@@ -1,0 +1,102 @@
+/**
+ * JavaCC file
+ */
+
+
+options {
+  JDK_VERSION = "1.5";
+  STATIC = false;
+  LOOKAHEAD=2; // speed up parser by removing this and fixing choice conflict in ctt() differently
+  FORCE_LA_CHECK=true;
+}
+PARSER_BEGIN(BottomUpAutomatonParser)
+package de.saar.penguin.irtg.automata;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.*;
+import java.io.*;
+
+/**
+ * Parser for bottom-up automata
+ * @author Alexander Koller
+ */
+public class BottomUpAutomatonParser {
+    private static BottomUpAutomaton<String,String> automaton;
+    private static BottomUpAutomatonParser parser = new BottomUpAutomatonParser(new ByteArrayInputStream(new byte[]{}));
+
+	public static BottomUpAutomaton<String,String> parse(Reader reader) throws ParseException{
+		parser.ReInit(reader);
+		automaton = new BottomUpAutomaton<String,String>();
+
+		parser.automaton();
+		return automaton;
+	}
+}
+PARSER_END(BottomUpAutomatonParser)
+
+SKIP : { " " | "\t" }
+
+TOKEN :
+{
+    < NAME:     ["a"-"z","A"-"Z","_", "'", "0"-"9"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9"] )* > |
+    < FIN_MARK: [ "\u00b0", "!"] > |
+    < NEUTRAL_MARK: ["%"] > |
+    <LINE_END_COMMENT: "//" (~["\n"])* >
+}
+
+void automaton() :
+{
+}
+{
+		automatonRule() (<LINE_END_COMMENT>)?
+		( "\n"
+			(
+				( LOOKAHEAD(2) automatonRule() )? (<LINE_END_COMMENT>)?
+			)
+		)*
+
+}
+
+
+void automatonRule() :
+{
+    String label = null;
+    List<String> childStates = null;
+    String parentState = null;
+}
+{
+    (label=<NAME>.image "(" childStates=StateList() ")" "->" parentState=State()) {
+      automaton.addRule(label, childStates, parentState);
+    }
+    | (label=<NAME>.image "->" parentState=State()) {
+      automaton.addRule(label, new ArrayList<String>(), parentState);
+    }
+
+}
+
+List<String> StateList() :
+{
+  List<String> ret = new ArrayList<String>();
+  String x;
+}
+{
+   (x = State() { ret.add(x); })+ { return ret; }
+}
+
+String State() :
+{
+  String state;
+  String fin_mark = null;
+}
+{
+  state = <NAME>.image (fin_mark = <FIN_MARK>.image)* {
+    if( fin_mark != null ) {
+      automaton.addFinalState(state);
+    }
+
+    return state;
+  }
+}
+
