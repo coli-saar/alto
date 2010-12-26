@@ -75,9 +75,6 @@ class IntersectionAutomaton<LeftState, RightState, Labels> extends BottomUpAutom
             List<RightState> rightParentStates = right.getParentStates(label, rightChildStates);
             List<Pair<LeftState, RightState>> ret = new ArrayList<Pair<LeftState, RightState>>();
 
-            System.err.println(" - left parents: " + leftParentStates);
-            System.err.println(" - right parents: " + rightParentStates);
-
             collectStatePairs(leftParentStates, rightParentStates, ret);
 
             // cache result

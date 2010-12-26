@@ -4,7 +4,11 @@
  */
 package de.saar.penguin.irtg.automata;
 
+import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.saar.basic.tree.Tree;
+import de.saar.basic.tree.TreeVisitor;
+import de.saar.penguin.irtg.hom.Homomorphism;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,6 +24,7 @@ public class BottomUpAutomaton<State, Labels> {
 
     protected Map<Labels, StateListToStateMap> explicitRules;
     protected Set<State> finalStates;
+    private final LeafToStateSubstitution<State, Labels> dummyLtsSubstitution = new LeafToStateSubstitution<State, Labels>();
 
     public BottomUpAutomaton() {
         explicitRules = new HashMap<Labels, StateListToStateMap>();
@@ -44,7 +49,7 @@ public class BottomUpAutomaton<State, Labels> {
     public boolean contains(Labels label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
-        if( smap == null ) {
+        if (smap == null) {
             return false;
         } else {
             return smap.contains(childStates);
@@ -65,6 +70,55 @@ public class BottomUpAutomaton<State, Labels> {
 
     public <OtherState> BottomUpAutomaton<Pair<State, OtherState>, Labels> intersect(BottomUpAutomaton<OtherState, Labels> other) {
         return new IntersectionAutomaton<State, OtherState, Labels>(this, other);
+    }
+
+    public BottomUpAutomaton<State, String> inverseHomomorphism(Homomorphism hom) {
+        return new InverseHomAutomaton<State>(this, hom);
+    }
+
+    public Set<State> run(final Tree<? extends Labels> tree) {
+        return run(tree, dummyLtsSubstitution);
+    }
+
+    public Set<State> run(final Tree<? extends Labels> tree, final LeafToStateSubstitution<State, Labels> subst) {
+        final Set<State> ret = new HashSet<State>();
+
+        tree.dfs(new TreeVisitor<Void, Set<State>>() {
+
+            @Override
+            public Set<State> combine(String node, List<Set<State>> childrenValues) {
+                Labels f = tree.getLabel(node);
+                Set<State> states = new HashSet<State>();
+
+                System.err.println("  visit " + node + "/" + f + ", kids=" + childrenValues);
+
+                if (childrenValues.isEmpty()) {
+                    if (subst.isSubstituted(f)) {
+                        states.add(subst.substitute(f));
+                    } else {
+                        System.err.println("  -> parents " + getParentStates(f, new ArrayList<State>()));
+                        states.addAll(getParentStates(f, new ArrayList<State>()));
+                    }
+                } else {
+                    CartesianIterator<State> it = new CartesianIterator<State>(childrenValues);
+
+                    while (it.hasNext()) {
+                        List<State> parentStates = getParentStates(f, it.next());
+                        states.addAll(parentStates);
+                    }
+                }
+
+                if (node.equals(tree.getRoot())) {
+                    ret.addAll(states);
+                }
+
+                System.err.println("  -> " + node + " -> " + states);
+
+                return states;
+            }
+        });
+
+        return ret;
     }
 
     private StateListToStateMap getOrCreateStateMap(Labels label) {

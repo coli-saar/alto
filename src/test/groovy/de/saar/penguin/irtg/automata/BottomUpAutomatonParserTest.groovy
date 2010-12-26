@@ -31,6 +31,12 @@ class BottomUpAutomatonParserTest {
         assertEquals(new HashSet(["q2"]), automaton.getFinalStates());
     }
 
+    @Test
+    public void testParser2() {
+        BottomUpAutomaton automaton = parse("f(p2 p3) -> p1!\n a -> p2\n a -> p3");
+        assertEquals(["p2", "p3"], automaton.getParentStates("a", []));
+    }
+
     private static BottomUpAutomaton parse(String s) {
         return BottomUpAutomatonParser.parse(new StringReader(s));
     }

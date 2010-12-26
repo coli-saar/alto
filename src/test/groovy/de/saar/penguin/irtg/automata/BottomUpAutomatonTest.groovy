@@ -10,6 +10,8 @@ import org.junit.*
 import java.util.*
 import java.io.*
 import de.saar.basic.*
+import de.saar.chorus.term.parser.*
+import de.saar.basic.tree.*
 import static org.junit.Assert.*
 
 /**
@@ -30,6 +32,14 @@ class BottomUpAutomatonTest {
 
         assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
         assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
+    }
+
+    @Test
+    public void testRun() {
+        BottomUpAutomaton auto2 = parse("f(p2 p3) -> p1!\n a -> p2\n a -> p3");
+        Tree t = TermParser.parse("f(a,a)").toTree();
+
+        assertEquals(new HashSet(["p1"]), auto2.run(t));
     }
 
     private static Pair p(Object a, Object b) {
