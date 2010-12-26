@@ -41,6 +41,17 @@ class HomomorphismTest {
         assertEquals(gold, rhsTerm);
     }
 
+    @Test
+    public void testNonDestructive() {
+        Homomorphism h = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"]);
+        Tree t = TermParser.parse("f(a,c)").toTree();
+        Term gold = TermParser.parse("g(l(e),h(k(b)))");
+        Tree rhs = h.apply(t);
+        Term rhsTerm = rhs.toTerm();
+
+        assertEquals(TermParser.parse("g(?2,h(?1))").toTree(), h.get(new Constant("f")));
+    }
+
 
     private static Homomorphism hom(Map<String,String> mappings) {
         Homomorphism ret = new Homomorphism();
