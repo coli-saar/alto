@@ -9,9 +9,11 @@ import de.saar.basic.StringOrVariable;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -71,5 +73,26 @@ public class Homomorphism {
 
     public static int getIndexForVariable(StringOrVariable varname) {
         return Integer.parseInt(varname.getValue().substring(1)) - 1;
+    }
+
+    public int getArity(String label) {
+        Integer ar = mappings.get(label).dfs(new TreeVisitor<Void, Integer>() {
+
+            @Override
+            public Integer combine(String node, List<Integer> childrenValues) {
+                if( childrenValues.isEmpty() ) {
+                    return 0;
+                } else {
+                    int childrenMax = Collections.max(childrenValues);
+                    return Math.max(childrenMax, childrenValues.size());
+                }
+            }
+        });
+
+        return ar;
+    }
+
+    public Set<String> getDomain() {
+        return mappings.keySet();
     }
 }

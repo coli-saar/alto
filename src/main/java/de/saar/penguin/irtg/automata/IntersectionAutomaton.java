@@ -17,7 +17,6 @@ import java.util.Set;
  * @author koller
  */
 class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pair<LeftState, RightState>> {
-
     private BottomUpAutomaton<LeftState> left;
     private BottomUpAutomaton<RightState> right;
     private Set<String> allString;
@@ -30,6 +29,7 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
         allString.retainAll(right.getAllLabels());
 
         finalStates = null;
+        allStates = null;
     }
 
     @Override
@@ -62,7 +62,7 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
     @Override
     public List<Pair<LeftState, RightState>> getParentStates(String label, List<Pair<LeftState, RightState>> childStates) {
         if (contains(label, childStates)) {
-            return super.getParentStates(label, childStates);
+            return getParentStatesFromExplicitRules(label, childStates);
         } else {
             List<LeftState> leftChildStates = new ArrayList<LeftState>();
             List<RightState> rightChildStates = new ArrayList<RightState>();
@@ -79,10 +79,25 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
 
             // cache result
             for (Pair<LeftState, RightState> parentState : ret) {
-                addRule(label, childStates, parentState);
+                storeRule(label, childStates, parentState);
             }
 
             return ret;
         }
+    }
+
+    @Override
+    public Set<Pair<LeftState, RightState>> getAllStates() {
+        if (allStates == null) {
+            allStates = new HashSet<Pair<LeftState, RightState>>();
+            collectStatePairs(left.getAllStates(), right.getAllStates(), allStates);
+        }
+
+        return allStates;
+    }
+
+    @Override
+    public int getArity(String label) {
+        return left.getArity(label);
     }
 }

@@ -6,7 +6,6 @@ package de.saar.penguin.irtg.automata;
 
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
-import de.saar.basic.StringOrVariable;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.hom.Homomorphism;
@@ -21,22 +20,40 @@ import java.util.Set;
  *
  * @author koller
  */
-public class BottomUpAutomaton<State> {
+public abstract class BottomUpAutomaton<State> {
+
     protected Map<String, StateListToStateMap> explicitRules;
     protected Set<State> finalStates;
+    protected Set<State> allStates;
     private final LeafToStateSubstitution<State, String> dummyLtsSubstitution = new LeafToStateSubstitution<State, String>();
 
     public BottomUpAutomaton() {
         explicitRules = new HashMap<String, StateListToStateMap>();
         finalStates = new HashSet<State>();
+        allStates = new HashSet<State>();
     }
 
-    public void addRule(String label, List<State> childStates, State parentState) {
+    abstract public List<State> getParentStates(String label, List<State> childStates);
+
+    abstract public int getArity(String label);
+
+    abstract public Set<String> getAllLabels();
+
+    abstract public Set<State> getFinalStates();
+
+    abstract public Set<State> getAllStates();
+
+    protected void storeRule(String label, List<State> childStates, State parentState) {
         StateListToStateMap smap = getOrCreateStateMap(label);
         smap.put(childStates, parentState);
+
+        if (allStates != null) {
+            allStates.add(parentState);
+            allStates.addAll(childStates);
+        }
     }
 
-    public List<State> getParentStates(String label, List<State> childStates) {
+    protected List<State> getParentStatesFromExplicitRules(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
         if (smap == null) {
@@ -46,7 +63,39 @@ public class BottomUpAutomaton<State> {
         }
     }
 
-    public boolean contains(String label, List<State> childStates) {
+    public Map<String, Map<List<State>, List<State>>> getAllRules() {
+        Map<String, Map<List<State>, List<State>>> ret = new HashMap<String, Map<List<State>, List<State>>>();
+
+        for (String f : getAllLabels()) {
+            ret.put(f, explicitRules.get(f).getAllRules());
+        }
+
+        return ret;
+    }
+
+    public void makeAllRulesExplicit() {
+        for (String f : getAllLabels()) {
+            int arity = getArity(f);
+
+            List<Set<State>> statesTuple = new ArrayList<Set<State>>();
+            for (int i = 0; i < arity; i++) {
+                statesTuple.add(new HashSet<State>(getAllStates()));
+            }
+
+            CartesianIterator<State> it = new CartesianIterator<State>(statesTuple);
+            while (it.hasNext()) {
+                List<State> childStates = it.next();
+                List<State> parentStates = getParentStates(f, childStates);
+                if (!parentStates.isEmpty()) {
+                    for (State p : parentStates) {
+                        storeRule(f, childStates, p);
+                    }
+                }
+            }
+        }
+    }
+
+    protected boolean contains(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
         if (smap == null) {
@@ -54,18 +103,6 @@ public class BottomUpAutomaton<State> {
         } else {
             return smap.contains(childStates);
         }
-    }
-
-    public Set<String> getAllLabels() {
-        return explicitRules.keySet();
-    }
-
-    public void addFinalState(State state) {
-        finalStates.add(state);
-    }
-
-    public Set<State> getFinalStates() {
-        return finalStates;
     }
 
     public <OtherState> BottomUpAutomaton<Pair<State, OtherState>> intersect(BottomUpAutomaton<OtherState> other) {
@@ -84,18 +121,16 @@ public class BottomUpAutomaton<State> {
         final Set<State> ret = new HashSet<State>();
 
         tree.dfs(new TreeVisitor<Void, Set<State>>() {
+
             @Override
             public Set<State> combine(String node, List<Set<State>> childrenValues) {
                 String f = tree.getLabel(node).toString();
                 Set<State> states = new HashSet<State>();
 
-                System.err.println("  visit " + node + "/" + f + ", kids=" + childrenValues);
-
                 if (childrenValues.isEmpty()) {
                     if (subst.isSubstituted(f)) {
                         states.add(subst.substitute(f));
                     } else {
-                        System.err.println("  -> parents " + getParentStates(f, new ArrayList<State>()));
                         states.addAll(getParentStates(f, new ArrayList<State>()));
                     }
                 } else {
@@ -110,8 +145,6 @@ public class BottomUpAutomaton<State> {
                 if (node.equals(tree.getRoot())) {
                     ret.addAll(states);
                 }
-
-                System.err.println("  -> " + node + " -> " + states);
 
                 return states;
             }

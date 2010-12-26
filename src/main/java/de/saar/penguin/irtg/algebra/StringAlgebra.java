@@ -17,7 +17,6 @@ import java.util.Set;
  * @author koller
  */
 public class StringAlgebra implements Algebra<String> {
-
     public static final String CONCAT = "*";
 
     public String evaluate(Tree t) {
@@ -63,9 +62,24 @@ public class StringAlgebra implements Algebra<String> {
         }
 
         @Override
+        public Set<Span> getAllStates() {
+            Set<Span> ret = new HashSet<Span>();
+
+            for( int i = 0; i < words.length; i++ ) {
+                for( int k = i+1; k <= words.length; k++ ) {
+                    ret.add(new Span(i,k));
+                }
+            }
+
+            return ret;
+        }
+
+
+
+        @Override
         public List<Span> getParentStates(String label, List<Span> childStates) {
             if (contains(label, childStates)) {
-                return super.getParentStates(label, childStates);
+                return getParentStatesFromExplicitRules(label, childStates);
             } else {
                 List<Span> ret = new ArrayList<Span>();
 
@@ -80,7 +94,7 @@ public class StringAlgebra implements Algebra<String> {
 
                     Span span = new Span(childStates.get(0).start, childStates.get(1).end);
                     ret.add(span);
-                    addRule(label, childStates, span);
+                    storeRule(label, childStates, span);
 
                     return ret;
                 } else {
@@ -93,6 +107,20 @@ public class StringAlgebra implements Algebra<String> {
                     return ret;
                 }
             }
+        }
+
+        @Override
+        public int getArity(String label) {
+            if( label.equals(CONCAT)) {
+                return 2;
+            } else {
+                return 0;
+            }
+        }
+
+        @Override
+        public Set<Span> getFinalStates() {
+            return finalStates;
         }
     }
 

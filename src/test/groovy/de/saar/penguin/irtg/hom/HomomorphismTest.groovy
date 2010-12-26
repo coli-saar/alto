@@ -52,7 +52,7 @@ class HomomorphismTest {
     }
 
 
-    private static Homomorphism hom(Map<String,String> mappings) {
+    public static Homomorphism hom(Map<String,String> mappings) {
         Homomorphism ret = new Homomorphism();
 
         mappings.each {
