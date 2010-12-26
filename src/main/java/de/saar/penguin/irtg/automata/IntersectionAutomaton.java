@@ -60,7 +60,7 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
     }
 
     @Override
-    public List<Pair<LeftState, RightState>> getParentStates(String label, List<Pair<LeftState, RightState>> childStates) {
+    public Set<Pair<LeftState, RightState>> getParentStates(String label, List<Pair<LeftState, RightState>> childStates) {
         if (contains(label, childStates)) {
             return getParentStatesFromExplicitRules(label, childStates);
         } else {
@@ -71,9 +71,9 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
                 rightChildStates.add(childState.right);
             }
 
-            List<LeftState> leftParentStates = left.getParentStates(label, leftChildStates);
-            List<RightState> rightParentStates = right.getParentStates(label, rightChildStates);
-            List<Pair<LeftState, RightState>> ret = new ArrayList<Pair<LeftState, RightState>>();
+            Set<LeftState> leftParentStates = left.getParentStates(label, leftChildStates);
+            Set<RightState> rightParentStates = right.getParentStates(label, rightChildStates);
+            Set<Pair<LeftState, RightState>> ret = new HashSet<Pair<LeftState, RightState>>();
 
             collectStatePairs(leftParentStates, rightParentStates, ret);
 

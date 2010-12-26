@@ -26,15 +26,15 @@ class StringAlgebraTest {
         BottomUpAutomaton auto = algebra.decompose(string);
 
         assertEquals(new HashSet([s(0,7)]), auto.getFinalStates());
-        assertEquals([s(2,4)], auto.getParentStates(StringAlgebra.CONCAT, [s(2,3), s(3,4)]));
-        assertEquals([], auto.getParentStates(StringAlgebra.CONCAT, [s(2,3), s(4,5)]));
+        assertEquals(new HashSet([s(2,4)]), auto.getParentStates(StringAlgebra.CONCAT, [s(2,3), s(3,4)]));
+        assertEquals(new HashSet(), auto.getParentStates(StringAlgebra.CONCAT, [s(2,3), s(4,5)]));
     }
 
     @Test
     public void testEvaluate() {
         String string = "john watches the woman with the telescope";
         Algebra algebra = new StringAlgebra();
-        Tree term = TermParser.parse("CONCAT(john,CONCAT(watches,CONCAT(the,CONCAT(woman,CONCAT(with,CONCAT(the,telescope))))))").toTree();
+        Tree term = TermParser.parse("*(john,*(watches,*(the,*(woman,*(with,*(the,telescope))))))").toTree();
 
         assertEquals(string, algebra.evaluate(term));
     }

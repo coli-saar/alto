@@ -31,7 +31,7 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
     }
 
     @Override
-    public List<State> getParentStates(String label, final List<State> childStates) {
+    public Set<State> getParentStates(String label, final List<State> childStates) {
         if (contains(label, childStates)) {
             return getParentStatesFromExplicitRules(label, childStates);
         } else {
@@ -55,7 +55,7 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
                 storeRule(label, childStates, parentState);
             }
 
-            return new ArrayList<State>(resultStates);
+            return resultStates;
         }
     }
 

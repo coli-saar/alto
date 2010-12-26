@@ -77,19 +77,19 @@ public class StringAlgebra implements Algebra<String> {
 
 
         @Override
-        public List<Span> getParentStates(String label, List<Span> childStates) {
+        public Set<Span> getParentStates(String label, List<Span> childStates) {
             if (contains(label, childStates)) {
                 return getParentStatesFromExplicitRules(label, childStates);
             } else {
-                List<Span> ret = new ArrayList<Span>();
+                Set<Span> ret = new HashSet<Span>();
 
                 if (label.equals(CONCAT)) {
                     if (childStates.size() != 2) {
-                        return new ArrayList<Span>();
+                        return new HashSet<Span>();
                     }
 
                     if (childStates.get(0).end != childStates.get(1).start) {
-                        return new ArrayList<Span>();
+                        return new HashSet<Span>();
                     }
 
                     Span span = new Span(childStates.get(0).start, childStates.get(1).end);

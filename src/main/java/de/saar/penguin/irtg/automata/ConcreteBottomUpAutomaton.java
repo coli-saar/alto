@@ -5,7 +5,6 @@
 
 package de.saar.penguin.irtg.automata;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -19,7 +18,7 @@ public class ConcreteBottomUpAutomaton<State> extends BottomUpAutomaton<State> {
     }
 
     @Override
-    public List<State> getParentStates(String label, List<State> childStates) {
+    public Set<State> getParentStates(String label, List<State> childStates) {
         return getParentStatesFromExplicitRules(label, childStates);
     }
 

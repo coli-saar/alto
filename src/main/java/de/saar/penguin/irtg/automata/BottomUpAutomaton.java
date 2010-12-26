@@ -33,7 +33,7 @@ public abstract class BottomUpAutomaton<State> {
         allStates = new HashSet<State>();
     }
 
-    abstract public List<State> getParentStates(String label, List<State> childStates);
+    abstract public Set<State> getParentStates(String label, List<State> childStates);
 
     abstract public int getArity(String label);
 
@@ -46,6 +46,10 @@ public abstract class BottomUpAutomaton<State> {
     protected void storeRule(String label, List<State> childStates, State parentState) {
         StateListToStateMap smap = getOrCreateStateMap(label);
         smap.put(childStates, parentState);
+        String x = smap.toString();
+
+        System.err.println("smap/" + label + " after store of " + childStates + " -> " +parentState
+                + ": " + x);
 
         if (allStates != null) {
             allStates.add(parentState);
@@ -53,24 +57,79 @@ public abstract class BottomUpAutomaton<State> {
         }
     }
 
-    protected List<State> getParentStatesFromExplicitRules(String label, List<State> childStates) {
+    protected Set<State> getParentStatesFromExplicitRules(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
         if (smap == null) {
-            return new ArrayList<State>();
+            return new HashSet<State>();
         } else {
             return smap.get(childStates);
         }
     }
 
-    public Map<String, Map<List<State>, List<State>>> getAllRules() {
-        Map<String, Map<List<State>, List<State>>> ret = new HashMap<String, Map<List<State>, List<State>>>();
+    public Map<String, Map<List<State>, Set<State>>> getAllRules() {
+        Map<String, Map<List<State>, Set<State>>> ret = new HashMap<String, Map<List<State>, Set<State>>>();
 
         for (String f : getAllLabels()) {
-            ret.put(f, explicitRules.get(f).getAllRules());
+            ret.put(f, getAllRules(f));
         }
 
         return ret;
+    }
+
+    private Map<List<State>, Set<State>> getAllRules(String label) {
+        if (explicitRules.containsKey(label)) {
+            return explicitRules.get(label).getAllRules();
+        } else {
+            return new HashMap<List<State>, Set<State>>();
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof BottomUpAutomaton)) {
+            return false;
+        }
+
+        Map<String, Map<List<State>, Set<State>>> rules = getAllRules();
+        Map<String, Map<List<State>, Set<State>>> otherRules = ((BottomUpAutomaton) o).getAllRules();
+
+        if (!rules.keySet().equals(otherRules.keySet())) {
+//            System.err.println("not equals: labels " + rules.keySet() + " vs " +otherRules.keySet());
+            return false;
+        }
+
+        for (String f : rules.keySet()) {
+            if (!rules.get(f).keySet().equals(otherRules.get(f).keySet())) {
+//                System.err.println("not equals: LHS for " + f + " is " + rules.get(f).keySet() + " vs " + otherRules.get(f).keySet() );
+                return false;
+            }
+
+            for (List<State> states : rules.get(f).keySet()) {
+                if (!new HashSet<State>(rules.get(f).get(states)).equals(new HashSet<State>(otherRules.get(f).get(states)))) {
+//                    System.err.println("noteq: RHS for " + f + states + " is " + rules.get(f).get(states) + " vs " + otherRules.get(f).get(states));
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        Map<String, Map<List<State>, Set<State>>> rules = getAllRules();
+
+        for (String f : getAllLabels()) {
+            for (List<State> children : rules.get(f).keySet()) {
+                for (State parent : rules.get(f).get(children)) {
+                    buf.append(f + children + " -> " + parent + "\n");
+                }
+            }
+        }
+
+        return buf.toString();
     }
 
     public void makeAllRulesExplicit() {
@@ -85,11 +144,10 @@ public abstract class BottomUpAutomaton<State> {
             CartesianIterator<State> it = new CartesianIterator<State>(statesTuple);
             while (it.hasNext()) {
                 List<State> childStates = it.next();
-                List<State> parentStates = getParentStates(f, childStates);
-                if (!parentStates.isEmpty()) {
-                    for (State p : parentStates) {
-                        storeRule(f, childStates, p);
-                    }
+                Set<State> parentStates = getParentStates(f, childStates);
+                for (State p : parentStates) {
+                    System.err.println(" -> " + f + childStates + " -> " + p);
+                    storeRule(f, childStates, p);
                 }
             }
         }
@@ -128,8 +186,8 @@ public abstract class BottomUpAutomaton<State> {
                 Set<State> states = new HashSet<State>();
 
                 if (childrenValues.isEmpty()) {
-                    if (subst.isSubstituted(f)) {
-                        states.add(subst.substitute(f));
+                    if (subst.isSubstituted(node)) {
+                        states.add(subst.substitute(node));
                     } else {
                         states.addAll(getParentStates(f, new ArrayList<State>()));
                     }
@@ -137,7 +195,7 @@ public abstract class BottomUpAutomaton<State> {
                     CartesianIterator<State> it = new CartesianIterator<State>(childrenValues);
 
                     while (it.hasNext()) {
-                        List<State> parentStates = getParentStates(f, it.next());
+                        Set<State> parentStates = getParentStates(f, it.next());
                         states.addAll(parentStates);
                     }
                 }
@@ -167,11 +225,11 @@ public abstract class BottomUpAutomaton<State> {
     protected class StateListToStateMap {
 
         private Map<State, StateListToStateMap> nextStep;
-        private List<State> rhsState;
+        private Set<State> rhsState;
         private int arity;
 
         public StateListToStateMap() {
-            rhsState = new ArrayList<State>();
+            rhsState = new HashSet<State>();
             nextStep = new HashMap<State, StateListToStateMap>();
             arity = -1;
         }
@@ -204,11 +262,11 @@ public abstract class BottomUpAutomaton<State> {
             }
         }
 
-        public List<State> get(List<State> stateList) {
+        public Set<State> get(List<State> stateList) {
             return get(stateList, 0);
         }
 
-        private List<State> get(List<State> stateList, int index) {
+        private Set<State> get(List<State> stateList, int index) {
             if (index == stateList.size()) {
                 return rhsState;
             } else {
@@ -216,7 +274,7 @@ public abstract class BottomUpAutomaton<State> {
                 StateListToStateMap sub = nextStep.get(nextState);
 
                 if (sub == null) {
-                    return new ArrayList<State>();
+                    return new HashSet<State>();
                 } else {
                     return sub.get(stateList, index + 1);
                 }
@@ -246,22 +304,29 @@ public abstract class BottomUpAutomaton<State> {
             return arity;
         }
 
-        public Map<List<State>, List<State>> getAllRules() {
-            Map<List<State>, List<State>> ret = new HashMap<List<State>, List<State>>();
+        public Map<List<State>, Set<State>> getAllRules() {
+            Map<List<State>, Set<State>> ret = new HashMap<List<State>, Set<State>>();
             List<State> currentStateList = new ArrayList<State>();
-            retrieveAll(currentStateList, 0, ret);
+            retrieveAll(currentStateList, 0, getArity(), ret);
             return ret;
         }
 
-        private void retrieveAll(List<State> currentStateList, int index, Map<List<State>, List<State>> ret) {
-            if (index == getArity()) {
+        private void retrieveAll(List<State> currentStateList, int index, int arity, Map<List<State>, Set<State>> ret) {
+            if (index == arity) {
                 ret.put(new ArrayList<State>(currentStateList), rhsState);
+                System.err.println("put " + rhsState + " at " + currentStateList);
             } else {
                 for (State state : nextStep.keySet()) {
-                    currentStateList.add(index, state);
-                    retrieveAll(currentStateList, index + 1, ret);
+                    currentStateList.add(state);
+                    nextStep.get(state).retrieveAll(currentStateList, index + 1, arity, ret);
+                    currentStateList.remove(index);
                 }
             }
+        }
+
+        @Override
+        public String toString() {
+            return getAllRules().toString();
         }
     }
 }
