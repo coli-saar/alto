@@ -46,10 +46,8 @@ public abstract class BottomUpAutomaton<State> {
     protected void storeRule(String label, List<State> childStates, State parentState) {
         StateListToStateMap smap = getOrCreateStateMap(label);
         smap.put(childStates, parentState);
-        String x = smap.toString();
 
-        System.err.println("smap/" + label + " after store of " + childStates + " -> " +parentState
-                + ": " + x);
+        System.err.println("smap/" + label + " after store of " + childStates + " -> " +parentState + ": " + smap.toString());
 
         if (allStates != null) {
             allStates.add(parentState);
@@ -146,7 +144,6 @@ public abstract class BottomUpAutomaton<State> {
                 List<State> childStates = it.next();
                 Set<State> parentStates = getParentStates(f, childStates);
                 for (State p : parentStates) {
-                    System.err.println(" -> " + f + childStates + " -> " + p);
                     storeRule(f, childStates, p);
                 }
             }
@@ -314,7 +311,6 @@ public abstract class BottomUpAutomaton<State> {
         private void retrieveAll(List<State> currentStateList, int index, int arity, Map<List<State>, Set<State>> ret) {
             if (index == arity) {
                 ret.put(new ArrayList<State>(currentStateList), rhsState);
-                System.err.println("put " + rhsState + " at " + currentStateList);
             } else {
                 for (State state : nextStep.keySet()) {
                     currentStateList.add(state);

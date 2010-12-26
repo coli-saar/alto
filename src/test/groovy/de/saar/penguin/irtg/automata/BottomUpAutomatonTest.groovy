@@ -60,6 +60,7 @@ class BottomUpAutomatonTest {
 
         BottomUpAutomaton pre = rhs.inverseHomomorphism(h);
         pre.makeAllRulesExplicit();
+//        System.out.println(pre);
 
         assertEquals(gold, pre);
     }
