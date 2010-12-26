@@ -16,25 +16,25 @@ import java.util.Set;
  *
  * @author koller
  */
-class IntersectionAutomaton<LeftState, RightState, Labels> extends BottomUpAutomaton<Pair<LeftState, RightState>, Labels> {
+class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pair<LeftState, RightState>> {
 
-    private BottomUpAutomaton<LeftState, Labels> left;
-    private BottomUpAutomaton<RightState, Labels> right;
-    private Set<Labels> allLabels;
+    private BottomUpAutomaton<LeftState> left;
+    private BottomUpAutomaton<RightState> right;
+    private Set<String> allString;
 
-    public IntersectionAutomaton(BottomUpAutomaton<LeftState, Labels> left, BottomUpAutomaton<RightState, Labels> right) {
+    public IntersectionAutomaton(BottomUpAutomaton<LeftState> left, BottomUpAutomaton<RightState> right) {
         this.left = left;
         this.right = right;
 
-        allLabels = new HashSet<Labels>(left.getAllLabels());
-        allLabels.retainAll(right.getAllLabels());
+        allString = new HashSet<String>(left.getAllLabels());
+        allString.retainAll(right.getAllLabels());
 
         finalStates = null;
     }
 
     @Override
-    public Set<Labels> getAllLabels() {
-        return allLabels;
+    public Set<String> getAllLabels() {
+        return allString;
     }
 
     @Override
@@ -60,7 +60,7 @@ class IntersectionAutomaton<LeftState, RightState, Labels> extends BottomUpAutom
     }
 
     @Override
-    public List<Pair<LeftState, RightState>> getParentStates(Labels label, List<Pair<LeftState, RightState>> childStates) {
+    public List<Pair<LeftState, RightState>> getParentStates(String label, List<Pair<LeftState, RightState>> childStates) {
         if (contains(label, childStates)) {
             return super.getParentStates(label, childStates);
         } else {

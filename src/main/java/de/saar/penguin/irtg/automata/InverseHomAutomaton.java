@@ -5,8 +5,8 @@
 
 package de.saar.penguin.irtg.automata;
 
+import de.saar.basic.StringOrVariable;
 import de.saar.basic.tree.Tree;
-import de.saar.chorus.term.Term;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import java.util.List;
 import java.util.Set;
@@ -15,11 +15,11 @@ import java.util.Set;
  *
  * @author koller
  */
-class InverseHomAutomaton<State> extends BottomUpAutomaton<State, String> {
-    private BottomUpAutomaton<State, ? extends Object> rhsAutomaton;
+class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
+    private BottomUpAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
 
-    public InverseHomAutomaton(BottomUpAutomaton<State, ? extends Object> rhsAutomaton, Homomorphism hom) {
+    public InverseHomAutomaton(BottomUpAutomaton<State> rhsAutomaton, Homomorphism hom) {
         this.rhsAutomaton = rhsAutomaton;
         this.hom = hom;
     }
@@ -31,7 +31,9 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State, String> {
 
     @Override
     public List<State> getParentStates(String label, List<State> childStates) {
-        Tree<Term> rhsTree = hom.get(label);
+        Tree<StringOrVariable> rhsTree = hom.get(label);
+//        List<State> resultStates = rhsAutomaton.run(rhsTree, new LeafToStateSubstitution<State, String>() {
+//        });
 
         
 

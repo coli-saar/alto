@@ -37,9 +37,12 @@ class BottomUpAutomatonTest {
     @Test
     public void testRun() {
         BottomUpAutomaton auto2 = parse("f(p2 p3) -> p1!\n a -> p2\n a -> p3");
-        Tree t = TermParser.parse("f(a,a)").toTree();
 
+        Tree t = TermParser.parse("f(a,a)").toTree();
         assertEquals(new HashSet(["p1"]), auto2.run(t));
+
+        Tree ta = TermParser.parse("a").toTree();
+        assertEquals(new HashSet(["p2","p3"]), auto2.run(ta));
     }
 
     private static Pair p(Object a, Object b) {

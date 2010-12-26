@@ -6,6 +6,7 @@ package de.saar.penguin.irtg.automata;
 
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.saar.basic.StringOrVariable;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.hom.Homomorphism;
@@ -20,23 +21,22 @@ import java.util.Set;
  *
  * @author koller
  */
-public class BottomUpAutomaton<State, Labels> {
-
-    protected Map<Labels, StateListToStateMap> explicitRules;
+public class BottomUpAutomaton<State> {
+    protected Map<String, StateListToStateMap> explicitRules;
     protected Set<State> finalStates;
-    private final LeafToStateSubstitution<State, Labels> dummyLtsSubstitution = new LeafToStateSubstitution<State, Labels>();
+    private final LeafToStateSubstitution<State, String> dummyLtsSubstitution = new LeafToStateSubstitution<State, String>();
 
     public BottomUpAutomaton() {
-        explicitRules = new HashMap<Labels, StateListToStateMap>();
+        explicitRules = new HashMap<String, StateListToStateMap>();
         finalStates = new HashSet<State>();
     }
 
-    public void addRule(Labels label, List<State> childStates, State parentState) {
+    public void addRule(String label, List<State> childStates, State parentState) {
         StateListToStateMap smap = getOrCreateStateMap(label);
         smap.put(childStates, parentState);
     }
 
-    public List<State> getParentStates(Labels label, List<State> childStates) {
+    public List<State> getParentStates(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
         if (smap == null) {
@@ -46,7 +46,7 @@ public class BottomUpAutomaton<State, Labels> {
         }
     }
 
-    public boolean contains(Labels label, List<State> childStates) {
+    public boolean contains(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
         if (smap == null) {
@@ -56,7 +56,7 @@ public class BottomUpAutomaton<State, Labels> {
         }
     }
 
-    public Set<Labels> getAllLabels() {
+    public Set<String> getAllLabels() {
         return explicitRules.keySet();
     }
 
@@ -68,26 +68,25 @@ public class BottomUpAutomaton<State, Labels> {
         return finalStates;
     }
 
-    public <OtherState> BottomUpAutomaton<Pair<State, OtherState>, Labels> intersect(BottomUpAutomaton<OtherState, Labels> other) {
-        return new IntersectionAutomaton<State, OtherState, Labels>(this, other);
+    public <OtherState> BottomUpAutomaton<Pair<State, OtherState>> intersect(BottomUpAutomaton<OtherState> other) {
+        return new IntersectionAutomaton<State, OtherState>(this, other);
     }
 
-    public BottomUpAutomaton<State, String> inverseHomomorphism(Homomorphism hom) {
+    public BottomUpAutomaton<State> inverseHomomorphism(Homomorphism hom) {
         return new InverseHomAutomaton<State>(this, hom);
     }
 
-    public Set<State> run(final Tree<? extends Labels> tree) {
+    public Set<State> run(final Tree tree) {
         return run(tree, dummyLtsSubstitution);
     }
 
-    public Set<State> run(final Tree<? extends Labels> tree, final LeafToStateSubstitution<State, Labels> subst) {
+    public Set<State> run(final Tree tree, final LeafToStateSubstitution<State, String> subst) {
         final Set<State> ret = new HashSet<State>();
 
         tree.dfs(new TreeVisitor<Void, Set<State>>() {
-
             @Override
             public Set<State> combine(String node, List<Set<State>> childrenValues) {
-                Labels f = tree.getLabel(node);
+                String f = tree.getLabel(node).toString();
                 Set<State> states = new HashSet<State>();
 
                 System.err.println("  visit " + node + "/" + f + ", kids=" + childrenValues);
@@ -121,7 +120,7 @@ public class BottomUpAutomaton<State, Labels> {
         return ret;
     }
 
-    private StateListToStateMap getOrCreateStateMap(Labels label) {
+    private StateListToStateMap getOrCreateStateMap(String label) {
         StateListToStateMap ret = explicitRules.get(label);
 
         if (ret == null) {

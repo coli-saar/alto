@@ -41,8 +41,7 @@ public class StringAlgebra implements Algebra<String> {
         return new CkyAutomaton(words);
     }
 
-    private static class CkyAutomaton extends BottomUpAutomaton<Span, String> {
-
+    private static class CkyAutomaton extends BottomUpAutomaton<Span> {
         private String[] words;
         private Set<String> allLabels;
 
