@@ -47,7 +47,7 @@ public abstract class BottomUpAutomaton<State> {
         StateListToStateMap smap = getOrCreateStateMap(label);
         smap.put(childStates, parentState);
 
-        System.err.println("smap/" + label + " after store of " + childStates + " -> " +parentState + ": " + smap.toString());
+//        System.err.println("smap/" + label + " after store of " + childStates + " -> " +parentState + ": " + smap.toString());
 
         if (allStates != null) {
             allStates.add(parentState);
@@ -81,6 +81,10 @@ public abstract class BottomUpAutomaton<State> {
         } else {
             return new HashMap<List<State>, Set<State>>();
         }
+    }
+
+    public long countTrees() {
+        return 0;
     }
 
     @Override
@@ -122,7 +126,7 @@ public abstract class BottomUpAutomaton<State> {
         for (String f : getAllLabels()) {
             for (List<State> children : rules.get(f).keySet()) {
                 for (State parent : rules.get(f).get(children)) {
-                    buf.append(f + children + " -> " + parent + "\n");
+                    buf.append(f + (children.isEmpty()?"":children) + " -> " + parent + "\n");
                 }
             }
         }
@@ -166,6 +170,12 @@ public abstract class BottomUpAutomaton<State> {
 
     public BottomUpAutomaton<State> inverseHomomorphism(Homomorphism hom) {
         return new InverseHomAutomaton<State>(this, hom);
+    }
+
+    public boolean accepts(final Tree tree) {
+        Set<State> resultStates = run(tree);
+        resultStates.retainAll(getFinalStates());
+        return ! resultStates.isEmpty();
     }
 
     public Set<State> run(final Tree tree) {
