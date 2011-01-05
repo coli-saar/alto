@@ -4,6 +4,8 @@
  */
 package de.saar.penguin.irtg.automata;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
 import de.saar.basic.tree.Tree;
@@ -12,8 +14,10 @@ import de.saar.penguin.irtg.hom.Homomorphism;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -23,17 +27,21 @@ import java.util.Set;
 public abstract class BottomUpAutomaton<State> {
 
     protected Map<String, StateListToStateMap> explicitRules;
+    protected Map<String, SetMultimap<State, List<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
     protected Set<State> allStates;
     private final LeafToStateSubstitution<State, String> dummyLtsSubstitution = new LeafToStateSubstitution<State, String>();
 
     public BottomUpAutomaton() {
         explicitRules = new HashMap<String, StateListToStateMap>();
+        explicitRulesTopDown = new HashMap<String, SetMultimap<State, List<State>>>();
         finalStates = new HashSet<State>();
         allStates = new HashSet<State>();
     }
 
     abstract public Set<State> getParentStates(String label, List<State> childStates);
+
+    abstract public Set<List<State>> getRulesForParentState(String label, State parentState);
 
     abstract public int getArity(String label);
 
@@ -47,7 +55,12 @@ public abstract class BottomUpAutomaton<State> {
         StateListToStateMap smap = getOrCreateStateMap(label);
         smap.put(childStates, parentState);
 
-//        System.err.println("smap/" + label + " after store of " + childStates + " -> " +parentState + ": " + smap.toString());
+        SetMultimap<State, List<State>> topdown = explicitRulesTopDown.get(label);
+        if (topdown == null) {
+            topdown = HashMultimap.create();
+            explicitRulesTopDown.put(label, topdown);
+        }
+        topdown.put(parentState, childStates);
 
         if (allStates != null) {
             allStates.add(parentState);
@@ -62,6 +75,14 @@ public abstract class BottomUpAutomaton<State> {
             return new HashSet<State>();
         } else {
             return smap.get(childStates);
+        }
+    }
+
+    protected Set<List<State>> getRulesForParentStateFromExplicit(String label, State parentState) {
+        if (containsTopDown(label, parentState)) {
+            return explicitRulesTopDown.get(label).get(parentState);
+        } else {
+            return new HashSet<List<State>>();
         }
     }
 
@@ -126,7 +147,7 @@ public abstract class BottomUpAutomaton<State> {
         for (String f : getAllLabels()) {
             for (List<State> children : rules.get(f).keySet()) {
                 for (State parent : rules.get(f).get(children)) {
-                    buf.append(f + (children.isEmpty()?"":children) + " -> " + parent + "\n");
+                    buf.append(f + (children.isEmpty() ? "" : children) + " -> " + parent + "\n");
                 }
             }
         }
@@ -135,6 +156,29 @@ public abstract class BottomUpAutomaton<State> {
     }
 
     public void makeAllRulesExplicit() {
+        Set<State> everAddedStates = new HashSet<State>();
+        Queue<State> agenda = new LinkedList<State>();
+
+        agenda.addAll(getFinalStates());
+        everAddedStates.addAll(getFinalStates());
+
+        while( ! agenda.isEmpty() ) {
+            State state = agenda.remove();
+
+            for( String label : getAllLabels() ) {
+                Set<List<State>> rules = getRulesForParentState(label, state);
+                for( List<State> children : rules ) {
+                    for( State child : children ) {
+                        if( ! everAddedStates.contains(child)) {
+                            everAddedStates.add(child);
+                            agenda.offer(child);
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
         for (String f : getAllLabels()) {
             int arity = getArity(f);
 
@@ -152,6 +196,8 @@ public abstract class BottomUpAutomaton<State> {
                 }
             }
         }
+         *
+         */
     }
 
     protected boolean contains(String label, List<State> childStates) {
@@ -161,6 +207,15 @@ public abstract class BottomUpAutomaton<State> {
             return false;
         } else {
             return smap.contains(childStates);
+        }
+    }
+
+    protected boolean containsTopDown(String label, State parent) {
+        SetMultimap<State, List<State>> topdown = explicitRulesTopDown.get(label);
+        if (topdown == null) {
+            return false;
+        } else {
+            return topdown.containsKey(parent);
         }
     }
 
@@ -175,7 +230,7 @@ public abstract class BottomUpAutomaton<State> {
     public boolean accepts(final Tree tree) {
         Set<State> resultStates = run(tree);
         resultStates.retainAll(getFinalStates());
-        return ! resultStates.isEmpty();
+        return !resultStates.isEmpty();
     }
 
     public Set<State> run(final Tree tree) {
@@ -218,6 +273,8 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+//    public void runTopDown(final Tree<StringOrVariable> tree, final Map<)
+
     private StateListToStateMap getOrCreateStateMap(String label) {
         StateListToStateMap ret = explicitRules.get(label);
 
@@ -246,7 +303,7 @@ public abstract class BottomUpAutomaton<State> {
 
             if (arity != -1) {
                 if (arity != stateList.size()) {
-                    throw new UnsupportedOperationException("Storing state lists of different length: " + stateList);
+                    throw new UnsupportedOperationException("Storing state lists of different length: " + stateList + ", should be " + arity);
                 }
             } else {
                 arity = stateList.size();

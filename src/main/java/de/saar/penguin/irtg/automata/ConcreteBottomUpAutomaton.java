@@ -22,6 +22,13 @@ public class ConcreteBottomUpAutomaton<State> extends BottomUpAutomaton<State> {
         return getParentStatesFromExplicitRules(label, childStates);
     }
 
+
+
+    @Override
+    public Set<List<State>> getRulesForParentState(String label, State parentState) {
+        return getRulesForParentStateFromExplicit(label, parentState);
+    }
+
     @Override
     public int getArity(String label) {
         return explicitRules.get(label).getArity();

@@ -109,6 +109,24 @@ public class StringAlgebra implements Algebra<String> {
             }
         }
 
+
+
+        @Override
+        public Set<List<Span>> getRulesForParentState(String label, Span parentState) {
+            if( ! containsTopDown(label, parentState)) {
+                if( label.equals(CONCAT)) {
+                    for( int i = parentState.start + 1; i < parentState.end; i++ ) {
+                        List<Span> childStates = new ArrayList<Span>();
+                        childStates.add(new Span(parentState.start, i));
+                        childStates.add(new Span(i, parentState.end));
+                        storeRule(label, childStates, parentState);
+                    }
+                }
+            }
+
+            return getRulesForParentStateFromExplicit(label, parentState);
+        }
+
         @Override
         public int getArity(String label) {
             if( label.equals(CONCAT)) {

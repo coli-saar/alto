@@ -87,6 +87,28 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
     }
 
     @Override
+    public Set<List<Pair<LeftState, RightState>>> getRulesForParentState(String label, Pair<LeftState, RightState> parentState) {
+        if( ! containsTopDown(label, parentState)) {
+            Set<List<LeftState>> leftRules = left.getRulesForParentState(label, parentState.left);
+            Set<List<RightState>> rightRules = right.getRulesForParentState(label, parentState.right);
+
+            for( List<LeftState> leftRule : leftRules ) {
+                for( List<RightState> rightRule : rightRules ) {
+                    List<Pair<LeftState,RightState>> combinedRule = new ArrayList<Pair<LeftState, RightState>>();
+
+                    for( int i = 0; i < leftRule.size(); i++ ) {
+                        combinedRule.add(new Pair<LeftState, RightState>(leftRule.get(i), rightRule.get(i)));
+                    }
+
+                    storeRule(label, combinedRule, parentState);
+                }
+            }
+        }
+
+        return getRulesForParentStateFromExplicit(label, parentState);
+    }
+
+    @Override
     public Set<Pair<LeftState, RightState>> getAllStates() {
         if (allStates == null) {
             allStates = new HashSet<Pair<LeftState, RightState>>();
