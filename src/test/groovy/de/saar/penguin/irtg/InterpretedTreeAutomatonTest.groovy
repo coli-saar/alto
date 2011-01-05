@@ -46,10 +46,16 @@ class InterpretedTreeAutomatonTest {
 
         BottomUpAutomaton chart = irtg.parse([string]);
         chart.makeAllRulesExplicit();
-        System.out.println(chart);
+//        System.err.println(chart);
+
+//        System.err.println("\n\nstates in order: " + chart.getStatesInBottomUpOrder() );
+
+//        System.err.println("\n\nreduced:\n" + chart.reduce());
 
         assert chart.accepts(parseTree("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"));
         assert chart.accepts(parseTree("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))"));
+
+        assertEquals(2, chart.countTrees());
     }
 
     public static Tree parseTree(String s) {

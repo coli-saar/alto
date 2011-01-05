@@ -11,6 +11,9 @@ import de.saar.basic.Pair;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.hom.Homomorphism;
+import de.saar.penguin.irtg.semiring.AndOrSemiring;
+import de.saar.penguin.irtg.semiring.LongArithmeticSemiring;
+import de.saar.penguin.irtg.semiring.Semiring;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,18 +28,19 @@ import java.util.Set;
  * @author koller
  */
 public abstract class BottomUpAutomaton<State> {
-
     protected Map<String, StateListToStateMap> explicitRules;
     protected Map<String, SetMultimap<State, List<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
     protected Set<State> allStates;
     private final LeafToStateSubstitution<State, String> dummyLtsSubstitution = new LeafToStateSubstitution<State, String>();
+    protected boolean isExplicit;
 
     public BottomUpAutomaton() {
         explicitRules = new HashMap<String, StateListToStateMap>();
         explicitRulesTopDown = new HashMap<String, SetMultimap<State, List<State>>>();
         finalStates = new HashSet<State>();
         allStates = new HashSet<State>();
+        isExplicit = false;
     }
 
     abstract public Set<State> getParentStates(String label, List<State> childStates);
@@ -89,6 +93,8 @@ public abstract class BottomUpAutomaton<State> {
     public Map<String, Map<List<State>, Set<State>>> getAllRules() {
         Map<String, Map<List<State>, Set<State>>> ret = new HashMap<String, Map<List<State>, Set<State>>>();
 
+        makeAllRulesExplicit();
+
         for (String f : getAllLabels()) {
             ret.put(f, getAllRules(f));
         }
@@ -104,8 +110,19 @@ public abstract class BottomUpAutomaton<State> {
         }
     }
 
+    // TODO - this is only correct if the FTA is bottom-up deterministic
     public long countTrees() {
-        return 0;
+        Map<State,Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<State, Long>() {
+            public Long evaluateRule(State parent, String label, List<State> children) {
+                return 1L;
+            }
+        });
+
+        long ret = 0L;
+        for( State f : getFinalStates() ) {
+            ret += map.get(f);
+        }
+        return ret;
     }
 
     @Override
@@ -156,48 +173,31 @@ public abstract class BottomUpAutomaton<State> {
     }
 
     public void makeAllRulesExplicit() {
-        Set<State> everAddedStates = new HashSet<State>();
-        Queue<State> agenda = new LinkedList<State>();
+        if (!isExplicit) {
+            Set<State> everAddedStates = new HashSet<State>();
+            Queue<State> agenda = new LinkedList<State>();
 
-        agenda.addAll(getFinalStates());
-        everAddedStates.addAll(getFinalStates());
+            agenda.addAll(getFinalStates());
+            everAddedStates.addAll(getFinalStates());
 
-        while( ! agenda.isEmpty() ) {
-            State state = agenda.remove();
+            while (!agenda.isEmpty()) {
+                State state = agenda.remove();
 
-            for( String label : getAllLabels() ) {
-                Set<List<State>> rules = getRulesForParentState(label, state);
-                for( List<State> children : rules ) {
-                    for( State child : children ) {
-                        if( ! everAddedStates.contains(child)) {
-                            everAddedStates.add(child);
-                            agenda.offer(child);
+                for (String label : getAllLabels()) {
+                    Set<List<State>> rules = getRulesForParentState(label, state);
+                    for (List<State> children : rules) {
+                        for (State child : children) {
+                            if (!everAddedStates.contains(child)) {
+                                everAddedStates.add(child);
+                                agenda.offer(child);
+                            }
                         }
                     }
                 }
             }
+
+            isExplicit = true;
         }
-
-        /*
-        for (String f : getAllLabels()) {
-            int arity = getArity(f);
-
-            List<Set<State>> statesTuple = new ArrayList<Set<State>>();
-            for (int i = 0; i < arity; i++) {
-                statesTuple.add(new HashSet<State>(getAllStates()));
-            }
-
-            CartesianIterator<State> it = new CartesianIterator<State>(statesTuple);
-            while (it.hasNext()) {
-                List<State> childStates = it.next();
-                Set<State> parentStates = getParentStates(f, childStates);
-                for (State p : parentStates) {
-                    storeRule(f, childStates, p);
-                }
-            }
-        }
-         *
-         */
     }
 
     protected boolean contains(String label, List<State> childStates) {
@@ -273,7 +273,102 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
-//    public void runTopDown(final Tree<StringOrVariable> tree, final Map<)
+    public BottomUpAutomaton<State> reduce() {
+        Map<State,Boolean> productiveStates = evaluateInSemiring(new AndOrSemiring(), new RuleEvaluator<State, Boolean>() {
+            public Boolean evaluateRule(State parent, String label, List<State> children) {
+                return true;
+            }
+        });
+
+        ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
+        Map<String, Map<List<State>, Set<State>>> allRules = getAllRules();
+
+        for( String label : allRules.keySet() ) {
+            for( List<State> children : allRules.get(label).keySet() ) {
+                boolean allProductive = true;
+                for( State child : children ) {
+                    if( ! productiveStates.get(child)) {
+                        allProductive = false;
+                    }
+                }
+
+                if( allProductive ) {
+                    for( State parent : allRules.get(label).get(children) ) {
+                        if( productiveStates.get(parent)) {
+                            ret.addRule(label, children, parent);
+                        }
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public <E> Map<State, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<State,E> evaluator) {
+        Map<State, E> ret = new HashMap<State, E>();
+
+        for( State s : getStatesInBottomUpOrder() ) {
+            E accu = semiring.zero();
+
+            for( String label : getAllLabels() ) {
+                Set<List<State>> rules = getRulesForParentState(label, s);
+
+                for( List<State> rule : rules ) {
+                    E valueThisRule = evaluator.evaluateRule(s, label, rule);
+                    for( State child : rule ) {
+                        if( ! ret.containsKey(child)) {
+                            throw new RuntimeException("State " + child + " not yet evaluated when processing rule " + rule + " for " + s + "/" + label);
+                        }
+                        valueThisRule = semiring.multiply(valueThisRule, ret.get(child));
+                    }
+
+                    accu = semiring.add(accu, valueThisRule);
+                }
+            }
+
+            ret.put(s, accu);
+        }
+
+        return ret;
+    }
+
+    public List<State> getStatesInBottomUpOrder() {
+        List<State> ret = new ArrayList<State>();
+        SetMultimap<State, State> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
+        Set<State> visited = new HashSet<State>();
+
+        // traverse all rules to compute graph
+        Map<String, Map<List<State>, Set<State>>> rules = getAllRules();
+        for( Map<List<State>, Set<State>> rulesPerLabel : rules.values() ) {
+            for( List<State> lhs : rulesPerLabel.keySet() ) {
+                Set<State> rhsStates = rulesPerLabel.get(lhs);
+
+                for( State rhsState : rhsStates ) {
+                    children.putAll(rhsState, lhs);
+                }
+            }
+        }
+
+        // perform topological sort
+        for (State q : getFinalStates()) {
+            dfsForStatesInBottomUpOrder(q, children, visited, ret);
+        }
+
+        return ret;
+    }
+
+    private void dfsForStatesInBottomUpOrder(State q, SetMultimap<State, State> children, Set<State> visited, List<State> ret) {
+        if (!visited.contains(q)) {
+            visited.add(q);
+
+            for (State parent : children.get(q)) {
+                dfsForStatesInBottomUpOrder(parent, children, visited, ret);
+            }
+
+            ret.add(q);
+        }
+    }
 
     private StateListToStateMap getOrCreateStateMap(String label) {
         StateListToStateMap ret = explicitRules.get(label);

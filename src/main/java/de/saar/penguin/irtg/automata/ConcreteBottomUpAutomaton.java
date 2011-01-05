@@ -13,6 +13,11 @@ import java.util.Set;
  * @author koller
  */
 public class ConcreteBottomUpAutomaton<State> extends BottomUpAutomaton<State> {
+    public ConcreteBottomUpAutomaton() {
+        super();
+        isExplicit = true;
+    }
+
     public void addRule(String label, List<State> childStates, State parentState) {
         storeRule(label, childStates, parentState);
     }
