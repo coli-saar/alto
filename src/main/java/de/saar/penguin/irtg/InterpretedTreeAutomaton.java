@@ -6,8 +6,9 @@
 package de.saar.penguin.irtg;
 
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -15,25 +16,22 @@ import java.util.List;
  */
 public class InterpretedTreeAutomaton {
     private BottomUpAutomaton<String> automaton;
-    private List<Interpretation> interpretations;
+    private Map<String,Interpretation> interpretations;
 
     public InterpretedTreeAutomaton(BottomUpAutomaton<String> automaton) {
         this.automaton = automaton;
-        interpretations = new ArrayList<Interpretation>();
+        interpretations = new HashMap<String, Interpretation>();
     }
 
-    public void addInterpretation(Interpretation interp) {
-        interpretations.add(interp);
+    public void addInterpretation(String name, Interpretation interp) {
+        interpretations.put(name, interp);
     }
 
-    public BottomUpAutomaton parse(List inputs) {
+    public BottomUpAutomaton parse(Map<String,Object> inputs) {
         BottomUpAutomaton ret = automaton;
 
-        for( int i = 0; i < inputs.size(); i++ ) {
-            Object inp = inputs.get(i);
-            if( inp != null ) {
-                ret = ret.intersect(interpretations.get(i).parse(inp));
-            }
+        for( String interpName : inputs.keySet() ) {
+            ret = ret.intersect(interpretations.get(interpName).parse(inputs.get(interpName)));
         }
 
         return ret;

@@ -1,0 +1,197 @@
+/**
+ * JavaCC file
+ */
+
+
+options {
+  JDK_VERSION = "1.5";
+  STATIC = false;
+  LOOKAHEAD=2; // speed up parser by removing this and fixing choice conflict in ctt() differently
+  FORCE_LA_CHECK=true;
+}
+PARSER_BEGIN(IrtgParser)
+package de.saar.penguin.irtg;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.*;
+import java.io.*;
+
+import de.saar.penguin.irtg.automata.*;
+import de.saar.penguin.irtg.hom.*;
+import de.saar.penguin.irtg.algebra.*;
+import de.saar.chorus.term.*;
+import de.saar.basic.tree.*;
+
+
+/**
+ * Parser for interpreted bottom-up automata
+ * @author Alexander Koller
+ */
+public class IrtgParser {
+    private ConcreteBottomUpAutomaton<String> automaton = new ConcreteBottomUpAutomaton<String>();
+    private InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(automaton);
+    private Map<String,Homomorphism> homomorphisms = new HashMap<String,Homomorphism>();
+    private String lastSeenTerminal = null;
+
+    private static IrtgParser parser = new IrtgParser(new ByteArrayInputStream(new byte[]{}));
+
+
+    public static InterpretedTreeAutomaton parse(Reader reader) throws ParseException {
+        parser = new IrtgParser(new ByteArrayInputStream(new byte[]{}));
+        parser.ReInit(reader);
+
+	parser.grammar();
+	return parser.irtg;
+    }
+}
+PARSER_END(IrtgParser)
+
+SKIP : { " " | "\t" | "\r" | "\n" }
+
+TOKEN :
+{
+    <INTERPRETATION: "interpretation"> |
+    < NAME:     ["a"-"z","A"-"Z","_", "'", "0"-"9", "*"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*"] )* > |
+    <VARIABLE : ["?"] (["a"-"z", "A"-"Z", "_", "0"-"9", "-"])*> |
+    < FIN_MARK: [ "\u00b0", "!"] > |
+    <LINE_END_COMMENT: "//" (~["\n"])* >
+}
+
+void grammar() :
+{
+}
+{
+    (<LINE_END_COMMENT>)*
+    (InterpretationDeclaration() (<LINE_END_COMMENT>)*) +
+    (RuleWithHomomorphisms() (<LINE_END_COMMENT>)*) +
+}
+
+void InterpretationDeclaration() :
+{
+    Token id;
+    String classname;
+}
+{
+    <INTERPRETATION> id=<NAME> ":" classname=ClassName() {
+       try {
+        Homomorphism hom = new Homomorphism();
+        Class algebraClass = Class.forName(classname);
+        Algebra algebra = (Algebra) algebraClass.newInstance();
+
+        irtg.addInterpretation(id.image, new Interpretation(algebra, hom));
+        homomorphisms.put(id.image, hom);
+       } catch(Exception e) {
+        throw new ParseException("Could not instantiate algebra class " + classname + " for interpretation " + id.image + ": " + e.toString());
+       }
+     }
+}
+
+String ClassName() :
+{
+  StringBuffer buf = new StringBuffer();
+  String id = null;
+}
+{
+   ((id=<NAME>.image) { buf.append(id); }
+   ("." id=<NAME>.image { buf.append("."); buf.append(id); } ) *) {
+     return buf.toString();
+   }
+}
+
+void RuleWithHomomorphisms() :
+{
+}
+{
+    AutomatonRule() (HomomorphismRule())+
+}
+
+void AutomatonRule() :
+{
+    String label = null;
+    List<String> childStates = null;
+    String parentState = null;
+}
+{
+    (label=<NAME>.image "(" childStates=StateList() ")" "->" parentState=State()) {
+      automaton.addRule(label, childStates, parentState);
+      lastSeenTerminal = label;
+    }
+    | (label=<NAME>.image "->" parentState=State()) {
+      automaton.addRule(label, new ArrayList<String>(), parentState);
+      lastSeenTerminal = label;
+    }
+
+}
+
+List<String> StateList() :
+{
+  List<String> ret = new ArrayList<String>();
+  String x;
+}
+{
+   (x = State() { ret.add(x); } ("," x = State() { ret.add(x); })*  ) { return ret; }
+}
+
+String State() :
+{
+  String state;
+  String fin_mark = null;
+}
+{
+  state = <NAME>.image (fin_mark = <FIN_MARK>.image)* {
+    if( fin_mark != null ) {
+      automaton.addFinalState(state);
+    }
+
+    return state;
+  }
+}
+
+void HomomorphismRule() :
+{
+    String interpName = null;
+    Term term = null;
+}
+{
+    "[" interpName=<NAME>.image "]" term=Term() {
+        Tree rhs = term.toTree();
+        Homomorphism hom = homomorphisms.get(interpName);
+
+        if( hom == null ) {
+            throw new ParseException("Homomorphism declaration for unknown interpretation '" + interpName + "'");
+        } else if( hom.get(lastSeenTerminal) != null ) {
+            if( ! hom.get(lastSeenTerminal).equals(rhs) ) {
+                throw new ParseException("Redefined value of interpretation '" + interpName + "' for " + lastSeenTerminal + " as " + term + " (was: " + hom.get(lastSeenTerminal).toTerm() + ")");
+            }
+       } else {
+          hom.add(lastSeenTerminal, rhs);
+       }
+    }
+}
+
+
+
+Term Term() :
+{
+	Token label;
+	List<Term> subterms = new ArrayList<Term>();
+	Term subterm;
+}
+{
+	label = <NAME> "("
+               (subterm = Term() { subterms.add(subterm); })
+               ("," subterm = Term() { subterms.add(subterm); })*
+        	 ")" {
+		return new Compound(label.image, subterms);
+	}
+
+  | label = <NAME> {
+	  return new Constant(label.image);
+  }
+
+  | label = <VARIABLE> {
+  	  return new Variable(label.image);
+  }
+}

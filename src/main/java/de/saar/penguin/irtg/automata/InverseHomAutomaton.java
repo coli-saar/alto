@@ -87,56 +87,59 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
     private void computeRulesForLabel(String label) {
         final Tree<StringOrVariable> rhsTree = hom.get(label);
 
-        Set<Item> rootItems = rhsTree.dfs(new TreeVisitor<Void, Set<Item>>() {
+        if (rhsTree != null) {
 
-            @Override
-            public Set<Item> combine(String node, List<Set<Item>> childrenValues) {
-                Set<Item> ret = new HashSet<Item>();
+            Set<Item> rootItems = rhsTree.dfs(new TreeVisitor<Void, Set<Item>>() {
 
-                if (rhsTree.getLabel(node).isVariable()) {
-                    for (State state : getAllStates()) {
-                        ret.add(new Item(state, subst(rhsTree.getLabel(node), state)));
-                    }
-                } else {
-                    CartesianIterator<Item> it = new CartesianIterator<Item>(childrenValues);
+                @Override
+                public Set<Item> combine(String node, List<Set<Item>> childrenValues) {
+                    Set<Item> ret = new HashSet<Item>();
 
-                    while (it.hasNext()) {
-                        List<Item> childItems = it.next();
-                        List<State> childStates = new ArrayList<State>();
-                        List<Map<StringOrVariable, State>> childSubsts = new ArrayList<Map<StringOrVariable, State>>();
-
-                        for (Item item : childItems) {
-                            childStates.add(item.state);
-                            childSubsts.add(item.substitution);
+                    if (rhsTree.getLabel(node).isVariable()) {
+                        for (State state : getAllStates()) {
+                            ret.add(new Item(state, subst(rhsTree.getLabel(node), state)));
                         }
+                    } else {
+                        CartesianIterator<Item> it = new CartesianIterator<Item>(childrenValues);
 
-                        Set<State> parentStates = rhsAutomaton.getParentStates(rhsTree.getLabel(node).toString(), childStates);
+                        while (it.hasNext()) {
+                            List<Item> childItems = it.next();
+                            List<State> childStates = new ArrayList<State>();
+                            List<Map<StringOrVariable, State>> childSubsts = new ArrayList<Map<StringOrVariable, State>>();
 
-                        if (!parentStates.isEmpty()) {
-                            Map<StringOrVariable, State> subst = mergeSubstitutions(childSubsts);
-                            for (State p : parentStates) {
-                                ret.add(new Item(p, subst));
+                            for (Item item : childItems) {
+                                childStates.add(item.state);
+                                childSubsts.add(item.substitution);
+                            }
+
+                            Set<State> parentStates = rhsAutomaton.getParentStates(rhsTree.getLabel(node).toString(), childStates);
+
+                            if (!parentStates.isEmpty()) {
+                                Map<StringOrVariable, State> subst = mergeSubstitutions(childSubsts);
+                                for (State p : parentStates) {
+                                    ret.add(new Item(p, subst));
+                                }
                             }
                         }
                     }
+
+                    return ret;
+                }
+            });
+
+            for (Item rootItem : rootItems) {
+                List<State> childStates = new ArrayList<State>();
+
+                for (int i = 0; i < hom.getArity(label); i++) {
+                    // TODO - deal with unbound variables here!!
+                    childStates.add(rootItem.substitution.get(new StringOrVariable("?" + (i + 1), true)));
                 }
 
-                return ret;
-            }
-        });
-
-        for (Item rootItem : rootItems) {
-            List<State> childStates = new ArrayList<State>();
-
-            for (int i = 0; i < hom.getArity(label); i++) {
-                // TODO - deal with unbound variables here!!
-                childStates.add(rootItem.substitution.get(new StringOrVariable("?" + (i + 1), true)));
+                storeRule(label, childStates, rootItem.state);
             }
 
-            storeRule(label, childStates, rootItem.state);
+            computedLabels.add(label);
         }
-
-        computedLabels.add(label);
     }
 
     private class Item {

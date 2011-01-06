@@ -42,9 +42,9 @@ class InterpretedTreeAutomatonTest {
         Algebra algebra = new StringAlgebra();
 
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(rtg);
-        irtg.addInterpretation(new Interpretation(algebra, h));
+        irtg.addInterpretation("string", new Interpretation(algebra, h));
 
-        BottomUpAutomaton chart = irtg.parse([string]);
+        BottomUpAutomaton chart = irtg.parse(["string": string]);
         chart.makeAllRulesExplicit();
 //        System.err.println(chart);
 
