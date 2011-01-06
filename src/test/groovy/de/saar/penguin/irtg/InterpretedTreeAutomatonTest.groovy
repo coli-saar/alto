@@ -28,8 +28,8 @@ class InterpretedTreeAutomatonTest {
 
         BottomUpAutomaton rtg = parse("john -> NP\n watches -> V\n" +
             "the -> Det\n woman -> N\n with -> P\n telescope -> N\n" +
-            "s(NP VP) -> S!\n np(Det N) -> NP\n n(N PP) -> N\n" +
-            "vp(V NP) -> VP\n vp(VP PP) -> VP\n pp(P NP) -> PP"
+            "s(NP,VP) -> S!\n np(Det,N) -> NP\n n(N,PP) -> N\n" +
+            "vp(V,NP) -> VP\n vp(VP,PP) -> VP\n pp(P,NP) -> PP"
             );
 
         String concat = "*(?1,?2)";

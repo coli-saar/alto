@@ -17,14 +17,14 @@ import static org.junit.Assert.*
 class BottomUpAutomatonParserTest {
     @Test
     public void testParserNotNull() {
-        BottomUpAutomaton automaton = parse("a -> q1\n f(q1 q1) -> q2!");
+        BottomUpAutomaton automaton = parse("a -> q1\n f(q1,q1) -> q2!");
 
         assert automaton != null;
     }
 
     @Test
     public void testParser1() {
-        BottomUpAutomaton automaton = parse("a -> q1\n f(q1 q1) -> q2 !");
+        BottomUpAutomaton automaton = parse("a -> q1\n f(q1,q1) -> q2 !");
 
         assertEquals(new HashSet(["q1"]), automaton.getParentStates("a", []));
         assertEquals(new HashSet(["q2"]), automaton.getParentStates("f", ["q1", "q1"]));
@@ -33,7 +33,7 @@ class BottomUpAutomatonParserTest {
 
     @Test
     public void testParser2() {
-        BottomUpAutomaton automaton = parse("f(p2 p3) -> p1!\n a -> p2\n a -> p3");
+        BottomUpAutomaton automaton = parse("f(p2,p3) -> p1!\n a -> p2\n a -> p3");
         assertEquals(new HashSet(["p2", "p3"]), automaton.getParentStates("a", []));
     }
 

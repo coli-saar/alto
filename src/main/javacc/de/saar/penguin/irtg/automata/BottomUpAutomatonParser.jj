@@ -82,7 +82,7 @@ List<String> StateList() :
   String x;
 }
 {
-   (x = State() { ret.add(x); })+ { return ret; }
+   (x = State() { ret.add(x); } ("," x = State() { ret.add(x); })*  ) { return ret; }
 }
 
 String State() :
