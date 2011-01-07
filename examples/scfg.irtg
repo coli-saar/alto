@@ -1,0 +1,59 @@
+
+interpretation english: de.saar.penguin.irtg.algebra.StringAlgebra
+interpretation german: de.saar.penguin.irtg.algebra.StringAlgebra
+
+
+
+
+r1(NP,VP) -> S!
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+
+r2(Det,N) -> NP
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+r3(N,PP) -> N
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+r4(V,NP) -> VP
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+r5(VP,PP) -> VP
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+r6(P,NP) -> PP
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+r7 -> NP
+  [english] john
+  [german] hans
+
+r8 -> V
+  [english] watches
+  [german] betrachtet
+
+r9 -> Det
+  [english] the
+  [german] die
+
+r9b -> Det
+  [english] the
+  [german] dem
+
+r10 -> N
+  [english] woman
+  [german] frau
+
+r11 -> N
+  [english] telescope
+  [german] fernrohr
+
+r12 -> P
+  [english] with
+  [german] mit
