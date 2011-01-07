@@ -13,12 +13,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author koller
  */
 public class Main {
+    private static Pattern pattern = Pattern.compile("[, ]*([^ :]*):\\s*\"([^\"]*)\"(.*)");
+
     public static void main(String[] args) throws ParseException, FileNotFoundException, IOException {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(args[0]));
         BufferedReader console = new BufferedReader(new InputStreamReader(System.in));
@@ -26,15 +30,24 @@ public class Main {
         while(true) {
             System.out.print("> ");
             String line = console.readLine();
-            String[] tokens = line.split(":/");
             Map<String,Object> inputObjects = new HashMap<String, Object>();
 
-            for( int i = 0; i < tokens.length; i += 2 ) {
-                inputObjects.put(tokens[i], tokens[i+1]);
+            if( line == null ) {
+                System.exit(0);
+            }
+
+            Matcher m = pattern.matcher(line);
+            while( m.matches() ) {
+                inputObjects.put(m.group(1), m.group(2));
+                line = m.group(3);
+                m = pattern.matcher(line);
             }
 
             BottomUpAutomaton chart = irtg.parse(inputObjects);
-            System.out.println(chart.reduce() + "\n");
+            BottomUpAutomaton reduced = chart.reduce();
+            
+            System.out.print(reduced);
+            System.out.println(reduced.countTrees() + " derivation trees\n");
         }
     }
 }
