@@ -7,7 +7,6 @@ package de.saar.penguin.irtg;
 
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,7 +30,9 @@ public class InterpretedTreeAutomaton {
         BottomUpAutomaton ret = automaton;
 
         for( String interpName : inputs.keySet() ) {
-            ret = ret.intersect(interpretations.get(interpName).parse(inputs.get(interpName)));
+            Interpretation interp = interpretations.get(interpName);
+            Object input = inputs.get(interpName);
+            ret = ret.intersect(interp.parse(input));
         }
 
         return ret;
