@@ -90,7 +90,7 @@ r12 -> P
         BottomUpAutomaton chart = irtg.parse(["1": string]);
         chart.makeAllRulesExplicit();
 
-        System.err.println("\n\nreduced:\n" + chart.reduce());
+//        System.err.println("\n\nreduced:\n" + chart.reduce());
 
         assert chart.accepts(parseTree("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
         assert chart.accepts(parseTree("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
@@ -111,9 +111,8 @@ r12 -> P
 
             a -> Foo [2] bar
         ''';
-        try {
+
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-        } catch(Exception e) { System.err.println(e); throw e; }
     }
 
     @Test(expected=ParseException.class)
@@ -124,9 +123,7 @@ r12 -> P
             a -> Foo [1] bar
             a -> Fooo [1] baz
         ''';
-        try {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-        } catch(Exception e) { System.err.println(e); throw e; }
     }
 }
 

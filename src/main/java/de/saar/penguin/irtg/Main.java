@@ -43,11 +43,13 @@ public class Main {
                 m = pattern.matcher(line);
             }
 
+            long parsingStartTime = System.currentTimeMillis();
             BottomUpAutomaton chart = irtg.parse(inputObjects);
             BottomUpAutomaton reduced = chart.reduce();
+            long parsingEndTime = System.currentTimeMillis();
             
             System.out.print(reduced);
-            System.out.println(reduced.countTrees() + " derivation trees\n");
+            System.out.println(reduced.countTrees() + " derivation trees, " + (parsingEndTime-parsingStartTime) + "ms\n");
         }
     }
 }
