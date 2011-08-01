@@ -53,7 +53,7 @@ void automaton() :
 {
 }
 {
-		automatonRule() (<LINE_END_COMMENT>)?
+		automatonRule() (Weight())? (<LINE_END_COMMENT>)?
 		( "\n"
 			(
 				( LOOKAHEAD(2) automatonRule() (Weight())? )? (<LINE_END_COMMENT>)?
@@ -71,10 +71,10 @@ void automatonRule() :
 }
 {
     (label=<NAME>.image "(" childStates=StateList() ")" "->" parentState=State()) {
-      automaton.addRule(label, childStates, parentState);
+      lastSeenRule = automaton.addRule(label, childStates, parentState);
     }
     | (label=<NAME>.image "->" parentState=State()) {
-      automaton.addRule(label, new ArrayList<String>(), parentState);
+      lastSeenRule = automaton.addRule(label, new ArrayList<String>(), parentState);
     }
 
 }

@@ -37,12 +37,23 @@ class BottomUpAutomatonParserTest {
         assertEquals(new HashSet([r("p2", "a", []), r("p3", "a", [])]), automaton.getRulesBottomUp("a", []));
     }
 
+    @Test
+    public void testWeights() {
+        BottomUpAutomaton automaton = parse("a -> q1 [2]\n b -> q2 [1]\n f(q1,q1) -> q! [1]\n f(q1,q2) -> q! [1.5]");
+        assertEquals(new HashSet([rw("q1", "a", [], 2)]), automaton.getRulesBottomUp("a", []));
+        assertEquals(new HashSet([rw("q", "f", ["q1", "q2"], 1.5)]), automaton.getRulesBottomUp("f", ["q1", "q2"]));
+    }
+
     private static BottomUpAutomaton parse(String s) {
         return BottomUpAutomatonParser.parse(new StringReader(s));
     }
 
     private static Rule r(parent, label, children) {
         return new Rule(parent, label, children);
+    }
+
+    private static Rule rw(parent, label, children, weight) {
+        return new Rule(parent, label, children, weight);
     }
 }
 

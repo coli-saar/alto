@@ -4,6 +4,7 @@
  */
 package de.saar.penguin.irtg.automata;
 
+import de.saar.basic.StringTools;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -69,7 +70,7 @@ public class Rule<State> {
 
     @Override
     public String toString() {
-        return getLabel() + (children.length == 0 ? "" : children) + " -> " + parent;
+        return getLabel() + (children.length == 0 ? "" : Arrays.asList(children)) + " -> " + parent + " [" + weight + "]";
     }
 
     @Override

@@ -66,6 +66,13 @@ class BottomUpAutomatonTest {
         assertEquals(gold, pre);
     }
 
+    @Test
+    public void testViterbi() {
+        BottomUpAutomaton auto = parse("a -> q1 [2]\n b -> q2 [1]\n f(q1,q1) -> q! [1]\n f(q1,q2) -> q! [1.5]");
+        Tree best = auto.viterbi();
+        assertEquals(best.toString(), TermParser.parse("f(a,a)").toTree().toString());
+    }
+
     private static Pair p(Object a, Object b) {
         return new Pair(a,b);
     }
