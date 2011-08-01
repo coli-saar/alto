@@ -140,8 +140,6 @@ public abstract class BottomUpAutomaton<State> {
             }
         });
         
-        System.err.println(map);
-        
         // find final state with highest weight
         State bestFinalState = null;
         double weightBestFinalState = Double.POSITIVE_INFINITY;
@@ -361,7 +359,6 @@ public abstract class BottomUpAutomaton<State> {
     public <E> Map<State, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<State, E> evaluator) {
         Map<State, E> ret = new HashMap<State, E>();
 
-        System.err.println("states: " + getStatesInBottomUpOrder());
         for (State s : getStatesInBottomUpOrder()) {
             E accu = semiring.zero();
 
@@ -381,7 +378,6 @@ public abstract class BottomUpAutomaton<State> {
                 }
             }
 
-            System.err.println(s + ": " + accu);
             ret.put(s, accu);
         }
 
