@@ -34,6 +34,7 @@ public class IrtgParser {
     private InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(automaton);
     private Map<String,Homomorphism> homomorphisms = new HashMap<String,Homomorphism>();
     private String lastSeenTerminal = null;
+    private Rule<String> lastSeenRule = null;
 
     private static IrtgParser parser = new IrtgParser(new ByteArrayInputStream(new byte[]{}));
 
@@ -53,8 +54,9 @@ SKIP : { " " | "\t" | "\r" | "\n" }
 TOKEN :
 {
     <INTERPRETATION: "interpretation"> |
-    < NAME:     ["a"-"z","A"-"Z","_", "'", "0"-"9", "*"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*"] )* > |
+    < NAME:     ["a"-"z","A"-"Z","_", "'", "*"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
     <VARIABLE : ["?"] (["a"-"z", "A"-"Z", "_", "0"-"9", "-"])*> |
+    <NUMBER : ["0"-"9", "."] (["0"-"9", ".", "e", "-"])* > |
     < FIN_MARK: [ "\u00b0", "!"] > |
     <LINE_END_COMMENT: "//" (~["\n"])* >
 }
@@ -90,21 +92,24 @@ void InterpretationDeclaration() :
 
 String ClassName() :
 {
-  StringBuffer buf = new StringBuffer();
+  //StringBuffer buf = new StringBuffer();
   String id = null;
 }
 {
-   ((id=<NAME>.image) { buf.append(id); }
+   (id=<NAME>.image) { return id; }
+/*
+{ buf.append(id); }
    ("." id=<NAME>.image { buf.append("."); buf.append(id); } ) *) {
      return buf.toString();
    }
+*/
 }
 
 void RuleWithHomomorphisms() :
 {
 }
 {
-    AutomatonRule() (HomomorphismRule())+
+    AutomatonRule() (Weight())? (HomomorphismRule())+
 }
 
 void AutomatonRule() :
@@ -115,11 +120,11 @@ void AutomatonRule() :
 }
 {
     (label=<NAME>.image "(" childStates=StateList() ")" "->" parentState=State()) {
-      automaton.addRule(label, childStates, parentState);
+      lastSeenRule = automaton.addRule(label, childStates, parentState);
       lastSeenTerminal = label;
     }
     | (label=<NAME>.image "->" parentState=State()) {
-      automaton.addRule(label, new ArrayList<String>(), parentState);
+      lastSeenRule = automaton.addRule(label, new ArrayList<String>(), parentState);
       lastSeenTerminal = label;
     }
 
@@ -147,6 +152,16 @@ String State() :
 
     return state;
   }
+}
+
+void Weight() :
+{
+    String num = null;
+}
+{
+    "[" num=<NUMBER>.image "]" {
+        lastSeenRule.setWeight(Double.parseDouble(num));
+    }
 }
 
 void HomomorphismRule() :

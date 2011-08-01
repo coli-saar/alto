@@ -27,56 +27,56 @@ class IrtgParserTest {
     public void testParser() {
         String grammarstring = '''
             // declarating the interpretations
-            interpretation 1: de.saar.penguin.irtg.algebra.StringAlgebra  // another comment
+            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra  // another comment
 
             // automaton starts here
 
 r1(NP,VP) -> S!
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r2(Det,N) -> NP
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r3(N,PP) -> N
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
-r4(V,NP) -> VP
-  [1] *(?1,?2)
+r4(V,NP) -> VP [.6]
+  [i] *(?1,?2)
 
 
-r5(VP,PP) -> VP
-  [1] *(?1,?2)
+r5(VP,PP) -> VP [0.4]
+  [i] *(?1,?2)
 
 
 r6(P,NP) -> PP
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r7 -> NP
-  [1] john
+  [i] john
 
 
 r8 -> V
-  [1] watches
+  [i] watches
 
 
 r9 -> Det
-  [1] the
+  [i] the
 
 
 r10 -> N
-  [1] woman
+  [i] woman
 
 
 r11 -> N
-  [1] telescope
+  [i] telescope
 
 
 r12 -> P
-  [1] with
+  [i] with
 
 
 
@@ -87,7 +87,7 @@ r12 -> P
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
 
         String string = "john watches the woman with the telescope";
-        BottomUpAutomaton chart = irtg.parse(["1": string]);
+        BottomUpAutomaton chart = irtg.parse(["i": string]);
         chart.makeAllRulesExplicit();
 
 //        System.err.println("\n\nreduced:\n" + chart.reduce());
@@ -96,6 +96,10 @@ r12 -> P
         assert chart.accepts(parseTree("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
 
         assertEquals(2, chart.countTrees());
+
+        assertEquals( irtg.getAutomaton().getRulesTopDown("r4", "VP").iterator().next().getWeight(), 0.6, 0.001);
+        assertEquals( irtg.getAutomaton().getRulesTopDown("r5", "VP").iterator().next().getWeight(), 0.4, 0.001);
+        assertEquals( irtg.getAutomaton().getRulesTopDown("r1", "S").iterator().next().getWeight(), 1.0, 0.001);
     }
 
     @Test(expected=ParseException.class)
@@ -107,9 +111,9 @@ r12 -> P
     @Test(expected=ParseException.class)
     public void testUndeclaredInterpretation() {
         String grammarstring = '''
-            interpretation 1: de.saar.penguin.irtg.algebra.StringAlgebra
+            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
-            a -> Foo [2] bar
+            a -> Foo [j] bar
         ''';
 
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
@@ -118,10 +122,10 @@ r12 -> P
     @Test(expected=ParseException.class)
     public void testInconsistentHoms() {
         String grammarstring = '''
-            interpretation 1: de.saar.penguin.irtg.algebra.StringAlgebra
+            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
-            a -> Foo [1] bar
-            a -> Fooo [1] baz
+            a -> Foo [i] bar
+            a -> Fooo [i] baz
         ''';
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
     }

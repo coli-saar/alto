@@ -26,6 +26,16 @@ public class InterpretedTreeAutomaton {
         interpretations.put(name, interp);
     }
 
+    public BottomUpAutomaton<String> getAutomaton() {
+        return automaton;
+    }
+
+    public Map<String, Interpretation> getInterpretations() {
+        return interpretations;
+    }
+    
+    
+
     public BottomUpAutomaton parse(Map<String,Object> inputs) {
         BottomUpAutomaton ret = automaton;
 

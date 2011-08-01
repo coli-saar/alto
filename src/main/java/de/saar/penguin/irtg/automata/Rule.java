@@ -55,6 +55,12 @@ public class Rule<State> {
     public double getWeight() {
         return weight;
     }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+    
+    
     
     public int getArity() {
         return children.length;

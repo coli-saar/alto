@@ -25,10 +25,12 @@ import java.io.*;
 public class BottomUpAutomatonParser {
     private static ConcreteBottomUpAutomaton<String> automaton;
     private static BottomUpAutomatonParser parser = new BottomUpAutomatonParser(new ByteArrayInputStream(new byte[]{}));
+    private static Rule<String> lastSeenRule = null;
 
 	public static BottomUpAutomaton<String> parse(Reader reader) throws ParseException{
 		parser.ReInit(reader);
 		automaton = new ConcreteBottomUpAutomaton<String>();
+                lastSeenRule = null;
 
 		parser.automaton();
 		return automaton;
@@ -40,7 +42,8 @@ SKIP : { " " | "\t" }
 
 TOKEN :
 {
-    < NAME:     ["a"-"z","A"-"Z","_", "'", "0"-"9"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9"] )* > |
+    < NAME:     ["a"-"z","A"-"Z","_", "'", "*"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
+    <NUMBER : ["0"-"9", "."] (["0"-"9", ".", "e", "-"])* > |
     < FIN_MARK: [ "\u00b0", "!"] > |
     < NEUTRAL_MARK: ["%"] > |
     <LINE_END_COMMENT: "//" (~["\n"])* >
@@ -53,7 +56,7 @@ void automaton() :
 		automatonRule() (<LINE_END_COMMENT>)?
 		( "\n"
 			(
-				( LOOKAHEAD(2) automatonRule() )? (<LINE_END_COMMENT>)?
+				( LOOKAHEAD(2) automatonRule() (Weight())? )? (<LINE_END_COMMENT>)?
 			)
 		)*
 
@@ -100,3 +103,13 @@ String State() :
   }
 }
 
+
+void Weight() :
+{
+    String num = null;
+}
+{
+    "[" num=<NUMBER>.image "]" {
+        lastSeenRule.setWeight(Double.parseDouble(num));
+    }
+}
