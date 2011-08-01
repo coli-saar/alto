@@ -28,10 +28,11 @@ class BottomUpAutomatonTest {
         BottomUpAutomaton auto2 = parse("f(p2,p3) -> p1!\n a -> p2\n a -> p3");
         BottomUpAutomaton intersect = auto1.intersect(auto2);
 
-        assertEquals(new HashSet([p("q1","p2"), p("q1", "p3")]), intersect.getParentStates("a", []));
-        assertEquals(new HashSet([p("q1","p2"), p("q1", "p3")]), intersect.getParentStates("a", []));
+        assertEquals(new HashSet([r(p("q1","p2"), "a", []), r(p("q1", "p3"), "a", [])]), 
+            intersect.getRulesBottomUp("a", []));
 
-        assertEquals(new HashSet([p("q2", "p1")]), intersect.getParentStates("f", [p("q1","p2"), p("q1","p3")]));
+        assertEquals(new HashSet([r(p("q2", "p1"), "f", [p("q1","p2"), p("q1","p3")])]), 
+            intersect.getRulesBottomUp("f", [p("q1","p2"), p("q1","p3")]));
 
         assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
         assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
@@ -71,6 +72,10 @@ class BottomUpAutomatonTest {
 
     private static BottomUpAutomaton parse(String s) {
         return BottomUpAutomatonParser.parse(new StringReader(s));
+    }
+
+    private static Rule r(parent, label, children) {
+        return new Rule(parent, label, children);
     }
 }
 

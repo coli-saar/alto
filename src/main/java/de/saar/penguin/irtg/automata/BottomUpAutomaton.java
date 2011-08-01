@@ -28,8 +28,8 @@ import java.util.Set;
  * @author koller
  */
 public abstract class BottomUpAutomaton<State> {
-    protected Map<String, StateListToStateMap> explicitRules;
-    protected Map<String, SetMultimap<State, List<State>>> explicitRulesTopDown;
+    protected Map<String, StateListToStateMap> explicitRules; // one for each label
+    protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
     protected Set<State> allStates;
     private final LeafToStateSubstitution<State, String> dummyLtsSubstitution = new LeafToStateSubstitution<State, String>();
@@ -37,15 +37,15 @@ public abstract class BottomUpAutomaton<State> {
 
     public BottomUpAutomaton() {
         explicitRules = new HashMap<String, StateListToStateMap>();
-        explicitRulesTopDown = new HashMap<String, SetMultimap<State, List<State>>>();
+        explicitRulesTopDown = new HashMap<String, SetMultimap<State, Rule<State>>>();
         finalStates = new HashSet<State>();
         allStates = new HashSet<State>();
         isExplicit = false;
     }
 
-    abstract public Set<State> getParentStates(String label, List<State> childStates);
+    abstract public Set<Rule<State>> getRulesBottomUp(String label, List<State> childStates);
 
-    abstract public Set<List<State>> getRulesForParentState(String label, State parentState);
+    abstract public Set<Rule<State>> getRulesTopDown(String label, State parentState);
 
     abstract public int getArity(String label);
 
@@ -55,43 +55,45 @@ public abstract class BottomUpAutomaton<State> {
 
     abstract public Set<State> getAllStates();
 
-    protected void storeRule(String label, List<State> childStates, State parentState) {
-        StateListToStateMap smap = getOrCreateStateMap(label);
-        smap.put(childStates, parentState);
+    protected void storeRule(Rule<State> rule) {
+        StateListToStateMap smap = getOrCreateStateMap(rule.getLabel());
+        smap.put(rule);
 
-        SetMultimap<State, List<State>> topdown = explicitRulesTopDown.get(label);
+        SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(rule.getLabel());
         if (topdown == null) {
             topdown = HashMultimap.create();
-            explicitRulesTopDown.put(label, topdown);
+            explicitRulesTopDown.put(rule.getLabel(), topdown);
         }
-        topdown.put(parentState, childStates);
+        topdown.put(rule.getParent(), rule);
 
         if (allStates != null) {
-            allStates.add(parentState);
-            allStates.addAll(childStates);
+            allStates.add(rule.getParent());
+            for( int i = 0; i < rule.getArity(); i++ ) {
+                allStates.add(rule.getChildren()[i]);
+            }
         }
     }
 
-    protected Set<State> getParentStatesFromExplicitRules(String label, List<State> childStates) {
+    protected Set<Rule<State>> getRulesBottomUpFromExplicit(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
         if (smap == null) {
-            return new HashSet<State>();
+            return new HashSet<Rule<State>>();
         } else {
             return smap.get(childStates);
         }
     }
 
-    protected Set<List<State>> getRulesForParentStateFromExplicit(String label, State parentState) {
+    protected Set<Rule<State>> getRulesTopDownFromExplicit(String label, State parentState) {
         if (containsTopDown(label, parentState)) {
             return explicitRulesTopDown.get(label).get(parentState);
         } else {
-            return new HashSet<List<State>>();
+            return new HashSet<Rule<State>>();
         }
     }
 
-    public Map<String, Map<List<State>, Set<State>>> getAllRules() {
-        Map<String, Map<List<State>, Set<State>>> ret = new HashMap<String, Map<List<State>, Set<State>>>();
+    public Map<String, Map<List<State>, Set<Rule<State>>>> getAllRules() {
+        Map<String, Map<List<State>, Set<Rule<State>>>> ret = new HashMap<String, Map<List<State>, Set<Rule<State>>>>();
 
         makeAllRulesExplicit();
 
@@ -102,18 +104,18 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
-    private Map<List<State>, Set<State>> getAllRules(String label) {
+    private Map<List<State>, Set<Rule<State>>> getAllRules(String label) {
         if (explicitRules.containsKey(label)) {
             return explicitRules.get(label).getAllRules();
         } else {
-            return new HashMap<List<State>, Set<State>>();
+            return new HashMap<List<State>, Set<Rule<State>>>();
         }
     }
 
     // TODO - this is only correct if the FTA is bottom-up deterministic
     public long countTrees() {
         Map<State,Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<State, Long>() {
-            public Long evaluateRule(State parent, String label, List<State> children) {
+            public Long evaluateRule(Rule<State> rule) {
                 return 1L;
             }
         });
@@ -131,8 +133,8 @@ public abstract class BottomUpAutomaton<State> {
             return false;
         }
 
-        Map<String, Map<List<State>, Set<State>>> rules = getAllRules();
-        Map<String, Map<List<State>, Set<State>>> otherRules = ((BottomUpAutomaton) o).getAllRules();
+        Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
+        Map<String, Map<List<State>, Set<Rule<State>>>> otherRules = ((BottomUpAutomaton) o).getAllRules();
 
         if (!rules.keySet().equals(otherRules.keySet())) {
 //            System.err.println("not equals: labels " + rules.keySet() + " vs " +otherRules.keySet());
@@ -146,7 +148,7 @@ public abstract class BottomUpAutomaton<State> {
             }
 
             for (List<State> states : rules.get(f).keySet()) {
-                if (!new HashSet<State>(rules.get(f).get(states)).equals(new HashSet<State>(otherRules.get(f).get(states)))) {
+                if (!new HashSet<Rule<State>>(rules.get(f).get(states)).equals(new HashSet<Rule<State>>(otherRules.get(f).get(states)))) {
 //                    System.err.println("noteq: RHS for " + f + states + " is " + rules.get(f).get(states) + " vs " + otherRules.get(f).get(states));
                     return false;
                 }
@@ -159,12 +161,12 @@ public abstract class BottomUpAutomaton<State> {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        Map<String, Map<List<State>, Set<State>>> rules = getAllRules();
+        Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
 
         for (String f : getAllLabels()) {
             for (List<State> children : rules.get(f).keySet()) {
-                for (State parent : rules.get(f).get(children)) {
-                    buf.append(f + (children.isEmpty() ? "" : children) + " -> " + parent + (getFinalStates().contains(parent)?"!":"") + "\n");
+                for (Rule rule : rules.get(f).get(children)) {
+                    buf.append(rule.toString() + (getFinalStates().contains(rule.getParent())?"!":"") + "\n");
                 }
             }
         }
@@ -184,9 +186,9 @@ public abstract class BottomUpAutomaton<State> {
                 State state = agenda.remove();
 
                 for (String label : getAllLabels()) {
-                    Set<List<State>> rules = getRulesForParentState(label, state);
-                    for (List<State> children : rules) {
-                        for (State child : children) {
+                    Set<Rule<State>> rules = getRulesTopDown(label, state);
+                    for (Rule<State> rule : rules) {
+                        for (State child : rule.getChildren()) {
                             if (!everAddedStates.contains(child)) {
                                 everAddedStates.add(child);
                                 agenda.offer(child);
@@ -211,7 +213,7 @@ public abstract class BottomUpAutomaton<State> {
     }
 
     protected boolean containsTopDown(String label, State parent) {
-        SetMultimap<State, List<State>> topdown = explicitRulesTopDown.get(label);
+        SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(label);
         if (topdown == null) {
             return false;
         } else {
@@ -251,14 +253,17 @@ public abstract class BottomUpAutomaton<State> {
                     if (subst.isSubstituted(node)) {
                         states.add(subst.substitute(node));
                     } else {
-                        states.addAll(getParentStates(f, new ArrayList<State>()));
+                        for( Rule<State> rule : getRulesBottomUp(f, new ArrayList<State>())) {
+                            states.add(rule.getParent());
+                        }
                     }
                 } else {
                     CartesianIterator<State> it = new CartesianIterator<State>(childrenValues);
 
                     while (it.hasNext()) {
-                        Set<State> parentStates = getParentStates(f, it.next());
-                        states.addAll(parentStates);
+                        for( Rule<State> rule : getRulesBottomUp(f, it.next())) {
+                            states.add(rule.getParent());
+                        }
                     }
                 }
 
@@ -275,13 +280,13 @@ public abstract class BottomUpAutomaton<State> {
 
     public BottomUpAutomaton<State> reduce() {
         Map<State,Boolean> productiveStates = evaluateInSemiring(new AndOrSemiring(), new RuleEvaluator<State, Boolean>() {
-            public Boolean evaluateRule(State parent, String label, List<State> children) {
+            public Boolean evaluateRule(Rule<State> rule) {
                 return true;
             }
         });
 
         ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
-        Map<String, Map<List<State>, Set<State>>> allRules = getAllRules();
+        Map<String, Map<List<State>, Set<Rule<State>>>> allRules = getAllRules();
 
         // copy all rules that only contain productive states
         for( String label : allRules.keySet() ) {
@@ -294,9 +299,9 @@ public abstract class BottomUpAutomaton<State> {
                 }
 
                 if( allProductive ) {
-                    for( State parent : allRules.get(label).get(children) ) {
-                        if( productiveStates.get(parent)) {
-                            ret.addRule(label, children, parent);
+                    for( Rule<State> rule : allRules.get(label).get(children)) {
+                        if( productiveStates.get(rule.getParent())) {
+                            ret.addRule(label, children, rule.getParent());
                         }
                     }
                 }
@@ -320,11 +325,11 @@ public abstract class BottomUpAutomaton<State> {
             E accu = semiring.zero();
 
             for( String label : getAllLabels() ) {
-                Set<List<State>> rules = getRulesForParentState(label, s);
+                Set<Rule<State>> rules = getRulesTopDown(label, s);
 
-                for( List<State> rule : rules ) {
-                    E valueThisRule = evaluator.evaluateRule(s, label, rule);
-                    for( State child : rule ) {
+                for( Rule<State> rule : rules ) {
+                    E valueThisRule = evaluator.evaluateRule(rule);
+                    for( State child : rule.getChildren() ) {
                         if( ! ret.containsKey(child)) {
                             throw new RuntimeException("State " + child + " not yet evaluated when processing rule " + rule + " for " + s + "/" + label);
                         }
@@ -347,13 +352,13 @@ public abstract class BottomUpAutomaton<State> {
         Set<State> visited = new HashSet<State>();
 
         // traverse all rules to compute graph
-        Map<String, Map<List<State>, Set<State>>> rules = getAllRules();
-        for( Map<List<State>, Set<State>> rulesPerLabel : rules.values() ) {
+        Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
+        for( Map<List<State>, Set<Rule<State>>> rulesPerLabel : rules.values() ) {
             for( List<State> lhs : rulesPerLabel.keySet() ) {
-                Set<State> rhsStates = rulesPerLabel.get(lhs);
+                Set<Rule<State>> rhsStates = rulesPerLabel.get(lhs);
 
-                for( State rhsState : rhsStates ) {
-                    children.putAll(rhsState, lhs);
+                for( Rule<State> rule : rhsStates ) {
+                    children.putAll(rule.getParent(), lhs);
                 }
             }
         }
@@ -382,7 +387,7 @@ public abstract class BottomUpAutomaton<State> {
         StateListToStateMap ret = explicitRules.get(label);
 
         if (ret == null) {
-            ret = new StateListToStateMap();
+            ret = new StateListToStateMap(label);
             explicitRules.put(label, ret);
         }
 
@@ -390,58 +395,60 @@ public abstract class BottomUpAutomaton<State> {
     }
 
     protected class StateListToStateMap {
-
         private Map<State, StateListToStateMap> nextStep;
-        private Set<State> rhsState;
+        private Set<Rule<State>> rulesHere;
         private int arity;
+        private String label;
 
-        public StateListToStateMap() {
-            rhsState = new HashSet<State>();
+        public StateListToStateMap(String label) {
+            rulesHere = new HashSet<Rule<State>>();
             nextStep = new HashMap<State, StateListToStateMap>();
             arity = -1;
+            this.label = label;
         }
 
-        public void put(List<State> stateList, State state) {
-            put(stateList, state, 0);
+        public void put(Rule<State> rule) {
+            put(rule, 0, 1);
 
             if (arity != -1) {
-                if (arity != stateList.size()) {
-                    throw new UnsupportedOperationException("Storing state lists of different length: " + stateList + ", should be " + arity);
+                if (arity != rule.getChildren().length) {
+                    throw new UnsupportedOperationException("Storing state lists of different length: " + rule + ", should be " + arity);
                 }
             } else {
-                arity = stateList.size();
+                arity = rule.getChildren().length;
             }
         }
 
-        private void put(List<State> stateList, State state, int index) {
-            if (index == stateList.size()) {
-                rhsState.add(state);
+        private void put(Rule<State> rule, int index, double weight) {
+            if (index == rule.getArity()) {
+//                Rule<State> rule = new Rule<State>(state, label, stateList, weight);
+                rulesHere.add(rule);
             } else {
-                State nextState = stateList.get(index);
+                State nextState = rule.getChildren()[index];
                 StateListToStateMap sub = nextStep.get(nextState);
 
                 if (sub == null) {
-                    sub = new StateListToStateMap();
+                    sub = new StateListToStateMap(label);
                     nextStep.put(nextState, sub);
                 }
 
-                sub.put(stateList, state, index + 1);
+                sub.put(rule, index + 1, weight);
             }
         }
 
-        public Set<State> get(List<State> stateList) {
+        public Set<Rule<State>> get(List<State> stateList) {
             return get(stateList, 0);
         }
 
-        private Set<State> get(List<State> stateList, int index) {
+        private Set<Rule<State>> get(List<State> stateList, int index) {
             if (index == stateList.size()) {
-                return rhsState;
+                return rulesHere;
             } else {
                 State nextState = stateList.get(index);
                 StateListToStateMap sub = nextStep.get(nextState);
 
                 if (sub == null) {
-                    return new HashSet<State>();
+                    return new HashSet<Rule<State>>();
                 } else {
                     return sub.get(stateList, index + 1);
                 }
@@ -471,16 +478,16 @@ public abstract class BottomUpAutomaton<State> {
             return arity;
         }
 
-        public Map<List<State>, Set<State>> getAllRules() {
-            Map<List<State>, Set<State>> ret = new HashMap<List<State>, Set<State>>();
+        public Map<List<State>, Set<Rule<State>>> getAllRules() {
+            Map<List<State>, Set<Rule<State>>> ret = new HashMap<List<State>, Set<Rule<State>>>();
             List<State> currentStateList = new ArrayList<State>();
             retrieveAll(currentStateList, 0, getArity(), ret);
             return ret;
         }
 
-        private void retrieveAll(List<State> currentStateList, int index, int arity, Map<List<State>, Set<State>> ret) {
+        private void retrieveAll(List<State> currentStateList, int index, int arity, Map<List<State>, Set<Rule<State>>> ret) {
             if (index == arity) {
-                ret.put(new ArrayList<State>(currentStateList), rhsState);
+                ret.put(new ArrayList<State>(currentStateList), rulesHere);
             } else {
                 for (State state : nextStep.keySet()) {
                     currentStateList.add(state);

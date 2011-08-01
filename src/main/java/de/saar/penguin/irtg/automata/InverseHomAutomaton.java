@@ -17,7 +17,6 @@ import java.util.Set;
  * @author koller
  */
 class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
-
     private BottomUpAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
     private Set<String> computedLabels;
@@ -34,50 +33,21 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
     }
 
     @Override
-    public Set<State> getParentStates(String label, final List<State> childStates) {
-        /*
-        if (contains(label, childStates)) {
-        return getParentStatesFromExplicitRules(label, childStates);
-        } else {
-        final Tree<StringOrVariable> rhsTree = hom.get(label);
-
-        Set<State> resultStates = rhsAutomaton.run(rhsTree, new LeafToStateSubstitution<State, String>() {
-
-        @Override
-        public boolean isSubstituted(String x) {
-        return rhsTree.getLabel(x).isVariable();
-        }
-
-        @Override
-        public State substitute(String x) {
-        return childStates.get(Homomorphism.getIndexForVariable(rhsTree.getLabel(x)));
-        }
-        });
-
-        // cache result
-        for (State parentState : resultStates) {
-        storeRule(label, childStates, parentState);
-        }
-
-        return resultStates;
-        }
-         *
-         */
-
+    public Set<Rule<State>> getRulesBottomUp(String label, final List<State> childStates) {
         if (!computedLabels.contains(label)) {
             computeRulesForLabel(label);
         }
 
-        return getParentStatesFromExplicitRules(label, childStates);
+        return getRulesBottomUpFromExplicit(label, childStates);
     }
 
     @Override
-    public Set<List<State>> getRulesForParentState(String label, State parentState) {
+    public Set<Rule<State>> getRulesTopDown(String label, State parentState) {
         if (!computedLabels.contains(label)) {
             computeRulesForLabel(label);
         }
 
-        return getRulesForParentStateFromExplicit(label, parentState);
+        return getRulesTopDownFromExplicit(label, parentState);
     }
 
     private void computeRulesForLabel(String label) {
@@ -108,12 +78,12 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
                                 childSubsts.add(item.substitution);
                             }
 
-                            Set<State> parentStates = rhsAutomaton.getParentStates(rhsTree.getLabel(node).toString(), childStates);
+                            Set<Rule<State>> rules = rhsAutomaton.getRulesBottomUp(rhsTree.getLabel(node).toString(), childStates);
 
-                            if (!parentStates.isEmpty()) {
+                            if (!rules.isEmpty()) {
                                 Map<StringOrVariable, State> subst = mergeSubstitutions(childSubsts);
-                                for (State p : parentStates) {
-                                    ret.add(new Item(p, subst));
+                                for (Rule<State> r : rules) {
+                                    ret.add(new Item(r.getParent(), subst));
                                 }
                             }
                         }
@@ -131,7 +101,7 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
                     childStates.add(rootItem.substitution.get(new StringOrVariable("?" + (i + 1), true)));
                 }
 
-                storeRule(label, childStates, rootItem.state);
+                storeRule(new Rule<State>(rootItem.state, label, childStates));
             }
 
             computedLabels.add(label);
@@ -188,3 +158,33 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
         return hom.getDomain();
     }
 }
+
+
+/*
+        if (contains(label, childStates)) {
+        return getParentStatesFromExplicitRules(label, childStates);
+        } else {
+        final Tree<StringOrVariable> rhsTree = hom.get(label);
+
+        Set<State> resultStates = rhsAutomaton.run(rhsTree, new LeafToStateSubstitution<State, String>() {
+
+        @Override
+        public boolean isSubstituted(String x) {
+        return rhsTree.getLabel(x).isVariable();
+        }
+
+        @Override
+        public State substitute(String x) {
+        return childStates.get(Homomorphism.getIndexForVariable(rhsTree.getLabel(x)));
+        }
+        });
+
+        // cache result
+        for (State parentState : resultStates) {
+        storeRule(label, childStates, parentState);
+        }
+
+        return resultStates;
+        }
+         *
+         */

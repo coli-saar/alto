@@ -58,6 +58,26 @@ class InterpretedTreeAutomatonTest {
         assertEquals(2, chart.countTrees());
     }
 
+    @Test
+    public void testMarco() {
+        String grammarstring = '''
+interpretation 1: de.saar.penguin.irtg.algebra.StringAlgebra
+
+r1(S, S) -> S!
+  [1] *(?1, ?2)
+
+r2 -> S
+  [1] a
+        ''';
+         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+
+        String string = "a a a";
+        BottomUpAutomaton chart = irtg.parse(["1": string]);
+        chart.makeAllRulesExplicit();
+
+        chart.reduce();
+    }
+
     public static Tree parseTree(String s) {
         return TermParser.parse(s).toTree();
     }

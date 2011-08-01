@@ -7,6 +7,7 @@ package de.saar.penguin.irtg.algebra;
 import de.saar.basic.StringTools;
 import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.Rule;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -77,30 +78,31 @@ public class StringAlgebra implements Algebra<String> {
 
 
         @Override
-        public Set<Span> getParentStates(String label, List<Span> childStates) {
+        public Set<Rule<Span>> getRulesBottomUp(String label, List<Span> childStates) {
             if (contains(label, childStates)) {
-                return getParentStatesFromExplicitRules(label, childStates);
+                return getRulesBottomUpFromExplicit(label, childStates);
             } else {
-                Set<Span> ret = new HashSet<Span>();
+                Set<Rule<Span>> ret = new HashSet<Rule<Span>>();
 
                 if (label.equals(CONCAT)) {
                     if (childStates.size() != 2) {
-                        return new HashSet<Span>();
+                        return new HashSet<Rule<Span>>();
                     }
 
                     if (childStates.get(0).end != childStates.get(1).start) {
-                        return new HashSet<Span>();
+                        return new HashSet<Rule<Span>>();
                     }
 
                     Span span = new Span(childStates.get(0).start, childStates.get(1).end);
-                    ret.add(span);
-                    storeRule(label, childStates, span);
+                    Rule<Span> rule = new Rule<Span>(span, label, childStates);
+                    ret.add(rule);
+                    storeRule(rule);
 
                     return ret;
                 } else {
                     for (int i = 0; i < words.length; i++) {
                         if (words[i].equals(label)) {
-                            ret.add(new Span(i, i + 1));
+                            ret.add(new Rule<Span>(new Span(i, i+1), label, new Span[]{}));
                         }
                     }
 
@@ -112,19 +114,20 @@ public class StringAlgebra implements Algebra<String> {
 
 
         @Override
-        public Set<List<Span>> getRulesForParentState(String label, Span parentState) {
+        public Set<Rule<Span>> getRulesTopDown(String label, Span parentState) {
             if( ! containsTopDown(label, parentState)) {
                 if( label.equals(CONCAT)) {
                     for( int i = parentState.start + 1; i < parentState.end; i++ ) {
                         List<Span> childStates = new ArrayList<Span>();
                         childStates.add(new Span(parentState.start, i));
                         childStates.add(new Span(i, parentState.end));
-                        storeRule(label, childStates, parentState);
+                        Rule<Span> rule = new Rule<Span>(parentState, label, childStates);
+                        storeRule(rule);
                     }
                 }
             }
 
-            return getRulesForParentStateFromExplicit(label, parentState);
+            return getRulesTopDownFromExplicit(label, parentState);
         }
 
         @Override

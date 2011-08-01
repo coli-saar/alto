@@ -26,9 +26,14 @@ class StringAlgebraTest {
         BottomUpAutomaton auto = algebra.decompose(string);
 
         assertEquals(new HashSet([s(0,7)]), auto.getFinalStates());
-        assertEquals(new HashSet([s(2,4)]), auto.getParentStates(StringAlgebra.CONCAT, [s(2,3), s(3,4)]));
-        assertEquals(new HashSet(), auto.getParentStates(StringAlgebra.CONCAT, [s(2,3), s(4,5)]));
+        assertEquals(new HashSet([r(s(2,4), StringAlgebra.CONCAT, [s(2,3), s(3,4)])]), auto.getRulesBottomUp(StringAlgebra.CONCAT, [s(2,3), s(3,4)]));
+        assertEquals(new HashSet(), auto.getRulesBottomUp(StringAlgebra.CONCAT, [s(2,3), s(4,5)]));
     }
+
+    private static Rule r(parent, label, children) {
+        return new Rule(parent, label, children);
+    }
+        
 
     @Test
     public void testEvaluate() {

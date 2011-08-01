@@ -19,19 +19,19 @@ public class ConcreteBottomUpAutomaton<State> extends BottomUpAutomaton<State> {
     }
 
     public void addRule(String label, List<State> childStates, State parentState) {
-        storeRule(label, childStates, parentState);
+        storeRule(new Rule<State>(parentState, label, childStates));
     }
 
     @Override
-    public Set<State> getParentStates(String label, List<State> childStates) {
-        return getParentStatesFromExplicitRules(label, childStates);
+    public Set<Rule<State>> getRulesBottomUp(String label, List<State> childStates) {
+        return getRulesBottomUpFromExplicit(label, childStates);
     }
 
 
 
     @Override
-    public Set<List<State>> getRulesForParentState(String label, State parentState) {
-        return getRulesForParentStateFromExplicit(label, parentState);
+    public Set<Rule<State>> getRulesTopDown(String label, State parentState) {
+        return getRulesTopDownFromExplicit(label, parentState);
     }
 
     @Override

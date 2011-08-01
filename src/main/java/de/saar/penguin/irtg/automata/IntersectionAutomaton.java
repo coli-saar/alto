@@ -60,9 +60,9 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
     }
 
     @Override
-    public Set<Pair<LeftState, RightState>> getParentStates(String label, List<Pair<LeftState, RightState>> childStates) {
+    public Set<Rule<Pair<LeftState, RightState>>> getRulesBottomUp(String label, List<Pair<LeftState, RightState>> childStates) {
         if (contains(label, childStates)) {
-            return getParentStatesFromExplicitRules(label, childStates);
+            return getRulesBottomUpFromExplicit(label, childStates);
         } else {
             List<LeftState> leftChildStates = new ArrayList<LeftState>();
             List<RightState> rightChildStates = new ArrayList<RightState>();
@@ -71,15 +71,20 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
                 rightChildStates.add(childState.right);
             }
 
-            Set<LeftState> leftParentStates = left.getParentStates(label, leftChildStates);
-            Set<RightState> rightParentStates = right.getParentStates(label, rightChildStates);
-            Set<Pair<LeftState, RightState>> ret = new HashSet<Pair<LeftState, RightState>>();
+            Set<Rule<LeftState>> leftRules = left.getRulesBottomUp(label, leftChildStates);
+            Collection<LeftState> leftParents = Rule.extractParentStates(leftRules);
+            Set<Rule<RightState>> rightRules = right.getRulesBottomUp(label, rightChildStates);
+            Collection<RightState> rightParents = Rule.extractParentStates(rightRules);
+            Set<Pair<LeftState, RightState>> parentPairs = new HashSet<Pair<LeftState, RightState>>();
 
-            collectStatePairs(leftParentStates, rightParentStates, ret);
+            collectStatePairs(leftParents, rightParents, parentPairs);
 
             // cache result
-            for (Pair<LeftState, RightState> parentState : ret) {
-                storeRule(label, childStates, parentState);
+            Set<Rule<Pair<LeftState, RightState>>> ret = new HashSet<Rule<Pair<LeftState, RightState>>>();
+            for (Pair<LeftState, RightState> parentState : parentPairs) {
+                Rule<Pair<LeftState,RightState>> rule = new Rule<Pair<LeftState,RightState>>(parentState, label, childStates);
+                storeRule(rule);
+                ret.add(rule);
             }
 
             return ret;
@@ -87,25 +92,26 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
     }
 
     @Override
-    public Set<List<Pair<LeftState, RightState>>> getRulesForParentState(String label, Pair<LeftState, RightState> parentState) {
+    public Set<Rule<Pair<LeftState, RightState>>> getRulesTopDown(String label, Pair<LeftState, RightState> parentState) {
         if( ! containsTopDown(label, parentState)) {
-            Set<List<LeftState>> leftRules = left.getRulesForParentState(label, parentState.left);
-            Set<List<RightState>> rightRules = right.getRulesForParentState(label, parentState.right);
+            Set<Rule<LeftState>> leftRules = left.getRulesTopDown(label, parentState.left);
+            Set<Rule<RightState>> rightRules = right.getRulesTopDown(label, parentState.right);
 
-            for( List<LeftState> leftRule : leftRules ) {
-                for( List<RightState> rightRule : rightRules ) {
-                    List<Pair<LeftState,RightState>> combinedRule = new ArrayList<Pair<LeftState, RightState>>();
+            for( Rule<LeftState> leftRule : leftRules ) {
+                for( Rule<RightState> rightRule : rightRules ) {
+                    List<Pair<LeftState,RightState>> combinedChildren = new ArrayList<Pair<LeftState, RightState>>();
 
-                    for( int i = 0; i < leftRule.size(); i++ ) {
-                        combinedRule.add(new Pair<LeftState, RightState>(leftRule.get(i), rightRule.get(i)));
+                    for( int i = 0; i < leftRule.getArity(); i++ ) {
+                        combinedChildren.add(new Pair<LeftState, RightState>(leftRule.getChildren()[i], rightRule.getChildren()[i]));
                     }
-
-                    storeRule(label, combinedRule, parentState);
+                    
+                    Rule<Pair<LeftState,RightState>> rule = new Rule<Pair<LeftState, RightState>>(parentState, label, combinedChildren);
+                    storeRule(rule);
                 }
             }
         }
 
-        return getRulesForParentStateFromExplicit(label, parentState);
+        return getRulesTopDownFromExplicit(label, parentState);
     }
 
     @Override
