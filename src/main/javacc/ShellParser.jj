@@ -1,0 +1,143 @@
+/**
+ * JavaCC file
+ */
+
+
+options {
+  JDK_VERSION = "1.5";
+  STATIC = false;
+  LOOKAHEAD=2;
+  //FORCE_LA_CHECK=true;
+}
+PARSER_BEGIN(ShellParser)
+package de.saar.penguin.irtg.shell;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.*;
+import java.io.*;
+
+import de.saar.penguin.irtg.automata.*;
+import de.saar.penguin.irtg.hom.*;
+import de.saar.penguin.irtg.algebra.*;
+import de.saar.chorus.term.*;
+import de.saar.basic.tree.*;
+
+/**
+ * Parser for interpreted bottom-up automata
+ * @author Alexander Koller
+ */
+public class ShellParser {
+    private static ShellParser parser = new ShellParser(new ByteArrayInputStream(new byte[]{}));
+
+
+    public static Expression parse(Reader reader) throws ParseException {
+        parser = new ShellParser(new ByteArrayInputStream(new byte[]{}));
+        parser.ReInit(reader);
+
+	return parser.expression();
+    }
+}
+PARSER_END(ShellParser)
+
+SKIP : { " " | "\t" | "\r" | "\n" }
+
+TOKEN :
+{
+    <LOAD: "load"> |
+    <PARSE: "parse"> |
+    <VITERBI: "viterbi"> |
+    <EMTRAIN: "emtrain"> |
+    <PRINT: "print" > |
+    <QUIT: "quit" > |
+    < NAME:     ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
+    < QUOTEDSTRING:     ["\""] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", ".", "/", "~", " "] )* ["\""]> |
+    <LINE_END_COMMENT: "//" (~["\n"])* >
+}
+
+Expression expression() : {
+    Expression sub;
+}{
+    (LOOKAHEAD(2)  sub=assign() | sub=load() | sub=parse() | sub=var() | sub=viterbi() 
+        | sub = emtrain() | sub = quit() | sub = print()
+    ) (<LINE_END_COMMENT>)? {
+        return sub;
+    } |
+    <LINE_END_COMMENT> {
+        return new Expression(Expression.Type.NOP);
+    }
+}
+
+Expression assign() : {
+    Expression sub;
+    String name;
+}{
+    (name = <NAME>.image) "=" (sub = expression()) {
+        return new Expression(Expression.Type.ASSIGN, name, sub);
+    }
+}
+
+Expression load() : {
+    String filename;
+}{
+    <LOAD> "(" filename=quotedString() ")" {
+        return new Expression(Expression.Type.LOAD, filename);
+    }
+}
+
+
+Expression parse() : {
+    Expression irtg;
+    Map<String,String> inputs = new HashMap<String,String>();
+    String interp;
+    String input;
+}{
+    <PARSE> "(" irtg=expression()
+        ("," interp=<NAME>.image ":" input=quotedString() { inputs.put(interp, input); }) *
+    ")" {
+        return new Expression(Expression.Type.PARSE, irtg, inputs);
+    }
+}
+
+Expression var() : {
+    String name;
+}{
+    name=<NAME>.image { return new Expression(Expression.Type.VARIABLE, name); }
+}
+
+Expression viterbi() : {
+    Expression expr;
+}{
+    <VITERBI> "(" expr=expression() ")" {
+        return new Expression(Expression.Type.VITERBI, expr);
+    }
+}
+
+Expression print() : {
+    Expression expr;
+}{
+    <PRINT> "(" expr=expression() ")" {
+        return new Expression(Expression.Type.PRINT, expr);
+    }
+}
+
+Expression emtrain() : {
+    String filename;
+    Expression irtg;
+}{
+    <EMTRAIN> "(" irtg=expression() "," filename=quotedString() ")" {
+        return new Expression(Expression.Type.EMTRAIN, irtg, filename);
+    }
+}
+
+Expression quit() : {
+}{
+    <QUIT> { return new Expression(Expression.Type.QUIT); }
+}
+
+String quotedString() : {
+    String x;
+}{
+    x=<QUOTEDSTRING>.image { return x.substring(1, x.length()-1); }
+}

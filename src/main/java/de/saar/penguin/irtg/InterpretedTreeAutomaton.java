@@ -42,6 +42,14 @@ public class InterpretedTreeAutomaton {
     public Object parseString(String interpretation, String representation) {
         return getInterpretations().get(interpretation).getAlgebra().parseString(representation);
     }
+    
+    public Map<String,Object> parseStrings(Map<String,String> representations) {
+        Map<String,Object> ret = new HashMap<String, Object>();
+        for( String interp : representations.keySet() ) {
+            ret.put(interp, parseString(interp, representations.get(interp)));
+        }
+        return ret;
+    }
 
     public BottomUpAutomaton parse(Map<String, Object> inputs) {
         BottomUpAutomaton ret = automaton;
