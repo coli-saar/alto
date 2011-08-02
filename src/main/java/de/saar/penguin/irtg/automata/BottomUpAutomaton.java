@@ -106,6 +106,20 @@ public abstract class BottomUpAutomaton<State> {
             return new HashSet<Rule<State>>();
         }
     }
+    
+    public Set<Rule<State>> getRuleSet() {
+        Set<Rule<State>> ret = new HashSet<Rule<State>>();
+        
+        makeAllRulesExplicit();
+        
+        for( StateListToStateMap map : explicitRules.values() ) {
+            for( Set<Rule<State>> set : map.getAllRules().values() ) {
+                ret.addAll(set);
+            }
+        }        
+        
+        return ret;
+    }
 
     public Map<String, Map<List<State>, Set<Rule<State>>>> getAllRules() {
         Map<String, Map<List<State>, Set<Rule<State>>>> ret = new HashMap<String, Map<List<State>, Set<Rule<State>>>>();
