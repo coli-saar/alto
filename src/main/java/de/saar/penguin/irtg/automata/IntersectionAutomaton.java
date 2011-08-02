@@ -72,19 +72,16 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             }
 
             Set<Rule<LeftState>> leftRules = left.getRulesBottomUp(label, leftChildStates);
-            Collection<LeftState> leftParents = Rule.extractParentStates(leftRules);
             Set<Rule<RightState>> rightRules = right.getRulesBottomUp(label, rightChildStates);
-            Collection<RightState> rightParents = Rule.extractParentStates(rightRules);
             Set<Pair<LeftState, RightState>> parentPairs = new HashSet<Pair<LeftState, RightState>>();
-
-            collectStatePairs(leftParents, rightParents, parentPairs);
-
-            // cache result
+            
             Set<Rule<Pair<LeftState, RightState>>> ret = new HashSet<Rule<Pair<LeftState, RightState>>>();
-            for (Pair<LeftState, RightState> parentState : parentPairs) {
-                Rule<Pair<LeftState,RightState>> rule = new Rule<Pair<LeftState,RightState>>(parentState, label, childStates);
+            for( Rule<LeftState> leftRule : leftRules ) {
+                for( Rule<RightState> rightRule : rightRules ) {
+                    Rule<Pair<LeftState,RightState>> rule = new Rule<Pair<LeftState,RightState>>(new Pair<LeftState,RightState>(leftRule.getParent(), rightRule.getParent()), label, childStates, leftRule.getWeight()*rightRule.getWeight());
                 storeRule(rule);
                 ret.add(rule);
+                }
             }
 
             return ret;
@@ -105,7 +102,7 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
                         combinedChildren.add(new Pair<LeftState, RightState>(leftRule.getChildren()[i], rightRule.getChildren()[i]));
                     }
                     
-                    Rule<Pair<LeftState,RightState>> rule = new Rule<Pair<LeftState, RightState>>(parentState, label, combinedChildren);
+                    Rule<Pair<LeftState,RightState>> rule = new Rule<Pair<LeftState, RightState>>(parentState, label, combinedChildren, leftRule.getWeight()*rightRule.getWeight());
                     storeRule(rule);
                 }
             }
