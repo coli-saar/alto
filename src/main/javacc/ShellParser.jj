@@ -64,7 +64,7 @@ Expression expression() : {
     ) (<LINE_END_COMMENT>)? {
         return sub;
     } |
-    <LINE_END_COMMENT> {
+    (<LINE_END_COMMENT>)? {
         return new Expression(Expression.Type.NOP);
     }
 }

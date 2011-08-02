@@ -37,7 +37,7 @@ public class Main {
             }
             String line = console.readLine();
 
-            if (line == null || "".equals(line)) {
+            if (line == null ) {
                 System.exit(0);
             } else {
                 try {

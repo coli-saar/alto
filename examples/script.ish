@@ -1,3 +1,4 @@
 irtg = load("examples/cfg.irtg")  // a test comment
 chart = parse(irtg, i:"john watches the woman with the telescope")
+
 print(viterbi(chart))
