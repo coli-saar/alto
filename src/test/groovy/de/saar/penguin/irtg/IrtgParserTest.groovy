@@ -87,7 +87,8 @@ r12 -> P
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
 
         String string = "john watches the woman with the telescope";
-        BottomUpAutomaton chart = irtg.parse(["i": string]);
+        List words = irtg.parseString("i", string);
+        BottomUpAutomaton chart = irtg.parse(["i": words]);
         chart.makeAllRulesExplicit();
 
 //        System.err.println("\n\nreduced:\n" + chart.reduce());

@@ -38,7 +38,8 @@ public class Main {
 
             Matcher m = pattern.matcher(line);
             while( m.matches() ) {
-                inputObjects.put(m.group(1), m.group(2));
+                String interpretation = m.group(1);
+                inputObjects.put(interpretation, irtg.parseString(interpretation, m.group(2)));
                 line = m.group(3);
                 m = pattern.matcher(line);
             }

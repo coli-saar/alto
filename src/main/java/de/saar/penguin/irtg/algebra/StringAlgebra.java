@@ -9,6 +9,7 @@ import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,44 +18,49 @@ import java.util.Set;
  *
  * @author koller
  */
-public class StringAlgebra implements Algebra<String> {
+public class StringAlgebra implements Algebra<List<String>> {
     public static final String CONCAT = "*";
 
-    public String evaluate(Tree t) {
+    public List<String> evaluate(Tree t) {
         List<String> children = t.getChildren(t.getRoot());
 
         if (children.isEmpty()) {
-            return t.getLabel(t.getRoot()).toString();
+            List<String> ret = new ArrayList<String>();
+            ret.add(t.getLabel(t.getRoot()).toString());
+            return ret;
         } else {
             List<String> childEval = new ArrayList<String>();
 
+            // append yields of all children
             for (String child : children) {
-                childEval.add(evaluate(t.subtree(child)));
+                childEval.addAll(evaluate(t.subtree(child)));
             }
 
-            return StringTools.join(childEval, " ");
+            return childEval;
+//            return StringTools.join(childEval, " ");
         }
     }
 
-    public BottomUpAutomaton decompose(String value) {
-        String[] words = value.split("\\s+");
+    public BottomUpAutomaton decompose(List<String> words) {
         return new CkyAutomaton(words);
     }
 
+    public List<String> parseString(String representation) {
+        return Arrays.asList(representation.split("\\s+"));
+    }
+
     private static class CkyAutomaton extends BottomUpAutomaton<Span> {
-        private String[] words;
+        private List<String> words;
         private Set<String> allLabels;
 
-        public CkyAutomaton(String[] words) {
+        public CkyAutomaton(List<String> words) {
             this.words = words;
 
-            finalStates.add(new Span(0, words.length));
+            finalStates.add(new Span(0, words.size()));
 
             allLabels = new HashSet<String>();
             allLabels.add(CONCAT);
-            for (int i = 0; i < words.length; i++) {
-                allLabels.add(words[i]);
-            }
+            allLabels.addAll(words);
         }
 
         @Override
@@ -66,8 +72,8 @@ public class StringAlgebra implements Algebra<String> {
         public Set<Span> getAllStates() {
             Set<Span> ret = new HashSet<Span>();
 
-            for( int i = 0; i < words.length; i++ ) {
-                for( int k = i+1; k <= words.length; k++ ) {
+            for( int i = 0; i < words.size(); i++ ) {
+                for( int k = i+1; k <= words.size(); k++ ) {
                     ret.add(new Span(i,k));
                 }
             }
@@ -100,8 +106,8 @@ public class StringAlgebra implements Algebra<String> {
 
                     return ret;
                 } else {
-                    for (int i = 0; i < words.length; i++) {
-                        if (words[i].equals(label)) {
+                    for (int i = 0; i < words.size(); i++) {
+                        if (words.get(i).equals(label)) {
                             ret.add(new Rule<Span>(new Span(i, i+1), label, new Span[]{}));
                         }
                     }

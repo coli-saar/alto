@@ -23,7 +23,8 @@ class StringAlgebraTest {
         String string = "john watches the woman with the telescope";
         Algebra algebra = new StringAlgebra();
 
-        BottomUpAutomaton auto = algebra.decompose(string);
+        List words = algebra.parseString(string);
+        BottomUpAutomaton auto = algebra.decompose(words);
 
         assertEquals(new HashSet([s(0,7)]), auto.getFinalStates());
         assertEquals(new HashSet([r(s(2,4), StringAlgebra.CONCAT, [s(2,3), s(3,4)])]), auto.getRulesBottomUp(StringAlgebra.CONCAT, [s(2,3), s(3,4)]));
@@ -39,9 +40,10 @@ class StringAlgebraTest {
     public void testEvaluate() {
         String string = "john watches the woman with the telescope";
         Algebra algebra = new StringAlgebra();
+        List words = algebra.parseString(string);
         Tree term = TermParser.parse("*(john,*(watches,*(the,*(woman,*(with,*(the,telescope))))))").toTree();
 
-        assertEquals(string, algebra.evaluate(term));
+        assertEquals(words, algebra.evaluate(term));
     }
 
     private StringAlgebra.Span s(int i, int k) {

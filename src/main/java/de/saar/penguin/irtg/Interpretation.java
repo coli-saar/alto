@@ -27,6 +27,16 @@ public class Interpretation<E> {
         return algebra.evaluate(hom.apply(t));
     }
 
+    public Algebra<E> getAlgebra() {
+        return algebra;
+    }
+
+    public Homomorphism getHom() {
+        return hom;
+    }
+    
+    
+
     public BottomUpAutomaton parse(E object) {
         return algebra.decompose(object).inverseHomomorphism(hom);
     }

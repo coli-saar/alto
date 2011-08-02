@@ -44,7 +44,8 @@ class InterpretedTreeAutomatonTest {
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(rtg);
         irtg.addInterpretation("string", new Interpretation(algebra, h));
 
-        BottomUpAutomaton chart = irtg.parse(["string": string]);
+        List words = irtg.parseString("string", string);
+        BottomUpAutomaton chart = irtg.parse(["string": words]);
         chart.makeAllRulesExplicit();
 //        System.err.println(chart);
 
@@ -72,7 +73,8 @@ r2 -> S
          InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
 
         String string = "a a a";
-        BottomUpAutomaton chart = irtg.parse(["i": string]);
+        List words = irtg.parseString("i", string);
+        BottomUpAutomaton chart = irtg.parse(["i": words]);
         chart.makeAllRulesExplicit();
 
         chart.reduce();

@@ -1,55 +1,55 @@
 
-interpretation 1: de.saar.penguin.irtg.algebra.StringAlgebra
+interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
 
 
 
 r1(NP,VP) -> S!
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r2(Det,N) -> NP
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r3(N,PP) -> N
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r4(V,NP) -> VP
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r5(VP,PP) -> VP
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r6(P,NP) -> PP
-  [1] *(?1,?2)
+  [i] *(?1,?2)
 
 
 r7 -> NP
-  [1] john
+  [i] john
 
 
 r8 -> V
-  [1] watches
+  [i] watches
 
 
 r9 -> Det
-  [1] the
+  [i] the
 
 
 r10 -> N
-  [1] woman
+  [i] woman
 
 
 r11 -> N
-  [1] telescope
+  [i] telescope
 
 
 r12 -> P
-  [1] with
+  [i] with
 
 
 
