@@ -17,11 +17,14 @@ public class ConcreteBottomUpAutomaton<State> extends BottomUpAutomaton<State> {
         super();
         isExplicit = true;
     }
+    
+    public Rule<State> addRule(Rule<State> rule) {
+        storeRule(rule);
+        return rule;
+    }
 
     public Rule<State> addRule(String label, List<State> childStates, State parentState, double weight) {
-        Rule<State> ret = new Rule<State>(parentState, label, childStates);
-        storeRule(ret);
-        return ret;
+        return addRule(new Rule<State>(parentState, label, childStates));
     }
 
     public Rule<State> addRule(String label, List<State> childStates, State parentState) {

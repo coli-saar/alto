@@ -8,15 +8,7 @@ r1(NP,VP) -> S!
   [i] *(?1,?2)
 
 
-r2(Det,N) -> NP
-  [i] *(?1,?2)
-
-
-r3(N,PP) -> N
-  [i] *(?1,?2)
-
-
-r4(V,NP) -> VP
+r4(V,NP) -> VP 
   [i] *(?1,?2)
 
 
@@ -30,6 +22,10 @@ r6(P,NP) -> PP
 
 r7 -> NP
   [i] john
+
+
+r2(Det,N) -> NP
+  [i] *(?1,?2)
 
 
 r8 -> V
@@ -47,6 +43,8 @@ r10 -> N
 r11 -> N
   [i] telescope
 
+r3(N,PP) -> N
+  [i] *(?1,?2)
 
 r12 -> P
   [i] with

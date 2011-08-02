@@ -373,27 +373,22 @@ public abstract class BottomUpAutomaton<State> {
         });
 
         ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
-        Map<String, Map<List<State>, Set<Rule<State>>>> allRules = getAllRules();
+//        Map<String, Map<List<State>, Set<Rule<State>>>> allRules = getAllRules();
 
         // copy all rules that only contain productive states
-        for (String label : allRules.keySet()) {
-            for (List<State> children : allRules.get(label).keySet()) {
-                boolean allProductive = true;
-                for (State child : children) {
-                    if (!productiveStates.get(child)) {
-                        allProductive = false;
-                    }
-                }
-
-                if (allProductive) {
-                    for (Rule<State> rule : allRules.get(label).get(children)) {
-                        if (productiveStates.get(rule.getParent())) {
-                            ret.addRule(label, children, rule.getParent());
-                        }
-                    }
+        for( Rule<State> rule : getRuleSet() ) {
+            boolean allProductive = productiveStates.get(rule.getParent());
+            
+            for( State child : rule.getChildren() ) {
+                if( !productiveStates.get(child)) {
+                    allProductive = false;
                 }
             }
-        }
+            
+            if( allProductive ) {
+                ret.addRule(rule);
+            }
+        }        
 
         // copy all productive final states
         for (State state : getFinalStates()) {

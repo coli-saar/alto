@@ -18,9 +18,9 @@ import java.util.Set;
  * @author koller
  */
 public class InterpretedTreeAutomaton {
-
     private BottomUpAutomaton<String> automaton;
     private Map<String, Interpretation> interpretations;
+    private boolean debug = false;
 
     public InterpretedTreeAutomaton(BottomUpAutomaton<String> automaton) {
         this.automaton = automaton;
@@ -56,49 +56,54 @@ public class InterpretedTreeAutomaton {
     }
 
     public void trainEM(List<Map<String, Object>> trainingData) {
-        for (int iteration = 0; iteration < 100; iteration++) {
-            Map<Rule<String>, Double> globalRuleCount = new HashMap<Rule<String>, Double>();
-            Map<String, Double> globalStateCount = new HashMap<String, Double>();
+        if (debug) {
+            System.out.println("\n\nInitial model:\n" + automaton);
+        }
 
+        for (int iteration = 0; iteration < 10; iteration++) {
             // initialize counts
+            Map<Rule<String>, Double> globalRuleCount = new HashMap<Rule<String>, Double>();
             for (Rule<String> rule : automaton.getRuleSet()) {
                 globalRuleCount.put(rule, 0.0);
             }
 
-            for (String state : automaton.getAllStates()) {
-                globalStateCount.put(state, 0.0);
-            }
-
             // E-step
             for (Map<String, Object> tuple : trainingData) {
-                BottomUpAutomaton parse = parse(tuple);
+                BottomUpAutomaton parse = parse(tuple).reduce();
                 Map<Object, Double> inside = parse.inside();
                 Map<Object, Double> outside = parse.outside(inside);
                 Set<Rule> rules = parse.getRuleSet();
 
                 for (Rule intersectedRule : rules) {
+                    Object intersectedParent = intersectedRule.getParent();
                     Rule<String> originalRule = getRuleInGrammar(intersectedRule);
                     double oldRuleCount = globalRuleCount.get(originalRule);
-                    double thisRuleCount = outside.get(intersectedRule.getParent()) * intersectedRule.getWeight();
-                    
+                    double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight();
+
                     for (int i = 0; i < intersectedRule.getArity(); i++) {
                         thisRuleCount *= inside.get(intersectedRule.getChildren()[i]);
                     }
-                    
+
                     globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
-                    
-                    String originalState = originalRule.getParent();
-                    double oldStateCount = globalStateCount.get(originalState);
-                    globalStateCount.put(originalState, oldStateCount + outside.get(originalState)*inside.get(originalState));
-                }                
+                }
+            }
+
+            // sum over rules with same parent state to obtain state counts
+            Map<String, Double> globalStateCount = new HashMap<String, Double>();
+            for (String state : automaton.getAllStates()) {
+                globalStateCount.put(state, 0.0);
+            }
+            for (Rule<String> rule : automaton.getRuleSet()) {
+                String state = rule.getParent();
+                globalStateCount.put(state, globalStateCount.get(state) + globalRuleCount.get(rule));
             }
 
             // M-step
-            for( Rule<String> rule : automaton.getRuleSet() ) {
+            for (Rule<String> rule : automaton.getRuleSet()) {
                 rule.setWeight(globalRuleCount.get(rule) / globalStateCount.get(rule.getParent()));
             }
-            
-            System.out.println("\n\nAfter iteration " + (iteration+1) + ":\n" + automaton );
+
+            if(debug) System.out.println("\n\nAfter iteration " + (iteration + 1) + ":\n" + automaton);
         }
     }
 
@@ -125,5 +130,9 @@ public class InterpretedTreeAutomaton {
         } else {
             return pairState;
         }
+    }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
     }
 }
