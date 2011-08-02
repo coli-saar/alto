@@ -4,7 +4,9 @@
  */
 package de.saar.penguin.irtg.automata;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
@@ -12,10 +14,12 @@ import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.saar.penguin.irtg.semiring.AndOrSemiring;
+import de.saar.penguin.irtg.semiring.DoubleArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.LongArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.Semiring;
 import de.saar.penguin.irtg.semiring.ViterbiWithBackpointerSemiring;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -29,13 +33,13 @@ import java.util.Set;
  * @author koller
  */
 public abstract class BottomUpAutomaton<State> {
-
     protected Map<String, StateListToStateMap> explicitRules; // one for each label
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
     protected Set<State> allStates;
     private final LeafToStateSubstitution<State, String> dummyLtsSubstitution = new LeafToStateSubstitution<State, String>();
     protected boolean isExplicit;
+    protected SetMultimap<State, Rule<State>> rulesForRhsState;
 
     public BottomUpAutomaton() {
         explicitRules = new HashMap<String, StateListToStateMap>();
@@ -43,6 +47,7 @@ public abstract class BottomUpAutomaton<State> {
         finalStates = new HashSet<State>();
         allStates = new HashSet<State>();
         isExplicit = false;
+        rulesForRhsState = HashMultimap.create();
     }
 
     abstract public Set<Rule<State>> getRulesBottomUp(String label, List<State> childStates);
@@ -58,9 +63,11 @@ public abstract class BottomUpAutomaton<State> {
     abstract public Set<State> getAllStates();
 
     protected void storeRule(Rule<State> rule) {
+        // store as bottom-up rule
         StateListToStateMap smap = getOrCreateStateMap(rule.getLabel());
         smap.put(rule);
 
+        // store as top-down rule
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(rule.getLabel());
         if (topdown == null) {
             topdown = HashMultimap.create();
@@ -68,6 +75,12 @@ public abstract class BottomUpAutomaton<State> {
         }
         topdown.put(rule.getParent(), rule);
 
+        // store pointer from rhs states to rule
+        for (State rhs : rule.getChildren()) {
+            rulesForRhsState.put(rhs, rule);
+        }
+
+        // collect states
         if (allStates != null) {
             allStates.add(rule.getParent());
             for (int i = 0; i < rule.getArity(); i++) {
@@ -117,7 +130,6 @@ public abstract class BottomUpAutomaton<State> {
     // TODO - this is only correct if the FTA is bottom-up deterministic
     public long countTrees() {
         Map<State, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<State, Long>() {
-
             public Long evaluateRule(Rule<State> rule) {
                 return 1L;
             }
@@ -130,36 +142,61 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+    public Map<State, Double> inside() {
+        return evaluateInSemiring(new DoubleArithmeticSemiring(), new RuleEvaluator<State, Double>() {
+            public Double evaluateRule(Rule<State> rule) {
+                return rule.getWeight();
+            }
+        });
+    }
+
+    public Map<State, Double> outside(final Map<State, Double> inside) {
+        return evaluateInSemiringTopDown(new DoubleArithmeticSemiring(), new RuleEvaluatorTopDown<State, Double>() {
+            public Double initialValue() {
+                return 1.0;
+            }
+
+            public Double evaluateRule(Rule<State> rule, int i) {
+                Double ret = rule.getWeight();
+                for (int j = 0; j < rule.getArity(); j++) {
+                    if (j != i) {
+                        ret = ret * inside.get(rule.getChildren()[j]);
+                    }
+                }
+                return ret;
+            }
+        });
+    }
+
     public Tree viterbi() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
         Map<State, Pair<Double, Rule<State>>> map =
                 evaluateInSemiring(new ViterbiWithBackpointerSemiring<State>(), new RuleEvaluator<State, Pair<Double, Rule<State>>>() {
-
             public Pair<Double, Rule<State>> evaluateRule(Rule<State> rule) {
                 return new Pair<Double, Rule<State>>(rule.getWeight(), rule);
             }
         });
-        
+
         // find final state with highest weight
         State bestFinalState = null;
         double weightBestFinalState = Double.POSITIVE_INFINITY;
-        for( State s : getFinalStates() ) {
-            if( map.get(s).left < weightBestFinalState ) {
+        for (State s : getFinalStates()) {
+            if (map.get(s).left < weightBestFinalState) {
                 bestFinalState = s;
                 weightBestFinalState = map.get(s).left;
             }
         }
-        
+
         // extract best tree from backpointers
         Tree ret = new Tree();
         extractTreeFromViterbi(ret, null, bestFinalState, map);
         return ret;
     }
-        
+
     private void extractTreeFromViterbi(Tree tree, String parent, State state, Map<State, Pair<Double, Rule<State>>> map) {
         Rule<State> backpointer = map.get(state).right;
         String node = tree.addNode(backpointer.getLabel(), parent);
-        for( State child : backpointer.getChildren() ) {
+        for (State child : backpointer.getChildren()) {
             extractTreeFromViterbi(tree, node, child, map);
         }
     }
@@ -280,7 +317,6 @@ public abstract class BottomUpAutomaton<State> {
         final Set<State> ret = new HashSet<State>();
 
         tree.dfs(new TreeVisitor<Void, Set<State>>() {
-
             @Override
             public Set<State> combine(String node, List<Set<State>> childrenValues) {
                 String f = tree.getLabel(node).toString();
@@ -317,7 +353,6 @@ public abstract class BottomUpAutomaton<State> {
 
     public BottomUpAutomaton<State> reduce() {
         Map<State, Boolean> productiveStates = evaluateInSemiring(new AndOrSemiring(), new RuleEvaluator<State, Boolean>() {
-
             public Boolean evaluateRule(Rule<State> rule) {
                 return true;
             }
@@ -384,6 +419,33 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+    public <E> Map<State, E> evaluateInSemiringTopDown(Semiring<E> semiring, RuleEvaluatorTopDown<State, E> evaluator) {
+        Map<State, E> ret = new HashMap<State, E>();
+        List<State> statesInOrder = getStatesInBottomUpOrder();
+        Collections.reverse(statesInOrder);
+
+        for (State s : statesInOrder) {
+            E accu = semiring.zero();
+
+            if (rulesForRhsState.containsKey(s)) {
+                for (Rule<State> rule : rulesForRhsState.get(s)) {
+                    E parentValue = ret.get(rule.getParent());
+                    for (int i = 0; i < rule.getArity(); i++) {
+                        if (rule.getChildren()[i].equals(s)) {
+                            accu = semiring.add(accu, semiring.multiply(parentValue, evaluator.evaluateRule(rule, i)));
+                        }
+                    }
+                }
+            } else {
+                accu = evaluator.initialValue();
+            }
+
+            ret.put(s, accu);
+        }
+
+        return ret;
+    }
+
     public List<State> getStatesInBottomUpOrder() {
         List<State> ret = new ArrayList<State>();
         SetMultimap<State, State> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
@@ -432,9 +494,7 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
-
     protected class StateListToStateMap {
-
         private Map<State, StateListToStateMap> nextStep;
         private Set<Rule<State>> rulesHere;
         private int arity;

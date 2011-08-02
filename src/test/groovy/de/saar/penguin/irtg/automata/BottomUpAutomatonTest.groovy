@@ -73,6 +73,23 @@ class BottomUpAutomatonTest {
         assertEquals(best.toString(), TermParser.parse("f(a,a)").toTree().toString());
     }
 
+    @Test
+    public void testInside() {
+        BottomUpAutomaton auto = parse("a -> q1 [2]\n b -> q2 [1]\n f(q1,q1) -> q! [1]\n f(q1,q2) -> q! [1.5]");
+        Map inside = auto.inside();
+        assertEquals(7.0, inside.get("q"), 0.001);
+        assertEquals(2.0, inside.get("q1"), 0.001);
+    }
+
+    @Test
+    public void testOutside() {
+        BottomUpAutomaton auto = parse("a -> q1 [2]\n b -> q2 [1]\n f(q1,q1) -> q! [1]\n f(q1,q2) -> q! [1.5]");
+        Map inside = auto.inside();
+        Map outside = auto.outside(inside);
+        assertEquals(1.0, outside.get("q"), 0.001);
+        assertEquals(5.5, outside.get("q1"), 0.001);
+    }
+
     private static Pair p(Object a, Object b) {
         return new Pair(a,b);
     }
