@@ -6,6 +6,7 @@ package de.saar.penguin.irtg.algebra.lambda;
 
 import de.saar.basic.Pair;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -44,12 +45,16 @@ public class LambdaTerm {
         return ret;
     }
 
-    public static LambdaTerm apply(LambdaTerm functor, LambdaTerm argument) {
+    public static LambdaTerm apply(LambdaTerm functor, List<LambdaTerm> arguments) {
         LambdaTerm ret = new LambdaTerm(Type.APPLY);
         ret.sub = new ArrayList<LambdaTerm>();
         ret.sub.add(functor);
-        ret.sub.add(argument);
+        ret.sub.addAll(arguments);
         return ret;
+    }
+    
+    public static LambdaTerm apply(LambdaTerm functor, LambdaTerm... arguments) {
+        return apply(functor, Arrays.asList(arguments));
     }
 
     public static LambdaTerm exists(String x, LambdaTerm sub) {
@@ -65,20 +70,26 @@ public class LambdaTerm {
         ret.sub = new ArrayList<LambdaTerm>(subs);
         return ret;
     }
+    
+    public static LambdaTerm conj(LambdaTerm... subs) {
+        return conj(Arrays.asList(subs));
+    }
 
-    public static LambdaTerm argmax(String x, LambdaTerm sub) {
+    public static LambdaTerm argmax(String x, LambdaTerm sub1, LambdaTerm sub2) {
         LambdaTerm ret = new LambdaTerm(Type.ARGMAX);
         ret.x = x;
         ret.sub = new ArrayList<LambdaTerm>();
-        ret.sub.add(sub);
+        ret.sub.add(sub1);
+        ret.sub.add(sub2);
         return ret;
     }
 
-    public static LambdaTerm argmin(String x, LambdaTerm sub) {
+    public static LambdaTerm argmin(String x, LambdaTerm sub1, LambdaTerm sub2) {
         LambdaTerm ret = new LambdaTerm(Type.ARGMIN);
         ret.x = x;
         ret.sub = new ArrayList<LambdaTerm>();
-        ret.sub.add(sub);
+        ret.sub.add(sub1);
+        ret.sub.add(sub2);
         return ret;
     }
 
