@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -48,18 +50,63 @@ public abstract class BottomUpAutomaton<State> {
         rulesForRhsState = HashMultimap.create();
     }
 
+    /**
+     * Finds automaton rules bottom-up for a given list of child states
+     * and a given parent label. The method returns a collection of
+     * rules that can be used to assign a state to the parent node.
+     * 
+     * @param label
+     * @param childStates
+     * @return 
+     */
     abstract public Set<Rule<State>> getRulesBottomUp(String label, List<State> childStates);
 
+    /**
+     * Finds automaton rules top-down for a given parent state and label.
+     * The method returns a collection of rules that can be used to
+     * assign states to the children.
+     * 
+     * @param label
+     * @param parentState
+     * @return 
+     */
     abstract public Set<Rule<State>> getRulesTopDown(String label, State parentState);
 
+    /**
+     * Returns the arity of a terminal symbol used by this automaton.
+     * 
+     * @param label
+     * @return 
+     */
     abstract public int getArity(String label);
 
+    /**
+     * Returns all terminal symbols that this automaton knows about.
+     * 
+     * @return 
+     */
     abstract public Set<String> getAllLabels();
 
+    /**
+     * Returns the final states of the automaton.
+     * 
+     * @return 
+     */
     abstract public Set<State> getFinalStates();
 
+    /**
+     * Returns the set of all states of this automaton.
+     * 
+     * @return 
+     */
     abstract public Set<State> getAllStates();
 
+    /**
+     * Caches a rule for future use. Once a rule has been cached,
+     * it will be found by getRulesBottomUpFromExplicit and getRulesTopDownFromExplicit.
+     * 
+     * @param rule 
+     */
     protected void storeRule(Rule<State> rule) {
         // store as bottom-up rule
         StateListToStateMap smap = getOrCreateStateMap(rule.getLabel());
@@ -87,6 +134,14 @@ public abstract class BottomUpAutomaton<State> {
         }
     }
 
+    /**
+     * Like getRulesBottomUp, but only looks for rules in the
+     * cache of previously discovered rules.
+     * 
+     * @param label
+     * @param childStates
+     * @return 
+     */
     protected Set<Rule<State>> getRulesBottomUpFromExplicit(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
@@ -97,6 +152,14 @@ public abstract class BottomUpAutomaton<State> {
         }
     }
 
+    /**
+     * Like getRulesTopDown, but only looks for rules in the
+     * cache of previously discovered rules.
+     * 
+     * @param label
+     * @param parentState
+     * @return 
+     */
     protected Set<Rule<State>> getRulesTopDownFromExplicit(String label, State parentState) {
         if (containsTopDown(label, parentState)) {
             return explicitRulesTopDown.get(label).get(parentState);
@@ -104,21 +167,35 @@ public abstract class BottomUpAutomaton<State> {
             return new HashSet<Rule<State>>();
         }
     }
-    
+
+    /**
+     * Returns the set of all rules of this automaton. This method
+     * is currently implemented rather inefficiently. Note that it
+     * necessarily _computes_ the set of all rules, which may be expensive
+     * for lazy automata.
+     * 
+     * @return 
+     */
     public Set<Rule<State>> getRuleSet() {
         Set<Rule<State>> ret = new HashSet<Rule<State>>();
-        
+
         makeAllRulesExplicit();
-        
-        for( StateListToStateMap map : explicitRules.values() ) {
-            for( Set<Rule<State>> set : map.getAllRules().values() ) {
+
+        for (StateListToStateMap map : explicitRules.values()) {
+            for (Set<Rule<State>> set : map.getAllRules().values()) {
                 ret.addAll(set);
             }
-        }        
-        
+        }
+
         return ret;
     }
 
+    /**
+     * Returns the set of all rules, indexed by parent label and
+     * children states.
+     * 
+     * @return 
+     */
     public Map<String, Map<List<State>, Set<Rule<State>>>> getAllRules() {
         Map<String, Map<List<State>, Set<Rule<State>>>> ret = new HashMap<String, Map<List<State>, Set<Rule<State>>>>();
 
@@ -139,7 +216,15 @@ public abstract class BottomUpAutomaton<State> {
         }
     }
 
-    // TODO - this is only correct if the FTA is bottom-up deterministic
+    /**
+     * Returns the number of trees in the language of this
+     * automaton. Note that this is faster than computing the
+     * entire language. The method only works if the automaton
+     * is acyclic, and only returns correct results if the
+     * automaton is bottom-up deterministic.
+     * 
+     * @return 
+     */
     public long countTrees() {
         Map<State, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<State, Long>() {
             public Long evaluateRule(Rule<State> rule) {
@@ -154,6 +239,12 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+    /**
+     * Returns a map representing the inside probability of
+     * each state.
+     * 
+     * @return 
+     */
     public Map<State, Double> inside() {
         return evaluateInSemiring(new DoubleArithmeticSemiring(), new RuleEvaluator<State, Double>() {
             public Double evaluateRule(Rule<State> rule) {
@@ -162,6 +253,13 @@ public abstract class BottomUpAutomaton<State> {
         });
     }
 
+    /**
+     * Returns a map representing the outside probability of
+     * each state.
+     * 
+     * @param inside a map representing the inside probability of each state.
+     * @return 
+     */
     public Map<State, Double> outside(final Map<State, Double> inside) {
         return evaluateInSemiringTopDown(new DoubleArithmeticSemiring(), new RuleEvaluatorTopDown<State, Double>() {
             public Double initialValue() {
@@ -180,6 +278,12 @@ public abstract class BottomUpAutomaton<State> {
         });
     }
 
+    /**
+     * Computes the highest-weighted tree in the language of this
+     * (weighted) automaton, using the Viterbi algorithm.
+     * 
+     * @return 
+     */
     public Tree viterbi() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
         Map<State, Pair<Double, Rule<State>>> map =
@@ -210,6 +314,60 @@ public abstract class BottomUpAutomaton<State> {
         String node = tree.addNode(backpointer.getLabel(), parent);
         for (State child : backpointer.getChildren()) {
             extractTreeFromViterbi(tree, node, child, map);
+        }
+    }
+
+    /**
+     * Computes the tree language accepted by this automaton.
+     * This only works if the automaton is acyclic (in which case
+     * the language is also finite). 
+     * 
+     * @return 
+     */
+    public List<Tree> language() {
+        /*
+         * The current implementation is probably not particularly efficient.
+         * It could be improved by using CartesianIterators for each rule.
+         */
+        Map<State, List<Tree>> languagesForStates =
+                evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree>>() {
+            public List<Tree> evaluateRule(Rule<State> rule) {
+                List<Tree> ret = new ArrayList<Tree>();
+                Tree tree = new Tree();
+                tree.addNode(rule.getLabel(), null);
+                ret.add(tree);
+                return ret;
+            }
+        });
+
+        List<Tree> ret = new ArrayList<Tree>();
+        for (State finalState : getFinalStates()) {
+            ret.addAll(languagesForStates.get(finalState));
+        }
+        return ret;
+    }
+
+    private static class LanguageCollectingSemiring implements Semiring<List<Tree>> {
+        public List<Tree> add(List<Tree> x, List<Tree> y) {
+            x.addAll(y);
+            return x;
+        }
+
+        public List<Tree> multiply(List<Tree> partialTrees, List<Tree> newSubtrees) {
+            List<Tree> ret = new ArrayList<Tree>();
+            for (Tree partialTree : partialTrees) {
+                for (Tree newSubtree : newSubtrees) {
+                    Tree newTree = partialTree.copy();
+                    newTree.insert(newSubtree, newTree.getRoot());
+                    ret.add(newTree);
+                }
+            }
+
+            return ret;
+        }
+
+        public List<Tree> zero() {
+            return new ArrayList<Tree>();
         }
     }
 
@@ -260,6 +418,12 @@ public abstract class BottomUpAutomaton<State> {
         return buf.toString();
     }
 
+    /**
+     * Computes all rules in this automaton and stores them in the cache.
+     * This only makes a difference for lazy automata, in which rules
+     * are only computed by need. After calling this function, it is
+     * guaranteed that all rules are in the cache.
+     */
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
             Set<State> everAddedStates = new HashSet<State>();
@@ -288,6 +452,14 @@ public abstract class BottomUpAutomaton<State> {
         }
     }
 
+    /**
+     * Checks whether the cache contains a bottom-up rule for
+     * the given parent label and children states.
+     * 
+     * @param label
+     * @param childStates
+     * @return 
+     */
     protected boolean contains(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
 
@@ -298,6 +470,13 @@ public abstract class BottomUpAutomaton<State> {
         }
     }
 
+    /**
+     * Checks whether the cache contains a top-down rule for
+     * the given parent label and state.
+     * @param label
+     * @param parent
+     * @return 
+     */
     protected boolean containsTopDown(String label, State parent) {
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(label);
         if (topdown == null) {
@@ -307,24 +486,60 @@ public abstract class BottomUpAutomaton<State> {
         }
     }
 
+    /**
+     * Intersects this automaton with another one.
+     * 
+     * @param <OtherState> the state type of the other automaton.
+     * @param other the other automaton.
+     * @return an automaton representing the intersected language.
+     */
     public <OtherState> BottomUpAutomaton<Pair<State, OtherState>> intersect(BottomUpAutomaton<OtherState> other) {
         return new IntersectionAutomaton<State, OtherState>(this, other);
     }
 
+    /**
+     * Computes the pre-image of this automaton under a homomorphism.
+     * 
+     * @param hom the homomorphism.
+     * @return an automaton representing the homomorphic pre-image.
+     */
     public BottomUpAutomaton<State> inverseHomomorphism(Homomorphism hom) {
         return new InverseHomAutomaton<State>(this, hom);
     }
 
+    /**
+     * Determines whether the automaton accepts a given tree.
+     * 
+     * @param tree
+     * @return 
+     */
     public boolean accepts(final Tree tree) {
         Set<State> resultStates = run(tree);
         resultStates.retainAll(getFinalStates());
         return !resultStates.isEmpty();
     }
 
+    /**
+     * Runs the automaton bottom-up on a given tree and returns the set
+     * of possible states for the root.
+     * 
+     * @param tree
+     * @return 
+     */
     public Set<State> run(final Tree tree) {
         return run(tree, dummyLtsSubstitution);
     }
 
+    /**
+     * Runs the automaton bottom-up on a given tree, assuming a certain
+     * assignment of states to leaves. The LeafToStateSubstitution may
+     * assign states to certain node names, which then override or replace
+     * the state assignments the automaton would otherwise perform.
+     * 
+     * @param tree
+     * @param subst
+     * @return 
+     */
     public Set<State> run(final Tree tree, final LeafToStateSubstitution<State, String> subst) {
         final Set<State> ret = new HashSet<State>();
 
@@ -363,6 +578,12 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+    /**
+     * Reduces the automaton. This means that all states and rules that
+     * are not reachable bottom-up are removed.
+     * 
+     * @return 
+     */
     public BottomUpAutomaton<State> reduce() {
         Map<State, Boolean> productiveStates = evaluateInSemiring(new AndOrSemiring(), new RuleEvaluator<State, Boolean>() {
             public Boolean evaluateRule(Rule<State> rule) {
@@ -371,22 +592,21 @@ public abstract class BottomUpAutomaton<State> {
         });
 
         ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
-//        Map<String, Map<List<State>, Set<Rule<State>>>> allRules = getAllRules();
 
         // copy all rules that only contain productive states
-        for( Rule<State> rule : getRuleSet() ) {
+        for (Rule<State> rule : getRuleSet()) {
             boolean allProductive = productiveStates.get(rule.getParent());
-            
-            for( State child : rule.getChildren() ) {
-                if( !productiveStates.get(child)) {
+
+            for (State child : rule.getChildren()) {
+                if (!productiveStates.get(child)) {
                     allProductive = false;
                 }
             }
-            
-            if( allProductive ) {
+
+            if (allProductive) {
                 ret.addRule(rule);
             }
-        }        
+        }
 
         // copy all productive final states
         for (State state : getFinalStates()) {
@@ -398,6 +618,21 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+    /**
+     * Evaluates all states of the automaton bottom-up
+     * in a semiring. The evaluation of a state is the semiring sum
+     * of semiring zero plus the evaluations of all rules in which it is the parent.
+     * The evaluation of a rule is the semiring product of the evaluations
+     * of its child states, times the evaluation of the rule itself.
+     * The evaluation of a rule is determined by the RuleEvaluator argument.
+     * This method only works if the automaton is acyclic, so states can be
+     * processed in a well-defined bottom-up order.
+     * 
+     * @param <E>
+     * @param semiring
+     * @param evaluator
+     * @return a map assigning values in the semiring to all reachable states.
+     */
     public <E> Map<State, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<State, E> evaluator) {
         Map<State, E> ret = new HashMap<State, E>();
 
@@ -426,6 +661,14 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+    /**
+     * Like evaluateInSemiring, but proceeds in top-down order.
+     * 
+     * @param <E>
+     * @param semiring
+     * @param evaluator
+     * @return 
+     */
     public <E> Map<State, E> evaluateInSemiringTopDown(Semiring<E> semiring, RuleEvaluatorTopDown<State, E> evaluator) {
         Map<State, E> ret = new HashMap<State, E>();
         List<State> statesInOrder = getStatesInBottomUpOrder();
@@ -453,6 +696,13 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+    /**
+     * Returns a topological ordering of the states, such that
+     * later nodes always occur above earlier nodes in any run
+     * of the automaton on a tree.
+     * 
+     * @return 
+     */
     public List<State> getStatesInBottomUpOrder() {
         List<State> ret = new ArrayList<State>();
         SetMultimap<State, State> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state

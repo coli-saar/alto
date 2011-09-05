@@ -89,6 +89,26 @@ class BottomUpAutomatonTest {
         assertEquals(1.0, outside.get("q"), 0.001);
         assertEquals(5.5, outside.get("q1"), 0.001);
     }
+    
+    @Test
+    public void testLanguage() {
+        BottomUpAutomaton auto = parse("a -> q1 [2]\n b -> q2 [1]\n f(q1,q1) -> q! [1]\n f(q1,q2) -> q! [1.5]");
+        Set lang = new HashSet(auto.language()*.toString());
+        Set gold = new HashSet([pt("f(a,a)"), pt("f(a,b)")]*.toString());
+        assertEquals(gold, lang);
+    }
+    
+    @Test
+    public void testLanguage2() {
+        BottomUpAutomaton auto = parse("a -> q1\n b -> q1\n c -> q2\n d -> q2\n f(q1,q2) -> q!\n g(q1,q2) -> q!");
+        Set lang = new HashSet(auto.language()*.toString());
+        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
+        assertEquals(gold, lang)
+    }
+    
+    private static Tree pt(String s) {
+        TermParser.parse(s).toTree()
+    }
 
     private static Pair p(Object a, Object b) {
         return new Pair(a,b);
