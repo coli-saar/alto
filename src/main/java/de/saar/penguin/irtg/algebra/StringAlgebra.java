@@ -4,7 +4,6 @@
  */
 package de.saar.penguin.irtg.algebra;
 
-import de.saar.basic.StringTools;
 import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
@@ -37,7 +36,6 @@ public class StringAlgebra implements Algebra<List<String>> {
             }
 
             return childEval;
-//            return StringTools.join(childEval, " ");
         }
     }
 

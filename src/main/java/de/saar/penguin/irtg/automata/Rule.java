@@ -4,7 +4,6 @@
  */
 package de.saar.penguin.irtg.automata;
 
-import de.saar.basic.StringTools;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

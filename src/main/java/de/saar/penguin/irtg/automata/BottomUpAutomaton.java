@@ -4,9 +4,7 @@
  */
 package de.saar.penguin.irtg.automata;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
