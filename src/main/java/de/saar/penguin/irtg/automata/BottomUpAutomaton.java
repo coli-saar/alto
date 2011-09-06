@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -381,19 +379,16 @@ public abstract class BottomUpAutomaton<State> {
         Map<String, Map<List<State>, Set<Rule<State>>>> otherRules = ((BottomUpAutomaton) o).getAllRules();
 
         if (!rules.keySet().equals(otherRules.keySet())) {
-//            System.err.println("not equals: labels " + rules.keySet() + " vs " +otherRules.keySet());
             return false;
         }
 
         for (String f : rules.keySet()) {
             if (!rules.get(f).keySet().equals(otherRules.get(f).keySet())) {
-//                System.err.println("not equals: LHS for " + f + " is " + rules.get(f).keySet() + " vs " + otherRules.get(f).keySet() );
                 return false;
             }
 
             for (List<State> states : rules.get(f).keySet()) {
                 if (!new HashSet<Rule<State>>(rules.get(f).get(states)).equals(new HashSet<Rule<State>>(otherRules.get(f).get(states)))) {
-//                    System.err.println("noteq: RHS for " + f + states + " is " + rules.get(f).get(states) + " vs " + otherRules.get(f).get(states));
                     return false;
                 }
             }
@@ -778,7 +773,6 @@ public abstract class BottomUpAutomaton<State> {
 
         private void put(Rule<State> rule, int index, double weight) {
             if (index == rule.getArity()) {
-//                Rule<State> rule = new Rule<State>(state, label, stateList, weight);
                 rulesHere.add(rule);
             } else {
                 State nextState = rule.getChildren()[index];
