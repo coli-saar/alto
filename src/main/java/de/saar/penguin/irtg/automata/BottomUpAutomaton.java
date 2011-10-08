@@ -37,7 +37,7 @@ public abstract class BottomUpAutomaton<State> {
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
     protected Set<State> allStates;
-    private final LeafToStateSubstitution<State, String> dummyLtsSubstitution = new LeafToStateSubstitution<State, String>();
+    private final Map<String,State> dummyLtsSubstitution = new HashMap<String, State>();
     protected boolean isExplicit;
     protected SetMultimap<State, Rule<State>> rulesForRhsState;
 
@@ -540,7 +540,7 @@ public abstract class BottomUpAutomaton<State> {
      * @param subst
      * @return 
      */
-    public Set<State> run(final Tree tree, final LeafToStateSubstitution<State, String> subst) {
+    public Set<State> run(final Tree tree, final Map<String, State> subst) {
         final Set<State> ret = new HashSet<State>();
 
         tree.dfs(new TreeVisitor<Void, Set<State>>() {
@@ -550,8 +550,8 @@ public abstract class BottomUpAutomaton<State> {
                 Set<State> states = new HashSet<State>();
 
                 if (childrenValues.isEmpty()) {
-                    if (subst.isSubstituted(node)) {
-                        states.add(subst.substitute(node));
+                    if (subst.containsKey(node)) {
+                        states.add(subst.get(node));
                     } else {
                         for (Rule<State> rule : getRulesBottomUp(f, new ArrayList<State>())) {
                             states.add(rule.getParent());

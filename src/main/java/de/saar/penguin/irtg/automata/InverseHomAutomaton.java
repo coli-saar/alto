@@ -34,11 +34,27 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
 
     @Override
     public Set<Rule<State>> getRulesBottomUp(String label, final List<State> childStates) {
-        if (!computedLabels.contains(label)) {
-            computeRulesForLabel(label);
+        // lazy bottom-up computation of bottom-up rules
+        if( contains(label, childStates)) {
+            return getRulesBottomUpFromExplicit(label, childStates);
+        } else {
+            Map<String, StringOrVariable> varmap = hom.getVariableMap(label);
+            Map<String, State> statemap = new HashMap<String, State>();
+            
+            for( String node : varmap.keySet() ) {
+                statemap.put(node, childStates.get(Homomorphism.getIndexForVariable(varmap.get(node))));
+            }
+            
+            Set<State> resultStates = rhsAutomaton.run(hom.get(label), statemap);
+            Set<Rule<State>> ret = new HashSet<Rule<State>>();
+            for( State r : resultStates ) {
+                Rule<State> rule = new Rule<State>(r, label, childStates);
+                storeRule(rule);
+                ret.add(rule);
+            }
+            
+            return ret;
         }
-
-        return getRulesBottomUpFromExplicit(label, childStates);
     }
 
     @Override
