@@ -4,7 +4,9 @@
  */
 package de.saar.penguin.irtg.automata;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
@@ -634,26 +636,38 @@ public abstract class BottomUpAutomaton<State> {
     public <E> Map<State, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<State, E> evaluator) {
         Map<State, E> ret = new HashMap<State, E>();
 
+        System.err.println("\neval: bu-states " + getStatesInBottomUpOrder());
+
         for (State s : getStatesInBottomUpOrder()) {
             E accu = semiring.zero();
 
             for (String label : getAllLabels()) {
                 Set<Rule<State>> rules = getRulesTopDown(label, s);
+                System.err.println("eval: rules for " + s + "/" + label + " = " + rules);
 
                 for (Rule<State> rule : rules) {
                     E valueThisRule = evaluator.evaluateRule(rule);
                     for (State child : rule.getChildren()) {
-                        if (!ret.containsKey(child)) {
-                            throw new RuntimeException("State " + child + " not yet evaluated when processing rule " + rule + " for " + s + "/" + label);
+                        if (valueThisRule != null) {
+                            if (ret.containsKey(child)) {
+                                valueThisRule = semiring.multiply(valueThisRule, ret.get(child));
+                            } else {
+                                // if a child state hasn't been evaluated yet, this means that it
+                                // is not reachable bottom-up, and therefore shouldn't be counted here
+                                valueThisRule = null;
+                            }
                         }
-                        valueThisRule = semiring.multiply(valueThisRule, ret.get(child));
                     }
 
-                    accu = semiring.add(accu, valueThisRule);
+                    if (valueThisRule != null) {
+                        accu = semiring.add(accu, valueThisRule);
+                        System.err.println("  add " + valueThisRule + " to " + s + " because of " + rule);
+                    }
                 }
             }
 
             ret.put(s, accu);
+            System.err.println("eval: " + s + " -> " + accu);
         }
 
         return ret;
@@ -736,6 +750,18 @@ public abstract class BottomUpAutomaton<State> {
 
             ret.add(q);
         }
+    }
+
+    protected ListMultimap<State, Rule<State>> getRuleByChildStateMap() {
+        ListMultimap<State, Rule<State>> ret = ArrayListMultimap.create();
+
+        for (Rule<State> rule : getRuleSet()) {
+            for (State child : rule.getChildren()) {
+                ret.put(child, rule);
+            }
+        }
+
+        return ret;
     }
 
     private StateListToStateMap getOrCreateStateMap(String label) {

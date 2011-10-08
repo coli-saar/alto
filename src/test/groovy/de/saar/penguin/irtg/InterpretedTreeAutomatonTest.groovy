@@ -56,6 +56,7 @@ class InterpretedTreeAutomatonTest {
         assert chart.accepts(parseTree("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"));
         assert chart.accepts(parseTree("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))"));
 
+        System.err.println("*** count ***");
         assertEquals(2, chart.countTrees());
     }
 
@@ -77,7 +78,7 @@ r2 -> S
         BottomUpAutomaton chart = irtg.parse(["i": words]);
         chart.makeAllRulesExplicit();
 
-        chart.reduce();
+        chart.reduceBottomUp();
     }
 
     public static Tree parseTree(String s) {
