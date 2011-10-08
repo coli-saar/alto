@@ -5,6 +5,7 @@
 package de.saar.penguin.irtg;
 
 import de.saar.basic.Pair;
+import de.saar.penguin.irtg.algebra.ParseException;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import java.util.ArrayList;
@@ -39,11 +40,11 @@ public class InterpretedTreeAutomaton {
         return interpretations;
     }
 
-    public Object parseString(String interpretation, String representation) {
+    public Object parseString(String interpretation, String representation) throws ParseException {
         return getInterpretations().get(interpretation).getAlgebra().parseString(representation);
     }
     
-    public Map<String,Object> parseStrings(Map<String,String> representations) {
+    public Map<String,Object> parseStrings(Map<String,String> representations) throws ParseException {
         Map<String,Object> ret = new HashMap<String, Object>();
         for( String interp : representations.keySet() ) {
             ret.put(interp, parseString(interp, representations.get(interp)));

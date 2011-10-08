@@ -18,6 +18,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -37,7 +39,7 @@ public class Main {
             }
             String line = console.readLine();
 
-            if (line == null ) {
+            if (line == null) {
                 System.exit(0);
             } else {
                 try {
@@ -72,9 +74,14 @@ public class Main {
                 irtg = IrtgParser.parse(new FileReader(expr.getString(0)));
                 return irtg;
             case PARSE:
-                irtg = (InterpretedTreeAutomaton) evaluate(expr.getExpression(0));
-                Map<String, Object> inputs = irtg.parseStrings((Map<String, String>) expr.arguments.get(1));
-                return irtg.parse(inputs).reduce();
+                try {
+                    irtg = (InterpretedTreeAutomaton) evaluate(expr.getExpression(0));
+                    Map<String, Object> inputs = irtg.parseStrings((Map<String, String>) expr.arguments.get(1));
+                    return irtg.parse(inputs).reduce();
+                } catch (de.saar.penguin.irtg.algebra.ParseException e) {
+                    System.out.println("Parsing error: " + e.getMessage());
+                    return null;
+                }
             case VITERBI:
                 automaton = (BottomUpAutomaton) evaluate(expr.getExpression(0));
                 return automaton.viterbi();
@@ -113,7 +120,12 @@ public class Main {
                 interpretationOrder.add(line);
             } else {
                 String current = interpretationOrder.get(currentInterpretation);
-                currentTuple.put(current, irtg.parseString(current, line));
+                try {
+                    currentTuple.put(current, irtg.parseString(current, line));
+                } catch (de.saar.penguin.irtg.algebra.ParseException ex) {
+                    System.out.println("An error occurred while parsing " + file + ", line " + (lineNumber + 1) + ": " + ex.getMessage());
+                    return null;
+                }
 
                 currentInterpretation++;
                 if (currentInterpretation >= interpretationOrder.size()) {
