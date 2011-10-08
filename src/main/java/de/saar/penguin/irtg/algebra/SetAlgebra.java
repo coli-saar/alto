@@ -7,6 +7,7 @@ package de.saar.penguin.irtg.algebra;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.Rule;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,69 +24,93 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     private static final String INTERSECT = "intersect_";
     private static final String UNIQ = "uniq_";
     private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ};
-    private Map<String, Set<List<String>>> atomicInterpretations;
+    private static final int MAX_TUPLE_LENGTH = 3;
+    private final Map<String, Set<List<String>>> atomicInterpretations;
+    private final Set<String> allIndividuals;
+    private final Set<String> allLabels;
 
     public SetAlgebra(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
+
+        allIndividuals = new HashSet<String>();
+        for (Set<List<String>> sls : atomicInterpretations.values()) {
+            for (List<String> ls : sls) {
+                allIndividuals.addAll(ls);
+            }
+        }
+
+        allLabels = new HashSet<String>();
+        allLabels.addAll(atomicInterpretations.keySet());
+        for (int i = 1; i <= MAX_TUPLE_LENGTH; i++) {
+            allLabels.add(PROJECT + i);
+            allLabels.add(INTERSECT + i);
+        }
+        for (String individual : allIndividuals) {
+            allLabels.add(UNIQ + individual);
+        }
     }
 
+    @Override
     public Set<List<String>> evaluate(final Tree t) {
         return (Set<List<String>>) t.dfs(new TreeVisitor<Void, Set<List<String>>>() {
             @Override
             public Set<List<String>> combine(String node, List<Set<List<String>>> childrenValues) {
-//                System.err.println("evaluate: " + t.subtree(node));
-                Set<List<String>> ret = null;
-                String label = getLabel(t, node);
-
-                if (label.startsWith(PROJECT)) {
-                    Set<List<String>> child = childrenValues.get(0);
-                    int pos = Integer.parseInt(arg(label)) - 1;
-                    ret = new HashSet<List<String>>();
-                    for (List<String> tuple : child) {
-                        List<String> l = new ArrayList<String>();
-                        l.add(tuple.get(pos));
-                        ret.add(l);
-                    }
-                } else if (label.startsWith(INTERSECT)) {
-                    Set<List<String>> tupleSet = childrenValues.get(0);
-                    int pos = Integer.parseInt(arg(label)) - 1;
-                    Set<List<String>> filterSet = childrenValues.get(1);
-                    Set<String> filter = new HashSet<String>();
-                    ret = new HashSet<List<String>>();
-
-                    for (List<String> f : filterSet) {
-                        filter.add(f.get(0));
-                    }
-
-                    System.err.println("filter set: " + filter);
-
-                    for (List<String> tuple : tupleSet) {
-                        if (filter.contains(tuple.get(pos))) {
-                            ret.add(tuple);
-                        } 
-                    }
-                } else if (label.startsWith(UNIQ)) {
-                    String arg = arg(label);
-                    List<String> uniqArg = new ArrayList<String>();
-                    Set<List<String>> child = childrenValues.get(0);
-
-                    uniqArg.add(arg);
-                    
-                    if (child.size() == 1 && child.iterator().next().equals(uniqArg)) {
-                        ret = child;
-                    } else {
-                        ret = new HashSet<List<String>>();
-                    }
-                } else {
-                    ret = atomicInterpretations.get(label);
-                }
-
-//                System.err.println("  -> " + ret);
-                return ret;
+//                System.err.println("evaluate: " + t.subtree(node));                
+                return evaluate(getLabel(t, node), childrenValues);
             }
         });
+    }
 
+    private Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) {
+        if (label.startsWith(PROJECT)) {
+            return project(childrenValues.get(0), Integer.parseInt(arg(label)) - 1);
+        } else if (label.startsWith(INTERSECT)) {
+            return intersect(childrenValues.get(0), childrenValues.get(1), Integer.parseInt(arg(label)) - 1);
+        } else if (label.startsWith(UNIQ)) {
+            return uniq(childrenValues.get(0), arg(label));
+        } else {
+            return atomicInterpretations.get(label);
+        }
+    }
 
+    private Set<List<String>> project(Set<List<String>> tupleSet, int pos) {
+        Set<List<String>> ret = new HashSet<List<String>>();
+        for (List<String> tuple : tupleSet) {
+            List<String> l = new ArrayList<String>();
+            l.add(tuple.get(pos));
+            ret.add(l);
+        }
+
+        return ret;
+    }
+
+    private Set<List<String>> intersect(Set<List<String>> tupleSet, Set<List<String>> filterSet, int pos) {
+        Set<String> filter = new HashSet<String>();
+        Set<List<String>> ret = new HashSet<List<String>>();
+
+        for (List<String> f : filterSet) {
+            filter.add(f.get(0));
+        }
+
+        for (List<String> tuple : tupleSet) {
+            if (filter.contains(tuple.get(pos))) {
+                ret.add(tuple);
+            }
+        }
+
+        return ret;
+    }
+
+    private Set<List<String>> uniq(Set<List<String>> tupleSet, String value) {
+        List<String> uniqArg = new ArrayList<String>();
+
+        uniqArg.add(value);
+
+        if (tupleSet.size() == 1 && tupleSet.iterator().next().equals(uniqArg)) {
+            return tupleSet;
+        } else {
+            return new HashSet<List<String>>();
+        }
     }
 
     private static String arg(String stringWithArg) {
@@ -102,10 +127,72 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         return t.getLabel(node).toString();
     }
 
+    @Override
     public BottomUpAutomaton decompose(Set<List<String>> value) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    private class SetDecompositionAutomaton extends BottomUpAutomaton<Set<List<String>>> {
+        private Set<Set<List<String>>> finalStates;
+
+        public SetDecompositionAutomaton(String finalElement) {
+            finalStates = new HashSet<Set<List<String>>>();
+            Set<List<String>> x = new HashSet<List<String>>();
+            x.add(l(finalElement));
+            finalStates.add(x);
+        }
+
+        @Override
+        public Set<Rule<Set<List<String>>>> getRulesBottomUp(String label, List<Set<List<String>>> childStates) {
+            if (contains(label, childStates)) {
+                return getRulesBottomUpFromExplicit(label, childStates);
+            } else {
+                Set<List<String>> parents = evaluate(label, childStates);
+                Set<Rule<Set<List<String>>>> ret = new HashSet<Rule<Set<List<String>>>>();
+                Rule<Set<List<String>>> rule = new Rule<Set<List<String>>>(parents, label, childStates);
+                ret.add(rule);
+                storeRule(rule);
+
+                return ret;
+            }
+        }
+
+        @Override
+        public Set<Rule<Set<List<String>>>> getRulesTopDown(String label, Set<List<String>> parentState) {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+
+        @Override
+        public int getArity(String label) {
+            if (label.startsWith(UNIQ)) {
+                return 1;
+            } else if (label.startsWith(INTERSECT)) {
+                return 2;
+            } else if (label.startsWith(PROJECT)) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
+        @Override
+        public Set<String> getAllLabels() {
+            return allLabels;
+        }
+
+        @Override
+        public Set<Set<List<String>>> getFinalStates() {
+            return finalStates;
+        }
+
+        @Override
+        // ultimately, only needed for EM training -- and can we get rid of it there?
+        public Set<Set<List<String>>> getAllStates() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    @Override
     public Set<List<String>> parseString(String representation) throws ParseException {
         return SetParser.parse(new StringReader(representation));
     }

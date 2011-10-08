@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -584,7 +582,7 @@ public abstract class BottomUpAutomaton<State> {
      * 
      * @return 
      */
-    public BottomUpAutomaton<State> reduce() {
+    public BottomUpAutomaton<State> reduceBottomUp() {
         Map<State, Boolean> productiveStates = evaluateInSemiring(new AndOrSemiring(), new RuleEvaluator<State, Boolean>() {
             public Boolean evaluateRule(Rule<State> rule) {
                 return true;

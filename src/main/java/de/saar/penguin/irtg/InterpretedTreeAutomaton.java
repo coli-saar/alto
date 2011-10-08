@@ -78,7 +78,7 @@ public class InterpretedTreeAutomaton {
 
             // E-step
             for (Map<String, Object> tuple : trainingData) {
-                BottomUpAutomaton parse = parse(tuple).reduce();
+                BottomUpAutomaton parse = parse(tuple).reduceBottomUp();
                 Map<Object, Double> inside = parse.inside();
                 Map<Object, Double> outside = parse.outside(inside);
                 Set<Rule> rules = parse.getRuleSet();

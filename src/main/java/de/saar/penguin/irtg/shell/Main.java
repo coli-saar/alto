@@ -77,7 +77,7 @@ public class Main {
                 try {
                     irtg = (InterpretedTreeAutomaton) evaluate(expr.getExpression(0));
                     Map<String, Object> inputs = irtg.parseStrings((Map<String, String>) expr.arguments.get(1));
-                    return irtg.parse(inputs).reduce();
+                    return irtg.parse(inputs).reduceBottomUp();
                 } catch (de.saar.penguin.irtg.algebra.ParseException e) {
                     System.out.println("Parsing error: " + e.getMessage());
                     return null;
