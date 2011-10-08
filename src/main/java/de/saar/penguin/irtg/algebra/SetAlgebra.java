@@ -31,7 +31,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     private final Set<String> allIndividuals;
     private final Set<String> allLabels;
     private final Set<List<String>> allIndividualsAsTuples;
-    
+
     public SetAlgebra() {
         this(new HashMap<String, Set<List<String>>>());
     }
@@ -44,8 +44,8 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         for (Set<List<String>> sls : atomicInterpretations.values()) {
             for (List<String> ls : sls) {
                 allIndividuals.addAll(ls);
-                
-                for( String x : ls ) {
+
+                for (String x : ls) {
                     List<String> tuple = new ArrayList<String>();
                     tuple.add(x);
                     allIndividualsAsTuples.add(tuple);
@@ -82,7 +82,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
             return intersect(childrenValues.get(0), childrenValues.get(1), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(UNIQ)) {
             return uniq(childrenValues.get(0), arg(label));
-        } else if( label.equals(TOP)) {
+        } else if (label.equals(TOP)) {
             return allIndividualsAsTuples;
         } else {
             return atomicInterpretations.get(label);
@@ -161,11 +161,16 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
             if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
-                Set<List<String>> parents = evaluate(label, childStates);
                 Set<Rule<Set<List<String>>>> ret = new HashSet<Rule<Set<List<String>>>>();
-                Rule<Set<List<String>>> rule = new Rule<Set<List<String>>>(parents, label, childStates);
-                ret.add(rule);
-                storeRule(rule);
+
+                Set<List<String>> parents = evaluate(label, childStates);
+
+                // require that set in parent state must be non-empty; otherwise there is simply no rule
+                if (!parents.isEmpty()) {
+                    Rule<Set<List<String>>> rule = new Rule<Set<List<String>>>(parents, label, childStates);
+                    ret.add(rule);
+                    storeRule(rule);
+                }
 
                 return ret;
             }
