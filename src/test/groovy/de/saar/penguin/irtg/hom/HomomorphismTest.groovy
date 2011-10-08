@@ -48,7 +48,7 @@ class HomomorphismTest {
         Tree rhs = h.apply(t);
         Term rhsTerm = rhs.toTerm();
 
-        assertEquals(TermParser.parse("g(?2,h(?1))").toTree(), h.get("f"));
+        assertEquals(TermParser.parse("g(?2,h(?1))").toTreeWithVariables(), h.get("f"));
     }
 
 
@@ -56,7 +56,7 @@ class HomomorphismTest {
         Homomorphism ret = new Homomorphism();
 
         mappings.each {
-            ret.add(it.key, TermParser.parse(it.value).toTree());
+            ret.add(it.key, TermParser.parse(it.value).toTreeWithVariables());
         }
 
         return ret;

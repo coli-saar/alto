@@ -10,7 +10,6 @@ import de.saar.basic.tree.TreeVisitor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -78,7 +77,7 @@ public class Homomorphism {
      * @param f
      * @return 
      */
-    public Map<String,StringOrVariable> getVariableMap(String f) {
+    public Map<String,StringOrVariable> getVariableMap(final String f) {
         final Map<String,StringOrVariable> ret = new HashMap<String,StringOrVariable>();
         final Tree<StringOrVariable> tree = mappings.get(f);
 
@@ -86,6 +85,7 @@ public class Homomorphism {
             @Override
             public Void combine(String node, List<Void> childrenValues) {
                 StringOrVariable sv = tree.getLabel(node);
+                
                 if( sv.isVariable() ) {
                     ret.put(node, sv);
                 }

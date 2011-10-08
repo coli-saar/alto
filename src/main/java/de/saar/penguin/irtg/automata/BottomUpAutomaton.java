@@ -161,7 +161,7 @@ public abstract class BottomUpAutomaton<State> {
      * @return 
      */
     protected Set<Rule<State>> getRulesTopDownFromExplicit(String label, State parentState) {
-        if (containsTopDown(label, parentState)) {
+        if (useCachedRuleTopDown(label, parentState)) {
             return explicitRulesTopDown.get(label).get(parentState);
         } else {
             return new HashSet<Rule<State>>();
@@ -324,40 +324,40 @@ public abstract class BottomUpAutomaton<State> {
      * 
      * @return 
      */
-    public List<Tree> language() {
+    public List<Tree<String>> language() {
         /*
          * The current implementation is probably not particularly efficient.
          * It could be improved by using CartesianIterators for each rule.
          */
-        Map<State, List<Tree>> languagesForStates =
-                evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree>>() {
-            public List<Tree> evaluateRule(Rule<State> rule) {
-                List<Tree> ret = new ArrayList<Tree>();
-                Tree tree = new Tree();
+        Map<State, List<Tree<String>>> languagesForStates =
+                evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree<String>>>() {
+            public List<Tree<String>> evaluateRule(Rule<State> rule) {
+                List<Tree<String>> ret = new ArrayList<Tree<String>>();
+                Tree<String> tree = new Tree<String>();
                 tree.addNode(rule.getLabel(), null);
                 ret.add(tree);
                 return ret;
             }
         });
 
-        List<Tree> ret = new ArrayList<Tree>();
+        List<Tree<String>> ret = new ArrayList<Tree<String>>();
         for (State finalState : getFinalStates()) {
             ret.addAll(languagesForStates.get(finalState));
         }
         return ret;
     }
 
-    private static class LanguageCollectingSemiring implements Semiring<List<Tree>> {
-        public List<Tree> add(List<Tree> x, List<Tree> y) {
+    private static class LanguageCollectingSemiring implements Semiring<List<Tree<String>>> {
+        public List<Tree<String>> add(List<Tree<String>> x, List<Tree<String>> y) {
             x.addAll(y);
             return x;
         }
 
-        public List<Tree> multiply(List<Tree> partialTrees, List<Tree> newSubtrees) {
-            List<Tree> ret = new ArrayList<Tree>();
-            for (Tree partialTree : partialTrees) {
-                for (Tree newSubtree : newSubtrees) {
-                    Tree newTree = partialTree.copy();
+        public List<Tree<String>> multiply(List<Tree<String>> partialTrees, List<Tree<String>> newSubtrees) {
+            List<Tree<String>> ret = new ArrayList<Tree<String>>();
+            for (Tree<String> partialTree : partialTrees) {
+                for (Tree<String> newSubtree : newSubtrees) {
+                    Tree<String> newTree = partialTree.copy();
                     newTree.insert(newSubtree, newTree.getRoot());
                     ret.add(newTree);
                 }
@@ -366,8 +366,8 @@ public abstract class BottomUpAutomaton<State> {
             return ret;
         }
 
-        public List<Tree> zero() {
-            return new ArrayList<Tree>();
+        public List<Tree<String>> zero() {
+            return new ArrayList<Tree<String>>();
         }
     }
 
@@ -460,7 +460,11 @@ public abstract class BottomUpAutomaton<State> {
      * @param childStates
      * @return 
      */
-    protected boolean contains(String label, List<State> childStates) {
+    protected boolean useCachedRuleBottomUp(String label, List<State> childStates) {
+        if( isExplicit ) {
+            return true;
+        }
+            
         StateListToStateMap smap = explicitRules.get(label);
 
         if (smap == null) {
@@ -477,7 +481,11 @@ public abstract class BottomUpAutomaton<State> {
      * @param parent
      * @return 
      */
-    protected boolean containsTopDown(String label, State parent) {
+    protected boolean useCachedRuleTopDown(String label, State parent) {
+        if( isExplicit ) {
+            return true;
+        }
+        
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(label);
         if (topdown == null) {
             return false;
@@ -636,14 +644,11 @@ public abstract class BottomUpAutomaton<State> {
     public <E> Map<State, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<State, E> evaluator) {
         Map<State, E> ret = new HashMap<State, E>();
 
-        System.err.println("\neval: bu-states " + getStatesInBottomUpOrder());
-
         for (State s : getStatesInBottomUpOrder()) {
             E accu = semiring.zero();
 
             for (String label : getAllLabels()) {
                 Set<Rule<State>> rules = getRulesTopDown(label, s);
-                System.err.println("eval: rules for " + s + "/" + label + " = " + rules);
 
                 for (Rule<State> rule : rules) {
                     E valueThisRule = evaluator.evaluateRule(rule);
@@ -661,13 +666,11 @@ public abstract class BottomUpAutomaton<State> {
 
                     if (valueThisRule != null) {
                         accu = semiring.add(accu, valueThisRule);
-                        System.err.println("  add " + valueThisRule + " to " + s + " because of " + rule);
                     }
                 }
             }
 
             ret.put(s, accu);
-            System.err.println("eval: " + s + " -> " + accu);
         }
 
         return ret;

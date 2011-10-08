@@ -35,24 +35,26 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
     @Override
     public Set<Rule<State>> getRulesBottomUp(String label, final List<State> childStates) {
         // lazy bottom-up computation of bottom-up rules
-        if( contains(label, childStates)) {
+        if (useCachedRuleBottomUp(label, childStates)) {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
+            Set<Rule<State>> ret = new HashSet<Rule<State>>();
             Map<String, StringOrVariable> varmap = hom.getVariableMap(label);
             Map<String, State> statemap = new HashMap<String, State>();
-            
-            for( String node : varmap.keySet() ) {
-                statemap.put(node, childStates.get(Homomorphism.getIndexForVariable(varmap.get(node))));
+
+            if (new HashSet<StringOrVariable>(varmap.values()).size() == childStates.size()) {
+                for (String node : varmap.keySet()) {
+                    statemap.put(node, childStates.get(Homomorphism.getIndexForVariable(varmap.get(node))));
+                }
+
+                Set<State> resultStates = rhsAutomaton.run(hom.get(label), statemap);
+                for (State r : resultStates) {
+                    Rule<State> rule = new Rule<State>(r, label, childStates);
+                    storeRule(rule);
+                    ret.add(rule);
+                }
             }
-            
-            Set<State> resultStates = rhsAutomaton.run(hom.get(label), statemap);
-            Set<Rule<State>> ret = new HashSet<Rule<State>>();
-            for( State r : resultStates ) {
-                Rule<State> rule = new Rule<State>(r, label, childStates);
-                storeRule(rule);
-                ret.add(rule);
-            }
-            
+
             return ret;
         }
     }
@@ -72,7 +74,6 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
         if (rhsTree != null) {
 
             Set<Item> rootItems = rhsTree.dfs(new TreeVisitor<Void, Set<Item>>() {
-
                 @Override
                 public Set<Item> combine(String node, List<Set<Item>> childrenValues) {
                     Set<Item> ret = new HashSet<Item>();
@@ -125,7 +126,6 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
     }
 
     private class Item {
-
         public State state;
         public Map<StringOrVariable, State> substitution;
 

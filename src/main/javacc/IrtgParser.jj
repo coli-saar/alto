@@ -23,6 +23,7 @@ import de.saar.penguin.irtg.hom.*;
 import de.saar.penguin.irtg.algebra.*;
 import de.saar.chorus.term.*;
 import de.saar.basic.tree.*;
+import de.saar.basic.*;
 
 
 /**
@@ -171,7 +172,7 @@ void HomomorphismRule() :
 }
 {
     "[" interpName=<NAME>.image "]" term=Term() {
-        Tree rhs = term.toTree();
+        Tree<StringOrVariable> rhs = term.toTreeWithVariables();
         Homomorphism hom = homomorphisms.get(interpName);
 
         if( hom == null ) {

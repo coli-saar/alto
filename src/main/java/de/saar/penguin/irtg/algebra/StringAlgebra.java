@@ -83,7 +83,7 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         @Override
         public Set<Rule<Span>> getRulesBottomUp(String label, List<Span> childStates) {
-            if (contains(label, childStates)) {
+            if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
                 Set<Rule<Span>> ret = new HashSet<Rule<Span>>();
@@ -119,7 +119,7 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         @Override
         public Set<Rule<Span>> getRulesTopDown(String label, Span parentState) {
-            if( ! containsTopDown(label, parentState)) {
+            if( ! useCachedRuleTopDown(label, parentState)) {
                 if( label.equals(CONCAT)) {
                     for( int i = parentState.start + 1; i < parentState.end; i++ ) {
                         List<Span> childStates = new ArrayList<Span>();

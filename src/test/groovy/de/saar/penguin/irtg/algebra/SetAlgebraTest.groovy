@@ -12,6 +12,8 @@ import de.saar.penguin.irtg.automata.*
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.saar.basic.tree.*;
+import de.saar.penguin.irtg.*;
+import de.saar.penguin.irtg.hom.*;
 
 /**
  *
@@ -73,6 +75,105 @@ class SetAlgebraTest {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
         Set<List<String>> result = a.evaluate(pt("uniq_r1(rabbit)"))
         Set<List<String>> gold = sl([])
+        assertEquals(gold, result)
+    }
+    
+    @Test
+    public void testGenerateRE() {
+        SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
+        Set referent = a.parseString("{r1}");
+        BottomUpAutomaton decomp = a.decompose(referent);
+        
+        String grammarstring = '''
+interpretation i: de.saar.penguin.irtg.algebra.SetAlgebra
+
+a_rabbit(Adj_N) -> N!
+  [i] intersect_1(rabbit, ?1)
+
+b_white -> Adj_N
+  [i] white
+
+b_nop -> Adj_N
+  [i] T
+        ''';
+         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+         Homomorphism hom = irtg.getInterpretations().get("i").getHom();
+         
+        BottomUpAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+        chart.makeAllRulesExplicit();
+        
+        List result = chart.language();
+        List gold = [pt("a_rabbit(b_white)")]
+        
+        assertEquals(gold, result)
+    }
+    
+    @Test
+    public void testGenerateSent() {
+        SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
+        Set referent = a.parseString("{e}");
+        BottomUpAutomaton decomp = a.decompose(referent);
+        
+        String grammarstring = '''
+interpretation i: de.saar.penguin.irtg.algebra.SetAlgebra
+
+a_rabbit(Adj_N) -> N
+  [i] intersect_1(rabbit, ?1)
+
+b_white -> Adj_N
+  [i] white
+
+b_nop -> Adj_N
+  [i] T
+
+a_sleeps_r1(N) -> S!
+  [i] project_1(intersect_2(sleep, uniq_r1(?1)))
+        ''';
+        
+         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+         Homomorphism hom = irtg.getInterpretations().get("i").getHom();
+         
+        BottomUpAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+        chart.makeAllRulesExplicit();
+        
+        List result = chart.language();
+        List gold = [pt("a_sleeps_r1(a_rabbit(b_white))")]
+        
+        assertEquals(gold, result)
+    }
+    
+    // uniqueness requirement in semantics of "sleeps" is deliberately missing
+    @Test
+    public void testGenerateSent2() {
+        SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
+        Set referent = a.parseString("{e}");
+        BottomUpAutomaton decomp = a.decompose(referent);
+        
+        String grammarstring = '''
+interpretation i: de.saar.penguin.irtg.algebra.SetAlgebra
+
+a_rabbit(Adj_N) -> N
+  [i] intersect_1(rabbit, ?1)
+
+b_white -> Adj_N
+  [i] white
+
+b_nop -> Adj_N
+  [i] T
+
+a_sleeps_r1(N) -> S!
+  [i] project_1(intersect_2(sleep, ?1))
+        ''';
+        
+         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+         Homomorphism hom = irtg.getInterpretations().get("i").getHom();
+         
+        BottomUpAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+        chart.makeAllRulesExplicit();
+        
+        Set result = new HashSet(chart.language())
+        Set gold = new HashSet([pt("a_sleeps_r1(a_rabbit(b_white))"), pt("a_sleeps_r1(a_rabbit(b_nop))")])
+        
         assertEquals(gold, result)
     }
     

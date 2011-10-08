@@ -56,7 +56,6 @@ class InterpretedTreeAutomatonTest {
         assert chart.accepts(parseTree("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"));
         assert chart.accepts(parseTree("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))"));
 
-        System.err.println("*** count ***");
         assertEquals(2, chart.countTrees());
     }
 

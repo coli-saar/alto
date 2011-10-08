@@ -10,6 +10,7 @@ import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,19 +24,32 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";
     private static final String UNIQ = "uniq_";
+    private static final String TOP = "T";
     private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ};
     private static final int MAX_TUPLE_LENGTH = 3;
     private final Map<String, Set<List<String>>> atomicInterpretations;
     private final Set<String> allIndividuals;
     private final Set<String> allLabels;
+    private final Set<List<String>> allIndividualsAsTuples;
+    
+    public SetAlgebra() {
+        this(new HashMap<String, Set<List<String>>>());
+    }
 
     public SetAlgebra(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
 
         allIndividuals = new HashSet<String>();
+        allIndividualsAsTuples = new HashSet<List<String>>();
         for (Set<List<String>> sls : atomicInterpretations.values()) {
             for (List<String> ls : sls) {
                 allIndividuals.addAll(ls);
+                
+                for( String x : ls ) {
+                    List<String> tuple = new ArrayList<String>();
+                    tuple.add(x);
+                    allIndividualsAsTuples.add(tuple);
+                }
             }
         }
 
@@ -68,6 +82,8 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
             return intersect(childrenValues.get(0), childrenValues.get(1), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(UNIQ)) {
             return uniq(childrenValues.get(0), arg(label));
+        } else if( label.equals(TOP)) {
+            return allIndividualsAsTuples;
         } else {
             return atomicInterpretations.get(label);
         }
@@ -129,22 +145,20 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
 
     @Override
     public BottomUpAutomaton decompose(Set<List<String>> value) {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return new SetDecompositionAutomaton(value);
     }
 
     private class SetDecompositionAutomaton extends BottomUpAutomaton<Set<List<String>>> {
         private Set<Set<List<String>>> finalStates;
 
-        public SetDecompositionAutomaton(String finalElement) {
+        public SetDecompositionAutomaton(Set<List<String>> finalElement) {
             finalStates = new HashSet<Set<List<String>>>();
-            Set<List<String>> x = new HashSet<List<String>>();
-            x.add(l(finalElement));
-            finalStates.add(x);
+            finalStates.add(finalElement);
         }
 
         @Override
         public Set<Rule<Set<List<String>>>> getRulesBottomUp(String label, List<Set<List<String>>> childStates) {
-            if (contains(label, childStates)) {
+            if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
                 Set<List<String>> parents = evaluate(label, childStates);
