@@ -41,17 +41,12 @@ public class Main {
         }
     }
     
-    
-    
-
-    /*
-    private static void parseCommandLineArgs(String[] args) {
-        for (int i = 0; i < args.length; i++) {
-            if ("--quiet".equals(args[i]) || "-q".equals(args[i])) {
-                quiet = true;
-            }
+    @CallableFromShell
+    public void type(Object val) {
+        if( val ==  null ) {
+            System.out.println(val);
+        } else {
+            System.out.println(val.getClass());
         }
     }
-     * 
-     */
 }

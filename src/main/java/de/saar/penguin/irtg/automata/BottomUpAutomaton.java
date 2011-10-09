@@ -38,7 +38,7 @@ public abstract class BottomUpAutomaton<State> {
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
     protected Set<State> allStates;
-    private final Map<String,State> dummyLtsSubstitution = new HashMap<String, State>();
+    private final Map<String, State> dummyLtsSubstitution = new HashMap<String, State>();
     protected boolean isExplicit;
     protected SetMultimap<State, Rule<State>> rulesForRhsState;
 
@@ -327,7 +327,7 @@ public abstract class BottomUpAutomaton<State> {
      * 
      * @return 
      */
-    @CallableFromShell(joinList="\n")
+    @CallableFromShell(joinList = "\n")
     public List<Tree<String>> language() {
         /*
          * The current implementation is probably not particularly efficient.
@@ -385,19 +385,16 @@ public abstract class BottomUpAutomaton<State> {
         Map<String, Map<List<State>, Set<Rule<State>>>> otherRules = ((BottomUpAutomaton) o).getAllRules();
 
         if (!rules.keySet().equals(otherRules.keySet())) {
-//            System.err.println("not equals: labels " + rules.keySet() + " vs " +otherRules.keySet());
             return false;
         }
 
         for (String f : rules.keySet()) {
             if (!rules.get(f).keySet().equals(otherRules.get(f).keySet())) {
-//                System.err.println("not equals: LHS for " + f + " is " + rules.get(f).keySet() + " vs " + otherRules.get(f).keySet() );
                 return false;
             }
 
             for (List<State> states : rules.get(f).keySet()) {
                 if (!new HashSet<Rule<State>>(rules.get(f).get(states)).equals(new HashSet<Rule<State>>(otherRules.get(f).get(states)))) {
-//                    System.err.println("noteq: RHS for " + f + states + " is " + rules.get(f).get(states) + " vs " + otherRules.get(f).get(states));
                     return false;
                 }
             }
@@ -465,10 +462,10 @@ public abstract class BottomUpAutomaton<State> {
      * @return 
      */
     protected boolean useCachedRuleBottomUp(String label, List<State> childStates) {
-        if( isExplicit ) {
+        if (isExplicit) {
             return true;
         }
-            
+
         StateListToStateMap smap = explicitRules.get(label);
 
         if (smap == null) {
@@ -486,10 +483,10 @@ public abstract class BottomUpAutomaton<State> {
      * @return 
      */
     protected boolean useCachedRuleTopDown(String label, State parent) {
-        if( isExplicit ) {
+        if (isExplicit) {
             return true;
         }
-        
+
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(label);
         if (topdown == null) {
             return false;
@@ -597,20 +594,15 @@ public abstract class BottomUpAutomaton<State> {
      * @return 
      */
     public BottomUpAutomaton<State> reduceBottomUp() {
-        Map<State, Boolean> productiveStates = evaluateInSemiring(new AndOrSemiring(), new RuleEvaluator<State, Boolean>() {
-            public Boolean evaluateRule(Rule<State> rule) {
-                return true;
-            }
-        });
-
+        Set<State> productiveStates = getProductiveStates();
         ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
 
         // copy all rules that only contain productive states
         for (Rule<State> rule : getRuleSet()) {
-            boolean allProductive = productiveStates.get(rule.getParent());
+            boolean allProductive = productiveStates.contains(rule.getParent());
 
             for (State child : rule.getChildren()) {
-                if (!productiveStates.get(child)) {
+                if (!productiveStates.contains(child)) {
                     allProductive = false;
                 }
             }
@@ -622,12 +614,16 @@ public abstract class BottomUpAutomaton<State> {
 
         // copy all productive final states
         for (State state : getFinalStates()) {
-            if (productiveStates.get(state)) {
+            if (productiveStates.contains(state)) {
                 ret.addFinalState(state);
             }
         }
 
         return ret;
+    }
+
+    public Set<State> getProductiveStates() {
+        return new HashSet<State>(getStatesInBottomUpOrder());
     }
 
     /**
@@ -718,7 +714,9 @@ public abstract class BottomUpAutomaton<State> {
     /**
      * Returns a topological ordering of the states, such that
      * later nodes always occur above earlier nodes in any run
-     * of the automaton on a tree.
+     * of the automaton on a tree. Note that only states that are
+     * reachable top-down from the final states are included in the
+     * list that is returned.
      * 
      * @return 
      */

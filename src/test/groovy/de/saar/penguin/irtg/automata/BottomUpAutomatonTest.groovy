@@ -106,6 +106,32 @@ class BottomUpAutomatonTest {
         assertEquals(gold, lang)
     }
     
+    @Test
+    public void testReduce() {
+        BottomUpAutomaton auto = parse("""r12 -> P.4-5 [1.0]
+r11 -> N.6-7 [1.0]
+r10 -> N.3-4 [1.0]
+r6(P.4-5, NP.5-7) -> PP.4-7 [1.0]
+r7 -> NP.0-1 [1.0]
+r8 -> V.1-2 [1.0]
+r1(NP.0-1, VP.1-4) -> S.0-4 [1.0]
+r1(NP.0-1, VP.1-7) -> S.0-7! [1.0]
+r9 -> Det.2-3 [1.0]
+r9 -> Det.5-6 [1.0]
+r2(Det.5-6, N.6-7) -> NP.5-7 [1.0]
+r2(Det.2-3, N.3-4) -> NP.2-4 [1.0]
+r2(Det.2-3, N.3-7) -> NP.2-7 [1.0]
+r3(N.3-4, PP.4-7) -> N.3-7 [1.0]
+r4(V.1-2, NP.2-4) -> VP.1-4 [1.0]
+r4(V.1-2, NP.2-7) -> VP.1-7 [1.0]
+r5(VP.1-4, PP.4-7) -> VP.1-7 [1.0]""");
+        
+        Set productiveStates = auto.getProductiveStates();
+        Set gold = new HashSet(["NP.0-1", "V.1-2", "Det.2-3", "N.3-4", "P.4-5", "Det.5-6", "N.6-7", "PP.4-7", "S.0-7", "NP.5-7", "NP.2-4", "NP.2-7", "N.3-7", "VP.1-4", "VP.1-7"]);
+        assertEquals(gold, productiveStates);
+        
+    }
+    
     private static Tree pt(String s) {
         TermParser.parse(s).toTree()
     }

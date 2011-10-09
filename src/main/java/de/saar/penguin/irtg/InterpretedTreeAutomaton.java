@@ -11,8 +11,6 @@ import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.up.ling.shell.CallableFromShell;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -28,14 +26,12 @@ import java.util.Set;
 public class InterpretedTreeAutomaton {
     private BottomUpAutomaton<String> automaton;
     private Map<String, Interpretation> interpretations;
-    private boolean debug = false;
+    private boolean debug = true;
 
     public InterpretedTreeAutomaton(BottomUpAutomaton<String> automaton) {
         this.automaton = automaton;
         interpretations = new HashMap<String, Interpretation>();
     }
-    
-    
 
     public void addInterpretation(String name, Interpretation interp) {
         interpretations.put(name, interp);
@@ -50,29 +46,30 @@ public class InterpretedTreeAutomaton {
     }
 
     public Object parseString(String interpretation, String representation) throws ParseException {
-        return getInterpretations().get(interpretation).getAlgebra().parseString(representation);
+        Object ret = getInterpretations().get(interpretation).getAlgebra().parseString(representation);
+        return ret;
     }
-    
-    public Map<String,Object> parseStrings(Map<String,String> representations) throws ParseException {
-        Map<String,Object> ret = new HashMap<String, Object>();
-        for( String interp : representations.keySet() ) {
+
+    public Map<String, Object> parseStrings(Map<String, String> representations) throws ParseException {
+        Map<String, Object> ret = new HashMap<String, Object>();
+        for (String interp : representations.keySet()) {
             ret.put(interp, parseString(interp, representations.get(interp)));
         }
         return ret;
     }
 
-    @CallableFromShell(name="parse")
-    public BottomUpAutomaton parseFromReaders(Map<String,Reader> readers) throws ParseException, IOException {
+    @CallableFromShell(name = "parse")
+    public BottomUpAutomaton parseFromReaders(Map<String, Reader> readers) throws ParseException, IOException {
         Map<String, Object> inputs = new HashMap<String, Object>();
-        
-        for( String interp : readers.keySet() ) {
+
+        for (String interp : readers.keySet()) {
             String representation = StringTools.slurp(readers.get(interp));
             inputs.put(interp, parseString(interp, representation));
         }
-        
+
         return parse(inputs);
     }
-    
+
     public BottomUpAutomaton parse(Map<String, Object> inputs) {
         BottomUpAutomaton ret = automaton;
 
@@ -84,8 +81,8 @@ public class InterpretedTreeAutomaton {
 
         return ret;
     }
-    
-    @CallableFromShell(name="emtrain")
+
+    @CallableFromShell(name = "emtrain")
     public void trainEM(Reader reader) throws IOException {
         List<Map<String, Object>> data = readTrainingData(reader);
         trainEM(data);
@@ -105,7 +102,8 @@ public class InterpretedTreeAutomaton {
 
             // E-step
             for (Map<String, Object> tuple : trainingData) {
-                BottomUpAutomaton parse = parse(tuple).reduceBottomUp();
+                BottomUpAutomaton parse = parse(tuple);
+                parse = parse.reduceBottomUp();
                 Map<Object, Double> inside = parse.inside();
                 Map<Object, Double> outside = parse.outside(inside);
                 Set<Rule> rules = parse.getRuleSet();
@@ -139,7 +137,9 @@ public class InterpretedTreeAutomaton {
                 rule.setWeight(globalRuleCount.get(rule) / globalStateCount.get(rule.getParent()));
             }
 
-            if(debug) System.out.println("\n\nAfter iteration " + (iteration + 1) + ":\n" + automaton);
+            if (debug) {
+                System.out.println("\n\nAfter iteration " + (iteration + 1) + ":\n" + automaton);
+            }
         }
     }
 
@@ -171,7 +171,7 @@ public class InterpretedTreeAutomaton {
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-    
+
     private List<Map<String, Object>> readTrainingData(Reader reader) throws IOException {
         BufferedReader br = new BufferedReader(reader);
         List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
@@ -182,8 +182,13 @@ public class InterpretedTreeAutomaton {
 
         while (true) {
             String line = br.readLine();
+
             if (line == null) {
                 return ret;
+            }
+
+            if (line.equals("")) {
+                continue;
             }
 
             if (lineNumber < getInterpretations().size()) {
@@ -191,6 +196,7 @@ public class InterpretedTreeAutomaton {
             } else {
                 String current = interpretationOrder.get(currentInterpretation);
                 try {
+//                    System.err.println("")
                     currentTuple.put(current, parseString(current, line));
                 } catch (de.saar.penguin.irtg.algebra.ParseException ex) {
                     System.out.println("An error occurred while parsing " + reader + ", line " + (lineNumber + 1) + ": " + ex.getMessage());

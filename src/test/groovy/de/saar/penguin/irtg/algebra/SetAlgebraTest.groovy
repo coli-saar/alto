@@ -140,7 +140,6 @@ a_sleeps_r1(N) -> S!
         List gold = [pt("a_sleeps_r1(a_rabbit(b_white))")]
         
         assertEquals(gold, result)
-        println(chart)
     }
     
     // uniqueness requirement in semantics of "sleeps" is deliberately missing

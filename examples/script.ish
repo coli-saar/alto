@@ -4,4 +4,4 @@ chart = irtg.parse(i:"john watches the woman with the telescope")
 println(chart.viterbi())
 
 
-// irtg.emtrain(["pcfg-training.txt"])
+// irtg.emtrain(["examples/pcfg-training.txt"])

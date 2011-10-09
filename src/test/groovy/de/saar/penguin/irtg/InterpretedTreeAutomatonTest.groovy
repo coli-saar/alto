@@ -47,11 +47,6 @@ class InterpretedTreeAutomatonTest {
         List words = irtg.parseString("string", string);
         BottomUpAutomaton chart = irtg.parse(["string": words]);
         chart.makeAllRulesExplicit();
-//        System.err.println(chart);
-
-//        System.err.println("\n\nstates in order: " + chart.getStatesInBottomUpOrder() );
-
-//        System.err.println("\n\nreduced:\n" + chart.reduce());
 
         assert chart.accepts(parseTree("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"));
         assert chart.accepts(parseTree("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))"));
@@ -79,6 +74,14 @@ r2 -> S
 
         chart.reduceBottomUp();
     }
+    
+    @Test
+    public void testEM() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        irtg.trainEM(new StringReader(PCFG_EMTRAIN_STR));
+        
+        assert true;
+    }
 
     public static Tree parseTree(String s) {
         return TermParser.parse(s).toTree();
@@ -87,5 +90,64 @@ r2 -> S
     private static BottomUpAutomaton parse(String s) {
         return BottomUpAutomatonParser.parse(new StringReader(s));
     }
+    
+    private static final String CFG_STR = """
+interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
+
+r1(NP,VP) -> S!
+  [i] *(?1,?2)
+
+
+r4(V,NP) -> VP 
+  [i] *(?1,?2)
+
+
+r5(VP,PP) -> VP
+  [i] *(?1,?2)
+
+
+r6(P,NP) -> PP
+  [i] *(?1,?2)
+
+
+r7 -> NP
+  [i] john
+
+
+r2(Det,N) -> NP
+  [i] *(?1,?2)
+
+
+r8 -> V
+  [i] watches
+
+
+r9 -> Det
+  [i] the
+
+
+r10 -> N
+  [i] woman
+
+
+r11 -> N
+  [i] telescope
+
+r3(N,PP) -> N
+  [i] *(?1,?2)
+
+r12 -> P
+  [i] with
+
+
+
+""";
+    
+    private static final String PCFG_EMTRAIN_STR = """
+i
+john watches the woman with the telescope
+john watches the telescope with the telescope
+john watches the telescope with the woman
+""";
 }
 
