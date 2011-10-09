@@ -18,6 +18,7 @@ import de.saar.penguin.irtg.semiring.DoubleArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.LongArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.Semiring;
 import de.saar.penguin.irtg.semiring.ViterbiWithBackpointerSemiring;
+import de.up.ling.shell.CallableFromShell;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -225,6 +226,7 @@ public abstract class BottomUpAutomaton<State> {
      * 
      * @return 
      */
+    @CallableFromShell
     public long countTrees() {
         Map<State, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<State, Long>() {
             public Long evaluateRule(Rule<State> rule) {
@@ -284,6 +286,7 @@ public abstract class BottomUpAutomaton<State> {
      * 
      * @return 
      */
+    @CallableFromShell
     public Tree viterbi() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
         Map<State, Pair<Double, Rule<State>>> map =
@@ -324,6 +327,7 @@ public abstract class BottomUpAutomaton<State> {
      * 
      * @return 
      */
+    @CallableFromShell(joinList="\n")
     public List<Tree<String>> language() {
         /*
          * The current implementation is probably not particularly efficient.

@@ -1,4 +1,7 @@
-irtg = load("examples/cfg.irtg")  // a test comment
-chart = parse(irtg, i:"john watches the woman with the telescope")
+irtg = irtg(["examples/cfg.irtg"])  // a test comment
+chart = irtg.parse(i:"john watches the woman with the telescope")
 
-print(viterbi(chart))
+println(chart.viterbi())
+
+
+// irtg.emtrain(["pcfg-training.txt"])

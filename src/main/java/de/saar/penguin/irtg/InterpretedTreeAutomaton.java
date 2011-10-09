@@ -5,9 +5,16 @@
 package de.saar.penguin.irtg;
 
 import de.saar.basic.Pair;
+import de.saar.basic.StringTools;
 import de.saar.penguin.irtg.algebra.ParseException;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.up.ling.shell.CallableFromShell;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +34,8 @@ public class InterpretedTreeAutomaton {
         this.automaton = automaton;
         interpretations = new HashMap<String, Interpretation>();
     }
+    
+    
 
     public void addInterpretation(String name, Interpretation interp) {
         interpretations.put(name, interp);
@@ -52,6 +61,18 @@ public class InterpretedTreeAutomaton {
         return ret;
     }
 
+    @CallableFromShell(name="parse")
+    public BottomUpAutomaton parseFromReaders(Map<String,Reader> readers) throws ParseException, IOException {
+        Map<String, Object> inputs = new HashMap<String, Object>();
+        
+        for( String interp : readers.keySet() ) {
+            String representation = StringTools.slurp(readers.get(interp));
+            inputs.put(interp, parseString(interp, representation));
+        }
+        
+        return parse(inputs);
+    }
+    
     public BottomUpAutomaton parse(Map<String, Object> inputs) {
         BottomUpAutomaton ret = automaton;
 
@@ -62,6 +83,12 @@ public class InterpretedTreeAutomaton {
         }
 
         return ret;
+    }
+    
+    @CallableFromShell(name="emtrain")
+    public void trainEM(Reader reader) throws IOException {
+        List<Map<String, Object>> data = readTrainingData(reader);
+        trainEM(data);
     }
 
     public void trainEM(List<Map<String, Object>> trainingData) {
@@ -143,5 +170,42 @@ public class InterpretedTreeAutomaton {
 
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+    
+    private List<Map<String, Object>> readTrainingData(Reader reader) throws IOException {
+        BufferedReader br = new BufferedReader(reader);
+        List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
+        List<String> interpretationOrder = new ArrayList<String>();
+        Map<String, Object> currentTuple = new HashMap<String, Object>();
+        int currentInterpretation = 0;
+        int lineNumber = 0;
+
+        while (true) {
+            String line = br.readLine();
+            if (line == null) {
+                return ret;
+            }
+
+            if (lineNumber < getInterpretations().size()) {
+                interpretationOrder.add(line);
+            } else {
+                String current = interpretationOrder.get(currentInterpretation);
+                try {
+                    currentTuple.put(current, parseString(current, line));
+                } catch (de.saar.penguin.irtg.algebra.ParseException ex) {
+                    System.out.println("An error occurred while parsing " + reader + ", line " + (lineNumber + 1) + ": " + ex.getMessage());
+                    return null;
+                }
+
+                currentInterpretation++;
+                if (currentInterpretation >= interpretationOrder.size()) {
+                    ret.add(currentTuple);
+                    currentTuple = new HashMap<String, Object>();
+                    currentInterpretation = 0;
+                }
+            }
+
+            lineNumber++;
+        }
     }
 }
