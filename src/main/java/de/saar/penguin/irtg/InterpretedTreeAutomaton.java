@@ -26,7 +26,7 @@ import java.util.Set;
 public class InterpretedTreeAutomaton {
     private BottomUpAutomaton<String> automaton;
     private Map<String, Interpretation> interpretations;
-    private boolean debug = true;
+    private boolean debug = false;
 
     public InterpretedTreeAutomaton(BottomUpAutomaton<String> automaton) {
         this.automaton = automaton;

@@ -13,7 +13,6 @@ import de.saar.basic.Pair;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.hom.Homomorphism;
-import de.saar.penguin.irtg.semiring.AndOrSemiring;
 import de.saar.penguin.irtg.semiring.DoubleArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.LongArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.Semiring;

@@ -128,8 +128,38 @@ r5(VP.1-4, PP.4-7) -> VP.1-7 [1.0]""");
         
         Set productiveStates = auto.getProductiveStates();
         Set gold = new HashSet(["NP.0-1", "V.1-2", "Det.2-3", "N.3-4", "P.4-5", "Det.5-6", "N.6-7", "PP.4-7", "S.0-7", "NP.5-7", "NP.2-4", "NP.2-7", "N.3-7", "VP.1-4", "VP.1-7"]);
-        assertEquals(gold, productiveStates);
+        assertEquals(gold, productiveStates);        
+    }
+    
+    @Test
+    public void testIntersectWeights() {
+        BottomUpAutomaton auto1 = parse("a -> q1 [0.5]\n f(q1,q1) -> q2 !");
+        BottomUpAutomaton auto2 = parse("f(p2,p3) -> p1!\n a -> p2 [0.4]\n a -> p3 [0.6]");
+        BottomUpAutomaton intersect = auto1.intersect(auto2);
         
+        Set rulesForA = intersect.getRulesBottomUp("a", [])
+        
+        for( Rule r : rulesForA ) {
+            double w = r.getWeight();
+            assert ((Math.abs(w-0.3) < 0.001) || (Math.abs(w-0.2) < 0.001)) : rulesForA;
+        }
+        
+//        assertEquals( new HashSet([0.4*0.5, 0.6*0.5]), new HashSet(rulesForA.collect { it.getWeight() }) )
+    }
+    
+    @Test
+    public void testIntersectWeightsViaExplicit() {
+        BottomUpAutomaton auto1 = parse("a -> q1 [0.5]\n f(q1,q1) -> q2 !");
+        BottomUpAutomaton auto2 = parse("f(p2,p3) -> p1!\n a -> p2 [0.4]\n a -> p3 [0.6]");
+        BottomUpAutomaton intersect = auto1.intersect(auto2);
+        
+        intersect.makeAllRulesExplicit();        
+        Set rulesForA = intersect.getRulesBottomUp("a", [])
+        
+        for( Rule r : rulesForA ) {
+            double w = r.getWeight();
+            assert ((Math.abs(w)-0.3 < 0.001) || (Math.abs(w)-0.2 < 0.001)) : rulesForA;
+        }
     }
     
     private static Tree pt(String s) {

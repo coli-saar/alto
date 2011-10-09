@@ -9,8 +9,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
-import de.saar.basic.tree.Tree;
-import de.saar.chorus.term.parser.TermParser;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -50,49 +48,37 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             SetMultimap<LeftState, RightState> partners = HashMultimap.create();
 
             // initialize agenda with all pairs of rules of the form A -> f
-            Map<String, Set<RightState>> preTerminalStatesRight = new HashMap<String, Set<RightState>>();
+            Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new HashMap<String, Set<Rule<RightState>>>();
             List<RightState> noRightChildren = new ArrayList<RightState>();
             for (String label : right.getAllLabels()) {
                 Set<Rule<RightState>> rules = right.getRulesBottomUp(label, noRightChildren);
-                Set<RightState> parents = new HashSet<RightState>();
-                for (Rule<RightState> rule : rules) {
-                    parents.add(rule.getParent());
-                }
-                preTerminalStatesRight.put(label, parents);
+                preTerminalStatesRight.put(label, rules);
             }
 
-            List<Pair<LeftState,RightState>> noChildren = new ArrayList<Pair<LeftState, RightState>>();
             for (Rule<LeftState> leftRule : left.getRuleSet()) {
                 if (leftRule.getArity() == 0) {
                     if (preTerminalStatesRight.containsKey(leftRule.getLabel())) {
-                        for (RightState rightParent : preTerminalStatesRight.get(leftRule.getLabel())) {
-                            Rule<Pair<LeftState, RightState>> rule = new Rule<Pair<LeftState,RightState>>(new Pair<LeftState,RightState>(leftRule.getParent(), rightParent), leftRule.getLabel(), noChildren);
+                        for (Rule<RightState> rightRule : preTerminalStatesRight.get(leftRule.getLabel())) {
+                            Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
                             storeRule(rule);
                             agenda.offer(rule.getParent());
                             seenStates.add(rule.getParent());
-                            partners.put(leftRule.getParent(), rightParent);
+                            partners.put(leftRule.getParent(), rightRule.getParent());
                         }
                     }
                 }
             }
-
-//            System.err.println("mARE: Initial states are " + agenda);
 
             // compute rules and states bottom-up
             while (!agenda.isEmpty()) {
                 Pair<LeftState, RightState> state = agenda.remove();
                 List<Rule<LeftState>> possibleRules = rulesByChildState.get(state.left);
 
-//                System.err.println("\n   state " + state + ", rest agenda " + agenda);
-//                System.err.println("   poss rules " + possibleRules);
-
                 for (Rule<LeftState> leftRule : possibleRules) {
                     List<Set<RightState>> partnerStates = new ArrayList<Set<RightState>>();
                     for (LeftState leftState : leftRule.getChildren()) {
                         partnerStates.add(partners.get(leftState));
                     }
-
-//                    System.err.println("   partners for " + leftRule + ": " + partnerStates);
 
                     CartesianIterator<RightState> it = new CartesianIterator<RightState>(partnerStates);
                     List<Pair<LeftState, RightState>> newStates = new ArrayList<Pair<LeftState, RightState>>();
@@ -101,7 +87,6 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
                         for (Rule<RightState> rightRule : rightRules) {
                             Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
                             storeRule(rule);
-//                            System.err.println("      add: " + rule);
                             if (seenStates.add(rule.getParent())) {
                                 newStates.add(rule.getParent());
                             }
@@ -110,13 +95,11 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
                     for (Pair<LeftState, RightState> newState : newStates) {
                         agenda.offer(newState);
                         partners.put(newState.left, newState.right);
-//                        System.err.println("     new state " + newState);
                     }
                 }
             }
 
             isExplicit = true;
-//            System.err.println("Intersection mARE: " + getRuleSet());
         }
     }
 
@@ -126,7 +109,7 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             childStates.add(new Pair<LeftState, RightState>(leftRule.getChildren()[i], rightRule.getChildren()[i]));
         }
 
-        return new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), leftRule.getLabel(), childStates);
+        return new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), leftRule.getLabel(), childStates, leftRule.getWeight()*rightRule.getWeight());
     }
 
     @Override
