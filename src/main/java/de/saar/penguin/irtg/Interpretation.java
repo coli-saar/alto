@@ -35,9 +35,12 @@ public class Interpretation<E> {
         return hom;
     }
     
-    
-
     public BottomUpAutomaton parse(E object) {
         return algebra.decompose(object).inverseHomomorphism(hom);
+    }
+
+    @Override
+    public String toString() {
+        return algebra.getClass() + "\n" + hom.toString();
     }
 }

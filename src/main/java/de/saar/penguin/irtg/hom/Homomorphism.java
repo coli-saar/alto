@@ -120,4 +120,15 @@ public class Homomorphism {
     public Set<String> getDomain() {
         return mappings.keySet();
     }
+
+    @Override
+    public String toString() {
+        StringBuilder buf = new StringBuilder();
+        
+        for( String key : mappings.keySet() ) {
+            buf.append(key + " -> " + mappings.get(key) + "\n");
+        }
+        
+        return buf.toString();
+    }
 }

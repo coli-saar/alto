@@ -37,12 +37,19 @@ public class InterpretedTreeAutomaton {
         interpretations.put(name, interp);
     }
 
+    @CallableFromShell(name="automaton")
     public BottomUpAutomaton<String> getAutomaton() {
         return automaton;
     }
 
     public Map<String, Interpretation> getInterpretations() {
         return interpretations;
+    }
+    
+    @CallableFromShell(name="interpretation")
+    public Interpretation getInterpretation(Reader reader) throws IOException {
+        String interp = StringTools.slurp(reader);
+        return interpretations.get(interp);
     }
 
     public Object parseString(String interpretation, String representation) throws ParseException {
