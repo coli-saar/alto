@@ -13,11 +13,12 @@ import de.saar.penguin.irtg.automata.*
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.saar.basic.tree.*;
+import java.util.ArrayList;
 
 
 /**
  *
- * @author koller
+ * @author koller, melzer
  */
 class LambdaTermParserTest {
     @Test
@@ -47,7 +48,22 @@ class LambdaTermParserTest {
         p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))")
         )
     }
-    
+
+    @Test
+    public void testBeta(){
+       LambdaTerm a= LambdaTerm.apply(LambdaTerm.lambda(   "\$f",
+                                                        LambdaTerm.lambda(  "\$x",
+                                                                                a(  v("n"),
+                                                                                    v("f"),
+                                                                                    a(  v("f"),
+                                                                                        v("x"))))),
+                                    LambdaTerm.lambda("\$a",LambdaTerm.lambda("\$b",v("b"))));
+
+       LambdaTerm lx = LambdaTerm.lambda("\$x", LambdaTerm.apply(v("n"),LambdaTerm.lambda("\$a",LambdaTerm.lambda("\$b",v("b"))),LambdaTerm.lambda("\$b",v("b"))));
+       assertEquals(lx,a.reduce());
+
+    }
+
     private static LambdaTerm a(f, LambdaTerm... a) {
         return LambdaTerm.apply(f,Arrays.asList(a));
     }
