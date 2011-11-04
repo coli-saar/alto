@@ -806,7 +806,6 @@ public abstract class BottomUpAutomaton<State> {
 
         private void put(Rule<State> rule, int index, double weight) {
             if (index == rule.getArity()) {
-//                Rule<State> rule = new Rule<State>(state, label, stateList, weight);
                 rulesHere.add(rule);
             } else {
                 State nextState = rule.getChildren()[index];
