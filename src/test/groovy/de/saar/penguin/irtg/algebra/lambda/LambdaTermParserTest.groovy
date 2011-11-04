@@ -48,18 +48,27 @@ class LambdaTermParserTest {
         p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))")
         )
     }
-
+    
+    
     @Test
-    public void testBeta(){
-       LambdaTerm a= LambdaTerm.apply(LambdaTerm.lambda(   "\$f",
+    public void testComplicatedTerm() {
+        LambdaTerm parsed = p("""((lambda \$f (lambda \$x (\$n \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))""");
+        LambdaTerm b = LambdaTerm.apply(LambdaTerm.lambda(   "\$f",
                                                         LambdaTerm.lambda(  "\$x",
                                                                                 a(  v("n"),
                                                                                     v("f"),
                                                                                     a(  v("f"),
                                                                                         v("x"))))),
                                     LambdaTerm.lambda("\$a",LambdaTerm.lambda("\$b",v("b"))));
+                                
+        assertEquals(b,parsed);
+    }
+    
 
-       LambdaTerm lx = LambdaTerm.lambda("\$x", LambdaTerm.apply(v("n"),LambdaTerm.lambda("\$a",LambdaTerm.lambda("\$b",v("b"))),LambdaTerm.lambda("\$b",v("b"))));
+    @Test
+    public void testBeta(){
+       LambdaTerm a = p("((lambda \$f (lambda \$x (\$n \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))");
+       LambdaTerm lx = p("(lambda \$x (\$n (lambda \$a (lambda \$b \$b)) (lambda \$b \$b)))");
        assertEquals(lx,a.reduce());
 
     }
