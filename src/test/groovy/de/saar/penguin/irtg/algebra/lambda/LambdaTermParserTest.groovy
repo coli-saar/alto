@@ -67,9 +67,40 @@ class LambdaTermParserTest {
 
     @Test
     public void testBeta(){
-       LambdaTerm a = p("((lambda \$f (lambda \$x (\$n \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))");
-       LambdaTerm lx = p("(lambda \$x (\$n (lambda \$a (lambda \$b \$b)) (lambda \$b \$b)))");
-       assertEquals(lx,a.reduce());
+        LambdaTerm lx = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
+        LambdaTerm y = p("(lambda \$f (\$f \$f))")
+
+       assertEquals(y,lx.reduce());
+
+    }
+
+    @Test
+    public void testEvaluate(){
+        Tree<LambdaTermAlgebraSymbol> t1 = new Tree<LambdaTermAlgebraSymbol>();
+        Tree<LambdaTermAlgebraSymbol> t2 = new Tree<LambdaTermAlgebraSymbol>();
+
+        LambdaTermAlgebraSymbol func = LambdaTermAlgebraSymbol.functor();
+
+        LambdaTermAlgebraSymbol lt1 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$x (lambda \$f (\$x \$f)))"));
+        LambdaTermAlgebraSymbol lt2 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$a (\$a \$a))"));
+        //LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(p("(love:i)"));
+        // LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(c("love"));
+        LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$r (\$r \$x))"));
+
+        t1.addNode(null,func,null);
+        t1.addNode(lt1,t1.getRoot());
+        t1.addNode(lt2,t1.getRoot());
+
+        t2.addNode(null,func,null);
+        t2.addSubTree(t1,t2.getRoot());
+        t2.addNode(lt3,t2.getRoot());
+
+
+        LambdaTermAlgebra algebra = new LambdaTermAlgebra();
+
+        LambdaTerm test = a(v("x"),v("x"));
+
+        assertEquals(test,algebra.evaluate(t2));
 
     }
 
