@@ -13,23 +13,26 @@ public class LambdaTermAlgebraSymbol {
         public String type;
         public LambdaTerm content;
         
+        public static final String FUNCTOR = "FUNCTOR";
+        public static final String LTERM = "LTERM";
+        
         public static LambdaTermAlgebraSymbol functor(){
             LambdaTermAlgebraSymbol ret = new LambdaTermAlgebraSymbol();
-            ret.type = "FUNCTOR";
+            ret.type = FUNCTOR;
             return ret;
 
         }
 
         public static LambdaTermAlgebraSymbol lterm(LambdaTerm content){
             LambdaTermAlgebraSymbol ret = new LambdaTermAlgebraSymbol();
-            ret.type = "LTERM";
+            ret.type = LTERM;
             ret.content = content;
             return ret;
         }
 
         @Override
         public String toString(){
-            if(this.type.equals("FUNCTOR")){
+            if(this.type.equals(FUNCTOR)){
                 return "<";
             }
             else{

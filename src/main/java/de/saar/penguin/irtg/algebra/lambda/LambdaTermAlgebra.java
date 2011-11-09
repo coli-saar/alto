@@ -12,8 +12,6 @@ import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -37,7 +35,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
                    ArrayList<LambdaTerm> cV = (ArrayList<LambdaTerm>) childValues;
                    LambdaTerm ret;
 
-                   if (x.getLabel(node).type.equals("FUNCTOR")){
+                   if (x.getLabel(node).type.equals(LambdaTermAlgebraSymbol.FUNCTOR)){
                        // works since it is binary tree
                        LambdaTerm tmp = LambdaTerm.apply(cV.get(0),cV.get(1));
                        ret = tmp.reduce();
