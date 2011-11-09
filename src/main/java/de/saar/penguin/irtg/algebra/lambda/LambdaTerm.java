@@ -17,6 +17,13 @@ import java.util.List;
  */
 public class LambdaTerm {
 
+    /**
+     * @return the tree
+     */
+    public Tree<Pair<Type, String>> getTree() {
+        return tree;
+    }
+
     public static enum Type {
 
         CONSTANT, VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN
@@ -29,7 +36,7 @@ public class LambdaTerm {
     private LambdaTerm(Type type) {
         this.type = type;
         this.tree = new Tree<Pair<Type, String>>();
-        Pair<Type, String> pair = new Pair<Type, String>(type, null);
+        Pair<Type, String> pair = new Pair<Type, String>(type, "");
         this.tree.addNode(pair, null);
     }
 
@@ -37,6 +44,7 @@ public class LambdaTerm {
     private LambdaTerm(Tree<Pair<Type, String>> tree) {
         this.type = tree.getLabel(tree.getRoot()).left;
         this.tree = tree;
+        this.x = tree.getLabel(tree.getRoot()).right;
     }
 
     public static LambdaTerm constant(String x) {
@@ -44,7 +52,7 @@ public class LambdaTerm {
         ret.x = x;
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.CONSTANT, x);
-        ret.tree.addNode(pair, null);
+        ret.getTree().addNode(pair, null);
         return ret;
     }
 
@@ -53,7 +61,7 @@ public class LambdaTerm {
         ret.x = x;
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.VARIABLE, x);
-        ret.tree.addNode(pair, null);
+        ret.getTree().addNode(pair, null);
         return ret;
     }
 
@@ -65,8 +73,8 @@ public class LambdaTerm {
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.LAMBDA, x);
-        ret.tree.addNode(pair, null);
-        ret.tree.addSubTree(sub.tree, ret.tree.getRoot());
+        ret.getTree().addNode(pair, null);
+        ret.getTree().addSubTree( sub.getTree(), ret.getTree().getRoot());
         return ret;
     }
 
@@ -77,12 +85,13 @@ public class LambdaTerm {
         ret.sub.addAll(arguments);
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
-        Pair<Type, String> pair = new Pair<Type, String>(Type.APPLY, null);
-        ret.tree.addNode(pair, null);
-        ret.tree.addSubTree(functor.tree, ret.tree.getRoot());
+        Pair<Type, String> pair = new Pair<Type, String>(Type.APPLY, "");
+        ret.getTree().addNode(pair, null);
+        ret.getTree().addSubTree( functor.getTree(), ret.getTree().getRoot());
         for (LambdaTerm argument : arguments) {
-            ret.tree.addSubTree(argument.tree, ret.tree.getRoot());
+            ret.getTree().addSubTree( argument.getTree(), ret.getTree().getRoot());
         }
+        ret.x = "";
         return ret;
     }
 
@@ -98,8 +107,8 @@ public class LambdaTerm {
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.EXISTS, x);
-        ret.tree.addNode(pair, null);
-        ret.tree.addSubTree(sub.tree, ret.tree.getRoot());
+        ret.getTree().addNode(pair, null);
+        ret.getTree().addSubTree( sub.getTree(), ret.getTree().getRoot());
         return ret;
     }
 
@@ -108,10 +117,11 @@ public class LambdaTerm {
         ret.sub = new ArrayList<LambdaTerm>(subs);
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
+        ret.x = "";
         Pair<Type, String> pair = new Pair<Type, String>(Type.APPLY, null);
-        ret.tree.addNode(pair, null);
+        ret.getTree().addNode(pair, null);
         for (LambdaTerm argument : subs) {
-            ret.tree.addSubTree(argument.tree, ret.tree.getRoot());
+            ret.getTree().addSubTree( argument.getTree(), ret.getTree().getRoot());
         }
         return ret;
     }
@@ -129,9 +139,9 @@ public class LambdaTerm {
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.ARGMAX, x);
-        ret.tree.addNode(pair, null);
-        ret.tree.addSubTree(sub1.tree, ret.tree.getRoot());
-        ret.tree.addSubTree(sub2.tree, ret.tree.getRoot());
+        ret.getTree().addNode(pair, null);
+        ret.getTree().addSubTree( sub1.getTree(), ret.getTree().getRoot());
+        ret.getTree().addSubTree( sub2.getTree(), ret.getTree().getRoot());
         return ret;
     }
 
@@ -143,48 +153,15 @@ public class LambdaTerm {
         ret.sub.add(sub2);// merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.ARGMIN, x);
-        ret.tree.addNode(pair, null);
-        ret.tree.addSubTree(sub1.tree, ret.tree.getRoot());
-        ret.tree.addSubTree(sub2.tree, ret.tree.getRoot());
+        ret.getTree().addNode(pair, null);
+        ret.getTree().addSubTree( sub1.getTree(), ret.getTree().getRoot());
+        ret.getTree().addSubTree( sub2.getTree(), ret.getTree().getRoot());
         return ret;
     }
 
-    // returns list of nodes containing the same x as stated in droidName
-    // essential for beta reduction
-    public List<String> findVariables(final String varName) {
-        final ArrayList<String> droidnames = new ArrayList<String>();
-
-        TreeVisitor<String, Void> tv = new TreeVisitor<String, Void>() {
-
-            @Override
-            public String visit(String node, String var) {
-                Pair<Type, String> label = tree.getLabel(node);
-                // TODO fix that
-                try {
-                    if (label.right != null && label.left != Type.LAMBDA && label.right.equals(var)) {
-                        droidnames.add(node);
-                    }
-                } // TODO - Make this work without Exception
-                catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return var;
-
-            }
-
-            @Override
-            public String getRootValue() {
-                return varName;
-            }
-        };
-        tree.dfs(tv);
-        return droidnames;
-
-    }
-
-    // given a list of nodes which shall be substituted
+     // given a list of nodes which shall be substituted
     // substitute every node with the content given
-    private Tree<Pair<Type, String>> substitute(final List<String> nodes, final Tree<Pair<Type, String>> content, final Tree<Pair<Type, String>> treeToWorkOn) {
+    private Tree<Pair<Type, String>> substitute(final String varName, final Tree<Pair<Type, String>> content, final Tree<Pair<Type, String>> treeToWorkOn) {
         //System.out.println("Ersetze "+nodes+" durch "+content);
 
         Tree<Pair<Type, String>> ret = new Tree<Pair<Type, String>>();
@@ -199,7 +176,7 @@ public class LambdaTerm {
             public Tree<Pair<Type, String>> combine(String node, List<Tree<Pair<Type, String>>> childValues) {
                 Tree<Pair<Type, String>> ret = new Tree<Pair<Type, String>>();
                 // replace node
-                if (nodes.contains(node)) {
+                if (treeToWorkOn.getLabel(node).right.equals(varName) && treeToWorkOn.getLabel(node).left == Type.VARIABLE ) {
                     ret = content;
                 } else {
                     // delete upmost node (lamda)
@@ -224,57 +201,51 @@ public class LambdaTerm {
     }
 
     // applies beta-reduction to the LamdaTerm once
-    public LambdaTerm beta() {
+    private LambdaTerm beta() {
 
         // beginning tree visitor
         TreeVisitor<String, Tree<Pair<Type, String>>> tv = new TreeVisitor<String, Tree<Pair<Type, String>>>() {
 
             @Override
             public String getRootValue() {
-                return tree.getRoot();
+                return getTree().getRoot();
             }
 
             @Override
             public Tree<Pair<Type, String>> combine(String parent, List<Tree<Pair<Type, String>>> childValues) {
-                Pair<Type, String> parentLabel = tree.getLabel(parent);
+                Pair<Type, String> parentLabel = getTree().getLabel(parent);
                 Tree<Pair<Type, String>> ret = new Tree<Pair<Type, String>>();
 
                 // if we have an APPLY node
                 if (parentLabel.left == Type.APPLY) {
                     // if there is a variable to fill
-                    Tree<Pair<Type, String>> firstChild = childValues.get(0);
-                    Pair<Type, String> label = firstChild.getLabel(firstChild.getRoot());
+                    Tree<Pair<Type, String>> functor = childValues.get(0);
+                    Pair<Type, String> label = functor.getLabel(functor.getRoot());
                     if (label.left == Type.LAMBDA
                             || label.left == Type.ARGMAX
                             || label.left == Type.ARGMIN
                             || label.left == Type.EXISTS) {
 
-                        // TODO - Performance can be enhanced here
-                        Tree<Pair<Type, String>> subTree = tree.subtree(firstChild.getAllNodesInDfsOrder().get(1));
-                        // TODO - make method only work on given subtree
-                        List<String> nodesToReplace = findVariables(label.right);
-
-                        // Was wenn mehrere Kinder
+                        // if there is more than one child, use the first argument
+                        // and create a new apply node
                         if (childValues.size() > 2) {
                             ret = new Tree<Pair<Type, String>>();
-                            Pair<Type, String> pair = new Pair<Type, String>(Type.APPLY, null);
+                            Pair<Type, String> pair = new Pair<Type, String>(Type.APPLY, "");
                             ret.addNode(pair, null);
-
-
-
-                            for (Tree<Pair<Type, String>> argument : childValues) {
+                            ret.addSubTree(substitute(label.right, childValues.get(1), functor), ret.getRoot());
+                            for (Tree<Pair<Type, String>> argument : childValues.subList(2,childValues.size())) {
                                 ret.addSubTree(argument, ret.getRoot());
                             }
 
                         } else {
-                            //subtree mit ersetzten Werten
-                            ret = substitute(nodesToReplace, childValues.get(1), subTree);
+                            // replace variables with first arguments
+                            ret = substitute(label.right, childValues.get(1), functor);
                         }
 
                     } // else: no variable to fill - just make new Tree
                     else {
 
-                        Pair<Type, String> p = new Pair<Type, String>(Type.APPLY, null);
+                        Pair<Type, String> p = new Pair<Type, String>(Type.APPLY, "");
                         // check hier
                         ret.addNode(p, ret.getRoot());
 
@@ -295,7 +266,7 @@ public class LambdaTerm {
             }
         };
         // end tree visitor
-        LambdaTerm ret = new LambdaTerm(tree.dfs(tv));
+        LambdaTerm ret = new LambdaTerm(getTree().dfs(tv));
 
         return ret;
     }
@@ -307,7 +278,7 @@ public class LambdaTerm {
         Boolean t = true;
         while (t == true) {
             LambdaTerm temp = old.beta();
-            if (temp.tree.equals(old.tree)) {
+            if (temp.getTree().equals(old.getTree())) {
 
                 t = false;
             }
@@ -321,42 +292,15 @@ public class LambdaTerm {
     public Pair<LambdaTerm, LambdaTerm> split(String top, String bottom) {
 
 
-
-
         return null;
     }
 
+
+    // TODO - Rewrite to make subs obsolete
     @Override
     public String toString() {
         return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
     }
-    /*
-    @Override
-    public boolean equals(Object obj) {
-
-    if (obj == null) {
-    return false;
-    }
-    if (getClass() != obj.getClass()) {
-    return false;
-    }
-    final LambdaTerm other = (LambdaTerm) obj;
-    if(this.tree.equals(other.tree)){
-    return true;
-    }
-    if (this.type != other.type) {
-    return false;
-    }
-    if (this.sub != other.sub && (this.sub == null || !this.sub.equals(other.sub))) {
-    return false;
-    }
-    if ((this.x == null) ? (other.x != null) : !this.x.equals(other.x)) {
-    return false;
-    }
-    return true;
-    }
-
-     */
 
     @Override
     public boolean equals(Object obj) {
@@ -368,7 +312,7 @@ public class LambdaTerm {
             return false;
         }
         final LambdaTerm other = (LambdaTerm) obj;
-        if (this.tree.equals(other.tree)) {
+        if (this.getTree().equals(other.getTree())) {
             return true;
         }
         return false;
