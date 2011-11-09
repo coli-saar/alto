@@ -10,19 +10,9 @@ package de.saar.penguin.irtg.algebra.lambda;
  * @author Anna Melzer
  */
 public class LambdaTermAlgebraSymbol {
-
-        public static enum Type {
-
-        FUNCTOR, LTERM    };
-
         public String type;
         public LambdaTerm content;
-
-        public LambdaTermAlgebraSymbol(){
-
-
-        }
-
+        
         public static LambdaTermAlgebraSymbol functor(){
             LambdaTermAlgebraSymbol ret = new LambdaTermAlgebraSymbol();
             ret.type = "FUNCTOR";

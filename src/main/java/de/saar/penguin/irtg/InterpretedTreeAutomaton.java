@@ -7,6 +7,7 @@ package de.saar.penguin.irtg;
 import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.saar.penguin.irtg.algebra.ParseException;
+import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.up.ling.shell.CallableFromShell;
@@ -52,12 +53,12 @@ public class InterpretedTreeAutomaton {
         return interpretations.get(interp);
     }
 
-    public Object parseString(String interpretation, String representation) throws ParseException {
+    public Object parseString(String interpretation, String representation) throws ParserException {
         Object ret = getInterpretations().get(interpretation).getAlgebra().parseString(representation);
         return ret;
     }
 
-    public Map<String, Object> parseStrings(Map<String, String> representations) throws ParseException {
+    public Map<String, Object> parseStrings(Map<String, String> representations) throws ParserException {
         Map<String, Object> ret = new HashMap<String, Object>();
         for (String interp : representations.keySet()) {
             ret.put(interp, parseString(interp, representations.get(interp)));
@@ -66,7 +67,7 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell(name = "parse")
-    public BottomUpAutomaton parseFromReaders(Map<String, Reader> readers) throws ParseException, IOException {
+    public BottomUpAutomaton parseFromReaders(Map<String, Reader> readers) throws ParserException, IOException {
         Map<String, Object> inputs = new HashMap<String, Object>();
 
         for (String interp : readers.keySet()) {
@@ -205,7 +206,7 @@ public class InterpretedTreeAutomaton {
                 try {
 //                    System.err.println("")
                     currentTuple.put(current, parseString(current, line));
-                } catch (de.saar.penguin.irtg.algebra.ParseException ex) {
+                } catch (ParserException ex) {
                     System.out.println("An error occurred while parsing " + reader + ", line " + (lineNumber + 1) + ": " + ex.getMessage());
                     return null;
                 }

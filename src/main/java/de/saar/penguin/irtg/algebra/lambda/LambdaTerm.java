@@ -271,7 +271,7 @@ public class LambdaTerm {
         return ret;
     }
 
-    // apllies beta-rerduction to a LambdaTerm until no more is possible
+    // applies beta-rerduction to a LambdaTerm until no more is possible
     public LambdaTerm reduce() {
         LambdaTerm old = this;
 

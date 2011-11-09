@@ -15,6 +15,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -212,8 +214,13 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     }
 
     @Override
-    public Set<List<String>> parseString(String representation) throws ParseException {
-        return SetParser.parse(new StringReader(representation));
+    public Set<List<String>> parseString(String representation) throws ParserException {
+        try {
+            return SetParser.parse(new StringReader(representation));
+        } catch (ParseException ex) {
+            throw new ParserException(ex);
+        }
+        
     }
 
     private static List<String> l(String x) {

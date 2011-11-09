@@ -83,7 +83,8 @@ class LambdaTermParserTest {
 
         LambdaTermAlgebraSymbol lt1 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$x (lambda \$f (\$x \$f)))"));
         LambdaTermAlgebraSymbol lt2 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$a (\$a \$a))"));
-        //LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(p("(love:i)"));
+        //LambdaTermAlgebraSymbol lt4 = LambdaTermAlgebraSymbol.lterm(p("love:i"));
+        //System.err.println(lt4);
         // LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(c("love"));
         LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$r (\$r \$x))"));
 

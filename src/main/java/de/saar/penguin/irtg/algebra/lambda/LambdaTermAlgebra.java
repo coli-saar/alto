@@ -7,9 +7,13 @@ package de.saar.penguin.irtg.algebra.lambda;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.algebra.Algebra;
+import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -57,8 +61,12 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
-    public LambdaTerm parseString(String representation) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public LambdaTerm parseString(String representation) throws ParserException {
+        try {
+            return LambdaTermParser.parse(new StringReader(representation));
+        } catch (ParseException ex) {
+            throw new ParserException(ex);
+        }
     }
     
 }
