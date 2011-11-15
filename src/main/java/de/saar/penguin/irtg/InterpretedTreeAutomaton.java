@@ -6,7 +6,7 @@ package de.saar.penguin.irtg;
 
 import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
-import de.saar.penguin.irtg.algebra.ParseException;
+import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,6 +88,30 @@ public class InterpretedTreeAutomaton {
             ret = ret.intersect(interp.parse(input));
         }
 
+        return ret;
+    }
+    
+    @CallableFromShell(name = "decode", joinList="\n")
+    public Set<Object> decodeFromReaders(Reader outputInterpretation, Map<String,Reader> readers) throws ParserException, IOException {
+        BottomUpAutomaton chart = parseFromReaders(readers);
+        String interp = StringTools.slurp(outputInterpretation);
+        return decode(chart, interpretations.get(interp));
+    }
+    
+    public Set<Object> decode(String outputInterpretation, Map<String, Object> inputs) {
+        BottomUpAutomaton chart = parse(inputs);
+        return decode(chart, interpretations.get(outputInterpretation));
+    }
+    
+    private Set<Object> decode(BottomUpAutomaton chart, Interpretation interp) {
+        BottomUpAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
+        Set<Tree<String>> outputLanguage = outputChart.language();
+        
+        Set<Object> ret = new HashSet<Object>();
+        for( Tree<String> term : outputLanguage ) {
+            ret.add(interp.getAlgebra().evaluate(term));
+        }
+        
         return ret;
     }
 
