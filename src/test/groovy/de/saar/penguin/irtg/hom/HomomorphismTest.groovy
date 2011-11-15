@@ -53,14 +53,15 @@ class HomomorphismTest {
     
     @Test
     public void testGensym() {
-        Homomorphism h = hom(["a":"h(+1)", "f":"g(?1,?2,?3)", "b":"+2"])
+        Homomorphism h = hom(["a":"h+3(+1)", "f":"g(?1,?2,?3)", "b":"+2"])
         Tree t = TermParser.parse("f(a,a,b)").toTree();
-        Term gold = TermParser.parse("g(h(_gen1), h(_gen1), _gen2)");
+        Term gold = TermParser.parse("g(h_1(_2), h_1(_2), _3)");
         Tree rhs = h.apply(t);
         Term rhsTerm = rhs.toTerm();
         
         assertEquals(gold, rhsTerm)
     }
+    
 
 
     public static Homomorphism hom(Map<String,String> mappings) {

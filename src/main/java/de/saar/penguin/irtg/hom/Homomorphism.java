@@ -73,7 +73,7 @@ public class Homomorphism {
                 if (label.isVariable()) {
                     ret.insert(subtrees.get(getIndexForVariable(label)), parent);
                     return null; // never used
-                } else if( label.getValue().startsWith("+")) {
+                } else if( label.getValue().contains("+") ) {
                     String newNode = ret.addNode(gensym(label.getValue(), knownGensyms), parent);
                     return newNode;
                 } else {
@@ -91,12 +91,16 @@ public class Homomorphism {
         return ret;
     }
     
-    private String gensym(String gensymKey, Map<String,String> knownGensyms) {
+    private String gensym(String gensymString, Map<String,String> knownGensyms) {
+        int start = gensymString.indexOf("+");
+        String prefix = gensymString.substring(0, start);
+        String gensymKey = gensymString.substring(start);        
+        
         if( ! knownGensyms.containsKey(gensymKey) ) {
-            knownGensyms.put(gensymKey, "_gen" + (gensymNext++));
+            knownGensyms.put(gensymKey, "_" + (gensymNext++));
         }
         
-        return knownGensyms.get(gensymKey);
+        return prefix + knownGensyms.get(gensymKey);
     }
 
     /**
