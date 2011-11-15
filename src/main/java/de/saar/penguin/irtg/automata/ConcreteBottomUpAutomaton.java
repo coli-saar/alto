@@ -44,10 +44,10 @@ public class ConcreteBottomUpAutomaton<State> extends BottomUpAutomaton<State> {
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
-    @Override
-    public int getArity(String label) {
-        return explicitRules.get(label).getArity();
-    }
+//    @Override
+//    public int getArity(String label) {
+//        return explicitRules.get(label).getArity();
+//    }
 
     public void addFinalState(State state) {
         finalStates.add(state);

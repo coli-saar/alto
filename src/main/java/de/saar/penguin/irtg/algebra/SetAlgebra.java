@@ -183,18 +183,18 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        @Override
-        public int getArity(String label) {
-            if (label.startsWith(UNIQ)) {
-                return 1;
-            } else if (label.startsWith(INTERSECT)) {
-                return 2;
-            } else if (label.startsWith(PROJECT)) {
-                return 1;
-            } else {
-                return 0;
-            }
-        }
+//        @Override
+//        public int getArity(String label) {
+//            if (label.startsWith(UNIQ)) {
+//                return 1;
+//            } else if (label.startsWith(INTERSECT)) {
+//                return 2;
+//            } else if (label.startsWith(PROJECT)) {
+//                return 1;
+//            } else {
+//                return 0;
+//            }
+//        }
 
         @Override
         public Set<String> getAllLabels() {

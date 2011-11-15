@@ -73,12 +73,13 @@ public abstract class BottomUpAutomaton<State> {
     abstract public Set<Rule<State>> getRulesTopDown(String label, State parentState);
 
     /**
-     * Returns the arity of a terminal symbol used by this automaton.
+     * Returns the arity of a terminal symbol. Apparently this method
+     * is not being used anywhere, so I'm deleting it for now.
      * 
      * @param label
      * @return 
      */
-    abstract public int getArity(String label);
+//    abstract public int getArity(String label);
 
     /**
      * Returns all terminal symbols that this automaton knows about.
@@ -327,7 +328,7 @@ public abstract class BottomUpAutomaton<State> {
      * @return 
      */
     @CallableFromShell(joinList = "\n")
-    public List<Tree<String>> language() {
+    public Set<Tree<String>> language() {
         /*
          * The current implementation is probably not particularly efficient.
          * It could be improved by using CartesianIterators for each rule.
@@ -343,7 +344,7 @@ public abstract class BottomUpAutomaton<State> {
             }
         });
 
-        List<Tree<String>> ret = new ArrayList<Tree<String>>();
+        Set<Tree<String>> ret = new HashSet<Tree<String>>();
         for (State finalState : getFinalStates()) {
             ret.addAll(languagesForStates.get(finalState));
         }
@@ -513,6 +514,16 @@ public abstract class BottomUpAutomaton<State> {
      */
     public BottomUpAutomaton<State> inverseHomomorphism(Homomorphism hom) {
         return new InverseHomAutomaton<State>(this, hom);
+    }
+    
+    /**
+     * Computes the image of this automaton under a homomorphism.
+     * 
+     * @param hom
+     * @return 
+     */
+    public BottomUpAutomaton<String> homomorphism(Homomorphism hom) {
+        return new HomAutomaton(this, hom);
     }
 
     /**

@@ -201,8 +201,8 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
         return allStates;
     }
 
-    @Override
-    public int getArity(String label) {
-        return left.getArity(label);
-    }
+//    @Override
+//    public int getArity(String label) {
+//        return left.getArity(label);
+//    }
 }

@@ -134,14 +134,14 @@ public class StringAlgebra implements Algebra<List<String>> {
             return getRulesTopDownFromExplicit(label, parentState);
         }
 
-        @Override
-        public int getArity(String label) {
-            if( label.equals(CONCAT)) {
-                return 2;
-            } else {
-                return 0;
-            }
-        }
+//        @Override
+//        public int getArity(String label) {
+//            if( label.equals(CONCAT)) {
+//                return 2;
+//            } else {
+//                return 0;
+//            }
+//        }
 
         @Override
         public Set<Span> getFinalStates() {

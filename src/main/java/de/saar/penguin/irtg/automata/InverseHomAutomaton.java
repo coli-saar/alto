@@ -164,10 +164,10 @@ class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
         return rhsAutomaton.getAllStates();
     }
 
-    @Override
-    public int getArity(String label) {
-        return hom.getArity(label);
-    }
+//    @Override
+//    public int getArity(String label) {
+//        return hom.getArity(label);
+//    }
 
     @Override
     public Set<String> getAllLabels() {

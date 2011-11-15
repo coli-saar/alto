@@ -102,8 +102,8 @@ b_nop -> Adj_N
         BottomUpAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
         chart.makeAllRulesExplicit();
         
-        List result = chart.language();
-        List gold = [pt("a_rabbit(b_white)")]
+        Set result = chart.language();
+        Set gold = new HashSet([pt("a_rabbit(b_white)")])
         
         assertEquals(gold, result)
     }
@@ -136,8 +136,8 @@ a_sleeps_r1(N) -> S!
         BottomUpAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
         chart.makeAllRulesExplicit();
         
-        List result = chart.language();
-        List gold = [pt("a_sleeps_r1(a_rabbit(b_white))")]
+        Set result = chart.language();
+        Set gold = new HashSet([pt("a_sleeps_r1(a_rabbit(b_white))")])
         
         assertEquals(gold, result)
     }

@@ -65,6 +65,17 @@ class BottomUpAutomatonTest {
 
         assertEquals(gold, pre);
     }
+    
+    @Test
+    public void testHom() {
+        BottomUpAutomaton base = parse("f(q1, q2) -> q! \n g(q1, q2) -> q\n h(q1,q2) -> q\n a -> q1\n b -> q2");
+        Homomorphism h = hom(["f":"H(F(?1,?2))", "g":"H(F(?1,?2))", "h":"G(?2,?1)", "a":"A", "b":"B"]);
+        
+        Set gold = new HashSet([pt("H(F(A,B))"), pt("G(B,A)")])
+        BottomUpAutomaton result = base.homomorphism(h)
+                
+        assertEquals(gold, result.language())
+    }
 
     @Test
     public void testViterbi() {
