@@ -1,0 +1,348 @@
+\documentclass[11pt]{article}
+
+\usepackage{url}
+\usepackage{natbib}
+
+
+\title{The IRTG Tool\\Version 1.0}
+\author{Alexander Koller\\University of Potsdam\\\url{koller@ling.uni-potsdam.de}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+\clearpage
+
+\section{Introduction} \label{sec:introduction}
+
+This document describes the IRTG Tool, a system that implements
+standard algorithms for interpreted regular tree grammars
+(IRTGs). IRTGs were introduced by \cite{koller11} as a joint
+generalization of a number of monolingual and synchronous grammar
+formalisms, tree transducers, and weighted variants of all these.  We
+assume here that the reader is familiar with the theory behind IRTGs
+and focus on the use of the IRTG tool itself.
+
+The IRTG tool implements a number of standard data structures and
+algorithms for working with IRTGs. These include (monolingual or
+synchronous) parsing; extraction of a best parse with the Viterbi
+algorithm; decoding; and EM training. The implementation of all these
+algorithms is completely independent of the particular algebras into
+which the IRTGs are interpreted. The IRTG distribution comes with a
+number of predefined algebras, including the string algebra $\Sigma^*$
+with binary concatenation. In addition, a user can define their own
+algebras by implementing a Java class that implements the
+\verb?Algebra? interface. These algebras will then integrate
+seamlessly with the rest of the IRTG tool, and can be used in decoding
+and parsing.
+
+This documentation is structured as follows. We start with a tutorial
+walkthrough that demonstrates the main features of the IRTG tool in
+Section~\ref{sec:introduction}.  We will then explain some advanced
+uses of the tool in Section~\ref{sec:using}. Section~\ref{sec:algebra}
+explains how to implement algebras for use with the IRTG
+tool. Section~\ref{sec:conclusion} concludes.
+
+
+\section{A tutorial walkthrough} \label{sec:tutorial}
+
+The IRTG tool is distributed as a ZIP file containing three things:
+\begin{itemize}
+\item A Java Jar file with the filename \url{irtg-<version>.jar},
+  where \verb?<version>? is the version of the system. This is the
+  IRTG tool itself.
+\item A subdirectory \verb?examples? which contains various examples
+  that we will use below.
+\item This documentation as a PDF file.
+\end{itemize}
+
+Assuming that you have Java (version 6 or higher) installed on your
+system, you can unzip the ZIP file, change into the directory this
+creates, and then start the IRTG tool from the command line as
+follows:
+
+\begin{verbatim}
+$ java -jar irtg-1.0.jar
+>
+\end{verbatim}
+
+If you run the IRTG tool without any further parameters, it will
+start the \emph{shell}, in which you can enter commands for
+manipulating IRTGs, which will then be executed. The greater-than sign
+\verb?>? is a prompt, which asks you to type a command to be
+executed.
+
+You can quit the IRTG shell at any time by typing \verb?quit()? or
+Control-D.
+
+
+
+\subsection{Loading an IRTG from a file}
+
+You can instruct the shell to load an IRTG grammar from a file as
+follows:
+
+\begin{verbatim}
+> g = irtg(["examples/scfg.irtg"])
+>
+\end{verbatim}
+
+The \verb?irtg? function reads an IRTG grammar. Here we tell the shell
+to read this grammar from the file \verb?scfg.irtg? in the
+\verb?examples? subdirectory, and to assign the resulting IRTG object
+to the variable \verb?g?. The square brackets around the file name are
+important, because this is what instructs the shell to read from a
+file with a given name. Without the square brackets, the shell would
+simply take the contents of the shell as the grammar.
+
+Take a moment to look at the file \url{examples/scfg.irtg}. The file
+starts with a preamble which specified names for the interpretations
+in this IRTG, as well as the algebra for each interpretation. It then
+continues with entries such as
+
+\begin{verbatim}
+r1(NP,VP) -> S!
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+\end{verbatim}
+
+The first line of each entry is the rule of the RTG $G$ in the center of
+the IRTG, written bottom-up. The rule in the example specifies that if
+the children of some node $u$ in a derivation tree can be assigned the
+states \verb?NP? and \verb?VP?, and if $u$ has the node label
+\verb?r1?, then $u$ can be assigned the state \verb?S?. We deviate
+from \cite{koller11} in that we assume that every rule only contains a
+single label (and not an entire term), and that no two rules use the
+same label. Note that the exclamation mark behind \verb?S? marks
+\verb?S? as a final state of the automaton (or the start symbol of the
+RTG).
+
+The values for the homomorphisms are defined in the remaining lines of
+the entry. There is one line for each interpretation, which specified
+the value of the homomorphism of that interpretation for the label
+that is processed by the current grammar rule.  Variables are written
+as terms of the form \texttt{?n}, where \verb?n? is a number. Note
+that if $n$ states occur on the left-hand side of the grammar rule
+(i.e., the label has arity $n$), you can use only the variables
+\texttt{?1}, \ldots, \texttt{?n} in the homomorphism term. The example
+rule specifies that $h_\mathrm{english}(r_1) = *(x_1,x_2)$ and
+$h_\mathrm{german}(r_1) = *(x_1,x_2)$; the symbol * is interpreted as
+concatenation in the string algebra.
+
+The example grammar also contains terminal rules of the following
+form:
+
+\begin{verbatim}
+r11 -> N
+  [english] telescope
+  [german] fernrohr
+\end{verbatim}
+
+This rule states that a leaf node with label \verb?r11? may be
+assigned the state \verb?N? by the automaton. Notice that \verb?r11?
+is a symbol of arity zero, and therefore there are no states (and no
+brackets) on the left-hand side of the grammar rule. The homomorphisms
+are specified as before, as $h_\mathrm{english}(r_{11}) =
+\mathtt{telescope}$ and $h_\mathrm{german}(r_{11}) =
+\mathtt{fernrohr}$.
+
+
+\subsection{Parsing}
+
+Now let's use this grammar for parsing an English string.
+
+\begin{verbatim}
+> chart = irtg.parse(english:"john watches the woman with the telescope")
+> chart
+r12 -> P,4-5  [1.0]
+r11 -> N,6-7  [1.0]
+r10 -> N,3-4  [1.0]
+r9b -> Det,5-6  [1.0]
+r9b -> Det,2-3  [1.0]
+r6(P,4-5, NP,5-7) -> PP,4-7  [1.0]
+r7 -> NP,0-1  [1.0]
+r8 -> V,1-2  [1.0]
+r9 -> Det,5-6  [1.0]
+r9 -> Det,2-3  [1.0]
+r1(NP,0-1, VP,1-4) -> S,0-4  [1.0]
+r1(NP,0-1, VP,1-7) -> S,0-7  [1.0]!
+r2(Det,5-6, N,6-7) -> NP,5-7  [1.0]
+r2(Det,2-3, N,3-4) -> NP,2-4  [1.0]
+r2(Det,2-3, N,3-7) -> NP,2-7  [1.0]
+r3(N,3-4, PP,4-7) -> N,3-7  [1.0]
+r4(V,1-2, NP,2-4) -> VP,1-4  [1.0]
+r4(V,1-2, NP,2-7) -> VP,1-7  [1.0]
+r5(VP,1-4, PP,4-7) -> VP,1-7  [1.0]
+\end{verbatim}
+
+Several things happened here. First, we called the \verb?parse? method
+of the object stored in the variable \verb?irtg? to parse the sentence
+``John watches the woman with the telescope'' on the \verb?english?
+interpretation. This happens by computing the decomposition automaton
+$D_w$ for this string in the string algebra and intersecting $G$ with
+the homomorphic pre-image $h_\mathrm{english}(D_w)$. The result of
+this intersection is an RTG $G'$, which we store in the variable
+\verb?chart?. Notice that the values of expressions (such as the
+objects stored in a variable) are really Java objects of certain
+classes, and have methods that can be called.
+
+Second, we ask the shell to determine the value of the expression
+\verb?chart? and print it. \verb?chart? is a variable which contains
+an RTG object; printing an RTG amounts to printing all of its rules.
+As you can see, the states of $G'$ are pairs of states of $G$
+(corresponding to nonterminals of the SCFG) and spans in the input
+string. That is, $G'$ is a context-free parse chart of the English
+input sentence.
+
+Finally, notice that each rule of \verb?chart? comes with a weight,
+printed in square brackets behind the rule. These weights are there
+because unlike the system described \cite{koller11}, the IRTG works
+with \emph{weighted} grammars, and $G'$ is the \emph{weighted}
+intersection of $G$ and the pre-image. Because we neither specified
+weights for the rules of $G$ nor for the pre-image grammar, all of
+them default to 1, which is where the 1.0 weights come from.
+
+We can now ask the IRTG tool to show us all derivation trees of the
+input sentence:
+
+\begin{verbatim}
+> chart.language()
+r1(r7 r5(r4(r8 r2(r9b r10)) r6(r12 r2(r9 r11))))
+r1(r7 r4(r8 r2(r9 r3(r10 r6(r12 r2(r9 r11))))))
+r1(r7 r5(r4(r8 r2(r9 r10)) r6(r12 r2(r9b r11))))
+r1(r7 r4(r8 r2(r9b r3(r10 r6(r12 r2(r9 r11))))))
+r1(r7 r5(r4(r8 r2(r9 r10)) r6(r12 r2(r9 r11))))
+r1(r7 r4(r8 r2(r9 r3(r10 r6(r12 r2(r9b r11))))))
+r1(r7 r5(r4(r8 r2(r9b r10)) r6(r12 r2(r9b r11))))
+r1(r7 r4(r8 r2(r9b r3(r10 r6(r12 r2(r9b r11))))))
+\end{verbatim}
+
+This calls the \verb?language? method of the weighted RTG. If you
+were surprised that the sentence has eight rather than two derivation
+trees, congratulations. This is correct, though, because the word
+\verb?the? can be generated by two rules, \verb?r9? and \verb?r9b?,
+which differ in the German interpretation. The system gets to choose
+twice between these two rules, which accounts for the eight parses.
+
+We can also ask the IRTG tool to show us only the highest-scoring
+derivation tree:
+
+\begin{verbatim}
+> chart.viterbi()
+r1(r7 r5(r4(r8 r2(r9 r10)) r6(r12 r2(r9 r11))))
+\end{verbatim}
+
+Of course, all derivation trees described by the chart have the same
+weight, and so the choice is rather arbitrary here.
+
+\subsection{Decoding}
+
+In addition to parsing, we can use the IRTG tool for synchronous
+\emph{decoding}, in which we give the values of some interpretations
+and ask for the output values in another interpretation. Here is an
+example:
+
+\begin{verbatim}
+> irtg.decode("english", german: "hans betrachtet die frau mit dem fernrohr")
+[john, watches, the, woman, with, the, telescope]
+\end{verbatim}
+
+This computes $G'' = G \cap h^{-1}_\mathrm{german}(D_{w'})$, where
+$w'$ is the German input sentence. It then maps $L(G'')$ into terms
+over the English string algebra by computing
+$h_\mathrm{english}(L(G''))$, and evaluates these terms in the
+algebra. The value of the expression is the set of all of these
+values, which are printed line by line. Note that the English string
+is not shown as a single string, but as a comma-separated list of
+words.  This is because the implementation of the string algebra
+represents a string as a list of words internally.
+
+Observe that IRTG grammars are, in principle, fully symmetric, and so
+you can use the same grammar to decode from English to German:
+
+\begin{verbatim}
+> irtg.decode("german", english:"john watches the woman with the telescope")
+[hans, betrachtet, die, frau, mit, die, fernrohr]
+[hans, betrachtet, dem, frau, mit, die, fernrohr]
+[hans, betrachtet, die, frau, mit, dem, fernrohr]
+[hans, betrachtet, dem, frau, mit, dem, fernrohr]
+\end{verbatim}
+
+As above, there are four instead of one strings because the grammar does
+not represent case and gender agreement on the German side.
+
+
+\subsection{EM training}
+
+Finally, there is experimental support in the IRTG tool for using EM
+training to learn weights for the weighted RTG.  We will demonstrate
+this with a PCFG grammar. First we load an IRTG encoding of a
+context-free grammar in which all weights are 1.
+
+\begin{verbatim}
+> g2 = irtg(["examples/cfg.irtg"])
+> g2.automaton()
+r6(P, NP) -> PP  [1.0]
+r7 -> NP  [1.0]
+r8 -> V  [1.0]
+r9 -> Det  [1.0]
+r1(NP, VP) -> S  [1.0]!
+r12 -> P  [1.0]
+r2(Det, N) -> NP  [1.0]
+r3(N, PP) -> N  [1.0]
+r11 -> N  [1.0]
+r10 -> N  [1.0]
+r4(V, NP) -> VP  [1.0]
+r5(VP, PP) -> VP  [1.0]
+\end{verbatim}
+
+We can then learn PCFG weights for this grammar using Expectation
+Maximization (EM) training. We use the file
+\url{examples/pcfg-training.txt} as training data. Each training
+instance consists of several lines, one for each interpretation of the
+IRTG. The order of the interpretations is specified at the start of
+the file. In the example, there is only a single interpretation,
+\verb?i?, so each line (except for the first one) counts as a single
+training instance. We can perform EM training as follows:
+
+\begin{verbatim}
+> g2.emtrain(["examples/pcfg-training.txt"])
+> g2.automaton()
+r6(P, NP) -> PP  [1.0]
+r7 -> NP  [0.3333333333333333]
+r8 -> V  [1.0]
+r9 -> Det  [1.0]
+r1(NP, VP) -> S  [1.0]!
+r12 -> P  [1.0]
+r2(Det, N) -> NP  [0.6666666666666667]
+r3(N, PP) -> N  [0.04888355312945965]
+r11 -> N  [0.8718567429646621]
+r10 -> N  [0.07925970390587832]
+r4(V, NP) -> VP  [0.5270903186242554]
+r5(VP, PP) -> VP  [0.4729096813757445]
+\end{verbatim}
+
+(Notice again that we have used square bracket notation to read data
+from files instead of using the string value directly, as in the
+parsing examples above.)
+
+The EM algorithm has adjusted the rule weights to fit the
+observations. \verb?g2? is an ordinary IRTG and can be used in exactly
+the same ways as before; the only difference is that we did not read
+it directly from a file, but set the weights through training.
+
+
+\section{Using the IRTG Tool} \label{sec:using}
+
+\section{Implementing algebras} \label{sec:algebra}
+
+\section{Conclusion} \label{sec:conclusion}
+
+
+
+\bibliographystyle{apalike}
+\bibliography{bibliography}
+
+\end{document}
