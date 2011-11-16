@@ -13,7 +13,7 @@ import de.saar.penguin.irtg.automata.BottomUpAutomaton;
  * @author koller
  */
 public interface Algebra<E> {
-    public E evaluate(Tree t);
+    public E evaluate(Tree<String> t);
     public BottomUpAutomaton decompose(E value);
     public E parseString(String representation) throws ParserException;
 }

@@ -20,7 +20,7 @@ import java.util.Set;
 public class StringAlgebra implements Algebra<List<String>> {
     public static final String CONCAT = "*";
 
-    public List<String> evaluate(Tree t) {
+    public List<String> evaluate(Tree<String> t) {
         List<String> children = t.getChildren(t.getRoot());
 
         if (children.isEmpty()) {
