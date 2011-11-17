@@ -33,6 +33,12 @@ public class LambdaTerm {
     private String x = null;
     private Tree<Pair<Type, String>> tree;
 
+
+    /**
+     * Constructs a new LambdaTerm with a given type
+     * @param type  the type of the Lambda Term, must be one of  CONSTANT,
+     *              VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN
+     */
     private LambdaTerm(Type type) {
         this.type = type;
         this.tree = new Tree<Pair<Type, String>>();
@@ -40,13 +46,20 @@ public class LambdaTerm {
         this.tree.addNode(pair, null);
     }
 
-    // initialise LambdaTerm with a given Tree
+    /**
+     * Constructs a new LambdaTerm without a type
+     * @param tree  the internal tree of the Lambda Term
+     */
     private LambdaTerm(Tree<Pair<Type, String>> tree) {
         this.type = tree.getLabel(tree.getRoot()).left;
         this.tree = tree;
         this.x = tree.getLabel(tree.getRoot()).right;
     }
 
+     /**
+     * Constructs a new LambdaTerm of type constant
+     * @param x  the name of the constant
+     */
     public static LambdaTerm constant(String x) {
         LambdaTerm ret = new LambdaTerm(Type.CONSTANT);
         ret.x = x;
@@ -56,6 +69,10 @@ public class LambdaTerm {
         return ret;
     }
 
+      /**
+     * Constructs a new LambdaTerm of type variable
+     * @param x  the name of the variable
+     */
     public static LambdaTerm variable(String x) {
         LambdaTerm ret = new LambdaTerm(Type.VARIABLE);
         ret.x = x;
@@ -65,6 +82,11 @@ public class LambdaTerm {
         return ret;
     }
 
+     /**
+     * Constructs a new LambdaTerm of type lambda (lambda abstraction)
+     * @param   x   the name of the variable bound by the lambda
+      *         sub the lambda term within the scope of the lambda
+     */
     public static LambdaTerm lambda(String x, LambdaTerm sub) {
         LambdaTerm ret = new LambdaTerm(Type.LAMBDA);
         ret.x = x;
@@ -78,6 +100,12 @@ public class LambdaTerm {
         return ret;
     }
 
+
+     /**
+     * Constructs a new LambdaTerm of type apply (application)
+     * @param   functor the lambda teerm working as the functor
+      *         arguments    the lambda terms being the arguments to the functor
+     */
     public static LambdaTerm apply(LambdaTerm functor, List<LambdaTerm> arguments) {
         LambdaTerm ret = new LambdaTerm(Type.APPLY);
         ret.sub = new ArrayList<LambdaTerm>();
@@ -94,11 +122,20 @@ public class LambdaTerm {
         ret.x = "";
         return ret;
     }
-
+     /**
+     * Constructs a new LambdaTerm of type apply (application)
+     * @param   functor the lambda teerm working as the functor
+      *         arguments  the lambda terms being the arguments to the functor
+     */
     public static LambdaTerm apply(LambdaTerm functor, LambdaTerm... arguments) {
         return apply(functor, Arrays.asList(arguments));
     }
 
+         /**
+     * Constructs a new LambdaTerm of type exists (lambda abstraction)
+     * @param   x   the name of the variable bound by the existential quantifier
+      *         sub the lambda term within the scope of the quantifier
+     */
     public static LambdaTerm exists(String x, LambdaTerm sub) {
         LambdaTerm ret = new LambdaTerm(Type.EXISTS);
         ret.x = x;
@@ -112,6 +149,10 @@ public class LambdaTerm {
         return ret;
     }
 
+     /**
+     * Constructs a new LambdaTerm of type conj (conjunction)
+     * @param subs the lambda term working as conjuncts
+     */
     public static LambdaTerm conj(List<LambdaTerm> subs) {
         LambdaTerm ret = new LambdaTerm(Type.CONJ);
         ret.sub = new ArrayList<LambdaTerm>(subs);
@@ -126,10 +167,20 @@ public class LambdaTerm {
         return ret;
     }
 
+     /**
+     * Constructs a new LambdaTerm of type conj (conjunction)
+     * @param subs the lambda term working as conjuncts
+     */
     public static LambdaTerm conj(LambdaTerm... subs) {
         return conj(Arrays.asList(subs));
     }
 
+     /**
+     * Constructs a new LambdaTerm of type argmax (lambda abstraction)
+     * @param   x   the name of the variable bound by the argmax quantifier
+      *         sub1 the first lambda term within the scope of the quantifier
+      *         sub2 the second lambda term within the scope of the quantifier
+     */
     public static LambdaTerm argmax(String x, LambdaTerm sub1, LambdaTerm sub2) {
         LambdaTerm ret = new LambdaTerm(Type.ARGMAX);
         ret.x = x;
@@ -145,6 +196,12 @@ public class LambdaTerm {
         return ret;
     }
 
+     /**
+     * Constructs a new LambdaTerm of type argmin (lambda abstraction)
+     * @param   x   the name of the variable bound by the argmin quantifier
+      *         sub1 the first lambda term within the scope of the quantifier
+      *         sub2 the second lambda term within the scope of the quantifier
+     */
     public static LambdaTerm argmin(String x, LambdaTerm sub1, LambdaTerm sub2) {
         LambdaTerm ret = new LambdaTerm(Type.ARGMIN);
         ret.x = x;
@@ -159,10 +216,16 @@ public class LambdaTerm {
         return ret;
     }
 
-     // given a list of nodes which shall be substituted
-    // substitute every node with the content given
+    /**
+     *
+     * @param varName variables to be replaced
+     * @param content content which is replacing the variables
+     * @param treeToWorkOn The tree on which this operation is performed starting
+     *                      with the lambda that binds the variable
+     * @return a tree with all variables replaced by the content
+     */
     private Tree<Pair<Type, String>> substitute(final String varName, final Tree<Pair<Type, String>> content, final Tree<Pair<Type, String>> treeToWorkOn) {
-        //System.out.println("Ersetze "+nodes+" durch "+content);
+
 
         Tree<Pair<Type, String>> ret = new Tree<Pair<Type, String>>();
         TreeVisitor<String, Tree<Pair<Type, String>>> tv = new TreeVisitor<String, Tree<Pair<Type, String>>>() {
@@ -182,7 +245,6 @@ public class LambdaTerm {
                     // delete upmost node (lamda)
                     // should not be more than 1 child
                     if (node.equals(treeToWorkOn.getRoot())) {
-                        //    System.out.println("Wuzel löschen");
                         ret = childValues.get(0);
                     } // do not replace
                     else {
@@ -200,7 +262,11 @@ public class LambdaTerm {
         return ret;
     }
 
-    // applies beta-reduction to the LamdaTerm once
+    /**
+     * applies beta-reduction to the LamdaTerm once
+     * WARNING: Does not perform alpha-conversion, free variables will be captured
+     * @return the lambda term after one time reduction
+     */
     private LambdaTerm beta() {
 
         // beginning tree visitor
@@ -271,7 +337,11 @@ public class LambdaTerm {
         return ret;
     }
 
-    // apllies beta-rerduction to a LambdaTerm until no more is possible
+
+    /**
+     * appleies beta() to the LambdaTerm until it is completely reduced
+     * @return the completely reduced lambda term
+     */
     public LambdaTerm reduce() {
         LambdaTerm old = this;
 
