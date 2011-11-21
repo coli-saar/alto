@@ -29,7 +29,6 @@ public class LambdaTerm {
         CONSTANT, VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN
     };
     private Type type;
-    private List<LambdaTerm> sub;
     private String x = null;
     private Tree<Pair<Type, String>> tree;
 
@@ -90,8 +89,6 @@ public class LambdaTerm {
     public static LambdaTerm lambda(String x, LambdaTerm sub) {
         LambdaTerm ret = new LambdaTerm(Type.LAMBDA);
         ret.x = x;
-        ret.sub = new ArrayList<LambdaTerm>();
-        ret.sub.add(sub);
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.LAMBDA, x);
@@ -108,9 +105,6 @@ public class LambdaTerm {
      */
     public static LambdaTerm apply(LambdaTerm functor, List<LambdaTerm> arguments) {
         LambdaTerm ret = new LambdaTerm(Type.APPLY);
-        ret.sub = new ArrayList<LambdaTerm>();
-        ret.sub.add(functor);
-        ret.sub.addAll(arguments);
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.APPLY, "");
@@ -139,8 +133,6 @@ public class LambdaTerm {
     public static LambdaTerm exists(String x, LambdaTerm sub) {
         LambdaTerm ret = new LambdaTerm(Type.EXISTS);
         ret.x = x;
-        ret.sub = new ArrayList<LambdaTerm>();
-        ret.sub.add(sub);
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.EXISTS, x);
@@ -155,7 +147,6 @@ public class LambdaTerm {
      */
     public static LambdaTerm conj(List<LambdaTerm> subs) {
         LambdaTerm ret = new LambdaTerm(Type.CONJ);
-        ret.sub = new ArrayList<LambdaTerm>(subs);
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         ret.x = "";
@@ -184,9 +175,6 @@ public class LambdaTerm {
     public static LambdaTerm argmax(String x, LambdaTerm sub1, LambdaTerm sub2) {
         LambdaTerm ret = new LambdaTerm(Type.ARGMAX);
         ret.x = x;
-        ret.sub = new ArrayList<LambdaTerm>();
-        ret.sub.add(sub1);
-        ret.sub.add(sub2);
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.ARGMAX, x);
@@ -205,9 +193,6 @@ public class LambdaTerm {
     public static LambdaTerm argmin(String x, LambdaTerm sub1, LambdaTerm sub2) {
         LambdaTerm ret = new LambdaTerm(Type.ARGMIN);
         ret.x = x;
-        ret.sub = new ArrayList<LambdaTerm>();
-        ret.sub.add(sub1);
-        ret.sub.add(sub2);// merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         Pair<Type, String> pair = new Pair<Type, String>(Type.ARGMIN, x);
         ret.getTree().addNode(pair, null);
@@ -251,7 +236,7 @@ public class LambdaTerm {
                         Pair<Type, String> label = treeToWorkOn.getLabel(node);
                         ret.addNode(label, ret.getRoot());
                         for (Tree<Pair<Type, String>> child : childValues) {
-                            ret.addSubTree(child, "n1");
+                            ret.addSubTree(child, child.getRoot());
                         }
                     }
                 }
@@ -339,7 +324,7 @@ public class LambdaTerm {
 
 
     /**
-     * appleies beta() to the LambdaTerm until it is completely reduced
+     * applies beta() to the LambdaTerm until it is completely reduced
      * @return the completely reduced lambda term
      */
     public LambdaTerm reduce() {
@@ -436,9 +421,10 @@ public class LambdaTerm {
     @Override
     public int hashCode() {
         int hash = 5;
-        hash = 59 * hash + (this.type != null ? this.type.hashCode() : 0);
-        hash = 59 * hash + (this.sub != null ? this.sub.hashCode() : 0);
-        hash = 59 * hash + (this.x != null ? this.x.hashCode() : 0);
+   //     hash = 59 * hash + (this.type != null ? this.type.hashCode() : 0);
+   //     hash = 59 * hash + (this.sub != null ? this.sub.hashCode() : 0);
+   //     hash = 59 * hash + (this.x != null ? this.x.hashCode() : 0);
+        hash = 59 * this.toString().hashCode();
         return hash;
     }
 }
