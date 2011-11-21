@@ -159,7 +159,7 @@ public class LambdaTerm {
         // merge trees
         ret.tree = new Tree<Pair<Type, String>>();
         ret.x = "";
-        Pair<Type, String> pair = new Pair<Type, String>(Type.APPLY, null);
+        Pair<Type, String> pair = new Pair<Type, String>(Type.CONJ, null);
         ret.getTree().addNode(pair, null);
         for (LambdaTerm argument : subs) {
             ret.getTree().addSubTree( argument.getTree(), ret.getTree().getRoot());
@@ -365,11 +365,56 @@ public class LambdaTerm {
         return null;
     }
 
+// TODO - add varList
+    private String printInfo(Pair<Type,String> label){
+        String ret = new String();
+        Type typ = label.left;
+        if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
+            ret = typ+" \\"+label.right+" ";
+        }
+        if (typ == Type.APPLY){
+            ret = "";
+        }
+        if (typ == Type.VARIABLE){
+            ret = "\\"+label.right;
+        }
+        if (typ == Type.CONSTANT){
+            ret = label.right;
+        }
+        if (typ == Type.CONJ){
+            ret = "and ";
+        }
+
+        return ret;
+    }
+
+    private void printAsString(String node, StringBuffer buf) {
+        boolean first = true;
+        buf.append(printInfo(tree.getLabel(node)));
+
+        if (!tree.getChildren(node).isEmpty()) {
+            buf.append("(");
+            for (String child : tree.getChildren(node)) {
+                if (first) {
+                    first = false;
+                } else {
+                    buf.append(" ");
+                }
+                printAsString(child, buf);
+            }
+            buf.append(")");
+        }
+    }
 
     // TODO - Rewrite to make subs obsolete
     @Override
     public String toString() {
-        return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
+       // return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
+        StringBuffer buf = new StringBuffer();
+        buf.append("(");
+        printAsString(tree.getRoot(),buf);
+        buf.append(")");
+        return buf.toString();
     }
 
     @Override
