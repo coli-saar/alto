@@ -10,6 +10,7 @@ import de.saar.basic.tree.TreeVisitor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashMap;
 
 /**
  *
@@ -31,6 +32,8 @@ public class LambdaTerm {
     private Type type;
     private String x = null;
     private Tree<Pair<Type, String>> tree;
+    private HashMap<String, String> varList = null;
+    private int genvarNext = 0;
 
 
     /**
@@ -350,18 +353,28 @@ public class LambdaTerm {
         return null;
     }
 
+        /**
+         * generates fresh variable names
+         * @return a fresh variable name
+         */
+        private String genvar() {
+        return "$" + genvarNext++;
+        }
+
 // TODO - add varList
     private String printInfo(Pair<Type,String> label){
         String ret = new String();
         Type typ = label.left;
         if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
-            ret = typ+" \\"+label.right+" ";
+            String newVarName = this.genvar();
+            this.varList.put(label.right,newVarName);
+            ret = typ+" \\"+newVarName+" ";
         }
         if (typ == Type.APPLY){
             ret = "";
         }
         if (typ == Type.VARIABLE){
-            ret = "\\"+label.right;
+            ret = "\\"+varList.get(label.right);
         }
         if (typ == Type.CONSTANT){
             ret = label.right;
@@ -395,6 +408,9 @@ public class LambdaTerm {
     @Override
     public String toString() {
        // return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
+        if(varList == null){
+            varList = new HashMap<String, String>();
+        }
         StringBuffer buf = new StringBuffer();
         buf.append("(");
         printAsString(tree.getRoot(),buf);
@@ -412,7 +428,10 @@ public class LambdaTerm {
             return false;
         }
         final LambdaTerm other = (LambdaTerm) obj;
-        if (this.getTree().equals(other.getTree())) {
+       /* if (this.getTree().equals(other.getTree())) {
+            return true;
+        }*/
+        if (this.toString().equals(obj.toString())){
             return true;
         }
         return false;
