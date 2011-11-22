@@ -15,8 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -67,7 +65,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     }
 
     @Override
-    public Set<List<String>> evaluate(final Tree t) {
+    public Set<List<String>> evaluate(final Tree<String> t) {
         return (Set<List<String>>) t.dfs(new TreeVisitor<Void, Set<List<String>>>() {
             @Override
             public Set<List<String>> combine(String node, List<Set<List<String>>> childrenValues) {
