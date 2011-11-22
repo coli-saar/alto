@@ -198,7 +198,7 @@ input sentence.
 
 Finally, notice that each rule of \verb?chart? comes with a weight,
 printed in square brackets behind the rule. These weights are there
-because unlike the system described \cite{koller11}, the IRTG works
+because unlike the system described by \cite{koller11}, the IRTG works
 with \emph{weighted} grammars, and $G'$ is the \emph{weighted}
 intersection of $G$ and the pre-image. Because we neither specified
 weights for the rules of $G$ nor for the pre-image grammar, all of
@@ -241,8 +241,9 @@ weight, and so the choice is rather arbitrary here.
 
 In addition to parsing, we can use the IRTG tool for synchronous
 \emph{decoding}, in which we give the values of some interpretations
-and ask for the output values in another interpretation. Here is an
-example:
+and ask for the output values in another interpretation. This assumes
+that the homomorphism of the output interpretation is linear.  Here is
+an example:
 
 \begin{verbatim}
 > irtg.decode("english", german: "hans betrachtet die frau mit dem fernrohr")
@@ -336,7 +337,143 @@ it directly from a file, but set the weights through training.
 
 \section{Using the IRTG Tool} \label{sec:using}
 
+I will now go through the methods for each class that are available
+from the shell.
+
+This section needs to be improved at some point.
+
+\subsection{Main}
+
+The following methods can be called directly as \verb?method()?,
+instead of in the form \verb?object.method()?.
+
+A \verb?Reader? can be obtained in the shell with an expression of the
+form \verb?"blah"? (in which case the reader returns the string
+``blah'') or the form \verb?["blah"]? (in which case the reader
+returns the contents of the file with name ``blah'').
+
+A \verb?Map? can be obtained in the shell with a method call of the
+form \verb?object.method(a:x, b:y)?. This call will create a map in
+which the value of x is stored under the key ``a'' and the value of y
+under the key ``b''.
+
+\begin{description}
+\item[InterpretedTreeAutomaton irtg(Reader reader)] Returns the IRTG
+  described by the reader.
+\item[void println(Object x)] Prints the string representation of
+  \verb?x?.
+\item[void type(Object x)] Prints the Java class of the object to
+  which \verb?x? evaluates.
+\item[void quit()] Exits the shell.
+\end{description}
+
+
+\subsection{InterpretedTreeAutomaton}
+
+\begin{description}
+\item[BottomUpTreeAutomaton automaton()] Returns the RTG in the center
+  of the IRTG as a tree automaton.
+\item[Interpretation interpretation(Reader label)] Returns the
+  interpretation with the given name.
+\item[BottomUpAutomaton parse(Map inputs)] Returns the result of
+  parsing the given inputs. \verb?inputs? is a map from
+  interpretation names to the inputs on these interpretations.
+\item[Set decode(Reader outputInterpretation, Map inputs)] Returns the
+  result of parsing the given inputs (see \verb?parse?) and mapping
+  them to the given output interpretation.
+\item[trainEm(Reader reader)] Adjusts the RTG weights from the given
+  training data using EM training.
+\end{description}
+
+\subsection{BottomUpTreeAutomaton}
+
+\begin{description}
+\item[long countTrees()] Returns the number of trees in the (finite)
+  language of the tree automaton.
+\item[Tree viterbi()] Computes the tree in the language of the tree
+  automaton with the highest weight.
+\item[Set language()] Returns the language of the tree automaton.
+\end{description}
+
+
+
+
 \section{Implementing algebras} \label{sec:algebra}
+
+A crucial ingredient of an IRTG grammar is the algebra. This is the
+only part of the grammar which cannot be specified in the grammar
+file. The IRTG tool comes with a number of predefined algebras, but
+you can (and probably will) also implement your own algebras. You can
+use these algebras just like the predefined algebras, by referencing
+them in the preamble of an IRTG grammar file. The algorithms for
+parsing, training, and decoding will work for your algebra as well. In
+fact, it is the key advantage of working with IRTGs that
+algebra-specific aspects of parsing are completely separated from the
+core parsing engine.
+
+An algebra in the IRTG tool is a Java class that implements the
+interface \verb?Algebra?.  \verb?Algebra? is a generic interface,
+which means that you need to specify a type parameter.  If your class
+implements \verb?Algebra<O>?, this means that the universe of your
+algebra contains all values that are represented by the Java type
+\verb?O?.  For example, the class \verb?StringAlgebra? implements the
+interface \verb?Algebra<List<String>>?, which means that its values
+are lists of strings (namely, a list of the words in a sentence).
+
+The interface \verb?Algebra? defines three methods, which your class
+must implement. These methods are as follows.
+
+\begin{description}
+\item[evaluate] The \verb?evaluate? method evaluates a term of the
+  algebra to an element of the algebra. The term is represented as a
+  \verb?Tree? object with string labels. (See
+  \verb?StringAlgebra#evaluate? for some methods that can be used on
+  trees.)
+\item[parseString] The \verb?parseString? method parses the string
+  representation of an algebra object and returns the algebra
+  object. If the objects of your algebra are represented as terms, you
+  may be interested in using the method \verb?TermParser#parse? to
+  parse the string representation of the term into a \verb?Term?
+  object and then evaluating that term further.
+\item[decompose] The \verb?decompose? method computes the
+  decomposition automaton for the given algebra object $a$. The
+  decomposition automaton accepts exactly those terms that evaluate to
+  $a$. Typically, your algebra class will define a private nested
+  class that is derived from \verb?BottomUpAutomaton?, and return a
+  new object of this class as the return value of \verb?decompose?.
+\end{description}
+
+Not every algebra class will do something useful in all of these
+methods. The other methods are welcome to throw an
+\verb?UnsupportedOperationException?.
+
+\begin{itemize}
+\item If you are certain that you will never parse an object of your
+  algebra, you do not need to implement the \verb?decompose? and
+  \verb?parseString?  methods. Because \verb?decompose? is usually the
+  most difficult of the three methods to implement, this can be very
+  convenient.
+\item If you are certain that you will never decode into an object of
+  your algebra, you do not need to implement the \verb?evaluate?
+  method.
+\item You may find that implementing \verb?evaluate? and
+  \verb?parseString? can still be useful for writing test cases.
+\end{itemize}
+
+When the IRTG tool reads an IRTG grammar file, it looks for the
+algebra classes on the Java classpath. This means that your algebra
+class must be on the classpath. The most convenient way to do this may
+be to package your algebra class into a Jar file of its own (say,
+\verb?foo.jar?). You can then instruct Java to load your Jar file when
+starting the shell as follows:
+
+\begin{verbatim}
+$ java -cp irtg-1.0.jar:foo.jar de.saar.penguin.irtg.shell.Main
+\end{verbatim}
+
+Notice that if you use Windows, you must replace the colon (:) by a
+semicolon (;).
+
 
 \section{Conclusion} \label{sec:conclusion}
 
