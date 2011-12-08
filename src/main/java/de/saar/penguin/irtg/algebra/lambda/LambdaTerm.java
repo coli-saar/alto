@@ -8,8 +8,11 @@ import de.saar.basic.Pair;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -52,6 +55,7 @@ public class LambdaTerm {
      * @param tree  the internal tree of the Lambda Term
      */
     private LambdaTerm(Tree<Pair<Type, String>> tree) {
+        //System.out.println("Wurzellabel "+tree.getLabel(tree.getRoot()));
         this.type = tree.getLabel(tree.getRoot()).left;
         this.tree = tree;
         this.x = tree.getLabel(tree.getRoot()).right;
@@ -345,6 +349,76 @@ public class LambdaTerm {
         return old;
 
     }
+
+    /**
+     * Gets pairs of LambdaTerms which, when applied to each other will become
+     * this LambdaTerm
+     * @return
+     */
+    public HashMap<LambdaTerm,LambdaTerm> getSource(){
+        HashMap<LambdaTerm,LambdaTerm> ret = new HashMap<LambdaTerm,LambdaTerm>();
+        Tree<Pair<Type,String>> workingCopy = this.tree.copy();
+
+        System.out.println(this.tree);
+
+
+        // Baum durchgehen und Positionen finden, die nicht die ersten Lambdas sind
+        List<String> nodes = this.tree.getNodesInDfsOrder();
+        Collections.reverse(nodes);
+
+        boolean first = true;
+
+        for(String node : nodes){
+            if(first == true && this.tree.getLabel(node).left == Type.LAMBDA){
+                // do nothing
+
+            }
+            else{
+                //System.out.println("Knotenlabel "+this.tree.getLabel(node).left+" "+this.tree.getLabel(node).right);
+                first = false;
+                // subtree von da an erstellen
+
+                LambdaTerm extracted = new LambdaTerm(this.tree.subtree(node));
+
+                // context erstellen
+
+                // neuer Baum
+                // neues Lambda
+
+                // an die Stelle des Knoten eine Variable setzen - replace node
+
+                 String newVar = this.genvar();
+                 LambdaTerm hole = variable(newVar);
+
+                 // loch hinzufügen
+  
+                 workingCopy.replaceNode(node, hole.tree);
+
+                 Tree<Pair<Type,String>> modified = workingCopy;
+
+                 Pair<Type,String> newPair = new Pair<Type,String>(Type.LAMBDA,newVar);
+                 Tree<Pair<Type,String>> newTree = new Tree<Pair<Type,String>>();
+
+
+                 newTree.addNode(newPair, null);
+
+
+                 // add modified subtree to tree
+                 newTree.addSubTree(modified,newTree.getRoot());
+
+                 LambdaTerm context = new LambdaTerm(newTree);
+
+                 ret.put(context, extracted);
+
+                 workingCopy = this.tree;
+            }
+
+        }
+
+
+        return ret;
+    }
+
 
     public Pair<LambdaTerm, LambdaTerm> split(String top, String bottom) {
 
