@@ -8,11 +8,9 @@ import de.saar.basic.Pair;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  *
@@ -36,6 +34,7 @@ public class LambdaTerm {
     private Tree<Pair<Type, String>> tree;
     private HashMap<String, String> varList = null;
     private int genvarNext = 0;
+    private String stringRep = "";
 
 
     /**
@@ -354,63 +353,45 @@ public class LambdaTerm {
      * Gets pairs of LambdaTerms which, when applied to each other will become
      * this LambdaTerm
      * @return
+     * TODO - bind free variables in extracted Term
      */
     public HashMap<LambdaTerm,LambdaTerm> getSource(){
         HashMap<LambdaTerm,LambdaTerm> ret = new HashMap<LambdaTerm,LambdaTerm>();
         Tree<Pair<Type,String>> workingCopy = this.tree.copy();
 
-        System.out.println(this.tree);
-
-
-        // Baum durchgehen und Positionen finden, die nicht die ersten Lambdas sind
+        // nearly every subtree can be extracted
         List<String> nodes = this.tree.getNodesInDfsOrder();
         Collections.reverse(nodes);
 
         boolean first = true;
 
         for(String node : nodes){
+            // do not extract lambdas appearng at the root
             if(first == true && this.tree.getLabel(node).left == Type.LAMBDA){
                 // do nothing
-
             }
             else{
-                //System.out.println("Knotenlabel "+this.tree.getLabel(node).left+" "+this.tree.getLabel(node).right);
                 first = false;
-                // subtree von da an erstellen
 
+                // extracted Lambdaterm
                 LambdaTerm extracted = new LambdaTerm(this.tree.subtree(node));
+                // contect LambdaTerm
+                String newVar = this.genvar();
+                LambdaTerm hole = variable(newVar);
+                workingCopy.replaceNode(node, hole.tree);
+                Tree<Pair<Type,String>> modified = workingCopy;
+                Pair<Type,String> newPair = new Pair<Type,String>(Type.LAMBDA,newVar);
+                Tree<Pair<Type,String>> newTree = new Tree<Pair<Type,String>>();
+                newTree.addNode(newPair, null);
+                // add modified subtree to tree
+                newTree.addSubTree(modified,newTree.getRoot());
+                LambdaTerm context = new LambdaTerm(newTree);
 
-                // context erstellen
+                // add pair to map
+                ret.put(context, extracted);
 
-                // neuer Baum
-                // neues Lambda
-
-                // an die Stelle des Knoten eine Variable setzen - replace node
-
-                 String newVar = this.genvar();
-                 LambdaTerm hole = variable(newVar);
-
-                 // loch hinzufügen
-  
-                 workingCopy.replaceNode(node, hole.tree);
-
-                 Tree<Pair<Type,String>> modified = workingCopy;
-
-                 Pair<Type,String> newPair = new Pair<Type,String>(Type.LAMBDA,newVar);
-                 Tree<Pair<Type,String>> newTree = new Tree<Pair<Type,String>>();
-
-
-                 newTree.addNode(newPair, null);
-
-
-                 // add modified subtree to tree
-                 newTree.addSubTree(modified,newTree.getRoot());
-
-                 LambdaTerm context = new LambdaTerm(newTree);
-
-                 ret.put(context, extracted);
-
-                 workingCopy = this.tree;
+                // reset workingCopy
+                workingCopy = this.tree.copy();
             }
 
         }
@@ -436,8 +417,10 @@ public class LambdaTerm {
 
 // TODO - add varList
     private String printInfo(Pair<Type,String> label){
+
         String ret = new String();
         Type typ = label.left;
+        // System.out.println("printinfo mit "+label);
         if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
             String newVarName = this.genvar();
             this.varList.put(label.right,newVarName);
@@ -447,6 +430,12 @@ public class LambdaTerm {
             ret = "";
         }
         if (typ == Type.VARIABLE){
+            if(!varList.containsKey(label.right)){
+
+            String newVarName = this.genvar();
+            this.varList.put(label.right,newVarName);
+
+            }
             ret = "\\"+varList.get(label.right);
         }
         if (typ == Type.CONSTANT){
@@ -481,14 +470,17 @@ public class LambdaTerm {
     @Override
     public String toString() {
        // return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
-        if(varList == null){
+        if(stringRep.equals("")){
+            if(varList == null){
             varList = new HashMap<String, String>();
         }
         StringBuffer buf = new StringBuffer();
         buf.append("(");
         printAsString(tree.getRoot(),buf);
         buf.append(")");
-        return buf.toString();
+        stringRep = buf.toString();
+        }
+        return stringRep;
     }
 
     @Override
