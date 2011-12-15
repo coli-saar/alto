@@ -7,10 +7,13 @@ package de.saar.penguin.irtg.algebra.lambda;
 import de.saar.basic.Pair;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -205,6 +208,48 @@ public class LambdaTerm {
         ret.getTree().addSubTree( sub2.getTree(), ret.getTree().getRoot());
         return ret;
     }
+    
+     private static class CollectingTreeVisitor extends TreeVisitor<Set<String>, Void>{
+            Set<String> unbound;
+            Tree<Pair<Type,String>> workingCopy;
+            
+            CollectingTreeVisitor(Set<String> unbound,Tree<Pair<Type,String>> workingCopy){
+                this.unbound = unbound;
+                this.workingCopy = workingCopy;
+            }     
+            
+            public Set<String> visit(String node, Set<String> data) {
+                Set<String> ret = data;
+                Type typ = workingCopy.getLabel(node).left;
+                String value = workingCopy.getLabel(node).right;
+                if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
+                    ret.add(value);
+                }
+                if (typ == Type.VARIABLE && !data.contains(value)){
+                    unbound.add(value);
+                }
+                return ret;
+            }
+
+            public Set<String> getRootValue() {
+                Set<String> ret = new HashSet<String>();
+                ret.add(workingCopy.getLabel(workingCopy.getRoot()).right);
+                return ret;
+                }          
+            }
+
+    public Set<String> findUnboundVariables(){
+        Set<String> ret = new HashSet<String>();
+        Set<String> start = new HashSet<String>();
+
+        final Tree<Pair<Type,String>> workingCopy = this.tree;
+        start.add(workingCopy.getLabel(workingCopy.getRoot()).right);
+        CollectingTreeVisitor tv = new CollectingTreeVisitor(ret, workingCopy);
+        this.tree.dfs(tv);
+        return ret;
+
+
+    }
 
     /**
      *
@@ -387,9 +432,10 @@ public class LambdaTerm {
                 newTree.addSubTree(modified,newTree.getRoot());
                 LambdaTerm context = new LambdaTerm(newTree);
 
-                // add pair to map
+                // add pair to map if it is a "good" decomposition
+                if(! (context == this || extracted == this) ){
                 ret.put(context, extracted);
-
+                }
                 // reset workingCopy
                 workingCopy = this.tree.copy();
             }
