@@ -233,7 +233,11 @@ public class LambdaTerm {
 
             public Set<String> getRootValue() {
                 Set<String> ret = new HashSet<String>();
-                ret.add(workingCopy.getLabel(workingCopy.getRoot()).right);
+                Pair<Type,String> label = workingCopy.getLabel(workingCopy.getRoot());
+                Type typ = label.left;
+                 if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
+                ret.add(label.right);
+                }
                 return ret;
                 }          
             }
@@ -417,9 +421,20 @@ public class LambdaTerm {
             }
             else{
                 first = false;
-
                 // extracted Lambdaterm
+                // TODO - PErformance can be enhanced here
+                LambdaTerm extractedUnfinsihed = new LambdaTerm(this.tree.subtree(node));
                 LambdaTerm extracted = new LambdaTerm(this.tree.subtree(node));
+                for(String var : extractedUnfinsihed.findUnboundVariables()){
+                    Pair<Type,String> newPair = new Pair<Type,String>(Type.LAMBDA,var);
+                    Tree<Pair<Type,String>> newTree = new Tree<Pair<Type,String>>();
+                    newTree.addNode(newPair,newTree.getRoot());
+                    newTree.addSubTree(extracted.tree,newTree.getRoot());
+                    extracted = new LambdaTerm(newTree);
+                }
+
+
+
                 // contect LambdaTerm
                 String newVar = this.genvar();
                 LambdaTerm hole = variable(newVar);
@@ -433,8 +448,8 @@ public class LambdaTerm {
                 LambdaTerm context = new LambdaTerm(newTree);
 
                 // add pair to map if it is a "good" decomposition
-                if(! (context == this || extracted == this) ){
-                ret.put(context, extracted);
+                if(! (this.equals(context) || this.equals(extracted)) ){
+                     ret.put(context, extracted);
                 }
                 // reset workingCopy
                 workingCopy = this.tree.copy();
