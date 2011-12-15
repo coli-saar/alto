@@ -106,7 +106,7 @@ class LambdaTermParserTest {
 
     }
 
-    @Test
+   // @Test
     public void testSplit(){
         // LambdaTerm test = a(v("x"),LambdaTerm.lambda("\$x",v("x")));
          LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
