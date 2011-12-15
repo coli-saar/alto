@@ -154,7 +154,7 @@ are specified as before, as $h_\mathrm{english}(r_{11}) =
 Now let's use this grammar for parsing an English string.
 
 \begin{verbatim}
-> chart = irtg.parse(english:"john watches the woman with the telescope")
+> chart = g.parse(english:"john watches the woman with the telescope")
 > chart
 r12 -> P,4-5  [1.0]
 r11 -> N,6-7  [1.0]
@@ -246,7 +246,7 @@ that the homomorphism of the output interpretation is linear.  Here is
 an example:
 
 \begin{verbatim}
-> irtg.decode("english", german: "hans betrachtet die frau mit dem fernrohr")
+> g.decode("english", german: "hans betrachtet die frau mit dem fernrohr")
 [john, watches, the, woman, with, the, telescope]
 \end{verbatim}
 
@@ -264,7 +264,7 @@ Observe that IRTG grammars are, in principle, fully symmetric, and so
 you can use the same grammar to decode from English to German:
 
 \begin{verbatim}
-> irtg.decode("german", english:"john watches the woman with the telescope")
+> g.decode("german", english:"john watches the woman with the telescope")
 [hans, betrachtet, die, frau, mit, die, fernrohr]
 [hans, betrachtet, dem, frau, mit, die, fernrohr]
 [hans, betrachtet, die, frau, mit, dem, fernrohr]

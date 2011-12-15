@@ -106,14 +106,17 @@ class LambdaTermParserTest {
 
     }
 
-   // @Test
+    @Test
     public void testSplit(){
         // LambdaTerm test = a(v("x"),LambdaTerm.lambda("\$x",v("x")));
          LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
          //System.out.println("===========================================");
          //System.out.println(test.getSource());
          LambdaTerm easy = LambdaTerm.lambda("\$x",v("x"));
-         System.out.println(easy.getSource());
+         System.out.println("easy: " + easy.getDecompositions());
+         System.out.println("test: " + test.getDecompositions());
+         
+//        System.out.println("auto for test: " + new LambdaTermAlgebra().decompose(test));
    }
 
     @Test

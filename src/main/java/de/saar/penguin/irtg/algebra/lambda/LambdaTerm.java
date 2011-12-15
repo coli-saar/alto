@@ -7,12 +7,12 @@ package de.saar.penguin.irtg.algebra.lambda;
 import de.saar.basic.Pair;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -404,8 +404,8 @@ public class LambdaTerm {
      * @return
      * TODO - bind free variables in extracted Term
      */
-    public HashMap<LambdaTerm,LambdaTerm> getSource(){
-        HashMap<LambdaTerm,LambdaTerm> ret = new HashMap<LambdaTerm,LambdaTerm>();
+    public Map<LambdaTerm,LambdaTerm> getDecompositions(){
+        Map<LambdaTerm,LambdaTerm> ret = new HashMap<LambdaTerm,LambdaTerm>();
         Tree<Pair<Type,String>> workingCopy = this.tree.copy();
 
         // nearly every subtree can be extracted
