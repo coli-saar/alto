@@ -105,6 +105,14 @@ class LambdaTermParserTest {
 
     }
 
+    //@Test
+    public void testSplit(){
+        // LambdaTerm test = a(v("x"),v("x"));
+         LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
+         System.out.println("===========================================");
+         System.out.println(test.getSource());
+   }
+
     private static LambdaTerm a(f, LambdaTerm... a) {
         return LambdaTerm.apply(f,Arrays.asList(a));
     }
