@@ -90,6 +90,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
 
         @Override
         public Set<Rule<LambdaTerm>> getRulesTopDown(String label, LambdaTerm parentState) {
+           // System.out.println("Schon mal? "+parentState+" "+label);
             if (!useCachedRuleTopDown(label, parentState)) {
                 // create new rules and cache them
 
