@@ -69,7 +69,6 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         return (Set<List<String>>) t.dfs(new TreeVisitor<Void, Set<List<String>>>() {
             @Override
             public Set<List<String>> combine(String node, List<Set<List<String>>> childrenValues) {
-//                System.err.println("evaluate: " + t.subtree(node));                
                 return evaluate(getLabel(t, node), childrenValues);
             }
         });

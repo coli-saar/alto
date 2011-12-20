@@ -4,12 +4,15 @@
  */
 package de.saar.penguin.irtg.automata;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.SetMultimap;
 import de.saar.basic.StringOrVariable;
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -17,6 +20,7 @@ import java.util.Set;
  * @author koller
  */
 class HomAutomaton extends BottomUpAutomaton<String> {
+
     private BottomUpAutomaton base;
     private Homomorphism hom;
     private int gensymNext = 1;
@@ -37,32 +41,56 @@ class HomAutomaton extends BottomUpAutomaton<String> {
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
             Set<Rule> baseRuleSet = base.getRuleSet();
+            SetMultimap<Object, Object> chainRules = HashMultimap.create();
+            final Set<String> labels = new HashSet<String>();
+
             for (final Rule<Object> rule : baseRuleSet) {
                 final Tree<StringOrVariable> tree = hom.get(rule.getLabel());
-                tree.dfs(new TreeVisitor<Void, String>() {
-                    @Override
-                    public String combine(String node, List<String> childrenValues) {
-                        StringOrVariable label = tree.getLabel(node);
 
-                        if (label.isVariable()) {
-                            return rule.getChildren()[Homomorphism.getIndexForVariable(label)].toString();
-                        } else {
-                            String parentState = null;
-                            double weight = 0;
-                            
-                            if( node.equals(tree.getRoot()) ) {
-                                parentState = rule.getParent().toString();
-                                weight = rule.getWeight();
+                if (tree.getLabel(tree.getRoot()).isVariable()) {
+                    // special case for homomorphisms of the form ?1: store chain rule
+                    assert rule.getChildren().length == 1;
+
+                    chainRules.put(rule.getChildren()[0], rule.getParent());
+                } else {
+                    // otherwise, iterate over homomorphic image of rule label and
+                    // introduce rules as we go along
+                    tree.dfs(new TreeVisitor<Void, String>() {
+
+                        @Override
+                        public String combine(String node, List<String> childrenValues) {
+                            StringOrVariable label = tree.getLabel(node);
+
+                            if (label.isVariable()) {
+                                return rule.getChildren()[Homomorphism.getIndexForVariable(label)].toString();
                             } else {
-                                parentState = gensymState();
-                                weight = 1;
-                            }
+                                String parentState = null;
+                                double weight = 0;
 
-                            storeRule(new Rule<String>(parentState, label.toString(), childrenValues, weight));
-                            return parentState;
+                                if (node.equals(tree.getRoot())) {
+                                    parentState = rule.getParent().toString();
+                                    weight = rule.getWeight();
+                                } else {
+                                    parentState = gensymState();
+                                    weight = 1;
+                                }
+
+                                storeRule(new Rule<String>(parentState, label.toString(), childrenValues, weight));
+                                labels.add(label.toString());
+                                return parentState;
+                            }
+                        }
+                    });
+                }
+                
+                // now process chain rules
+                for( Entry<Object,Object> entry : chainRules.entries() ) {
+                    for( String label : labels ) {
+                        for( Rule<String> ruleForEntry : getRulesTopDownFromExplicit(label, entry.getKey().toString()) ) {
+                            storeRule(new Rule<String>(entry.getValue().toString(), label, ruleForEntry.getChildren()));
                         }
                     }
-                });
+                }
 
             }
 

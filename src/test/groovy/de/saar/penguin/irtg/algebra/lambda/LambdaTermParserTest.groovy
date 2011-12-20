@@ -14,6 +14,7 @@ import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.saar.basic.tree.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 
 /**
@@ -104,6 +105,30 @@ class LambdaTermParserTest {
         assertEquals(test,algebra.evaluate(t2));
 
     }
+
+    @Test
+    public void testSplit(){
+        // LambdaTerm test = a(v("x"),LambdaTerm.lambda("\$x",v("x")));
+         LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
+         //System.out.println("===========================================");
+         //System.out.println(test.getSource());
+         LambdaTerm easy = LambdaTerm.lambda("\$x",v("x"));
+         System.out.println("easy: " + easy.getDecompositions());
+         System.out.println("test: " + test.getDecompositions());
+         
+//        System.out.println("auto for test: " + new LambdaTermAlgebra().decompose(test));
+   }
+
+    @Test
+    public void testUnbound(){
+        //LambdaTerm test = a(v("y"),LambdaTerm.lambda("\$x",v("x")));
+        LambdaTerm test = v("y");
+        HashSet<String> answer = new HashSet<String>();
+        answer.add("\$y");
+        assertEquals(test.findUnboundVariables(),answer);
+    }
+
+
 
     private static LambdaTerm a(f, LambdaTerm... a) {
         return LambdaTerm.apply(f,Arrays.asList(a));

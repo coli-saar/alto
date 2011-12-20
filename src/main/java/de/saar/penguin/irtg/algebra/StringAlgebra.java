@@ -25,7 +25,7 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         if (children.isEmpty()) {
             List<String> ret = new ArrayList<String>();
-            ret.add(t.getLabel(t.getRoot()).toString());
+            ret.add(t.getLabel(t.getRoot()));
             return ret;
         } else {
             List<String> childEval = new ArrayList<String>();

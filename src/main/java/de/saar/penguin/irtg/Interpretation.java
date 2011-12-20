@@ -9,6 +9,7 @@ import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.algebra.Algebra;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.hom.Homomorphism;
+import de.up.ling.shell.CallableFromShell;
 
 /**
  *
@@ -31,6 +32,7 @@ public class Interpretation<E> {
         return algebra;
     }
 
+    @CallableFromShell(name="homomorphism")
     public Homomorphism getHom() {
         return hom;
     }
