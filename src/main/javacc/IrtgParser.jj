@@ -50,7 +50,9 @@ public class IrtgParser {
 }
 PARSER_END(IrtgParser)
 
-SKIP : { " " | "\t" | "\r" | "\n" }
+SKIP : { <"/*">: INSIDE_COMMENT |  " " | "\t" | "\r" | "\n" }
+<INSIDE_COMMENT>
+SKIP: { <"*/">: DEFAULT | <~[]> }
 
 TOKEN :
 {
@@ -58,17 +60,15 @@ TOKEN :
     < NAME:     ["a"-"z","A"-"Z","_", "'", "*"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
     <VARIABLE : ["?"] (["a"-"z", "A"-"Z", "_", "0"-"9", "-"])*> |
     <NUMBER : ["0"-"9", "."] (["0"-"9", ".", "e", "-"])* > |
-    < FIN_MARK: [ "\u00b0", "!"] > |
-    <LINE_END_COMMENT: "//" (~["\n"])* >
+    < FIN_MARK: [ "\u00b0", "!"] > 
 }
 
 void grammar() :
 {
 }
 {
-    (<LINE_END_COMMENT>)*
-    (InterpretationDeclaration() (<LINE_END_COMMENT>)*) +
-    (RuleWithHomomorphisms() (<LINE_END_COMMENT>)*) +
+    (InterpretationDeclaration() ) +
+    (RuleWithHomomorphisms() ) +
 }
 
 void InterpretationDeclaration() :

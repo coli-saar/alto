@@ -6,7 +6,7 @@
 options {
   JDK_VERSION = "1.5";
   STATIC = false;
-  LOOKAHEAD=2; // speed up parser by removing this and fixing choice conflict in ctt() differently
+  LOOKAHEAD=2;
   FORCE_LA_CHECK=true;
 }
 PARSER_BEGIN(BottomUpAutomatonParser)
@@ -38,26 +38,26 @@ public class BottomUpAutomatonParser {
 }
 PARSER_END(BottomUpAutomatonParser)
 
-SKIP : { " " | "\t" }
+SKIP : { <"/*">: INSIDE_COMMENT | " " | "\t" | "\n" }
+<INSIDE_COMMENT>
+SKIP: { <"*/">: DEFAULT | <~[]> }
 
 TOKEN :
 {
     < NAME:     ["a"-"z","A"-"Z","_", "'", "*"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
     <NUMBER : ["0"-"9", "."] (["0"-"9", ".", "e", "-"])* > |
-    < FIN_MARK: [ "\u00b0", "!"] > |
-    < NEUTRAL_MARK: ["%"] > |
-    <LINE_END_COMMENT: "//" (~["\n"])* >
+    < FIN_MARK: [ "\u00b0", "!"] > 
+   // < NEUTRAL_MARK: ["%"] > |
+  //  <LINE_END_COMMENT: "//" (~["\n"])* >
 }
 
 void automaton() :
 {
 }
 {
-		automatonRule() (Weight())? (<LINE_END_COMMENT>)?
-		( "\n"
-			(
-				( LOOKAHEAD(2) automatonRule() (Weight())? )? (<LINE_END_COMMENT>)?
-			)
+		automatonRule() (Weight())? 
+		( 
+				 LOOKAHEAD(2) automatonRule() (Weight())? 
 		)*
 
 }

@@ -23,6 +23,21 @@ class BottomUpAutomatonParserTest {
     }
 
     @Test
+    public void testParserNoNewlines() {
+        BottomUpAutomaton automaton = parse("a -> q1 f(q1,q1) -> q2!");
+
+        assert automaton != null;
+    }
+    
+    @Test
+    public void testParserWithComments() {
+        BottomUpAutomaton automaton = parse("a -> q1 /* foo -> bar */ f(q1,  /* lalala */ q1) -> q2!");
+
+        assert automaton != null;
+    }
+
+    
+    @Test
     public void testParser1() {
         BottomUpAutomaton automaton = parse("a -> q1\n f(q1,q1) -> q2 !");
 
