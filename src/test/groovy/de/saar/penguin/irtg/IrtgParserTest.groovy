@@ -26,10 +26,10 @@ class IrtgParserTest {
     @Test
     public void testParser() {
         String grammarstring = '''
-            // declarating the interpretations
-            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra  // another comment
+            /* declarating the interpretations */
+            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra  /* another comment */
 
-            // automaton starts here
+            /* automaton starts here */
 
 r1(NP,VP) -> S!
   [i] *(?1,?2)
