@@ -76,6 +76,17 @@ class BottomUpAutomatonTest {
                 
         assertEquals(gold, result.language())
     }
+    
+    @Test
+    public void testHomOneVariable() {
+        Homomorphism h = hom(["f": "?1", "a": "A"])
+        BottomUpAutomaton base = parse("f(q2) -> q1! \n a -> q2");
+        BottomUpAutomaton gold = parse("A -> q1! \n A -> q2");
+        
+        BottomUpAutomaton result = base.homomorphism(h)
+        
+        assertEquals(gold, result)
+    }
 
     @Test
     public void testViterbi() {

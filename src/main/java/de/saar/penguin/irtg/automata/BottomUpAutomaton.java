@@ -522,6 +522,7 @@ public abstract class BottomUpAutomaton<State> {
      * @param hom
      * @return 
      */
+    @CallableFromShell
     public BottomUpAutomaton<String> homomorphism(Homomorphism hom) {
         return new HomAutomaton(this, hom);
     }

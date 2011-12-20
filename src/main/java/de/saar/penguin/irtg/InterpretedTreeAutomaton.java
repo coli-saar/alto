@@ -114,6 +114,30 @@ public class InterpretedTreeAutomaton {
         
         return ret;
     }
+    
+    @CallableFromShell(name = "decodeToTerms", joinList="\n")
+    public Set<Tree> decodeToTermsFromReaders(Reader outputInterpretation, Map<String,Reader> readers) throws ParserException, IOException {
+        BottomUpAutomaton chart = parseFromReaders(readers);
+        String interp = StringTools.slurp(outputInterpretation);
+        return decodeToTerms(chart, interpretations.get(interp));
+    }
+    
+    public Set<Tree> decodeToTerms(String outputInterpretation, Map<String, Object> inputs) {
+        BottomUpAutomaton chart = parse(inputs);
+        return decodeToTerms(chart, interpretations.get(outputInterpretation));
+    }
+    
+    private Set<Tree> decodeToTerms(BottomUpAutomaton chart, Interpretation interp) {
+        BottomUpAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
+        Set<Tree<String>> outputLanguage = outputChart.language();
+        
+        Set<Tree> ret = new HashSet<Tree>();
+        for( Tree<String> term : outputLanguage ) {
+            ret.add(term);
+        }
+        
+        return ret;
+    }
 
     @CallableFromShell(name = "emtrain")
     public void trainEM(Reader reader) throws IOException {
