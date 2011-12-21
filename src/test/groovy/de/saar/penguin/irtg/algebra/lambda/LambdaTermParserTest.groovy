@@ -136,6 +136,18 @@ class LambdaTermParserTest {
         assertEquals(test.findUnboundVariables(),answer);
     }
 
+/*    
+    @Test
+    public void testToStringParse() {
+        LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
+        String encoded = test.toString().toLowerCase();
+   //     System.out.println("test: " + encoded);
+        LambdaTerm parsed = p(encoded);
+        
+        
+        assertEquals(test, parsed);
+    }
+*/
 
 
     private static LambdaTerm a(f, LambdaTerm... a) {

@@ -20,7 +20,7 @@ import java.io.Reader;
 public class Main {
     public static void main(String[] args) throws IOException {
         int serverPort = 0;
-
+        
         for (int i = 0; i < args.length; i++) {
             if ("--server".equals(args[i])) {
                 serverPort = Integer.parseInt(args[++i]);

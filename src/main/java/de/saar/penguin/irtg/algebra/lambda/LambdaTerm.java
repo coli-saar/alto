@@ -545,7 +545,7 @@ public class LambdaTerm {
         if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
             String newVarName = this.genvar();
             this.varList.put(label.right,newVarName);
-            ret = typ+" \\"+newVarName+" ";
+            ret = typ + " " + newVarName + " ";
         }
         if (typ == Type.APPLY){
             ret = "";
@@ -557,7 +557,7 @@ public class LambdaTerm {
             this.varList.put(label.right,newVarName);
 
             }
-            ret = "\\"+varList.get(label.right);
+            ret = varList.get(label.right);
         }
         if (typ == Type.CONSTANT){
             ret = label.right;
@@ -624,14 +624,14 @@ public class LambdaTerm {
         String name = label.right;
         // System.out.println("printinfo mit "+label);
         if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
-            String s1 = typ+" \\"+name+" ";
+            String s1 = typ+" "+name+" ";
             buf.append(s1);
         }
         if (typ == Type.APPLY){
             buf.append("APPLY");
         }
         if (typ == Type.VARIABLE){
-           String s1 = "\\"+name;
+           String s1 = name;
            buf.append(s1);
         }
         if (typ == Type.CONSTANT){

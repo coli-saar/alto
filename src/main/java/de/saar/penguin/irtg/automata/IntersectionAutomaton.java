@@ -24,16 +24,17 @@ import java.util.Set;
  * @author koller
  */
 class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pair<LeftState, RightState>> {
+
     private BottomUpAutomaton<LeftState> left;
     private BottomUpAutomaton<RightState> right;
-    private Set<String> allString;
+    private Set<String> allLabels;
 
     public IntersectionAutomaton(BottomUpAutomaton<LeftState> left, BottomUpAutomaton<RightState> right) {
         this.left = left;
         this.right = right;
 
-        allString = new HashSet<String>(left.getAllLabels());
-        allString.retainAll(right.getAllLabels());
+        allLabels = new HashSet<String>(left.getAllLabels());
+        allLabels.retainAll(right.getAllLabels());
 
         finalStates = null;
         allStates = null;
@@ -48,23 +49,27 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             SetMultimap<LeftState, RightState> partners = HashMultimap.create();
 
             // initialize agenda with all pairs of rules of the form A -> f
-            Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new HashMap<String, Set<Rule<RightState>>>();
+//            Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new HashMap<String, Set<Rule<RightState>>>();
             List<RightState> noRightChildren = new ArrayList<RightState>();
+            
+            /*
             for (String label : right.getAllLabels()) {
                 Set<Rule<RightState>> rules = right.getRulesBottomUp(label, noRightChildren);
                 preTerminalStatesRight.put(label, rules);
             }
+             * 
+             */
 
             for (Rule<LeftState> leftRule : left.getRuleSet()) {
                 if (leftRule.getArity() == 0) {
-                    if (preTerminalStatesRight.containsKey(leftRule.getLabel())) {
-                        for (Rule<RightState> rightRule : preTerminalStatesRight.get(leftRule.getLabel())) {
-                            Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
-                            agenda.offer(rule.getParent());
-                            seenStates.add(rule.getParent());
-                            partners.put(leftRule.getParent(), rightRule.getParent());
-                        }
+                    Set<Rule<RightState>> preterminalRulesForLabel = right.getRulesBottomUp(leftRule.getLabel(), noRightChildren);
+
+                    for (Rule<RightState> rightRule : preterminalRulesForLabel) {
+                        Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
+                        storeRule(rule);
+                        agenda.offer(rule.getParent());
+                        seenStates.add(rule.getParent());
+                        partners.put(leftRule.getParent(), rightRule.getParent());
                     }
                 }
             }
@@ -109,12 +114,12 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             childStates.add(new Pair<LeftState, RightState>(leftRule.getChildren()[i], rightRule.getChildren()[i]));
         }
 
-        return new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), leftRule.getLabel(), childStates, leftRule.getWeight()*rightRule.getWeight());
+        return new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), leftRule.getLabel(), childStates, leftRule.getWeight() * rightRule.getWeight());
     }
 
     @Override
     public Set<String> getAllLabels() {
-        return allString;
+        return allLabels;
     }
 
     @Override
@@ -200,7 +205,6 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
 
         return allStates;
     }
-
 //    @Override
 //    public int getArity(String label) {
 //        return left.getArity(label);
