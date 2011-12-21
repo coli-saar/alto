@@ -266,7 +266,7 @@ public class LambdaTerm {
      */
     private Tree<Pair<Type, String>> substitute(final String varName, final Tree<Pair<Type, String>> content, final Tree<Pair<Type, String>> treeToWorkOn) {
 
-
+    //    System.out.println("Ersetze "+varName+" in "+treeToWorkOn+" durch "+content);
         Tree<Pair<Type, String>> ret = new Tree<Pair<Type, String>>();
         TreeVisitor<String, Tree<Pair<Type, String>>> tv = new TreeVisitor<String, Tree<Pair<Type, String>>>() {
 
@@ -373,7 +373,7 @@ public class LambdaTerm {
         };
         // end tree visitor
         LambdaTerm ret = new LambdaTerm(getTree().dfs(tv));
-
+       // System.out.println(this.printTrue()+" wurde reduziert zu "+ret.printTrue());
         return ret;
     }
 
@@ -403,7 +403,7 @@ public class LambdaTerm {
      * Gets pairs of LambdaTerms which, when applied to each other will become
      * this LambdaTerm
      * @return
-     * TODO - bind free variables in extracted Term
+     * TODO - Return List of Pairs for performance resons
      */
     public Map<LambdaTerm,LambdaTerm> getDecompositions(){
         Map<LambdaTerm,LambdaTerm> ret = new HashMap<LambdaTerm,LambdaTerm>();
@@ -628,7 +628,7 @@ public class LambdaTerm {
             buf.append(s1);
         }
         if (typ == Type.APPLY){
-            buf.append("");
+            buf.append("APPLY");
         }
         if (typ == Type.VARIABLE){
            String s1 = "\\"+name;
