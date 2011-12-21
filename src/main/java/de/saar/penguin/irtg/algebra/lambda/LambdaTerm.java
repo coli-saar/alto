@@ -208,7 +208,8 @@ public class LambdaTerm {
         ret.getTree().addSubTree( sub2.getTree(), ret.getTree().getRoot());
         return ret;
     }
-    
+
+    // Tree visitor to find unbound variables
      private static class CollectingTreeVisitor extends TreeVisitor<Set<String>, Void>{
             Set<String> unbound;
             Tree<Pair<Type,String>> workingCopy;
@@ -265,7 +266,7 @@ public class LambdaTerm {
      */
     private Tree<Pair<Type, String>> substitute(final String varName, final Tree<Pair<Type, String>> content, final Tree<Pair<Type, String>> treeToWorkOn) {
 
-
+    //    System.out.println("Ersetze "+varName+" in "+treeToWorkOn+" durch "+content);
         Tree<Pair<Type, String>> ret = new Tree<Pair<Type, String>>();
         TreeVisitor<String, Tree<Pair<Type, String>>> tv = new TreeVisitor<String, Tree<Pair<Type, String>>>() {
 
@@ -372,7 +373,7 @@ public class LambdaTerm {
         };
         // end tree visitor
         LambdaTerm ret = new LambdaTerm(getTree().dfs(tv));
-
+       // System.out.println(this.printTrue()+" wurde reduziert zu "+ret.printTrue());
         return ret;
     }
 
@@ -402,7 +403,7 @@ public class LambdaTerm {
      * Gets pairs of LambdaTerms which, when applied to each other will become
      * this LambdaTerm
      * @return
-     * TODO - bind free variables in extracted Term
+     * TODO - Return List of Pairs for performance resons
      */
     public Map<LambdaTerm,LambdaTerm> getDecompositions(){
         Map<LambdaTerm,LambdaTerm> ret = new HashMap<LambdaTerm,LambdaTerm>();
@@ -410,6 +411,7 @@ public class LambdaTerm {
 
         // nearly every subtree can be extracted
         List<String> nodes = this.tree.getNodesInDfsOrder();
+        
         Collections.reverse(nodes);
 
         boolean first = true;
@@ -420,36 +422,94 @@ public class LambdaTerm {
                 // do nothing
             }
             else{
+
+                /////////////////////////////////////////////////////////////
+                // neuer versuch
+                /////////////////////////////////////////////////////////////
+                
+                // from now on, everything can be extracted
                 first = false;
-                // extracted Lambdaterm
-                // TODO - PErformance can be enhanced here
-                LambdaTerm extractedUnfinsihed = new LambdaTerm(this.tree.subtree(node));
-                LambdaTerm extracted = new LambdaTerm(this.tree.subtree(node));
-                for(String var : extractedUnfinsihed.findUnboundVariables()){
-                    Pair<Type,String> newPair = new Pair<Type,String>(Type.LAMBDA,var);
-                    Tree<Pair<Type,String>> newTree = new Tree<Pair<Type,String>>();
-                    newTree.addNode(newPair,newTree.getRoot());
-                    newTree.addSubTree(extracted.tree,newTree.getRoot());
-                    extracted = new LambdaTerm(newTree);
+
+                // extract subtree
+                LambdaTerm extracted = new LambdaTerm(workingCopy.subtree(node));
+                // System.out.println("Extrahiere "+extracted.tree);
+
+                // prepare context
+                String newVar = genvar();
+                Pair<Type,String> newVarPair = new Pair<Type,String>(Type.LAMBDA,newVar);
+                Tree<Pair<Type,String>> context = new Tree<Pair<Type,String>>();
+                context.addNode(newVarPair, null);
+
+
+                // prepare extracted Tree
+
+                // find unbound variables in extracted LambdaTerm
+                Set<String> unbound = extracted.findUnboundVariables();
+
+                // prepare the hole which is going to replace the extracted subtree
+                Tree<Pair<Type,String>> contextTree = new Tree<Pair<Type,String>>();
+
+
+                // if there are unbound variables
+                if(!unbound.isEmpty()){
+
+                   // System.out.println("Ich habe ungebundene Variablen im extrahierten");
+
+                    String lastNode = null;
+                    Pair<Type,String> applyNodeForContext = new Pair<Type,String>(Type.APPLY,"");
+                    // add it to root of contextTree
+                    contextTree.addNode(applyNodeForContext, null);
+                    String contextTreeRoot = contextTree.getRoot();
+                    contextTree.addNode(new Pair<Type,String>(Type.VARIABLE,newVar),contextTreeRoot);
+
+                    // surrounding for extracted tree
+                    Tree<Pair<Type,String>> tempExtractedTree = new Tree<Pair<Type,String>>();
+
+                    for(String var : unbound){
+                        // prepare a new lambda with that variable for the extracted tree
+                        Pair<Type,String> newLambda = new Pair<Type,String>(Type.LAMBDA,var);
+
+                        // prepare a new variable node for the contextTree
+                        Pair<Type,String> newVarP = new Pair<Type,String>(Type.VARIABLE,var);
+
+                        // add variable to contextTree
+                        contextTree.addNode(newVarP,contextTreeRoot);
+                     
+                        // update last node
+                        lastNode = tempExtractedTree.addNode(newLambda,lastNode);
+
+
+                    }
+
+                    // now add the extracted tree under the built up tree
+                    ;
+                    tempExtractedTree.addSubTree(extracted.tree,lastNode);
+
+                    // update lambda term
+                    extracted = new LambdaTerm(tempExtractedTree);
+
+                    //
+
                 }
+                // there are no unbound variables
+                else{
+                   // System.out.println("Ich habe keine ungebundenen Variablen im Extrahierten");
+                    // contextTree just new Variable
+                    contextTree.addNode(new Pair<Type,String>(Type.VARIABLE,newVar),null);
+                }
+                    //System.out.println("Replace node "+node+" mit label "+workingCopy.getLabel(node)+" durch "+contextTree+" in "+workingCopy);
+                    //LambdaTerm hole = variable(newVar);
+                    workingCopy.replaceNode(node,contextTree);
+                    //workingCopy.replaceNode(node,hole.tree);
+                    
+                    context.addSubTree(workingCopy,context.getRoot());
+                    LambdaTerm contextTerm = new LambdaTerm(context);
+                // Replace the extracted Tree with the hole in the context tree
 
-
-
-                // contect LambdaTerm
-                String newVar = this.genvar();
-                LambdaTerm hole = variable(newVar);
-                workingCopy.replaceNode(node, hole.tree);
-                Tree<Pair<Type,String>> modified = workingCopy;
-                Pair<Type,String> newPair = new Pair<Type,String>(Type.LAMBDA,newVar);
-                Tree<Pair<Type,String>> newTree = new Tree<Pair<Type,String>>();
-                newTree.addNode(newPair, null);
-                // add modified subtree to tree
-                newTree.addSubTree(modified,newTree.getRoot());
-                LambdaTerm context = new LambdaTerm(newTree);
-
-                // add pair to map if it is a "good" decomposition
-                if(! (this.equals(context) || this.equals(extracted)) ){
-                     ret.put(context, extracted);
+                if(! (this.equals(contextTerm) || this.equals(extracted)) ){
+                   // System.out.printf("Wederr %s noch %s sind gleich zu %s \n", context, extracted, this);
+                    //System.out.printf("Machae daraus %s und %s \n", context, extracted);
+                     ret.put(contextTerm, extracted);
                 }
                 // reset workingCopy
                 workingCopy = this.tree.copy();
@@ -531,6 +591,7 @@ public class LambdaTerm {
     @Override
     public String toString() {
        // return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
+        this.genvarNext =0;
         if(stringRep.equals("")){
             if(varList == null){
             varList = new HashMap<String, String>();
@@ -542,6 +603,59 @@ public class LambdaTerm {
         stringRep = buf.toString();
         }
         return stringRep;
+    }
+
+    public String printTrue(){
+        String ret = "";
+        StringBuffer buf = new StringBuffer();
+        buf.append("(");
+        printAsItIs(tree.getRoot(),buf);
+        buf.append(")");
+
+        return buf.toString();
+    }
+
+
+    private void printAsItIs(String node, StringBuffer buf) {
+        boolean first = true;
+       // buf.append(printInfo(tree.getLabel(node)));
+        Pair<Type,String> label = tree.getLabel(node);
+        Type typ = label.left;
+        String name = label.right;
+        // System.out.println("printinfo mit "+label);
+        if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
+            String s1 = typ+" \\"+name+" ";
+            buf.append(s1);
+        }
+        if (typ == Type.APPLY){
+            buf.append("APPLY");
+        }
+        if (typ == Type.VARIABLE){
+           String s1 = "\\"+name;
+           buf.append(s1);
+        }
+        if (typ == Type.CONSTANT){
+             buf.append(name);
+        }
+        if (typ == Type.CONJ){
+            buf.append("and ");
+        }
+
+
+
+
+        if (!tree.getChildren(node).isEmpty()) {
+            buf.append("(");
+            for (String child : tree.getChildren(node)) {
+                if (first) {
+                    first = false;
+                } else {
+                    buf.append(" ");
+                }
+                printAsItIs(child, buf);
+            }
+            buf.append(")");
+        }
     }
 
     @Override
