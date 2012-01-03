@@ -8,5 +8,7 @@ print '>' + result + '<'
 result = conn.command('i.automaton()')
 print '>' + result + '<'
 
+result = conn.command('i = irtg(')  # syntax error raises an exception
+
 conn.close()
 
