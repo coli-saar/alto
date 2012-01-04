@@ -478,7 +478,6 @@ public class LambdaTerm {
                         // update last node
                         lastNode = tempExtractedTree.addNode(newLambda,lastNode);
 
-
                     }
 
                     // now add the extracted tree under the built up tree
@@ -545,7 +544,7 @@ public class LambdaTerm {
         if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
             String newVarName = this.genvar();
             this.varList.put(label.right,newVarName);
-            ret = typ + " " + newVarName + " ";
+            ret = typ.toString().toLowerCase() + " " + newVarName + " ";
         }
         if (typ == Type.APPLY){
             ret = "";
@@ -572,18 +571,46 @@ public class LambdaTerm {
     private void printAsString(String node, StringBuffer buf) {
         boolean first = true;
         buf.append(printInfo(tree.getLabel(node)));
+        List<String> children = tree.getChildren(node);
 
-        if (!tree.getChildren(node).isEmpty()) {
-            buf.append("(");
-            for (String child : tree.getChildren(node)) {
-                if (first) {
-                    first = false;
-                } else {
-                    buf.append(" ");
-                }
-                printAsString(child, buf);
+       // System.out.println("Knotelabel "+tree.getLabel(node).left+" Anzahl Kinder "+children.size());
+        if (!children.isEmpty()) {
+
+            // 1. Fall: Knoten selbst ist Apply
+            // dann klammern um die Kinder falls keine varconsts
+            // und nicht nur ein Kind.... (das sollte nicht vorkommen
+
+            if(tree.getLabel(node).left.equals(Type.APPLY)){
+                    for (String child : children) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            buf.append(" ");
+                        }
+                        if(tree.getLabel(child).left.equals(Type.VARIABLE) ||
+                           tree.getLabel(child).left.equals(Type.CONSTANT)){
+                           printAsString(child, buf);
+
+                        } else {
+                            buf.append("(");
+                            printAsString(child, buf);
+                            buf.append(")");
+                        }
+                    }
+
+            } else {
+                buf.append("(");
+                    for (String child : children) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            buf.append(" ");
+                        }
+                        printAsString(child, buf);
+                    }
+                buf.append(")");
+
             }
-            buf.append(")");
         }
     }
 
@@ -602,61 +629,11 @@ public class LambdaTerm {
         buf.append(")");
         stringRep = buf.toString();
         }
+        //System.out.println("internal tree:"+this.tree);
         return stringRep;
     }
 
-    public String printTrue(){
-        String ret = "";
-        StringBuffer buf = new StringBuffer();
-        buf.append("(");
-        printAsItIs(tree.getRoot(),buf);
-        buf.append(")");
 
-        return buf.toString();
-    }
-
-
-    private void printAsItIs(String node, StringBuffer buf) {
-        boolean first = true;
-       // buf.append(printInfo(tree.getLabel(node)));
-        Pair<Type,String> label = tree.getLabel(node);
-        Type typ = label.left;
-        String name = label.right;
-        // System.out.println("printinfo mit "+label);
-        if (typ == Type.LAMBDA || typ == Type.ARGMAX || typ == Type.ARGMIN || typ == Type.EXISTS){
-            String s1 = typ+" "+name+" ";
-            buf.append(s1);
-        }
-        if (typ == Type.APPLY){
-            buf.append("APPLY");
-        }
-        if (typ == Type.VARIABLE){
-           String s1 = name;
-           buf.append(s1);
-        }
-        if (typ == Type.CONSTANT){
-             buf.append(name);
-        }
-        if (typ == Type.CONJ){
-            buf.append("and ");
-        }
-
-
-
-
-        if (!tree.getChildren(node).isEmpty()) {
-            buf.append("(");
-            for (String child : tree.getChildren(node)) {
-                if (first) {
-                    first = false;
-                } else {
-                    buf.append(" ");
-                }
-                printAsItIs(child, buf);
-            }
-            buf.append(")");
-        }
-    }
 
     @Override
     public boolean equals(Object obj) {
