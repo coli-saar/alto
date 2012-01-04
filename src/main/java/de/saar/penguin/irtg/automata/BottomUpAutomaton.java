@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -897,5 +898,54 @@ public abstract class BottomUpAutomaton<State> {
         public String toString() {
             return getAllRules().toString();
         }
+    }
+    
+    private class LanguageIterable implements Iterable<Tree<String>> {
+        public Iterator<Tree<String>> iterator() {
+            return new LanguageIterator();
+        }        
+    }
+    
+    private class LanguageIterator implements Iterator<Tree<String>> {
+        private class IndexedRuleList {
+            public Rule<State>[] rules;
+            public int index;
+        }
+        
+        private Tree<IndexedRuleList> ruleTree = new Tree<IndexedRuleList>();
+        private boolean hasNext;
+        
+        public LanguageIterator() {
+            assert getFinalStates().size() == 1;            
+            hasNext = first(getFinalStates().iterator().next(), null);
+        }
+        
+        public boolean hasNext() {
+            return hasNext;
+        }
+
+        public Tree<String> next() {
+            Tree<String> ret = extractTree();
+            hasNext = next(ruleTree.getRoot());
+            return ret;
+        }
+
+
+        
+        private boolean first(State state, String parent) {
+            return false;
+        }
+        
+        private boolean next(String node) {
+            return false;
+        }
+        
+        private Tree<String> extractTree() {
+            return null;
+        }
+        
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }        
     }
 }
