@@ -25,16 +25,12 @@ import java.util.Set;
  * @author koller
  */
 public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
-
-    // evaluates a tree of LambdaTermAlgebraSymbols
-    public LambdaTerm evaluate(Tree t) {
-        final Tree<LambdaTermAlgebraSymbol> x = (Tree<LambdaTermAlgebraSymbol>) t;
-
+    public LambdaTerm evaluate(final Tree<String> t) {
         TreeVisitor<String, LambdaTerm> tv = new TreeVisitor<String, LambdaTerm>() {
 
             @Override
             public String getRootValue() {
-                return x.getRoot();
+                return t.getRoot();
             }
 
             @Override
@@ -42,12 +38,17 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
                 ArrayList<LambdaTerm> cV = (ArrayList<LambdaTerm>) childValues;
                 LambdaTerm ret;
 
-                if (x.getLabel(node).type.equals(LambdaTermAlgebraSymbol.FUNCTOR)) {
+                if (t.getLabel(node).equals(LambdaTermAlgebraSymbol.FUNCTOR)) {
                     // works since it is binary tree
                     LambdaTerm tmp = LambdaTerm.apply(cV.get(0), cV.get(1));
                     ret = tmp.reduce();
                 } else {
-                    ret = x.getLabel(node).content;
+                    try {
+                        //                    ret = t.getLabel(node);
+                        ret = LambdaTermParser.parse(new StringReader(t.getLabel(node)));
+                    } catch (ParseException ex) {
+                        ret = LambdaTerm.constant(">>" + t.getLabel(node) + "<<", "LALA");
+                    }
                 }
 
                 return ret;
@@ -72,6 +73,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
     }
 
     private class LambdaDecompositionAutomaton extends BottomUpAutomaton<LambdaTerm> {
+
         private Set<String> allLabels;
 
         // constructor
@@ -90,7 +92,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
 
         @Override
         public Set<Rule<LambdaTerm>> getRulesTopDown(String label, LambdaTerm parentState) {
-           // System.out.println("Schon mal? "+parentState+" "+label);
+            // System.out.println("Schon mal? "+parentState+" "+label);
             if (!useCachedRuleTopDown(label, parentState)) {
                 // create new rules and cache them
 
@@ -102,7 +104,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
                         allLabels.add(parentState.toString());
                     } else {
                         for (Entry<LambdaTerm, LambdaTerm> pair : sources.entrySet()) {
-                            Rule<LambdaTerm> rule = new Rule<LambdaTerm>(parentState, label, new LambdaTerm[] { pair.getKey(), pair.getValue() });
+                            Rule<LambdaTerm> rule = new Rule<LambdaTerm>(parentState, label, new LambdaTerm[]{pair.getKey(), pair.getValue()});
                             storeRule(rule);
                         }
                     }

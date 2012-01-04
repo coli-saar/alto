@@ -22,23 +22,23 @@ class LambdaTermTest {
         LambdaTerm lx = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
         LambdaTerm y = p("(lambda \$f (\$f \$f))")
 
-       assertEquals(y,lx.reduce());
+        assertEquals(y,lx.reduce());
 
     }
 
     @Test
     public void testEvaluate(){
-        Tree<LambdaTermAlgebraSymbol> t1 = new Tree<LambdaTermAlgebraSymbol>();
-        Tree<LambdaTermAlgebraSymbol> t2 = new Tree<LambdaTermAlgebraSymbol>();
+        Tree<String> t1 = new Tree<String>();
+        Tree<String> t2 = new Tree<String>();
 
-        LambdaTermAlgebraSymbol func = LambdaTermAlgebraSymbol.functor();
+        String func = LambdaTermAlgebraSymbol.FUNCTOR;
 
-        LambdaTermAlgebraSymbol lt1 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$x (lambda \$f (\$x \$f)))"));
-        LambdaTermAlgebraSymbol lt2 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$a (\$a \$a))"));
+        String lt1 = "(lambda \$x (lambda \$f (\$x \$f)))";
+        String lt2 = "(lambda \$a (\$a \$a))";
         //LambdaTermAlgebraSymbol lt4 = LambdaTermAlgebraSymbol.lterm(p("love:i"));
         //System.err.println(lt4);
         // LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(c("love"));
-        LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$r (\$r \$x))"));
+        String lt3 = "(lambda \$r (\$r \$x))";
 
         t1.addNode(null,func,null);
         t1.addNode(lt1,t1.getRoot());
@@ -59,26 +59,48 @@ class LambdaTermTest {
 
     @Test
     public void testSplit(){
-         LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (love:e \$a)))");
-         LambdaTerm easy = LambdaTerm.lambda("\$x",v("x"));
+        LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (love:e \$a)))");
+        LambdaTerm easy = LambdaTerm.lambda("\$x",v("x"));
 
-         // System.out.println("easy: " + easy.getDecompositions());
-         // System.out.println("test: " + test.getDecompositions());
+        Map<LambdaTerm,LambdaTerm> decomps = test.getDecompositions();
+        Set<LambdaTerm> origin = new HashSet<LambdaTerm>();
+        origin.add(test.reduce());
+        Set<LambdaTerm> goal = new HashSet<LambdaTerm>();
 
-         Map<LambdaTerm,LambdaTerm> decomps = test.getDecompositions();
-         Set<LambdaTerm> origin = new HashSet<LambdaTerm>();
-         origin.add(test.reduce());
-         Set<LambdaTerm> goal = new HashSet<LambdaTerm>();
-
-         for(LambdaTerm entry :decomps.keySet() ){
-                 LambdaTerm eval = a(entry, decomps.get(entry));
-                 goal.add(eval.reduce());
-         }
-         // assertEquals(origin,goal);
-         LambdaTerm geo = p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))");
-         System.out.println("auto for test: " + new LambdaTermAlgebra().decompose(test));
-         //System.out.println("auto for geo: " + new LambdaTermAlgebra().decompose(geo));
-   }
+        for(LambdaTerm entry :decomps.keySet() ){
+            LambdaTerm eval = a(entry, decomps.get(entry));
+            goal.add(eval.reduce());
+        }
+        
+        LambdaTermAlgebra alg = new LambdaTermAlgebra();
+        checkAllTermsEquals(alg.decompose(test), test);        
+    }
+    
+    private void checkAllTermsEquals(BottomUpAutomaton auto, LambdaTerm gold) {
+        LambdaTermAlgebra alg = new LambdaTermAlgebra();
+        
+        Set<LambdaTerm> reducedSet = new HashSet<LambdaTerm>();
+        reducedSet.add(gold.reduce());
+        
+        Set<LambdaTerm> foundSet = new HashSet<LambdaTerm>();
+        
+        for( Tree<String> t : auto.language() ) {
+            foundSet.add(alg.evaluate(t));
+        }
+        
+        assertEquals(reducedSet, foundSet);
+    }
+    
+    @Test
+    public void testSplitGeo() {
+        LambdaTerm geo = p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))");
+        
+        LambdaTermAlgebra alg = new LambdaTermAlgebra();
+        BottomUpAutomaton<LambdaTerm> auto = alg.decompose(geo);        
+        
+        System.err.println("auto for geo: " + auto);
+        System.err.println("trees: " + auto.countTrees());
+    }
 
     @Test
     public void testUnbound(){

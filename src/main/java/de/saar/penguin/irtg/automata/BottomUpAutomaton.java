@@ -332,6 +332,7 @@ public abstract class BottomUpAutomaton<State> {
         /*
          * The current implementation is probably not particularly efficient.
          * It could be improved by using CartesianIterators for each rule.
+         * Or don't return the Set as a whole, but just an Iterator.
          */
         Map<State, List<Tree<String>>> languagesForStates =
                 evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree<String>>>() {

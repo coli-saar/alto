@@ -24,7 +24,7 @@ import java.util.HashSet;
 class LambdaTermParserTest {
     @Test
     public void testConstant() {
-        assertEquals(LambdaTerm.constant("a"), p("a:e"));
+        assertEquals(LambdaTerm.constant("a", "e"), p("a:e"));
     }
     
     @Test
@@ -75,6 +75,13 @@ class LambdaTermParserTest {
 	LambdaTerm parsed=p(test.toString());        
 	assertEquals(test, parsed);
     }
+    
+    @Test
+    public void testToStringParseWithConstants() {
+        LambdaTerm test = p("((lambda \$f (lambda \$x (\$n \$f (\$f a:e)))) (lambda \$a (lambda \$b \$b)))");
+	LambdaTerm parsed=p(test.toString());        
+	assertEquals(test, parsed);
+    }
 
 
     //@Test
@@ -93,8 +100,8 @@ class LambdaTermParserTest {
         return LambdaTerm.apply(f,Arrays.asList(a));
     }
     
-    private static LambdaTerm c(x) {
-        return LambdaTerm.constant(x);
+    private static LambdaTerm c(x) { // c(x,type)
+        return LambdaTerm.constant(x, "HIER BITTE WAS EINTRAGEN");
     }
     
     private static LambdaTerm v(x) {
