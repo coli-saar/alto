@@ -59,7 +59,7 @@ class LambdaTermTest {
 
     @Test
     public void testSplit(){
-         LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
+         LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (love:e \$a)))");
          LambdaTerm easy = LambdaTerm.lambda("\$x",v("x"));
 
          // System.out.println("easy: " + easy.getDecompositions());
@@ -77,7 +77,7 @@ class LambdaTermTest {
          // assertEquals(origin,goal);
          LambdaTerm geo = p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))");
          System.out.println("auto for test: " + new LambdaTermAlgebra().decompose(test));
-         System.out.println("auto for geo: " + new LambdaTermAlgebra().decompose(geo));
+         //System.out.println("auto for geo: " + new LambdaTermAlgebra().decompose(geo));
    }
 
     @Test

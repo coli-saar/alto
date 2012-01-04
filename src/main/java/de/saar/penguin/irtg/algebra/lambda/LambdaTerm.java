@@ -443,6 +443,7 @@ public class LambdaTerm {
 
                 // prepare extracted Tree
 
+
                 // find unbound variables in extracted LambdaTerm
                 Set<String> unbound = extracted.findUnboundVariables();
 
@@ -481,7 +482,7 @@ public class LambdaTerm {
                     }
 
                     // now add the extracted tree under the built up tree
-                    ;
+                    //;
                     tempExtractedTree.addSubTree(extracted.tree,lastNode);
 
                     // update lambda term
@@ -505,9 +506,24 @@ public class LambdaTerm {
                     LambdaTerm contextTerm = new LambdaTerm(context);
                 // Replace the extracted Tree with the hole in the context tree
 
-                if(! (this.equals(contextTerm) || this.equals(extracted)) ){
-                   // System.out.printf("Wederr %s noch %s sind gleich zu %s \n", context, extracted, this);
-                    //System.out.printf("Machae daraus %s und %s \n", context, extracted);
+
+                // neuer baum darf weder gleich dem alten noch dem neuen sein
+                // neuer baum muss eine konstante enthalten
+                // kann baum so dennoch groesser werden?? Ja, aber Extraktion terminiert,
+                // wenn der restbaum auch nur aus variablen besteht
+                // TODO - take this to a nicer place
+
+                // TODO - get all nodes has to be rewritten in tree
+                boolean hasCons = false;
+                for(String node2 : extracted.getTree().getNodesInDfsOrder()){
+                    if(extracted.getTree().getLabel(node2).left.equals(Type.CONSTANT)){
+                        hasCons = true;
+                        //System.out.println("Konstante GEFUNDEN IN "+extracted.getTree()+ " denn label ist"+);
+                    }
+                }
+
+                if(! (this.equals(contextTerm) || this.equals(extracted) || hasCons == false) ){
+
                      ret.put(contextTerm, extracted);
                 }
                 // reset workingCopy
@@ -535,7 +551,7 @@ public class LambdaTerm {
         return "$" + genvarNext++;
         }
 
-// TODO - add varList
+
     private String printInfo(Pair<Type,String> label){
 
         String ret = new String();
@@ -614,7 +630,6 @@ public class LambdaTerm {
         }
     }
 
-    // TODO - Rewrite to make subs obsolete
     @Override
     public String toString() {
        // return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
