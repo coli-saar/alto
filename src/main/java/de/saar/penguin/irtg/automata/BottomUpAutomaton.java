@@ -333,6 +333,7 @@ public abstract class BottomUpAutomaton<State> {
         /*
          * The current implementation is probably not particularly efficient.
          * It could be improved by using CartesianIterators for each rule.
+         * Or don't return the Set as a whole, but just an Iterator.
          */
         Map<State, List<Tree<String>>> languagesForStates =
                 evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree<String>>>() {
@@ -409,7 +410,7 @@ public abstract class BottomUpAutomaton<State> {
         StringBuilder buf = new StringBuilder();
         Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
 
-        for (String f : getAllLabels()) {
+        for (String f : rules.keySet() ) {
             for (List<State> children : rules.get(f).keySet()) {
                 for (Rule rule : rules.get(f).get(children)) {
                     buf.append(rule.toString() + (getFinalStates().contains(rule.getParent()) ? "!" : "") + "\n");

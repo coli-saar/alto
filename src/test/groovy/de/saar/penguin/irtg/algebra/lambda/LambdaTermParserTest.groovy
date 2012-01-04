@@ -24,7 +24,7 @@ import java.util.HashSet;
 class LambdaTermParserTest {
     @Test
     public void testConstant() {
-        assertEquals(LambdaTerm.constant("a"), p("a:e"));
+        assertEquals(LambdaTerm.constant("a", "e"), p("a:e"));
     }
     
     @Test
@@ -66,76 +66,42 @@ class LambdaTermParserTest {
     }
     
 
+
+
+    
     @Test
-    public void testBeta(){
-        LambdaTerm lx = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
-        LambdaTerm y = p("(lambda \$f (\$f \$f))")
-
-       assertEquals(y,lx.reduce());
-
+    public void testToStringParse() {
+        LambdaTerm test = p("((lambda \$f (lambda \$x (\$n \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))");
+	LambdaTerm parsed=p(test.toString());        
+	assertEquals(test, parsed);
     }
-
+    
     @Test
-    public void testEvaluate(){
-        Tree<LambdaTermAlgebraSymbol> t1 = new Tree<LambdaTermAlgebraSymbol>();
-        Tree<LambdaTermAlgebraSymbol> t2 = new Tree<LambdaTermAlgebraSymbol>();
-
-        LambdaTermAlgebraSymbol func = LambdaTermAlgebraSymbol.functor();
-
-        LambdaTermAlgebraSymbol lt1 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$x (lambda \$f (\$x \$f)))"));
-        LambdaTermAlgebraSymbol lt2 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$a (\$a \$a))"));
-        //LambdaTermAlgebraSymbol lt4 = LambdaTermAlgebraSymbol.lterm(p("love:i"));
-        //System.err.println(lt4);
-        // LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(c("love"));
-        LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(p("(lambda \$r (\$r \$x))"));
-
-        t1.addNode(null,func,null);
-        t1.addNode(lt1,t1.getRoot());
-        t1.addNode(lt2,t1.getRoot());
-
-        t2.addNode(null,func,null);
-        t2.addSubTree(t1,t2.getRoot());
-        t2.addNode(lt3,t2.getRoot());
-
-
-        LambdaTermAlgebra algebra = new LambdaTermAlgebra();
-
-        LambdaTerm test = a(v("x"),v("x"));
-
-        assertEquals(test,algebra.evaluate(t2));
-
-    }
-
-    @Test
-    public void testSplit(){
-        // LambdaTerm test = a(v("x"),LambdaTerm.lambda("\$x",v("x")));
-         LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
-         //System.out.println("===========================================");
-         //System.out.println(test.getSource());
-         LambdaTerm easy = LambdaTerm.lambda("\$x",v("x"));
-         System.out.println("easy: " + easy.getDecompositions());
-         System.out.println("test: " + test.getDecompositions());
-         
-//        System.out.println("auto for test: " + new LambdaTermAlgebra().decompose(test));
-   }
-
-    @Test
-    public void testUnbound(){
-        //LambdaTerm test = a(v("y"),LambdaTerm.lambda("\$x",v("x")));
-        LambdaTerm test = v("y");
-        HashSet<String> answer = new HashSet<String>();
-        answer.add("\$y");
-        assertEquals(test.findUnboundVariables(),answer);
+    public void testToStringParseWithConstants() {
+        LambdaTerm test = p("((lambda \$f (lambda \$x (\$n \$f (\$f a:e)))) (lambda \$a (lambda \$b \$b)))");
+	LambdaTerm parsed=p(test.toString());        
+	assertEquals(test, parsed);
     }
 
 
+    //@Test
+    public void testApply(){
+	LambdaTerm test = p("(love:i me:i (tender:e sweet:e))");
+	LambdaTerm test2 = p("(love:i me:i tender:e sweet:e)");
+	System.out.println(test);
+	System.out.println(test2);
+	// PROBLEM! typ der Konstanten geht floeten. wird noch nirgendwo gespeichert.
+	LambdaTerm test3 = p("(love me tender sweet)");
+	//assertEquals(p(test.toString()),p(test2.toString()));
+	
+    }		
 
     private static LambdaTerm a(f, LambdaTerm... a) {
         return LambdaTerm.apply(f,Arrays.asList(a));
     }
     
-    private static LambdaTerm c(x) {
-        return LambdaTerm.constant(x);
+    private static LambdaTerm c(x) { // c(x,type)
+        return LambdaTerm.constant(x, "HIER BITTE WAS EINTRAGEN");
     }
     
     private static LambdaTerm v(x) {

@@ -18,6 +18,10 @@ import java.io.Reader;
  * @author koller
  */
 public class Main {
+
+    private static final String OUTPUT_END_MARKER = "---";
+    private static final String ERROR_MARKER = "*** ";
+
     public static void main(String[] args) throws IOException {
         int serverPort = 0;
 
@@ -33,6 +37,8 @@ public class Main {
 
         if (serverPort > 0) {
             System.out.println("IRTG server listening on port " + serverPort + " ...");
+            shell.setOutputEndMarker(OUTPUT_END_MARKER);
+            shell.setErrorMarker(ERROR_MARKER);
             shell.startServer(x, serverPort);
         } else {
             shell.run(x);
