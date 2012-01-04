@@ -84,7 +84,7 @@ class LambdaTermTest {
         
         Set<LambdaTerm> foundSet = new HashSet<LambdaTerm>();
         
-        for( Tree<String> t : auto.language() ) {
+        for( Tree<String> t : auto.languageIterable() ) {
             foundSet.add(alg.evaluate(t));
         }
         
@@ -96,10 +96,20 @@ class LambdaTermTest {
         LambdaTerm geo = p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))");
         
         LambdaTermAlgebra alg = new LambdaTermAlgebra();
-        BottomUpAutomaton<LambdaTerm> auto = alg.decompose(geo);        
+        BottomUpAutomaton<LambdaTerm> auto = alg.decompose(geo);
         
         System.err.println("auto for geo: " + auto);
         System.err.println("trees: " + auto.countTrees());
+        
+        int i = 0;
+        for( Tree<String> t : auto.languageIterable() ) {
+            if( ++i > 1000 ) {
+                break;
+            }
+            
+            System.err.println(t);
+            System.err.println(" --> " + alg.evaluate(t));
+        }
     }
 
     @Test

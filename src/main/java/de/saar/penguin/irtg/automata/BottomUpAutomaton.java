@@ -81,7 +81,6 @@ public abstract class BottomUpAutomaton<State> {
      * @return 
      */
 //    abstract public int getArity(String label);
-
     /**
      * Returns all terminal symbols that this automaton knows about.
      * 
@@ -353,6 +352,14 @@ public abstract class BottomUpAutomaton<State> {
         return ret;
     }
 
+    public Iterator<Tree<String>> languageIterator() {
+        return new LanguageIterator();
+    }
+
+    public Iterable<Tree<String>> languageIterable() {
+        return new LanguageIterable();
+    }
+
     private static class LanguageCollectingSemiring implements Semiring<List<Tree<String>>> {
         public List<Tree<String>> add(List<Tree<String>> x, List<Tree<String>> y) {
             x.addAll(y);
@@ -410,7 +417,7 @@ public abstract class BottomUpAutomaton<State> {
         StringBuilder buf = new StringBuilder();
         Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
 
-        for (String f : rules.keySet() ) {
+        for (String f : rules.keySet()) {
             for (List<State> children : rules.get(f).keySet()) {
                 for (Rule rule : rules.get(f).get(children)) {
                     buf.append(rule.toString() + (getFinalStates().contains(rule.getParent()) ? "!" : "") + "\n");
@@ -517,7 +524,7 @@ public abstract class BottomUpAutomaton<State> {
     public BottomUpAutomaton<State> inverseHomomorphism(Homomorphism hom) {
         return new InverseHomAutomaton<State>(this, hom);
     }
-    
+
     /**
      * Computes the image of this automaton under a homomorphism.
      * 
@@ -900,27 +907,39 @@ public abstract class BottomUpAutomaton<State> {
             return getAllRules().toString();
         }
     }
-    
+
     private class LanguageIterable implements Iterable<Tree<String>> {
         public Iterator<Tree<String>> iterator() {
             return new LanguageIterator();
-        }        
+        }
     }
-    
+
     private class LanguageIterator implements Iterator<Tree<String>> {
         private class IndexedRuleList {
             public Rule<State>[] rules;
             public int index;
+
+            public boolean isFinished() {
+                return index >= rules.length;
+            }
+
+            public Rule<State> getCurrentRule() {
+                return rules[index];
+            }
         }
-        
         private Tree<IndexedRuleList> ruleTree = new Tree<IndexedRuleList>();
         private boolean hasNext;
-        
+        private Map<State, Rule<State>[]> rulesPerState;
+        private Rule[] emptyRuleArray = new Rule[0];
+
         public LanguageIterator() {
-            assert getFinalStates().size() == 1;            
-            hasNext = first(getFinalStates().iterator().next(), null);
+            assert getFinalStates().size() == 1;
+
+            cacheRules();
+            first(getFinalStates().iterator().next(), null);
+            hasNext = true;
         }
-        
+
         public boolean hasNext() {
             return hasNext;
         }
@@ -931,22 +950,92 @@ public abstract class BottomUpAutomaton<State> {
             return ret;
         }
 
+        private void first(State state, String parent) {
+            // We assume that automaton is reduced, i.e. all nonterminals on children side of a rule are productive.
+            // Could get rid of this assumption, but this requires (a) some annoying tree surgery to get rid of
+            // the new node if a child returns fails, and (b) we need to try the next rule if the previous one didn't work.
+            IndexedRuleList irl = new IndexedRuleList();
+            irl.rules = rulesPerState.get(state);
+            irl.index = 0;
 
-        
-        private boolean first(State state, String parent) {
-            return false;
+            String node = ruleTree.addNode(irl, parent);
+            addAllChildren(node);
         }
-        
+
+        private void addAllChildren(String node) {
+            IndexedRuleList irl = ruleTree.getLabel(node);
+            for (State childState : irl.getCurrentRule().getChildren()) {
+                first(childState, node);
+            }
+        }
+
         private boolean next(String node) {
-            return false;
+            IndexedRuleList irl = ruleTree.getLabel(node);
+            List<String> children = ruleTree.getChildren(node);
+            int n = irl.getCurrentRule().getArity();
+
+            // first, try to increase each child, from right to left
+            for (int i = n - 1; i >= 0; i--) {
+                String childI = children.get(i);
+
+                if (next(childI)) {
+                    State[] currentRuleChildren = irl.getCurrentRule().getChildren();
+
+                    for (int k = i + 1; k < n; k++) {
+                        first(currentRuleChildren[k], node);
+                    }
+
+                    return true;
+                } else {
+                    ruleTree.removeNode(childI);
+                }
+            }
+
+            // if no child could be increased, try switching to the next rule
+            irl.index++;
+            if (!irl.isFinished()) {
+                addAllChildren(node);
+                return true;
+            } else {
+                // if we have tried all rules, this node and its subtree have been fully explored
+                return false;
+            }
         }
-        
+
         private Tree<String> extractTree() {
-            return null;
+            final Tree<String> ret = new Tree<String>();
+
+            ruleTree.dfs(new TreeVisitor<String, Void>() {
+                @Override
+                public String getRootValue() {
+                    return null;
+                }
+
+                @Override
+                public String visit(String nodeInRuleTree, String parentInRet) {
+                    String nodeInRet = ret.addNode(ruleTree.getLabel(nodeInRuleTree).getCurrentRule().getLabel(), parentInRet);
+                    return nodeInRet;
+                }
+            });
+
+            return ret;
         }
-        
+
+        private void cacheRules() {
+            ListMultimap<State, Rule<State>> ruleListPerState = ArrayListMultimap.create();
+
+            for (Rule<State> rule : getRuleSet()) {
+                ruleListPerState.put(rule.getParent(), rule);
+            }
+
+            rulesPerState = new HashMap<State, Rule<State>[]>();
+            for (State state : ruleListPerState.keySet()) {
+                rulesPerState.put(state, ruleListPerState.get(state).toArray(emptyRuleArray));
+            }
+        }
+
         public void remove() {
             throw new UnsupportedOperationException("Not supported yet.");
-        }        
+        }
     }
 }

@@ -13,6 +13,7 @@ import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.saar.basic.tree.*
 import de.saar.penguin.irtg.hom.*
+import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
 import static de.saar.penguin.irtg.hom.HomomorphismTest.hom;
 
@@ -125,6 +126,19 @@ class BottomUpAutomatonTest {
         BottomUpAutomaton auto = parse("a -> q1\n b -> q1\n c -> q2\n d -> q2\n f(q1,q2) -> q!\n g(q1,q2) -> q!");
         Set lang = new HashSet(auto.language()*.toString());
         Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
+        assertEquals(gold, lang)
+    }
+    
+    @Test
+    public void testLanguageIterator() {
+        BottomUpAutomaton auto = parse("a -> q1\n b -> q1\n c -> q2\n d -> q2\n f(q1,q2) -> q!\n g(q1,q2) -> q!");
+        Set lang = new HashSet();
+        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
+        
+        for( Tree t : auto.languageIterable() ) {
+            lang.add(t.toString())
+        }
+        
         assertEquals(gold, lang)
     }
     
