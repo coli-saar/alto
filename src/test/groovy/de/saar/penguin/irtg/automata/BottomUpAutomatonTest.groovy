@@ -143,6 +143,19 @@ class BottomUpAutomatonTest {
     }
     
     @Test
+    public void testEmptyLanguageIterator() {
+        BottomUpAutomaton auto = parse("g(q1,q2) -> q!");
+        Set lang = new HashSet();
+        Set gold = new HashSet();
+        
+        for( Tree t : auto.languageIterable() ) {
+            lang.add(t.toString())
+        }
+        
+        assertEquals(gold, lang)
+    }
+    
+    @Test
     public void testReduce() {
         BottomUpAutomaton auto = parse("""r12 -> P.4-5 [1.0]
 r11 -> N.6-7 [1.0]
