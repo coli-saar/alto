@@ -74,8 +74,10 @@ class LambdaTermTest {
                  LambdaTerm eval = a(entry, decomps.get(entry));
                  goal.add(eval.reduce());
          }
-         assertEquals(origin,goal);
-        // System.out.println("auto for easy: " + new LambdaTermAlgebra().decompose(easy));
+         // assertEquals(origin,goal);
+         LambdaTerm geo = p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))");
+         System.out.println("auto for test: " + new LambdaTermAlgebra().decompose(test));
+         System.out.println("auto for geo: " + new LambdaTermAlgebra().decompose(geo));
    }
 
     @Test
