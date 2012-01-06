@@ -36,7 +36,7 @@ public class LambdaTermAlgebraSymbol {
                 return "<";
             }
             else{
-                return content.getTree().toString();
+                return content.toString();
             }
         }
 
