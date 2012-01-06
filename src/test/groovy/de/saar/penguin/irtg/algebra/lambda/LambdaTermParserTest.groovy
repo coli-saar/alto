@@ -35,16 +35,16 @@ class LambdaTermParserTest {
     @Test
     public void testComplex() {
         assertEquals(LambdaTerm.lambda("\$0", LambdaTerm.argmax("\$1",
-                        LambdaTerm.conj(a(c("state"), v("0")), a(c("next"), v("0"), v("1")), a(c("foo"), v("1"))),
-                        a(c("elevation"), v("1"))
+                        LambdaTerm.conj(a(c("state","a"), v("0")), a(c("next","a"), v("0"), v("1")), a(c("foo","a"), v("1"))),
+                        a(c("elevation","i"), v("1"))
                 )),
             p("(lambda \$0 (argmax \$1 (and (state:a \$0) (next:a \$0 \$1) (foo:a \$1)) (elevation:i \$1)))"));
     }
     
     @Test
     public void testGeo880_1() {
-        assertEquals(a(c("population"), a(c("capital"), 
-                        LambdaTerm.argmax("\$1", LambdaTerm.conj(a(c("state"),v("1")), a(c("loc"), c("mississippi_river"), v("1"))), a(c("size"), v("1")))
+        assertEquals(a(c("population","i"), a(c("capital","c"), 
+                        LambdaTerm.argmax("\$1", LambdaTerm.conj(a(c("state","t"),v("1")), a(c("loc","t"), c("mississippi_river","r"), v("1"))), a(c("size","i"), v("1")))
                     )),
         p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))")
         )
@@ -100,8 +100,8 @@ class LambdaTermParserTest {
         return LambdaTerm.apply(f,Arrays.asList(a));
     }
     
-    private static LambdaTerm c(x) { // c(x,type)
-        return LambdaTerm.constant(x, "HIER BITTE WAS EINTRAGEN");
+    private static LambdaTerm c(x,type) { // c(x,type)
+        return LambdaTerm.constant(x, type);
     }
     
     private static LambdaTerm v(x) {

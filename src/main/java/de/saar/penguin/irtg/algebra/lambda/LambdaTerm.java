@@ -612,7 +612,7 @@ public class LambdaTerm {
             ret = varList.get(label.x);
         }
         if (typ == Kind.CONSTANT){
-            ret = label.x;
+            ret = label.x+":"+label.type;
         }
         if (typ == Kind.CONJ){
             ret = "and ";
