@@ -28,6 +28,24 @@ public class LambdaTerm {
         public Kind kind;
         public String x = "";
         public String type = "";
+
+        @Override
+        public String toString(){
+            String ret;
+            if(kind.equals(Kind.CONSTANT)){
+                ret = x+":"+type;
+            } else if(kind.equals(Kind.VARIABLE)){
+                ret = x;
+            } else if(kind.equals(Kind.CONJ)){
+                ret = "and";
+            } else {
+                ret = kind+"["+x+"]";
+            }
+
+            return ret;
+        }
+
+
     }
 
     /**
@@ -635,7 +653,7 @@ public class LambdaTerm {
             // dann klammern um die Kinder falls keine varconsts
             // und nicht nur ein Kind.... (das sollte nicht vorkommen
 
-            if(tree.getLabel(node).kind.equals(Kind.APPLY)){
+            if(tree.getLabel(node).kind.equals(Kind.APPLY) || tree.getLabel(node).kind.equals(Kind.CONJ) || tree.getLabel(node).kind.equals(Kind.ARGMIN) || tree.getLabel(node).kind.equals(Kind.ARGMAX) ){
                     for (String child : children) {
                         if (first) {
                             first = false;
@@ -676,13 +694,14 @@ public class LambdaTerm {
         if(stringRep.equals("")){
             if(varList == null){
             varList = new HashMap<String, String>();
-        }
+            }
         StringBuffer buf = new StringBuffer();
         buf.append("(");
         printAsString(tree.getRoot(),buf);
         buf.append(")");
         stringRep = buf.toString();
         }
+
         //System.out.println("internal tree:"+this.tree);
         return stringRep;
     }
