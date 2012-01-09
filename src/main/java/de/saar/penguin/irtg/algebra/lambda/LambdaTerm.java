@@ -410,9 +410,11 @@ public class LambdaTerm {
 
         Boolean t = true;
         while (t == true) {
+            //System.out.println("Reduziere "+old);
             LambdaTerm temp = old.beta();
-            if (temp.getTree().equals(old.getTree())) {
-
+            //if (temp.getTree().equals(old.getTree())) {
+              if (temp.equals(old)){
+                //System.out.println("")
                 t = false;
             }
             old = temp;
@@ -696,10 +698,6 @@ public class LambdaTerm {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final LambdaTerm other = (LambdaTerm) obj;
-       /* if (this.getTree().equals(other.getTree())) {
-            return true;
-        }*/
         if (this.toString().equals(obj.toString())){
             return true;
         }
