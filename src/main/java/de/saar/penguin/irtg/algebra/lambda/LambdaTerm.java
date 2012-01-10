@@ -62,17 +62,7 @@ public class LambdaTerm {
     private String stringRep = "";
 
 
-    /**
-     * Constructs a new LambdaTerm with a given type
-     * @param kind  the type of the Lambda Term, must be one of  CONSTANT,
-     *              VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN
-     */
-   /* private LambdaTerm(Kind kind) {
-        this.tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = kind;
-        this.tree.addNode(label, null);
-    }*/
+
 
     /**
      * Constructs a new LambdaTerm without a type
@@ -80,6 +70,7 @@ public class LambdaTerm {
      */
     private LambdaTerm(Tree<LambdaTermNode> tree) {
         this.tree = tree;
+        this.findHighestVarName();
     }
 
      /**
@@ -246,6 +237,28 @@ public class LambdaTerm {
         return new LambdaTerm(tree);
     }
 
+    private void findHighestVarName(){
+        int varName = -1;
+        for(String node : this.tree.getNodesInDfsOrder()){
+            if(this.tree.getLabel(node).kind.equals(Kind.VARIABLE)){
+                int temp = -1;
+                try{
+                    temp = Integer.parseInt(this.tree.getLabel(node).x.substring(1));
+                }catch (NumberFormatException nfe){
+                    //System.out.println("Kann "+this.tree.getLabel(node).x+" nicht casten");
+                }
+                if(temp>varName){
+                    varName =temp;
+                }
+
+            }
+        }
+
+        this.genvarNext = varName+1;
+    }
+
+
+
     // Tree visitor to find unbound variables
      private static class CollectingTreeVisitor extends TreeVisitor<Set<String>, Void>{
             Set<String> unbound;
@@ -282,6 +295,10 @@ public class LambdaTerm {
                 }          
             }
 
+     /**
+      * Finds unbound variables occurring in the term
+      * @return a list of variable names 
+      */
     public Set<String> findUnboundVariables(){
         Set<String> ret = new HashSet<String>();
         Set<String> start = new HashSet<String>();
@@ -478,61 +495,68 @@ public class LambdaTerm {
                 // System.out.println("Extrahiere "+extracted.tree);
 
                 // prepare context
-                String newVar = genvar();
-                LambdaTermNode newVarPair = new LambdaTermNode();
-                newVarPair.kind = Kind.LAMBDA;
-                newVarPair.x = newVar;
-                Tree<LambdaTermNode> context = new Tree<LambdaTermNode>();
-                context.addNode(newVarPair, null);
+                // variable of the hole
+                String newVariableNameForNodeToReplaceHole = genvar();
+                
+                // new Lambda node for hole
+                LambdaTermNode newLambdaNodeForHole = new LambdaTermNode();
+                newLambdaNodeForHole.kind = Kind.LAMBDA;
+                newLambdaNodeForHole.x = newVariableNameForNodeToReplaceHole;
 
+                // make new tree with new lambda on top
+                Tree<LambdaTermNode> context = new Tree<LambdaTermNode>();
+                context.addNode(newLambdaNodeForHole, null);
+
+                // prepare the hole which is going to replace the extracted subtree
+                Tree<LambdaTermNode> treeToReplaceHole = new Tree<LambdaTermNode>();
 
                 // prepare extracted Tree
-
-
                 // find unbound variables in extracted LambdaTerm
                 Set<String> unbound = extracted.findUnboundVariables();
 
-                // prepare the hole which is going to replace the extracted subtree
-                Tree<LambdaTermNode> contextTree = new Tree<LambdaTermNode>();
+                LambdaTermNode nodeWithVarToReplaceHole = new LambdaTermNode();
+                nodeWithVarToReplaceHole.kind = Kind.VARIABLE;
+                nodeWithVarToReplaceHole.x = newVariableNameForNodeToReplaceHole;
 
+                // if there are no unbound variables
+                if(unbound.isEmpty()){
+                    // System.out.println("Ich habe keine ungebundenen Variablen im Extrahierten");
+                    // contextTree just new Variable
 
-                // if there are unbound variables
-                if(!unbound.isEmpty()){
+                    treeToReplaceHole.addNode(nodeWithVarToReplaceHole,null);
 
-                   // System.out.println("Ich habe ungebundene Variablen im extrahierten");
-
+                }
+                // there are unbound variables
+                else{
                     String lastNode = null;
                     LambdaTermNode applyNodeForContext = new LambdaTermNode();
                     applyNodeForContext.kind = Kind.APPLY;
                     // add it to root of contextTree
-                    contextTree.addNode(applyNodeForContext, null);
-                    String contextTreeRoot = contextTree.getRoot();
+                    treeToReplaceHole.addNode(applyNodeForContext, null);
+                    String contextTreeRoot = treeToReplaceHole.getRoot();
 
-                    LambdaTermNode newNode = new LambdaTermNode();
-                    newNode.kind = Kind.VARIABLE;
-                    newNode.x = newVar;
-                    contextTree.addNode(newNode,contextTreeRoot);
+                    //  node which hast to replace the hole
+                    treeToReplaceHole.addNode(nodeWithVarToReplaceHole,contextTreeRoot);
 
                     // surrounding for extracted tree
                     Tree<LambdaTermNode> tempExtractedTree = new Tree<LambdaTermNode>();
 
                     for(String var : unbound){
                         // prepare a new lambda with that variable for the extracted tree
-                        LambdaTermNode newLambda = new LambdaTermNode();
-                        newLambda.kind = Kind.LAMBDA;
-                        newLambda.x = var;
+                        LambdaTermNode newLambdaForUnboundInExtracted = new LambdaTermNode();
+                        newLambdaForUnboundInExtracted.kind = Kind.LAMBDA;
+                        newLambdaForUnboundInExtracted.x = var;
 
                         // prepare a new variable node for the contextTree
-                        LambdaTermNode newVarP = new LambdaTermNode();
-                        newVarP.kind = Kind.VARIABLE;
-                        newVarP.x = var;
+                        LambdaTermNode newVarForUnboundToGoInContextTree = new LambdaTermNode();
+                        newVarForUnboundToGoInContextTree.kind = Kind.VARIABLE;
+                        newVarForUnboundToGoInContextTree.x = var;
 
                         // add variable to contextTree
-                        contextTree.addNode(newVarP,contextTreeRoot);
-                     
-                        // update last node
-                        lastNode = tempExtractedTree.addNode(newLambda,lastNode);
+                        treeToReplaceHole.addNode(newVarForUnboundToGoInContextTree,contextTreeRoot);
 
+                        // update last node
+                        lastNode = tempExtractedTree.addNode(newLambdaForUnboundInExtracted,lastNode);
                     }
 
                     // now add the extracted tree under the built up tree
@@ -545,18 +569,9 @@ public class LambdaTerm {
                     //
 
                 }
-                // there are no unbound variables
-                else{
-                   // System.out.println("Ich habe keine ungebundenen Variablen im Extrahierten");
-                    // contextTree just new Variable
-                    LambdaTermNode newNode = new LambdaTermNode();
-                    newNode.kind = Kind.VARIABLE;
-                    newNode.x = newVar;
-                    contextTree.addNode(newNode,null);
-                }
-                    //System.out.println("Replace node "+node+" mit label "+workingCopy.getLabel(node)+" durch "+contextTree+" in "+workingCopy);
+                    //sSystem.out.println("Replace node "+node+" mit label "+workingCopy.getLabel(node)+" durch "+contextTree+" in "+workingCopy);
                     //LambdaTerm hole = variable(newVar);
-                    workingCopy.replaceNode(node,contextTree);
+                    workingCopy.replaceNode(node,treeToReplaceHole);
                     //workingCopy.replaceNode(node,hole.tree);
                     
                     context.addSubTree(workingCopy,context.getRoot());
@@ -690,8 +705,9 @@ public class LambdaTerm {
     @Override
     public String toString() {
        // return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
-        this.genvarNext =0;
+        
         if(stringRep.equals("")){
+            this.genvarNext =0;
             if(varList == null){
             varList = new HashMap<String, String>();
             }
@@ -702,7 +718,7 @@ public class LambdaTerm {
         stringRep = buf.toString();
         }
 
-        //System.out.println("internal tree:"+this.tree);
+   //     System.out.println("internal tree:"+this.tree);
         return stringRep;
     }
 
@@ -726,9 +742,7 @@ public class LambdaTerm {
     @Override
     public int hashCode() {
         int hash = 5;
-   //     hash = 59 * hash + (this.type != null ? this.type.hashCode() : 0);
-   //     hash = 59 * hash + (this.sub != null ? this.sub.hashCode() : 0);
-   //     hash = 59 * hash + (this.x != null ? this.x.hashCode() : 0);
+
         hash = 59 * this.toString().hashCode();
         return hash;
     }
