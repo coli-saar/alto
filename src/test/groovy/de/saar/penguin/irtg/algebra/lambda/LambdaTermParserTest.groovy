@@ -98,19 +98,6 @@ class LambdaTermParserTest {
 	assertEquals(test, parsed);
     }
 
-
-    //@Test
-    public void testApply(){
-	LambdaTerm test = p("(love:i me:i (tender:e sweet:e))");
-	LambdaTerm test2 = p("(love:i me:i tender:e sweet:e)");
-	System.out.println(test);
-	System.out.println(test2);
-	// PROBLEM! typ der Konstanten geht floeten. wird noch nirgendwo gespeichert.
-	LambdaTerm test3 = p("(love me tender sweet)");
-	//assertEquals(p(test.toString()),p(test2.toString()));
-	
-    }		
-
     private static LambdaTerm a(f, LambdaTerm... a) {
         return LambdaTerm.apply(f,Arrays.asList(a));
     }

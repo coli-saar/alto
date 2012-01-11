@@ -229,7 +229,7 @@ public class InterpretedTreeAutomaton {
         this.debug = debug;
     }
 
-    private List<Map<String, Object>> readTrainingData(Reader reader) throws IOException {
+    public List<Map<String, Object>> readTrainingData(Reader reader) throws IOException {
         BufferedReader br = new BufferedReader(reader);
         List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
         List<String> interpretationOrder = new ArrayList<String>();
