@@ -10,6 +10,7 @@ import de.saar.chorus.term.parser.*;
 import de.saar.basic.tree.*;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Map.Entry;
 
 /**
  *
@@ -21,9 +22,8 @@ class LambdaTermTest {
     public void testBeta(){
         LambdaTerm lx = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (\$a \$a)))");
         LambdaTerm y = p("(lambda \$f (\$f \$f))")
-
+	
         assertEquals(y,lx.reduce());
-
     }
 
     @Test
@@ -35,9 +35,6 @@ class LambdaTermTest {
 
         String lt1 = "(lambda \$x (lambda \$f (\$x \$f)))";
         String lt2 = "(lambda \$a (\$a \$a))";
-        //LambdaTermAlgebraSymbol lt4 = LambdaTermAlgebraSymbol.lterm(p("love:i"));
-        //System.err.println(lt4);
-        // LambdaTermAlgebraSymbol lt3 = LambdaTermAlgebraSymbol.lterm(c("love"));
         String lt3 = "(lambda \$r (\$r \$x))";
 
         t1.addNode(null,func,null);
@@ -48,80 +45,71 @@ class LambdaTermTest {
         t2.addSubTree(t1,t2.getRoot());
         t2.addNode(lt3,t2.getRoot());
 
-
         LambdaTermAlgebra algebra = new LambdaTermAlgebra();
-
         LambdaTerm test = a(v("x"),v("x"));
-
         assertEquals(test,algebra.evaluate(t2));
 
     }
+ 
+   
+	@Test
+    public void getFirstDecompositionGeo(){
 
-    //@Test
-    public void testSplit(){
-        LambdaTerm test = p("((lambda \$x (lambda \$f (\$x \$f))) (lambda \$a (love:e \$a)))");
-        LambdaTerm easy = LambdaTerm.lambda("\$x",v("x"));
+	LambdaTerm geo = p("(lambda \$11 (population:i (capital:c (argmax \$x (and (state:t \$x) (\$11 mississippi_river:r \$x)) (size:i \$x)))))");
+	Map<LambdaTerm,LambdaTerm> decomps = geo.getDecompositions();
 
-        Map<LambdaTerm,LambdaTerm> decomps = test.getDecompositions();
-        Set<LambdaTerm> origin = new HashSet<LambdaTerm>();
-        origin.add(test.reduce());
-        Set<LambdaTerm> goal = new HashSet<LambdaTerm>();
+	Set<LambdaTerm> origin = new HashSet<LambdaTerm>();
+	origin.add(geo);
+	Set<LambdaTerm> goal = new HashSet<LambdaTerm>();
 
-        for(LambdaTerm entry :decomps.keySet() ){
+	for(LambdaTerm entry : decomps.keySet() ){
             LambdaTerm eval = a(entry, decomps.get(entry));
             goal.add(eval.reduce());
         }
-        
-        LambdaTermAlgebra alg = new LambdaTermAlgebra();
-        checkAllTermsEquals(alg.decompose(test), test);        
-    }
-    
-    private void checkAllTermsEquals(BottomUpAutomaton auto, LambdaTerm gold) {
-        LambdaTermAlgebra alg = new LambdaTermAlgebra();
-        
-        Set<LambdaTerm> reducedSet = new HashSet<LambdaTerm>();
-        reducedSet.add(gold.reduce());
-        
-        Set<LambdaTerm> foundSet = new HashSet<LambdaTerm>();
-        
-        for( Tree<String> t : auto.languageIterable() ) {
-            foundSet.add(alg.evaluate(t));
-        }
-        
-        assertEquals(reducedSet, foundSet);
-    }
-    
-    //@Test
-    public void testSplitGeo() {
-        LambdaTerm geo = p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))");
-        
-        LambdaTermAlgebra alg = new LambdaTermAlgebra();
-        BottomUpAutomaton<LambdaTerm> auto = alg.decompose(geo);
-        
-        System.err.println("auto for geo: " + auto);
-        System.err.println("trees: " + auto.countTrees());
-        
-        int i = 0;
-        for( Tree<String> t : auto.languageIterable() ) {
-            if( ++i > 1000 ) {
-                break;
-            }
-            
-            System.err.println(t);
-            System.err.println(" --> " + alg.evaluate(t));
-        }
-    }
 
-    @Test
-    public void testUnbound(){
-        //LambdaTerm test = a(v("y"),LambdaTerm.lambda("\$x",v("x")));
-        LambdaTerm test = v("y");
-        HashSet<String> answer = new HashSet<String>();
-        answer.add("\$y");
-        assertEquals(test.findUnboundVariables(),answer);
-    }
+	assertEquals(origin,goal);
+	}	
+
+	@Test
+    public void splitGeoEasy(){
+	LambdaTerm geo = p("(capital:c utah:s)")
+	LambdaTermAlgebra alg = new LambdaTermAlgebra();
+	checkAllTermsEquals(alg.decompose(geo), geo);
+	}		
+
+	@Test
+    public void splitGeoArgmax(){
+	LambdaTerm geo = p("(argmax \$0 (city:t \$0) (size:i \$0))");
+	LambdaTermAlgebra alg = new LambdaTermAlgebra();
+	checkAllTermsEquals(alg.decompose(geo), geo);
+	}
+
+	@Test
+    public void splitGeoArgmin(){
+	LambdaTerm geo = p("(argmin \$0 (state:t \$0) (population:i \$0))");
+	LambdaTermAlgebra alg = new LambdaTermAlgebra();
+	checkAllTermsEquals(alg.decompose(geo), geo);
+	}
 
 
+	@Test
+    public void splitGeoConj(){
+	//LambdaTerm geo = p("(argmin \$0 (and (place:t \$0) (loc:t \$0 california:s)) (elevation:i \$0))");
+	
+	LambdaTerm geo = p("(lambda \$0 (and (place:t \$0) (elevation:i \$0)))");
+	LambdaTermAlgebra alg = new LambdaTermAlgebra();
+	checkAllTermsEquals(alg.decompose(geo), geo);
+	}
+
+	//@Test
+    public void splitGeoAll(){
+	LambdaTerm geo = p("(argmin \$0 (and (place:t \$0) (loc:t \$0 california:s)) (elevation:i \$0))");
+	System.out.println("All");
+	LambdaTermAlgebra alg = new LambdaTermAlgebra();
+
+	//System.out.println(alg.decompose(geo));
+	checkAllTermsEquals(alg.decompose(geo), geo);
+	}
 
     private static LambdaTerm a(f, LambdaTerm... a) {
         return LambdaTerm.apply(f,Arrays.asList(a));
@@ -138,4 +126,21 @@ class LambdaTermTest {
     private static LambdaTerm p(s) {
         return LambdaTermParser.parse(new StringReader(s));
     }
+
+    private void checkAllTermsEquals(BottomUpAutomaton auto, LambdaTerm gold) {
+        LambdaTermAlgebra alg = new LambdaTermAlgebra();
+        
+        Set<LambdaTerm> reducedSet = new HashSet<LambdaTerm>();
+        reducedSet.add(gold.reduce());
+        
+        Set<LambdaTerm> foundSet = new HashSet<LambdaTerm>();
+        
+        for( Tree<String> t : auto.languageIterable() ) {
+            foundSet.add(alg.evaluate(t));
+        }
+        
+        assertEquals(reducedSet, foundSet);
+    }
+
+
 }

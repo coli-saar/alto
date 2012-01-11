@@ -51,7 +51,6 @@ public class LambdaTerm {
     /**
      * @return the tree
      */
-    // @TODO sollte private sein
     private Tree<LambdaTermNode> getTree() {
         return tree;
     }
@@ -132,6 +131,10 @@ public class LambdaTerm {
     public static LambdaTerm apply(LambdaTerm functor, List<LambdaTerm> arguments) {
         //LambdaTerm ret = new LambdaTerm(Kind.APPLY);
         // merge trees
+        if(arguments.isEmpty()){
+            return functor;
+        }
+        else {
         Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
         LambdaTermNode label = new LambdaTermNode();
         label.kind = Kind.APPLY;
@@ -142,6 +145,7 @@ public class LambdaTerm {
         }
 //        ret.x = "";
         return new LambdaTerm(tree);
+        }
     }
      /**
      * Constructs a new LambdaTerm of type apply (application)
@@ -483,11 +487,7 @@ public class LambdaTerm {
             }
             else{
 
-                /////////////////////////////////////////////////////////////
-                // neuer versuch
-                /////////////////////////////////////////////////////////////
-                
-                // from now on, everything can be extracted
+               // from now on, everything can be extracted
                 first = false;
 
                 // extract subtree
@@ -496,6 +496,7 @@ public class LambdaTerm {
 
                 // prepare context
                 // variable of the hole
+                this.findHighestVarName();
                 String newVariableNameForNodeToReplaceHole = genvar();
                 
                 // new Lambda node for hole
@@ -520,10 +521,8 @@ public class LambdaTerm {
 
                 // if there are no unbound variables
                 if(unbound.isEmpty()){
-                    // System.out.println("Ich habe keine ungebundenen Variablen im Extrahierten");
                     // contextTree just new Variable
-
-                    treeToReplaceHole.addNode(nodeWithVarToReplaceHole,null);
+                   treeToReplaceHole.addNode(nodeWithVarToReplaceHole,null);
 
                 }
                 // there are unbound variables
@@ -569,7 +568,6 @@ public class LambdaTerm {
                     //
 
                 }
-                    //sSystem.out.println("Replace node "+node+" mit label "+workingCopy.getLabel(node)+" durch "+contextTree+" in "+workingCopy);
                     //LambdaTerm hole = variable(newVar);
                     workingCopy.replaceNode(node,treeToReplaceHole);
                     //workingCopy.replaceNode(node,hole.tree);
@@ -579,18 +577,14 @@ public class LambdaTerm {
                 // Replace the extracted Tree with the hole in the context tree
 
 
-                // neuer baum darf weder gleich dem alten noch dem neuen sein
-                // neuer baum muss eine konstante enthalten
-                // kann baum so dennoch groesser werden?? Ja, aber Extraktion terminiert,
-                // wenn der restbaum auch nur aus variablen besteht
-                // TODO - take this to a nicer place
+                // extracted and context have to differ from original
+                // extracted tree needs at least one constant
 
-                // TODO - get all nodes has to be rewritten in tree
+                // TODO - take this to a nicer place
                 boolean hasCons = false;
                 for(String node2 : extracted.getTree().getNodesInDfsOrder()){
                     if(extracted.getTree().getLabel(node2).kind.equals(Kind.CONSTANT)){
                         hasCons = true;
-                        //System.out.println("Konstante GEFUNDEN IN "+extracted.getTree()+ " denn label ist"+);
                     }
                 }
 

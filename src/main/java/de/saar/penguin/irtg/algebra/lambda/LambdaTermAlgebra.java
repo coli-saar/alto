@@ -107,7 +107,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
                             Rule<LambdaTerm> rule = new Rule<LambdaTerm>(parentState, label, new LambdaTerm[]{pair.getKey(), pair.getValue()});
                             storeRule(rule);
                         }
-                    }
+                    }     
                 } else {
                     if (label.equals(parentState.toString())) {
                         storeRule(new Rule<LambdaTerm>(parentState, label, new LambdaTerm[]{}));

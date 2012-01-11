@@ -75,6 +75,21 @@ class LambdaTermParserTest {
 	LambdaTerm parsed=p(test.toString());        
 	assertEquals(test, parsed);
     }
+
+
+    @Test
+    public void testToStringParseGeo() {
+        LambdaTerm test = p("(population:i (capital:c (argmax \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1)) (size:i \$1))))");
+	LambdaTerm parsed=p(test.toString());        
+	assertEquals(test, parsed);
+    }
+
+    @Test
+    public void testToStringParseGeo2() {
+        LambdaTerm test = p("(argmin \$0 (and (place:t \$0) (loc:t \$0 california:s)) (elevation:i \$0))");
+	LambdaTerm parsed=p(test.toString());        
+	assertEquals(test, parsed);
+    }
     
     @Test
     public void testToStringParseWithConstants() {
