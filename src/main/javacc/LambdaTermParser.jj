@@ -46,8 +46,15 @@ TOKEN :
     <ARGMAX: "argmax"> |
     <ARGMIN: "argmin"> |
     <AND: "and"> |
+    <OR: "or"> |
     <EXISTS: "exists"> |
-    < NAME:     ["a"-"z","A"-"Z","_"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
+    <COUNT: "count"> |
+    <LT: "<"> |
+    <EQUALS: "="> |
+    <GT: ">"> |
+    <NOT: "not"> |
+    <SUM: "sum"> |
+    < NAME:     ["a"-"z","A"-"Z","_", "0"-"9"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
     < VARIABLE: "$" (["0"-"9","a"-"z","A"-"Z","_"])* > |
     <LINE_END_COMMENT: "//" (~["\n"])* >
 }
@@ -57,7 +64,9 @@ LambdaTerm lambdaterm() : {
     LambdaTerm sub;
 }{
     (sub = constant() | sub = variable() | sub = apply() | sub = lambda()
-     | sub = argmin() | sub = argmax() | sub = exists() | sub = conj()
+     | sub = argmin() | sub = argmax() | sub = exists() | sub = conj() | sub = disj()
+     | sub = count() | sub = lessThan() | sub = equalTo() | sub = greaterThan()
+     | sub = not() | sub = sum()
     ) {
         return sub;
     }
@@ -101,6 +110,15 @@ LambdaTerm conj() : {
     }
 }
 
+LambdaTerm disj() : {
+    List<LambdaTerm> subs;
+}{
+    "(" <OR> subs = listOfTerms() ")" {
+        //return LambdaTerm.disj(subs);
+        return null;
+    }
+}
+
 LambdaTerm argmax() : {
     String varname;
     LambdaTerm sub1, sub2;
@@ -127,6 +145,64 @@ LambdaTerm exists() : {
         return LambdaTerm.exists(varname, sub);
     }
 }
+
+LambdaTerm count() : {
+    String varname;
+    LambdaTerm sub1;
+}{
+    "(" <COUNT> varname=<VARIABLE>.image sub1=lambdaterm() ")" {
+        //return LambdaTerm.count(varname, sub1);
+        return LambdaTerm.constant("FIXME", "FOOOO");
+    }
+}
+
+LambdaTerm sum() : {
+    String varname;
+    LambdaTerm sub1, sub2;
+}{
+    "(" <SUM> varname=<VARIABLE>.image sub1=lambdaterm() sub2=lambdaterm() ")" {
+        //return LambdaTerm.sum(varname, sub1, sub2);
+        return LambdaTerm.constant("FIXME", "FOOOO");
+    }
+}
+
+LambdaTerm lessThan() : {
+    LambdaTerm sub1, sub2;
+}{
+    "(" <LT> sub1=lambdaterm() sub2=lambdaterm() ")" {
+        //return LambdaTerm.lessThan(sub1, sub2);
+        return LambdaTerm.constant("FIXME", "FOOOO");
+    }
+}
+
+LambdaTerm equalTo() : {
+    LambdaTerm sub1, sub2;
+}{
+    "(" <EQUALS> sub1=lambdaterm() sub2=lambdaterm() ")" {
+        //return LambdaTerm.equalTo(sub1, sub2);
+        return LambdaTerm.constant("FIXME", "FOOOO");
+    }
+}
+
+LambdaTerm greaterThan() : {
+    LambdaTerm sub1, sub2;
+}{
+    "(" <GT> sub1=lambdaterm() sub2=lambdaterm() ")" {
+        //return LambdaTerm.greaterThan(sub1, sub2);
+        return LambdaTerm.constant("FIXME", "FOOOO");
+    }
+}
+
+LambdaTerm not() : {
+    LambdaTerm sub1;
+}{
+    "(" <NOT> sub1=lambdaterm() ")" {
+        //return LambdaTerm.not(sub1);
+        return LambdaTerm.constant("FIXME", "FOOOO");
+    }
+}
+
+
 
 Pair<String,String> nameWithType() : {
     String name, type;

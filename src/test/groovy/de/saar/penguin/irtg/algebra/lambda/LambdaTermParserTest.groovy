@@ -115,21 +115,21 @@ class LambdaTermParserTest {
 
 
 
-    //@Test
+    @Test
     public void testParseGeo3() {
         LambdaTerm test = p("(lambda \$0 (and (capital:t \$0) (not (and (major:t \$0) (city:t \$0)))))");
 	//LambdaTerm parsed=p(test.toString());        
 	//assertEquals(test, parsed);
     }
 
-    //@Test
+    @Test
     public void testParseGeo4() {
         LambdaTerm test = p("(lambda \$0 (exists \$1 (and (state:t \$1) (loc:t mississippi_river:r \$1) (= (population:i \$1) \$0))))");
 	//LambdaTerm parsed=p(test.toString());        
 	//assertEquals(test, parsed);
     }
 
-    //@Test
+    @Test
     public void testParseGeo5() {
         LambdaTerm test = p("(lambda \$0 (and (state:t \$0) (> (count \$1 (and (major:t \$1) (river:t \$1) (loc:t \$1 \$0))) 0:i)))");
 	//LambdaTerm parsed=p(test.toString());        
