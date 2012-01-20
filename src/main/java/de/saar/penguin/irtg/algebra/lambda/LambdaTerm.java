@@ -23,7 +23,7 @@ public class LambdaTerm {
 
     private static enum Kind {
 
-        CONSTANT, VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN
+        CONSTANT, VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN, COUNT, SUM, LESSTHAN, GREATERTHAN, EQUALTO, NOT
     };
 
     private static class LambdaTermNode {
@@ -217,6 +217,73 @@ public class LambdaTerm {
         tree.addSubTree(sub2.getTree(), tree.getRoot());
         return new LambdaTerm(tree);
     }
+
+    public static LambdaTerm count(String x, LambdaTerm sub){
+        // merge trees
+        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
+        LambdaTermNode label = new LambdaTermNode();
+        label.kind = Kind.COUNT;
+        label.x = x;
+        tree.addNode(label, null);
+        tree.addSubTree(sub.getTree(), tree.getRoot());
+        return new LambdaTerm(tree);
+    }
+
+        public static LambdaTerm sum(String x, LambdaTerm sub1, LambdaTerm sub2){
+        // merge trees
+        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
+        LambdaTermNode label = new LambdaTermNode();
+        label.kind = Kind.SUM;
+        label.x = x;
+        tree.addNode(label, null);
+        tree.addSubTree(sub1.getTree(), tree.getRoot());
+        tree.addSubTree(sub2.getTree(), tree.getRoot());
+        return new LambdaTerm(tree);
+    }
+
+        public static LambdaTerm lessThan( LambdaTerm sub1, LambdaTerm sub2){
+        // merge trees
+        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
+        LambdaTermNode label = new LambdaTermNode();
+        label.kind = Kind.LESSTHAN;
+        tree.addNode(label, null);
+        tree.addSubTree(sub1.getTree(), tree.getRoot());
+        tree.addSubTree(sub2.getTree(), tree.getRoot());
+        return new LambdaTerm(tree);
+    }
+
+         public static LambdaTerm greaterThan( LambdaTerm sub1, LambdaTerm sub2){
+        // merge trees
+        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
+        LambdaTermNode label = new LambdaTermNode();
+        label.kind = Kind.GREATERTHAN;
+         tree.addNode(label, null);
+        tree.addSubTree(sub1.getTree(), tree.getRoot());
+        tree.addSubTree(sub2.getTree(), tree.getRoot());
+        return new LambdaTerm(tree);
+    }
+
+        public static LambdaTerm equalTo( LambdaTerm sub1, LambdaTerm sub2){
+        // merge trees
+        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
+        LambdaTermNode label = new LambdaTermNode();
+        label.kind = Kind.EQUALTO;
+         tree.addNode(label, null);
+        tree.addSubTree(sub1.getTree(), tree.getRoot());
+        tree.addSubTree(sub2.getTree(), tree.getRoot());
+        return new LambdaTerm(tree);
+    }
+
+         public static LambdaTerm not(LambdaTerm sub){
+        // merge trees
+        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
+        LambdaTermNode label = new LambdaTermNode();
+        label.kind = Kind.NOT;
+         tree.addNode(label, null);
+        tree.addSubTree(sub.getTree(), tree.getRoot());
+        return new LambdaTerm(tree);
+    }
+
 
     /**
      * Constructs a new LambdaTerm of type argmin (lambda abstraction)
@@ -613,7 +680,7 @@ public class LambdaTerm {
         String ret = new String();
         Kind typ = label.kind;
         // System.out.println("printinfo mit "+label);
-        if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS) {
+        if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS || typ == Kind.COUNT || typ == Kind.SUM) {
             String newVarName = this.genvar();
             this.varList.put(label.x, newVarName);
             ret = typ.toString().toLowerCase() + " " + newVarName + " ";
@@ -636,6 +703,18 @@ public class LambdaTerm {
         if (typ == Kind.CONJ) {
             ret = "and ";
         }
+        if (typ == Kind.NOT) {
+            ret = "not ";
+        }
+        if (typ == Kind.LESSTHAN) {
+            ret = "< ";
+        }
+        if (typ == Kind.GREATERTHAN) {
+            ret = "> ";
+        }
+        if (typ == Kind.EQUALTO) {
+            ret = "= ";
+        }
 
         return ret;
     }
@@ -651,16 +730,17 @@ public class LambdaTerm {
             // 1. Fall: Knoten selbst ist Apply
             // dann klammern um die Kinder falls keine varconsts
             // und nicht nur ein Kind.... (das sollte nicht vorkommen
+            Kind typ = tree.getLabel(node).kind;
 
-            if (tree.getLabel(node).kind.equals(Kind.APPLY) || tree.getLabel(node).kind.equals(Kind.CONJ) || tree.getLabel(node).kind.equals(Kind.ARGMIN) || tree.getLabel(node).kind.equals(Kind.ARGMAX)) {
+            if (typ.equals(Kind.APPLY) || typ.equals(Kind.CONJ) || typ.equals(Kind.ARGMIN) || typ.equals(Kind.ARGMAX) || typ.equals(Kind.EQUALTO) || typ.equals(Kind.LESSTHAN) || typ.equals(Kind.GREATERTHAN) ) {
                 for (String child : children) {
                     if (first) {
                         first = false;
                     } else {
                         buf.append(" ");
                     }
-                    if (tree.getLabel(child).kind.equals(Kind.VARIABLE)
-                            || tree.getLabel(child).kind.equals(Kind.CONSTANT)) {
+                    if (typ.equals(Kind.VARIABLE)
+                            || typ.equals(Kind.CONSTANT)) {
                         printAsString(child, buf);
 
                     } else {

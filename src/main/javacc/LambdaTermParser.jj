@@ -151,8 +151,7 @@ LambdaTerm count() : {
     LambdaTerm sub1;
 }{
     "(" <COUNT> varname=<VARIABLE>.image sub1=lambdaterm() ")" {
-        //return LambdaTerm.count(varname, sub1);
-        return LambdaTerm.constant("FIXME", "FOOOO");
+        return LambdaTerm.count(varname, sub1);
     }
 }
 
@@ -161,8 +160,7 @@ LambdaTerm sum() : {
     LambdaTerm sub1, sub2;
 }{
     "(" <SUM> varname=<VARIABLE>.image sub1=lambdaterm() sub2=lambdaterm() ")" {
-        //return LambdaTerm.sum(varname, sub1, sub2);
-        return LambdaTerm.constant("FIXME", "FOOOO");
+        return LambdaTerm.sum(varname, sub1, sub2);
     }
 }
 
@@ -170,8 +168,7 @@ LambdaTerm lessThan() : {
     LambdaTerm sub1, sub2;
 }{
     "(" <LT> sub1=lambdaterm() sub2=lambdaterm() ")" {
-        //return LambdaTerm.lessThan(sub1, sub2);
-        return LambdaTerm.constant("FIXME", "FOOOO");
+        return LambdaTerm.lessThan(sub1, sub2);
     }
 }
 
@@ -179,8 +176,7 @@ LambdaTerm equalTo() : {
     LambdaTerm sub1, sub2;
 }{
     "(" <EQUALS> sub1=lambdaterm() sub2=lambdaterm() ")" {
-        //return LambdaTerm.equalTo(sub1, sub2);
-        return LambdaTerm.constant("FIXME", "FOOOO");
+        return LambdaTerm.equalTo(sub1, sub2);
     }
 }
 
@@ -188,8 +184,7 @@ LambdaTerm greaterThan() : {
     LambdaTerm sub1, sub2;
 }{
     "(" <GT> sub1=lambdaterm() sub2=lambdaterm() ")" {
-        //return LambdaTerm.greaterThan(sub1, sub2);
-        return LambdaTerm.constant("FIXME", "FOOOO");
+        return LambdaTerm.greaterThan(sub1, sub2);
     }
 }
 
@@ -197,8 +192,7 @@ LambdaTerm not() : {
     LambdaTerm sub1;
 }{
     "(" <NOT> sub1=lambdaterm() ")" {
-        //return LambdaTerm.not(sub1);
-        return LambdaTerm.constant("FIXME", "FOOOO");
+        return LambdaTerm.not(sub1);
     }
 }
 
