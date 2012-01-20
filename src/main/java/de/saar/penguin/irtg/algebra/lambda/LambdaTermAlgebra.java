@@ -151,6 +151,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
             }
         }
 
+
         @Override
         public Set<String> getAllLabels() {
             makeAllRulesExplicit();

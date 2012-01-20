@@ -15,6 +15,7 @@ import de.saar.chorus.term.parser.*;
 import de.saar.basic.tree.*;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.io.BufferedReader;
 
 
 /**
@@ -136,6 +137,23 @@ class LambdaTermParserTest {
 	assertEquals(test, parsed);
     }
 
+
+
+    @Test
+	public void testParseAllGeo(){
+		try {
+		BufferedReader inter = new BufferedReader(new FileReader("geo280lambda"));
+		String zeile = null;
+		while ((zeile = inter.readLine()) != null) {
+			System.out.println("Gelesene Zeile: " + zeile);
+			LambdaTerm test = p(zeile);
+		}
+		} catch (IOException e) {
+		e.printStackTrace();
+		}
+		
+	
+	}	
 
     private static LambdaTerm a(f, LambdaTerm... a) {
         return LambdaTerm.apply(f,Arrays.asList(a));
