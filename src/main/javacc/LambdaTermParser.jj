@@ -53,6 +53,7 @@ TOKEN :
     <EQUALS: "="> |
     <GT: ">"> |
     <NOT: "not"> |
+    <THE: "the"> |
     <SUM: "sum"> |
     < NAME:     ["a"-"z","A"-"Z","_", "0"-"9"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
     < VARIABLE: "$" (["0"-"9","a"-"z","A"-"Z","_"])* > |
@@ -66,7 +67,7 @@ LambdaTerm lambdaterm() : {
     (sub = constant() | sub = variable() | sub = apply() | sub = lambda()
      | sub = argmin() | sub = argmax() | sub = exists() | sub = conj() | sub = disj()
      | sub = count() | sub = lessThan() | sub = equalTo() | sub = greaterThan()
-     | sub = not() | sub = sum()
+     | sub = not() | sub = sum() | sub = the()
     ) {
         return sub;
     }
@@ -193,6 +194,15 @@ LambdaTerm not() : {
 }{
     "(" <NOT> sub1=lambdaterm() ")" {
         return LambdaTerm.not(sub1);
+    }
+}
+
+LambdaTerm the() : {
+    String varname;
+    LambdaTerm sub;
+}{
+    "(" <THE> varname=<VARIABLE>.image sub=lambdaterm() ")" {
+        return LambdaTerm.the(varname, sub);
     }
 }
 
