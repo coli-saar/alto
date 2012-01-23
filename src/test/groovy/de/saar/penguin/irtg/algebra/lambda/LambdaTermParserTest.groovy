@@ -99,22 +99,14 @@ class LambdaTermParserTest {
 	assertEquals(test, parsed);
     }
 
-    //@Test
+    @Test
     public void testParseGeo1() {
-        LambdaTerm test = p("(argmax \$0 (and (river:t \$0) (exists \$1 (and (state:t \$1) (loc:t (argmax \$2 (place:t \$2) (elevation:i \$2)) \$1)) (loc:t \$0 \$1))) (len:i \$0))");
+        LambdaTerm test = p("(lambda \$0 (and (major:t \$0) (city:t \$0) (exists \$1 (and (state:t \$1) (loc:t \$0 \$1) (loc:t (the \$2 (and (river:t \$2) (major:t \$2) (loc:t \$2 virginia:s))) \$1)))))");
 	LambdaTerm parsed=p(test.toString());        
 	assertEquals(test, parsed);
     }
 
 	
-    //@Test
-    public void testParseGeo2() {
-        LambdaTerm test = p("(count \$0 (and (state:t \$0) (exists \$1 (and (city:t \$1) (named:t \$1 rochester:n) (loc:t \$1 \$0)))))");
-	LambdaTerm parsed=p(test.toString());        
-	assertEquals(test, parsed);
-    }
-
-
 
     @Test
     public void testParseGeo3() {
@@ -142,10 +134,9 @@ class LambdaTermParserTest {
     @Test
 	public void testParseAllGeo(){
 		try {
-		BufferedReader inter = new BufferedReader(new FileReader("geo280lambda"));
+		BufferedReader inter = new BufferedReader(new FileReader("examples/geolambda"));
 		String zeile = null;
 		while ((zeile = inter.readLine()) != null) {
-			System.out.println("Gelesene Zeile: " + zeile);
 			LambdaTerm test = p(zeile);
 		}
 		} catch (IOException e) {
@@ -159,7 +150,7 @@ class LambdaTermParserTest {
         return LambdaTerm.apply(f,Arrays.asList(a));
     }
     
-    private static LambdaTerm c(x,type) { // c(x,type)
+    private static LambdaTerm c(x,type) { 
         return LambdaTerm.constant(x, type);
     }
     

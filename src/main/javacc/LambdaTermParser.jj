@@ -115,7 +115,7 @@ LambdaTerm disj() : {
     List<LambdaTerm> subs;
 }{
     "(" <OR> subs = listOfTerms() ")" {
-        //return LambdaTerm.disj(subs);
+        return LambdaTerm.disj(subs);
         return null;
     }
 }

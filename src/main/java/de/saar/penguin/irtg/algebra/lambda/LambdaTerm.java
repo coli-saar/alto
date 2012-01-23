@@ -23,7 +23,7 @@ public class LambdaTerm {
 
     private static enum Kind {
 
-        CONSTANT, VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN, COUNT, SUM, LESSTHAN, GREATERTHAN, EQUALTO, NOT
+        CONSTANT, VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN, COUNT, SUM, LESSTHAN, GREATERTHAN, EQUALTO, NOT, THE, DISJ
     };
 
     private static class LambdaTermNode {
@@ -194,6 +194,25 @@ public class LambdaTerm {
      * Constructs a new LambdaTerm of type conj (conjunction)
      * @param subs the lambda term working as conjuncts
      */
+    public static LambdaTerm disj(List<LambdaTerm> subs) {
+        //LambdaTerm ret = new LambdaTerm(Kind.CONJ);
+        // merge trees
+        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
+//        ret.x = "";
+        LambdaTermNode label = new LambdaTermNode();
+        label.kind = Kind.DISJ;
+        tree.addNode(label, null);
+
+        for (LambdaTerm argument : subs) {
+            tree.addSubTree(argument.getTree(), tree.getRoot());
+        }
+        return new LambdaTerm(tree);
+    }
+
+    /**
+     * Constructs a new LambdaTerm of type conj (conjunction)
+     * @param subs the lambda term working as conjuncts
+     */
     public static LambdaTerm conj(LambdaTerm... subs) {
         return conj(Arrays.asList(subs));
     }
@@ -280,6 +299,18 @@ public class LambdaTerm {
         LambdaTermNode label = new LambdaTermNode();
         label.kind = Kind.NOT;
          tree.addNode(label, null);
+        tree.addSubTree(sub.getTree(), tree.getRoot());
+        return new LambdaTerm(tree);
+    }
+
+
+        public static LambdaTerm the(String x, LambdaTerm sub){
+        // merge trees
+        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
+        LambdaTermNode label = new LambdaTermNode();
+        label.kind = Kind.NOT;
+        label.x = x;
+        tree.addNode(label, null);
         tree.addSubTree(sub.getTree(), tree.getRoot());
         return new LambdaTerm(tree);
     }
@@ -703,8 +734,15 @@ public class LambdaTerm {
         if (typ == Kind.CONJ) {
             ret = "and ";
         }
+        if (typ == Kind.DISJ) {
+            ret = "or ";
+        }
         if (typ == Kind.NOT) {
             ret = "not ";
+        }
+
+        if (typ == Kind.THE) {
+            ret = "the ";
         }
         if (typ == Kind.LESSTHAN) {
             ret = "< ";
@@ -732,7 +770,7 @@ public class LambdaTerm {
             // und nicht nur ein Kind.... (das sollte nicht vorkommen
             Kind typ = tree.getLabel(node).kind;
 
-            if (typ.equals(Kind.APPLY) || typ.equals(Kind.CONJ) || typ.equals(Kind.ARGMIN) || typ.equals(Kind.ARGMAX) || typ.equals(Kind.EQUALTO) || typ.equals(Kind.LESSTHAN) || typ.equals(Kind.GREATERTHAN) ) {
+            if (typ.equals(Kind.APPLY) || typ.equals(Kind.CONJ) ||  typ.equals(Kind.DISJ) || typ.equals(Kind.ARGMIN) || typ.equals(Kind.ARGMAX) || typ.equals(Kind.EQUALTO) || typ.equals(Kind.LESSTHAN) || typ.equals(Kind.GREATERTHAN) ) {
                 for (String child : children) {
                     if (first) {
                         first = false;
