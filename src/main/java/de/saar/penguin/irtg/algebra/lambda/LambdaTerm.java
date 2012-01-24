@@ -59,6 +59,7 @@ public class LambdaTerm {
     private HashMap<String, String> varList = null;
     private int genvarNext = 0;
     private String stringRep = "";
+    private boolean hasCons = false;
 
     /**
      * Constructs a new LambdaTerm without a type
@@ -67,6 +68,12 @@ public class LambdaTerm {
     private LambdaTerm(Tree<LambdaTermNode> tree) {
         this.tree = tree;
         this.findHighestVarName();
+        for (String node2 :tree.getNodesInDfsOrder()) {
+                    if (tree.getLabel(node2).kind.equals(Kind.CONSTANT)) {
+                        hasCons = true;
+                    }
+                }
+
     }
 
     /**
@@ -371,7 +378,7 @@ public class LambdaTerm {
             Set<String> ret = data;
             Kind typ = workingCopy.getLabel(node).kind;
             String value = workingCopy.getLabel(node).x;
-            if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS) {
+            if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS || typ == Kind.THE || typ == Kind.SUM || typ == Kind.COUNT ) {
                 ret.add(value);
             }
             if (typ == Kind.VARIABLE && !data.contains(value)) {
@@ -385,7 +392,7 @@ public class LambdaTerm {
             Set<String> ret = new HashSet<String>();
             LambdaTermNode label = workingCopy.getLabel(workingCopy.getRoot());
             Kind typ = label.kind;
-            if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS) {
+            if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS || typ == Kind.THE || typ == Kind.SUM || typ == Kind.COUNT) {
                 ret.add(label.x);
             }
             return ret;
@@ -433,6 +440,7 @@ public class LambdaTerm {
                 Tree<LambdaTermNode> ret = new Tree<LambdaTermNode>();
                 // replace node
                 if (treeToWorkOn.getLabel(node).x.equals(varName) && treeToWorkOn.getLabel(node).kind == Kind.VARIABLE) {
+                    //ret = content;
                     ret = content;
                 } else {
                     // delete upmost node (lamda)
@@ -483,7 +491,10 @@ public class LambdaTerm {
                     if (label.kind == Kind.LAMBDA
                             || label.kind == Kind.ARGMAX
                             || label.kind == Kind.ARGMIN
-                            || label.kind == Kind.EXISTS) {
+                            || label.kind == Kind.EXISTS
+                            || label.kind == Kind.THE
+                            || label.kind == Kind.COUNT
+                            || label.kind == Kind.SUM) {
 
                         // if there is more than one child, use the first argument
                         // and create a new apply node
@@ -541,7 +552,7 @@ public class LambdaTerm {
 
         Boolean t = true;
         while (t == true) {
-            //System.out.println("Reduziere "+old);
+         //   System.out.println("Reduziere "+old);
             LambdaTerm temp = old.beta();
             //if (temp.getTree().equals(old.getTree())) {
             if (temp.equals(old)) {
@@ -553,6 +564,51 @@ public class LambdaTerm {
 
         return old;
 
+    }
+
+    // renames variables making the names start at a given number
+    private Tree<LambdaTermNode> alphaConvert(final Tree<LambdaTermNode> treeToWorkOn, final int newStart){
+
+
+
+        TreeVisitor<String, Tree<LambdaTermNode>> tv = new TreeVisitor<String, Tree<LambdaTermNode>>() {
+            Map<String,String> newNames = new HashMap<String,String>();
+            int internalGenvar = newStart;
+
+            @Override
+            public String getRootValue() {
+                return treeToWorkOn.getRoot();
+            }
+
+            public Tree<LambdaTermNode> combine(String parent, List<Tree<LambdaTermNode>> childValues){
+                Kind typ = treeToWorkOn.getLabel(parent).kind;
+                Tree<LambdaTermNode> ret = new Tree<LambdaTermNode>();
+                LambdaTermNode newNode = treeToWorkOn.getLabel(parent);
+                if(typ == Kind.VARIABLE || typ == Kind.ARGMAX ||typ ==  Kind.ARGMIN ||typ ==  Kind.EXISTS || typ == Kind.COUNT ||typ ==  Kind.SUM ||typ ==  Kind.THE){
+                    // in new Names nachschauen
+                    String newVarName;
+                    if (!newNames.containsKey(treeToWorkOn.getLabel(parent).x)) {
+                        newVarName = "$"+internalGenvar;
+                       this.newNames.put(treeToWorkOn.getLabel(parent).x, newVarName);
+                       internalGenvar++;
+                    }
+                    newNode = new LambdaTermNode();
+                    newNode.kind = typ;
+                    newNode.x = newNames.get(treeToWorkOn.getLabel(parent).x);
+                    newNode.type ="";
+
+                }
+                ret.addNode(newNode,null);
+                for(Tree<LambdaTermNode> child : childValues){
+                    ret.addSubTree(child,ret.getRoot());
+                }
+
+                return ret;
+            }
+
+        };
+
+        return tree.dfs(tv);
     }
 
     /**
@@ -670,15 +726,7 @@ public class LambdaTerm {
                 // extracted and context have to differ from original
                 // extracted tree needs at least one constant
 
-                // TODO - take this to a nicer place
-                boolean hasCons = false;
-                for (String node2 : extracted.getTree().getNodesInDfsOrder()) {
-                    if (extracted.getTree().getLabel(node2).kind.equals(Kind.CONSTANT)) {
-                        hasCons = true;
-                    }
-                }
-
-                if (!(this.equals(contextTerm) || this.equals(extracted) || hasCons == false)) {
+                if (!(this.equals(contextTerm) || this.equals(extracted) || extracted.hasCons == false || contextTerm.hasCons == false)) {
 
                     ret.put(contextTerm, extracted);
                 }
