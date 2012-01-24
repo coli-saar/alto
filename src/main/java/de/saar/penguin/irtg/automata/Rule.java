@@ -11,7 +11,10 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- *
+ * Caution: When comparing rules with equals and hashCode, the rule weight is
+ * NOT taken into account. This is so rules can be destructively reweighted
+ * in training.
+ * 
  * @author koller
  */
 public class Rule<State> {
@@ -95,9 +98,9 @@ public class Rule<State> {
         if (!Arrays.deepEquals(this.children, other.children)) {
             return false;
         }
-        if (Double.doubleToLongBits(this.weight) != Double.doubleToLongBits(other.weight)) {
-            return false;
-        }
+//        if (Double.doubleToLongBits(this.weight) != Double.doubleToLongBits(other.weight)) {
+//            return false;
+//        }
         return true;
     }
 
@@ -107,7 +110,7 @@ public class Rule<State> {
         hash = 23 * hash + (this.parent != null ? this.parent.hashCode() : 0);
         hash = 23 * hash + (this.label != null ? this.label.hashCode() : 0);
         hash = 23 * hash + Arrays.deepHashCode(this.children);
-        hash = 23 * hash + (int) (Double.doubleToLongBits(this.weight) ^ (Double.doubleToLongBits(this.weight) >>> 32));
+//        hash = 23 * hash + (int) (Double.doubleToLongBits(this.weight) ^ (Double.doubleToLongBits(this.weight) >>> 32));
         return hash;
     }
     

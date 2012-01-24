@@ -4,6 +4,8 @@
  */
 package de.saar.penguin.irtg;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.saar.basic.tree.Tree;
@@ -26,6 +28,7 @@ import java.util.Set;
  * @author koller
  */
 public class InterpretedTreeAutomaton {
+
     private BottomUpAutomaton<String> automaton;
     private Map<String, Interpretation> interpretations;
     private boolean debug = false;
@@ -39,7 +42,7 @@ public class InterpretedTreeAutomaton {
         interpretations.put(name, interp);
     }
 
-    @CallableFromShell(name="automaton")
+    @CallableFromShell(name = "automaton")
     public BottomUpAutomaton<String> getAutomaton() {
         return automaton;
     }
@@ -47,8 +50,8 @@ public class InterpretedTreeAutomaton {
     public Map<String, Interpretation> getInterpretations() {
         return interpretations;
     }
-    
-    @CallableFromShell(name="interpretation")
+
+    @CallableFromShell(name = "interpretation")
     public Interpretation getInterpretation(Reader reader) throws IOException {
         String interp = StringTools.slurp(reader);
         return interpretations.get(interp);
@@ -90,52 +93,52 @@ public class InterpretedTreeAutomaton {
 
         return ret;
     }
-    
-    @CallableFromShell(name = "decode", joinList="\n")
-    public Set<Object> decodeFromReaders(Reader outputInterpretation, Map<String,Reader> readers) throws ParserException, IOException {
+
+    @CallableFromShell(name = "decode", joinList = "\n")
+    public Set<Object> decodeFromReaders(Reader outputInterpretation, Map<String, Reader> readers) throws ParserException, IOException {
         BottomUpAutomaton chart = parseFromReaders(readers);
         String interp = StringTools.slurp(outputInterpretation);
         return decode(chart, interpretations.get(interp));
     }
-    
+
     public Set<Object> decode(String outputInterpretation, Map<String, Object> inputs) {
         BottomUpAutomaton chart = parse(inputs);
         return decode(chart, interpretations.get(outputInterpretation));
     }
-    
+
     private Set<Object> decode(BottomUpAutomaton chart, Interpretation interp) {
         BottomUpAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
         Set<Tree<String>> outputLanguage = outputChart.language();
-        
+
         Set<Object> ret = new HashSet<Object>();
-        for( Tree<String> term : outputLanguage ) {
+        for (Tree<String> term : outputLanguage) {
             ret.add(interp.getAlgebra().evaluate(term));
         }
-        
+
         return ret;
     }
-    
-    @CallableFromShell(name = "decodeToTerms", joinList="\n")
-    public Set<Tree> decodeToTermsFromReaders(Reader outputInterpretation, Map<String,Reader> readers) throws ParserException, IOException {
+
+    @CallableFromShell(name = "decodeToTerms", joinList = "\n")
+    public Set<Tree> decodeToTermsFromReaders(Reader outputInterpretation, Map<String, Reader> readers) throws ParserException, IOException {
         BottomUpAutomaton chart = parseFromReaders(readers);
         String interp = StringTools.slurp(outputInterpretation);
         return decodeToTerms(chart, interpretations.get(interp));
     }
-    
+
     public Set<Tree> decodeToTerms(String outputInterpretation, Map<String, Object> inputs) {
         BottomUpAutomaton chart = parse(inputs);
         return decodeToTerms(chart, interpretations.get(outputInterpretation));
     }
-    
+
     private Set<Tree> decodeToTerms(BottomUpAutomaton chart, Interpretation interp) {
         BottomUpAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
         Set<Tree<String>> outputLanguage = outputChart.language();
-        
+
         Set<Tree> ret = new HashSet<Tree>();
-        for( Tree<String> term : outputLanguage ) {
+        for (Tree<String> term : outputLanguage) {
             ret.add(term);
         }
-        
+
         return ret;
     }
 
@@ -150,6 +153,31 @@ public class InterpretedTreeAutomaton {
             System.out.println("\n\nInitial model:\n" + automaton);
         }
 
+        // compute all parses for the training data, and memorize mapping between
+        // rules of the parse charts and rules of the underlying RTG
+        List<BottomUpAutomaton> parses = new ArrayList<BottomUpAutomaton>();
+        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
+        ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
+
+        for (Map<String, Object> tuple : trainingData) {
+            BottomUpAutomaton parse = parse(tuple);
+            parse = parse.reduceBottomUp();
+            
+            parses.add(parse);
+
+            Set<Rule> rules = parse.getRuleSet();
+            Map<Rule,Rule> irtorHere = new HashMap<Rule, Rule>();
+            for (Rule intersectedRule : rules) {
+                Object intersectedParent = intersectedRule.getParent();
+                Rule<String> originalRule = getRuleInGrammar(intersectedRule);
+                
+                irtorHere.put(intersectedRule, originalRule);
+                originalRuleToIntersectedRules.put(originalRule, intersectedRule);
+            }
+            
+            intersectedRuleToOriginalRule.add(irtorHere);
+        }
+
         for (int iteration = 0; iteration < 10; iteration++) {
             // initialize counts
             Map<Rule<String>, Double> globalRuleCount = new HashMap<Rule<String>, Double>();
@@ -158,27 +186,27 @@ public class InterpretedTreeAutomaton {
             }
 
             // E-step
-            for (Map<String, Object> tuple : trainingData) {
-                BottomUpAutomaton parse = parse(tuple);
-                parse = parse.reduceBottomUp();
+            for( int i = 0; i < parses.size(); i++ ) {
+                BottomUpAutomaton parse = parses.get(i);
+                
                 Map<Object, Double> inside = parse.inside();
                 Map<Object, Double> outside = parse.outside(inside);
-                Set<Rule> rules = parse.getRuleSet();
-
-                for (Rule intersectedRule : rules) {
+                
+                for( Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet() ) {
                     Object intersectedParent = intersectedRule.getParent();
-                    Rule<String> originalRule = getRuleInGrammar(intersectedRule);
+                    Rule<String> originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
+                    
                     double oldRuleCount = globalRuleCount.get(originalRule);
                     double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight();
 
-                    for (int i = 0; i < intersectedRule.getArity(); i++) {
-                        thisRuleCount *= inside.get(intersectedRule.getChildren()[i]);
+                    for (int j = 0; j < intersectedRule.getArity(); j++) {
+                        thisRuleCount *= inside.get(intersectedRule.getChildren()[j]);
                     }
 
                     globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
                 }
             }
-
+            
             // sum over rules with same parent state to obtain state counts
             Map<String, Double> globalStateCount = new HashMap<String, Double>();
             for (String state : automaton.getAllStates()) {
@@ -191,7 +219,12 @@ public class InterpretedTreeAutomaton {
 
             // M-step
             for (Rule<String> rule : automaton.getRuleSet()) {
-                rule.setWeight(globalRuleCount.get(rule) / globalStateCount.get(rule.getParent()));
+                double newWeight = globalRuleCount.get(rule) / globalStateCount.get(rule.getParent());
+                
+                rule.setWeight(newWeight);
+                for( Rule intersectedRule : originalRuleToIntersectedRules.get(rule)) {
+                    intersectedRule.setWeight(newWeight);
+                }
             }
 
             if (debug) {

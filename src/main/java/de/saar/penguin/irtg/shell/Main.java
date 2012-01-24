@@ -21,6 +21,7 @@ public class Main {
 
     private static final String OUTPUT_END_MARKER = "---";
     private static final String ERROR_MARKER = "*** ";
+    private Shell shell;
 
     public static void main(String[] args) throws IOException {
         int serverPort = 0;
@@ -31,9 +32,8 @@ public class Main {
             }
         }
 
-        Main x = new Main();
         Shell shell = new Shell();
-
+        Main x = new Main(shell);
 
         if (serverPort > 0) {
             System.out.println("IRTG server listening on port " + serverPort + " ...");
@@ -43,6 +43,10 @@ public class Main {
         } else {
             shell.run(x);
         }
+    }
+
+    Main(Shell shell) {
+        this.shell = shell;
     }
 
     @CallableFromShell
@@ -69,5 +73,15 @@ public class Main {
         } else {
             System.out.println(val.getClass());
         }
+    }
+
+    @CallableFromShell
+    public void measure() {
+        shell.setMeasureExecutionTime(true);
+    }
+
+    @CallableFromShell
+    public void nomeasure() {
+        shell.setMeasureExecutionTime(false);
     }
 }

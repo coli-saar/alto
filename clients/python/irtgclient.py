@@ -23,7 +23,6 @@ class IrtgConnection:
         
         while True:
             line = self.f.readline().rstrip('\n')
-            print line
             match = error_pattern.match(line)
             
             if line == output_end_marker:
