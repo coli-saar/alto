@@ -45,7 +45,7 @@ public class Main {
         }
     }
 
-    Main(Shell shell) {
+    protected Main(Shell shell) {
         this.shell = shell;
     }
 

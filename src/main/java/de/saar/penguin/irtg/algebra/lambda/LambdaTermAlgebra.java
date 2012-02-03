@@ -40,7 +40,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
 
                 if (t.getLabel(node).equals(LambdaTermAlgebraSymbol.FUNCTOR)) {
                     // works since it is binary tree
-                    LambdaTerm tmp = LambdaTerm.apply(cV.get(0), cV.get(1).alphaConvert(cV.get(0).findHighestVarName()+1));
+                    LambdaTerm tmp = LambdaTerm.apply(cV.get(0), cV.get(1).alphaConvert(cV.get(0).findHighestVarName() + 1));
                     ret = tmp.reduce();
                     //System.out.println(tmp.getTree()+" reduziert zu "+ret.getTree()+" nit "+ret);
                 } else {
@@ -108,7 +108,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
                             Rule<LambdaTerm> rule = new Rule<LambdaTerm>(parentState, label, new LambdaTerm[]{pair.getKey(), pair.getValue()});
                             storeRule(rule);
                         }
-                    }     
+                    }
                 } else {
                     if (label.equals(parentState.toString())) {
                         storeRule(new Rule<LambdaTerm>(parentState, label, new LambdaTerm[]{}));
@@ -151,7 +151,6 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
                 }
             }
         }
-
 
         @Override
         public Set<String> getAllLabels() {

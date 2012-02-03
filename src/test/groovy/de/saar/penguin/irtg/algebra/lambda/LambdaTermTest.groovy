@@ -88,7 +88,9 @@ class LambdaTermTest {
     public void splitGeoArgmin(){
 	LambdaTerm geo = p("(argmin \$0 (state:t \$0) (population:i \$0))");
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
-	checkAllTermsEquals(alg.decompose(geo), geo, false);
+        BottomUpAutomaton auto = alg.decompose(geo);
+	checkAllTermsEquals(auto, geo, false);
+        System.err.println("argmin: " + auto);
     }
 
 
@@ -96,17 +98,17 @@ class LambdaTermTest {
     public void splitGeoConj(){
 	LambdaTerm geo = p("(lambda \$0 (and (place:t \$0) (elevation:i \$0)))");
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
-	checkAllTermsEquals(alg.decompose(geo), geo, false);
+        BottomUpAutomaton auto = alg.decompose(geo);
+	checkAllTermsEquals(auto, geo, false);
+        System.err.println("conj: " + auto);
     }
 
-    @Test
+//    @Test
     public void splitlongGeoConj(){
 	LambdaTerm geo = p("(argmax \$0 (and (city:t \$0) (exists \$1 (and (state:t \$1) (next_to:t \$1 (argmax \$2 (state:t \$2) (size:i \$2))) (loc:t \$0 \$1)))) (size:i \$0))");
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
 	checkAllTermsEquals(alg.decompose(geo), geo, false);
     }
-
-
 
     //@Test
     public void splitGeoAll(){

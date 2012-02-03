@@ -18,6 +18,7 @@ import de.saar.penguin.irtg.semiring.LongArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.Semiring;
 import de.saar.penguin.irtg.semiring.ViterbiWithBackpointerSemiring;
 import de.up.ling.shell.CallableFromShell;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,7 +34,7 @@ import java.util.Set;
  *
  * @author koller
  */
-public abstract class BottomUpAutomaton<State> {
+public abstract class BottomUpAutomaton<State> implements Serializable {
     protected Map<String, StateListToStateMap> explicitRules; // one for each label
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;

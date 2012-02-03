@@ -144,7 +144,7 @@ public class InterpretedTreeAutomaton {
 
     @CallableFromShell(name = "emtrain")
     public void trainEM(Reader reader) throws IOException {
-        List<Map<String, Object>> data = readTrainingData(reader);
+        List<Map<String, Object>> data = null; //readTrainingData(reader);
         trainEM(data);
     }
 
@@ -262,9 +262,10 @@ public class InterpretedTreeAutomaton {
         this.debug = debug;
     }
 
-    public List<Map<String, Object>> readTrainingData(Reader reader) throws IOException {
+    @CallableFromShell
+    public ParsedCorpus readTrainingData(Reader reader) throws IOException {
         BufferedReader br = new BufferedReader(reader);
-        List<Map<String, Object>> ret = new ArrayList<Map<String, Object>>();
+        ParsedCorpus ret = new ParsedCorpus();
         List<String> interpretationOrder = new ArrayList<String>();
         Map<String, Object> currentTuple = new HashMap<String, Object>();
         int currentInterpretation = 0;
@@ -295,7 +296,7 @@ public class InterpretedTreeAutomaton {
 
                 currentInterpretation++;
                 if (currentInterpretation >= interpretationOrder.size()) {
-                    ret.add(currentTuple);
+//                    ret.add(currentTuple);
                     currentTuple = new HashMap<String, Object>();
                     currentInterpretation = 0;
                 }
