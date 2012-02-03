@@ -99,7 +99,7 @@ class LambdaTermTest {
 	checkAllTermsEquals(alg.decompose(geo), geo, false);
     }
 
-    //@Test
+    @Test
     public void splitlongGeoConj(){
 	LambdaTerm geo = p("(argmax \$0 (and (city:t \$0) (exists \$1 (and (state:t \$1) (next_to:t \$1 (argmax \$2 (state:t \$2) (size:i \$2))) (loc:t \$0 \$1)))) (size:i \$0))");
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
@@ -107,24 +107,6 @@ class LambdaTermTest {
     }
 
 
-	//@Test
-	public void testBetaAgain(){
-		LambdaTerm one = p("(lambda \$0 (lambda \$1 (lambda \$2 (lambda \$3 (lambda \$4 (and ((\$1) (\$4)) (exists \$5 (and ((state:t) (\$5)) ((\$2) (\$5) (\$3)) ((\$0) (\$5) (\$4))))))))))");
-		LambdaTerm two = p("(lambda \$0 (lambda \$1 ((next_to:t) (\$1) (\$0))))");
-
-		LambdaTerm three = p("(state:t)");
-		LambdaTerm four = p("(lambda \$0 (lambda \$1 ((loc:t) (\$1) (\$0))))");
-
-                LambdaTerm five = p("(mississippi_river:r)");
-
-		LambdaTerm onetwo = a(one,two).reduce();
-                LambdaTerm onetwothree = a(onetwo,three).reduce();
-                LambdaTerm onetwothreefour = a(onetwothree,four).reduce();
-                LambdaTerm onetwothreefourfive = a(onetwothreefour,five).reduce();
-
-		System.out.println(onetwothreefourfive);
-		System.out.println(onetwothreefourfive.getTree());
-	}
 
     //@Test
     public void splitGeoAll(){
