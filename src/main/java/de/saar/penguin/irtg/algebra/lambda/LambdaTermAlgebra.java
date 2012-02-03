@@ -40,8 +40,9 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
 
                 if (t.getLabel(node).equals(LambdaTermAlgebraSymbol.FUNCTOR)) {
                     // works since it is binary tree
-                    LambdaTerm tmp = LambdaTerm.apply(cV.get(0), cV.get(1));
+                    LambdaTerm tmp = LambdaTerm.apply(cV.get(0), cV.get(1).alphaConvert(cV.get(0).findHighestVarName()+1));
                     ret = tmp.reduce();
+                    //System.out.println(tmp.getTree()+" reduziert zu "+ret.getTree()+" nit "+ret);
                 } else {
                     try {
                         //                    ret = t.getLabel(node);

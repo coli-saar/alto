@@ -57,7 +57,7 @@ public class LambdaTerm {
     }
     private Tree<LambdaTermNode> tree;
     private HashMap<String, String> varList = null;
-    private int genvarNext = 0;
+    public int genvarNext = 0;
     private String stringRep = "";
     private boolean hasCons = false;
 
@@ -342,7 +342,7 @@ public class LambdaTerm {
         return new LambdaTerm(tree);
     }
 
-    private void findHighestVarName() {
+    public int findHighestVarName() {
         int varName = -1;
         for (String node : this.tree.getNodesInDfsOrder()) {
             if (this.tree.getLabel(node).kind.equals(Kind.VARIABLE)) {
@@ -360,6 +360,7 @@ public class LambdaTerm {
         }
 
         this.genvarNext = varName + 1;
+        return varName;
     }
 
     // Tree visitor to find unbound variables
@@ -567,9 +568,9 @@ public class LambdaTerm {
     }
 
     // renames variables making the names start at a given number
-    private Tree<LambdaTermNode> alphaConvert(final Tree<LambdaTermNode> treeToWorkOn, final int newStart){
+    public LambdaTerm alphaConvert(final int newStart){
 
-
+        final Tree<LambdaTermNode> treeToWorkOn = this.tree;
 
         TreeVisitor<String, Tree<LambdaTermNode>> tv = new TreeVisitor<String, Tree<LambdaTermNode>>() {
             Map<String,String> newNames = new HashMap<String,String>();
@@ -584,7 +585,7 @@ public class LambdaTerm {
                 Kind typ = treeToWorkOn.getLabel(parent).kind;
                 Tree<LambdaTermNode> ret = new Tree<LambdaTermNode>();
                 LambdaTermNode newNode = treeToWorkOn.getLabel(parent);
-                if(typ == Kind.VARIABLE || typ == Kind.ARGMAX ||typ ==  Kind.ARGMIN ||typ ==  Kind.EXISTS || typ == Kind.COUNT ||typ ==  Kind.SUM ||typ ==  Kind.THE){
+                if(typ == Kind.VARIABLE || typ == Kind.LAMBDA|| typ == Kind.ARGMAX ||typ ==  Kind.ARGMIN ||typ ==  Kind.EXISTS || typ == Kind.COUNT ||typ ==  Kind.SUM ||typ ==  Kind.THE){
                     // in new Names nachschauen
                     String newVarName;
                     if (!newNames.containsKey(treeToWorkOn.getLabel(parent).x)) {
@@ -607,8 +608,8 @@ public class LambdaTerm {
             }
 
         };
-
-        return tree.dfs(tv);
+        Tree<LambdaTermNode> newTre = tree.dfs(tv);
+        return new LambdaTerm(newTre);
     }
 
     /**
@@ -818,7 +819,7 @@ public class LambdaTerm {
             // und nicht nur ein Kind.... (das sollte nicht vorkommen
             Kind typ = tree.getLabel(node).kind;
 
-            if (typ.equals(Kind.APPLY) || typ.equals(Kind.CONJ) ||  typ.equals(Kind.DISJ) || typ.equals(Kind.ARGMIN) || typ.equals(Kind.ARGMAX) || typ.equals(Kind.EQUALTO) || typ.equals(Kind.LESSTHAN) || typ.equals(Kind.GREATERTHAN) ) {
+            if (typ.equals(Kind.APPLY) || typ.equals(Kind.CONJ) || typ.equals(Kind.SUM) || typ.equals(Kind.DISJ) || typ.equals(Kind.ARGMIN) || typ.equals(Kind.ARGMAX) || typ.equals(Kind.EQUALTO) || typ.equals(Kind.LESSTHAN) || typ.equals(Kind.GREATERTHAN) ) {
                 for (String child : children) {
                     if (first) {
                         first = false;
