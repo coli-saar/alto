@@ -5,6 +5,7 @@
 package de.saar.penguin.irtg.automata;
 
 import de.saar.basic.StringTools;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -17,7 +18,7 @@ import java.util.List;
  * 
  * @author koller
  */
-public class Rule<State> {
+public class Rule<State> implements Serializable {
     private State parent;
     private String label;
     private State[] children;

@@ -93,6 +93,8 @@ public class InterpretedTreeAutomaton {
 
         return ret;
     }
+    
+    
 
     @CallableFromShell(name = "decode", joinList = "\n")
     public Set<Object> decodeFromReaders(Reader outputInterpretation, Map<String, Reader> readers) throws ParserException, IOException {
@@ -143,26 +145,18 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell(name = "emtrain")
-    public void trainEM(Reader reader) throws IOException {
-        List<Map<String, Object>> data = null; //readTrainingData(reader);
-        trainEM(data);
-    }
-
-    public void trainEM(List<Map<String, Object>> trainingData) {
+    public void trainEM(ParsedCorpus trainingData) {
         if (debug) {
             System.out.println("\n\nInitial model:\n" + automaton);
         }
 
-        // compute all parses for the training data, and memorize mapping between
+        // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
         List<BottomUpAutomaton> parses = new ArrayList<BottomUpAutomaton>();
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
-
-        for (Map<String, Object> tuple : trainingData) {
-            BottomUpAutomaton parse = parse(tuple);
-            parse = parse.reduceBottomUp();
-            
+        
+        for( BottomUpAutomaton parse : trainingData.getAllInstances() ) {            
             parses.add(parse);
 
             Set<Rule> rules = parse.getRuleSet();
@@ -263,12 +257,12 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell
-    public ParsedCorpus readTrainingData(Reader reader) throws IOException {
+    public ParsedCorpus parseCorpus(Reader reader) throws IOException {
         BufferedReader br = new BufferedReader(reader);
         ParsedCorpus ret = new ParsedCorpus();
         List<String> interpretationOrder = new ArrayList<String>();
-        Map<String, Object> currentTuple = new HashMap<String, Object>();
-        int currentInterpretation = 0;
+        Map<String,Object> currentInputs = new HashMap<String, Object>();
+        int currentInterpretationIndex = 0;
         int lineNumber = 0;
 
         while (true) {
@@ -285,20 +279,24 @@ public class InterpretedTreeAutomaton {
             if (lineNumber < getInterpretations().size()) {
                 interpretationOrder.add(line);
             } else {
-                String current = interpretationOrder.get(currentInterpretation);
+                String current = interpretationOrder.get(currentInterpretationIndex);
+                Interpretation currentInterpretation = interpretations.get(current);
+                
                 try {
-//                    System.err.println("")
-                    currentTuple.put(current, parseString(current, line));
+                    Object inputObject = parseString(current, line);
+                    currentInputs.put(current, inputObject);
                 } catch (ParserException ex) {
                     System.out.println("An error occurred while parsing " + reader + ", line " + (lineNumber + 1) + ": " + ex.getMessage());
                     return null;
                 }
 
-                currentInterpretation++;
-                if (currentInterpretation >= interpretationOrder.size()) {
-//                    ret.add(currentTuple);
-                    currentTuple = new HashMap<String, Object>();
-                    currentInterpretation = 0;
+                currentInterpretationIndex++;
+                if (currentInterpretationIndex >= interpretationOrder.size()) {
+                    BottomUpAutomaton chart = parse(currentInputs).reduceBottomUp().makeConcreteAutomaton();
+                    ret.addInstance(chart);
+                    
+                    currentInputs.clear();
+                    currentInterpretationIndex = 0;
                 }
             }
 

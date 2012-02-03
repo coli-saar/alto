@@ -7,6 +7,7 @@ package de.saar.penguin.irtg.algebra;
 import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.automata.BottomUpAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -149,7 +150,7 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
     }
 
-    static class Span {
+    static class Span implements Serializable {
 
         public int start, end;
 

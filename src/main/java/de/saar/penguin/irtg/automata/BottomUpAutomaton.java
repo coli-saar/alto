@@ -462,6 +462,21 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
             isExplicit = true;
         }
     }
+    
+    public ConcreteBottomUpAutomaton<State> makeConcreteAutomaton() {
+        makeAllRulesExplicit();
+        
+        ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
+        
+        ret.explicitRules = explicitRules;
+        ret.explicitRulesTopDown = explicitRulesTopDown;
+        ret.finalStates = finalStates;
+        ret.allStates = allStates;
+        ret.isExplicit = isExplicit;
+        ret.rulesForRhsState = rulesForRhsState;
+        
+        return ret;
+    }
 
     /**
      * Checks whether the cache contains a bottom-up rule for
@@ -801,7 +816,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
         return ret;
     }
 
-    protected class StateListToStateMap {
+    protected class StateListToStateMap implements Serializable {
         private Map<State, StateListToStateMap> nextStep;
         private Set<Rule<State>> rulesHere;
         private int arity;

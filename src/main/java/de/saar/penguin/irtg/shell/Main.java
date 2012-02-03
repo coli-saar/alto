@@ -4,12 +4,16 @@
  */
 package de.saar.penguin.irtg.shell;
 
+import de.saar.basic.StringTools;
 import de.saar.penguin.irtg.InterpretedTreeAutomaton;
 import de.saar.penguin.irtg.IrtgParser;
 import de.saar.penguin.irtg.ParseException;
+import de.saar.penguin.irtg.ParsedCorpus;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.shell.Shell;
 import de.up.ling.shell.ShutdownShellException;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Reader;
 
@@ -52,6 +56,12 @@ public class Main {
     @CallableFromShell
     public InterpretedTreeAutomaton irtg(Reader reader) throws ParseException {
         return IrtgParser.parse(reader);
+    }
+    
+    @CallableFromShell
+    public ParsedCorpus readParsedCorpus(Reader reader) throws IOException, ClassNotFoundException {
+        String filename = StringTools.slurp(reader);
+        return ParsedCorpus.read(new FileInputStream(new File(filename)));
     }
 
     @CallableFromShell

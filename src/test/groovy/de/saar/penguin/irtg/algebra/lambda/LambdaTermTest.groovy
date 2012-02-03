@@ -90,7 +90,7 @@ class LambdaTermTest {
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
         BottomUpAutomaton auto = alg.decompose(geo);
 	checkAllTermsEquals(auto, geo, false);
-        System.err.println("argmin: " + auto);
+//        System.err.println("argmin: " + auto);
     }
 
 
@@ -100,7 +100,7 @@ class LambdaTermTest {
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
         BottomUpAutomaton auto = alg.decompose(geo);
 	checkAllTermsEquals(auto, geo, false);
-        System.err.println("conj: " + auto);
+//        System.err.println("conj: " + auto);
     }
 
 //    @Test

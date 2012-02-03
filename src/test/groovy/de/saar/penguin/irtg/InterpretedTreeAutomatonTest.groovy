@@ -47,11 +47,10 @@ class InterpretedTreeAutomatonTest {
         List words = irtg.parseString("string", string);
         BottomUpAutomaton chart = irtg.parse(["string": words]);
         chart.makeAllRulesExplicit();
-
-        assert chart.accepts(parseTree("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"));
-        assert chart.accepts(parseTree("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))"));
-
-        assertEquals(2, chart.countTrees());
+        
+        assertEquals(new HashSet([parseTree("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"),
+                                  parseTree("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))")]),
+                          chart.language());
     }
 
     @Test
@@ -73,12 +72,44 @@ r2 -> S
         chart.makeAllRulesExplicit();
 
         chart.reduceBottomUp();
+        
+        assertEquals(new HashSet([parseTree("r1(r2,r1(r2,r2))"), parseTree("r1(r1(r2,r2),r2)")]),
+                     chart.language());
     }
-    
+
     @Test
     public void testEM() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        irtg.trainEM(new StringReader(PCFG_EMTRAIN_STR));
+        ParsedCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        irtg.trainEM(pco);
+        
+        assert true;
+    }
+    
+    @Test
+    public void testParseCorpus() {
+       InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        ParsedCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        assertEquals(3, pco.getAllInstances().size());
+    }
+    
+    @Test
+    public void testSerializeParsedCorpus() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        ParsedCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        
+        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
+        pco.write(ostream);
+        ostream.flush();
+
+        byte[] buf = ostream.toByteArray();
+
+        ByteArrayInputStream istream = new ByteArrayInputStream(buf);
+        ParsedCorpus copy = ParsedCorpus.read(istream);
+        istream.close();
+        
+        irtg.trainEM(copy);
+//        System.err.println("after EM: " + irtg.getAutomaton());
         
         assert true;
     }
