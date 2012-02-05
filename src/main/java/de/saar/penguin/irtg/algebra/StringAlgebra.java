@@ -135,15 +135,6 @@ public class StringAlgebra implements Algebra<List<String>> {
             return getRulesTopDownFromExplicit(label, parentState);
         }
 
-//        @Override
-//        public int getArity(String label) {
-//            if( label.equals(CONCAT)) {
-//                return 2;
-//            } else {
-//                return 0;
-//            }
-//        }
-
         @Override
         public Set<Span> getFinalStates() {
             return finalStates;
@@ -151,7 +142,6 @@ public class StringAlgebra implements Algebra<List<String>> {
     }
 
     static class Span implements Serializable {
-
         public int start, end;
 
         public Span(int start, int end) {
@@ -184,7 +174,9 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         @Override
         public int hashCode() {
-            int hash = 7;
+            int hash = 3;
+            hash = 23 * hash + this.start;
+            hash = 23 * hash + this.end;
             return hash;
         }
     }

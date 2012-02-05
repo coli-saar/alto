@@ -71,10 +71,10 @@ void automatonRule() :
 }
 {
     (label=<NAME>.image "(" childStates=StateList() ")" "->" parentState=State()) {
-      lastSeenRule = automaton.addRule(label, childStates, parentState);
+      lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
     }
     | (label=<NAME>.image "->" parentState=State()) {
-      lastSeenRule = automaton.addRule(label, new ArrayList<String>(), parentState);
+      lastSeenRule = automaton.addRule(label.intern(), new ArrayList<String>(), parentState);
     }
 
 }
@@ -90,16 +90,17 @@ List<String> StateList() :
 
 String State() :
 {
-  String state;
+  String state, internedState;
   String fin_mark = null;
 }
 {
   state = <NAME>.image (fin_mark = <FIN_MARK>.image)* {
+    internedState = state.intern();
     if( fin_mark != null ) {
-      automaton.addFinalState(state);
+      automaton.addFinalState(internedState);
     }
 
-    return state;
+    return internedState;
   }
 }
 

@@ -121,11 +121,11 @@ void AutomatonRule() :
 }
 {
     (label=<NAME>.image "(" childStates=StateList() ")" "->" parentState=State()) {
-      lastSeenRule = automaton.addRule(label, childStates, parentState);
+      lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
       lastSeenTerminal = label;
     }
     | (label=<NAME>.image "->" parentState=State()) {
-      lastSeenRule = automaton.addRule(label, new ArrayList<String>(), parentState);
+      lastSeenRule = automaton.addRule(label.intern(), new ArrayList<String>(), parentState);
       lastSeenTerminal = label;
     }
 
@@ -148,10 +148,10 @@ String State() :
 {
   state = <NAME>.image (fin_mark = <FIN_MARK>.image)* {
     if( fin_mark != null ) {
-      automaton.addFinalState(state);
+      automaton.addFinalState(state.intern());
     }
 
-    return state;
+    return state.intern();
   }
 }
 
@@ -200,14 +200,14 @@ Term Term() :
                (subterm = Term() { subterms.add(subterm); })
                ("," subterm = Term() { subterms.add(subterm); })*
         	 ")" {
-		return new Compound(label.image, subterms);
+		return new Compound(label.image.intern(), subterms);
 	}
 
   | label = <NAME> {
-	  return new Constant(label.image);
+	  return new Constant(label.image.intern());
   }
 
   | label = <VARIABLE> {
-  	  return new Variable(label.image);
+  	  return new Variable(label.image.intern());
   }
 }

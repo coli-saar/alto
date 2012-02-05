@@ -198,7 +198,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      * 
      * @return 
      */
-    public Map<String, Map<List<State>, Set<Rule<State>>>> getAllRules() {
+    private Map<String, Map<List<State>, Set<Rule<State>>>> getAllRules() {
         Map<String, Map<List<State>, Set<Rule<State>>>> ret = new HashMap<String, Map<List<State>, Set<Rule<State>>>>();
 
         makeAllRulesExplicit();
