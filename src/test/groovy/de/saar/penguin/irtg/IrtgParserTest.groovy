@@ -102,6 +102,17 @@ r12 -> P
         assertEquals( irtg.getAutomaton().getRulesTopDown("r5", "VP").iterator().next().getWeight(), 0.4, 0.001);
         assertEquals( irtg.getAutomaton().getRulesTopDown("r1", "S").iterator().next().getWeight(), 1.0, 0.001);
     }
+    
+    @Test
+    public void testQuotedName() {
+        String grammarstring = '''
+            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
+
+            a -> Foo [i] 'foo bar'
+        ''';
+
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+    }
 
     @Test(expected=ParseException.class)
     public void testIllegalInterpretation() {
