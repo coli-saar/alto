@@ -90,7 +90,7 @@ class LambdaTermTest {
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
         BottomUpAutomaton auto = alg.decompose(geo);
 	checkAllTermsEquals(auto, geo, false);
-//        System.err.println("argmin: " + auto);
+        //        System.err.println("argmin: " + auto);
     }
 
 
@@ -100,10 +100,10 @@ class LambdaTermTest {
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
         BottomUpAutomaton auto = alg.decompose(geo);
 	checkAllTermsEquals(auto, geo, false);
-//        System.err.println("conj: " + auto);
+        //        System.err.println("conj: " + auto);
     }
 
-//    @Test
+    //    @Test
     public void splitlongGeoConj(){
 	LambdaTerm geo = p("(argmax \$0 (and (city:t \$0) (exists \$1 (and (state:t \$1) (next_to:t \$1 (argmax \$2 (state:t \$2) (size:i \$2))) (loc:t \$0 \$1)))) (size:i \$0))");
 	LambdaTermAlgebra alg = new LambdaTermAlgebra();
@@ -114,23 +114,23 @@ class LambdaTermTest {
     public void splitGeoAll(){
        
         try {
-                LambdaTermAlgebra alg = new LambdaTermAlgebra();
-		BufferedReader inter = new BufferedReader(new FileReader("examples/geolambda"));
-		String zeile = null;
-		while ((zeile = inter.readLine()) != null) {
-                        System.out.println(zeile);
-			LambdaTerm geo = p(zeile);
-                        BottomUpAutomaton auto = alg.decompose(geo);
-                        checkAllTermsEquals(auto, geo, false);
-		}
+            LambdaTermAlgebra alg = new LambdaTermAlgebra();
+            BufferedReader inter = new BufferedReader(new FileReader("examples/geolambda"));
+            String zeile = null;
+            while ((zeile = inter.readLine()) != null) {
+                System.out.println(zeile);
+                LambdaTerm geo = p(zeile);
+                BottomUpAutomaton auto = alg.decompose(geo);
+                checkAllTermsEquals(auto, geo, false);
+            }
 	} catch (IOException e) {
-		e.printStackTrace();
+            e.printStackTrace();
 	} 
 
-      /*  LambdaTermAlgebra alg = new LambdaTermAlgebra();
+        /*  LambdaTermAlgebra alg = new LambdaTermAlgebra();
 	LambdaTerm geo = p("(sum \$0 (state:t \$0) (area:i \$0))");
-                       BottomUpAutomaton auto = alg.decompose(geo);
-                      checkAllTermsEquals(auto, geo, false); */
+        BottomUpAutomaton auto = alg.decompose(geo);
+        checkAllTermsEquals(auto, geo, false); */
 	//System.out.println("All");
 	
 
@@ -141,7 +141,7 @@ class LambdaTermTest {
 	//System.out.println(alg.decompose(geo));
 	//checkAllTermsEquals(auto, geo, true);
     }
-
+    
     private static LambdaTerm a(f, LambdaTerm... a) {
         return LambdaTerm.apply(f,Arrays.asList(a));
     }
@@ -180,7 +180,7 @@ class LambdaTermTest {
             foundSet.add(eval);
         }
         
-       assertEquals(reducedSet, foundSet);
+        assertEquals(reducedSet, foundSet);
 
 
     }

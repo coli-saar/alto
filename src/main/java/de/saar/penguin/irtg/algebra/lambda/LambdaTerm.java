@@ -4,9 +4,11 @@
  */
 package de.saar.penguin.irtg.algebra.lambda;
 
+import com.google.common.base.Predicate;
 import de.saar.basic.Pair;
-import de.saar.basic.tree.Tree;
-import de.saar.basic.tree.TreeVisitor;
+import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeVisitor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -29,8 +31,18 @@ public class LambdaTerm {
     private static class LambdaTermNode {
 
         public Kind kind;
-        public String x = "";
-        public String type = "";
+        public String x;
+        public String type;
+
+        public LambdaTermNode(Kind kind, String x, String type) {
+            this.kind = kind;
+            this.x = x;
+            this.type = type;
+        }
+
+        public LambdaTermNode() {
+            this(null, "", "");
+        }
 
         @Override
         public String toString() {
@@ -67,13 +79,14 @@ public class LambdaTerm {
      */
     private LambdaTerm(Tree<LambdaTermNode> tree) {
         this.tree = tree;
-        this.findHighestVarName();
-        for (String node2 :tree.getNodesInDfsOrder()) {
-                    if (tree.getLabel(node2).kind.equals(Kind.CONSTANT)) {
-                        hasCons = true;
-                    }
-                }
+        findHighestVarName();
 
+        hasCons = tree.some(new Predicate<LambdaTermNode>() {
+
+            public boolean apply(LambdaTermNode t) {
+                return t.kind.equals(Kind.CONSTANT);
+            }
+        });
     }
 
     /**
@@ -81,17 +94,8 @@ public class LambdaTerm {
      * @param x  the name of the constant
      */
     public static LambdaTerm constant(String x, String type) {
-        // LambdaTerm ret = new LambdaTerm(Kind.CONSTANT);
-        // ret.tree = new Tree<LambdaTermNode>();
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.CONSTANT;
-        label.x = x;
-        label.type = type;
-        //(Kind.CONSTANT, x);
-        tree.addNode(label, null);
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.CONSTANT, x, type), new ArrayList<Tree>());
         return new LambdaTerm(tree);
-        //return ret;
     }
 
     /**
@@ -99,12 +103,7 @@ public class LambdaTerm {
      * @param x  the name of the variable
      */
     public static LambdaTerm variable(String x) {
-        //LambdaTerm ret = new LambdaTerm(Kind.VARIABLE);
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.VARIABLE;
-        label.x = x;
-        tree.addNode(label, null);
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.VARIABLE, x, ""), new ArrayList<Tree>());
         return new LambdaTerm(tree);
     }
 
@@ -114,15 +113,7 @@ public class LambdaTerm {
      *         sub the lambda term within the scope of the lambda
      */
     public static LambdaTerm lambda(String x, LambdaTerm sub) {
-        //LambdaTerm ret = new LambdaTerm(Kind.LAMBDA);
-
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.LAMBDA;
-        label.x = x;
-        tree.addNode(label, null);
-        tree.addSubTree(sub.getTree(), tree.getRoot());
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.LAMBDA, x, ""), new Tree[]{sub.getTree()});
         return new LambdaTerm(tree);
     }
 
@@ -132,27 +123,20 @@ public class LambdaTerm {
      *         arguments    the lambda terms being the arguments to the functor
      */
     public static LambdaTerm apply(LambdaTerm functor, List<LambdaTerm> arguments) {
-        //LambdaTerm ret = new LambdaTerm(Kind.APPLY);
-        // merge trees
-        if (arguments.isEmpty()) {
-            return functor;
-        } else {
-            Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-            LambdaTermNode label = new LambdaTermNode();
-            label.kind = Kind.APPLY;
-            tree.addNode(label, null);
-            tree.addSubTree(functor.getTree(), tree.getRoot());
-            for (LambdaTerm argument : arguments) {
-                tree.addSubTree(argument.getTree(), tree.getRoot());
-            }
-//        ret.x = "";
-            return new LambdaTerm(tree);
+        List<Tree> subtrees = new ArrayList<Tree>();
+
+        subtrees.add(functor.getTree());
+        for (LambdaTerm arg : arguments) {
+            subtrees.add(arg.getTree());
         }
+
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.APPLY, "", ""), subtrees);
+        return new LambdaTerm(tree);
     }
 
     /**
      * Constructs a new LambdaTerm of type apply (application)
-     * @param   functor the lambda teerm working as the functor
+     * @param   functor the lambda term working as the functor
      *         arguments  the lambda terms being the arguments to the functor
      */
     public static LambdaTerm apply(LambdaTerm functor, LambdaTerm... arguments) {
@@ -165,16 +149,7 @@ public class LambdaTerm {
      *         sub the lambda term within the scope of the quantifier
      */
     public static LambdaTerm exists(String x, LambdaTerm sub) {
-        //LambdaTerm ret = new LambdaTerm(Kind.EXISTS);
-//        ret.x = x;
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.EXISTS;
-        label.x = x;
-
-        tree.addNode(label, null);
-        tree.addSubTree(sub.getTree(), tree.getRoot());
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.EXISTS, x, ""), new Tree[]{sub.getTree()});
         return new LambdaTerm(tree);
     }
 
@@ -183,17 +158,13 @@ public class LambdaTerm {
      * @param subs the lambda term working as conjuncts
      */
     public static LambdaTerm conj(List<LambdaTerm> subs) {
-        //LambdaTerm ret = new LambdaTerm(Kind.CONJ);
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-//        ret.x = "";
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.CONJ;
-        tree.addNode(label, null);
+        List<Tree> subtrees = new ArrayList<Tree>();
 
-        for (LambdaTerm argument : subs) {
-            tree.addSubTree(argument.getTree(), tree.getRoot());
+        for (LambdaTerm arg : subs) {
+            subtrees.add(arg.getTree());
         }
+
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.CONJ, "", ""), subtrees);
         return new LambdaTerm(tree);
     }
 
@@ -202,17 +173,13 @@ public class LambdaTerm {
      * @param subs the lambda term working as conjuncts
      */
     public static LambdaTerm disj(List<LambdaTerm> subs) {
-        //LambdaTerm ret = new LambdaTerm(Kind.CONJ);
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-//        ret.x = "";
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.DISJ;
-        tree.addNode(label, null);
+        List<Tree> subtrees = new ArrayList<Tree>();
 
-        for (LambdaTerm argument : subs) {
-            tree.addSubTree(argument.getTree(), tree.getRoot());
+        for (LambdaTerm arg : subs) {
+            subtrees.add(arg.getTree());
         }
+
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.DISJ, "", ""), subtrees);
         return new LambdaTerm(tree);
     }
 
@@ -231,97 +198,44 @@ public class LambdaTerm {
      *         sub2 the second lambda term within the scope of the quantifier
      */
     public static LambdaTerm argmax(String x, LambdaTerm sub1, LambdaTerm sub2) {
-        // LambdaTerm ret = new LambdaTerm(Kind.ARGMAX);
-//        ret.x = x;
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.ARGMAX;
-        label.x = x;
-        tree.addNode(label, null);
-        tree.addSubTree(sub1.getTree(), tree.getRoot());
-        tree.addSubTree(sub2.getTree(), tree.getRoot());
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.ARGMAX, x, ""), new Tree[]{sub1.getTree(), sub2.getTree()});
         return new LambdaTerm(tree);
     }
 
-    public static LambdaTerm count(String x, LambdaTerm sub){
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.COUNT;
-        label.x = x;
-        tree.addNode(label, null);
-        tree.addSubTree(sub.getTree(), tree.getRoot());
+    public static LambdaTerm count(String x, LambdaTerm sub) {
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.COUNT, x, ""), new Tree[]{sub.getTree()});
         return new LambdaTerm(tree);
     }
 
-        public static LambdaTerm sum(String x, LambdaTerm sub1, LambdaTerm sub2){
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.SUM;
-        label.x = x;
-        tree.addNode(label, null);
-        tree.addSubTree(sub1.getTree(), tree.getRoot());
-        tree.addSubTree(sub2.getTree(), tree.getRoot());
+    public static LambdaTerm sum(String x, LambdaTerm sub1, LambdaTerm sub2) {
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.SUM, x, ""), new Tree[]{sub1.getTree(), sub2.getTree()});
         return new LambdaTerm(tree);
     }
 
-        public static LambdaTerm lessThan( LambdaTerm sub1, LambdaTerm sub2){
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.LESSTHAN;
-        tree.addNode(label, null);
-        tree.addSubTree(sub1.getTree(), tree.getRoot());
-        tree.addSubTree(sub2.getTree(), tree.getRoot());
+    public static LambdaTerm lessThan(LambdaTerm sub1, LambdaTerm sub2) {
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.LESSTHAN, "", ""), new Tree[]{sub1.getTree(), sub2.getTree()});
         return new LambdaTerm(tree);
     }
 
-         public static LambdaTerm greaterThan( LambdaTerm sub1, LambdaTerm sub2){
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.GREATERTHAN;
-         tree.addNode(label, null);
-        tree.addSubTree(sub1.getTree(), tree.getRoot());
-        tree.addSubTree(sub2.getTree(), tree.getRoot());
+    public static LambdaTerm greaterThan(LambdaTerm sub1, LambdaTerm sub2) {
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.GREATERTHAN, "", ""), new Tree[]{sub1.getTree(), sub2.getTree()});
         return new LambdaTerm(tree);
     }
 
-        public static LambdaTerm equalTo( LambdaTerm sub1, LambdaTerm sub2){
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.EQUALTO;
-         tree.addNode(label, null);
-        tree.addSubTree(sub1.getTree(), tree.getRoot());
-        tree.addSubTree(sub2.getTree(), tree.getRoot());
+    public static LambdaTerm equalTo(LambdaTerm sub1, LambdaTerm sub2) {
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.EQUALTO, "", ""), new Tree[]{sub1.getTree(), sub2.getTree()});
         return new LambdaTerm(tree);
     }
 
-         public static LambdaTerm not(LambdaTerm sub){
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.NOT;
-         tree.addNode(label, null);
-        tree.addSubTree(sub.getTree(), tree.getRoot());
+    public static LambdaTerm not(LambdaTerm sub) {
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.NOT, "", ""), new Tree[]{sub.getTree()});
         return new LambdaTerm(tree);
     }
 
-
-        public static LambdaTerm the(String x, LambdaTerm sub){
-        // merge trees
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.NOT;
-        label.x = x;
-        tree.addNode(label, null);
-        tree.addSubTree(sub.getTree(), tree.getRoot());
+    public static LambdaTerm the(String x, LambdaTerm sub) {
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.THE, x, ""), new Tree[]{sub.getTree()});
         return new LambdaTerm(tree);
     }
-
 
     /**
      * Constructs a new LambdaTerm of type argmin (lambda abstraction)
@@ -330,41 +244,39 @@ public class LambdaTerm {
      *         sub2 the second lambda term within the scope of the quantifier
      */
     public static LambdaTerm argmin(String x, LambdaTerm sub1, LambdaTerm sub2) {
-        //LambdaTerm ret = new LambdaTerm(Kind.ARGMIN);
-//        ret.x = x;
-        Tree<LambdaTermNode> tree = new Tree<LambdaTermNode>();
-        LambdaTermNode label = new LambdaTermNode();
-        label.kind = Kind.ARGMIN;
-        label.x = x;
-        tree.addNode(label, null);
-        tree.addSubTree(sub1.getTree(), tree.getRoot());
-        tree.addSubTree(sub2.getTree(), tree.getRoot());
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.ARGMIN, x, ""), new Tree[]{sub1.getTree(), sub2.getTree()});
         return new LambdaTerm(tree);
     }
 
     public int findHighestVarName() {
-        int varName = -1;
-        for (String node : this.tree.getNodesInDfsOrder()) {
-            if (this.tree.getLabel(node).kind.equals(Kind.VARIABLE)) {
+        int varName = tree.dfs(new TreeVisitor<LambdaTermNode, Void, Integer>() {
+
+            @Override
+            public Integer combine(Tree<LambdaTermNode> node, Integer[] childrenValues) {
                 int temp = -1;
+
                 try {
-                    temp = Integer.parseInt(this.tree.getLabel(node).x.substring(1));
+                    temp = Integer.parseInt(node.getLabel().x.substring(1));
                 } catch (NumberFormatException nfe) {
                     //System.out.println("Kann "+this.tree.getLabel(node).x+" nicht casten");
                 }
-                if (temp > varName) {
-                    varName = temp;
+
+                for (int i = 0; i < childrenValues.length; i++) {
+                    if (childrenValues[i] > temp) {
+                        temp = childrenValues[i];
+                    }
                 }
 
+                return temp;
             }
-        }
+        });
 
-        this.genvarNext = varName + 1;
+        genvarNext = varName + 1;
         return varName;
     }
 
     // Tree visitor to find unbound variables
-    private static class CollectingTreeVisitor extends TreeVisitor<Set<String>, Void> {
+    private static class CollectingTreeVisitor extends TreeVisitor<LambdaTermNode, Set<String>, Void> {
 
         Set<String> unbound;
         Tree<LambdaTermNode> workingCopy;
@@ -375,11 +287,12 @@ public class LambdaTerm {
         }
 
         @Override
-        public Set<String> visit(String node, Set<String> data) {
+        public Set<String> visit(Tree<LambdaTermNode> node, Set<String> data) {
             Set<String> ret = data;
-            Kind typ = workingCopy.getLabel(node).kind;
-            String value = workingCopy.getLabel(node).x;
-            if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS || typ == Kind.THE || typ == Kind.SUM || typ == Kind.COUNT ) {
+
+            Kind typ = node.getLabel().kind;
+            String value = node.getLabel().x;
+            if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS || typ == Kind.THE || typ == Kind.SUM || typ == Kind.COUNT) {
                 ret.add(value);
             }
             if (typ == Kind.VARIABLE && !data.contains(value)) {
@@ -391,7 +304,7 @@ public class LambdaTerm {
         @Override
         public Set<String> getRootValue() {
             Set<String> ret = new HashSet<String>();
-            LambdaTermNode label = workingCopy.getLabel(workingCopy.getRoot());
+            LambdaTermNode label = workingCopy.getLabel();
             Kind typ = label.kind;
             if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS || typ == Kind.THE || typ == Kind.SUM || typ == Kind.COUNT) {
                 ret.add(label.x);
@@ -404,63 +317,13 @@ public class LambdaTerm {
      * Finds unbound variables occurring in the term
      * @return a list of variable names 
      */
-    public Set<String> findUnboundVariables() {
+    private static Set<String> findUnboundVariables(Tree<LambdaTermNode> tree) {
         Set<String> ret = new HashSet<String>();
         Set<String> start = new HashSet<String>();
 
-        final Tree<LambdaTermNode> workingCopy = this.tree;
-        start.add(workingCopy.getLabel(workingCopy.getRoot()).x);
-        CollectingTreeVisitor tv = new CollectingTreeVisitor(ret, workingCopy);
-        this.tree.dfs(tv);
-        return ret;
-
-
-    }
-
-    /**
-     *
-     * @param varName variables to be replaced
-     * @param content content which is replacing the variables
-     * @param treeToWorkOn The tree on which this operation is performed starting
-     *                      with the lambda that binds the variable
-     * @return a tree with all variables replaced by the content
-     */
-    private Tree<LambdaTermNode> substitute(final String varName, final Tree<LambdaTermNode> content, final Tree<LambdaTermNode> treeToWorkOn) {
-
-        //    System.out.println("Ersetze "+varName+" in "+treeToWorkOn+" durch "+content);
-        Tree<LambdaTermNode> ret = new Tree<LambdaTermNode>();
-        TreeVisitor<String, Tree<LambdaTermNode>> tv = new TreeVisitor<String, Tree<LambdaTermNode>>() {
-
-            @Override
-            public String getRootValue() {
-                return treeToWorkOn.getRoot();
-            }
-
-            @Override
-            public Tree<LambdaTermNode> combine(String node, List<Tree<LambdaTermNode>> childValues) {
-                Tree<LambdaTermNode> ret = new Tree<LambdaTermNode>();
-                // replace node
-                if (treeToWorkOn.getLabel(node).x.equals(varName) && treeToWorkOn.getLabel(node).kind == Kind.VARIABLE) {
-                    //ret = content;
-                    ret = content;
-                } else {
-                    // delete upmost node (lamda)
-                    // should not be more than 1 child
-                    if (node.equals(treeToWorkOn.getRoot())) {
-                        ret = childValues.get(0);
-                    } // do not replace
-                    else {
-                        LambdaTermNode label = treeToWorkOn.getLabel(node);
-                        ret.addNode(label, ret.getRoot());
-                        for (Tree<LambdaTermNode> child : childValues) {
-                            ret.addSubTree(child, child.getRoot());
-                        }
-                    }
-                }
-                return ret;
-            }
-        };
-        ret = treeToWorkOn.dfs(tv);
+        start.add(tree.getLabel().x);
+        CollectingTreeVisitor tv = new CollectingTreeVisitor(ret, tree);
+        tree.dfs(tv);
         return ret;
     }
 
@@ -470,78 +333,55 @@ public class LambdaTerm {
      * @return the lambda term after one time reduction
      */
     private LambdaTerm beta() {
-
-        // beginning tree visitor
-        TreeVisitor<String, Tree<LambdaTermNode>> tv = new TreeVisitor<String, Tree<LambdaTermNode>>() {
+        Tree<LambdaTermNode> reduced = tree.dfs(new TreeVisitor<LambdaTermNode, Void, Tree<LambdaTermNode>>() {
 
             @Override
-            public String getRootValue() {
-                return getTree().getRoot();
-            }
-
-            @Override
-            public Tree<LambdaTermNode> combine(String parent, List<Tree<LambdaTermNode>> childValues) {
-                LambdaTermNode parentLabel = getTree().getLabel(parent);
-                Tree<LambdaTermNode> ret = new Tree<LambdaTermNode>();
+            public Tree<LambdaTermNode> combine(Tree<LambdaTermNode> node, Tree<LambdaTermNode>[] childrenValues) {
+                LambdaTermNode parentLabel = node.getLabel();
 
                 // if we have an APPLY node
                 if (parentLabel.kind == Kind.APPLY) {
-                    // if there is a variable to fill
-                    Tree<LambdaTermNode> functor = childValues.get(0);
-                    LambdaTermNode label = functor.getLabel(functor.getRoot());
-                    if (label.kind == Kind.LAMBDA
-                            || label.kind == Kind.ARGMAX
-                            || label.kind == Kind.ARGMIN
-                            || label.kind == Kind.EXISTS
-                            || label.kind == Kind.THE
-                            || label.kind == Kind.COUNT
-                            || label.kind == Kind.SUM) {
+                    final Tree<LambdaTermNode> functor = childrenValues[0];
 
-                        // if there is more than one child, use the first argument
-                        // and create a new apply node
-                        if (childValues.size() > 2) {
-                            ret = new Tree<LambdaTermNode>();
-                            LambdaTermNode newLabel = new LambdaTermNode();
-                            newLabel.kind = Kind.APPLY;
-                            ret.addNode(newLabel, null);
-                            ret.addSubTree(substitute(label.x, childValues.get(1), functor), ret.getRoot());
-                            for (Tree<LambdaTermNode> argument : childValues.subList(2, childValues.size())) {
-                                ret.addSubTree(argument, ret.getRoot());
+                    switch (functor.getLabel().kind) {
+                        case LAMBDA:
+                        case ARGMAX:
+                        case ARGMIN:
+                        case EXISTS:
+                        case THE:
+                        case COUNT:
+                        case SUM:
+                            Tree<LambdaTermNode> result = functor.getChildren().get(0).substitute(new Predicate<Tree<LambdaTermNode>>() {
+
+                                public boolean apply(Tree<LambdaTermNode> node) {
+                                    return node.getLabel().kind == Kind.VARIABLE && node.getLabel().x.equals(functor.getLabel().x);
+                                }
+                            }, childrenValues[1]);
+
+                            if (childrenValues.length > 2) {
+                                List<Tree<LambdaTermNode>> arguments = new ArrayList<Tree<LambdaTermNode>>();
+                                arguments.add(result);
+                                for (int i = 2; i < childrenValues.length; i++) {
+                                    arguments.add(childrenValues[i]);
+                                }
+
+                                return Tree.create(new LambdaTermNode(Kind.APPLY, "", ""), arguments);
+                            } else {
+                                return result;
                             }
 
-                        } else {
-                            // replace variables with first arguments
-                            ret = substitute(label.x, childValues.get(1), functor);
-                        }
-
-                    } // else: no variable to fill - just make new Tree
-                    else {
-
-                        LambdaTermNode p = new LambdaTermNode();
-                        p.kind = Kind.APPLY;
-                        // check hier
-                        ret.addNode(p, ret.getRoot());
-
-                        for (Tree<LambdaTermNode> child : childValues) {
-                            ret.addSubTree(child, ret.getRoot());
-                        }
+                        default:
+                            // else: no variable to fill - just make new Tree
+                            return Tree.create(parentLabel, childrenValues);
                     }
-                } // else: node is not an apply node - just pass up as Tree
-                else {
-                    ret = new Tree<LambdaTermNode>();
-                    ret.addNode(parentLabel, null);
-                    // check hier
-                    for (Tree<LambdaTermNode> child : childValues) {
-                        ret.addSubTree(child, ret.getRoot());
-                    }
+                } else {
+                    // else: node is not an apply node - just pass up as Tree
+                    return Tree.create(parentLabel, childrenValues);
                 }
-                return ret;
             }
-        };
-        // end tree visitor
-        LambdaTerm ret = new LambdaTerm(getTree().dfs(tv));
-        // System.out.println(this.printTrue()+" wurde reduziert zu "+ret.printTrue());
-        return ret;
+        });
+
+        return new LambdaTerm(reduced);
     }
 
     /**
@@ -553,7 +393,7 @@ public class LambdaTerm {
 
         Boolean t = true;
         while (t == true) {
-         //   System.out.println("Reduziere "+old);
+            //   System.out.println("Reduziere "+old);
             LambdaTerm temp = old.beta();
             //if (temp.getTree().equals(old.getTree())) {
             if (temp.equals(old)) {
@@ -568,48 +408,55 @@ public class LambdaTerm {
     }
 
     // renames variables making the names start at a given number
-    public LambdaTerm alphaConvert(final int newStart){
+    // TODO - in term like (\x x) (\x x), only one new name is assigned to all occurrences of x.
+    // Method should assign new names for each x top-down at the variable binders, and these should
+    // then be valid only in the subtree below the binder.
+    public LambdaTerm alphaConvert(final int newStart) {
+        Tree<LambdaTermNode> ret = tree.dfs(new TreeVisitor<LambdaTermNode, Void, Tree<LambdaTermNode>>() {
 
-        final Tree<LambdaTermNode> treeToWorkOn = this.tree;
-
-        TreeVisitor<String, Tree<LambdaTermNode>> tv = new TreeVisitor<String, Tree<LambdaTermNode>>() {
-            Map<String,String> newNames = new HashMap<String,String>();
+            Map<String, String> newNames = new HashMap<String, String>();
             int internalGenvar = newStart;
 
             @Override
-            public String getRootValue() {
-                return treeToWorkOn.getRoot();
-            }
+            public Tree<LambdaTermNode> combine(Tree<LambdaTermNode> node, Tree<LambdaTermNode>[] childrenValues) {
+                LambdaTermNode label = node.getLabel();
 
-            public Tree<LambdaTermNode> combine(String parent, List<Tree<LambdaTermNode>> childValues){
-                Kind typ = treeToWorkOn.getLabel(parent).kind;
-                Tree<LambdaTermNode> ret = new Tree<LambdaTermNode>();
-                LambdaTermNode newNode = treeToWorkOn.getLabel(parent);
-                if(typ == Kind.VARIABLE || typ == Kind.LAMBDA|| typ == Kind.ARGMAX ||typ ==  Kind.ARGMIN ||typ ==  Kind.EXISTS || typ == Kind.COUNT ||typ ==  Kind.SUM ||typ ==  Kind.THE){
-                    // in new Names nachschauen
-                    String newVarName;
-                    if (!newNames.containsKey(treeToWorkOn.getLabel(parent).x)) {
-                        newVarName = "$"+internalGenvar;
-                       this.newNames.put(treeToWorkOn.getLabel(parent).x, newVarName);
-                       internalGenvar++;
-                    }
-                    newNode = new LambdaTermNode();
-                    newNode.kind = typ;
-                    newNode.x = newNames.get(treeToWorkOn.getLabel(parent).x);
-                    newNode.type ="";
+                switch (getTree().getLabel().kind) {
+                    case VARIABLE:
+                    case LAMBDA:
+                    case ARGMAX:
+                    case ARGMIN:
+                    case EXISTS:
+                    case COUNT:
+                    case SUM:
+                    case THE:
+                        String newName = node.getLabel().x;
 
-                }
-                ret.addNode(newNode,null);
-                for(Tree<LambdaTermNode> child : childValues){
-                    ret.addSubTree(child,ret.getRoot());
+                        if (newNames.containsKey(newName)) {
+                            newName = newNames.get(newName);
+                        } else {
+                            newName = "$" + internalGenvar;
+                            newNames.put(node.getLabel().x, newName);
+                            internalGenvar++;
+                        }
+
+                        label.x = newName;
                 }
 
-                return ret;
+                return Tree.create(label, childrenValues);
             }
+        });
 
-        };
-        Tree<LambdaTermNode> newTre = tree.dfs(tv);
-        return new LambdaTerm(newTre);
+
+        return new LambdaTerm(ret);
+    }
+
+    private static Tree<LambdaTermNode> variableT(String x) {
+        return Tree.create(new LambdaTermNode(Kind.VARIABLE, x, ""), new Tree[]{});
+    }
+
+    private static Tree<LambdaTermNode> lambdaT(String x, Tree<LambdaTermNode> sub) {
+        return Tree.create(new LambdaTermNode(Kind.LAMBDA, x, ""), new Tree[]{sub});
     }
 
     /**
@@ -619,125 +466,46 @@ public class LambdaTerm {
      * TODO - Return List of Pairs for performance resons
      */
     public Map<LambdaTerm, LambdaTerm> getDecompositions() {
-        Map<LambdaTerm, LambdaTerm> ret = new HashMap<LambdaTerm, LambdaTerm>();
-        Tree<LambdaTermNode> workingCopy = this.tree.copy();
+        final Map<LambdaTerm, LambdaTerm> ret = new HashMap<LambdaTerm, LambdaTerm>();
+        getTree().dfs(new TreeVisitor<LambdaTermNode, Void, Void>() {
 
-        // nearly every subtree can be extracted
-        List<String> nodes = this.tree.getNodesInDfsOrder();
+            boolean first = true;
 
-        Collections.reverse(nodes);
+            @Override
+            public Void visit(final Tree<LambdaTermNode> subtree, Void data) {
+                if (!first || subtree.getLabel().kind != Kind.LAMBDA) {
+                    first = false;
 
-        boolean first = true;
+                    findHighestVarName();
+                    String newVariableNameForNodeToReplaceHole = genvar();
+                    List<String> unbound = new ArrayList<String>(findUnboundVariables(subtree));
 
-        for (String node : nodes) {
-            // do not extract lambdas appearng at the root
-            if (first == true && this.tree.getLabel(node).kind == Kind.LAMBDA) {
-                // do nothing
-            } else {
-
-                // from now on, everything can be extracted
-                first = false;
-
-                // extract subtree
-                LambdaTerm extracted = new LambdaTerm(workingCopy.subtree(node));
-                // System.out.println("Extrahiere "+extracted.tree);
-
-                // prepare context
-                // variable of the hole
-                this.findHighestVarName();
-                String newVariableNameForNodeToReplaceHole = genvar();
-
-                // new Lambda node for hole
-                LambdaTermNode newLambdaNodeForHole = new LambdaTermNode();
-                newLambdaNodeForHole.kind = Kind.LAMBDA;
-                newLambdaNodeForHole.x = newVariableNameForNodeToReplaceHole;
-
-                // make new tree with new lambda on top
-                Tree<LambdaTermNode> context = new Tree<LambdaTermNode>();
-                context.addNode(newLambdaNodeForHole, null);
-
-                // prepare the hole which is going to replace the extracted subtree
-                Tree<LambdaTermNode> treeToReplaceHole = new Tree<LambdaTermNode>();
-
-                // prepare extracted Tree
-                // find unbound variables in extracted LambdaTerm
-                Set<String> unbound = extracted.findUnboundVariables();
-
-                LambdaTermNode nodeWithVarToReplaceHole = new LambdaTermNode();
-                nodeWithVarToReplaceHole.kind = Kind.VARIABLE;
-                nodeWithVarToReplaceHole.x = newVariableNameForNodeToReplaceHole;
-
-                // if there are no unbound variables
-                if (unbound.isEmpty()) {
-                    // contextTree just new Variable
-                    treeToReplaceHole.addNode(nodeWithVarToReplaceHole, null);
-
-                } // there are unbound variables
-                else {
-                    String lastNode = null;
-                    LambdaTermNode applyNodeForContext = new LambdaTermNode();
-                    applyNodeForContext.kind = Kind.APPLY;
-                    // add it to root of contextTree
-                    treeToReplaceHole.addNode(applyNodeForContext, null);
-                    String contextTreeRoot = treeToReplaceHole.getRoot();
-
-                    //  node which hast to replace the hole
-                    treeToReplaceHole.addNode(nodeWithVarToReplaceHole, contextTreeRoot);
-
-                    // surrounding for extracted tree
-                    Tree<LambdaTermNode> tempExtractedTree = new Tree<LambdaTermNode>();
-
+                    // build context
+                    Tree<LambdaTermNode> hole = variableT(newVariableNameForNodeToReplaceHole);
                     for (String var : unbound) {
-                        // prepare a new lambda with that variable for the extracted tree
-                        LambdaTermNode newLambdaForUnboundInExtracted = new LambdaTermNode();
-                        newLambdaForUnboundInExtracted.kind = Kind.LAMBDA;
-                        newLambdaForUnboundInExtracted.x = var;
-
-                        // prepare a new variable node for the contextTree
-                        LambdaTermNode newVarForUnboundToGoInContextTree = new LambdaTermNode();
-                        newVarForUnboundToGoInContextTree.kind = Kind.VARIABLE;
-                        newVarForUnboundToGoInContextTree.x = var;
-
-                        // add variable to contextTree
-                        treeToReplaceHole.addNode(newVarForUnboundToGoInContextTree, contextTreeRoot);
-
-                        // update last node
-                        lastNode = tempExtractedTree.addNode(newLambdaForUnboundInExtracted, lastNode);
+                        hole = Tree.create(new LambdaTermNode(Kind.APPLY, "", ""), new Tree[]{hole, variableT(var)});
                     }
 
-                    // now add the extracted tree under the built up tree
-                    //;
-                    tempExtractedTree.addSubTree(extracted.tree, lastNode);
+                    Tree<LambdaTermNode> context = lambdaT(newVariableNameForNodeToReplaceHole, getTree().substitute(new Predicate<Tree<LambdaTermNode>>() {
+                        public boolean apply(Tree<LambdaTermNode> t) {
+                            return t == subtree;
+                        }
+                    }, hole));
 
-                    // update lambda term
-                    extracted = new LambdaTerm(tempExtractedTree);
-
-                    //
-
+                    // build other tree
+                    Tree<LambdaTermNode> otherTree = subtree;
+                    Collections.reverse(unbound);
+                    for( String var : unbound ) {
+                        otherTree = lambdaT(var, otherTree);
+                    }
+                    
+                    ret.put(new LambdaTerm(context), new LambdaTerm(otherTree));
                 }
-                //LambdaTerm hole = variable(newVar);
-                workingCopy.replaceNode(node, treeToReplaceHole);
-                //workingCopy.replaceNode(node,hole.tree);
-
-                context.addSubTree(workingCopy, context.getRoot());
-                LambdaTerm contextTerm = new LambdaTerm(context);
-                // Replace the extracted Tree with the hole in the context tree
-
-
-                // extracted and context have to differ from original
-                // extracted tree needs at least one constant
-
-                if (!(this.equals(contextTerm) || this.equals(extracted) || extracted.hasCons == false || contextTerm.hasCons == false)) {
-
-                    ret.put(contextTerm, extracted);
-                }
-                // reset workingCopy
-                workingCopy = this.tree.copy();
+                
+                return null;
             }
-
-        }
-
-
+        });
+        
         return ret;
     }
 
@@ -819,7 +587,7 @@ public class LambdaTerm {
             // und nicht nur ein Kind.... (das sollte nicht vorkommen
             Kind typ = tree.getLabel(node).kind;
 
-            if (typ.equals(Kind.APPLY) || typ.equals(Kind.CONJ) || typ.equals(Kind.SUM) || typ.equals(Kind.DISJ) || typ.equals(Kind.ARGMIN) || typ.equals(Kind.ARGMAX) || typ.equals(Kind.EQUALTO) || typ.equals(Kind.LESSTHAN) || typ.equals(Kind.GREATERTHAN) ) {
+            if (typ.equals(Kind.APPLY) || typ.equals(Kind.CONJ) || typ.equals(Kind.SUM) || typ.equals(Kind.DISJ) || typ.equals(Kind.ARGMIN) || typ.equals(Kind.ARGMAX) || typ.equals(Kind.EQUALTO) || typ.equals(Kind.LESSTHAN) || typ.equals(Kind.GREATERTHAN)) {
                 for (String child : children) {
                     if (first) {
                         first = false;
