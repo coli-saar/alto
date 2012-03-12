@@ -73,7 +73,7 @@ class LambdaTermParserTest {
     @Test
     public void testToStringParse() {
         LambdaTerm test = p("((lambda \$f (lambda \$x (\$n \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))");
-	LambdaTerm parsed=p(test.toString());        
+	LambdaTerm parsed=p(test.toString());
 	assertEquals(test, parsed);
     }
 
@@ -99,7 +99,7 @@ class LambdaTermParserTest {
 	assertEquals(test, parsed);
     }
 
-    @Test
+    //@Test
     public void testParseGeo1() {
         LambdaTerm test = p("(lambda \$0 (and (major:t \$0) (city:t \$0) (exists \$1 (and (state:t \$1) (loc:t \$0 \$1) (loc:t (the \$2 (and (river:t \$2) (major:t \$2) (loc:t \$2 virginia:s))) \$1)))))");
 	LambdaTerm parsed=p(test.toString());        
@@ -131,7 +131,7 @@ class LambdaTermParserTest {
 
 
 
-    @Test
+//    @Test
 	public void testParseAllGeo(){
 		try {
 		BufferedReader inter = new BufferedReader(new FileReader("examples/geolambda"));

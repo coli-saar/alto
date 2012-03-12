@@ -94,7 +94,7 @@ public class LambdaTerm {
      * @param x  the name of the constant
      */
     public static LambdaTerm constant(String x, String type) {
-        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.CONSTANT, x, type), new ArrayList<Tree>());
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.CONSTANT, x, type), new ArrayList<Tree<LambdaTermNode>>());
         return new LambdaTerm(tree);
     }
 
@@ -103,7 +103,7 @@ public class LambdaTerm {
      * @param x  the name of the variable
      */
     public static LambdaTerm variable(String x) {
-        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.VARIABLE, x, ""), new ArrayList<Tree>());
+        Tree<LambdaTermNode> tree = Tree.create(new LambdaTermNode(Kind.VARIABLE, x, ""), new ArrayList<Tree<LambdaTermNode>>());
         return new LambdaTerm(tree);
     }
 
@@ -123,7 +123,7 @@ public class LambdaTerm {
      *         arguments    the lambda terms being the arguments to the functor
      */
     public static LambdaTerm apply(LambdaTerm functor, List<LambdaTerm> arguments) {
-        List<Tree> subtrees = new ArrayList<Tree>();
+        List<Tree<LambdaTermNode>> subtrees = new ArrayList<Tree<LambdaTermNode>>();
 
         subtrees.add(functor.getTree());
         for (LambdaTerm arg : arguments) {
@@ -158,7 +158,7 @@ public class LambdaTerm {
      * @param subs the lambda term working as conjuncts
      */
     public static LambdaTerm conj(List<LambdaTerm> subs) {
-        List<Tree> subtrees = new ArrayList<Tree>();
+        List<Tree<LambdaTermNode>> subtrees = new ArrayList<Tree<LambdaTermNode>>();
 
         for (LambdaTerm arg : subs) {
             subtrees.add(arg.getTree());
@@ -173,7 +173,7 @@ public class LambdaTerm {
      * @param subs the lambda term working as conjuncts
      */
     public static LambdaTerm disj(List<LambdaTerm> subs) {
-        List<Tree> subtrees = new ArrayList<Tree>();
+        List<Tree<LambdaTermNode>> subtrees = new ArrayList<Tree<LambdaTermNode>>();
 
         for (LambdaTerm arg : subs) {
             subtrees.add(arg.getTree());
@@ -252,18 +252,20 @@ public class LambdaTerm {
         int varName = tree.dfs(new TreeVisitor<LambdaTermNode, Void, Integer>() {
 
             @Override
-            public Integer combine(Tree<LambdaTermNode> node, Integer[] childrenValues) {
+            public Integer combine(Tree<LambdaTermNode> node, List<Integer> childrenValues) {
                 int temp = -1;
 
-                try {
-                    temp = Integer.parseInt(node.getLabel().x.substring(1));
-                } catch (NumberFormatException nfe) {
-                    //System.out.println("Kann "+this.tree.getLabel(node).x+" nicht casten");
+                if (node.getLabel().x.length() > 1) {
+                    try {
+                        temp = Integer.parseInt(node.getLabel().x.substring(1));
+                    } catch (NumberFormatException nfe) {
+                        //System.out.println("Kann "+this.tree.getLabel(node).x+" nicht casten");
+                    }
                 }
 
-                for (int i = 0; i < childrenValues.length; i++) {
-                    if (childrenValues[i] > temp) {
-                        temp = childrenValues[i];
+                for (int i = 0; i < childrenValues.size(); i++) {
+                    if (childrenValues.get(i) > temp) {
+                        temp = childrenValues.get(i);
                     }
                 }
 
@@ -336,12 +338,12 @@ public class LambdaTerm {
         Tree<LambdaTermNode> reduced = tree.dfs(new TreeVisitor<LambdaTermNode, Void, Tree<LambdaTermNode>>() {
 
             @Override
-            public Tree<LambdaTermNode> combine(Tree<LambdaTermNode> node, Tree<LambdaTermNode>[] childrenValues) {
+            public Tree<LambdaTermNode> combine(Tree<LambdaTermNode> node, List<Tree<LambdaTermNode>> childrenValues) {
                 LambdaTermNode parentLabel = node.getLabel();
 
                 // if we have an APPLY node
                 if (parentLabel.kind == Kind.APPLY) {
-                    final Tree<LambdaTermNode> functor = childrenValues[0];
+                    final Tree<LambdaTermNode> functor = childrenValues.get(0);
 
                     switch (functor.getLabel().kind) {
                         case LAMBDA:
@@ -356,13 +358,13 @@ public class LambdaTerm {
                                 public boolean apply(Tree<LambdaTermNode> node) {
                                     return node.getLabel().kind == Kind.VARIABLE && node.getLabel().x.equals(functor.getLabel().x);
                                 }
-                            }, childrenValues[1]);
+                            }, childrenValues.get(1));
 
-                            if (childrenValues.length > 2) {
+                            if (childrenValues.size() > 2) {
                                 List<Tree<LambdaTermNode>> arguments = new ArrayList<Tree<LambdaTermNode>>();
                                 arguments.add(result);
-                                for (int i = 2; i < childrenValues.length; i++) {
-                                    arguments.add(childrenValues[i]);
+                                for (int i = 2; i < childrenValues.size(); i++) {
+                                    arguments.add(childrenValues.get(i));
                                 }
 
                                 return Tree.create(new LambdaTermNode(Kind.APPLY, "", ""), arguments);
@@ -418,7 +420,7 @@ public class LambdaTerm {
             int internalGenvar = newStart;
 
             @Override
-            public Tree<LambdaTermNode> combine(Tree<LambdaTermNode> node, Tree<LambdaTermNode>[] childrenValues) {
+            public Tree<LambdaTermNode> combine(Tree<LambdaTermNode> node, List<Tree<LambdaTermNode>> childrenValues) {
                 LambdaTermNode label = node.getLabel();
 
                 switch (getTree().getLabel().kind) {
@@ -487,6 +489,7 @@ public class LambdaTerm {
                     }
 
                     Tree<LambdaTermNode> context = lambdaT(newVariableNameForNodeToReplaceHole, getTree().substitute(new Predicate<Tree<LambdaTermNode>>() {
+
                         public boolean apply(Tree<LambdaTermNode> t) {
                             return t == subtree;
                         }
@@ -495,17 +498,17 @@ public class LambdaTerm {
                     // build other tree
                     Tree<LambdaTermNode> otherTree = subtree;
                     Collections.reverse(unbound);
-                    for( String var : unbound ) {
+                    for (String var : unbound) {
                         otherTree = lambdaT(var, otherTree);
                     }
-                    
+
                     ret.put(new LambdaTerm(context), new LambdaTerm(otherTree));
                 }
-                
+
                 return null;
             }
         });
-        
+
         return ret;
     }
 
@@ -574,49 +577,57 @@ public class LambdaTerm {
         return ret;
     }
 
-    private void printAsString(String node, StringBuffer buf) {
+    private void printAsString(Tree<LambdaTermNode> node, final StringBuffer buf) {
         boolean first = true;
-        buf.append(printInfo(tree.getLabel(node)));
-        List<String> children = tree.getChildren(node);
+        buf.append(printInfo(node.getLabel()));
+        List<Tree<LambdaTermNode>> children = node.getChildren();
 
         // System.out.println("Knotelabel "+tree.getLabel(node).kind+" Anzahl Kinder "+children.size());
         if (!children.isEmpty()) {
-
             // 1. Fall: Knoten selbst ist Apply
             // dann klammern um die Kinder falls keine varconsts
             // und nicht nur ein Kind.... (das sollte nicht vorkommen
-            Kind typ = tree.getLabel(node).kind;
+            Kind typ = node.getLabel().kind;
 
-            if (typ.equals(Kind.APPLY) || typ.equals(Kind.CONJ) || typ.equals(Kind.SUM) || typ.equals(Kind.DISJ) || typ.equals(Kind.ARGMIN) || typ.equals(Kind.ARGMAX) || typ.equals(Kind.EQUALTO) || typ.equals(Kind.LESSTHAN) || typ.equals(Kind.GREATERTHAN)) {
-                for (String child : children) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        buf.append(" ");
+            switch (typ) {
+                case APPLY:
+                case CONJ:
+                case SUM:
+                case DISJ:
+                case ARGMIN:
+                case ARGMAX:
+                case EQUALTO:
+                case LESSTHAN:
+                case GREATERTHAN:
+                    for (Tree<LambdaTermNode> child : children) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            buf.append(" ");
+                        }
+
+                        if (typ.equals(Kind.VARIABLE) || typ.equals(Kind.CONSTANT)) {
+                            printAsString(child, buf);
+                        } else {
+                            buf.append("(");
+                            printAsString(child, buf);
+                            buf.append(")");
+                        }
                     }
-                    if (typ.equals(Kind.VARIABLE)
-                            || typ.equals(Kind.CONSTANT)) {
+                    break;
+
+                default:
+                    buf.append("(");
+                    for (Tree<LambdaTermNode> child : children) {
+                        if (first) {
+                            first = false;
+                        } else {
+                            buf.append(" ");
+                        }
+
                         printAsString(child, buf);
-
-                    } else {
-                        buf.append("(");
-                        printAsString(child, buf);
-                        buf.append(")");
                     }
-                }
-
-            } else {
-                buf.append("(");
-                for (String child : children) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        buf.append(" ");
-                    }
-                    printAsString(child, buf);
-                }
-                buf.append(")");
-
+                    buf.append(")");
             }
         }
     }
@@ -632,7 +643,7 @@ public class LambdaTerm {
             }
             StringBuffer buf = new StringBuffer();
             buf.append("(");
-            printAsString(tree.getRoot(), buf);
+            printAsString(tree, buf);
             buf.append(")");
             stringRep = buf.toString();
         }
