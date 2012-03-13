@@ -72,7 +72,9 @@ class LambdaTermParserTest {
     
     @Test
     public void testToStringParse() {
-        LambdaTerm test = p("((lambda \$f (lambda \$x (\$n \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))");
+        // TODO - the term used to be "((lambda \$f (lambda \$x (\$n \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))", but 
+        // then the $n is a free variable. Is this intentional? In this case it gets replaced by "null".
+        LambdaTerm test = p("((lambda \$f (lambda \$x (\$f \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))");
 	LambdaTerm parsed=p(test.toString());
 	assertEquals(test, parsed);
     }
@@ -94,7 +96,9 @@ class LambdaTermParserTest {
     
     @Test
     public void testToStringParseWithConstants() {
-        LambdaTerm test = p("((lambda \$f (lambda \$x (\$n \$f (\$f a:e)))) (lambda \$a (lambda \$b \$b)))");
+        // TODO - the term used to be "((lambda \$f (lambda \$x (\$n \$f (\$f \$x)))) (lambda \$a (lambda \$b \$b)))", but 
+        // then the $n is a free variable. Is this intentional? In this case it gets replaced by "null".
+        LambdaTerm test = p("((lambda \$f (lambda \$x (\$f \$f (\$f a:e)))) (lambda \$a (lambda \$b \$b)))");
 	LambdaTerm parsed=p(test.toString());        
 	assertEquals(test, parsed);
     }

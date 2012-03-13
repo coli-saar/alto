@@ -28,7 +28,7 @@
         <dependency>
             <groupId>de.up.ling</groupId>
             <artifactId>tree</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>[1.0,)</version>
         </dependency>
 
         <dependency>
@@ -105,6 +105,18 @@
 
 
     <repositories>
+        <repository>
+            <id>tcl-releases</id>
+            <name>TCL releases</name>
+            <url>http://www.ling.uni-potsdam.de/tcl/maven2/releases</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        
         <repository>
             <id>external</id>
             <name>ECL external libraries</name>

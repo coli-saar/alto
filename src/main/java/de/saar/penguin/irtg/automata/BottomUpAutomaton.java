@@ -7,6 +7,7 @@ package de.saar.penguin.irtg.automata;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
@@ -21,6 +22,7 @@ import de.up.ling.shell.CallableFromShell;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -462,19 +464,19 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
             isExplicit = true;
         }
     }
-    
+
     public ConcreteBottomUpAutomaton<State> makeConcreteAutomaton() {
         makeAllRulesExplicit();
-        
+
         ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
-        
+
         ret.explicitRules = explicitRules;
         ret.explicitRulesTopDown = explicitRulesTopDown;
         ret.finalStates = finalStates;
         ret.allStates = allStates;
         ret.isExplicit = isExplicit;
         ret.rulesForRhsState = rulesForRhsState;
-        
+
         return ret;
     }
 
@@ -1074,15 +1076,19 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
          */
         private void cacheRules() {
             ListMultimap<State, Rule<State>> ruleListPerState = ArrayListMultimap.create();
+            Comparator<Rule<State>> comparator = new RuleCyclicityComparator();
 
             for (Rule<State> rule : getRuleSet()) {
                 ruleListPerState.put(rule.getParent(), rule);
             }
-
+            
             rulesPerState = new HashMap<State, Rule<State>[]>();
             for (State state : getAllStates()) {
+                List<Rule<State>> ruleList = ruleListPerState.get(state);
+                Collections.sort(ruleList, comparator);
+                
                 if (ruleListPerState.containsKey(state)) {
-                    rulesPerState.put(state, ruleListPerState.get(state).toArray(emptyRuleArray));
+                    rulesPerState.put(state, ruleList.toArray(emptyRuleArray));
                 } else {
                     rulesPerState.put(state, emptyRuleArray);
                 }
@@ -1122,6 +1128,35 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
                 return buf.toString();
             }
         }
+    }
+
+    private class RuleCyclicityComparator implements Comparator<Rule<State>> {
+        // return -1 iff r1 < r2
+        public int compare(Rule<State> r1, Rule<State> r2) {
+            boolean c1 = isCyclic(r1);
+            boolean c2 = isCyclic(r2);
+            
+            if( c1 && !c2 ) {
+                // only r1 cyclic => r2 < r1
+                return 1;
+            } else if( !c1 && c2 ) {
+                // only r2 cyclic => r1 < r2
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+        
+        private boolean isCyclic(Rule<State> r) {
+            for( int i = 0; i < r.getChildren().length; i++ ) {
+                if( r.getChildren()[i].equals(r.getParent())) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
     }
 }
 

@@ -22,14 +22,11 @@ import java.util.Set;
  * @author koller
  */
 public class LambdaTerm {
-
     private static enum Kind {
-
         CONSTANT, VARIABLE, LAMBDA, APPLY, EXISTS, CONJ, ARGMAX, ARGMIN, COUNT, SUM, LESSTHAN, GREATERTHAN, EQUALTO, NOT, THE, DISJ
     };
 
     private static class LambdaTermNode {
-
         public Kind kind;
         public String x;
         public String type;
@@ -70,7 +67,7 @@ public class LambdaTerm {
     private Tree<LambdaTermNode> tree;
     private HashMap<String, String> varList = null;
     public int genvarNext = 0;
-    private String stringRep = "";
+    private String cachedToString = null;
     private boolean hasCons = false;
 
     /**
@@ -82,10 +79,10 @@ public class LambdaTerm {
         findHighestVarName();
 
         hasCons = tree.some(new Predicate<LambdaTermNode>() {
-
-            public boolean apply(LambdaTermNode t) {
-                return t.kind.equals(Kind.CONSTANT);
-            }
+        
+        public boolean apply(LambdaTermNode t) {
+        return t.kind.equals(Kind.CONSTANT);
+        }
         });
     }
 
@@ -250,7 +247,6 @@ public class LambdaTerm {
 
     public int findHighestVarName() {
         int varName = tree.dfs(new TreeVisitor<LambdaTermNode, Void, Integer>() {
-
             @Override
             public Integer combine(Tree<LambdaTermNode> node, List<Integer> childrenValues) {
                 int temp = -1;
@@ -279,7 +275,6 @@ public class LambdaTerm {
 
     // Tree visitor to find unbound variables
     private static class CollectingTreeVisitor extends TreeVisitor<LambdaTermNode, Set<String>, Void> {
-
         Set<String> unbound;
         Tree<LambdaTermNode> workingCopy;
 
@@ -336,7 +331,6 @@ public class LambdaTerm {
      */
     private LambdaTerm beta() {
         Tree<LambdaTermNode> reduced = tree.dfs(new TreeVisitor<LambdaTermNode, Void, Tree<LambdaTermNode>>() {
-
             @Override
             public Tree<LambdaTermNode> combine(Tree<LambdaTermNode> node, List<Tree<LambdaTermNode>> childrenValues) {
                 LambdaTermNode parentLabel = node.getLabel();
@@ -354,7 +348,6 @@ public class LambdaTerm {
                         case COUNT:
                         case SUM:
                             Tree<LambdaTermNode> result = functor.getChildren().get(0).substitute(new Predicate<Tree<LambdaTermNode>>() {
-
                                 public boolean apply(Tree<LambdaTermNode> node) {
                                     return node.getLabel().kind == Kind.VARIABLE && node.getLabel().x.equals(functor.getLabel().x);
                                 }
@@ -415,7 +408,6 @@ public class LambdaTerm {
     // then be valid only in the subtree below the binder.
     public LambdaTerm alphaConvert(final int newStart) {
         Tree<LambdaTermNode> ret = tree.dfs(new TreeVisitor<LambdaTermNode, Void, Tree<LambdaTermNode>>() {
-
             Map<String, String> newNames = new HashMap<String, String>();
             int internalGenvar = newStart;
 
@@ -469,14 +461,26 @@ public class LambdaTerm {
      */
     public Map<LambdaTerm, LambdaTerm> getDecompositions() {
         final Map<LambdaTerm, LambdaTerm> ret = new HashMap<LambdaTerm, LambdaTerm>();
-        getTree().dfs(new TreeVisitor<LambdaTermNode, Void, Void>() {
-
+        getTree().dfs(new TreeVisitor<LambdaTermNode, Tree<LambdaTermNode>, Void>() {
             boolean first = true;
 
             @Override
-            public Void visit(final Tree<LambdaTermNode> subtree, Void data) {
+            public Tree<LambdaTermNode> visit(final Tree<LambdaTermNode> subtree, Tree<LambdaTermNode> parent) {
                 if (!first || subtree.getLabel().kind != Kind.LAMBDA) {
                     first = false;
+                    
+                    // decomposing at a variable leaf results in decompositions of the form blah @ \x.x; suppress those
+                    if( subtree.getLabel().kind == Kind.VARIABLE ) {
+                        return subtree;
+                    }
+                    
+                    // Kwiatkowski's "Limited Application" constraint:
+                    // suppress decompositions in which new variable would be applied to non-variable expression
+                    if( parent.getLabel().kind == Kind.APPLY
+                            && subtree == parent.getChildren().get(0)
+                            && parent.getChildren().get(1).getLabel().kind != Kind.VARIABLE ) {
+                        return subtree;
+                    }
 
                     findHighestVarName();
                     String newVariableNameForNodeToReplaceHole = genvar();
@@ -489,7 +493,6 @@ public class LambdaTerm {
                     }
 
                     Tree<LambdaTermNode> context = lambdaT(newVariableNameForNodeToReplaceHole, getTree().substitute(new Predicate<Tree<LambdaTermNode>>() {
-
                         public boolean apply(Tree<LambdaTermNode> t) {
                             return t == subtree;
                         }
@@ -501,21 +504,40 @@ public class LambdaTerm {
                     for (String var : unbound) {
                         otherTree = lambdaT(var, otherTree);
                     }
+                    
+                    LambdaTerm functor = new LambdaTerm(context);
+                    LambdaTerm argument = new LambdaTerm(otherTree);
+                    
+                    // suppress decompositions in which a lambda term without constants is
+                    // simply mapped to itself; e.g. \x.x decomposed into \y.y(\x.x)
+                    if( LambdaTerm.this.equals(argument) && ! argument.hasCons ) {
+                        return subtree;
+                    }
 
-                    ret.put(new LambdaTerm(context), new LambdaTerm(otherTree));
+                    ret.put(functor, argument);
                 }
 
-                return null;
+                return subtree;
             }
+
+            @Override
+            public Tree<LambdaTermNode> getRootValue() {
+                return getTree();
+            }
+            
+            
         });
+        
+        /*
+        System.err.println("\nDecompositions of " + this + ":");
+        for( Map.Entry<LambdaTerm,LambdaTerm> entry : ret.entrySet() ) {
+            System.err.println("   " + entry.getKey());
+            System.err.println("      + " + entry.getValue() + "\n");
+        }
+         * 
+         */
 
         return ret;
-    }
-
-    public Pair<LambdaTerm, LambdaTerm> split(String top, String bottom) {
-
-
-        return null;
     }
 
     /**
@@ -527,129 +549,101 @@ public class LambdaTerm {
     }
 
     private String printInfo(LambdaTermNode label) {
+        Kind type = label.kind;
+        String newVarName = null;
 
-        String ret = new String();
-        Kind typ = label.kind;
-        // System.out.println("printinfo mit "+label);
-        if (typ == Kind.LAMBDA || typ == Kind.ARGMAX || typ == Kind.ARGMIN || typ == Kind.EXISTS || typ == Kind.COUNT || typ == Kind.SUM) {
-            String newVarName = this.genvar();
-            this.varList.put(label.x, newVarName);
-            ret = typ.toString().toLowerCase() + " " + newVarName + " ";
-        }
-        if (typ == Kind.APPLY) {
-            ret = "";
-        }
-        if (typ == Kind.VARIABLE) {
-            if (!varList.containsKey(label.x)) {
-
-                String newVarName = this.genvar();
+        switch (type) {
+            case LAMBDA:
+            case ARGMAX:
+            case ARGMIN:
+            case EXISTS:
+            case COUNT:
+            case SUM:
+                newVarName = this.genvar();
                 this.varList.put(label.x, newVarName);
+                return type.toString().toLowerCase() + " " + newVarName;
 
-            }
-            ret = varList.get(label.x);
-        }
-        if (typ == Kind.CONSTANT) {
-            ret = label.x + ":" + label.type;
-        }
-        if (typ == Kind.CONJ) {
-            ret = "and ";
-        }
-        if (typ == Kind.DISJ) {
-            ret = "or ";
-        }
-        if (typ == Kind.NOT) {
-            ret = "not ";
-        }
+            case APPLY:
+                return "";
 
-        if (typ == Kind.THE) {
-            ret = "the ";
-        }
-        if (typ == Kind.LESSTHAN) {
-            ret = "< ";
-        }
-        if (typ == Kind.GREATERTHAN) {
-            ret = "> ";
-        }
-        if (typ == Kind.EQUALTO) {
-            ret = "= ";
-        }
+            case VARIABLE:
+                if (!varList.containsKey(label.x)) {
+                    this.genvar();
+                    this.varList.put(label.x, newVarName);
+                }
+                return varList.get(label.x);
 
-        return ret;
+            case CONSTANT:
+                return label.x + ":" + label.type;
+
+            case CONJ:
+                return "and";
+
+            case DISJ:
+                return "or";
+
+            case NOT:
+                return "not";
+
+            case THE:
+                return "the";
+
+            case LESSTHAN:
+                return "<";
+
+            case GREATERTHAN:
+                return ">";
+
+            case EQUALTO:
+                return "=";
+
+            default:
+                throw new RuntimeException("can't print lambda node type " + type);
+        }
     }
 
     private void printAsString(Tree<LambdaTermNode> node, final StringBuffer buf) {
-        boolean first = true;
-        buf.append(printInfo(node.getLabel()));
         List<Tree<LambdaTermNode>> children = node.getChildren();
+        boolean printSpace = true;
 
-        // System.out.println("Knotelabel "+tree.getLabel(node).kind+" Anzahl Kinder "+children.size());
         if (!children.isEmpty()) {
-            // 1. Fall: Knoten selbst ist Apply
-            // dann klammern um die Kinder falls keine varconsts
-            // und nicht nur ein Kind.... (das sollte nicht vorkommen
-            Kind typ = node.getLabel().kind;
+            buf.append("(");
+        }
 
-            switch (typ) {
-                case APPLY:
-                case CONJ:
-                case SUM:
-                case DISJ:
-                case ARGMIN:
-                case ARGMAX:
-                case EQUALTO:
-                case LESSTHAN:
-                case GREATERTHAN:
-                    for (Tree<LambdaTermNode> child : children) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            buf.append(" ");
-                        }
+        if (node.getLabel().kind == Kind.APPLY) {
+            printSpace = false;
+        } else {
+            buf.append(printInfo(node.getLabel()));
+        }
 
-                        if (typ.equals(Kind.VARIABLE) || typ.equals(Kind.CONSTANT)) {
-                            printAsString(child, buf);
-                        } else {
-                            buf.append("(");
-                            printAsString(child, buf);
-                            buf.append(")");
-                        }
-                    }
-                    break;
-
-                default:
-                    buf.append("(");
-                    for (Tree<LambdaTermNode> child : children) {
-                        if (first) {
-                            first = false;
-                        } else {
-                            buf.append(" ");
-                        }
-
-                        printAsString(child, buf);
-                    }
-                    buf.append(")");
+        for (Tree<LambdaTermNode> child : children) {
+            if (printSpace) {
+                buf.append(" ");
+            } else {
+                printSpace = true;
             }
+            printAsString(child, buf);
+        }
+
+        if (!children.isEmpty()) {
+            buf.append(")");
         }
     }
 
     @Override
     public String toString() {
-        // return type + (x == null ? "" : ("." + x)) + (sub == null ? "" : ("." + sub.toString()));
-
-        if (stringRep.equals("")) {
+        if (cachedToString == null) {
             this.genvarNext = 0;
             if (varList == null) {
                 varList = new HashMap<String, String>();
             }
+
             StringBuffer buf = new StringBuffer();
-            buf.append("(");
             printAsString(tree, buf);
-            buf.append(")");
-            stringRep = buf.toString();
+            cachedToString = buf.toString();
         }
 
-        //     System.out.println("internal tree:"+this.tree);
-        return stringRep;
+        return cachedToString;
     }
 
     @Override
@@ -669,9 +663,6 @@ public class LambdaTerm {
 
     @Override
     public int hashCode() {
-        int hash = 5;
-
-        hash = 59 * this.toString().hashCode();
-        return hash;
+        return toString().hashCode();
     }
 }
