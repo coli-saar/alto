@@ -37,6 +37,7 @@ import java.util.Set;
  * @author koller
  */
 public abstract class BottomUpAutomaton<State> implements Serializable {
+
     protected Map<String, StateListToStateMap> explicitRules; // one for each label
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
@@ -232,6 +233,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
     @CallableFromShell
     public long countTrees() {
         Map<State, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<State, Long>() {
+
             public Long evaluateRule(Rule<State> rule) {
                 return 1L;
             }
@@ -252,6 +254,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      */
     public Map<State, Double> inside() {
         return evaluateInSemiring(new DoubleArithmeticSemiring(), new RuleEvaluator<State, Double>() {
+
             public Double evaluateRule(Rule<State> rule) {
                 return rule.getWeight();
             }
@@ -267,6 +270,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      */
     public Map<State, Double> outside(final Map<State, Double> inside) {
         return evaluateInSemiringTopDown(new DoubleArithmeticSemiring(), new RuleEvaluatorTopDown<State, Double>() {
+
             public Double initialValue() {
                 return 1.0;
             }
@@ -294,6 +298,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
         Map<State, Pair<Double, Rule<State>>> map =
                 evaluateInSemiring(new ViterbiWithBackpointerSemiring<State>(), new RuleEvaluator<State, Pair<Double, Rule<State>>>() {
+
             public Pair<Double, Rule<State>> evaluateRule(Rule<State> rule) {
                 return new Pair<Double, Rule<State>>(rule.getWeight(), rule);
             }
@@ -339,6 +344,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
          */
         Map<State, List<Tree<String>>> languagesForStates =
                 evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree<String>>>() {
+
             public List<Tree<String>> evaluateRule(Rule<State> rule) {
                 List<Tree<String>> ret = new ArrayList<Tree<String>>();
                 Tree<String> tree = new Tree<String>();
@@ -364,6 +370,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
     }
 
     private static class LanguageCollectingSemiring implements Semiring<List<Tree<String>>> {
+
         public List<Tree<String>> add(List<Tree<String>> x, List<Tree<String>> y) {
             x.addAll(y);
             return x;
@@ -510,13 +517,15 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      * @return 
      */
     protected boolean useCachedRuleTopDown(String label, State parent) {
-        if (isExplicit) {
-            return true;
-        }
-
+        // Even when the automaton has been computed explicltly, not all labels
+        // that are returned by getAllLabels() may have entries in explicitRulesTopDown.
+        // This happens when the automaton doesn't contain any rules for these labels,
+        // e.g. for InverseHomAutomata (see getAllLabels of that class).
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(label);
         if (topdown == null) {
             return false;
+        } else if (isExplicit) {
+            return true;
         } else {
             return topdown.containsKey(parent);
         }
@@ -591,6 +600,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
         final Set<State> ret = new HashSet<State>();
 
         tree.dfs(new TreeVisitor<Void, Set<State>>() {
+
             @Override
             public Set<State> combine(String node, List<Set<State>> childrenValues) {
                 String f = tree.getLabel(node).toString();
@@ -819,6 +829,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
     }
 
     protected class StateListToStateMap implements Serializable {
+
         private Map<State, StateListToStateMap> nextStep;
         private Set<Rule<State>> rulesHere;
         private int arity;
@@ -927,12 +938,14 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
     }
 
     private class LanguageIterable implements Iterable<Tree<String>> {
+
         public Iterator<Tree<String>> iterator() {
             return new LanguageIterator();
         }
     }
 
     private class LanguageIterator implements Iterator<Tree<String>> {
+
         private Tree<IndexedRuleList> ruleTree = new Tree<IndexedRuleList>();
         private boolean hasNext;
         private Map<State, Rule<State>[]> rulesPerState;
@@ -1056,6 +1069,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
             final Tree<String> ret = new Tree<String>();
 
             ruleTree.dfs(new TreeVisitor<String, Void>() {
+
                 @Override
                 public String getRootValue() {
                     return null;
@@ -1081,12 +1095,12 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
             for (Rule<State> rule : getRuleSet()) {
                 ruleListPerState.put(rule.getParent(), rule);
             }
-            
+
             rulesPerState = new HashMap<State, Rule<State>[]>();
             for (State state : getAllStates()) {
                 List<Rule<State>> ruleList = ruleListPerState.get(state);
                 Collections.sort(ruleList, comparator);
-                
+
                 if (ruleListPerState.containsKey(state)) {
                     rulesPerState.put(state, ruleList.toArray(emptyRuleArray));
                 } else {
@@ -1100,6 +1114,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
         }
 
         private class IndexedRuleList {
+
             public Rule<State>[] rules;
             public int index;
 
@@ -1132,31 +1147,31 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
 
     private class RuleCyclicityComparator implements Comparator<Rule<State>> {
         // return -1 iff r1 < r2
+
         public int compare(Rule<State> r1, Rule<State> r2) {
             boolean c1 = isCyclic(r1);
             boolean c2 = isCyclic(r2);
-            
-            if( c1 && !c2 ) {
+
+            if (c1 && !c2) {
                 // only r1 cyclic => r2 < r1
                 return 1;
-            } else if( !c1 && c2 ) {
+            } else if (!c1 && c2) {
                 // only r2 cyclic => r1 < r2
                 return -1;
             } else {
                 return 0;
             }
         }
-        
+
         private boolean isCyclic(Rule<State> r) {
-            for( int i = 0; i < r.getChildren().length; i++ ) {
-                if( r.getChildren()[i].equals(r.getParent())) {
+            for (int i = 0; i < r.getChildren().length; i++) {
+                if (r.getChildren()[i].equals(r.getParent())) {
                     return true;
                 }
             }
-            
+
             return false;
         }
-        
     }
 }
 
