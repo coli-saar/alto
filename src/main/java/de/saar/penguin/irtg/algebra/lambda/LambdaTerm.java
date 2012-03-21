@@ -514,6 +514,22 @@ public class LambdaTerm {
                         return subtree;
                     }
 
+                    // suppress decompositions in which the whole term is extracted
+                    if(LambdaTerm.this.equals(functor)){
+                        return subtree;
+                    }
+
+                    // suppress decompositions in which the argument has no
+                    // constants
+                    if(!argument.hasCons){
+                        return subtree;
+                    }
+
+                    // do not decompose terms without constants
+                    if(!LambdaTerm.this.hasCons){
+                        return subtree;
+                    }
+
                     ret.put(functor, argument);
                 }
 

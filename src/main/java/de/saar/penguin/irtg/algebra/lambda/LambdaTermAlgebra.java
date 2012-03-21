@@ -100,7 +100,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
                 if (label.equals(LambdaTermAlgebraSymbol.FUNCTOR)) {
                     // split Lambda Term
                     Map<LambdaTerm, LambdaTerm> sources = parentState.getDecompositions();
-
+                     //System.err.println("Decompising "+parentState);
                     if (sources.isEmpty()) {
                         allLabels.add(parentState.toString());
                     } else {
