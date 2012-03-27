@@ -122,6 +122,16 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
         }
 
         @Override
+        public Set<String> getLabelsTopDown(LambdaTerm parentState) {
+            Set<String> ret = new HashSet<String>();
+            ret.add(LambdaTermAlgebraSymbol.FUNCTOR);
+            ret.add(parentState.toString());
+            return ret;
+        }
+        
+        
+
+        @Override
         public void makeAllRulesExplicit() {
             if (!isExplicit) {
                 Set<LambdaTerm> everAddedStates = new HashSet<LambdaTerm>();

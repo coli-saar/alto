@@ -7,7 +7,6 @@ package de.saar.penguin.irtg.automata;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
@@ -76,6 +75,23 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      * @return 
      */
     abstract public Set<Rule<State>> getRulesTopDown(String label, State parentState);
+    
+    /**
+     * Returns a set that contains all terminal symbols f
+     * such that the automaton has top-down
+     * transition rules parentState -> f(...). The set returned by this
+     * method may contain symbols for which such a transition does not
+     * actually exist; it is only guaranteed that all symbols for which
+     * transitions exist are also in the set. The default implementation
+     * in BottomUpAutomaton returns getAllLabels(). Subclasses
+     * (especially lazy automata) may replace this with more specific implementations.
+     * 
+     * @param parentState
+     * @return 
+     */
+    public Set<String> getLabelsTopDown(State parentState) {
+        return getAllLabels();
+    }
 
     /**
      * Returns the arity of a terminal symbol. Apparently this method

@@ -71,16 +71,14 @@ public class StringAlgebra implements Algebra<List<String>> {
         public Set<Span> getAllStates() {
             Set<Span> ret = new HashSet<Span>();
 
-            for( int i = 0; i < words.size(); i++ ) {
-                for( int k = i+1; k <= words.size(); k++ ) {
-                    ret.add(new Span(i,k));
+            for (int i = 0; i < words.size(); i++) {
+                for (int k = i + 1; k <= words.size(); k++) {
+                    ret.add(new Span(i, k));
                 }
             }
 
             return ret;
         }
-
-
 
         @Override
         public Set<Rule<Span>> getRulesBottomUp(String label, List<Span> childStates) {
@@ -107,7 +105,7 @@ public class StringAlgebra implements Algebra<List<String>> {
                 } else {
                     for (int i = 0; i < words.size(); i++) {
                         if (words.get(i).equals(label)) {
-                            ret.add(new Rule<Span>(new Span(i, i+1), label, new Span[]{}));
+                            ret.add(new Rule<Span>(new Span(i, i + 1), label, new Span[]{}));
                         }
                     }
 
@@ -116,23 +114,37 @@ public class StringAlgebra implements Algebra<List<String>> {
             }
         }
 
-
-
         @Override
         public Set<Rule<Span>> getRulesTopDown(String label, Span parentState) {
-            if( ! useCachedRuleTopDown(label, parentState)) {
-                if( label.equals(CONCAT)) {
-                    for( int i = parentState.start + 1; i < parentState.end; i++ ) {
+            if (!useCachedRuleTopDown(label, parentState)) {
+                if (label.equals(CONCAT)) {
+                    for (int i = parentState.start + 1; i < parentState.end; i++) {
                         List<Span> childStates = new ArrayList<Span>();
                         childStates.add(new Span(parentState.start, i));
                         childStates.add(new Span(i, parentState.end));
                         Rule<Span> rule = new Rule<Span>(parentState, label, childStates);
                         storeRule(rule);
                     }
+                } else if ((parentState.length() == 1) && label.equals(words.get(parentState.start))) {
+                    Rule<Span> rule = new Rule<Span>(parentState, label, new ArrayList<Span>());
+                    storeRule(rule);
                 }
             }
 
             return getRulesTopDownFromExplicit(label, parentState);
+        }
+
+        @Override
+        public Set<String> getLabelsTopDown(Span parentState) {
+            Set<String> ret = new HashSet<String>();
+
+            if (parentState.end == parentState.start + 1) {
+                ret.add(words.get(parentState.start));
+            } else {
+                ret.add(CONCAT);
+            }
+
+            return ret;
         }
 
         @Override
@@ -147,6 +159,10 @@ public class StringAlgebra implements Algebra<List<String>> {
         public Span(int start, int end) {
             this.start = start;
             this.end = end;
+        }
+
+        public int length() {
+            return end - start;
         }
 
         @Override
