@@ -4,18 +4,14 @@
  */
 package de.saar.penguin.irtg.automata;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
+import de.saar.basic.Agenda;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -37,7 +33,176 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
         finalStates = null;
         allStates = null;
     }
+    
+     @Override
+    public void makeAllRulesExplicit() {
+        if (!isExplicit) {
+            Queue<IncompleteEarleyItem> agenda = new Agenda<IncompleteEarleyItem>();
+            ListMultimap<LeftState, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create();
+            ListMultimap<LeftState, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();
 
+            for (LeftState state : left.getFinalStates()) {
+                for (String label : left.getAllLabels()) { // TODO - use more constrained set of labels
+                    for (Rule<LeftState> rule : left.getRulesTopDown(label, state)) {
+                        agenda.offer(new IncompleteEarleyItem(rule, null, null));
+                    }
+                }
+            }
+
+            while (!agenda.isEmpty()) {
+                IncompleteEarleyItem item = agenda.remove();
+                waitingIncompleteItems.put(item.getNextLeftState(), item);
+
+                if (item.matchedStates == item.leftRule.getArity()) {
+                    // Finish
+                    for (Rule<RightState> rightRule : right.getRulesBottomUp(item.leftRule.getLabel(), item.getRightChildren())) {
+                        CompleteEarleyItem completedItem = new CompleteEarleyItem(item.leftRule, rightRule);
+                        completedItemsForLeftState.put(item.leftRule.getParent(), completedItem);
+                        storeRule(combineRules(item.leftRule, rightRule));
+
+                        // perform Complete steps for relevant incomplete items that were discovered before
+                        for (IncompleteEarleyItem incompleteItem : waitingIncompleteItems.get(completedItem.leftRule.getParent())) {
+                            final IncompleteEarleyItem newIncompleteItem = new IncompleteEarleyItem(incompleteItem.leftRule, completedItem.rightRule.getParent(), incompleteItem);
+                            agenda.offer(newIncompleteItem); ///
+                        }
+                    }
+                } else {
+                    // Predict
+                    for (String label : left.getAllLabels()) { // TODO - use more constrained set
+                        for (Rule<LeftState> rule : left.getRulesTopDown(label, item.getNextLeftState())) {
+                            IncompleteEarleyItem newItem = new IncompleteEarleyItem(rule, null, null);
+                            agenda.offer(newItem); ///
+                        }
+                    }
+
+                    // Complete
+                    for (CompleteEarleyItem completeItem : completedItemsForLeftState.get(item.getNextLeftState())) {
+                        final IncompleteEarleyItem newItem = new IncompleteEarleyItem(item.leftRule, completeItem.rightRule.getParent(), item);
+                        agenda.offer(newItem); ///
+                    }
+                }
+            }
+
+            isExplicit = true;
+        }
+    }
+
+    private class CompleteEarleyItem {
+        Rule<LeftState> leftRule;
+        Rule<RightState> rightRule;
+
+        public CompleteEarleyItem(Rule<LeftState> leftRule, Rule<RightState> rightRule) {
+            this.leftRule = leftRule;
+            this.rightRule = rightRule;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final CompleteEarleyItem other = (CompleteEarleyItem) obj;
+            if (this.leftRule != other.leftRule && (this.leftRule == null || !this.leftRule.equals(other.leftRule))) {
+                return false;
+            }
+            if (this.rightRule != other.rightRule && (this.rightRule == null || !this.rightRule.equals(other.rightRule))) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 59 * hash + (this.leftRule != null ? this.leftRule.hashCode() : 0);
+            hash = 59 * hash + (this.rightRule != null ? this.rightRule.hashCode() : 0);
+            return hash;
+        }
+    }
+
+    private class IncompleteEarleyItem {
+        Rule<LeftState> leftRule;
+        RightState rightChildState;
+        IncompleteEarleyItem itemWithEarlierRightChildStates;
+        int matchedStates;
+        private int hashCode = -1;
+
+        public IncompleteEarleyItem(Rule<LeftState> leftRule, RightState rightChildState, IncompleteEarleyItem itemWithEarlierRightChildStates) {
+            this.leftRule = leftRule;
+            this.rightChildState = rightChildState;
+            this.itemWithEarlierRightChildStates = itemWithEarlierRightChildStates;
+
+            if (rightChildState == null) {
+                matchedStates = 0;
+            } else {
+                matchedStates = itemWithEarlierRightChildStates.matchedStates + 1;
+            }
+        }
+
+        public LeftState getNextLeftState() {
+            if (matchedStates < leftRule.getArity()) {
+                return leftRule.getChildren()[matchedStates];
+            } else {
+                return null;
+            }
+        }
+
+        public List<RightState> getRightChildren() {
+            List<RightState> children = new ArrayList<RightState>();
+            collect(children);
+            Collections.reverse(children);
+            return children;
+        }
+
+        private void collect(List<RightState> children) {
+            if (rightChildState != null) {
+                children.add(rightChildState);
+                if (itemWithEarlierRightChildStates != null) {
+                    itemWithEarlierRightChildStates.collect(children);
+                }
+            }
+        }
+
+        @Override
+        public String toString() {
+            return leftRule.toString() + getRightChildren();
+        }
+
+        // TODO - equals and hashCode should be more efficient
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final IncompleteEarleyItem other = (IncompleteEarleyItem) obj;
+            if (this.leftRule != other.leftRule && (this.leftRule == null || !this.leftRule.equals(other.leftRule))) {
+                return false;
+            }
+            if (!this.getRightChildren().equals(other.getRightChildren())) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            if (hashCode < 0) {
+                hashCode = 5;
+                hashCode = 29 * hashCode + (this.leftRule != null ? this.leftRule.hashCode() : 0);
+                hashCode = 29 * hashCode + this.getRightChildren().hashCode();
+            }
+            return hashCode;
+        }
+    }
+
+    /*
+     * // bottom-up intersection algorithm
     @Override
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
@@ -49,15 +214,7 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             // initialize agenda with all pairs of rules of the form A -> f
 //            Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new HashMap<String, Set<Rule<RightState>>>();
             List<RightState> noRightChildren = new ArrayList<RightState>();
-            
-            /*
-            for (String label : right.getAllLabels()) {
-                Set<Rule<RightState>> rules = right.getRulesBottomUp(label, noRightChildren);
-                preTerminalStatesRight.put(label, rules);
-            }
-             * 
-             */
-
+ 
             for (Rule<LeftState> leftRule : left.getRuleSet()) {
                 if (leftRule.getArity() == 0) {
                     Set<Rule<RightState>> preterminalRulesForLabel = right.getRulesBottomUp(leftRule.getLabel(), noRightChildren);
@@ -105,6 +262,8 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             isExplicit = true;
         }
     }
+    * 
+    */
 
     private Rule<Pair<LeftState, RightState>> combineRules(Rule<LeftState> leftRule, Rule<RightState> rightRule) {
         List<Pair<LeftState, RightState>> childStates = new ArrayList<Pair<LeftState, RightState>>();
