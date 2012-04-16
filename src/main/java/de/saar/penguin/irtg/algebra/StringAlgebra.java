@@ -20,6 +20,11 @@ import java.util.Set;
  */
 public class StringAlgebra implements Algebra<List<String>> {
     public static final String CONCAT = "*";
+    private static final Set<String> CONCAT_SET = new HashSet<String>();
+
+    static {
+        CONCAT_SET.add(CONCAT);
+    }
 
     public List<String> evaluate(Tree<String> t) {
         List<String> children = t.getChildren(t.getRoot());
@@ -136,15 +141,14 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         @Override
         public Set<String> getLabelsTopDown(Span parentState) {
-            Set<String> ret = new HashSet<String>();
 
             if (parentState.end == parentState.start + 1) {
+                Set<String> ret = new HashSet<String>();
                 ret.add(words.get(parentState.start));
+                return ret;
             } else {
-                ret.add(CONCAT);
+                return CONCAT_SET;
             }
-
-            return ret;
         }
 
         @Override

@@ -92,6 +92,23 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
     public Set<String> getLabelsTopDown(State parentState) {
         return getAllLabels();
     }
+    
+    /**
+     * Returns true whenever the automaton has a bottom-up rule whose first
+     * n child states are the n child states that are passed as the prefixOfChildren
+     * argument. It is not required that the method returns false if the automaton
+     * does _not_ have such a rule; i.e., the method may overestimate the existence
+     * of rules. The default implementation always returns true. Derived automaton
+     * classes for which an efficient, more precise test is available may override
+     * this method appropriately. This may speed up the Earley intersection algorithm.
+     * 
+     * @param label
+     * @param prefixOfChildren
+     * @return 
+     */
+    public boolean hasRuleWithPrefix(String label, List<State> prefixOfChildren) {
+        return true;
+    }
 
     /**
      * Returns the arity of a terminal symbol. Apparently this method

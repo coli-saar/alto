@@ -18,7 +18,6 @@ import java.util.*;
  * @author koller
  */
 class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pair<LeftState, RightState>> {
-
     private BottomUpAutomaton<LeftState> left;
     private BottomUpAutomaton<RightState> right;
     private Set<String> allLabels;
@@ -33,20 +32,20 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
         finalStates = null;
         allStates = null;
     }
-    
-     @Override
+
+    /**
+     * Earley-style intersection algorithm.
+     */
+    @Override
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
             Queue<IncompleteEarleyItem> agenda = new Agenda<IncompleteEarleyItem>();
             ListMultimap<LeftState, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create();
             ListMultimap<LeftState, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();
 
+            // Init
             for (LeftState state : left.getFinalStates()) {
-                for (String label : left.getAllLabels()) { // TODO - use more constrained set of labels
-                    for (Rule<LeftState> rule : left.getRulesTopDown(label, state)) {
-                        agenda.offer(new IncompleteEarleyItem(rule, null, null));
-                    }
-                }
+                predict(state, agenda);
             }
 
             while (!agenda.isEmpty()) {
@@ -62,28 +61,39 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
 
                         // perform Complete steps for relevant incomplete items that were discovered before
                         for (IncompleteEarleyItem incompleteItem : waitingIncompleteItems.get(completedItem.leftRule.getParent())) {
-                            final IncompleteEarleyItem newIncompleteItem = new IncompleteEarleyItem(incompleteItem.leftRule, completedItem.rightRule.getParent(), incompleteItem);
-                            agenda.offer(newIncompleteItem); ///
+                            complete(incompleteItem, completedItem, agenda);
                         }
                     }
                 } else {
                     // Predict
-                    for (String label : left.getAllLabels()) { // TODO - use more constrained set
-                        for (Rule<LeftState> rule : left.getRulesTopDown(label, item.getNextLeftState())) {
-                            IncompleteEarleyItem newItem = new IncompleteEarleyItem(rule, null, null);
-                            agenda.offer(newItem); ///
-                        }
-                    }
+                    predict(item.getNextLeftState(), agenda);
 
                     // Complete
                     for (CompleteEarleyItem completeItem : completedItemsForLeftState.get(item.getNextLeftState())) {
-                        final IncompleteEarleyItem newItem = new IncompleteEarleyItem(item.leftRule, completeItem.rightRule.getParent(), item);
-                        agenda.offer(newItem); ///
+                        complete(item, completeItem, agenda);
                     }
                 }
             }
 
             isExplicit = true;
+        }
+    }
+
+    private void complete(IncompleteEarleyItem incompleteItem, CompleteEarleyItem completeItem, Queue<IncompleteEarleyItem> agenda) {
+        final IncompleteEarleyItem newIncompleteItem = new IncompleteEarleyItem(incompleteItem.leftRule, completeItem.rightRule.getParent(), incompleteItem);
+
+        if (right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren())) {
+            agenda.offer(newIncompleteItem);
+        }
+    }
+
+    private void predict(LeftState state, Queue<IncompleteEarleyItem> agenda) {
+        for (String label : left.getLabelsTopDown(state)) {
+            if (right.hasRuleWithPrefix(label, new ArrayList<RightState>())) {
+                for (Rule<LeftState> rule : left.getRulesTopDown(label, state)) {
+                    agenda.offer(new IncompleteEarleyItem(rule, null, null));
+                }
+            }
         }
     }
 
@@ -202,69 +212,54 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
     }
 
     /*
-     * // bottom-up intersection algorithm
-    @Override
-    public void makeAllRulesExplicit() {
-        if (!isExplicit) {
-            ListMultimap<LeftState, Rule<LeftState>> rulesByChildState = left.getRuleByChildStateMap();
-            Queue<Pair<LeftState, RightState>> agenda = new LinkedList<Pair<LeftState, RightState>>();
-            Set<Pair<LeftState, RightState>> seenStates = new HashSet<Pair<LeftState, RightState>>();
-            SetMultimap<LeftState, RightState> partners = HashMultimap.create();
-
-            // initialize agenda with all pairs of rules of the form A -> f
-//            Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new HashMap<String, Set<Rule<RightState>>>();
-            List<RightState> noRightChildren = new ArrayList<RightState>();
- 
-            for (Rule<LeftState> leftRule : left.getRuleSet()) {
-                if (leftRule.getArity() == 0) {
-                    Set<Rule<RightState>> preterminalRulesForLabel = right.getRulesBottomUp(leftRule.getLabel(), noRightChildren);
-
-                    for (Rule<RightState> rightRule : preterminalRulesForLabel) {
-                        Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
-                        storeRule(rule);
-                        agenda.offer(rule.getParent());
-                        seenStates.add(rule.getParent());
-                        partners.put(leftRule.getParent(), rightRule.getParent());
-                    }
-                }
-            }
-
-            // compute rules and states bottom-up
-            while (!agenda.isEmpty()) {
-                Pair<LeftState, RightState> state = agenda.remove();
-                List<Rule<LeftState>> possibleRules = rulesByChildState.get(state.left);
-
-                for (Rule<LeftState> leftRule : possibleRules) {
-                    List<Set<RightState>> partnerStates = new ArrayList<Set<RightState>>();
-                    for (LeftState leftState : leftRule.getChildren()) {
-                        partnerStates.add(partners.get(leftState));
-                    }
-
-                    CartesianIterator<RightState> it = new CartesianIterator<RightState>(partnerStates);
-                    List<Pair<LeftState, RightState>> newStates = new ArrayList<Pair<LeftState, RightState>>();
-                    while (it.hasNext()) {
-                        Set<Rule<RightState>> rightRules = right.getRulesBottomUp(leftRule.getLabel(), it.next());
-                        for (Rule<RightState> rightRule : rightRules) {
-                            Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
-                            if (seenStates.add(rule.getParent())) {
-                                newStates.add(rule.getParent());
-                            }
-                        }
-                    }
-                    for (Pair<LeftState, RightState> newState : newStates) {
-                        agenda.offer(newState);
-                        partners.put(newState.left, newState.right);
-                    }
-                }
-            }
-
-            isExplicit = true;
-        }
-    }
-    * 
-    */
-
+     * // bottom-up intersection algorithm @Override public void
+     * makeAllRulesExplicit() { if (!isExplicit) { ListMultimap<LeftState,
+     * Rule<LeftState>> rulesByChildState = left.getRuleByChildStateMap();
+     * Queue<Pair<LeftState, RightState>> agenda = new
+     * LinkedList<Pair<LeftState, RightState>>(); Set<Pair<LeftState,
+     * RightState>> seenStates = new HashSet<Pair<LeftState, RightState>>();
+     * SetMultimap<LeftState, RightState> partners = HashMultimap.create();
+     *
+     * // initialize agenda with all pairs of rules of the form A -> f //
+     * Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new
+     * HashMap<String, Set<Rule<RightState>>>(); List<RightState>
+     * noRightChildren = new ArrayList<RightState>();
+     *
+     * for (Rule<LeftState> leftRule : left.getRuleSet()) { if
+     * (leftRule.getArity() == 0) { Set<Rule<RightState>>
+     * preterminalRulesForLabel = right.getRulesBottomUp(leftRule.getLabel(),
+     * noRightChildren);
+     *
+     * for (Rule<RightState> rightRule : preterminalRulesForLabel) {
+     * Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule,
+     * rightRule); storeRule(rule); agenda.offer(rule.getParent());
+     * seenStates.add(rule.getParent()); partners.put(leftRule.getParent(),
+     * rightRule.getParent()); } } }
+     *
+     * // compute rules and states bottom-up while (!agenda.isEmpty()) {
+     * Pair<LeftState, RightState> state = agenda.remove();
+     * List<Rule<LeftState>> possibleRules = rulesByChildState.get(state.left);
+     *
+     * for (Rule<LeftState> leftRule : possibleRules) { List<Set<RightState>>
+     * partnerStates = new ArrayList<Set<RightState>>(); for (LeftState
+     * leftState : leftRule.getChildren()) {
+     * partnerStates.add(partners.get(leftState)); }
+     *
+     * CartesianIterator<RightState> it = new
+     * CartesianIterator<RightState>(partnerStates); List<Pair<LeftState,
+     * RightState>> newStates = new ArrayList<Pair<LeftState, RightState>>();
+     * while (it.hasNext()) { Set<Rule<RightState>> rightRules =
+     * right.getRulesBottomUp(leftRule.getLabel(), it.next()); for
+     * (Rule<RightState> rightRule : rightRules) { Rule<Pair<LeftState,
+     * RightState>> rule = combineRules(leftRule, rightRule); storeRule(rule);
+     * if (seenStates.add(rule.getParent())) { newStates.add(rule.getParent());
+     * } } } for (Pair<LeftState, RightState> newState : newStates) {
+     * agenda.offer(newState); partners.put(newState.left, newState.right); } }
+     * }
+     *
+     * isExplicit = true; } }
+     *
+     */
     private Rule<Pair<LeftState, RightState>> combineRules(Rule<LeftState> leftRule, Rule<RightState> rightRule) {
         List<Pair<LeftState, RightState>> childStates = new ArrayList<Pair<LeftState, RightState>>();
         for (int i = 0; i < leftRule.getArity(); i++) {
