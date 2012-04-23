@@ -33,7 +33,7 @@ public class Interpretation<E> {
     }
 
     @CallableFromShell(name="homomorphism")
-    public Homomorphism getHom() {
+    public Homomorphism getHomomorphism() {
         return hom;
     }
     

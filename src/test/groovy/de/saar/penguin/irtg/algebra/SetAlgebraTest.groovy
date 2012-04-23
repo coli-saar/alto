@@ -97,7 +97,7 @@ b_nop -> Adj_N
   [i] T
         ''';
          InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-         Homomorphism hom = irtg.getInterpretations().get("i").getHom();
+         Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
          
         TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
         chart.makeAllRulesExplicit();
@@ -131,7 +131,7 @@ a_sleeps_r1(N) -> S!
         ''';
         
          InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-         Homomorphism hom = irtg.getInterpretations().get("i").getHom();
+         Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
          
         TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
         chart.makeAllRulesExplicit();
@@ -166,7 +166,7 @@ a_sleeps_r1(N) -> S!
         ''';
         
          InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-         Homomorphism hom = irtg.getInterpretations().get("i").getHom();
+         Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
          
         TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
         chart.makeAllRulesExplicit();

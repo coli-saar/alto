@@ -79,10 +79,14 @@ public class InterpretedTreeAutomaton {
             inputs.put(interp, parseString(interp, representation));
         }
 
-        return parse(inputs);
+        return parseInputObjects(inputs);
+    }
+    
+    public TreeAutomaton parse(Map<String, Reader> readers) throws ParserException, IOException {
+        return parseFromReaders(readers);
     }
 
-    public TreeAutomaton parse(Map<String, Object> inputs) {
+    TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
         TreeAutomaton ret = automaton;
 
         for (String interpName : inputs.keySet()) {
@@ -102,14 +106,21 @@ public class InterpretedTreeAutomaton {
         String interp = StringTools.slurp(outputInterpretation);
         return decode(chart, interpretations.get(interp));
     }
-
-    public Set<Object> decode(String outputInterpretation, Map<String, Object> inputs) {
-        TreeAutomaton chart = parse(inputs);
-        return decode(chart, interpretations.get(outputInterpretation));
+    
+    public Set<Object> decode(Reader outputInterpretation, Map<String, Reader> readers) throws ParserException, IOException {
+        return decodeFromReaders(outputInterpretation, readers);
     }
 
+    /*
+    public Set<Object> decode(String outputInterpretation, Map<String, Object> inputs) {
+        TreeAutomaton chart = parseInputObjects(inputs);
+        return decode(chart, interpretations.get(outputInterpretation));
+    }
+     * 
+     */
+
     private Set<Object> decode(TreeAutomaton chart, Interpretation interp) {
-        TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
+        TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
         Set<Tree<String>> outputLanguage = outputChart.language();
 
         Set<Object> ret = new HashSet<Object>();
@@ -128,12 +139,12 @@ public class InterpretedTreeAutomaton {
     }
 
     public Set<Tree> decodeToTerms(String outputInterpretation, Map<String, Object> inputs) {
-        TreeAutomaton chart = parse(inputs);
+        TreeAutomaton chart = parseInputObjects(inputs);
         return decodeToTerms(chart, interpretations.get(outputInterpretation));
     }
 
     private Set<Tree> decodeToTerms(TreeAutomaton chart, Interpretation interp) {
-        TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
+        TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
         Set<Tree<String>> outputLanguage = outputChart.language();
 
         Set<Tree> ret = new HashSet<Tree>();
@@ -292,7 +303,7 @@ public class InterpretedTreeAutomaton {
 
                 currentInterpretationIndex++;
                 if (currentInterpretationIndex >= interpretationOrder.size()) {
-                    TreeAutomaton chart = parse(currentInputs).reduceBottomUp().makeConcreteAutomaton();
+                    TreeAutomaton chart = parseInputObjects(currentInputs).reduceBottomUp().makeConcreteAutomaton();
                     ret.addInstance(chart);
                     
                     currentInputs.clear();

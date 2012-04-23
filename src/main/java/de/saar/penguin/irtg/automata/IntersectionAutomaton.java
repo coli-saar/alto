@@ -54,7 +54,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 IncompleteEarleyItem item = agenda.remove();
                 waitingIncompleteItems.put(item.getNextLeftState(), item);
                 
-                System.err.println("  -> " + item);
+//                System.err.println("  -> " + item);
                 countAgendaItems++;
 
                 if (item.matchedStates == item.leftRule.getArity()) {
@@ -81,15 +81,15 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
 
             isExplicit = true;
-            System.err.println("earley intersect: " + countAgendaItems + " incomplete items");
+//            System.err.println("earley intersect: " + countAgendaItems + " incomplete items");
         }
     }
 
     private void complete(IncompleteEarleyItem incompleteItem, CompleteEarleyItem completeItem, Queue<IncompleteEarleyItem> agenda) {
         final IncompleteEarleyItem newIncompleteItem = new IncompleteEarleyItem(incompleteItem.leftRule, completeItem.rightRule.getParent(), incompleteItem);
 
-        System.err.println("prefix check: " + newIncompleteItem.leftRule.getLabel() + "/" + newIncompleteItem.getRightChildren());
-        System.err.println(" -- " + right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren()));
+//        System.err.println("prefix check: " + newIncompleteItem.leftRule.getLabel() + "/" + newIncompleteItem.getRightChildren());
+//        System.err.println(" -- " + right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren()));
         if (right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren())) {
             agenda.offer(newIncompleteItem);
         }
