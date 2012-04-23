@@ -19,13 +19,13 @@ import java.util.Set;
  *
  * @author koller
  */
-class HomAutomaton extends BottomUpAutomaton<String> {
+class HomAutomaton extends TreeAutomaton<String> {
 
-    private BottomUpAutomaton base;
+    private TreeAutomaton base;
     private Homomorphism hom;
     private int gensymNext = 1;
 
-    public HomAutomaton(BottomUpAutomaton base, Homomorphism hom) {
+    public HomAutomaton(TreeAutomaton base, Homomorphism hom) {
         this.base = base;
         this.hom = hom;
 

@@ -10,7 +10,7 @@ import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.algebra.ParserException;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.up.ling.shell.CallableFromShell;
 import java.io.BufferedReader;
@@ -29,11 +29,11 @@ import java.util.Set;
  */
 public class InterpretedTreeAutomaton {
 
-    private BottomUpAutomaton<String> automaton;
+    private TreeAutomaton<String> automaton;
     private Map<String, Interpretation> interpretations;
     private boolean debug = false;
 
-    public InterpretedTreeAutomaton(BottomUpAutomaton<String> automaton) {
+    public InterpretedTreeAutomaton(TreeAutomaton<String> automaton) {
         this.automaton = automaton;
         interpretations = new HashMap<String, Interpretation>();
     }
@@ -43,7 +43,7 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell(name = "automaton")
-    public BottomUpAutomaton<String> getAutomaton() {
+    public TreeAutomaton<String> getAutomaton() {
         return automaton;
     }
 
@@ -71,7 +71,7 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell(name = "parse")
-    public BottomUpAutomaton parseFromReaders(Map<String, Reader> readers) throws ParserException, IOException {
+    public TreeAutomaton parseFromReaders(Map<String, Reader> readers) throws ParserException, IOException {
         Map<String, Object> inputs = new HashMap<String, Object>();
 
         for (String interp : readers.keySet()) {
@@ -82,8 +82,8 @@ public class InterpretedTreeAutomaton {
         return parse(inputs);
     }
 
-    public BottomUpAutomaton parse(Map<String, Object> inputs) {
-        BottomUpAutomaton ret = automaton;
+    public TreeAutomaton parse(Map<String, Object> inputs) {
+        TreeAutomaton ret = automaton;
 
         for (String interpName : inputs.keySet()) {
             Interpretation interp = interpretations.get(interpName);
@@ -98,18 +98,18 @@ public class InterpretedTreeAutomaton {
 
     @CallableFromShell(name = "decode", joinList = "\n")
     public Set<Object> decodeFromReaders(Reader outputInterpretation, Map<String, Reader> readers) throws ParserException, IOException {
-        BottomUpAutomaton chart = parseFromReaders(readers);
+        TreeAutomaton chart = parseFromReaders(readers);
         String interp = StringTools.slurp(outputInterpretation);
         return decode(chart, interpretations.get(interp));
     }
 
     public Set<Object> decode(String outputInterpretation, Map<String, Object> inputs) {
-        BottomUpAutomaton chart = parse(inputs);
+        TreeAutomaton chart = parse(inputs);
         return decode(chart, interpretations.get(outputInterpretation));
     }
 
-    private Set<Object> decode(BottomUpAutomaton chart, Interpretation interp) {
-        BottomUpAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
+    private Set<Object> decode(TreeAutomaton chart, Interpretation interp) {
+        TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
         Set<Tree<String>> outputLanguage = outputChart.language();
 
         Set<Object> ret = new HashSet<Object>();
@@ -122,18 +122,18 @@ public class InterpretedTreeAutomaton {
 
     @CallableFromShell(name = "decodeToTerms", joinList = "\n")
     public Set<Tree> decodeToTermsFromReaders(Reader outputInterpretation, Map<String, Reader> readers) throws ParserException, IOException {
-        BottomUpAutomaton chart = parseFromReaders(readers);
+        TreeAutomaton chart = parseFromReaders(readers);
         String interp = StringTools.slurp(outputInterpretation);
         return decodeToTerms(chart, interpretations.get(interp));
     }
 
     public Set<Tree> decodeToTerms(String outputInterpretation, Map<String, Object> inputs) {
-        BottomUpAutomaton chart = parse(inputs);
+        TreeAutomaton chart = parse(inputs);
         return decodeToTerms(chart, interpretations.get(outputInterpretation));
     }
 
-    private Set<Tree> decodeToTerms(BottomUpAutomaton chart, Interpretation interp) {
-        BottomUpAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
+    private Set<Tree> decodeToTerms(TreeAutomaton chart, Interpretation interp) {
+        TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHom());
         Set<Tree<String>> outputLanguage = outputChart.language();
 
         Set<Tree> ret = new HashSet<Tree>();
@@ -152,11 +152,11 @@ public class InterpretedTreeAutomaton {
 
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
-        List<BottomUpAutomaton> parses = new ArrayList<BottomUpAutomaton>();
+        List<TreeAutomaton> parses = new ArrayList<TreeAutomaton>();
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         
-        for( BottomUpAutomaton parse : trainingData.getAllInstances() ) {            
+        for( TreeAutomaton parse : trainingData.getAllInstances() ) {            
             parses.add(parse);
 
             Set<Rule> rules = parse.getRuleSet();
@@ -181,7 +181,7 @@ public class InterpretedTreeAutomaton {
 
             // E-step
             for( int i = 0; i < parses.size(); i++ ) {
-                BottomUpAutomaton parse = parses.get(i);
+                TreeAutomaton parse = parses.get(i);
                 
                 Map<Object, Double> inside = parse.inside();
                 Map<Object, Double> outside = parse.outside(inside);
@@ -292,7 +292,7 @@ public class InterpretedTreeAutomaton {
 
                 currentInterpretationIndex++;
                 if (currentInterpretationIndex >= interpretationOrder.size()) {
-                    BottomUpAutomaton chart = parse(currentInputs).reduceBottomUp().makeConcreteAutomaton();
+                    TreeAutomaton chart = parse(currentInputs).reduceBottomUp().makeConcreteAutomaton();
                     ret.addInstance(chart);
                     
                     currentInputs.clear();

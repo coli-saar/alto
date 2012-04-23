@@ -26,7 +26,7 @@ class InterpretedTreeAutomatonTest {
     public void testParse() {
         String string = "john watches the woman with the telescope";
 
-        BottomUpAutomaton rtg = parse("john -> NP\n watches -> V\n" +
+        TreeAutomaton rtg = parse("john -> NP\n watches -> V\n" +
             "the -> Det\n woman -> N\n with -> P\n telescope -> N\n" +
             "s(NP,VP) -> S!\n np(Det,N) -> NP\n n(N,PP) -> N\n" +
             "vp(V,NP) -> VP\n vp(VP,PP) -> VP\n pp(P,NP) -> PP"
@@ -45,7 +45,7 @@ class InterpretedTreeAutomatonTest {
         irtg.addInterpretation("string", new Interpretation(algebra, h));
 
         List words = irtg.parseString("string", string);
-        BottomUpAutomaton chart = irtg.parse(["string": words]);
+        TreeAutomaton chart = irtg.parse(["string": words]);
         chart.makeAllRulesExplicit();
         
         assertEquals(new HashSet([parseTree("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"),
@@ -68,7 +68,7 @@ r2 -> S
 
         String string = "a a a";
         List words = irtg.parseString("i", string);
-        BottomUpAutomaton chart = irtg.parse(["i": words]);
+        TreeAutomaton chart = irtg.parse(["i": words]);
         chart.makeAllRulesExplicit();
 
         chart.reduceBottomUp();
@@ -118,8 +118,8 @@ r2 -> S
         return TermParser.parse(s).toTree();
     }
 
-    private static BottomUpAutomaton parse(String s) {
-        return BottomUpAutomatonParser.parse(new StringReader(s));
+    private static TreeAutomaton parse(String s) {
+        return TreeAutomatonParser.parse(new StringReader(s));
     }
     
     private static final String CFG_STR = """

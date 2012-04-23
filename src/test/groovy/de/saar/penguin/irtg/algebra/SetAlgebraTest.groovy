@@ -82,7 +82,7 @@ class SetAlgebraTest {
     public void testGenerateRE() {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
         Set referent = a.parseString("{r1}");
-        BottomUpAutomaton decomp = a.decompose(referent);
+        TreeAutomaton decomp = a.decompose(referent);
         
         String grammarstring = '''
 interpretation i: de.saar.penguin.irtg.algebra.SetAlgebra
@@ -99,7 +99,7 @@ b_nop -> Adj_N
          InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
          Homomorphism hom = irtg.getInterpretations().get("i").getHom();
          
-        BottomUpAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+        TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
         chart.makeAllRulesExplicit();
         
         Set result = chart.language();
@@ -112,7 +112,7 @@ b_nop -> Adj_N
     public void testGenerateSent() {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
         Set referent = a.parseString("{e}");
-        BottomUpAutomaton decomp = a.decompose(referent);
+        TreeAutomaton decomp = a.decompose(referent);
         
         String grammarstring = '''
 interpretation i: de.saar.penguin.irtg.algebra.SetAlgebra
@@ -133,7 +133,7 @@ a_sleeps_r1(N) -> S!
          InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
          Homomorphism hom = irtg.getInterpretations().get("i").getHom();
          
-        BottomUpAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+        TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
         chart.makeAllRulesExplicit();
         
         Set result = chart.language();
@@ -147,7 +147,7 @@ a_sleeps_r1(N) -> S!
     public void testGenerateSent2() {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
         Set referent = a.parseString("{e}");
-        BottomUpAutomaton decomp = a.decompose(referent);
+        TreeAutomaton decomp = a.decompose(referent);
         
         String grammarstring = '''
 interpretation i: de.saar.penguin.irtg.algebra.SetAlgebra
@@ -168,7 +168,7 @@ a_sleeps_r1(N) -> S!
          InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
          Homomorphism hom = irtg.getInterpretations().get("i").getHom();
          
-        BottomUpAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+        TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
         chart.makeAllRulesExplicit();
         
         Set result = new HashSet(chart.language())

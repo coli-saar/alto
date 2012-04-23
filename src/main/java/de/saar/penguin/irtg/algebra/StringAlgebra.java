@@ -5,7 +5,7 @@
 package de.saar.penguin.irtg.algebra;
 
 import de.saar.basic.tree.Tree;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
     }
 
-    public BottomUpAutomaton decompose(List<String> words) {
+    public TreeAutomaton decompose(List<String> words) {
         return new CkyAutomaton(words);
     }
 
@@ -53,7 +53,7 @@ public class StringAlgebra implements Algebra<List<String>> {
         return Arrays.asList(representation.split("\\s+"));
     }
 
-    private static class CkyAutomaton extends BottomUpAutomaton<Span> {
+    private static class CkyAutomaton extends TreeAutomaton<Span> {
         private List<String> words;
         private Set<String> allLabels;
 
@@ -141,7 +141,6 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         @Override
         public Set<String> getLabelsTopDown(Span parentState) {
-
             if (parentState.end == parentState.start + 1) {
                 Set<String> ret = new HashSet<String>();
                 ret.add(words.get(parentState.start));
@@ -150,6 +149,26 @@ public class StringAlgebra implements Algebra<List<String>> {
                 return CONCAT_SET;
             }
         }
+
+        @Override
+        public boolean hasRuleWithPrefix(String label, List<Span> prefixOfChildren) {
+            if( label.equals(CONCAT)) {
+                switch(prefixOfChildren.size()) {
+                    case 0:
+                    case 1:
+                        return true;
+                        
+                    case 2:
+                        return prefixOfChildren.get(0).end == prefixOfChildren.get(1).start;
+                        
+                    default:
+                        throw new RuntimeException("checking rule prefix for CONCAT with arity > 2");
+                }
+            } else {
+                return words.contains(label);
+            }
+        }
+        
 
         @Override
         public Set<Span> getFinalStates() {

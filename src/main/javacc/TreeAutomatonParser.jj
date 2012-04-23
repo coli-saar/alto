@@ -9,7 +9,7 @@ options {
   LOOKAHEAD=2;
   FORCE_LA_CHECK=true;
 }
-PARSER_BEGIN(BottomUpAutomatonParser)
+PARSER_BEGIN(TreeAutomatonParser)
 package de.saar.penguin.irtg.automata;
 
 import java.io.ByteArrayInputStream;
@@ -22,21 +22,21 @@ import java.io.*;
  * Parser for bottom-up automata
  * @author Alexander Koller
  */
-public class BottomUpAutomatonParser {
-    private static ConcreteBottomUpAutomaton<String> automaton;
-    private static BottomUpAutomatonParser parser = new BottomUpAutomatonParser(new ByteArrayInputStream(new byte[]{}));
+public class TreeAutomatonParser {
+    private static ConcreteTreeAutomaton<String> automaton;
+    private static TreeAutomatonParser parser = new TreeAutomatonParser(new ByteArrayInputStream(new byte[]{}));
     private static Rule<String> lastSeenRule = null;
 
-	public static BottomUpAutomaton<String> parse(Reader reader) throws ParseException{
+	public static TreeAutomaton<String> parse(Reader reader) throws ParseException{
 		parser.ReInit(reader);
-		automaton = new ConcreteBottomUpAutomaton<String>();
+		automaton = new ConcreteTreeAutomaton<String>();
                 lastSeenRule = null;
 
 		parser.automaton();
 		return automaton;
 	}
 }
-PARSER_END(BottomUpAutomatonParser)
+PARSER_END(TreeAutomatonParser)
 
 SKIP : { <"/*">: INSIDE_COMMENT | " " | "\t" | "\n" }
 <INSIDE_COMMENT>

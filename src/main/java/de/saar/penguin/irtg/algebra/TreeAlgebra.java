@@ -5,7 +5,7 @@
 package de.saar.penguin.irtg.algebra;
 
 import de.saar.basic.tree.Tree;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 
 /**
  *
@@ -16,7 +16,7 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
         return t;
     }
 
-    public BottomUpAutomaton decompose(Tree<String> value) {
+    public TreeAutomaton decompose(Tree<String> value) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
 

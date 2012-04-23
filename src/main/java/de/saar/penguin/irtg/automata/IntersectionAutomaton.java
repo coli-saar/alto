@@ -17,12 +17,12 @@ import java.util.*;
  *
  * @author koller
  */
-class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pair<LeftState, RightState>> {
-    private BottomUpAutomaton<LeftState> left;
-    private BottomUpAutomaton<RightState> right;
+class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
+    private TreeAutomaton<LeftState> left;
+    private TreeAutomaton<RightState> right;
     private Set<String> allLabels;
 
-    public IntersectionAutomaton(BottomUpAutomaton<LeftState> left, BottomUpAutomaton<RightState> right) {
+    public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         this.left = left;
         this.right = right;
 
@@ -42,6 +42,8 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             Queue<IncompleteEarleyItem> agenda = new Agenda<IncompleteEarleyItem>();
             ListMultimap<LeftState, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create();
             ListMultimap<LeftState, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();
+            
+            int countAgendaItems = 0;
 
             // Init
             for (LeftState state : left.getFinalStates()) {
@@ -51,6 +53,9 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             while (!agenda.isEmpty()) {
                 IncompleteEarleyItem item = agenda.remove();
                 waitingIncompleteItems.put(item.getNextLeftState(), item);
+                
+                System.err.println("  -> " + item);
+                countAgendaItems++;
 
                 if (item.matchedStates == item.leftRule.getArity()) {
                     // Finish
@@ -76,12 +81,15 @@ class IntersectionAutomaton<LeftState, RightState> extends BottomUpAutomaton<Pai
             }
 
             isExplicit = true;
+            System.err.println("earley intersect: " + countAgendaItems + " incomplete items");
         }
     }
 
     private void complete(IncompleteEarleyItem incompleteItem, CompleteEarleyItem completeItem, Queue<IncompleteEarleyItem> agenda) {
         final IncompleteEarleyItem newIncompleteItem = new IncompleteEarleyItem(incompleteItem.leftRule, completeItem.rightRule.getParent(), incompleteItem);
 
+        System.err.println("prefix check: " + newIncompleteItem.leftRule.getLabel() + "/" + newIncompleteItem.getRightChildren());
+        System.err.println(" -- " + right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren()));
         if (right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren())) {
             agenda.offer(newIncompleteItem);
         }

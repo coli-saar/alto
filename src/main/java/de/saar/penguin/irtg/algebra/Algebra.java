@@ -6,7 +6,7 @@
 package de.saar.penguin.irtg.algebra;
 
 import de.saar.basic.tree.Tree;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 
 /**
  *
@@ -14,6 +14,6 @@ import de.saar.penguin.irtg.automata.BottomUpAutomaton;
  */
 public interface Algebra<E> {
     public E evaluate(Tree<String> t);
-    public BottomUpAutomaton decompose(E value);
+    public TreeAutomaton decompose(E value);
     public E parseString(String representation) throws ParserException;
 }

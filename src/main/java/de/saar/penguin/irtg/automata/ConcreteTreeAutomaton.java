@@ -12,8 +12,8 @@ import java.util.Set;
  *
  * @author koller
  */
-public class ConcreteBottomUpAutomaton<State> extends BottomUpAutomaton<State> {
-    public ConcreteBottomUpAutomaton() {
+public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
+    public ConcreteTreeAutomaton() {
         super();
         isExplicit = true;
     }

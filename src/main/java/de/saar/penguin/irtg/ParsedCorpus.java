@@ -5,7 +5,7 @@
 package de.saar.penguin.irtg;
 
 import de.saar.basic.StringTools;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.up.ling.shell.CallableFromShell;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,22 +26,22 @@ import java.util.zip.GZIPOutputStream;
  * @author koller
  */
 public class ParsedCorpus implements Serializable {
-    private List<BottomUpAutomaton> instances;
+    private List<TreeAutomaton> instances;
 
     public ParsedCorpus() {
-        this.instances = new ArrayList<BottomUpAutomaton>();
+        this.instances = new ArrayList<TreeAutomaton>();
     }
     
-    public void addInstance(BottomUpAutomaton inst) {
+    public void addInstance(TreeAutomaton inst) {
         instances.add(inst);
     }
     
-    public List<BottomUpAutomaton> getAllInstances() {
+    public List<TreeAutomaton> getAllInstances() {
         return instances;
     }
     
     @CallableFromShell
-    public BottomUpAutomaton getInstance(Reader r) throws IOException {
+    public TreeAutomaton getInstance(Reader r) throws IOException {
         String numString = StringTools.slurp(r);
         return instances.get(Integer.parseInt(numString));
     }

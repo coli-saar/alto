@@ -35,7 +35,7 @@ import java.util.Set;
  *
  * @author koller
  */
-public abstract class BottomUpAutomaton<State> implements Serializable {
+public abstract class TreeAutomaton<State> implements Serializable {
 
     protected Map<String, StateListToStateMap> explicitRules; // one for each label
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
@@ -45,7 +45,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
     protected boolean isExplicit;
     protected SetMultimap<State, Rule<State>> rulesForRhsState;
 
-    public BottomUpAutomaton() {
+    public TreeAutomaton() {
         explicitRules = new HashMap<String, StateListToStateMap>();
         explicitRulesTopDown = new HashMap<String, SetMultimap<State, Rule<State>>>();
         finalStates = new HashSet<State>();
@@ -429,12 +429,12 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof BottomUpAutomaton)) {
+        if (!(o instanceof TreeAutomaton)) {
             return false;
         }
 
         Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
-        Map<String, Map<List<State>, Set<Rule<State>>>> otherRules = ((BottomUpAutomaton) o).getAllRules();
+        Map<String, Map<List<State>, Set<Rule<State>>>> otherRules = ((TreeAutomaton) o).getAllRules();
 
         if (!rules.keySet().equals(otherRules.keySet())) {
             return false;
@@ -505,10 +505,10 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
         }
     }
 
-    public ConcreteBottomUpAutomaton<State> makeConcreteAutomaton() {
+    public ConcreteTreeAutomaton<State> makeConcreteAutomaton() {
         makeAllRulesExplicit();
 
-        ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
+        ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
 
         ret.explicitRules = explicitRules;
         ret.explicitRulesTopDown = explicitRulesTopDown;
@@ -571,7 +571,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      * @param other the other automaton.
      * @return an automaton representing the intersected language.
      */
-    public <OtherState> BottomUpAutomaton<Pair<State, OtherState>> intersect(BottomUpAutomaton<OtherState> other) {
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(TreeAutomaton<OtherState> other) {
         return new IntersectionAutomaton<State, OtherState>(this, other);
     }
 
@@ -581,7 +581,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      * @param hom the homomorphism.
      * @return an automaton representing the homomorphic pre-image.
      */
-    public BottomUpAutomaton<State> inverseHomomorphism(Homomorphism hom) {
+    public TreeAutomaton<State> inverseHomomorphism(Homomorphism hom) {
         return new InverseHomAutomaton<State>(this, hom);
     }
 
@@ -592,7 +592,7 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      * @return 
      */
     @CallableFromShell
-    public BottomUpAutomaton<String> homomorphism(Homomorphism hom) {
+    public TreeAutomaton<String> homomorphism(Homomorphism hom) {
         return new HomAutomaton(this, hom);
     }
 
@@ -674,9 +674,9 @@ public abstract class BottomUpAutomaton<State> implements Serializable {
      * 
      * @return 
      */
-    public BottomUpAutomaton<State> reduceBottomUp() {
+    public TreeAutomaton<State> reduceBottomUp() {
         Set<State> productiveStates = getProductiveStates();
-        ConcreteBottomUpAutomaton<State> ret = new ConcreteBottomUpAutomaton<State>();
+        ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
 
         // copy all rules that only contain productive states
         for (Rule<State> rule : getRuleSet()) {

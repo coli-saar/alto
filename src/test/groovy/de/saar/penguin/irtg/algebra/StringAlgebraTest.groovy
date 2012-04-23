@@ -24,7 +24,7 @@ class StringAlgebraTest {
         Algebra algebra = new StringAlgebra();
 
         List words = algebra.parseString(string);
-        BottomUpAutomaton auto = algebra.decompose(words);
+        TreeAutomaton auto = algebra.decompose(words);
 
         assertEquals(new HashSet([s(0,7)]), auto.getFinalStates());
         assertEquals(new HashSet([r(s(2,4), StringAlgebra.CONCAT, [s(2,3), s(3,4)])]), auto.getRulesBottomUp(StringAlgebra.CONCAT, [s(2,3), s(3,4)]));

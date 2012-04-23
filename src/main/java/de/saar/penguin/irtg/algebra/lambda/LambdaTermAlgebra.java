@@ -8,7 +8,7 @@ import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.algebra.Algebra;
 import de.saar.penguin.irtg.algebra.ParserException;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
 
     }
 
-    public BottomUpAutomaton decompose(LambdaTerm value) {
+    public TreeAutomaton decompose(LambdaTerm value) {
         return new LambdaDecompositionAutomaton(value);
     }
 
@@ -73,7 +73,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
         }
     }
 
-    private class LambdaDecompositionAutomaton extends BottomUpAutomaton<LambdaTerm> {
+    private class LambdaDecompositionAutomaton extends TreeAutomaton<LambdaTerm> {
 
         private Set<String> allLabels;
 

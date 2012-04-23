@@ -10,7 +10,7 @@ import de.saar.basic.Pair;
 import de.saar.penguin.irtg.algebra.Algebra;
 import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.algebra.StringAlgebra;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +25,7 @@ import java.util.Set;
  * @author koller
  */
 public class LexiconGenerator {
-    public <LeftState, RightState> SetMultimap<String, String> getLexicalPairs(BottomUpAutomaton<LeftState> left, BottomUpAutomaton<RightState> right) {
+    public <LeftState, RightState> SetMultimap<String, String> getLexicalPairs(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         SetMultimap<String, String> ret = HashMultimap.create();
         Set<Pair<LeftState, RightState>> seenStatePairs = new HashSet<Pair<LeftState, RightState>>();
         Queue<Pair<LeftState, RightState>> agenda = new LinkedList<Pair<LeftState, RightState>>();
@@ -71,8 +71,8 @@ public class LexiconGenerator {
     }
 
     public static void main(String[] args) throws ParserException {
-        BottomUpAutomaton english = makeDecompAutomaton("what is the highest point in florida", new StringAlgebra());
-        BottomUpAutomaton lambda = makeDecompAutomaton("(argmax $0 (and (place:t $0) (loc:t $0 florida:s)) (elevation:i $0))", new LambdaTermAlgebra());
+        TreeAutomaton english = makeDecompAutomaton("what is the highest point in florida", new StringAlgebra());
+        TreeAutomaton lambda = makeDecompAutomaton("(argmax $0 (and (place:t $0) (loc:t $0 florida:s)) (elevation:i $0))", new LambdaTermAlgebra());
 //        BottomUpAutomaton english = makeDecompAutomaton("what are the high points of states surrounding mississippi", new StringAlgebra());
 //        BottomUpAutomaton lambda = makeDecompAutomaton("(lambda $0 (exists $1 (and (state:t $1) (next_to:t $1 mississippi:s) (high_point:t $1 $0))))", new LambdaTermAlgebra());
         
@@ -102,7 +102,7 @@ public class LexiconGenerator {
         }
     }
 
-    private static <E> BottomUpAutomaton makeDecompAutomaton(String repr, Algebra<E> algebra) throws ParserException {
+    private static <E> TreeAutomaton makeDecompAutomaton(String repr, Algebra<E> algebra) throws ParserException {
         E algebraObject = algebra.parseString(repr);
         return algebra.decompose(algebraObject);
     }

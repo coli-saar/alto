@@ -31,7 +31,7 @@ import de.saar.basic.*;
  * @author Alexander Koller
  */
 public class IrtgParser {
-    private ConcreteBottomUpAutomaton<String> automaton = new ConcreteBottomUpAutomaton<String>();
+    private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
     private InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(automaton);
     private Map<String,Homomorphism> homomorphisms = new HashMap<String,Homomorphism>();
     private String lastSeenTerminal = null;

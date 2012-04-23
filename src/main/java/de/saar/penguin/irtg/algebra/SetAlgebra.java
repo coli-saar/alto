@@ -6,7 +6,7 @@ package de.saar.penguin.irtg.algebra;
 
 import de.saar.basic.tree.Tree;
 import de.saar.basic.tree.TreeVisitor;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -143,11 +143,11 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     }
 
     @Override
-    public BottomUpAutomaton decompose(Set<List<String>> value) {
+    public TreeAutomaton decompose(Set<List<String>> value) {
         return new SetDecompositionAutomaton(value);
     }
 
-    private class SetDecompositionAutomaton extends BottomUpAutomaton<Set<List<String>>> {
+    private class SetDecompositionAutomaton extends TreeAutomaton<Set<List<String>>> {
         private Set<Set<List<String>>> finalStates;
 
         public SetDecompositionAutomaton(Set<List<String>> finalElement) {

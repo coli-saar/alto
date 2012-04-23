@@ -7,7 +7,7 @@ package de.saar.penguin.irtg;
 
 import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.algebra.Algebra;
-import de.saar.penguin.irtg.automata.BottomUpAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.up.ling.shell.CallableFromShell;
 
@@ -37,7 +37,7 @@ public class Interpretation<E> {
         return hom;
     }
     
-    public BottomUpAutomaton parse(E object) {
+    public TreeAutomaton parse(E object) {
         return algebra.decompose(object).inverseHomomorphism(hom);
     }
 

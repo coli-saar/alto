@@ -16,12 +16,12 @@ import java.util.Set;
  *
  * @author koller
  */
-class InverseHomAutomaton<State> extends BottomUpAutomaton<State> {
-    private BottomUpAutomaton<State> rhsAutomaton;
+class InverseHomAutomaton<State> extends TreeAutomaton<State> {
+    private TreeAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
     private Set<String> computedLabels;
 
-    public InverseHomAutomaton(BottomUpAutomaton<State> rhsAutomaton, Homomorphism hom) {
+    public InverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         this.rhsAutomaton = rhsAutomaton;
         this.hom = hom;
         computedLabels = new HashSet<String>();
