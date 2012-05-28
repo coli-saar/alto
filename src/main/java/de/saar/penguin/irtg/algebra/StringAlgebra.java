@@ -176,7 +176,7 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
     }
 
-    static class Span implements Serializable {
+    public static class Span implements Serializable {
         public int start, end;
 
         public Span(int start, int end) {

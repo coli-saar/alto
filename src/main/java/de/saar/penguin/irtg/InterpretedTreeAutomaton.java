@@ -118,9 +118,9 @@ public class InterpretedTreeAutomaton {
      */
 
     private Set<Object> decode(TreeAutomaton chart, Interpretation interp) {
-        TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
+        TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());        
         Set<Tree<String>> outputLanguage = outputChart.language();
-
+        
         Set<Object> ret = new HashSet<Object>();
         for (Tree<String> term : outputLanguage) {
             ret.add(interp.getAlgebra().evaluate(term));
@@ -320,7 +320,7 @@ public class InterpretedTreeAutomaton {
         List<String> interpretationOrder = new ArrayList<String>(interpretations.keySet());
         
         for( String interp : interpretationOrder ) {
-            pw.println("interpretation " + interp + ": " + interpretations.get(interp).getAlgebra().getClass());
+            pw.println("interpretation " + interp + ": " + interpretations.get(interp).getAlgebra().getClass().getName());
         }
         
         pw.println();
