@@ -13,9 +13,7 @@ import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.up.ling.shell.CallableFromShell;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Reader;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -314,4 +312,33 @@ public class InterpretedTreeAutomaton {
             lineNumber++;
         }
     }
+
+    @Override
+    public String toString() {
+        StringWriter buf = new StringWriter();
+        PrintWriter pw = new PrintWriter(buf);
+        List<String> interpretationOrder = new ArrayList<String>(interpretations.keySet());
+        
+        for( String interp : interpretationOrder ) {
+            pw.println("interpretation " + interp + ": " + interpretations.get(interp).getAlgebra().getClass());
+        }
+        
+        pw.println();
+        
+        for( Rule<String> rule : automaton.getRuleSet() ) {
+            String isFinal = automaton.getFinalStates().contains(rule.getParent()) ? "!" : "";
+            String children = (rule.getArity() == 0 ? "" : "(" + StringTools.join(rule.getChildren(), ", ") + ")");
+            pw.println(rule.getLabel() + children + " -> " + rule.getParent().toString() + isFinal + " [" + rule.getWeight() + "]");
+            
+            for( String interp : interpretationOrder ) {
+                pw.println("  [" + interp + "] " + interpretations.get(interp).getHomomorphism().get(rule.getLabel()));
+            }
+            
+            pw.println();
+        }
+        
+        return buf.toString();
+    }
+    
+    
 }
