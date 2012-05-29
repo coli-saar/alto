@@ -312,6 +312,15 @@ public class InterpretedTreeAutomaton {
             lineNumber++;
         }
     }
+    
+    public InterpretedTreeAutomaton binarize() {
+        if( interpretations.keySet().size() > 1 ) {
+            throw new UnsupportedOperationException("Can only binarize IRTGs with a single interpretation.");
+	}
+
+	// TODO: Sarah Hemmens BSc-Arbeit
+	return null;
+    }
 
     @Override
     public String toString() {
@@ -322,9 +331,9 @@ public class InterpretedTreeAutomaton {
         for( String interp : interpretationOrder ) {
             pw.println("interpretation " + interp + ": " + interpretations.get(interp).getAlgebra().getClass().getName());
         }
-        
+
         pw.println();
-        
+
         for( Rule<String> rule : automaton.getRuleSet() ) {
             String isFinal = automaton.getFinalStates().contains(rule.getParent()) ? "!" : "";
             String children = (rule.getArity() == 0 ? "" : "(" + StringTools.join(rule.getChildren(), ", ") + ")");
@@ -339,6 +348,4 @@ public class InterpretedTreeAutomaton {
         
         return buf.toString();
     }
-    
-    
 }
