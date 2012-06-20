@@ -315,7 +315,7 @@ public class InterpretedTreeAutomaton {
 
     @CallableFromShell
     public InterpretedTreeAutomaton binarize() {
-        // interpretations.remove("tree");
+         interpretations.remove("tree");
 
         if (interpretations.keySet().size() > 1) {
             throw new UnsupportedOperationException("Can only binarize IRTGs with a single interpretation.");

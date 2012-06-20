@@ -75,7 +75,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return 
      */
     abstract public Set<Rule<State>> getRulesTopDown(String label, State parentState);
-    
+
     /**
      * Returns a set that contains all terminal symbols f
      * such that the automaton has top-down
@@ -92,7 +92,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Set<String> getLabelsTopDown(State parentState) {
         return getAllLabels();
     }
-    
+
     /**
      * Returns true whenever the automaton has a bottom-up rule whose first
      * n child states are the n child states that are passed as the prefixOfChildren
@@ -200,7 +200,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     protected Set<Rule<State>> getRulesTopDownFromExplicit(String label, State parentState) {
         if (useCachedRuleTopDown(label, parentState)) {
-            return explicitRulesTopDown.get(label).get(parentState);
+            if (!explicitRulesTopDown.containsKey(label) || !explicitRulesTopDown.get(label).containsKey(parentState)) {
+                return new HashSet<Rule<State>>();
+            } else {
+                return explicitRulesTopDown.get(label).get(parentState);
+            }
         } else {
             return new HashSet<Rule<State>>();
         }
@@ -555,10 +559,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
         // This happens when the automaton doesn't contain any rules for these labels,
         // e.g. for InverseHomAutomata (see getAllLabels of that class).
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(label);
-        if (topdown == null) {
-            return false;
-        } else if (isExplicit) {
+        if (isExplicit) {
             return true;
+        } else if (topdown == null) {
+            return false;
         } else {
             return topdown.containsKey(parent);
         }
