@@ -7,11 +7,14 @@ package de.saar.penguin.irtg;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
+import de.saar.basic.StringOrVariable;
 import de.saar.basic.StringTools;
 import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.algebra.ParserException;
+import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.saar.penguin.irtg.hom.Homomorphism;
 import de.up.ling.shell.CallableFromShell;
 import java.io.*;
 import java.util.ArrayList;
@@ -313,14 +316,132 @@ public class InterpretedTreeAutomaton {
         }
     }
     
+    @CallableFromShell 
     public InterpretedTreeAutomaton binarize() {
         if( interpretations.keySet().size() > 1 ) {
             throw new UnsupportedOperationException("Can only binarize IRTGs with a single interpretation.");
+            //interpretations.remove("tree");
 	}
 
-	// TODO: Sarah Hemmens BSc-Arbeit
-	return null;
+        ConcreteTreeAutomaton newAutomaton = new de.saar.penguin.irtg.automata.ConcreteTreeAutomaton();
+        Homomorphism newHomomorphism = new Homomorphism();
+        
+        Set<Rule<String>> rules = automaton.getRuleSet();
+        
+        if( interpretations.keySet().isEmpty()){
+            throw new RuntimeException("Trying to binarize IRTG without interpretation.");
+            // UnsupportedOperationException?
+        }
+        String interpretationName = interpretations.keySet().iterator().next();
+        Interpretation interpretation = interpretations.get(interpretationName);
+        Homomorphism homomorphism = interpretation.getHomomorphism();         
+        
+        for( Rule rule : rules) {
+            String ruleLabel = rule.getLabel();
+            
+            if( rule.getArity() > 2){
+                        
+                Tree<StringOrVariable> h_rule = homomorphism.get(ruleLabel);
+    
+                String parent = (String) rule.getParent();
+                String label = genSym(ruleLabel + "-b", 0, true);
+                
+                Set<Rule<String>> newRules = binarizeRule(newHomomorphism, h_rule, parent, label, rule);
+                for( Rule<String> r : newRules){
+                    newAutomaton.addRule(r);
+                }
+            }
+            else { // rules of arity <= 2
+                newAutomaton.addRule(rule);
+                newHomomorphism.add(ruleLabel,homomorphism.get(ruleLabel));
+            }
+        }
+        
+        for( String state : automaton.getFinalStates()){
+            newAutomaton.addFinalState(state);
+        }
+        InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAutomaton); 
+        Interpretation interpr = new Interpretation(interpretation.getAlgebra(),newHomomorphism);
+        ret.addInterpretation(interpretationName, interpr);
+        
+	return ret;
     }
+    
+    
+    private Set<Rule<String>> binarizeRule(Homomorphism h, Tree<StringOrVariable> homPart, String parentNT, String label, Rule rule){
+        List<String> nonterminalsInNewRule = new ArrayList<String>();
+        Set<Rule<String>> newRules = new HashSet<Rule<String>>();
+        
+        // homomorphism for new rule
+        Tree<StringOrVariable> hForRule = homPart.copy();
+        // everything apart from the operation in the root note can be replaced
+        List<String> childrenToRemove = hForRule.getChildren(hForRule.getRoot());
+        int argNum = childrenToRemove.size();
+        for(int i = 0; i<argNum; i++){
+            String arg = childrenToRemove.get(0);
+            hForRule.removeNode(arg);
+        }
+        
+        int varCounter = 0;
+        
+        String operation = homPart.getRoot();
+        List<String> args = homPart.getChildren(operation); 
+        
+        for(int pos = 1; pos <= args.size(); pos++){ 
+            String arg = args.get(pos-1);
+            StringOrVariable argLabel = homPart.getLabel(arg);
+
+            if(argLabel.isVariable()){
+                int index = Homomorphism.getIndexForVariable(argLabel);
+                String nonterminal = (String) rule.getChildren()[index];
+                nonterminalsInNewRule.add(nonterminal);
+
+                varCounter++;
+                StringOrVariable var = new StringOrVariable("?" + varCounter, true);
+                hForRule.addNode(var, operation);
+            }
+            else if(homPart.getChildren(arg).isEmpty()){ // no operations in this subtree
+                hForRule.addNode(argLabel, operation);
+            }
+            else{ // subtree of the homomorphism contains at least one operation
+                String newTerminal = genSym(label, pos, true);
+                String newNonterminal = genSym(label, pos, false);
+                nonterminalsInNewRule.add(newNonterminal);
+                
+                varCounter++;
+                StringOrVariable var = new StringOrVariable("?" + varCounter, true);
+                hForRule.addNode(var, operation);
+                
+                Tree<StringOrVariable> subTree = homPart.subtree(arg);
+                newRules.addAll( binarizeRule(h, subTree, newNonterminal, newTerminal, rule) );
+            }
+            
+        }
+        Rule<String> binRule = new Rule(parentNT, label, nonterminalsInNewRule);
+        newRules.add(binRule);
+        h.add(label, hForRule);
+        
+        return newRules;
+    }
+    
+    
+    
+    private String genSym(String prefix, int argNum, boolean terminal){
+        String newSymbol = prefix + argNum;
+        if(terminal){
+            while (automaton.getAllLabels().contains(newSymbol)){
+                newSymbol = newSymbol + "b";
+            }
+        }
+        else{
+            newSymbol = newSymbol.toUpperCase();
+            while(automaton.getAllStates().contains(newSymbol)){
+                newSymbol = newSymbol + "B";
+            }
+        }
+        return newSymbol;
+    }
+    
 
     @Override
     public String toString() {
