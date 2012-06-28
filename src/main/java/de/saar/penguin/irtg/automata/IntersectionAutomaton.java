@@ -230,7 +230,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            Set<Pair<LeftState, RightState>> seenStates = new HashSet<Pair<LeftState, RightState>>();
 //            SetMultimap<LeftState, RightState> partners = HashMultimap.create();
 //
-//            // initialize agenda with all pairs of rules of the form A -> f //
+//            // initialize agenda with all pairs of rules of the form A -> f
 //            Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new HashMap<String, Set<Rule<RightState>>>();
 //            List<RightState> noRightChildren = new ArrayList<RightState>();
 //
@@ -249,7 +249,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //                }
 //            }
 //
-//            // compute rules and states bottom-up while (!agenda.isEmpty()) {
+//            // compute rules and states bottom-up 
+//         while (!agenda.isEmpty()) {
 //            Pair<LeftState, RightState> state = agenda.remove();
 //            List<Rule<LeftState>> possibleRules = rulesByChildState.get(state.left);
 //
