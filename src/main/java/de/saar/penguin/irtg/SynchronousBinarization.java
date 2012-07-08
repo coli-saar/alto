@@ -9,8 +9,6 @@ import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.hom.Homomorphism;
-import de.up.ling.tree.Tree;
-import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -215,24 +213,6 @@ public class SynchronousBinarization<E, F> {
             hash = 97 * hash + (this.state != null ? this.state.hashCode() : 0);
             return hash;
         }
-    }
-    
-    private static <A> de.saar.basic.tree.Tree<A> newTreeToOldTree(Tree<A> tree) {
-        final de.saar.basic.tree.Tree<A> ret = new de.saar.basic.tree.Tree<A>();
-
-        tree.dfs(new TreeVisitor<A, String, Void>() {
-            @Override
-            public String getRootValue() {
-                return null;
-            }
-
-            @Override
-            public String visit(Tree<A> node, String parent) {
-                return ret.addNode(node.getLabel(), parent);
-            }
-        });
-
-        return ret;
     }
 }
 
