@@ -17,3 +17,10 @@ val pco2 = ParsedCorpus.read(fistream("/tmp/foo"))
 time(irtg.trainEM(pco2))
 
 
+val ger = irtg.getInterpretation("german")
+val alg = ger.getAlgebra().asInstanceOf[Algebra[List[String]]]
+irtg.getAutomaton().intersect(alg.decompose(alg.parseString("hans betrachtet die frau mit dem fernrohr")).inverseHomomorphism(ger.getHomomorphism()))
+
+
+irtg.parse("german" -> "hans betrachtet die frau mit dem fernrohr", "english" -> "john watches the woman with the telescope")
+
