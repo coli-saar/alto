@@ -11,6 +11,9 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.saar.penguin.irtg.algebra.lambda.LambdaTerm;
+import de.saar.penguin.irtg.algebra.lambda.LambdaTermAlgebra;
+import de.saar.penguin.irtg.algebra.lambda.LambdaTermParser;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.saar.penguin.irtg.semiring.DoubleArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.LongArithmeticSemiring;
@@ -20,6 +23,7 @@ import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.Serializable;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -29,6 +33,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
 
@@ -969,219 +974,197 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     private class LanguageIterable implements Iterable<Tree<String>> {
         public Iterator<Tree<String>> iterator() {
-//            return new LanguageIterator();
-            return new ArrayList<Tree<String>>().iterator(); // TODO FIXME
+            return new LanguageIterator();
         }
     }
-    
+
+    /**
+     * Returns an Iterable, to be used in a for-each loop.
+     * See the documentation of #languageIterator for caveats.
+     * 
+     * @return 
+     */
     public Iterable<Tree<String>> languageIterable() {
         return new LanguageIterable();
     }
 
-    
-
+    /**
+     * Returns an iterator over the language of this tree automaton.
+     * This only works reliably if the automaton is non-recursive, i.e. the language
+     * is finite. For infinite languages, the iterator makes an effort to
+     * consider rules in an order that has a good chance of returning some trees;
+     * but sometimes trying to enumerate even the first tree may
+     * not terminate in this case.
+     * The iterator is highly optimized and avoids allocating new objects
+     * as much as possible. Each tree it returns therefore becomes invalid
+     * with the next call to "next". If you want to retain it, you must
+     * clone it.
+     * 
+     * @return 
+     */
     public Iterator<Tree<String>> languageIterator() {
-//        return new LanguageIterator();
-        return new ArrayList<Tree<String>>().iterator(); // TODO FIXME
+        return new LanguageIterator();
     }
 
-//    private class LanguageIterator implements Iterator<Tree<String>> {
-//        private Tree<IndexedRuleList> ruleTree = new Tree<IndexedRuleList>();
-//        private boolean hasNext;
-//        private Map<State, Rule<State>[]> rulesPerState;
-//        private Rule[] emptyRuleArray = new Rule[0];
-//
-//        public LanguageIterator() {
-//            assert getFinalStates().size() == 1;
-//
-//            cacheRules();
-//            hasNext = first(getFinalStates().iterator().next(), null);
-//        }
-//
-//        public boolean hasNext() {
-//            return hasNext;
-//        }
-//
-//        public Tree<String> next() {
-//            Tree<String> ret = extractTree();
-//            hasNext = next(ruleTree.getRoot());
-//            return ret;
-//        }
-//
-//        /**
-//         * Adds the first tree that can be generated from state as the next child of parent.
-//         * If no tree can be generated from state, no child is added to parent.
-//         * 
-//         * @param state
-//         * @param parent
-//         * @return 
-//         */
-//        private boolean first(State state, String parent) {
-//            IndexedRuleList irl = new IndexedRuleList();
-//            irl.rules = rulesPerState.get(state);
-//            irl.index = 0;
-//
-//            String node = ruleTree.addNode(irl, parent);
-//            boolean addingChildrenWorked = addAllChildren(node);
-//
-//            if (!addingChildrenWorked) {
-//                ruleTree.removeNode(node);
-//            }
-//
-//            return addingChildrenWorked;
-//        }
-//
-//        /**
-//         * Tries to add children for all child states of the rule at node.
-//         * If the current rule at the node cannot be expanded into a complete
-//         * tree, the method tries the next rules, until one can be found.
-//         * If no subtree at all can be generated, the method returns false.
-//         * Otherwise true.
-//         * 
-//         * @param node
-//         * @return 
-//         */
-//        private boolean addAllChildren(String node) {
-//            IndexedRuleList irl = ruleTree.getLabel(node);
-//
-//            while (!irl.isFinished()) {
-//                boolean allChildrenWorked = true;
-//
-//                for (State childState : irl.getCurrentRule().getChildren()) {
-//                    allChildrenWorked = allChildrenWorked && first(childState, node);
-//                }
-//
-//                if (allChildrenWorked) {
-//                    return true;
-//                } else {
-//                    irl.index++;
-//                }
-//            }
-//
-//            return false;
-//        }
-//
-//        /**
-//         * Increments the rule tree below the node. This method looks for the
-//         * rightmost, deepest node at which the rule index can be increased by one,
-//         * and does this. If the subtree below node is already the last subtree
-//         * that can be generated from node's nonterminal, the method returns false;
-//         * otherwise true. If the method returns false, it is guaranteed that node
-//         * is now a leaf in the ruleTree.
-//         * 
-//         * @param node
-//         * @return 
-//         */
-//        private boolean next(String node) {
-//            IndexedRuleList irl = ruleTree.getLabel(node);
-//            List<String> children = ruleTree.getChildren(node);
-//            int n = irl.getCurrentRule().getArity();
-//
-//            // first, try to increase each child, from right to left
-//            for (int i = n - 1; i >= 0; i--) {
-//                String childI = children.get(i);
-//
-//                if (next(childI)) {
-//                    State[] currentRuleChildren = irl.getCurrentRule().getChildren();
-//
-//                    for (int k = i + 1; k < n; k++) {
-//                        first(currentRuleChildren[k], node);
-//                    }
-//
-//                    return true;
-//                } else {
-//                    ruleTree.removeNode(childI);
-//                }
-//            }
-//
-//            // if no child could be increased, try switching to the next rule;
-//            // if none can be found, return false
-//            irl.index++;
-//            return addAllChildren(node);
-//        }
-//
-//        /**
-//         * Extracts a tree of node labels from the current rule tree.
-//         * 
-//         * @return 
-//         */
-//        private Tree<String> extractTree() {
-//            final Tree<String> ret = new Tree<String>();
-//
-//            ruleTree.dfs(new TreeVisitor<String, Void>() {
-//                @Override
-//                public String getRootValue() {
-//                    return null;
-//                }
-//
-//                @Override
-//                public String visit(String nodeInRuleTree, String parentInRet) {
-//                    String nodeInRet = ret.addNode(ruleTree.getLabel(nodeInRuleTree).getCurrentRule().getLabel(), parentInRet);
-//                    return nodeInRet;
-//                }
-//            });
-//
-//            return ret;
-//        }
-//
-//        /**
-//         * Builds the rulesPerState map from the rules of the automaton.
-//         */
-//        private void cacheRules() {
-//            ListMultimap<State, Rule<State>> ruleListPerState = ArrayListMultimap.create();
-//            Comparator<Rule<State>> comparator = new RuleCyclicityComparator();
-//
-//            for (Rule<State> rule : getRuleSet()) {
-//                ruleListPerState.put(rule.getParent(), rule);
-//            }
-//
-//            rulesPerState = new HashMap<State, Rule<State>[]>();
-//            for (State state : getAllStates()) {
-//                List<Rule<State>> ruleList = ruleListPerState.get(state);
-//                Collections.sort(ruleList, comparator);
-//
-//                if (ruleListPerState.containsKey(state)) {
-//                    rulesPerState.put(state, ruleList.toArray(emptyRuleArray));
-//                } else {
-//                    rulesPerState.put(state, emptyRuleArray);
-//                }
-//            }
-//        }
-//
-//        public void remove() {
-//            throw new UnsupportedOperationException("Not supported yet.");
-//        }
-//
-//        private class IndexedRuleList {
-//            public Rule<State>[] rules;
-//            public int index;
-//
-//            public boolean isFinished() {
-//                return index >= rules.length;
-//            }
-//
-//            public Rule<State> getCurrentRule() {
-//                return rules[index];
-//            }
-//
-//            @Override
-//            public String toString() {
-//                StringBuffer buf = new StringBuffer();
-//
-//                buf.append("[");
-//                for (int i = 0; i < rules.length; i++) {
-//                    if (i == index) {
-//                        buf.append("*");
-//                    }
-//
-//                    buf.append(rules[i] + " ");
-//                }
-//
-//                buf.append("]");
-//                return buf.toString();
-//            }
-//        }
-//    }
+    private class LanguageIterator implements Iterator<Tree<String>> {
+        private Map<State, Tree<String>> tree = new HashMap<State, Tree<String>>();
+        private Map<State, List<Rule<State>>> rules = new HashMap<State, List<Rule<State>>>();
+        private Map<State, Integer> currentRule = new HashMap<State, Integer>();
+        private State finalState;
+        private boolean first = true;
+
+        public LanguageIterator() {
+            assert getFinalStates().size() == 1;
+            finalState = getFinalStates().iterator().next();
+            Comparator<Rule<State>> cyclicityComparator = new RuleCyclicityComparator();
+
+            for (State state : getAllStates()) {
+                // cache ordered list of all top-down rules for each state
+                List<Rule<State>> rulesForThisState = new ArrayList<Rule<State>>();
+                for (String label : getAllLabels()) {
+                    rulesForThisState.addAll(getRulesTopDown(label, state));
+                }
+                
+                Collections.sort(rulesForThisState, cyclicityComparator);
+                rules.put(state, rulesForThisState);
+
+                // create tree object for each state
+                Tree<String> treeForState = Tree.create("");
+                treeForState.setCachingPolicy(false);
+                
+                tree.put(state, treeForState);
+
+                // initialize rule indices
+                currentRule.put(state, 0);
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return checkHasNext(finalState);
+        }
+
+        private boolean checkHasNext(State state) {
+            int currentIndex = currentRule.get(state);
+            int numRules = rules.get(state).size();
+
+            // if the state has already been advanced past its limit, 
+            // it has no next tree
+            if (currentIndex >= numRules) {
+                return false;
+            }
+
+            // tree for this state can be advanced if the state has
+            // more rules
+            if (currentIndex < numRules - 1) {
+                return true;
+            }
+
+            // or if one of the children of the current rule can be advanced
+            for (State child : getCurrentRule(state).getChildren()) {
+                if (checkHasNext(child)) {
+                    return true;
+                }
+            }
+
+            // otherwise, not
+            return false;
+        }
+
+        @Override
+        public Tree<String> next() {
+            boolean hasNext;
+
+            if (first) {
+                hasNext = first(finalState);
+                first = false;
+            } else {
+                hasNext = next(finalState);
+            }
+
+            if (hasNext) {
+                return tree.get(finalState);
+            } else {
+                throw new NoSuchElementException();
+            }
+        }
+
+        private boolean first(State state) {
+            if (rules.get(state).isEmpty()) {
+                return false;
+            } else {
+                currentRule.put(state, 0);
+
+                Rule<State> current = rules.get(state).get(0);
+                return initializeWithRule(state, current);
+            }
+        }
+
+        private boolean next(State state) {
+            List<Rule<State>> rulesThisState = rules.get(state);
+            int currentIndex = currentRule.get(state);
+            Rule<State> current = rulesThisState.get(currentIndex);
+            int n = current.getArity();
+            
+            // try to advance the tree for state by advancing a child
+            for (int i = n - 1; i >= 0; i--) {
+                if (next(current.getChildren()[i])) {
+                    for (int j = i + 1; j < n; j++) {
+                        first(current.getChildren()[j]);
+                    }
+
+                    return true;
+                }
+            }
+
+            // if that didn't work, advance to the next rule for this state
+            if (currentIndex < rulesThisState.size() - 1) {
+                currentIndex++;
+                currentRule.put(state, currentIndex);
+                return initializeWithRule(state, rulesThisState.get(currentIndex));
+            }
+
+            // if we ran out of rules for this state, return false
+            return false;
+        }
+
+        private boolean initializeWithRule(State state, Rule<State> current) {
+            for (State child : current.getChildren()) {
+                if (!first(child)) {
+                    return false;
+                }
+            }
+
+            setTree(state, current);
+
+            return true;
+        }
+
+        private void setTree(State state, Rule<State> rule) {
+            Tree<String> treeHere = tree.get(state);
+
+            // open-heart surgery on the Tree object
+            List<Tree<String>> children = treeHere.getChildren();
+            children.clear();
+            for (State child : rule.getChildren()) {
+                children.add(tree.get(child));
+            }
+
+            treeHere.setLabel(rule.getLabel());
+        }
+
+        private Rule<State> getCurrentRule(State state) {
+            return rules.get(state).get(currentRule.get(state));
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("LanguageIterator does not support removal.");
+        }
+    }
+
+
+    
     private class RuleCyclicityComparator implements Comparator<Rule<State>> {
         // return -1 iff r1 < r2
         public int compare(Rule<State> r1, Rule<State> r2) {
@@ -1209,6 +1192,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return false;
         }
     }
+     
 }
 
 
