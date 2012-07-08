@@ -990,11 +990,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Returns an iterator over the language of this tree automaton.
+     * 
      * This only works reliably if the automaton is non-recursive, i.e. the language
      * is finite. For infinite languages, the iterator makes an effort to
      * consider rules in an order that has a good chance of returning some trees;
      * but sometimes trying to enumerate even the first tree may
      * not terminate in this case.
+     * 
+     * The method assumes that the automaton has a single final state.
+     * 
      * The iterator is highly optimized and avoids allocating new objects
      * as much as possible. Each tree it returns therefore becomes invalid
      * with the next call to "next". If you want to retain it, you must
@@ -1061,7 +1065,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
 
             // or if one of the children of the current rule can be advanced
-            for (State child : getCurrentRule(state).getChildren()) {
+            for (State child : rules.get(state).get(currentIndex).getChildren()) {
                 if (checkHasNext(child)) {
                     return true;
                 }
@@ -1089,6 +1093,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
         }
 
+        /*
+         * Initializes the data structures such that the first tree
+         * of all trees that can be built from state is selected.
+         */
         private boolean first(State state) {
             if (rules.get(state).isEmpty()) {
                 return false;
@@ -1100,6 +1108,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
         }
 
+        /*
+         * Initializes the data structures such that the next tree
+         * is selected from the list of trees that can be built from state.
+         * If this is not possible, the method returns false.
+         */
         private boolean next(State state) {
             List<Rule<State>> rulesThisState = rules.get(state);
             int currentIndex = currentRule.get(state);
@@ -1118,43 +1131,55 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
 
             // if that didn't work, advance to the next rule for this state
-            if (currentIndex < rulesThisState.size() - 1) {
+            while (currentIndex < rulesThisState.size() - 1) {
                 currentIndex++;
                 currentRule.put(state, currentIndex);
-                return initializeWithRule(state, rulesThisState.get(currentIndex));
+                
+                // if we don't manage to build a tree using the new rule,
+                // skip that rule and try the next, until we run out of rules
+                if( initializeWithRule(state, rulesThisState.get(currentIndex)) ) {
+                    return true;
+                }
             }
 
             // if we ran out of rules for this state, return false
             return false;
         }
 
-        private boolean initializeWithRule(State state, Rule<State> current) {
-            for (State child : current.getChildren()) {
-                if (!first(child)) {
-                    return false;
-                }
-            }
-
-            setTree(state, current);
-
-            return true;
-        }
-
-        private void setTree(State state, Rule<State> rule) {
+        /**
+         * Initializes the data structures such that the given rule
+         * is used for building the tree for this state. Call this whenever
+         * a new rule has been selected for a state (e.g. by modifying
+         * currentRule[state]).
+         * 
+         * @param state
+         * @param rule
+         * @return 
+         */
+        private boolean initializeWithRule(State state, Rule<State> rule) {
             Tree<String> treeHere = tree.get(state);
 
-            // open-heart surgery on the Tree object
+            // open-heart surgery on the Tree object:
+            // destructively modify the subtrees to correspond to the
+            // tree objects for the child states of the rule
             List<Tree<String>> children = treeHere.getChildren();
             children.clear();
             for (State child : rule.getChildren()) {
                 children.add(tree.get(child));
             }
 
+            // also modify node label to fit with rule
             treeHere.setLabel(rule.getLabel());
-        }
-
-        private Rule<State> getCurrentRule(State state) {
-            return rules.get(state).get(currentRule.get(state));
+            
+            // call first on all subtrees to ensure that they all start
+            // with their own first trees
+            for (State child : rule.getChildren()) {
+                if (!first(child)) {
+                    return false;
+                }
+            }
+            
+            return true;
         }
 
         @Override
