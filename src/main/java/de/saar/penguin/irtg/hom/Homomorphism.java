@@ -7,7 +7,6 @@ package de.saar.penguin.irtg.hom;
 import de.saar.basic.StringOrVariable;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
