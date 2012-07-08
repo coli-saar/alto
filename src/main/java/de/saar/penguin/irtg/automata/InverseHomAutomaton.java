@@ -1,10 +1,11 @@
 package de.saar.penguin.irtg.automata;
 
+import com.google.common.base.Function;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.StringOrVariable;
-import de.saar.basic.tree.Tree;
-import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.hom.Homomorphism;
+import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,20 +40,22 @@ class InverseHomAutomaton<State> extends TreeAutomaton<State> {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
             Set<Rule<State>> ret = new HashSet<Rule<State>>();
-            Map<String, StringOrVariable> varmap = hom.getVariableMap(label);
-            Map<String, State> statemap = new HashMap<String, State>();
 
-            if (new HashSet<StringOrVariable>(varmap.values()).size() == childStates.size()) {
-                for (String node : varmap.keySet()) {
-                    statemap.put(node, childStates.get(Homomorphism.getIndexForVariable(varmap.get(node))));
+            Set<State> resultStates = rhsAutomaton.run(hom.get(label), new Function<Tree<StringOrVariable>, State>() {
+                @Override
+                public State apply(Tree<StringOrVariable> f) {
+                    if (f.getLabel().isVariable()) {
+                        return childStates.get(Homomorphism.getIndexForVariable(f.getLabel()));
+                    } else {
+                        return null;
+                    }
                 }
+            });
 
-                Set<State> resultStates = rhsAutomaton.run(hom.get(label), statemap);
-                for (State r : resultStates) {
-                    Rule<State> rule = new Rule<State>(r, label, childStates);
-                    storeRule(rule);
-                    ret.add(rule);
-                }
+            for (State r : resultStates) {
+                Rule<State> rule = new Rule<State>(r, label, childStates);
+                storeRule(rule);
+                ret.add(rule);
             }
 
             return ret;
@@ -73,16 +76,16 @@ class InverseHomAutomaton<State> extends TreeAutomaton<State> {
 
         if (rhsTree != null) {
 
-            Set<Item> rootItems = rhsTree.dfs(new TreeVisitor<Void, Set<Item>>() {
+            Set<Item> rootItems = rhsTree.dfs(new TreeVisitor<StringOrVariable, Void, Set<Item>>() {
                 @Override
-                public Set<Item> combine(String node, List<Set<Item>> childrenValues) {
+                public Set<Item> combine(Tree<StringOrVariable> node, List<Set<Item>> childrenValues) {
                     Set<Item> ret = new HashSet<Item>();
 
                     // BUG - not all states are necessarily known at this point, so
                     // some rules are not found
-                    if (rhsTree.getLabel(node).isVariable()) {
+                    if (node.getLabel().isVariable()) {
                         for (State state : getAllStates()) {
-                            ret.add(new Item(state, subst(rhsTree.getLabel(node), state)));
+                            ret.add(new Item(state, subst(node.getLabel(), state)));
                         }
                     } else {
                         CartesianIterator<Item> it = new CartesianIterator<Item>(childrenValues);
@@ -97,7 +100,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<State> {
                                 childSubsts.add(item.substitution);
                             }
 
-                            Set<Rule<State>> rules = rhsAutomaton.getRulesBottomUp(rhsTree.getLabel(node).toString(), childStates);
+                            Set<Rule<State>> rules = rhsAutomaton.getRulesBottomUp(node.getLabel().toString(), childStates);
 
                             if (!rules.isEmpty()) {
                                 Map<StringOrVariable, State> subst = mergeSubstitutions(childSubsts);
@@ -140,8 +143,6 @@ class InverseHomAutomaton<State> extends TreeAutomaton<State> {
         public String toString() {
             return state.toString() + substitution;
         }
-        
-        
     }
 
     private Map<StringOrVariable, State> subst(StringOrVariable sov, State state) {
@@ -173,7 +174,6 @@ class InverseHomAutomaton<State> extends TreeAutomaton<State> {
         return rhsAutomaton.getAllStates();
     }
 
-
     /**
      * Returns the set of labels in the domain of the homomorphism.
      * The actual inverse homomorphism automaton may not contain
@@ -186,4 +186,3 @@ class InverseHomAutomaton<State> extends TreeAutomaton<State> {
         return hom.getDomain();
     }
 }
-

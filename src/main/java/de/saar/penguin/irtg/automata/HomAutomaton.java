@@ -7,9 +7,9 @@ package de.saar.penguin.irtg.automata;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.StringOrVariable;
-import de.saar.basic.tree.Tree;
-import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.hom.Homomorphism;
+import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeVisitor;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -45,9 +45,9 @@ class HomAutomaton extends TreeAutomaton<String> {
             final Set<String> labels = new HashSet<String>();
 
             for (final Rule<Object> rule : baseRuleSet) {
-                final Tree<StringOrVariable> tree = hom.get(rule.getLabel());
+                final Tree<StringOrVariable> homImage = hom.get(rule.getLabel());
 
-                if (tree.getLabel(tree.getRoot()).isVariable()) {
+                if (homImage.getLabel().isVariable()) {
                     // special case for homomorphisms of the form ?1: store chain rule
                     assert rule.getChildren().length == 1;
 
@@ -55,11 +55,11 @@ class HomAutomaton extends TreeAutomaton<String> {
                 } else {
                     // otherwise, iterate over homomorphic image of rule label and
                     // introduce rules as we go along
-                    tree.dfs(new TreeVisitor<Void, String>() {
+                    homImage.dfs(new TreeVisitor<StringOrVariable, Void, String>() {
 
                         @Override
-                        public String combine(String node, List<String> childrenValues) {
-                            StringOrVariable label = tree.getLabel(node);
+                        public String combine(Tree<StringOrVariable> node, List<String> childrenValues) {
+                            StringOrVariable label = node.getLabel();
 
                             if (label.isVariable()) {
                                 return rule.getChildren()[Homomorphism.getIndexForVariable(label)].toString();
@@ -67,7 +67,7 @@ class HomAutomaton extends TreeAutomaton<String> {
                                 String parentState = null;
                                 double weight = 0;
 
-                                if (node.equals(tree.getRoot())) {
+                                if (node == homImage) {
                                     parentState = rule.getParent().toString();
                                     weight = rule.getWeight();
                                 } else {
@@ -91,7 +91,6 @@ class HomAutomaton extends TreeAutomaton<String> {
                         }
                     }
                 }
-
             }
 
             isExplicit = true;

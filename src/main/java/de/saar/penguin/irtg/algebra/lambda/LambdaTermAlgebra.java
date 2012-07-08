@@ -4,14 +4,13 @@
  */
 package de.saar.penguin.irtg.algebra.lambda;
 
-import de.saar.basic.tree.Tree;
-import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.algebra.Algebra;
 import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeVisitor;
 import java.io.StringReader;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,46 +24,38 @@ import java.util.Set;
  * @author koller
  */
 public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
+    @Override
     public LambdaTerm evaluate(final Tree<String> t) {
-        TreeVisitor<String, LambdaTerm> tv = new TreeVisitor<String, LambdaTerm>() {
-
+        return t.dfs(new TreeVisitor<String, Void, LambdaTerm>() {
             @Override
-            public String getRootValue() {
-                return t.getRoot();
-            }
-
-            @Override
-            public LambdaTerm combine(String node, List<LambdaTerm> childValues) {
-                ArrayList<LambdaTerm> cV = (ArrayList<LambdaTerm>) childValues;
+            public LambdaTerm combine(Tree<String> node, List<LambdaTerm> childrenValues) {
                 LambdaTerm ret;
 
-                if (t.getLabel(node).equals(LambdaTermAlgebraSymbol.FUNCTOR)) {
+                if (node.getLabel().equals(LambdaTermAlgebraSymbol.FUNCTOR)) {
                     // works since it is binary tree
-                    LambdaTerm tmp = LambdaTerm.apply(cV.get(0), cV.get(1).alphaConvert(cV.get(0).findHighestVarName() + 1));
+                    LambdaTerm tmp = LambdaTerm.apply(childrenValues.get(0), childrenValues.get(1).alphaConvert(childrenValues.get(0).findHighestVarName() + 1));
                     ret = tmp.reduce();
                     //System.out.println(tmp.getTree()+" reduziert zu "+ret.getTree()+" nit "+ret);
                 } else {
                     try {
                         //                    ret = t.getLabel(node);
-                        ret = LambdaTermParser.parse(new StringReader(t.getLabel(node)));
+                        ret = LambdaTermParser.parse(new StringReader(node.getLabel()));
                     } catch (ParseException ex) {
-                        ret = LambdaTerm.constant(">>" + t.getLabel(node) + "<<", "LALA");
+                        ret = LambdaTerm.constant(">>" + node.getLabel() + "<<", "LALA");
                     }
                 }
 
                 return ret;
-            }
-        };
-
-        LambdaTerm retur = (LambdaTerm) t.dfs(tv);
-        return retur;
-
+            }            
+        });
     }
 
+    @Override
     public TreeAutomaton decompose(LambdaTerm value) {
         return new LambdaDecompositionAutomaton(value);
     }
 
+    @Override
     public LambdaTerm parseString(String representation) throws ParserException {
         try {
             return LambdaTermParser.parse(new StringReader(representation));

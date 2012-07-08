@@ -22,7 +22,7 @@ import de.saar.penguin.irtg.automata.*;
 import de.saar.penguin.irtg.hom.*;
 import de.saar.penguin.irtg.algebra.*;
 import de.saar.chorus.term.*;
-import de.saar.basic.tree.*;
+import de.up.ling.tree.*;
 import de.saar.basic.*;
 
 
@@ -180,7 +180,7 @@ void HomomorphismRule() :
             throw new ParseException("Homomorphism declaration for unknown interpretation '" + interpName + "'");
         } else if( hom.get(lastSeenTerminal) != null ) {
             if( ! hom.get(lastSeenTerminal).equals(rhs) ) {
-                throw new ParseException("Redefined value of interpretation '" + interpName + "' for " + lastSeenTerminal + " as " + term + " (was: " + hom.get(lastSeenTerminal).toTerm() + ")");
+                throw new ParseException("Redefined value of interpretation '" + interpName + "' for " + lastSeenTerminal + " as " + term + " (was: " + hom.get(lastSeenTerminal) + ")");
             }
        } else {
           hom.add(lastSeenTerminal, rhs);

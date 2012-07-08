@@ -4,10 +4,10 @@
  */
 package de.saar.penguin.irtg.algebra;
 
-import de.saar.basic.tree.Tree;
-import de.saar.basic.tree.TreeVisitor;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeVisitor;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,10 +66,10 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
 
     @Override
     public Set<List<String>> evaluate(final Tree<String> t) {
-        return (Set<List<String>>) t.dfs(new TreeVisitor<Void, Set<List<String>>>() {
+        return (Set<List<String>>) t.dfs(new TreeVisitor<String, Void, Set<List<String>>>() {
             @Override
-            public Set<List<String>> combine(String node, List<Set<List<String>>> childrenValues) {
-                return evaluate(getLabel(t, node), childrenValues);
+            public Set<List<String>> combine(Tree<String> node, List<Set<List<String>>> childrenValues) {
+                return evaluate(node.getLabel(), childrenValues);
             }
         });
     }
@@ -138,9 +138,9 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         return null;
     }
 
-    private String getLabel(Tree t, String node) {
-        return t.getLabel(node).toString();
-    }
+//    private String getLabel(Tree t, String node) {
+//        return t.getLabel(node).toString();
+//    }
 
     @Override
     public TreeAutomaton decompose(Set<List<String>> value) {

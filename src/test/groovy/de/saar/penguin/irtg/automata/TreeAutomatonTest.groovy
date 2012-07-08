@@ -11,11 +11,12 @@ import java.util.*
 import java.io.*
 import de.saar.basic.*
 import de.saar.chorus.term.parser.*
-import de.saar.basic.tree.*
+import de.up.ling.tree.*
 import de.saar.penguin.irtg.hom.*
 import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
 import static de.saar.penguin.irtg.hom.HomomorphismTest.hom;
+import static de.saar.penguin.irtg.util.TestingTools.pt;
 
 
 /**
@@ -43,10 +44,10 @@ class TreeAutomatonTest {
     public void testRun() {
         TreeAutomaton auto2 = parse("f(p2,p3) -> p1!\n a -> p2\n a -> p3");
 
-        Tree t = TermParser.parse("f(a,a)").toTree();
+        Tree t = pt("f(a,a)");
         assertEquals(new HashSet(["p1"]), auto2.run(t));
 
-        Tree ta = TermParser.parse("a").toTree();
+        Tree ta = pt("a");
         assertEquals(new HashSet(["p2","p3"]), auto2.run(ta));
     }
 
@@ -93,7 +94,7 @@ class TreeAutomatonTest {
     public void testViterbi() {
         TreeAutomaton auto = parse("a -> q1 [2]\n b -> q2 [1]\n f(q1,q1) -> q! [1]\n f(q1,q2) -> q! [1.5]");
         Tree best = auto.viterbi();
-        assertEquals(best.toString(), TermParser.parse("f(a,a)").toTree().toString());
+        assertEquals(best.toString(), pt("f(a,a)").toString());
     }
 
     @Test
@@ -209,10 +210,6 @@ r5(VP.1-4, PP.4-7) -> VP.1-7 [1.0]""");
             double w = r.getWeight();
             assert ((Math.abs(w)-0.3 < 0.001) || (Math.abs(w)-0.2 < 0.001)) : rulesForA;
         }
-    }
-    
-    private static Tree pt(String s) {
-        TermParser.parse(s).toTree()
     }
 
     private static Pair p(Object a, Object b) {

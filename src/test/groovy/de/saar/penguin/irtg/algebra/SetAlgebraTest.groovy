@@ -11,9 +11,10 @@ import java.io.*
 import de.saar.penguin.irtg.automata.*
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
-import de.saar.basic.tree.*;
+import de.up.ling.tree.*;
 import de.saar.penguin.irtg.*;
 import de.saar.penguin.irtg.hom.*;
+import static de.saar.penguin.irtg.util.TestingTools.pt;
 
 /**
  *
@@ -180,10 +181,6 @@ a_sleeps_r1(N) -> S!
 
     private Set<List<String>> sl(List<List<String>> ll) {
         return new HashSet<List<String>>(ll);
-    }
-	
-    private static Tree pt(String s) {
-        TermParser.parse(s).toTree()
     }
 }
 

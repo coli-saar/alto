@@ -7,7 +7,7 @@ import java.io.*
 import de.saar.penguin.irtg.automata.*
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
-import de.saar.basic.tree.*;
+import de.up.ling.tree.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map.Entry;
@@ -28,22 +28,25 @@ class LambdaTermTest {
 
     @Test
     public void testEvaluate(){
-        Tree<String> t1 = new Tree<String>();
-        Tree<String> t2 = new Tree<String>();
+//        Tree<String> t1 = new Tree<String>();
+//        Tree<String> t2 = new Tree<String>();
 
         String func = LambdaTermAlgebraSymbol.FUNCTOR;
 
         String lt1 = "(lambda \$x (lambda \$f (\$x \$f)))";
         String lt2 = "(lambda \$a (\$a \$a))";
         String lt3 = "(lambda \$r (\$r \$x))";
+        
+        Tree<String> t1 = Tree.create(func, [Tree.create(lt1), Tree.create(lt2)])
+        Tree<String> t2 = Tree.create(func, [t1, Tree.create(lt3)])
 
-        t1.addNode(null,func,null);
-        t1.addNode(lt1,t1.getRoot());
-        t1.addNode(lt2,t1.getRoot());
-
-        t2.addNode(null,func,null);
-        t2.addSubTree(t1,t2.getRoot());
-        t2.addNode(lt3,t2.getRoot());
+//        t1.addNode(null,func,null);
+//        t1.addNode(lt1,t1.getRoot());
+//        t1.addNode(lt2,t1.getRoot());
+//
+//        t2.addNode(null,func,null);
+//        t2.addSubTree(t1,t2.getRoot());
+//        t2.addNode(lt3,t2.getRoot());
 
         LambdaTermAlgebra algebra = new LambdaTermAlgebra();
         LambdaTerm test = a(v("x"),v("x"));
