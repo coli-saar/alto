@@ -12,10 +12,11 @@ import java.io.*
 import de.saar.penguin.irtg.automata.*
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
-import de.saar.basic.tree.*;
+import de.up.ling.tree.*;
 import de.saar.penguin.irtg.algebra.*;
 import de.saar.penguin.irtg.hom.*;
 import static de.saar.penguin.irtg.hom.HomomorphismTest.hom;
+import static de.saar.penguin.irtg.util.TestingTools.pt;
 
 /**
  *
@@ -48,8 +49,8 @@ class InterpretedTreeAutomatonTest {
         TreeAutomaton chart = irtg.parseInputObjects(["string": words]);
         chart.makeAllRulesExplicit();
         
-        assertEquals(new HashSet([parseTree("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"),
-                                  parseTree("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))")]),
+        assertEquals(new HashSet([pt("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"),
+                                  pt("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))")]),
                           chart.language());
     }
 
@@ -73,7 +74,7 @@ r2 -> S
 
         chart.reduceBottomUp();
         
-        assertEquals(new HashSet([parseTree("r1(r2,r1(r2,r2))"), parseTree("r1(r1(r2,r2),r2)")]),
+        assertEquals(new HashSet([pt("r1(r2,r1(r2,r2))"), pt("r1(r1(r2,r2),r2)")]),
                      chart.language());
     }
 
@@ -112,10 +113,6 @@ r2 -> S
 //        System.err.println("after EM: " + irtg.getAutomaton());
         
         assert true;
-    }
-
-    public static Tree parseTree(String s) {
-        return TermParser.parse(s).toTree();
     }
 
     private static TreeAutomaton parse(String s) {

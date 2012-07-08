@@ -9,13 +9,13 @@ import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
 import de.saar.basic.StringOrVariable;
 import de.saar.basic.StringTools;
-import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.up.ling.shell.CallableFromShell;
+import de.up.ling.tree.Tree;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -367,47 +367,49 @@ public class InterpretedTreeAutomaton {
     }
     
     private void binarizeRule(Homomorphism newHomomorphism, Set<Rule<String>> newRules, Tree<StringOrVariable> oldHomomorphismSubtree, String parentNT, String label, Rule rule) {
-        List<String> childStatesInNewRule = new ArrayList<String>();
-
-        // homomorphism for new rule
-        Tree<StringOrVariable> hForRule = new Tree<StringOrVariable>();
-        String hForRuleRoot = hForRule.addNode(oldHomomorphismSubtree.getLabel(oldHomomorphismSubtree.getRoot()), null);
-
-        int varCounter = 0;
-        String oldRoot = oldHomomorphismSubtree.getRoot();
-        List<String> args = oldHomomorphismSubtree.getChildren(oldRoot);
-
-        for (int pos = 0; pos < args.size(); pos++) {
-            String arg = args.get(pos);
-            StringOrVariable argLabel = oldHomomorphismSubtree.getLabel(arg);
-
-            if (argLabel.isVariable()) {
-                int index = Homomorphism.getIndexForVariable(argLabel);
-                String nonterminal = (String) rule.getChildren()[index];
-                childStatesInNewRule.add(nonterminal);
-
-                varCounter++;
-                StringOrVariable var = new StringOrVariable("?" + varCounter, true);
-                hForRule.addNode(var, hForRuleRoot);
-            } else if (oldHomomorphismSubtree.getChildren(arg).isEmpty()) { // leaf
-                hForRule.addNode(argLabel, hForRuleRoot);
-            } else { // root of subtree is an operation
-                String newTerminal = makeBinaryLabel(label, pos+1, true);
-                String newNonterminal = makeBinaryLabel(label, pos+1, false);
-                childStatesInNewRule.add(newNonterminal);
-
-                varCounter++;
-                StringOrVariable var = new StringOrVariable("?" + varCounter, true);
-                hForRule.addNode(var, hForRuleRoot);
-
-                Tree<StringOrVariable> subTree = oldHomomorphismSubtree.subtree(arg);
-                binarizeRule(newHomomorphism, newRules, subTree, newNonterminal, newTerminal, rule);
-            }
-        }
+// TODO FIXME
         
-        Rule<String> binRule = new Rule(parentNT, label, childStatesInNewRule);
-        newRules.add(binRule);
-        newHomomorphism.add(label, hForRule);
+//        List<String> childStatesInNewRule = new ArrayList<String>();
+//
+//        // homomorphism for new rule
+//        Tree<StringOrVariable> hForRule = new Tree<StringOrVariable>();
+//        String hForRuleRoot = hForRule.addNode(oldHomomorphismSubtree.getLabel(oldHomomorphismSubtree.getRoot()), null);
+//
+//        int varCounter = 0;
+//        String oldRoot = oldHomomorphismSubtree.getRoot();
+//        List<String> args = oldHomomorphismSubtree.getChildren(oldRoot);
+//
+//        for (int pos = 0; pos < args.size(); pos++) {
+//            String arg = args.get(pos);
+//            StringOrVariable argLabel = oldHomomorphismSubtree.getLabel(arg);
+//
+//            if (argLabel.isVariable()) {
+//                int index = Homomorphism.getIndexForVariable(argLabel);
+//                String nonterminal = (String) rule.getChildren()[index];
+//                childStatesInNewRule.add(nonterminal);
+//
+//                varCounter++;
+//                StringOrVariable var = new StringOrVariable("?" + varCounter, true);
+//                hForRule.addNode(var, hForRuleRoot);
+//            } else if (oldHomomorphismSubtree.getChildren(arg).isEmpty()) { // leaf
+//                hForRule.addNode(argLabel, hForRuleRoot);
+//            } else { // root of subtree is an operation
+//                String newTerminal = makeBinaryLabel(label, pos+1, true);
+//                String newNonterminal = makeBinaryLabel(label, pos+1, false);
+//                childStatesInNewRule.add(newNonterminal);
+//
+//                varCounter++;
+//                StringOrVariable var = new StringOrVariable("?" + varCounter, true);
+//                hForRule.addNode(var, hForRuleRoot);
+//
+//                Tree<StringOrVariable> subTree = oldHomomorphismSubtree.subtree(arg);
+//                binarizeRule(newHomomorphism, newRules, subTree, newNonterminal, newTerminal, rule);
+//            }
+//        }
+//        
+//        Rule<String> binRule = new Rule(parentNT, label, childStatesInNewRule);
+//        newRules.add(binRule);
+//        newHomomorphism.add(label, hForRule);
     }
 
     private String makeBinaryLabel(String prefix, int argNum, boolean terminal) {

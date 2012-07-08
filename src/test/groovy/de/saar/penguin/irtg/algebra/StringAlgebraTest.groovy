@@ -11,7 +11,8 @@ import java.io.*
 import de.saar.penguin.irtg.automata.*
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
-import de.saar.basic.tree.*;
+import de.up.ling.tree.*;
+
 
 /**
  *
@@ -41,7 +42,7 @@ class StringAlgebraTest {
         String string = "john watches the woman with the telescope";
         Algebra algebra = new StringAlgebra();
         List words = algebra.parseString(string);
-        Tree term = TermParser.parse("*(john,*(watches,*(the,*(woman,*(with,*(the,telescope))))))").toTree();
+        Tree term = TreeParser.parse("*(john,*(watches,*(the,*(woman,*(with,*(the,telescope))))))");
 
         assertEquals(words, algebra.evaluate(term));
     }

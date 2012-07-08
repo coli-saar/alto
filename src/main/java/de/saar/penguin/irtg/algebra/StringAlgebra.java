@@ -4,9 +4,10 @@
  */
 package de.saar.penguin.irtg.algebra;
 
-import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeVisitor;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,23 +27,22 @@ public class StringAlgebra implements Algebra<List<String>> {
         CONCAT_SET.add(CONCAT);
     }
 
+    @Override
     public List<String> evaluate(Tree<String> t) {
-        List<String> children = t.getChildren(t.getRoot());
-
-        if (children.isEmpty()) {
-            List<String> ret = new ArrayList<String>();
-            ret.add(t.getLabel(t.getRoot()));
-            return ret;
-        } else {
-            List<String> childEval = new ArrayList<String>();
-
-            // append yields of all children
-            for (String child : children) {
-                childEval.addAll(evaluate(t.subtree(child)));
+        final List<String> ret = new ArrayList<String>();
+        
+        t.dfs(new TreeVisitor<String, Void, Void>() {
+            @Override
+            public Void combine(Tree<String> node, List<Void> childrenValues) {
+                if( childrenValues.isEmpty() ) {
+                    ret.add(node.getLabel());
+                }
+                
+                return null;
             }
-
-            return childEval;
-        }
+        });
+        
+        return ret;
     }
 
     public TreeAutomaton decompose(List<String> words) {

@@ -5,7 +5,6 @@
 package de.saar.penguin.irtg.algebra.lambda;
 
 import com.google.common.base.Predicate;
-import de.saar.basic.Pair;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;

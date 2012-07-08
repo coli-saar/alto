@@ -5,11 +5,11 @@
 
 package de.saar.penguin.irtg;
 
-import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.algebra.Algebra;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.up.ling.shell.CallableFromShell;
+import de.up.ling.tree.Tree;
 
 /**
  *

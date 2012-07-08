@@ -5,8 +5,8 @@
 
 package de.saar.penguin.irtg.algebra;
 
-import de.saar.basic.tree.Tree;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
+import de.up.ling.tree.Tree;
 
 /**
  *
