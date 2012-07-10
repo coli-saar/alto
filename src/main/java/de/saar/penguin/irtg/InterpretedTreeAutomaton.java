@@ -114,10 +114,10 @@ public class InterpretedTreeAutomaton {
     }
 
     /*
-    public Set<Object> decode(String outputInterpretation, Map<String, Object> inputs) {
-    TreeAutomaton chart = parseInputObjects(inputs);
-    return decode(chart, interpretations.get(outputInterpretation));
-    }
+     public Set<Object> decode(String outputInterpretation, Map<String, Object> inputs) {
+     TreeAutomaton chart = parseInputObjects(inputs);
+     return decode(chart, interpretations.get(outputInterpretation));
+     }
      * 
      */
     private Set<Object> decode(TreeAutomaton chart, Interpretation interp) {
@@ -315,39 +315,45 @@ public class InterpretedTreeAutomaton {
             lineNumber++;
         }
     }
-    
-    public InterpretedTreeAutomaton binarize(Map<String,RegularBinarizer> binarizers) {
+
+    public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
         SynchronousBinarization sb = new SynchronousBinarization();
         ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
         Homomorphism newLeftHom = new Homomorphism();
         Homomorphism newRightHom = new Homomorphism();
         List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
-        
-        if( orderedInterpretationList.size() != 2 ) {
+
+        if (orderedInterpretationList.size() != 2) {
             throw new UnsupportedOperationException("trying to binarize " + orderedInterpretationList.size() + " interpretations");
         }
-        
-        String interp1 = orderedInterpretationList.get(0);
-        String interp2 = orderedInterpretationList.get(1);
-        
-        for( Rule rule : automaton.getRuleSet() ) {
-//        sb.binarize( BLA BLA BLA, newAuto, newLeftHom, newRightHom);
-            
+
+        String interpName1 = orderedInterpretationList.get(0);
+        String interpName2 = orderedInterpretationList.get(1);
+        Interpretation interp1 = interpretations.get(interpName1);
+        Interpretation interp2 = interpretations.get(interpName2);
+        RegularBinarizer bin1 = binarizers.get(interpName1);
+        RegularBinarizer bin2 = binarizers.get(interpName2);
+
+        for (Rule rule : automaton.getRuleSet()) {
+            TreeAutomaton leftAutomaton = bin1.binarizeWithVariables(interp1.getHomomorphism().get(rule.getLabel()));
+            TreeAutomaton rightAutomaton = bin2.binarizeWithVariables(interp2.getHomomorphism().get(rule.getLabel()));
+            sb.binarize(leftAutomaton, interp1.getHomomorphism(), rightAutomaton, interp2.getHomomorphism(), newAuto, newLeftHom, newRightHom);
         }
-        
+
         InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAuto);
-//        ret.addInterpretation(interp1, null);
-        
+        ret.addInterpretation(interpName1, new Interpretation(bin1.getOutputAlgebra(), newLeftHom));
+        ret.addInterpretation(interpName2, new Interpretation(bin2.getOutputAlgebra(), newRightHom));
+
         return ret;
-        
+
     }
 
     @CallableFromShell
     public InterpretedTreeAutomaton binarize() {
         /*
-        if (interpretations.keySet().size() > 1) {
-            throw new UnsupportedOperationException("Can only binarize IRTGs with a single interpretation.");
-        }
+         if (interpretations.keySet().size() > 1) {
+         throw new UnsupportedOperationException("Can only binarize IRTGs with a single interpretation.");
+         }
          * 
          */
 
@@ -358,11 +364,11 @@ public class InterpretedTreeAutomaton {
         ConcreteTreeAutomaton newAutomaton = new ConcreteTreeAutomaton();
         Homomorphism newHomomorphism = new Homomorphism();
         Set<Rule<String>> rules = automaton.getRuleSet();
-        
+
         // pick the alphabetically first interpretation for the binarization
         List<String> names = new ArrayList<String>(interpretations.keySet());
         Collections.sort(names);
-        
+
         String interpretationName = names.get(0);
         Interpretation interpretation = interpretations.get(interpretationName);
         Homomorphism homomorphism = interpretation.getHomomorphism();
@@ -395,13 +401,13 @@ public class InterpretedTreeAutomaton {
 
         return ret;
     }
-    
+
     private void binarizeRule(Homomorphism newHomomorphism, Set<Rule<String>> newRules, Tree<StringOrVariable> oldHomomorphismSubtree, String parentNT, String label, Rule rule) {
         List<String> childStatesInNewRule = new ArrayList<String>();
         int varCounter = 0;
         List<Tree<StringOrVariable>> childrenInOldHom = oldHomomorphismSubtree.getChildren();
         List<Tree<StringOrVariable>> childrenInNewHom = new ArrayList<Tree<StringOrVariable>>();
-        
+
         for (int pos = 0; pos < childrenInOldHom.size(); pos++) {
             Tree<StringOrVariable> arg = childrenInOldHom.get(pos);
             StringOrVariable argLabel = arg.getLabel();
@@ -417,8 +423,8 @@ public class InterpretedTreeAutomaton {
             } else if (arg.getChildren().isEmpty()) {           // leaf
                 childrenInNewHom.add(Tree.create(argLabel));
             } else {                                            // root of subtree is an operation
-                String newTerminal = makeBinaryLabel(label, pos+1, true);
-                String newNonterminal = makeBinaryLabel(label, pos+1, false);
+                String newTerminal = makeBinaryLabel(label, pos + 1, true);
+                String newNonterminal = makeBinaryLabel(label, pos + 1, false);
                 childStatesInNewRule.add(newNonterminal);
 
                 varCounter++;
@@ -428,8 +434,8 @@ public class InterpretedTreeAutomaton {
                 binarizeRule(newHomomorphism, newRules, arg, newNonterminal, newTerminal, rule);
             }
         }
-        
-        
+
+
         Tree<StringOrVariable> hForRule = Tree.create(oldHomomorphismSubtree.getLabel(), childrenInNewHom);
         Rule<String> binRule = new Rule(parentNT, label, childStatesInNewRule);
         newRules.add(binRule);
