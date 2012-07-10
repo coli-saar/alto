@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.saar.penguin.irtg;
+package de.saar.penguin.irtg.binarization;
 
 import de.saar.basic.Pair;
 import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
@@ -28,7 +28,7 @@ public class SynchronousBinarization<E, F> {
     private TreeAutomaton<E> leftAuto;
     private TreeAutomaton<F> rightAuto;
 
-    public void binarize(TreeAutomaton<E> leftAuto, TreeAutomaton<F> rightAuto, ConcreteTreeAutomaton<Pair<E,F>> outputAutomaton, Homomorphism leftHom, Homomorphism rightHom) {
+    public void binarize(TreeAutomaton<E> leftAuto, Homomorphism leftHom, TreeAutomaton<F> rightAuto, Homomorphism rightHom, ConcreteTreeAutomaton<Pair<E, F>> outputAutomaton, Homomorphism leftHomOut, Homomorphism rightHomOut) {
         correspondenceChart = new HashSet<CorrespondenceItem>();
         leftChart = new HashSet<LeftItem>();
         rightChart = new HashSet<RightItem>();
@@ -101,15 +101,12 @@ public class SynchronousBinarization<E, F> {
 
         throw new UnsupportedOperationException("Not yet implemented");
     }
-    
-    
-    
-    
-    
-      private interface Item {
+
+    private interface Item {
     }
 
     private class CorrespondenceItem implements Item {
+
         E leftState;
         F rightState;
         Set<String> variables;
@@ -118,6 +115,15 @@ public class SynchronousBinarization<E, F> {
             this.leftState = leftState;
             this.rightState = rightState;
             this.variables = variables;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 37 * hash + (this.leftState != null ? this.leftState.hashCode() : 0);
+            hash = 37 * hash + (this.rightState != null ? this.rightState.hashCode() : 0);
+            hash = 37 * hash + (this.variables != null ? this.variables.hashCode() : 0);
+            return hash;
         }
 
         @Override
@@ -140,20 +146,10 @@ public class SynchronousBinarization<E, F> {
             }
             return true;
         }
-
-        @Override
-        public int hashCode() {
-            int hash = 5;
-            hash = 29 * hash + (this.leftState != null ? this.leftState.hashCode() : 0);
-            hash = 29 * hash + (this.rightState != null ? this.rightState.hashCode() : 0);
-            hash = 29 * hash + (this.variables != null ? this.variables.hashCode() : 0);
-            return hash;
-        }
-        
-        
     }
 
     private class LeftItem implements Item {
+
         E state;
 
         public LeftItem(E state) {
@@ -181,11 +177,10 @@ public class SynchronousBinarization<E, F> {
             hash = 23 * hash + (this.state != null ? this.state.hashCode() : 0);
             return hash;
         }
-        
-        
     }
 
     private class RightItem implements Item {
+
         F state;
 
         public RightItem(F state) {
@@ -215,4 +210,3 @@ public class SynchronousBinarization<E, F> {
         }
     }
 }
-

@@ -13,6 +13,8 @@ import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.saar.penguin.irtg.binarization.RegularBinarizer;
+import de.saar.penguin.irtg.binarization.SynchronousBinarization;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
@@ -312,6 +314,32 @@ public class InterpretedTreeAutomaton {
 
             lineNumber++;
         }
+    }
+    
+    public InterpretedTreeAutomaton binarize(Map<String,RegularBinarizer> binarizers) {
+        SynchronousBinarization sb = new SynchronousBinarization();
+        ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
+        Homomorphism newLeftHom = new Homomorphism();
+        Homomorphism newRightHom = new Homomorphism();
+        List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
+        
+        if( orderedInterpretationList.size() != 2 ) {
+            throw new UnsupportedOperationException("trying to binarize " + orderedInterpretationList.size() + " interpretations");
+        }
+        
+        String interp1 = orderedInterpretationList.get(0);
+        String interp2 = orderedInterpretationList.get(1);
+        
+        for( Rule rule : automaton.getRuleSet() ) {
+//        sb.binarize( BLA BLA BLA, newAuto, newLeftHom, newRightHom);
+            
+        }
+        
+        InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAuto);
+//        ret.addInterpretation(interp1, null);
+        
+        return ret;
+        
     }
 
     @CallableFromShell
