@@ -35,28 +35,52 @@ public abstract class RegularBinarizer<E> {
     public abstract TreeAutomaton<E> binarize(String symbol, int arity);
 
     public TreeAutomaton<String> binarize(Tree<String> term) {
-        return null;
+        return binarizeGeneral(term);
     }
 
     public TreeAutomaton<String> binarizeWithVariables(Tree<StringOrVariable> term) {
+        return binarizeGeneral(term);
+    }
+    
+    /*
+     * This is a bit of a hack to get rid of the Tree<String> vs Tree<StringOrVariable> distinction,
+     * which currently are implemented identically anyway.
+     */
+    private TreeAutomaton<String> binarizeGeneral(Tree term) {
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
         String finalState = gensym();
         ret.addFinalState(finalState);
-        binarizeWithVariablesInto(term, finalState, ret);
+        binarizeInto(term, finalState, ret);
         return ret;
     }
 
-    private void binarizeWithVariablesInto(Tree<StringOrVariable> term, String renameFinalStatesTo, ConcreteTreeAutomaton<String> intoAutomaton) {
-        if (term.getLabel().isVariable()) {
-            intoAutomaton.addRule(term.getLabel().getValue(), new ArrayList<String>(), renameFinalStatesTo);
+    /**
+     * Writes the binarization automaton of the given term into the 'intoAutomaton'.
+     * If the term is a Tree<StringOrVariable>, variable leaves are treated specially,
+     * in that special variable rules are inserted into the output automaton.
+     * The final states of the automaton for the term's root label are all renamed
+     * to 'renameFinalStatesTo' when writing into the 'intoAutomaton'. All other states
+     * are given fresh names.
+     * 
+     * @param term
+     * @param renameFinalStatesTo
+     * @param intoAutomaton 
+     */
+    private void binarizeInto(Tree term, String renameFinalStatesTo, ConcreteTreeAutomaton<String> intoAutomaton) {
+        if (isVariable(term.getLabel()) ) {
+            intoAutomaton.addRule(term.getLabel().toString(), new ArrayList<String>(), renameFinalStatesTo);
         } else {
-            TreeAutomaton<E> auto = binarize(term.getLabel().getValue(), term.getChildren().size());
+            TreeAutomaton<E> auto = binarize(term.getLabel().toString(), term.getChildren().size());
             List<String> variableStates = copyWithRenaming(auto, auto.getFinalStates(), renameFinalStatesTo, intoAutomaton);
 
             for (int i = 0; i < term.getChildren().size(); i++) {
-                binarizeWithVariablesInto(term.getChildren().get(i), variableStates.get(i), intoAutomaton);
+                binarizeInto((Tree) term.getChildren().get(i), variableStates.get(i), intoAutomaton);
             }
         }
+    }
+    
+    private boolean isVariable(Object o) {
+        return (o instanceof StringOrVariable) && ((StringOrVariable) o).isVariable();
     }
 
     private List<String> copyWithRenaming(TreeAutomaton<E> automaton, Set<E> statesToRename, String newStateName, ConcreteTreeAutomaton<String> intoAutomaton) {
@@ -119,4 +143,5 @@ public abstract class RegularBinarizer<E> {
     public Algebra getOutputAlgebra() {
         return outputAlgebra;
     }
+
 }

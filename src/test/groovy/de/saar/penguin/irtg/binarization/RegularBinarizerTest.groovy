@@ -46,8 +46,6 @@ class RegularBinarizerTest {
         Tree<StringOrVariable> term = ptv("f(g(?1,?2,?3),?4,?5)");
         TreeAutomaton<String> auto = bin.binarizeWithVariables(term);
         
-        System.err.println(auto);
-        
         Set gold = new HashSet([
                 pt("*(*('?1', *('?2','?3')), *('?4','?5'))"),
                 pt("*(*( *('?1', *('?2','?3')), '?4'),'?5')"),
@@ -55,6 +53,6 @@ class RegularBinarizerTest {
                 pt("*(*( *(*('?1','?2'),'?3'), '?4'),'?5')")
             ])
         assertEquals(gold, new HashSet(auto.language()))
-    }
+    } 
 }
 
