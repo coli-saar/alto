@@ -32,7 +32,7 @@ public abstract class RegularBinarizer<E> {
         nextGensym = 1;
     }
 
-    public abstract TreeAutomaton<E> binarize(String symbol);
+    public abstract TreeAutomaton<E> binarize(String symbol, int arity);
 
     public TreeAutomaton<String> binarize(Tree<String> term) {
         return null;
@@ -41,6 +41,7 @@ public abstract class RegularBinarizer<E> {
     public TreeAutomaton<String> binarizeWithVariables(Tree<StringOrVariable> term) {
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
         String finalState = gensym();
+        ret.addFinalState(finalState);
         binarizeWithVariablesInto(term, finalState, ret);
         return ret;
     }
@@ -49,7 +50,7 @@ public abstract class RegularBinarizer<E> {
         if (term.getLabel().isVariable()) {
             intoAutomaton.addRule(term.getLabel().getValue(), new ArrayList<String>(), renameFinalStatesTo);
         } else {
-            TreeAutomaton<E> auto = binarize(term.getLabel().getValue());
+            TreeAutomaton<E> auto = binarize(term.getLabel().getValue(), term.getChildren().size());
             List<String> variableStates = copyWithRenaming(auto, auto.getFinalStates(), renameFinalStatesTo, intoAutomaton);
 
             for (int i = 0; i < term.getChildren().size(); i++) {

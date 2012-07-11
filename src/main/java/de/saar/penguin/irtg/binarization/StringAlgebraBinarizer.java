@@ -6,7 +6,10 @@ package de.saar.penguin.irtg.binarization;
 
 import de.saar.penguin.irtg.algebra.StringAlgebra;
 import de.saar.penguin.irtg.algebra.StringAlgebra.Span;
+import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -18,8 +21,29 @@ public class StringAlgebraBinarizer extends RegularBinarizer<Span> {
     }
     
     @Override
-    public TreeAutomaton<Span> binarize(String symbol) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public TreeAutomaton<Span> binarize(String symbol, int arity) {
+        ConcreteTreeAutomaton<Span> ret = new ConcreteTreeAutomaton<Span>();
+        
+        // terminal productions
+        for( int i = 1; i <= arity; i++ ) {
+            ret.addRule(RegularBinarizer.VARIABLE_MARKER + i, new ArrayList<Span>(), new Span(i, i+1));
+        }
+        
+        // binary productions
+        for( int start = 1; start <= arity; start++ ) {
+            for( int end = start+2; end <= arity+1; end++ ) {
+                for( int split = start+1; split <= end-1; split++ ) {
+                    List<Span> children = new ArrayList<Span>(2);
+                    children.add(new Span(start, split));
+                    children.add(new Span(split, end));
+                    ret.addRule(StringAlgebra.CONCAT, children, new Span(start,end));
+                }
+            }
+        }
+        
+        ret.addFinalState(new Span(1,arity+1));
+        
+        return ret;
     }
     
 }
