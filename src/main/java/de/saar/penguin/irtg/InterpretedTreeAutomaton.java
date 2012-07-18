@@ -14,6 +14,7 @@ import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.saar.penguin.irtg.binarization.RegularBinarizer;
+import de.saar.penguin.irtg.binarization.StringAlgebraBinarizer;
 import de.saar.penguin.irtg.binarization.SynchronousBinarization;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.up.ling.shell.CallableFromShell;
@@ -333,13 +334,16 @@ public class InterpretedTreeAutomaton {
         Interpretation interp2 = interpretations.get(interpName2);
         RegularBinarizer bin1 = binarizers.get(interpName1);
         RegularBinarizer bin2 = binarizers.get(interpName2);
-
-        for (Rule rule : automaton.getRuleSet()) {
+        
+        for (Rule rule : automaton.getRuleSet()) {  
             TreeAutomaton leftAutomaton = bin1.binarizeWithVariables(interp1.getHomomorphism().get(rule.getLabel()));
             TreeAutomaton rightAutomaton = bin2.binarizeWithVariables(interp2.getHomomorphism().get(rule.getLabel()));
-            sb.binarize(leftAutomaton, interp1.getHomomorphism(), rightAutomaton, interp2.getHomomorphism(), newAuto, newLeftHom, newRightHom);
+            //sb.binarize(leftAutomaton, interp1.getHomomorphism(), rightAutomaton, interp2.getHomomorphism(), newAuto, newLeftHom, newRightHom);
+            sb.binarize(rule, leftAutomaton, rightAutomaton, newAuto, newLeftHom, newRightHom);
         }
-
+        for (String state : automaton.getFinalStates()) {
+            newAuto.addFinalState(state);
+        }        
         InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAuto);
         ret.addInterpretation(interpName1, new Interpretation(bin1.getOutputAlgebra(), newLeftHom));
         ret.addInterpretation(interpName2, new Interpretation(bin2.getOutputAlgebra(), newRightHom));
@@ -347,7 +351,18 @@ public class InterpretedTreeAutomaton {
         return ret;
 
     }
-
+    
+    @CallableFromShell
+    public void testBinarize(){ 
+        RegularBinarizer bin1 = new StringAlgebraBinarizer();
+        RegularBinarizer bin2 = new StringAlgebraBinarizer();
+        Map<String,RegularBinarizer> binarizers = new HashMap<String, RegularBinarizer>();
+        binarizers.put("i1",bin1);
+        binarizers.put("i2",bin2);
+        InterpretedTreeAutomaton newAuto = binarize(binarizers);
+        System.out.println(newAuto);    
+    }
+    
     @CallableFromShell
     public InterpretedTreeAutomaton binarize() {
         /*

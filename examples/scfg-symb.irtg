@@ -1,0 +1,30 @@
+
+interpretation i1: de.saar.penguin.irtg.algebra.StringAlgebra
+interpretation i2: de.saar.penguin.irtg.algebra.StringAlgebra
+
+
+
+
+r1(A,B,C) -> S!
+  [i1] *(?1,?2,?3)
+  [i2] *(?3,?1,?2)
+
+r2(D,E) -> A
+  [i1] *(?1,?2)
+  [i2] *(a,?1,?2)
+
+r3 -> B
+  [i1] *(b,c,d)
+  [i2] e
+
+r4(B,E,D) -> C
+  [i1] *(f,?1,g,?2,?3)
+  [i2] *(?2,?1,*(h,?3,i))
+
+r5 -> D
+  [i1] j
+  [i2] k
+
+r6 -> E
+  [i1] m
+  [i2] *(n,o)

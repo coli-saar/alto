@@ -7,6 +7,7 @@ package de.saar.penguin.irtg.binarization;
 import de.saar.penguin.irtg.algebra.StringAlgebra;
 import de.saar.penguin.irtg.algebra.StringAlgebra.Span;
 import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
+import de.saar.penguin.irtg.automata.Rule;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,13 @@ public class StringAlgebraBinarizer extends RegularBinarizer<Span> {
     @Override
     public TreeAutomaton<Span> binarize(String symbol, int arity) {
         ConcreteTreeAutomaton<Span> ret = new ConcreteTreeAutomaton<Span>();
+
+        if (arity == 0) {
+            Span finalState = new Span(1,2);
+            ret.addFinalState(finalState);
+            ret.addRule(symbol, new ArrayList<Span>(), finalState);         
+            return ret;
+        }
         
         // terminal productions
         for( int i = 1; i <= arity; i++ ) {
