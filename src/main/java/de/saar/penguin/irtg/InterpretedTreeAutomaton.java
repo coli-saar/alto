@@ -353,14 +353,14 @@ public class InterpretedTreeAutomaton {
     }
     
     @CallableFromShell
-    public void testBinarize(){ 
+    public InterpretedTreeAutomaton testBinarize(){ 
         RegularBinarizer bin1 = new StringAlgebraBinarizer();
         RegularBinarizer bin2 = new StringAlgebraBinarizer();
         Map<String,RegularBinarizer> binarizers = new HashMap<String, RegularBinarizer>();
         binarizers.put("i1",bin1);
         binarizers.put("i2",bin2);
         InterpretedTreeAutomaton newAuto = binarize(binarizers);
-        System.out.println(newAuto);    
+        return newAuto;
     }
     
     @CallableFromShell

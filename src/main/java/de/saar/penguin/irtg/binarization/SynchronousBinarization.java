@@ -4,7 +4,6 @@
  */
 package de.saar.penguin.irtg.binarization;
 
-import com.google.common.base.Predicate;
 import de.saar.basic.Pair;
 import de.saar.basic.StringOrVariable;
 import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
@@ -19,12 +18,16 @@ import java.util.*;
  * @author koller
  */
 public class SynchronousBinarization<E, F> {
-    public static final String VARIABLE_MARKER = "?"; //nich sicher, ob ich das brauche
-    public static final String PLACEHOLDER = ".";
+    public static final String VARIABLE_MARKER = "?";
+    public static final StringOrVariable CONSTANTL = new StringOrVariable("y",false); // das kann so nicht bleiben
+    public static final StringOrVariable CONSTANTR = new StringOrVariable("z",false);
+    //private E leftDummy;
+    //private F rightDummy;
     private int nextGensym;
-    private Set<CorrespondenceItem> correspondenceChart;
-    private Set<LeftItem> leftChart;
-    private Set<RightItem> rightChart;
+    private Map<Item,Set<Item>> itemCombinations;
+    private Set<CItem> cChart;
+    private Set<LItem> leftChart;
+    private Set<RItem> rightChart;
     private Queue<Item> agenda;
     private TreeAutomaton<E> leftAuto;
     private TreeAutomaton<F> rightAuto;
@@ -35,10 +38,12 @@ public class SynchronousBinarization<E, F> {
 
     // eigentlich: ConcreteTreeAutomaton<Pair<E, F>> outputAutomaton
     public void binarize(Rule grammarRule, TreeAutomaton<E> leftAuto, TreeAutomaton<F> rightAuto, ConcreteTreeAutomaton<String> outputAutomaton, Homomorphism leftHomOut, Homomorphism rightHomOut) {
-        correspondenceChart = new HashSet<CorrespondenceItem>();
-        leftChart = new HashSet<LeftItem>();
-        rightChart = new HashSet<RightItem>();
+        cChart = new HashSet<CItem>();
+        leftChart = new HashSet<LItem>();
+        rightChart = new HashSet<RItem>();
         agenda = new LinkedList<Item>();
+        nextGensym = 1;
+        itemCombinations = new HashMap<Item,Set<Item>>();        
 
         this.leftAuto = leftAuto;
         this.rightAuto = rightAuto;
@@ -46,363 +51,308 @@ public class SynchronousBinarization<E, F> {
         this.outputAutomaton = outputAutomaton;
         this.leftHomOut = leftHomOut;
         this.rightHomOut = rightHomOut;
-        nextGensym = 1;
+        
+        // select a constant as dummy symbol from both algebras
+        // ...
+        
 
-        // initialize agenda and charts with (Var), (Const-L) and (Const-R)
+        // initialize agenda and charts with (Var), (InitC), (InitL) and (InitR)
         for (Rule<E> leftRule : leftAuto.getRuleSet()){
             if (leftRule.getArity() == 0){
                 String label = leftRule.getLabel();
                 if (label.startsWith(VARIABLE_MARKER)) {
-                    for (Rule<F> rightRule : rightAuto.getRulesBottomUp(label, new ArrayList())) { //nicht schön
+                    // combine variable with corresponding variable(s)
+                    for (Rule<F> rightRule : rightAuto.getRulesBottomUp(label, new ArrayList())) {
                         var(leftRule,rightRule);
                     }
                 } else { 
-                    constL(leftRule);             
+                    // combine left constant with every right constant
+                    for (Rule<F> rightRule: rightAuto.getRuleSet()) {
+                        if (rightRule.getArity() == 0 && !rightRule.getLabel().startsWith(VARIABLE_MARKER)) {
+                            initC(leftRule,rightRule);
+                        }
+                    }
+                    initL(leftRule);                  
                 }               
             }
         }    
         for (Rule<F> rightRule : rightAuto.getRuleSet()){
             if (rightRule.getArity() == 0 && !rightRule.getLabel().startsWith(VARIABLE_MARKER)){
-                constR(rightRule);
+                initR(rightRule);
             }
         }
         
         while (!agenda.isEmpty()) {
             Item item = agenda.remove();
-
-            if (item instanceof SynchronousBinarization.CorrespondenceItem) {
-                CorrespondenceItem itemAsC = (CorrespondenceItem) item;
-                //System.out.println("["+itemAsC.leftState+","+itemAsC.rightState+","+itemAsC.variables+"]");
-                for (CorrespondenceItem other : new ArrayList<CorrespondenceItem>(correspondenceChart)) {
-                    union(itemAsC, other);
-                    unionReverse(itemAsC, other);
+            
+            if (item instanceof SynchronousBinarization.CItem) {
+                CItem itemC = (CItem) item;
+                leftC(itemC);
+                rightC(itemC);
+                for (LItem other : new ArrayList<LItem>(leftChart)) {
+                    if (isNewCombination(itemC,other)) {
+                        cl(itemC, other);
+                        lc(other, itemC);
+                    }
                 }
-                for (LeftItem other : new ArrayList<LeftItem>(leftChart)) {
-                    binary1L(itemAsC, other);
-                    binary2L(other, itemAsC);
+                for (RItem other : new ArrayList<RItem>(rightChart)) {
+                    if (isNewCombination(itemC,other)) {
+                        cr(itemC, other);
+                        rc(other, itemC); 
+                    }
                 }
-                for (RightItem other : new ArrayList<RightItem>(rightChart)) {
-                    binary1R(itemAsC,other);
-                    binary2R(other,itemAsC);
+                for (CItem other : new ArrayList<CItem>(cChart)) {
+                    if (isNewCombination(itemC,other)) {                    
+                        cc(itemC, other); 
+                        ccRev(itemC, other);
+                        cc(other, itemC); 
+                        ccRev(other, itemC);
+                    }
+                }       
+            } else if (item instanceof SynchronousBinarization.LItem) {
+                LItem itemL = (LItem) item;
+                ruleL(itemL);
+                for (LItem other : new ArrayList<LItem>(leftChart)) {
+                    if (isNewCombination(itemL,other)) {
+                        ll(itemL, other);
+                        ll(other, itemL);
+                    }
                 }
-                unaryL(itemAsC);
-                unaryR(itemAsC);
-                        
-            } else if (item instanceof SynchronousBinarization.LeftItem) {
-                LeftItem itemAsL = (LeftItem) item;
-                //System.out.println("<"+itemAsL.state+">");
-                for (CorrespondenceItem other : new ArrayList<CorrespondenceItem>(correspondenceChart)) {
-                    binary1L(other, itemAsL);
-                    binary2L(itemAsL, other);
+                for (CItem other : new ArrayList<CItem>(cChart)) { 
+                    if (isNewCombination(itemL,other)) {                    
+                        lc(itemL, other);
+                        cl(other, itemL);
+                    }
+                }              
+            } else if (item instanceof SynchronousBinarization.RItem){   
+                RItem itemR = (RItem) item;
+                ruleR(itemR);
+                for (RItem other : new ArrayList<RItem>(rightChart)) {
+                    if (isNewCombination(itemR,other)) {
+                        rr(itemR, other);
+                        rr(other, itemR);
+                    }
                 }
-                for (LeftItem other : new ArrayList<LeftItem>(leftChart)) {
-                    binaryConstL(itemAsL, other);
-                }
-                unaryConstL(itemAsL);
-                
-            } else if (item instanceof SynchronousBinarization.RightItem){
-                RightItem itemAsR = (RightItem) item;
-                //System.out.println("<<"+itemAsR.state+">>");            
-                for (CorrespondenceItem other : new ArrayList<CorrespondenceItem>(correspondenceChart)) {
-                    binary1R(other, itemAsR);
-                    binary2R(itemAsR, other);
-                }
-                for (RightItem other : new ArrayList<RightItem>(rightChart)) {
-                    binaryConstR(itemAsR, other);
-                }
-                unaryConstR(itemAsR);                           
-            }
-        }
-    }
-
-    private void union(CorrespondenceItem item, CorrespondenceItem other) { 
-        union(item,other,false);
-    }
-
-    private void unionReverse(CorrespondenceItem item, CorrespondenceItem other) {
-        union(item,other,true);
-    }
-        
-    private void union(CorrespondenceItem item, CorrespondenceItem other, boolean reverse) { 
-        List leftChildren = makeChildrenList(item.leftState,other.leftState); // (p1,p2)
-        List rightChildren = makeChildrenList(item.rightState,other.rightState,reverse); // (q1,q2) oder (q2,q1)
-
-        for (String leftLabel : leftAuto.getAllLabels()) { 
-            for (Rule<E> leftRule : leftAuto.getRulesBottomUp(leftLabel, leftChildren)) { 
-                for (String rightLabel : rightAuto.getAllLabels()) { 
-                    for (Rule<F> rightRule: rightAuto.getRulesBottomUp(rightLabel, rightChildren)){
-                        Set<String> newVariableSet = new HashSet<String>(item.variables);
-                        newVariableSet.addAll(other.variables);
-                        CorrespondenceItem newItem = new CorrespondenceItem(leftRule.getParent(),rightRule.getParent(),newVariableSet);
-                        
-                        newItem.leftTree = Tree.create(PLACEHOLDER);
-                        newItem.rightTree = Tree.create(PLACEHOLDER);
-                        //newItem.leftPath = new ArrayList<Integer>();
-                        //newItem.rightPath = new ArrayList<Integer>();
-                        String newRuleLabel = gensym();
-                        newItem.symbolInRule = newRuleLabel.toUpperCase();
-                           
-                        // add rule and homomorphism-trees for new items
-                        if ( addItem(newItem,correspondenceChart) ) {
-                            List ruleChildren = makeChildrenList(item.symbolInRule,other.symbolInRule);
-                            Rule<String> newRule = new Rule<String>(newItem.symbolInRule,newRuleLabel,ruleChildren);
-                            this.outputAutomaton.addRule(newRule);
-
-                            Tree<StringOrVariable> leftHomTree = makeHomTree(item.leftTree,other.leftTree,leftLabel,false);
-                            Tree<StringOrVariable> rightHomTree = makeHomTree(item.rightTree,other.rightTree,rightLabel,reverse);
-                            leftHomOut.add(newRuleLabel, leftHomTree);                            
-                            rightHomOut.add(newRuleLabel, rightHomTree);  
-                            
-                            // add rule for parent state of orignal rule if both states are final states
-                            if (leftAuto.getFinalStates().contains(newItem.leftState) && rightAuto.getFinalStates().contains(newItem.rightState)) {
-                                String newLabel = gensym();
-                                this.outputAutomaton.addRule(newLabel, ruleChildren, (String) grammarRule.getParent());
-                                leftHomOut.add(newLabel, leftHomTree);
-                                rightHomOut.add(newLabel, rightHomTree);
-                            }
-                        }
-                        //System.out.println("Union: "+newItem.leftState+" "+newItem.rightState+" "+newItem.variables+" : "+newItem.symbolInRule); 
+                for (CItem other : new ArrayList<CItem>(cChart)) {
+                    if (isNewCombination(itemR,other)) {                    
+                        rc(itemR, other);
+                        cr(other, itemR);
                     }
                 }
             }
         }
-    }    
-    
-    private Tree makeHomTree(Tree tree1, Tree tree2, String label, boolean reverse) {   
         
-        // ?!?  // aber dann brauche ich den Pfad ja gar nicht...
-        Predicate<Tree> isOpenPosition = new Predicate<Tree>() {
-            @Override
-            public boolean apply(Tree tree) {
-                return ( tree.getLabel().equals(PLACEHOLDER) );
+        // add rules for parent state of original rule if both states in CItem are final states
+        for (CItem itemC : cChart) {
+            if (leftAuto.getFinalStates().contains(itemC.leftState) && rightAuto.getFinalStates().contains(itemC.rightState)) {
+                List ruleChildren = makeChildrenList(itemC.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable("?1", true));
+                Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable("?1", true)); 
+                outputRule((String)grammarRule.getParent(), ruleChildren, leftHomTree, rightHomTree);
             }
-        };            
-        Tree<StringOrVariable> firstVarTree = Tree.create(new StringOrVariable("?1", true));
-        Tree<StringOrVariable> secondVarTree = Tree.create( new StringOrVariable("?2", true));             
-        List HomChildren = makeChildrenList( tree1.substitute(isOpenPosition, firstVarTree),
-                                             tree2.substitute(isOpenPosition, secondVarTree), reverse );
-        return Tree.create(label, HomChildren);       
+        }
     }
-    
-    
-    private void var(Rule<E> leftRule, Rule<F> rightRule){
-        Set<String> varSet = new HashSet<String>();
-        varSet.add(leftRule.getLabel());
-        CorrespondenceItem newItem = new CorrespondenceItem(leftRule.getParent(),rightRule.getParent(),varSet);
+
         
-        newItem.leftTree = Tree.create(PLACEHOLDER);
-        newItem.rightTree = Tree.create(PLACEHOLDER);
-        //newItem.leftPath = new ArrayList<Integer>();
-        //newItem.rightPath = new ArrayList<Integer>();
+    private void var(Rule<E> leftRule, Rule<F> rightRule) {
+        CItem item = new CItem(leftRule.getParent(),rightRule.getParent());
+        addItem(item,cChart);
+
         int index = Homomorphism.getIndexForVariable(new StringOrVariable(leftRule.getLabel(),true));
-        newItem.symbolInRule = (String) grammarRule.getChildren()[index];      
-        addItem(newItem,correspondenceChart);
-        //System.out.println("Var: "+newItem.leftState+" "+newItem.rightState+" "+newItem.variables+" : "+newItem.symbolInRule); 
+        List ruleChildren = makeChildrenList(grammarRule.getChildren()[index]);
+        
+        Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable("?1", true));
+        Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable("?1", true));    
+        outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
     }
     
-    private void constL(Rule<E> leftRule){
-        E leftState = leftRule.getParent();
-        LeftItem newItem = new LeftItem(leftState);
-        newItem.tree = Tree.create(leftRule.getLabel());
-        addItem(newItem,leftChart);          
-        //System.out.println("ConstL: "+newItem.state+" "+newItem.tree);
-    }
-    
-    private void constR(Rule<F> rightRule){
-        F rightState = rightRule.getParent();
-        RightItem newItem = new RightItem(rightState);
-        newItem.tree = Tree.create(rightRule.getLabel());
-        addItem(newItem,rightChart);
-        //System.out.println("ConstR: "+newItem.state+" "+newItem.tree);        
-    }
-    
-    
-    private void binary1L(CorrespondenceItem itemAsC, LeftItem other) {
-        binaryL(itemAsC,other,true);
-    }
+    private void initC(Rule<E> leftRule, Rule<F> rightRule) {
+        CItem item = new CItem(leftRule.getParent(),rightRule.getParent());
+        addItem(item,cChart);
 
-    private void binary2L(LeftItem other, CorrespondenceItem itemAsC) {
-        binaryL(itemAsC,other,false);
+        Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable(leftRule.getLabel(),false));
+        Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable(rightRule.getLabel(),false));
+        outputRule(item.getSymbolInRule(), new ArrayList(), leftHomTree, rightHomTree);
     }
+    
+    private void initL(Rule<E> leftRule){
+        LItem item = new LItem(leftRule.getParent());
+        addItem(item,leftChart);
+
+        Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable(leftRule.getLabel(),false));
+        Tree<StringOrVariable> rightHomTree = Tree.create(CONSTANTR);
+        outputRule(item.getSymbolInRule(), new ArrayList(), leftHomTree, rightHomTree);
+    }
+    
+    private void initR(Rule<F> rightRule){
+        RItem item = new RItem(rightRule.getParent());
+        addItem(item,rightChart);
+
+        Tree<StringOrVariable> leftHomTree = Tree.create(CONSTANTL);            
+        Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable(rightRule.getLabel(),false));
+        outputRule(item.getSymbolInRule(), new ArrayList(), leftHomTree, rightHomTree);
+    }  
+    
+    
+    private void ruleL(LItem oldItem) {
+        for (String label : leftAuto.getAllLabels()) { 
+            for (Rule<E> rule : leftAuto.getRulesBottomUp(label, makeChildrenList(oldItem.state))) {
+                LItem item = new LItem(rule.getParent());
+                addItem(item,leftChart);
+                
+                List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = makeHomTree(label);
+                Tree<StringOrVariable> rightHomTree = Tree.create(CONSTANTR);
+                outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
+            }
+        }
+    }
+    
+    private void ruleR(RItem oldItem) {
+        for (String label : rightAuto.getAllLabels()) { 
+            for (Rule<F> rule : rightAuto.getRulesBottomUp(label, makeChildrenList(oldItem.state))) {        
+                RItem item = new RItem(rule.getParent());
+                addItem(item,rightChart);
+
+                List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = Tree.create(CONSTANTL);            
+                Tree<StringOrVariable> rightHomTree = makeHomTree(label); 
+                outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
+            }
+        }
+    }
+    
+    
+    private void leftC(CItem oldItem) {
+        for (String label : leftAuto.getAllLabels()) { 
+            for (Rule<E> rule : leftAuto.getRulesBottomUp(label, makeChildrenList(oldItem.leftState))) {
+                CItem item = new CItem(rule.getParent(),oldItem.rightState);
+                addItem(item,cChart);
+
+                List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = makeHomTree(label);
+                Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable("?1", true));
+                outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
+            }
+        }
+    } 
       
-    private void binaryL(CorrespondenceItem itemAsC, LeftItem other, boolean first) {
-        List leftChildren = makeChildrenList(itemAsC.leftState,other.state, !first);
+    private void rightC(CItem oldItem) {
+        for (String label : rightAuto.getAllLabels()) { 
+            for (Rule<F> rule : rightAuto.getRulesBottomUp(label, makeChildrenList(oldItem.rightState))) {
+                CItem item = new CItem(oldItem.leftState,rule.getParent());
+                addItem(item,cChart);
 
-        for (String leftLabel: leftAuto.getAllLabels()) {
-            for(Rule<E> leftRule : leftAuto.getRulesBottomUp(leftLabel, leftChildren)) {
-                E leftState = leftRule.getParent();
-                CorrespondenceItem newItem = new CorrespondenceItem(leftState,itemAsC.rightState,itemAsC.variables);
-                
-                List leftTreeChildren = makeChildrenList(itemAsC.leftTree,other.tree, !first);
-                newItem.leftTree = Tree.create(leftLabel,leftTreeChildren);
-                newItem.rightTree = itemAsC.rightTree; 
-//                List leftPath = new ArrayList<Integer>();
-//                if (first) {
-//                    leftPath.add(0);                    
-//                } else {
-//                    leftPath.add(1);
-//                }   
-//                leftPath.addAll(itemAsC.leftPath);
-//                newItem.leftPath = leftPath;                
-//                newItem.rightPath = itemAsC.rightPath;
-                newItem.symbolInRule = itemAsC.symbolInRule;                
-                
-                // add unary rule if both states are final states [incomplete]
-                if ( addItem(newItem,correspondenceChart) && leftAuto.getFinalStates().contains(newItem.leftState) && rightAuto.getFinalStates().contains(newItem.rightState) ) {
-                    String newLabel = gensym();
-                    List ruleChildren = new ArrayList<String>(1);
-                    ruleChildren.add(newItem.symbolInRule);
-                    this.outputAutomaton.addRule(newLabel, ruleChildren, (String) grammarRule.getParent());  
-                    //leftHomOut
-                    //rightHomOut
-                }
-                //System.out.println("BinaryL: "+newItem.leftState+" "+newItem.rightState+" "+newItem.variables+" : "+newItem.symbolInRule);        
+                List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable("?1", true));
+                Tree<StringOrVariable> rightHomTree = makeHomTree(label);
+                outputRule(item.getSymbolInRule(),ruleChildren, leftHomTree, rightHomTree);
             }
         }
     }    
-       
-    private void binary1R(CorrespondenceItem itemAsC, RightItem other) {
-        binaryR(itemAsC,other,true);
-    }
 
-    private void binary2R(RightItem other, CorrespondenceItem itemAsC) {
-        binaryR(itemAsC,other,false);
+    private void ll(LItem item1, LItem item2){
+        List children = makeChildrenList(item1.state,item2.state);
+        for (String label: leftAuto.getAllLabels()) {
+            for (Rule<E> rule : leftAuto.getRulesBottomUp(label,children)) {
+                LItem item = new LItem(rule.getParent());
+                addItem(item,leftChart);
+
+                List ruleChildren = makeChildrenList(item1.getSymbolInRule(),item2.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = makeHomTree(label,false);
+                Tree<StringOrVariable> rightHomTree = Tree.create(CONSTANTR);  
+                outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
+            }
+        }
     }
     
-    private void binaryR(CorrespondenceItem itemAsC, RightItem other, boolean first) {
-        List rightChildren = makeChildrenList(itemAsC.rightState,other.state, !first);
+    private void rr(RItem item1, RItem item2){
+        List children = makeChildrenList(item1.state,item2.state);
+        for (String label: rightAuto.getAllLabels()) {
+            for (Rule<F> rule : rightAuto.getRulesBottomUp(label,children)) {
+                RItem item = new RItem(rule.getParent());
+                addItem(item,rightChart);
 
-        for (String rightLabel: rightAuto.getAllLabels()) {
-            for(Rule<F> rightRule : rightAuto.getRulesBottomUp(rightLabel, rightChildren)) {
-                F rightState = rightRule.getParent();
-                CorrespondenceItem newItem = new CorrespondenceItem(itemAsC.leftState,rightState,itemAsC.variables);
-                
-                List rightTreeChildren = makeChildrenList(itemAsC.rightTree,other.tree,!first);
-                newItem.rightTree = Tree.create(rightLabel,rightTreeChildren);
-                newItem.leftTree = itemAsC.leftTree; 
-//                List rightPath = new ArrayList<Integer>();
-//                if (first) {
-//                    rightPath.add(0);                    
-//                } else {
-//                    rightPath.add(1);
-//                }
-//                rightPath.addAll(itemAsC.rightPath);
-//                newItem.rightPath = rightPath;                
-//                newItem.leftPath = itemAsC.leftPath;
-                newItem.symbolInRule = itemAsC.symbolInRule;
-             
-                addItem(newItem,correspondenceChart);
-                //System.out.println("BinaryR: "+newItem.leftState+" "+newItem.rightState+" "+newItem.variables+" : "+newItem.symbolInRule);            
+                List ruleChildren = makeChildrenList(item1.getSymbolInRule(),item2.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = Tree.create(CONSTANTL);                     
+                Tree<StringOrVariable> rightHomTree = makeHomTree(label,false);
+                outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
     }   
     
-    private void unaryL(CorrespondenceItem item){
-        List children = new ArrayList();
-        children.add(item.leftState);
+    private void cl(CItem itemC, LItem itemL) {
+        cl(itemC,itemL,false);
+    }
+    
+    private void lc(LItem itemL, CItem itemC) {
+        cl(itemC,itemL,true);
+    }
+    
+    private void cl(CItem itemC, LItem itemL, boolean reverse) {
+        List children = makeChildrenList(itemC.leftState,itemL.state,reverse);
         for (String label: leftAuto.getAllLabels()) {
-            for (Rule<E> rule: leftAuto.getRulesBottomUp(label,children)){
-                CorrespondenceItem newItem = new CorrespondenceItem(rule.getParent(),item.rightState,item.variables);
-                
-                List leftTreeChildren = new ArrayList<Tree<String>>(1);
-                leftTreeChildren.add(item.leftTree);
-                newItem.leftTree = Tree.create(label,leftTreeChildren);
-                newItem.rightTree = item.rightTree;
-                //List leftPath = new ArrayList<Integer>();                
-                //leftPath.add(0);                                          
-                //leftPath.addAll(item.leftPath);
-                //newItem.leftPath = leftPath;                
-               // newItem.rightPath = item.rightPath;
-                newItem.symbolInRule = item.symbolInRule;                
-                
-                addItem(newItem,correspondenceChart);
-                //System.out.println("UnaryL: "+newItem.leftState+" "+newItem.rightState+" "+newItem.variables+" : "+newItem.symbolInRule);              
-            }
-        }
-    }
-    
-    private void unaryR(CorrespondenceItem item){
-        List children = new ArrayList();
-        children.add(item.rightState);
-        for (String label: rightAuto.getAllLabels()) {
-            for (Rule<F> rule: rightAuto.getRulesBottomUp(label,children)){
-                CorrespondenceItem newItem = new CorrespondenceItem(item.leftState,rule.getParent(),item.variables);
-                
-                List rightTreeChildren = new ArrayList<Tree<String>>(1);
-                rightTreeChildren.add(item.rightTree);
-                newItem.rightTree = Tree.create(label,rightTreeChildren);
-                //List rightPath = new ArrayList<Integer>();                
-                //rightPath.add(0);                                           
-                //rightPath.addAll(item.rightPath);
-                //newItem.rightPath = rightPath;                
-                //newItem.leftPath = item.leftPath;
-                newItem.leftTree = item.leftTree;
-                newItem.symbolInRule = item.symbolInRule;                   
-                
-                addItem(newItem,correspondenceChart);
-                //.out.println("UnaryR: "+newItem.leftState+" "+newItem.rightState+" "+newItem.variables+" : "+newItem.symbolInRule); 
-            }
-        }        
-    }    
+            for (Rule<E> rule : leftAuto.getRulesBottomUp(label,children)) {
+                CItem item = new CItem(rule.getParent(),itemC.rightState);
+                addItem(item,cChart);
 
-    private void binaryConstL(LeftItem itemAsL, LeftItem other) {
-        List children = makeChildrenList(itemAsL.state,other.state);
-        for (String label : leftAuto.getAllLabels()){
-            for (Rule<E> rule : leftAuto.getRulesBottomUp(label, children)) {
-                LeftItem newItem = new LeftItem(rule.getParent());
-                List treeChildren = makeChildrenList(itemAsL.tree,other.tree);
-                newItem.tree = Tree.create(label,treeChildren);
-                
-                addItem(newItem,leftChart);
-                //System.out.println("binaryConstL: "+newItem.state+" "+newItem.tree);                
+                List ruleChildren = makeChildrenList(itemC.getSymbolInRule(),itemL.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = makeHomTree(label,reverse);                     
+                Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable("?1", true));
+                outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
     }
     
-    private void binaryConstR(RightItem itemAsR, RightItem other){
-        List children = makeChildrenList(itemAsR.state,other.state);
-        for (String label : rightAuto.getAllLabels()){
-            for (Rule<F> rule : rightAuto.getRulesBottomUp(label, children)) {
-                RightItem newItem = new RightItem(rule.getParent());
-                List treeChildren = makeChildrenList(itemAsR.tree,other.tree);
-                newItem.tree = Tree.create(label,treeChildren);
-                                
-                addItem(newItem,rightChart);
-                //System.out.println("binaryConstR: "+newItem.state+" "+newItem.tree);   
-            }
-        }
+
+    private void cr(CItem itemC, RItem itemR) {
+        cr(itemC,itemR,false);
     }
     
-    private void unaryConstL(LeftItem itemAsL){
-        List children = new ArrayList(1);
-        children.add(itemAsL.state);
-        for (String label : leftAuto.getAllLabels()) {
-            for (Rule<E> rule: leftAuto.getRulesBottomUp(label, children)) {
-                LeftItem newItem = new LeftItem(rule.getParent());
-                
-                ArrayList<Tree<String>> treeChildren = new ArrayList<Tree<String>>(1);
-                treeChildren.add(itemAsL.tree);
-                newItem.tree = Tree.create(label,treeChildren);
-                
-                addItem(newItem,leftChart);
-                //System.out.println("unaryConstL: "+newItem.state+" "+newItem.tree); 
-            }
-        }
+    private void rc(RItem itemR, CItem itemC) {
+        cr(itemC,itemR,true);
+
     }
     
-    private void unaryConstR(RightItem itemAsR){
-        List children = new ArrayList(1);
-        children.add(itemAsR.state);
-        for (String label : rightAuto.getAllLabels()) {
-            for (Rule<F> rule: rightAuto.getRulesBottomUp(label, children)) {
-                RightItem newItem = new RightItem(rule.getParent());
-                
-                ArrayList<Tree<String>> treeChildren = new ArrayList<Tree<String>>(1);
-                treeChildren.add(itemAsR.tree);
-                newItem.tree = Tree.create(label,treeChildren);                
-                
-                addItem(newItem,rightChart);
-                //System.out.println("unaryConstR: "+newItem.state+" "+newItem.tree); 
+    private void cr(CItem itemC, RItem itemR, boolean reverse) {
+        List children = makeChildrenList(itemC.rightState,itemR.state,reverse);
+        for (String label: rightAuto.getAllLabels()) {
+            for (Rule<F> rule : rightAuto.getRulesBottomUp(label,children)) {
+                CItem item = new CItem(itemC.leftState,rule.getParent());
+                addItem(item,cChart);
+
+                List ruleChildren = makeChildrenList(itemC.getSymbolInRule(),itemR.getSymbolInRule());
+                Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable("?1", true));                    
+                Tree<StringOrVariable> rightHomTree = makeHomTree(label,reverse);                     
+                outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
+            }
+        }
+    }   
+    
+    private void cc(CItem item1, CItem item2) {
+        cc(item1, item2, false);
+    }
+    
+    private void ccRev(CItem item1, CItem item2) {
+        cc(item1, item2, true);
+    }
+     
+    private void cc(CItem item1, CItem item2, boolean reverse) {
+        List leftChildren = makeChildrenList(item1.leftState,item2.leftState);
+        List rightChildren = makeChildrenList(item1.rightState,item2.rightState,reverse);
+        for (String leftLabel : leftAuto.getAllLabels()) {
+            for (Rule<E> leftRule : leftAuto.getRulesBottomUp(leftLabel,leftChildren)){
+                for (String rightLabel : rightAuto.getAllLabels()) {
+                    for (Rule<F> rightRule : rightAuto.getRulesBottomUp(rightLabel, rightChildren)) {
+                        CItem item = new CItem(leftRule.getParent(),rightRule.getParent());
+                        addItem(item, cChart);
+                        
+                        List ruleChildren = makeChildrenList(item1.getSymbolInRule(), item2.getSymbolInRule());
+                        Tree<StringOrVariable> leftHomTree = makeHomTree(leftLabel,false);                    
+                        Tree<StringOrVariable> rightHomTree = makeHomTree(rightLabel,reverse);                     
+                        outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
+                    }
+                }
             }
         }
     }
@@ -415,59 +365,97 @@ public class SynchronousBinarization<E, F> {
         }
         return false;
     }
-    
-    private List makeChildrenList(Object state1, Object state2, boolean reverse) {
-        if (reverse) {
-            return makeChildrenList(state2, state1);
+
+    // true if items have not been combined before
+    // (regardless of order)
+    private boolean isNewCombination(Item item1, Item item2) {
+        boolean i1i2New;
+        boolean i2i1New;
+        if (itemCombinations.containsKey(item1)){
+            i1i2New = itemCombinations.get(item1).add(item2);
         } else {
-            return makeChildrenList(state1, state2);
+            Set newItem1Set = new HashSet<Item>();
+            newItem1Set.add(item2);
+            itemCombinations.put(item1, newItem1Set);
+            i1i2New = true;
+        }
+        if (itemCombinations.containsKey(item2)){
+            i2i1New = itemCombinations.get(item2).add(item1);
+        } else { 
+            i2i1New = true; 
+        }
+        return (i1i2New && i2i1New);
+    }
+    
+    private void outputRule(String parent, List children, Tree<StringOrVariable> leftHomTree, Tree<StringOrVariable> rightHomTree) {
+        Rule<String> newRule = new Rule<String>(parent, gensym(), children);
+        outputAutomaton.addRule(newRule);                    
+        leftHomOut.add(newRule.getLabel(), leftHomTree);                            
+        rightHomOut.add(newRule.getLabel(), rightHomTree);        
+    }
+    
+    private List makeChildrenList(Object o1, Object o2, boolean reverse) {
+        if (reverse) {
+            return makeChildrenList(o2, o1);
+        } else {
+            return makeChildrenList(o1, o2);
         }
     }
     
-    private List makeChildrenList(Object state1, Object state2) {
+    private List makeChildrenList(Object o1, Object o2) {
         List children = new ArrayList(2);
-        children.add(state1);
-        children.add(state2);
+        children.add(o1);
+        children.add(o2);
         return children;
-    }   
-
-//    private String makeBinaryLabel(String ruleLabel, Set<String> variables) { 
-//        String newRuleLabel = ruleLabel;
-//        for (String var : variables) {
-//            int index = Homomorphism.getIndexForVariable(new StringOrVariable(var,true));
-//            String nonterminal = (String) grammarRule.getChildren()[index];  
-//            newRuleLabel = newRuleLabel.concat(nonterminal);
-//        }
-//        while (outputAutomaton.getAllLabels().contains(newRuleLabel)) {
-//            newRuleLabel = newRuleLabel + "b";
-//        }        
-//        return newRuleLabel;
-//    }
+    } 
+    
+    private List makeChildrenList(Object o) {
+        List childAsList = new ArrayList(1);
+        childAsList.add(o);
+        return childAsList;
+    }
+    
+    private Tree makeHomTree(String label){     // unary
+        StringOrVariable treeLabel = new StringOrVariable(label,false);
+        List children = makeChildrenList(Tree.create(new StringOrVariable("?1", true)));
+        Tree homTree = Tree.create(treeLabel,children);
+        return homTree;
+    }
+    
+    // ist es richtig, dass Homomorphismus-Terme vom Typ <StringOrVariable> sein müssen?
+    private Tree makeHomTree(String label, boolean reverse) { // binary
+        StringOrVariable treeLabel = new StringOrVariable(label,false);
+        Tree<StringOrVariable> firstVarTree = Tree.create(new StringOrVariable("?1", true));
+        Tree<StringOrVariable> secondVarTree = Tree.create(new StringOrVariable("?2", true));
+        List children = makeChildrenList(firstVarTree,secondVarTree,reverse);
+        Tree homTree = Tree.create(treeLabel,children);
+        return homTree;        
+    }
     
     private String gensym() {
-        return grammarRule.getLabel() + (nextGensym++);
+        return grammarRule.getLabel() + "b" + (nextGensym++);
     }
     
     
     private interface Item {
+       // states in outputAutomaton are Strings
+       public String getSymbolInRule(); 
     }
 
-    private class CorrespondenceItem implements Item {
+    private class CItem implements Item {
 
         E leftState;
         F rightState;
-        Set<String> variables;
-        Tree leftTree;
-        Tree rightTree;
-        //List leftPath;
-        //List rightPath;
-        String symbolInRule;
 
-        public CorrespondenceItem(E leftState, F rightState, Set<String> variables) {
+        public CItem(E leftState, F rightState) {
             this.leftState = leftState;
             this.rightState = rightState;
-            this.variables = variables;
         }
+        
+        @Override
+        public String getSymbolInRule() {
+            return grammarRule.getLabel() + leftState.toString() + rightState.toString();
+        }        
 
         @Override
         public boolean equals(Object obj) {
@@ -477,48 +465,11 @@ public class SynchronousBinarization<E, F> {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final CorrespondenceItem other = (CorrespondenceItem) obj;
+            final CItem other = (CItem) obj;
             if (this.leftState != other.leftState && (this.leftState == null || !this.leftState.equals(other.leftState))) {
                 return false;
             }
             if (this.rightState != other.rightState && (this.rightState == null || !this.rightState.equals(other.rightState))) {
-                return false;
-            }
-            if (this.variables != other.variables && (this.variables == null || !this.variables.equals(other.variables))) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 7;
-            hash = 23 * hash + (this.leftState != null ? this.leftState.hashCode() : 0);
-            hash = 23 * hash + (this.rightState != null ? this.rightState.hashCode() : 0);
-            hash = 23 * hash + (this.variables != null ? this.variables.hashCode() : 0);
-            return hash;
-        }
-    }
-
-    private class LeftItem implements Item {
-
-        E state;
-        Tree<String> tree; // Tree in equals und hashCode berücksichtigen?
-
-        public LeftItem(E state) {
-            this.state = state;
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final LeftItem other = (LeftItem) obj;
-            if (this.state != other.state && (this.state == null || !this.state.equals(other.state))) {
                 return false;
             }
             return true;
@@ -527,18 +478,23 @@ public class SynchronousBinarization<E, F> {
         @Override
         public int hashCode() {
             int hash = 5;
-            hash = 67 * hash + (this.state != null ? this.state.hashCode() : 0);
+            hash = 23 * hash + (this.leftState != null ? this.leftState.hashCode() : 0);
+            hash = 23 * hash + (this.rightState != null ? this.rightState.hashCode() : 0);
             return hash;
         }
     }
 
-    private class RightItem implements Item {
+    private class LItem implements Item {
 
-        F state;
-        Tree<String> tree;
+        E state;
 
-        public RightItem(F state) {
+        public LItem(E state) {
             this.state = state;
+        }
+        
+        @Override
+        public String getSymbolInRule() {
+            return grammarRule.getLabel() + "L" + state.toString();
         }
 
         @Override
@@ -549,7 +505,7 @@ public class SynchronousBinarization<E, F> {
             if (getClass() != obj.getClass()) {
                 return false;
             }
-            final RightItem other = (RightItem) obj;
+            final LItem other = (LItem) obj;
             if (this.state != other.state && (this.state == null || !this.state.equals(other.state))) {
                 return false;
             }
@@ -559,7 +515,43 @@ public class SynchronousBinarization<E, F> {
         @Override
         public int hashCode() {
             int hash = 3;
-            hash = 53 * hash + (this.state != null ? this.state.hashCode() : 0);
+            hash = 11 * hash + (this.state != null ? this.state.hashCode() : 0);
+            return hash;
+        }
+    }
+
+    private class RItem implements Item {
+
+        F state;
+
+        public RItem(F state) {
+            this.state = state;
+        }
+        
+        @Override
+        public String getSymbolInRule() {
+            return grammarRule.getLabel() + "R" + state.toString();
+        }        
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final RItem other = (RItem) obj;
+            if (this.state != other.state && (this.state == null || !this.state.equals(other.state))) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 97 * hash + (this.state != null ? this.state.hashCode() : 0);
             return hash;
         }
     }
