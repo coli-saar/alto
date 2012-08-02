@@ -75,7 +75,8 @@ public class SynchronousBinarization<E, F> {
                     initL(leftRule);                  
                 }               
             }
-        }    
+        }
+        
         for (Rule<F> rightRule : rightAuto.getRuleSet()){
             if (rightRule.getArity() == 0 && !rightRule.getLabel().startsWith(VARIABLE_MARKER)){
                 initR(rightRule);
@@ -363,6 +364,7 @@ public class SynchronousBinarization<E, F> {
             agenda.add(item);
             return true;
         }
+        
         return false;
     }
 
@@ -371,25 +373,29 @@ public class SynchronousBinarization<E, F> {
     private boolean isNewCombination(Item item1, Item item2) {
         boolean i1i2New;
         boolean i2i1New;
+        
         if (itemCombinations.containsKey(item1)){
             i1i2New = itemCombinations.get(item1).add(item2);
         } else {
-            Set newItem1Set = new HashSet<Item>();
+            Set<Item> newItem1Set = new HashSet<Item>();
             newItem1Set.add(item2);
             itemCombinations.put(item1, newItem1Set);
             i1i2New = true;
         }
+        
         if (itemCombinations.containsKey(item2)){
             i2i1New = itemCombinations.get(item2).add(item1);
         } else { 
             i2i1New = true; 
         }
+        
         return (i1i2New && i2i1New);
     }
     
     private void outputRule(String parent, List children, Tree<StringOrVariable> leftHomTree, Tree<StringOrVariable> rightHomTree) {
         Rule<String> newRule = new Rule<String>(parent, gensym(), children);
-        outputAutomaton.addRule(newRule);                    
+        
+        outputAutomaton.addRule(newRule);
         leftHomOut.add(newRule.getLabel(), leftHomTree);                            
         rightHomOut.add(newRule.getLabel(), rightHomTree);        
     }
@@ -404,14 +410,18 @@ public class SynchronousBinarization<E, F> {
     
     private List makeChildrenList(Object o1, Object o2) {
         List children = new ArrayList(2);
+        
         children.add(o1);
         children.add(o2);
+        
         return children;
     } 
     
     private List makeChildrenList(Object o) {
         List childAsList = new ArrayList(1);
+        
         childAsList.add(o);
+        
         return childAsList;
     }
     

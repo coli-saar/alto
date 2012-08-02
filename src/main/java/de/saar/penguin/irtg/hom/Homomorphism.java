@@ -92,33 +92,6 @@ public class Homomorphism {
         return prefix + knownGensyms.get(gensymKey);
     }
 
-    /**
-     * Returns a map that maps node names in hom(f) to variables,
-     * for all variables that occur in hom(f).
-     * 
-     * @param f
-     * @return 
-     */
-//    public Map<String,StringOrVariable> getVariableMap(final String f) {
-//        final Map<String,StringOrVariable> ret = new HashMap<String,StringOrVariable>();
-//        final Tree<StringOrVariable> tree = mappings.get(f);
-//
-//        tree.dfs(new TreeVisitor<StringOrVariable, Void, Void>() {
-//            @Override
-//            public Void combine(Tree<StringOrVariable> node, List<Void> childrenValues) {
-//                StringOrVariable sv = node.getLabel();
-//                
-//                if( sv.isVariable() ) {
-//                    ret.put(node, sv);
-//                }
-//                
-//                return null;
-//            }
-//        });
-//
-//        return ret;
-//    }
-
     public static int getIndexForVariable(StringOrVariable varname) {
         return Integer.parseInt(varname.getValue().substring(1)) - 1;
     }

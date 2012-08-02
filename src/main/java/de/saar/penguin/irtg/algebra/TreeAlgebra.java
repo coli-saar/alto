@@ -6,6 +6,7 @@ package de.saar.penguin.irtg.algebra;
 
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeParser;
 
 /**
  *
@@ -24,7 +25,7 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
 
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return TreeParser.parse(representation);
     }
     
 }

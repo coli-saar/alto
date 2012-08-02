@@ -353,7 +353,7 @@ public class InterpretedTreeAutomaton {
     }
     
     @CallableFromShell
-    public InterpretedTreeAutomaton testBinarize(){ 
+    public InterpretedTreeAutomaton testBinarize() {
         RegularBinarizer bin1 = new StringAlgebraBinarizer();
         RegularBinarizer bin2 = new StringAlgebraBinarizer();
         Map<String,RegularBinarizer> binarizers = new HashMap<String, RegularBinarizer>();
