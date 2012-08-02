@@ -101,9 +101,6 @@ public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
                 }
             }
         }
-        
-        
-        throw new UnsupportedOperationException("Not yet implemented");
     }
     
     private String makeStateName(String prefix, int start, int width) {

@@ -11,9 +11,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
-import de.saar.penguin.irtg.algebra.lambda.LambdaTerm;
-import de.saar.penguin.irtg.algebra.lambda.LambdaTermAlgebra;
-import de.saar.penguin.irtg.algebra.lambda.LambdaTermParser;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.saar.penguin.irtg.semiring.DoubleArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.LongArithmeticSemiring;
@@ -23,7 +20,6 @@ import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.Serializable;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -135,14 +131,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * 
      * @return 
      */
-    abstract public Set<State> getFinalStates();
+    public Set<State> getFinalStates() {
+        return finalStates;
+    }
 
     /**
      * Returns the set of all states of this automaton.
      * 
      * @return 
      */
-    abstract public Set<State> getAllStates();
+    public Set<State> getAllStates() {
+        return allStates;
+    }
 
     /**
      * Caches a rule for future use. Once a rule has been cached,
