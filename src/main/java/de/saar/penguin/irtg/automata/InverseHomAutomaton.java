@@ -47,9 +47,10 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
     @Override
     public Set<Rule<String>> getRulesBottomUp(String label, final List<String> childStates) {
         // lazy bottom-up computation of bottom-up rules
-        if (useCachedRuleBottomUp(label, childStates)) {
-            return getRulesBottomUpFromExplicit(label, childStates);
-        } else {
+        // TODO - removed these until top-down works again
+//        if (useCachedRuleBottomUp(label, childStates)) {
+//            return getRulesBottomUpFromExplicit(label, childStates);
+//        } else {
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
 
             // run RHS automaton on given child states
@@ -90,7 +91,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
             }
 
             return ret;
-        }
+//        }
     }
 
     private boolean containsFailedState(List<String> states) {
