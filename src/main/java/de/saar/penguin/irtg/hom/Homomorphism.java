@@ -104,22 +104,6 @@ public class Homomorphism {
         return Integer.parseInt(varname.getValue().substring(1)) - 1;
     }
 
-    public int getArity(String label) {
-        Integer ar = mappings.get(label).dfs(new TreeVisitor<StringOrVariable, Void, Integer>() {
-            @Override
-            public Integer combine(Tree<StringOrVariable> node, List<Integer> childrenValues) {
-                if (childrenValues.isEmpty()) {
-                    return 0;
-                } else {
-                    int childrenMax = Collections.max(childrenValues);
-                    return Math.max(childrenMax, childrenValues.size());
-                }
-            }
-        });
-
-        return ar;
-    }
-
     public Set<String> getDomain() {
         return mappings.keySet();
     }

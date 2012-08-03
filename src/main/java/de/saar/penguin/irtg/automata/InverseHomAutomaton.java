@@ -26,7 +26,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
 
     public InverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
-        
+
         this.rhsAutomaton = rhsAutomaton;
         this.hom = hom;
         computedLabels = new HashSet<String>();
@@ -47,10 +47,9 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
     @Override
     public Set<Rule<String>> getRulesBottomUp(String label, final List<String> childStates) {
         // lazy bottom-up computation of bottom-up rules
-        // TODO - removed these until top-down works again
-//        if (useCachedRuleBottomUp(label, childStates)) {
-//            return getRulesBottomUpFromExplicit(label, childStates);
-//        } else {
+        if (useCachedRuleBottomUp(label, childStates)) {
+            return getRulesBottomUpFromExplicit(label, childStates);
+        } else {
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
 
             // run RHS automaton on given child states
@@ -91,7 +90,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
             }
 
             return ret;
-//        }
+        }
     }
 
     private boolean containsFailedState(List<String> states) {
@@ -105,15 +104,10 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
     }
 
     @Override
-    // BUG - getRulesTopDown assumes that the homomorphism is non-deleting in order
-    // to identify the arity of the symbols. For deleting homomorphisms, it will generate
-    // symbols of the wrong arity, and intersection with an automaton of the correct
-    // arity will fail.
     public Set<Rule<String>> getRulesTopDown(String label, String parentState) {
         if (FAIL_STATE.equals(parentState)) {
-//            makeFailRulesExplicit(label);
+            makeFailRulesExplicit(label);
         } else {
-
             if (!computedLabels.contains(label)) {
                 computeRulesForLabel(label);
             }
@@ -123,7 +117,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
     }
 
     private void makeFailRulesExplicit(String label) {
-        int arity = hom.getArity(label);
+        int arity = signature.getArity(label);
         List<Set<String>> listOfStateSets = new ArrayList<Set<String>>();
 
         for (int i = 0; i < arity; i++) {
@@ -133,9 +127,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
         CartesianIterator<String> it = new CartesianIterator<String>(listOfStateSets);
         while (it.hasNext()) {
             List<String> children = it.next();
-            if (containsFailedState(children)) {
-                storeRule(new Rule<String>(FAIL_STATE, label, children));
-            }
+            storeRule(new Rule<String>(FAIL_STATE, label, children));
         }
     }
 
@@ -184,14 +176,27 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
             });
 
             for (Item rootItem : rootItems) {
-                List<String> childStates = new ArrayList<String>();
+                List<List<String>> optionsForEachChild = new ArrayList<List<String>>();
 
-                for (int i = 0; i < hom.getArity(label); i++) {
-                    // TODO - deal with unbound variables here!!
-                    childStates.add(rootItem.substitution.get(new StringOrVariable("?" + (i + 1), true)).toString());
+                for (int i = 0; i < signature.getArity(label); i++) {
+                    StringOrVariable sov = new StringOrVariable("?" + (i + 1), true);
+                    List<String> optionsForThisChild = new ArrayList<String>();
+
+                    if (rootItem.substitution.containsKey(sov)) {
+                        optionsForThisChild.add(rootItem.substitution.get(sov).toString());
+                    } else {
+                        // for variables that didn't occur in the homomorphic image,
+                        // we can set arbitrary states
+                        optionsForThisChild.addAll(getAllStates());
+                    }
+
+                    optionsForEachChild.add(optionsForThisChild);
                 }
 
-                storeRule(new Rule<String>(rootItem.state.toString(), label, childStates));
+                CartesianIterator<String> optionsIterator = new CartesianIterator<String>(optionsForEachChild);
+                while (optionsIterator.hasNext()) {
+                    storeRule(new Rule<String>(rootItem.state.toString(), label, optionsIterator.next()));
+                }
             }
 
             computedLabels.add(label);
@@ -238,5 +243,4 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
 
         return ret;
     }
-
 }

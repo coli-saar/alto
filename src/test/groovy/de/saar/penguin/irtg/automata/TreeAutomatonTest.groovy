@@ -78,6 +78,16 @@ class TreeAutomatonTest {
     }
     
     @Test
+    public void testInvHomNonlinearTopDown() {
+        TreeAutomaton rhs = parse("f(q1) -> q2!\n a -> q1"); // accepts { f(a) }
+        Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]))
+        
+        TreeAutomaton pre = rhs.inverseHomomorphism(h);
+        pre.makeAllRulesExplicit(); // this triggers computing all top-down rules
+        assert pre.accepts(pt("G(A,A)"));
+    }
+    
+    @Test
     public void testInvHomNonlinearByIntersection() {
         TreeAutomaton rhs = parse("f(q1) -> q2!\n a -> q1"); // accepts { f(a) }
         Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]))
@@ -86,8 +96,6 @@ class TreeAutomatonTest {
         
         TreeAutomaton left = parse("G(p1,p1) -> p2!\n A -> p1"); // accepts { G(A,A) }
         TreeAutomaton result = left.intersect(pre)
-        
-//        System.err.println(result)
         
         assert result.accepts(pt("G(A,A)"));
     }
