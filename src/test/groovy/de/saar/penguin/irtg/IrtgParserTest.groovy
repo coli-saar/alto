@@ -15,8 +15,7 @@ import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.saar.penguin.irtg.algebra.*;
 import de.saar.penguin.irtg.hom.*;
-import static de.saar.penguin.irtg.hom.HomomorphismTest.hom;
-import static de.saar.penguin.irtg.util.TestingTools.pt;
+import static de.saar.penguin.irtg.util.TestingTools.*;
 
 /**
  *

@@ -6,6 +6,7 @@ package de.saar.penguin.irtg.algebra;
 
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.StringReader;
@@ -147,12 +148,36 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         return new SetDecompositionAutomaton(value);
     }
 
-    private class SetDecompositionAutomaton extends TreeAutomaton<Set<List<String>>> {
-        private Set<Set<List<String>>> finalStates;
+    @Override
+    public Signature getSignature() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
+    private class SetDecompositionAutomaton extends TreeAutomaton<Set<List<String>>> {
         public SetDecompositionAutomaton(Set<List<String>> finalElement) {
+            super(SetAlgebra.this.getSignature());
             finalStates = new HashSet<Set<List<String>>>();
             finalStates.add(finalElement);
+            
+            // this is theoretically correct, but WAY too slow,
+            // and anyway the Guava powerset function only allows
+            // up to 30 elements in the base set
+            
+//            for( int arity = 1; arity <= MAX_TUPLE_LENGTH; arity++ ) {
+//                List<Set<String>> tupleLists = new ArrayList<Set<String>>();
+//                for( int i = 0; i < arity; i++ ) {
+//                    tupleLists.add(allIndividuals);
+//                }
+//                
+//                CartesianIterator<String> it = new CartesianIterator<String>(tupleLists);
+//                Set<List<String>> tuples = new HashSet<List<String>>();
+//                while( it.hasNext() ) {
+//                    tuples.add(it.next());
+//                }
+//                
+//                Set<Set<List<String>>> powerset = Sets.powerSet(tuples);
+//                allStates.addAll(powerset);
+//            }
         }
 
         @Override
@@ -161,11 +186,10 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
                 Set<Rule<Set<List<String>>>> ret = new HashSet<Rule<Set<List<String>>>>();
-
                 Set<List<String>> parents = evaluate(label, childStates);
-
+                
                 // require that set in parent state must be non-empty; otherwise there is simply no rule
-                if (!parents.isEmpty()) {
+                if (parents != null && !parents.isEmpty()) {
                     Rule<Set<List<String>>> rule = new Rule<Set<List<String>>>(parents, label, childStates);
                     ret.add(rule);
                     storeRule(rule);
@@ -205,8 +229,9 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
 
         @Override
         // ultimately, only needed for EM training -- and can we get rid of it there?
+        // (and for correct computation of 
         public Set<Set<List<String>>> getAllStates() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return new HashSet<Set<List<String>>>();
         }
     }
 

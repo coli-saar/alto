@@ -5,9 +5,7 @@
 package de.saar.penguin.irtg.automata;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.SetMultimap;
 import de.saar.basic.Agenda;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
@@ -21,8 +19,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
     private Set<String> allLabels;
+    private static final boolean DEBUG = false;
 
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
+        super(left.getSignature()); // should be the same as right signature
+        
         this.left = left;
         this.right = right;
 
@@ -42,7 +43,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             Queue<IncompleteEarleyItem> agenda = new Agenda<IncompleteEarleyItem>();
             ListMultimap<LeftState, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create();
             ListMultimap<LeftState, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();
-            
+
             int countAgendaItems = 0;
 
             // Init
@@ -53,7 +54,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             while (!agenda.isEmpty()) {
                 IncompleteEarleyItem item = agenda.remove();
                 waitingIncompleteItems.put(item.getNextLeftState(), item);
-                
+
+                if (DEBUG) {
+                    System.err.println("\npop: " + item);
+                }
+
                 countAgendaItems++;
 
                 if (item.matchedStates == item.leftRule.getArity()) {
@@ -61,7 +66,15 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     for (Rule<RightState> rightRule : right.getRulesBottomUp(item.leftRule.getLabel(), item.getRightChildren())) {
                         CompleteEarleyItem completedItem = new CompleteEarleyItem(item.leftRule, rightRule);
                         completedItemsForLeftState.put(item.leftRule.getParent(), completedItem);
-                        storeRule(combineRules(item.leftRule, rightRule));
+                        Rule<Pair<LeftState,RightState>> combinedRule = combineRules(item.leftRule, rightRule);
+                        storeRule(combinedRule);
+
+                        if (DEBUG) {
+                            System.err.println(" -> finish!");
+                            System.err.println("    left rule: " + item.leftRule);
+                            System.err.println("    right rule: " + rightRule);
+                            System.err.println("    - combined rule: " + combinedRule);
+                        }
 
                         // perform Complete steps for relevant incomplete items that were discovered before
                         for (IncompleteEarleyItem incompleteItem : waitingIncompleteItems.get(completedItem.leftRule.getParent())) {
@@ -83,8 +96,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            System.err.println("earley intersect: " + countAgendaItems + " incomplete items");
         }
     }
-    
-    
+
     private void complete(IncompleteEarleyItem incompleteItem, CompleteEarleyItem completeItem, Queue<IncompleteEarleyItem> agenda) {
         final IncompleteEarleyItem newIncompleteItem = new IncompleteEarleyItem(incompleteItem.leftRule, completeItem.rightRule.getParent(), incompleteItem);
 
@@ -92,6 +104,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //        System.err.println(" -- " + right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren()));
         if (right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren())) {
             agenda.offer(newIncompleteItem);
+
+            if (DEBUG) {
+                System.err.println(" -> complete, new item: " + newIncompleteItem);
+            }
         }
     }
 
@@ -99,7 +115,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         for (String label : left.getLabelsTopDown(state)) {
             if (right.hasRuleWithPrefix(label, new ArrayList<RightState>())) {
                 for (Rule<LeftState> rule : left.getRulesTopDown(label, state)) {
-                    agenda.offer(new IncompleteEarleyItem(rule, null, null));
+                    final IncompleteEarleyItem incompleteEarleyItem = new IncompleteEarleyItem(rule, null, null);
+                    agenda.offer(incompleteEarleyItem);
+
+                    if (DEBUG) {
+                        System.err.println(" -> predict, new item: " + incompleteEarleyItem);
+                    }
                 }
             }
         }
@@ -221,7 +242,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
     // bottom-up intersection algorithm 
     // for some reason, this algorithm no longer works (why? it makes tests fail!)
-    
 //    @Override
 //    public void makeAllRulesExplicit() {
 //        if (!isExplicit) {
@@ -282,7 +302,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //
 //        isExplicit = true;
 //    }
-
     private Rule<Pair<LeftState, RightState>> combineRules(Rule<LeftState> leftRule, Rule<RightState> rightRule) {
         List<Pair<LeftState, RightState>> childStates = new ArrayList<Pair<LeftState, RightState>>();
         for (int i = 0; i < leftRule.getArity(); i++) {

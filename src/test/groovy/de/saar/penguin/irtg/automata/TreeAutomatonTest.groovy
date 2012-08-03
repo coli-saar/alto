@@ -15,8 +15,7 @@ import de.up.ling.tree.*
 import de.saar.penguin.irtg.hom.*
 import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
-import static de.saar.penguin.irtg.hom.HomomorphismTest.hom;
-import static de.saar.penguin.irtg.util.TestingTools.pt;
+import static de.saar.penguin.irtg.util.TestingTools.*;
 
 
 /**
@@ -55,7 +54,8 @@ class TreeAutomatonTest {
     public void testInvHom() {
         TreeAutomaton rhs = parse("c(q12,q23) -> q13\n c(q23,q34) -> q24\n c(q12,q24) -> q14!\n" +
                 "c(q13,q34) -> q14\n a -> q12\n b -> q23\n d -> q34");
-        Homomorphism h = hom(["r1":"c(?1,?2)", "r2":"c(?1,?2)", "r3":"a", "r4":"b", "r5":"d"]);
+        Homomorphism h = hom(["r1":"c(?1,?2)", "r2":"c(?1,?2)", "r3":"a", "r4":"b", "r5":"d"], 
+                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]) );
 
         TreeAutomaton gold = parse("r1(q12,q23) -> q13\n r1(q23,q34) -> q24\n r1(q12,q24) -> q14!\n" +
                 "r1(q13,q34) -> q14\n r2(q12,q23) -> q13\n r2(q23,q34) -> q24\n r2(q12,q24) -> q14!\n" +
@@ -63,15 +63,21 @@ class TreeAutomatonTest {
 
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         pre.makeAllRulesExplicit();
-//        System.out.println(pre);
 
         assertEquals(gold, pre);
     }
     
+//    @Test
+//    public void testInvHomNonlinear() {
+//        TreeAutomaton rhs = parse("""
+//            
+//""");
+//    }
+    
     @Test
     public void testHom() {
         TreeAutomaton base = parse("f(q1, q2) -> q! \n g(q1, q2) -> q\n h(q1,q2) -> q\n a -> q1\n b -> q2");
-        Homomorphism h = hom(["f":"H(F(?1,?2))", "g":"H(F(?1,?2))", "h":"G(?2,?1)", "a":"A", "b":"B"]);
+        Homomorphism h = hom(["f":"H(F(?1,?2))", "g":"H(F(?1,?2))", "h":"G(?2,?1)", "a":"A", "b":"B"], base.getSignature());
         
         Set gold = new HashSet([pt("H(F(A,B))"), pt("G(B,A)")])
         TreeAutomaton result = base.homomorphism(h)
@@ -81,9 +87,9 @@ class TreeAutomatonTest {
     
     @Test
     public void testHomOneVariable() {
-        Homomorphism h = hom(["f": "?1", "a": "A"])
         TreeAutomaton base = parse("f(q2) -> q1! \n a -> q2");
         TreeAutomaton gold = parse("A -> q1! \n A -> q2");
+        Homomorphism h = hom(["f": "?1", "a": "A"], base.getSignature())
         
         TreeAutomaton result = base.homomorphism(h)
         

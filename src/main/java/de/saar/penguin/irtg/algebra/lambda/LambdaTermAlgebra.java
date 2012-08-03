@@ -8,6 +8,7 @@ import de.saar.penguin.irtg.algebra.Algebra;
 import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.StringReader;
@@ -18,6 +19,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
+
+/// TODO: implement signature properly!
 
 /**
  *
@@ -64,12 +67,18 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
         }
     }
 
-    private class LambdaDecompositionAutomaton extends TreeAutomaton<LambdaTerm> {
+    @Override
+    public Signature getSignature() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
+    private class LambdaDecompositionAutomaton extends TreeAutomaton<LambdaTerm> {
         private Set<String> allLabels;
 
         // constructor
         public LambdaDecompositionAutomaton(LambdaTerm value) {
+            super(LambdaTermAlgebra.this.getSignature());
+            
             finalStates.add(value);
 
             allLabels = new HashSet<String>();

@@ -5,6 +5,8 @@
 
 package de.saar.penguin.irtg.automata;
 
+import de.saar.penguin.irtg.signature.MapSignature;
+import de.saar.penguin.irtg.signature.Signature;
 import java.util.List;
 import java.util.Set;
 
@@ -14,12 +16,13 @@ import java.util.Set;
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public ConcreteTreeAutomaton() {
-        super();
+        super(new MapSignature());
         isExplicit = true;
     }
     
     public Rule<State> addRule(Rule<State> rule) {
         storeRule(rule);
+        ((MapSignature) signature).addSymbol(rule.getLabel(), rule.getChildren().length);
         return rule;
     }
 

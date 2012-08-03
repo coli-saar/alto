@@ -6,6 +6,8 @@ package de.saar.penguin.irtg.algebra;
 
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.saar.penguin.irtg.signature.MapSignature;
+import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.Serializable;
@@ -17,15 +19,26 @@ import java.util.Set;
 
 /**
  *
+ * The signature of the string algebra consists of a binary concatenation
+ * operation. It also contains a nullary constant for each word that has
+ * ever been read using the parseString method of this particular StringAlgebra
+ * object. Notice that the contents of the Signature object may change
+ * if further strings are parsed with the same algebra object.
+ * 
  * @author koller
  */
 public class StringAlgebra implements Algebra<List<String>> {
     public static final String CONCAT = "*";
     private static final Set<String> CONCAT_SET = new HashSet<String>();
+    private MapSignature signature = new MapSignature();
 
     static {
         CONCAT_SET.add(CONCAT);
     }
+
+    public StringAlgebra() {
+        signature.addSymbol(CONCAT, 2);
+    }    
 
     @Override
     public List<String> evaluate(Tree<String> t) {
@@ -45,19 +58,33 @@ public class StringAlgebra implements Algebra<List<String>> {
         return ret;
     }
 
+    @Override
     public TreeAutomaton decompose(List<String> words) {
         return new CkyAutomaton(words);
     }
 
+    @Override
     public List<String> parseString(String representation) {
-        return Arrays.asList(representation.split("\\s+"));
+        final List<String> symbols = Arrays.asList(representation.split("\\s+"));
+        
+        for( String sym : symbols ) {
+            signature.addSymbol(sym, 0);
+        }
+        
+        return symbols;
     }
 
-    private static class CkyAutomaton extends TreeAutomaton<Span> {
+    @Override
+    public Signature getSignature() {
+        return signature;
+    }
+
+    private class CkyAutomaton extends TreeAutomaton<Span> {
         private List<String> words;
         private Set<String> allLabels;
 
         public CkyAutomaton(List<String> words) {
+            super(StringAlgebra.this.getSignature());
             this.words = words;
 
             finalStates.add(new Span(0, words.size()));

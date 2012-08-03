@@ -20,12 +20,13 @@ import java.util.Set;
  * @author koller
  */
 class HomAutomaton extends TreeAutomaton<String> {
-
     private TreeAutomaton base;
     private Homomorphism hom;
     private int gensymNext = 1;
 
     public HomAutomaton(TreeAutomaton base, Homomorphism hom) {
+        super(hom.getTargetSignature());
+        
         this.base = base;
         this.hom = hom;
 

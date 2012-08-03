@@ -16,6 +16,7 @@ import de.saar.penguin.irtg.semiring.DoubleArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.LongArithmeticSemiring;
 import de.saar.penguin.irtg.semiring.Semiring;
 import de.saar.penguin.irtg.semiring.ViterbiWithBackpointerSemiring;
+import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -45,14 +46,20 @@ public abstract class TreeAutomaton<State> implements Serializable {
     private final Map<String, State> dummyLtsSubstitution = new HashMap<String, State>();
     protected boolean isExplicit;
     protected SetMultimap<State, Rule<State>> rulesForRhsState;
+    protected Signature signature;
 
-    public TreeAutomaton() {
+    public TreeAutomaton(Signature signature) {
         explicitRules = new HashMap<String, StateListToStateMap>();
         explicitRulesTopDown = new HashMap<String, SetMultimap<State, Rule<State>>>();
         finalStates = new HashSet<State>();
         allStates = new HashSet<State>();
         isExplicit = false;
         rulesForRhsState = HashMultimap.create();
+        this.signature = signature;
+    }
+
+    public Signature getSignature() {
+        return signature;
     }
 
     /**
@@ -576,7 +583,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param hom the homomorphism.
      * @return an automaton representing the homomorphic pre-image.
      */
-    public TreeAutomaton<State> inverseHomomorphism(Homomorphism hom) {
+    public TreeAutomaton<String> inverseHomomorphism(Homomorphism hom) {
         return new InverseHomAutomaton<State>(this, hom);
     }
 

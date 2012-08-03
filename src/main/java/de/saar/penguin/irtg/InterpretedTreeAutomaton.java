@@ -17,6 +17,7 @@ import de.saar.penguin.irtg.binarization.RegularBinarizer;
 import de.saar.penguin.irtg.binarization.StringAlgebraBinarizer;
 import de.saar.penguin.irtg.binarization.SynchronousBinarization;
 import de.saar.penguin.irtg.hom.Homomorphism;
+import de.saar.penguin.irtg.signature.MapSignature;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import java.io.*;
@@ -33,7 +34,6 @@ import java.util.Set;
  * @author koller
  */
 public class InterpretedTreeAutomaton {
-
     private TreeAutomaton<String> automaton;
     private Map<String, Interpretation> interpretations;
     private boolean debug = false;
@@ -318,27 +318,26 @@ public class InterpretedTreeAutomaton {
     }
 
     public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
-        SynchronousBinarization sb = new SynchronousBinarization();
-        ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
-        Homomorphism newLeftHom = new Homomorphism();
-        Homomorphism newRightHom = new Homomorphism();
         List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
-
         if (orderedInterpretationList.size() != 2) {
             throw new UnsupportedOperationException("trying to binarize " + orderedInterpretationList.size() + " interpretations");
         }
-
+        
         String interpName1 = orderedInterpretationList.get(0);
         String interpName2 = orderedInterpretationList.get(1);
         Interpretation interp1 = interpretations.get(interpName1);
         Interpretation interp2 = interpretations.get(interpName2);
         RegularBinarizer bin1 = binarizers.get(interpName1);
         RegularBinarizer bin2 = binarizers.get(interpName2);
+
+        SynchronousBinarization sb = new SynchronousBinarization();
+        ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
+        Homomorphism newLeftHom = new Homomorphism(newAuto.getSignature(), interp1.getHomomorphism().getTargetSignature());
+        Homomorphism newRightHom = new Homomorphism(newAuto.getSignature(), interp2.getHomomorphism().getTargetSignature());
         
         for (Rule rule : automaton.getRuleSet()) {  
             TreeAutomaton leftAutomaton = bin1.binarizeWithVariables(interp1.getHomomorphism().get(rule.getLabel()));
             TreeAutomaton rightAutomaton = bin2.binarizeWithVariables(interp2.getHomomorphism().get(rule.getLabel()));
-            //sb.binarize(leftAutomaton, interp1.getHomomorphism(), rightAutomaton, interp2.getHomomorphism(), newAuto, newLeftHom, newRightHom);
             sb.binarize(rule, leftAutomaton, rightAutomaton, newAuto, newLeftHom, newRightHom);
         }
         for (String state : automaton.getFinalStates()) {
@@ -376,10 +375,6 @@ public class InterpretedTreeAutomaton {
             throw new UnsupportedOperationException("Trying to binarize IRTG without interpretation.");
         }
 
-        ConcreteTreeAutomaton newAutomaton = new ConcreteTreeAutomaton();
-        Homomorphism newHomomorphism = new Homomorphism();
-        Set<Rule<String>> rules = automaton.getRuleSet();
-
         // pick the alphabetically first interpretation for the binarization
         List<String> names = new ArrayList<String>(interpretations.keySet());
         Collections.sort(names);
@@ -387,6 +382,11 @@ public class InterpretedTreeAutomaton {
         String interpretationName = names.get(0);
         Interpretation interpretation = interpretations.get(interpretationName);
         Homomorphism homomorphism = interpretation.getHomomorphism();
+
+        ConcreteTreeAutomaton newAutomaton = new ConcreteTreeAutomaton();
+        Homomorphism newHomomorphism = new Homomorphism(newAutomaton.getSignature(), homomorphism.getTargetSignature());
+        Set<Rule<String>> rules = automaton.getRuleSet();
+
 
         for (Rule<String> rule : rules) {
             String ruleLabel = rule.getLabel();

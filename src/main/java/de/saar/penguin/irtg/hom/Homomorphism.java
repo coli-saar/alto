@@ -5,6 +5,7 @@
 package de.saar.penguin.irtg.hom;
 
 import de.saar.basic.StringOrVariable;
+import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.Collections;
@@ -20,13 +21,20 @@ import java.util.Set;
 public class Homomorphism {
     private static int gensymNext = 1;
     private Map<String, Tree<StringOrVariable>> mappings;
+    private Signature srcSignature, tgtSignature;
 
-    public Homomorphism() {
+    public Homomorphism(Signature src, Signature tgt) {
         mappings = new HashMap<String, Tree<StringOrVariable>>();
+        srcSignature = src;
+        tgtSignature = tgt;
     }
 
     public void add(String label, Tree<StringOrVariable> mapping) {
         mappings.put(label, mapping);
+        
+        if( tgtSignature.isWritable() ) {
+            tgtSignature.addAllSymbolsWithoutVariables(mapping);
+        }
     }
 
     public Tree<StringOrVariable> get(String label) {
@@ -126,4 +134,14 @@ public class Homomorphism {
         
         return buf.toString();
     }
+
+    public Signature getSourceSignature() {
+        return srcSignature;
+    }
+
+    public Signature getTargetSignature() {
+        return tgtSignature;
+    }
+    
+    
 }

@@ -80,9 +80,9 @@ void InterpretationDeclaration() :
 {
     <INTERPRETATION> id=name() ":" classname=ClassName() {
        try {
-        Homomorphism hom = new Homomorphism();
         Class algebraClass = Class.forName(classname);
         Algebra algebra = (Algebra) algebraClass.newInstance();
+        Homomorphism hom = new Homomorphism(automaton.getSignature(), algebra.getSignature());
 
         irtg.addInterpretation(id, new Interpretation(algebra, hom));
         homomorphisms.put(id, hom);

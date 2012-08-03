@@ -13,7 +13,7 @@ import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*
 import de.saar.chorus.term.*
 import de.up.ling.tree.*
-import static de.saar.penguin.irtg.util.TestingTools.pt;
+import static de.saar.penguin.irtg.util.TestingTools.*;
 
 /**
  *
@@ -22,7 +22,7 @@ import static de.saar.penguin.irtg.util.TestingTools.pt;
 class HomomorphismTest {
     @Test
     public void testMap() {
-        Homomorphism h = hom(["f":"g(?1,h(?1))", "a":"k(b)"]);
+        Homomorphism h = hom(["f":"g(?1,h(?1))", "a":"k(b)"], sig(["f":1, "a":0]));
         Tree t = pt("f(a)");
         Tree gold = pt("g(k(b),h(k(b)))");
 
@@ -31,7 +31,7 @@ class HomomorphismTest {
 
     @Test
     public void testMapBinary() {
-        Homomorphism h = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"]);
+        Homomorphism h = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
         Tree t = pt("f(a,c)");
         Tree gold = pt("g(l(e),h(k(b)))");
         Tree rhs = h.apply(t);
@@ -41,7 +41,7 @@ class HomomorphismTest {
 
     @Test
     public void testNonDestructive() {
-        Homomorphism h = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"]);
+        Homomorphism h = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
         Tree t = pt("f(a,c)");
         Tree gold = pt("g(l(e),h(k(b)))");
         Tree rhs = h.apply(t); // this needs to be here
@@ -51,7 +51,7 @@ class HomomorphismTest {
     
     @Test
     public void testGensym() {
-        Homomorphism h = hom(["a":"h+3(+1)", "f":"g(?1,?2,?3)", "b":"+2"])
+        Homomorphism h = hom(["a":"h+3(+1)", "f":"g(?1,?2,?3)", "b":"+2"], sig(["f":3, "a":0, "b":0]))
         Tree t = pt("f(a,a,b)");
         Tree gold = pt("g(h_2(_1), h_2(_1), _3)");
         Tree rhs = h.apply(t);
@@ -61,6 +61,7 @@ class HomomorphismTest {
     
 
 
+    /*
     public static Homomorphism hom(Map<String,String> mappings) {
         Homomorphism ret = new Homomorphism();
 
@@ -70,5 +71,6 @@ class HomomorphismTest {
 
         return ret;
     }
+    */
 }
 

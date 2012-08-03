@@ -8,6 +8,8 @@ import de.saar.basic.StringTools;
 import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
+import de.saar.penguin.irtg.signature.MapSignature;
+import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import de.up.ling.tree.TreeVisitor;
@@ -109,6 +111,24 @@ public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
     
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
-        return TreeParser.parse(representation);
+        return underlyingAlgebra.parseString(representation);
+    }
+
+    @Override
+    public Signature getSignature() {
+        Signature underlyingSignature = underlyingAlgebra.getSignature();
+        MapSignature ret = new MapSignature();
+        
+        ret.addSymbol(APPEND, 2);
+        
+        for( String sym : underlyingSignature.getSymbols() ) {
+            if( underlyingSignature.getArity(sym) <= 2 ) {
+                ret.addSymbol(sym, underlyingSignature.getArity(sym));
+            } else {
+                ret.addSymbol(sym, 0);
+            }
+        }
+        
+        return ret;
     }
 }

@@ -15,8 +15,7 @@ import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.saar.penguin.irtg.algebra.*;
 import de.saar.penguin.irtg.hom.*;
-import static de.saar.penguin.irtg.hom.HomomorphismTest.hom;
-import static de.saar.penguin.irtg.util.TestingTools.pt;
+import static de.saar.penguin.irtg.util.TestingTools.*;
 
 /**
  *
@@ -38,7 +37,7 @@ class InterpretedTreeAutomatonTest {
                 "john":"john", "watches":"watches", "the":"the", "woman":"woman",
                 "with":"with", "telescope":"telescope",
                 "s":concat, "np":concat, "n":concat, "vp":concat, "pp":concat
-        ]);
+            ], rtg.getSignature());
 
         Algebra algebra = new StringAlgebra();
 
@@ -65,6 +64,7 @@ r1(S, S) -> S!
 r2 -> S
   [i] a
         ''';
+
          InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
 
         String string = "a a a";
