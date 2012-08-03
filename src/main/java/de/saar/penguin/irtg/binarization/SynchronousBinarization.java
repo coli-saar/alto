@@ -197,7 +197,7 @@ public class SynchronousBinarization<E, F> {
     
     
     private void ruleL(LItem oldItem) {
-        for (String label : leftAuto.getAllLabels()) { 
+        for (String label : leftAuto.getSignature().getSymbols()) { 
             for (Rule<E> rule : leftAuto.getRulesBottomUp(label, makeChildrenList(oldItem.state))) {
                 LItem item = new LItem(rule.getParent());
                 addItem(item,leftChart);
@@ -211,7 +211,7 @@ public class SynchronousBinarization<E, F> {
     }
     
     private void ruleR(RItem oldItem) {
-        for (String label : rightAuto.getAllLabels()) { 
+        for (String label : rightAuto.getSignature().getSymbols()) { 
             for (Rule<F> rule : rightAuto.getRulesBottomUp(label, makeChildrenList(oldItem.state))) {        
                 RItem item = new RItem(rule.getParent());
                 addItem(item,rightChart);
@@ -226,7 +226,7 @@ public class SynchronousBinarization<E, F> {
     
     
     private void leftC(CItem oldItem) {
-        for (String label : leftAuto.getAllLabels()) { 
+        for (String label : leftAuto.getSignature().getSymbols()) { 
             for (Rule<E> rule : leftAuto.getRulesBottomUp(label, makeChildrenList(oldItem.leftState))) {
                 CItem item = new CItem(rule.getParent(),oldItem.rightState);
                 addItem(item,cChart);
@@ -240,7 +240,7 @@ public class SynchronousBinarization<E, F> {
     } 
       
     private void rightC(CItem oldItem) {
-        for (String label : rightAuto.getAllLabels()) { 
+        for (String label : rightAuto.getSignature().getSymbols()) { 
             for (Rule<F> rule : rightAuto.getRulesBottomUp(label, makeChildrenList(oldItem.rightState))) {
                 CItem item = new CItem(oldItem.leftState,rule.getParent());
                 addItem(item,cChart);
@@ -255,7 +255,7 @@ public class SynchronousBinarization<E, F> {
 
     private void ll(LItem item1, LItem item2){
         List children = makeChildrenList(item1.state,item2.state);
-        for (String label: leftAuto.getAllLabels()) {
+        for (String label: leftAuto.getSignature().getSymbols()) {
             for (Rule<E> rule : leftAuto.getRulesBottomUp(label,children)) {
                 LItem item = new LItem(rule.getParent());
                 addItem(item,leftChart);
@@ -270,7 +270,7 @@ public class SynchronousBinarization<E, F> {
     
     private void rr(RItem item1, RItem item2){
         List children = makeChildrenList(item1.state,item2.state);
-        for (String label: rightAuto.getAllLabels()) {
+        for (String label: rightAuto.getSignature().getSymbols()) {
             for (Rule<F> rule : rightAuto.getRulesBottomUp(label,children)) {
                 RItem item = new RItem(rule.getParent());
                 addItem(item,rightChart);
@@ -293,7 +293,7 @@ public class SynchronousBinarization<E, F> {
     
     private void cl(CItem itemC, LItem itemL, boolean reverse) {
         List children = makeChildrenList(itemC.leftState,itemL.state,reverse);
-        for (String label: leftAuto.getAllLabels()) {
+        for (String label: leftAuto.getSignature().getSymbols()) {
             for (Rule<E> rule : leftAuto.getRulesBottomUp(label,children)) {
                 CItem item = new CItem(rule.getParent(),itemC.rightState);
                 addItem(item,cChart);
@@ -318,7 +318,7 @@ public class SynchronousBinarization<E, F> {
     
     private void cr(CItem itemC, RItem itemR, boolean reverse) {
         List children = makeChildrenList(itemC.rightState,itemR.state,reverse);
-        for (String label: rightAuto.getAllLabels()) {
+        for (String label: rightAuto.getSignature().getSymbols()) {
             for (Rule<F> rule : rightAuto.getRulesBottomUp(label,children)) {
                 CItem item = new CItem(itemC.leftState,rule.getParent());
                 addItem(item,cChart);
@@ -342,9 +342,9 @@ public class SynchronousBinarization<E, F> {
     private void cc(CItem item1, CItem item2, boolean reverse) {
         List leftChildren = makeChildrenList(item1.leftState,item2.leftState);
         List rightChildren = makeChildrenList(item1.rightState,item2.rightState,reverse);
-        for (String leftLabel : leftAuto.getAllLabels()) {
+        for (String leftLabel : leftAuto.getSignature().getSymbols()) {
             for (Rule<E> leftRule : leftAuto.getRulesBottomUp(leftLabel,leftChildren)){
-                for (String rightLabel : rightAuto.getAllLabels()) {
+                for (String rightLabel : rightAuto.getSignature().getSymbols()) {
                     for (Rule<F> rightRule : rightAuto.getRulesBottomUp(rightLabel, rightChildren)) {
                         CItem item = new CItem(leftRule.getParent(),rightRule.getParent());
                         addItem(item, cChart);

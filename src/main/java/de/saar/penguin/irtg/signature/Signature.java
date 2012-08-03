@@ -15,8 +15,10 @@ import java.util.List;
  * @author koller
  */
 public abstract class Signature {
-    public abstract Collection<String> getSymbols();
+    public abstract Collection<String> getSymbols();  // try to avoid using this, it may be hard to compute
+    
     public abstract int getArity(String symbol);
+    public abstract boolean contains(String symbol);
     
     public void addSymbol(String symbol, int arity) {
         throw new UnsupportedOperationException("Adding symbols to this signature is not allowed.");

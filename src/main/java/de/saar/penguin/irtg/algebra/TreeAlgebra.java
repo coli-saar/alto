@@ -14,7 +14,6 @@ import de.saar.penguin.irtg.signature.MapSignature;
 import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
-import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -107,11 +106,6 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
 
 
             return ret;
-        }
-
-        @Override
-        public Set<String> getAllLabels() {
-            return labels;
         }
 
         private void collectStatesAndLabels(Tree<String> node, String state) {

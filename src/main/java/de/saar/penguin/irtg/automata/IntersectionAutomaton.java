@@ -22,13 +22,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private static final boolean DEBUG = false;
 
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
-        super(left.getSignature()); // should be the same as right signature
+        super(left.getSignature()); // TODO = should intersect this with the right signature
         
         this.left = left;
         this.right = right;
-
-        allLabels = new HashSet<String>(left.getAllLabels());
-        allLabels.retainAll(right.getAllLabels());
 
         finalStates = null;
         allStates = null;
@@ -309,11 +306,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         }
 
         return new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), leftRule.getLabel(), childStates, leftRule.getWeight() * rightRule.getWeight());
-    }
-
-    @Override
-    public Set<String> getAllLabels() {
-        return allLabels;
     }
 
     @Override

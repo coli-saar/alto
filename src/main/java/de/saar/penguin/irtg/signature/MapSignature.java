@@ -39,6 +39,17 @@ public class MapSignature extends Signature implements Serializable {
     public boolean isWritable() {
         return true;
     }
+
+    @Override
+    public boolean contains(String symbol) {
+        return symbols.containsKey(symbol);
+    }
+
+    @Override
+    public String toString() {
+        return symbols.toString();
+    }
+    
     
     
 }

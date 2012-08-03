@@ -163,12 +163,6 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
         }
 
         @Override
-        public Set<String> getAllLabels() {
-            makeAllRulesExplicit();
-            return allLabels;
-        }
-
-        @Override
         public Set<LambdaTerm> getFinalStates() {
             return finalStates;
         }

@@ -114,16 +114,6 @@ class HomAutomaton extends TreeAutomaton<String> {
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
-//    @Override
-//    public int getArity(String label) {
-//        throw new UnsupportedOperationException("Not supported yet.");
-//    }
-    @Override
-    public Set<String> getAllLabels() {
-        makeAllRulesExplicit();
-        return explicitRules.keySet();
-    }
-
     @Override
     public Set<String> getFinalStates() {
         return finalStates;

@@ -110,7 +110,6 @@ r2 -> S
         istream.close();
         
         irtg.trainEM(copy);
-//        System.err.println("after EM: " + irtg.getAutomaton());
         
         assert true;
     }

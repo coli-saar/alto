@@ -305,7 +305,9 @@ public class InterpretedTreeAutomaton {
 
                 currentInterpretationIndex++;
                 if (currentInterpretationIndex >= interpretationOrder.size()) {
-                    TreeAutomaton chart = parseInputObjects(currentInputs).reduceBottomUp().makeConcreteAutomaton();
+                    TreeAutomaton chart = parseInputObjects(currentInputs);
+                    chart.makeAllRulesExplicit();
+                    chart = chart.reduceBottomUp(); //.makeConcreteAutomaton();
                     ret.addInstance(chart);
 
                     currentInputs.clear();
@@ -460,7 +462,7 @@ public class InterpretedTreeAutomaton {
     private String makeBinaryLabel(String prefix, int argNum, boolean terminal) {
         String newSymbol = prefix + argNum;
         if (terminal) {
-            while (automaton.getAllLabels().contains(newSymbol)) {
+            while (automaton.getSignature().contains(newSymbol)) {
                 newSymbol = newSymbol + "b";
             }
         } else {

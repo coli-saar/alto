@@ -238,16 +238,4 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
         return ret;
     }
 
-    /**
-     * Returns the set of labels in the domain of the homomorphism. The actual
-     * inverse homomorphism automaton may not contain rules for all of these
-     * labels.
-     *
-     * @return
-     */
-    @Override
-    public Set<String> getAllLabels() {
-        return hom.getDomain();
-    }
-
 }

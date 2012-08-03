@@ -22,6 +22,7 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -97,8 +98,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param parentState
      * @return 
      */
-    public Set<String> getLabelsTopDown(State parentState) {
-        return getAllLabels();
+    public Collection<String> getLabelsTopDown(State parentState) {
+        return getSignature().getSymbols();
     }
 
     /**
@@ -131,7 +132,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * 
      * @return 
      */
-    abstract public Set<String> getAllLabels();
+//    abstract public Set<String> getAllLabels();
 
     /**
      * Returns the final states of the automaton.
@@ -255,7 +256,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         makeAllRulesExplicit();
 
-        for (String f : getAllLabels()) {
+        for (String f : getSignature().getSymbols()) {
             ret.put(f, getAllRules(f));
         }
 
@@ -490,7 +491,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             while (!agenda.isEmpty()) {
                 State state = agenda.remove();
 
-                for (String label : getAllLabels()) {
+                for (String label : getSignature().getSymbols()) {
                     Set<Rule<State>> rules = getRulesTopDown(label, state);
                     for (Rule<State> rule : rules) {
                         for (State child : rule.getChildren()) {
@@ -507,6 +508,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
+    /*
     public ConcreteTreeAutomaton<State> makeConcreteAutomaton() {
         makeAllRulesExplicit();
 
@@ -518,9 +520,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ret.allStates = allStates;
         ret.isExplicit = isExplicit;
         ret.rulesForRhsState = rulesForRhsState;
+        ret.signature = signature;
 
         return ret;
     }
+    */
 
     /**
      * Checks whether the cache contains a bottom-up rule for
@@ -738,7 +742,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         for (State s : getStatesInBottomUpOrder()) {
             E accu = semiring.zero();
 
-            for (String label : getAllLabels()) {
+            for (String label : getSignature().getSymbols()) {
                 Set<Rule<State>> rules = getRulesTopDown(label, s);
 
                 for (Rule<State> rule : rules) {
@@ -1032,7 +1036,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             for (State state : getAllStates()) {
                 // cache ordered list of all top-down rules for each state
                 List<Rule<State>> rulesForThisState = new ArrayList<Rule<State>>();
-                for (String label : getAllLabels()) {
+                for (String label : getSignature().getSymbols()) {
                     rulesForThisState.addAll(getRulesTopDown(label, state));
                 }
                 

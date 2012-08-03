@@ -6,7 +6,6 @@
 package de.saar.penguin.irtg.automata;
 
 import de.saar.penguin.irtg.signature.MapSignature;
-import de.saar.penguin.irtg.signature.Signature;
 import java.util.List;
 import java.util.Set;
 
@@ -54,11 +53,6 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 
     public void addFinalState(State state) {
         finalStates.add(state);
-    }
-
-    @Override
-    public Set<String> getAllLabels() {
-        return explicitRules.keySet();
     }
 
     @Override

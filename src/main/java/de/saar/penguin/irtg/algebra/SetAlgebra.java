@@ -217,10 +217,6 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
 //            }
 //        }
 
-        @Override
-        public Set<String> getAllLabels() {
-            return allLabels;
-        }
 
         @Override
         public Set<Set<List<String>>> getFinalStates() {

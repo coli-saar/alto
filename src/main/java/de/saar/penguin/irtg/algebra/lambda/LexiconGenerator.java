@@ -13,6 +13,7 @@ import de.saar.penguin.irtg.algebra.StringAlgebra;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -40,8 +41,8 @@ public class LexiconGenerator {
 
         while (!agenda.isEmpty()) {
             Pair<LeftState, RightState> pq = agenda.remove();
-            Set<String> labelsLeft = left.getLabelsTopDown(pq.left);
-            Set<String> labelsRight = right.getLabelsTopDown(pq.right);
+            Collection<String> labelsLeft = left.getLabelsTopDown(pq.left);
+            Collection<String> labelsRight = right.getLabelsTopDown(pq.right);
 
             for (String labelLeft : labelsLeft) {
                 for (Rule<LeftState> leftRule : left.getRulesTopDown(labelLeft, pq.left)) {

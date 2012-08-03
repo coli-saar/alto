@@ -95,11 +95,6 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
 
         @Override
-        public Set<String> getAllLabels() {
-            return allLabels;
-        }
-
-        @Override
         public Set<Span> getAllStates() {
             Set<Span> ret = new HashSet<Span>();
 
