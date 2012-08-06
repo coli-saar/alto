@@ -43,6 +43,10 @@ public class Rule<State> implements Serializable {
         this(parent, label, children, 1);
     }
     
+    public static <State> Rule<State> c(State parent, String label, State... children) {
+        return new Rule(parent, label, children);
+    }
+    
     
 
     public State[] getChildren() {
