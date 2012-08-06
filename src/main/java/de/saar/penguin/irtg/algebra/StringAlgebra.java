@@ -66,10 +66,7 @@ public class StringAlgebra implements Algebra<List<String>> {
     @Override
     public List<String> parseString(String representation) {
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
-        
-        for( String sym : symbols ) {
-            signature.addSymbol(sym, 0);
-        }
+        signature.addAllSymbols(symbols);
         
         return symbols;
     }

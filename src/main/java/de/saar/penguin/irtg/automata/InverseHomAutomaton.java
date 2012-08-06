@@ -51,13 +51,17 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
+            
+//            System.err.println("\nrun on hom(" + label + "), children " + childStates);
 
             // run RHS automaton on given child states
             Set<State> resultStates = rhsAutomaton.run(hom.get(label), new Function<Tree<StringOrVariable>, State>() {
                 @Override
                 public State apply(Tree<StringOrVariable> f) {
+//                    System.err.println("    - " + f.getLabel() + " var:" + f.getLabel().isVariable());
                     if (f.getLabel().isVariable()) {
                         String child = childStates.get(Homomorphism.getIndexForVariable(f.getLabel()));
+//                        System.err.println("      + child: " + child);
 
                         if (FAIL_STATE.equals(child)) {
                             // Hom is requesting the value of a variable, but the state we
@@ -65,8 +69,10 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
                             // on the hom image should fail as well. We do this in a slightly hacky
                             // way by simply leaving the variable in place and hoping that things like
                             // "?x1" are not terminal symbols of the automaton.
+//                            System.err.println("      + is FAIL, return NULL");
                             return null;
                         } else {
+//                            System.err.println("      + is not FAIL, return " + rhsState.get(child));
                             return rhsState.get(child);
                         }
                     } else {
@@ -74,6 +80,8 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
                     }
                 }
             });
+            
+//            System.err.println("result states: " + resultStates);
 
             if (resultStates.isEmpty()) {
                 // no successful runs found, add rule with FAIL parent
@@ -205,6 +213,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
         }
     }
 
+
     private class Item {
         public State state;
         public Map<StringOrVariable, State> substitution;
@@ -242,5 +251,19 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
         }
 
         return ret;
+    }
+
+    public static <State> boolean isFailedRule(Rule<State> rule) {
+        if( rule.getParent().toString().contains(InverseHomAutomaton.FAIL_STATE) ) {
+            return true;
+        }
+        
+        for( State child : rule.getChildren() ) {
+            if( child.toString().contains(InverseHomAutomaton.FAIL_STATE)) {
+                return true;
+            }
+        }
+        
+        return false;
     }
 }

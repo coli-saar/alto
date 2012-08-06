@@ -8,7 +8,6 @@ import de.saar.basic.StringOrVariable;
 import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

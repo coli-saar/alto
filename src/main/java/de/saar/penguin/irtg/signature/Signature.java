@@ -38,6 +38,12 @@ public abstract class Signature {
         });
     }
     
+    public void addAllSymbols(List<String> words) {
+        for( String word : words ) {
+            addSymbol(word, 0);
+        }
+    }
+    
     public void addAllSymbolsWithoutVariables(Tree<StringOrVariable> tree) {
         tree.dfs(new TreeVisitor<StringOrVariable, Void, Void>() {
             @Override

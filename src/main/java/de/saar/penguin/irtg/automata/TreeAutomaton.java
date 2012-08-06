@@ -5,6 +5,7 @@
 package de.saar.penguin.irtg.automata;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
@@ -48,6 +49,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected boolean isExplicit;
     protected SetMultimap<State, Rule<State>> rulesForRhsState;
     protected Signature signature;
+    private Predicate<Rule<State>> filter = null;
 
     public TreeAutomaton(Signature signature) {
         explicitRules = new HashMap<String, StateListToStateMap>();
@@ -64,80 +66,79 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Finds automaton rules bottom-up for a given list of child states
-     * and a given parent label. The method returns a collection of
-     * rules that can be used to assign a state to the parent node.
-     * 
+     * Finds automaton rules bottom-up for a given list of child states and a
+     * given parent label. The method returns a collection of rules that can be
+     * used to assign a state to the parent node.
+     *
      * @param label
      * @param childStates
-     * @return 
+     * @return
      */
     abstract public Set<Rule<State>> getRulesBottomUp(String label, List<State> childStates);
 
     /**
-     * Finds automaton rules top-down for a given parent state and label.
-     * The method returns a collection of rules that can be used to
-     * assign states to the children.
-     * 
+     * Finds automaton rules top-down for a given parent state and label. The
+     * method returns a collection of rules that can be used to assign states to
+     * the children.
+     *
      * @param label
      * @param parentState
-     * @return 
+     * @return
      */
     abstract public Set<Rule<State>> getRulesTopDown(String label, State parentState);
 
     /**
-     * Returns a set that contains all terminal symbols f
-     * such that the automaton has top-down
-     * transition rules parentState -> f(...). The set returned by this
-     * method may contain symbols for which such a transition does not
-     * actually exist; it is only guaranteed that all symbols for which
-     * transitions exist are also in the set. The default implementation
-     * in BottomUpAutomaton returns getAllLabels(). Subclasses
-     * (especially lazy automata) may replace this with more specific implementations.
-     * 
+     * Returns a set that contains all terminal symbols f such that the
+     * automaton has top-down transition rules parentState -> f(...). The set
+     * returned by this method may contain symbols for which such a transition
+     * does not actually exist; it is only guaranteed that all symbols for which
+     * transitions exist are also in the set. The default implementation in
+     * BottomUpAutomaton returns getAllLabels(). Subclasses (especially lazy
+     * automata) may replace this with more specific implementations.
+     *
      * @param parentState
-     * @return 
+     * @return
      */
     public Collection<String> getLabelsTopDown(State parentState) {
         return getSignature().getSymbols();
     }
 
     /**
-     * Returns true whenever the automaton has a bottom-up rule whose first
-     * n child states are the n child states that are passed as the prefixOfChildren
-     * argument. It is not required that the method returns false if the automaton
-     * does _not_ have such a rule; i.e., the method may overestimate the existence
-     * of rules. The default implementation always returns true. Derived automaton
-     * classes for which an efficient, more precise test is available may override
-     * this method appropriately. This may speed up the Earley intersection algorithm.
-     * 
+     * Returns true whenever the automaton has a bottom-up rule whose first n
+     * child states are the n child states that are passed as the
+     * prefixOfChildren argument. It is not required that the method returns
+     * false if the automaton does _not_ have such a rule; i.e., the method may
+     * overestimate the existence of rules. The default implementation always
+     * returns true. Derived automaton classes for which an efficient, more
+     * precise test is available may override this method appropriately. This
+     * may speed up the Earley intersection algorithm.
+     *
      * @param label
      * @param prefixOfChildren
-     * @return 
+     * @return
      */
     public boolean hasRuleWithPrefix(String label, List<State> prefixOfChildren) {
         return true;
     }
 
     /**
-     * Returns the arity of a terminal symbol. Apparently this method
-     * is not being used anywhere, so I'm deleting it for now.
-     * 
+     * Returns the arity of a terminal symbol. Apparently this method is not
+     * being used anywhere, so I'm deleting it for now.
+     *
      * @param label
-     * @return 
+     * @return
      */
 //    abstract public int getArity(String label);
     /**
      * Returns all terminal symbols that this automaton knows about.
-     * 
-     * @return 
+     *
+     * @return
      */
 //    abstract public Set<String> getAllLabels();
-
     /**
      * Returns the final states of the automaton.
-     * 
-     * @return 
+     *
+     * @return
      */
     public Set<State> getFinalStates() {
         return finalStates;
@@ -145,18 +146,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Returns the set of all states of this automaton.
-     * 
-     * @return 
+     *
+     * @return
      */
     public Set<State> getAllStates() {
         return allStates;
     }
 
     /**
-     * Caches a rule for future use. Once a rule has been cached,
-     * it will be found by getRulesBottomUpFromExplicit and getRulesTopDownFromExplicit.
-     * 
-     * @param rule 
+     * Caches a rule for future use. Once a rule has been cached, it will be
+     * found by getRulesBottomUpFromExplicit and getRulesTopDownFromExplicit.
+     *
+     * @param rule
      */
     protected void storeRule(Rule<State> rule) {
         // store as bottom-up rule
@@ -186,12 +187,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Like getRulesBottomUp, but only looks for rules in the
-     * cache of previously discovered rules.
-     * 
+     * Like getRulesBottomUp, but only looks for rules in the cache of
+     * previously discovered rules.
+     *
      * @param label
      * @param childStates
-     * @return 
+     * @return
      */
     protected Set<Rule<State>> getRulesBottomUpFromExplicit(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
@@ -204,12 +205,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Like getRulesTopDown, but only looks for rules in the
-     * cache of previously discovered rules.
-     * 
+     * Like getRulesTopDown, but only looks for rules in the cache of previously
+     * discovered rules.
+     *
      * @param label
      * @param parentState
-     * @return 
+     * @return
      */
     protected Set<Rule<State>> getRulesTopDownFromExplicit(String label, State parentState) {
         if (useCachedRuleTopDown(label, parentState)) {
@@ -224,12 +225,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns the set of all rules of this automaton. This method
-     * is currently implemented rather inefficiently. Note that it
-     * necessarily _computes_ the set of all rules, which may be expensive
-     * for lazy automata.
-     * 
-     * @return 
+     * Returns the set of all rules of this automaton. This method is currently
+     * implemented rather inefficiently. Note that it necessarily _computes_ the
+     * set of all rules, which may be expensive for lazy automata.
+     *
+     * @return
      */
     public Set<Rule<State>> getRuleSet() {
         Set<Rule<State>> ret = new HashSet<Rule<State>>();
@@ -246,10 +246,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns the set of all rules, indexed by parent label and
-     * children states.
-     * 
-     * @return 
+     * Returns the set of all rules, indexed by parent label and children
+     * states.
+     *
+     * @return
      */
     private Map<String, Map<List<State>, Set<Rule<State>>>> getAllRules() {
         Map<String, Map<List<State>, Set<Rule<State>>>> ret = new HashMap<String, Map<List<State>, Set<Rule<State>>>>();
@@ -272,13 +272,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns the number of trees in the language of this
-     * automaton. Note that this is faster than computing the
-     * entire language. The method only works if the automaton
-     * is acyclic, and only returns correct results if the
+     * Returns the number of trees in the language of this automaton. Note that
+     * this is faster than computing the entire language. The method only works
+     * if the automaton is acyclic, and only returns correct results if the
      * automaton is bottom-up deterministic.
-     * 
-     * @return 
+     *
+     * @return
      */
     @CallableFromShell
     public long countTrees() {
@@ -296,10 +295,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns a map representing the inside probability of
-     * each state.
-     * 
-     * @return 
+     * Returns a map representing the inside probability of each state.
+     *
+     * @return
      */
     public Map<State, Double> inside() {
         return evaluateInSemiring(new DoubleArithmeticSemiring(), new RuleEvaluator<State, Double>() {
@@ -310,11 +308,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns a map representing the outside probability of
-     * each state.
-     * 
+     * Returns a map representing the outside probability of each state.
+     *
      * @param inside a map representing the inside probability of each state.
-     * @return 
+     * @return
      */
     public Map<State, Double> outside(final Map<State, Double> inside) {
         return evaluateInSemiringTopDown(new DoubleArithmeticSemiring(), new RuleEvaluatorTopDown<State, Double>() {
@@ -335,10 +332,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Computes the highest-weighted tree in the language of this
-     * (weighted) automaton, using the Viterbi algorithm.
-     * 
-     * @return 
+     * Computes the highest-weighted tree in the language of this (weighted)
+     * automaton, using the Viterbi algorithm.
+     *
+     * @return
      */
     @CallableFromShell
     public Tree viterbi() {
@@ -376,11 +373,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Computes the tree language accepted by this automaton.
-     * This only works if the automaton is acyclic (in which case
-     * the language is also finite). 
-     * 
-     * @return 
+     * Computes the tree language accepted by this automaton. This only works if
+     * the automaton is acyclic (in which case the language is also finite).
+     *
+     * @return
      */
     @CallableFromShell(joinList = "\n")
     public Set<Tree<String>> language() {
@@ -403,6 +399,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
             ret.addAll(languagesForStates.get(finalState));
         }
         return ret;
+    }
+    
+    public void setRulePrintingFilter(Predicate<Rule<State>> filter) {
+        this.filter = filter;
+    }
+    
+    private boolean isRulePrinting(Rule<State> rule) {
+        if( filter == null ) {
+            return true;
+        } else {
+            return filter.apply(rule);
+        }
     }
 
     private static class LanguageCollectingSemiring implements Semiring<List<Tree<String>>> {
@@ -461,24 +469,37 @@ public abstract class TreeAutomaton<State> implements Serializable {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
+        long countSuppressed = 0;
+        
+//        System.err.println("tostring before makeExplicit: " + explicitRules);
+
         Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
+//        System.err.println("tostring after makeExplicit: " + explicitRules);
 
         for (String f : rules.keySet()) {
             for (List<State> children : rules.get(f).keySet()) {
                 for (Rule rule : rules.get(f).get(children)) {
-                    buf.append(rule.toString() + (getFinalStates().contains(rule.getParent()) ? "!" : "") + "\n");
+                    if (isRulePrinting(rule)) {
+                        buf.append(rule.toString() + (getFinalStates().contains(rule.getParent()) ? "!" : "") + "\n");
+                    } else {
+                        countSuppressed++;
+                    }
                 }
             }
+        }
+        
+        if( countSuppressed > 0 ) {
+            buf.append("(" + countSuppressed + " rules omitted)\n");
         }
 
         return buf.toString();
     }
 
     /**
-     * Computes all rules in this automaton and stores them in the cache.
-     * This only makes a difference for lazy automata, in which rules
-     * are only computed by need. After calling this function, it is
-     * guaranteed that all rules are in the cache.
+     * Computes all rules in this automaton and stores them in the cache. This
+     * only makes a difference for lazy automata, in which rules are only
+     * computed by need. After calling this function, it is guaranteed that all
+     * rules are in the cache.
      */
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
@@ -490,10 +511,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
             while (!agenda.isEmpty()) {
                 State state = agenda.remove();
+//                System.err.println("state: " + state);
 
                 for (String label : getSignature().getSymbols()) {
                     Set<Rule<State>> rules = getRulesTopDown(label, state);
+                    if (!rules.isEmpty()) {
+//                        System.err.println("  rules for " + label + ": " + rules);
+                    }
+
                     for (Rule<State> rule : rules) {
+                        storeRule(rule);
+
                         for (State child : rule.getChildren()) {
                             if (!everAddedStates.contains(child)) {
                                 everAddedStates.add(child);
@@ -509,30 +537,29 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /*
-    public ConcreteTreeAutomaton<State> makeConcreteAutomaton() {
-        makeAllRulesExplicit();
+     public ConcreteTreeAutomaton<State> makeConcreteAutomaton() {
+     makeAllRulesExplicit();
 
-        ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
+     ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
 
-        ret.explicitRules = explicitRules;
-        ret.explicitRulesTopDown = explicitRulesTopDown;
-        ret.finalStates = finalStates;
-        ret.allStates = allStates;
-        ret.isExplicit = isExplicit;
-        ret.rulesForRhsState = rulesForRhsState;
-        ret.signature = signature;
+     ret.explicitRules = explicitRules;
+     ret.explicitRulesTopDown = explicitRulesTopDown;
+     ret.finalStates = finalStates;
+     ret.allStates = allStates;
+     ret.isExplicit = isExplicit;
+     ret.rulesForRhsState = rulesForRhsState;
+     ret.signature = signature;
 
-        return ret;
-    }
-    */
-
+     return ret;
+     }
+     */
     /**
-     * Checks whether the cache contains a bottom-up rule for
-     * the given parent label and children states.
-     * 
+     * Checks whether the cache contains a bottom-up rule for the given parent
+     * label and children states.
+     *
      * @param label
      * @param childStates
-     * @return 
+     * @return
      */
     protected boolean useCachedRuleBottomUp(String label, List<State> childStates) {
         if (isExplicit) {
@@ -549,11 +576,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Checks whether the cache contains a top-down rule for
-     * the given parent label and state.
+     * Checks whether the cache contains a top-down rule for the given parent
+     * label and state.
+     *
      * @param label
      * @param parent
-     * @return 
+     * @return
      */
     protected boolean useCachedRuleTopDown(String label, State parent) {
         // Even when the automaton has been computed explicltly, not all labels
@@ -572,7 +600,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Intersects this automaton with another one.
-     * 
+     *
      * @param <OtherState> the state type of the other automaton.
      * @param other the other automaton.
      * @return an automaton representing the intersected language.
@@ -583,7 +611,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Computes the pre-image of this automaton under a homomorphism.
-     * 
+     *
      * @param hom the homomorphism.
      * @return an automaton representing the homomorphic pre-image.
      */
@@ -593,9 +621,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Computes the image of this automaton under a homomorphism.
-     * 
+     *
      * @param hom
-     * @return 
+     * @return
      */
     @CallableFromShell
     public TreeAutomaton<String> homomorphism(Homomorphism hom) {
@@ -604,9 +632,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Determines whether the automaton accepts a given tree.
-     * 
+     *
      * @param tree
-     * @return 
+     * @return
      */
     public boolean accepts(final Tree tree) {
         Set<State> resultStates = run(tree);
@@ -615,11 +643,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Runs the automaton bottom-up on a given tree and returns the set
-     * of possible states for the root. See also #run(Tree, Function).
-     * 
+     * Runs the automaton bottom-up on a given tree and returns the set of
+     * possible states for the root. See also #run(Tree, Function).
+     *
      * @param tree
-     * @return 
+     * @return
      */
     public Set<State> run(final Tree tree) {
         return run(tree, new Function<Tree<String>, State>() {
@@ -632,29 +660,29 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Runs the automaton bottom-up on a given tree, assuming a certain
-     * assignment of states to nodes.  This assignment is specified in the
-     * second argument.  If this function returns a non-null value for a given
-     * subtree, this value is used as the (unique) state for this subtree.
-     * 
-     * This method can run on trees with arbitrary label classes, but the
-     * tree automaton itself can only have terminal symbols that are strings.
-     * When running the automaton, the labels of the tree are therefore
-     * converted to strings in order to look up the rules.
-     * 
+     * assignment of states to nodes. This assignment is specified in the second
+     * argument. If this function returns a non-null value for a given subtree,
+     * this value is used as the (unique) state for this subtree.
+     *
+     * This method can run on trees with arbitrary label classes, but the tree
+     * automaton itself can only have terminal symbols that are strings. When
+     * running the automaton, the labels of the tree are therefore converted to
+     * strings in order to look up the rules.
+     *
      * @param tree
      * @param subst
-     * @return 
+     * @return
      */
     public <TreeLabels> Set<State> run(final Tree<TreeLabels> tree, final Function<Tree<TreeLabels>, State> subst) {
 //        final Set<State> ret = new HashSet<State>();
-
+        
         final Set<State> ret = (Set<State>) tree.dfs(new TreeVisitor<TreeLabels, Void, Set<State>>() {
             @Override
             public Set<State> combine(Tree<TreeLabels> node, List<Set<State>> childrenValues) {
                 TreeLabels f = node.getLabel();
                 Set<State> states = new HashSet<State>();
                 State substState = subst.apply(node);
-
+                
                 if (substState != null) {
                     states.add(substState);
                 } else if (childrenValues.isEmpty()) {
@@ -674,6 +702,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //                if (node.equals(tree.getRoot())) {
 //                    ret.addAll(states);
 //                }
+                
+//                System.err.println(node.getLabel().toString() + childrenValues + " -> " + states);
 
                 return states;
             }
@@ -683,10 +713,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Reduces the automaton. This means that all states and rules that
-     * are not reachable bottom-up are removed.
-     * 
-     * @return 
+     * Reduces the automaton. This means that all states and rules that are not
+     * reachable bottom-up are removed.
+     *
+     * @return
      */
     public TreeAutomaton<State> reduceBottomUp() {
         Set<State> productiveStates = getProductiveStates();
@@ -722,15 +752,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Evaluates all states of the automaton bottom-up
-     * in a semiring. The evaluation of a state is the semiring sum
-     * of semiring zero plus the evaluations of all rules in which it is the parent.
-     * The evaluation of a rule is the semiring product of the evaluations
-     * of its child states, times the evaluation of the rule itself.
-     * The evaluation of a rule is determined by the RuleEvaluator argument.
-     * This method only works if the automaton is acyclic, so states can be
-     * processed in a well-defined bottom-up order.
-     * 
+     * Evaluates all states of the automaton bottom-up in a semiring. The
+     * evaluation of a state is the semiring sum of semiring zero plus the
+     * evaluations of all rules in which it is the parent. The evaluation of a
+     * rule is the semiring product of the evaluations of its child states,
+     * times the evaluation of the rule itself. The evaluation of a rule is
+     * determined by the RuleEvaluator argument. This method only works if the
+     * automaton is acyclic, so states can be processed in a well-defined
+     * bottom-up order.
+     *
      * @param <E>
      * @param semiring
      * @param evaluator
@@ -773,11 +803,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Like evaluateInSemiring, but proceeds in top-down order.
-     * 
+     *
      * @param <E>
      * @param semiring
      * @param evaluator
-     * @return 
+     * @return
      */
     public <E> Map<State, E> evaluateInSemiringTopDown(Semiring<E> semiring, RuleEvaluatorTopDown<State, E> evaluator) {
         Map<State, E> ret = new HashMap<State, E>();
@@ -807,13 +837,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns a topological ordering of the states, such that
-     * later nodes always occur above earlier nodes in any run
-     * of the automaton on a tree. Note that only states that are
-     * reachable top-down from the final states are included in the
-     * list that is returned.
-     * 
-     * @return 
+     * Returns a topological ordering of the states, such that later nodes
+     * always occur above earlier nodes in any run of the automaton on a tree.
+     * Note that only states that are reachable top-down from the final states
+     * are included in the list that is returned.
+     *
+     * @return
      */
     public List<State> getStatesInBottomUpOrder() {
         List<State> ret = new ArrayList<State>();
@@ -990,10 +1019,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns an Iterable, to be used in a for-each loop.
-     * See the documentation of #languageIterator for caveats.
-     * 
-     * @return 
+     * Returns an Iterable, to be used in a for-each loop. See the documentation
+     * of #languageIterator for caveats.
+     *
+     * @return
      */
     public Iterable<Tree<String>> languageIterable() {
         return new LanguageIterable();
@@ -1001,21 +1030,20 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Returns an iterator over the language of this tree automaton.
-     * 
-     * This only works reliably if the automaton is non-recursive, i.e. the language
-     * is finite. For infinite languages, the iterator makes an effort to
-     * consider rules in an order that has a good chance of returning some trees;
-     * but sometimes trying to enumerate even the first tree may
-     * not terminate in this case.
-     * 
+     *
+     * This only works reliably if the automaton is non-recursive, i.e. the
+     * language is finite. For infinite languages, the iterator makes an effort
+     * to consider rules in an order that has a good chance of returning some
+     * trees; but sometimes trying to enumerate even the first tree may not
+     * terminate in this case.
+     *
      * The method assumes that the automaton has a single final state.
-     * 
-     * The iterator is highly optimized and avoids allocating new objects
-     * as much as possible. Each tree it returns therefore becomes invalid
-     * with the next call to "next". If you want to retain it, you must
-     * clone it.
-     * 
-     * @return 
+     *
+     * The iterator is highly optimized and avoids allocating new objects as
+     * much as possible. Each tree it returns therefore becomes invalid with the
+     * next call to "next". If you want to retain it, you must clone it.
+     *
+     * @return
      */
     public Iterator<Tree<String>> languageIterator() {
         return new LanguageIterator();
@@ -1039,14 +1067,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 for (String label : getSignature().getSymbols()) {
                     rulesForThisState.addAll(getRulesTopDown(label, state));
                 }
-                
+
                 Collections.sort(rulesForThisState, cyclicityComparator);
                 rules.put(state, rulesForThisState);
 
                 // create tree object for each state
                 Tree<String> treeForState = Tree.create("");
                 treeForState.setCachingPolicy(false);
-                
+
                 tree.put(state, treeForState);
 
                 // initialize rule indices
@@ -1129,7 +1157,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             int currentIndex = currentRule.get(state);
             Rule<State> current = rulesThisState.get(currentIndex);
             int n = current.getArity();
-            
+
             // try to advance the tree for state by advancing a child
             for (int i = n - 1; i >= 0; i--) {
                 if (next(current.getChildren()[i])) {
@@ -1145,10 +1173,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
             while (currentIndex < rulesThisState.size() - 1) {
                 currentIndex++;
                 currentRule.put(state, currentIndex);
-                
+
                 // if we don't manage to build a tree using the new rule,
                 // skip that rule and try the next, until we run out of rules
-                if( initializeWithRule(state, rulesThisState.get(currentIndex)) ) {
+                if (initializeWithRule(state, rulesThisState.get(currentIndex))) {
                     return true;
                 }
             }
@@ -1158,14 +1186,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         /**
-         * Initializes the data structures such that the given rule
-         * is used for building the tree for this state. Call this whenever
-         * a new rule has been selected for a state (e.g. by modifying
-         * currentRule[state]).
-         * 
+         * Initializes the data structures such that the given rule is used for
+         * building the tree for this state. Call this whenever a new rule has
+         * been selected for a state (e.g. by modifying currentRule[state]).
+         *
          * @param state
          * @param rule
-         * @return 
+         * @return
          */
         private boolean initializeWithRule(State state, Rule<State> rule) {
             Tree<String> treeHere = tree.get(state);
@@ -1181,7 +1208,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
             // also modify node label to fit with rule
             treeHere.setLabel(rule.getLabel());
-            
+
             // call first on all subtrees to ensure that they all start
             // with their own first trees
             for (State child : rule.getChildren()) {
@@ -1189,7 +1216,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     return false;
                 }
             }
-            
+
             return true;
         }
 
@@ -1199,8 +1226,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-
-    
     private class RuleCyclicityComparator implements Comparator<Rule<State>> {
         // return -1 iff r1 < r2
         public int compare(Rule<State> r1, Rule<State> r2) {
@@ -1228,7 +1253,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return false;
         }
     }
-     
 }
 
 
