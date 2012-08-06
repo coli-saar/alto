@@ -11,7 +11,6 @@ import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.signature.MapSignature;
 import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
-import de.up.ling.tree.TreeParser;
 import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
 import java.util.Arrays;
