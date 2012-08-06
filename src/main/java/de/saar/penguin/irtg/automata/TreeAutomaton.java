@@ -494,6 +494,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return buf.toString();
     }
+    
+    public String toStringBottomUp() {
+        return new UniversalAutomaton(getSignature()).intersect(this).toString();
+    }
 
     /**
      * Computes all rules in this automaton and stores them in the cache. This
