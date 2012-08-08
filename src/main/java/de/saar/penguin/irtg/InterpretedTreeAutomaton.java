@@ -20,6 +20,7 @@ import de.saar.penguin.irtg.hom.Homomorphism;
 import de.saar.penguin.irtg.signature.MapSignature;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeVisitor;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -331,8 +332,12 @@ public class InterpretedTreeAutomaton {
         Interpretation interp2 = interpretations.get(interpName2);
         RegularBinarizer bin1 = binarizers.get(interpName1);
         RegularBinarizer bin2 = binarizers.get(interpName2);
+        
+        // select a constant as dummy symbol from both algebras 
+        StringOrVariable constantL = getConstantFromAlgebra(interp1.getHomomorphism());
+        StringOrVariable constantR = getConstantFromAlgebra(interp2.getHomomorphism());
 
-        SynchronousBinarization sb = new SynchronousBinarization();
+        SynchronousBinarization sb = new SynchronousBinarization(constantL, constantR);
         ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
         Homomorphism newLeftHom = new Homomorphism(newAuto.getSignature(), interp1.getHomomorphism().getTargetSignature());
         Homomorphism newRightHom = new Homomorphism(newAuto.getSignature(), interp2.getHomomorphism().getTargetSignature());
@@ -350,8 +355,33 @@ public class InterpretedTreeAutomaton {
         ret.addInterpretation(interpName2, new Interpretation(bin2.getOutputAlgebra(), newRightHom));
 
         return ret;
-
     }
+   
+    
+    private StringOrVariable getConstantFromAlgebra(Homomorphism hom) {
+        for (String label : hom.getDomain()) {
+            StringOrVariable constant = hom.get(label).dfs(new TreeVisitor<StringOrVariable, Void, StringOrVariable>() {
+                @Override
+                public StringOrVariable combine(Tree<StringOrVariable> node, List<StringOrVariable> childrenValues) {
+                    if (node.getChildren().isEmpty() && !node.getLabel().isVariable()) {
+                        return node.getLabel();
+                    }
+               
+                    for (int i = 0; i < childrenValues.size(); i++) {
+                        if (childrenValues.get(i) != null ) {
+                            return childrenValues.get(i);
+                        }
+                    } 
+                    return null;
+                }
+            });
+            if (constant != null) {
+                return constant;
+            }
+        }
+        throw new UnsupportedOperationException("Cannot find any symbols with arity 0 for this algebra.");
+    }
+    
     
     @CallableFromShell
     public InterpretedTreeAutomaton testBinarize() {

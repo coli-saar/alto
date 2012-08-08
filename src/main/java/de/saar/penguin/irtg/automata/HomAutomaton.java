@@ -50,7 +50,7 @@ class HomAutomaton extends TreeAutomaton<String> {
 
                 if (homImage.getLabel().isVariable()) {
                     // special case for homomorphisms of the form ?1: store chain rule
-                    assert rule.getChildren().length == 1;
+                    //assert rule.getChildren().length == 1;
 
                     chainRules.put(rule.getChildren()[0], rule.getParent());
                 } else {

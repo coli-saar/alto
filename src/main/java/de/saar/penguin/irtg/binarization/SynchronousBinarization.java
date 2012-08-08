@@ -4,7 +4,6 @@
  */
 package de.saar.penguin.irtg.binarization;
 
-import de.saar.basic.Pair;
 import de.saar.basic.StringOrVariable;
 import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
@@ -20,10 +19,6 @@ import java.util.*;
  */
 public class SynchronousBinarization<E, F> {
     public static final String VARIABLE_MARKER = "?";
-    public static final StringOrVariable CONSTANTL = new StringOrVariable("y",false); // das kann so nicht bleiben
-    public static final StringOrVariable CONSTANTR = new StringOrVariable("z",false);
-    //private E leftDummy;
-    //private F rightDummy;
     private int nextGensym;
     private Map<Item,Set<Item>> itemCombinations;
     private Set<CItem> cChart;
@@ -32,12 +27,20 @@ public class SynchronousBinarization<E, F> {
     private Queue<Item> agenda;
     private TreeAutomaton<E> leftAuto;
     private TreeAutomaton<F> rightAuto;
+    private Collection<String> leftSignature;
+    private Collection<String> rightSignature;
     private Rule grammarRule;
+    private StringOrVariable constantL;
+    private StringOrVariable constantR;
     private ConcreteTreeAutomaton<String> outputAutomaton;
     private Homomorphism leftHomOut;
     private Homomorphism rightHomOut;
 
-    // eigentlich: ConcreteTreeAutomaton<Pair<E, F>> outputAutomaton
+    public SynchronousBinarization(StringOrVariable constantL, StringOrVariable constantR) {
+        this.constantL = constantL;
+        this.constantR = constantR;
+    }
+
     public void binarize(Rule grammarRule, TreeAutomaton<E> leftAuto, TreeAutomaton<F> rightAuto, ConcreteTreeAutomaton<String> outputAutomaton, Homomorphism leftHomOut, Homomorphism rightHomOut) {
         cChart = new HashSet<CItem>();
         leftChart = new HashSet<LItem>();
@@ -52,10 +55,8 @@ public class SynchronousBinarization<E, F> {
         this.outputAutomaton = outputAutomaton;
         this.leftHomOut = leftHomOut;
         this.rightHomOut = rightHomOut;
-        
-        // select a constant as dummy symbol from both algebras
-        // ...
-        
+        leftSignature = leftAuto.getSignature().getSymbols();
+        rightSignature = rightAuto.getSignature().getSymbols();
 
         // initialize agenda and charts with (Var), (InitC), (InitL) and (InitR)
         for (Rule<E> leftRule : leftAuto.getRuleSet()){
@@ -182,7 +183,7 @@ public class SynchronousBinarization<E, F> {
         addItem(item,leftChart);
 
         Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable(leftRule.getLabel(),false));
-        Tree<StringOrVariable> rightHomTree = Tree.create(CONSTANTR);
+        Tree<StringOrVariable> rightHomTree = Tree.create(constantR);
         outputRule(item.getSymbolInRule(), new ArrayList(), leftHomTree, rightHomTree);
     }
     
@@ -190,34 +191,34 @@ public class SynchronousBinarization<E, F> {
         RItem item = new RItem(rightRule.getParent());
         addItem(item,rightChart);
 
-        Tree<StringOrVariable> leftHomTree = Tree.create(CONSTANTL);            
+        Tree<StringOrVariable> leftHomTree = Tree.create(constantL);            
         Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable(rightRule.getLabel(),false));
         outputRule(item.getSymbolInRule(), new ArrayList(), leftHomTree, rightHomTree);
     }  
     
     
     private void ruleL(LItem oldItem) {
-        for (String label : leftAuto.getSignature().getSymbols()) { 
+        for (String label : leftSignature) { 
             for (Rule<E> rule : leftAuto.getRulesBottomUp(label, makeChildrenList(oldItem.state))) {
                 LItem item = new LItem(rule.getParent());
                 addItem(item,leftChart);
                 
                 List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
                 Tree<StringOrVariable> leftHomTree = makeHomTree(label);
-                Tree<StringOrVariable> rightHomTree = Tree.create(CONSTANTR);
+                Tree<StringOrVariable> rightHomTree = Tree.create(constantR);
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
     }
     
     private void ruleR(RItem oldItem) {
-        for (String label : rightAuto.getSignature().getSymbols()) { 
+        for (String label : rightSignature) { 
             for (Rule<F> rule : rightAuto.getRulesBottomUp(label, makeChildrenList(oldItem.state))) {        
                 RItem item = new RItem(rule.getParent());
                 addItem(item,rightChart);
 
                 List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = Tree.create(CONSTANTL);            
+                Tree<StringOrVariable> leftHomTree = Tree.create(constantL);            
                 Tree<StringOrVariable> rightHomTree = makeHomTree(label); 
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
@@ -226,7 +227,7 @@ public class SynchronousBinarization<E, F> {
     
     
     private void leftC(CItem oldItem) {
-        for (String label : leftAuto.getSignature().getSymbols()) { 
+        for (String label : leftSignature) { 
             for (Rule<E> rule : leftAuto.getRulesBottomUp(label, makeChildrenList(oldItem.leftState))) {
                 CItem item = new CItem(rule.getParent(),oldItem.rightState);
                 addItem(item,cChart);
@@ -240,7 +241,7 @@ public class SynchronousBinarization<E, F> {
     } 
       
     private void rightC(CItem oldItem) {
-        for (String label : rightAuto.getSignature().getSymbols()) { 
+        for (String label : rightSignature) { 
             for (Rule<F> rule : rightAuto.getRulesBottomUp(label, makeChildrenList(oldItem.rightState))) {
                 CItem item = new CItem(oldItem.leftState,rule.getParent());
                 addItem(item,cChart);
@@ -255,14 +256,14 @@ public class SynchronousBinarization<E, F> {
 
     private void ll(LItem item1, LItem item2){
         List children = makeChildrenList(item1.state,item2.state);
-        for (String label: leftAuto.getSignature().getSymbols()) {
+        for (String label: leftSignature) {
             for (Rule<E> rule : leftAuto.getRulesBottomUp(label,children)) {
                 LItem item = new LItem(rule.getParent());
                 addItem(item,leftChart);
 
                 List ruleChildren = makeChildrenList(item1.getSymbolInRule(),item2.getSymbolInRule());
                 Tree<StringOrVariable> leftHomTree = makeHomTree(label,false);
-                Tree<StringOrVariable> rightHomTree = Tree.create(CONSTANTR);  
+                Tree<StringOrVariable> rightHomTree = Tree.create(constantR);  
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -270,13 +271,13 @@ public class SynchronousBinarization<E, F> {
     
     private void rr(RItem item1, RItem item2){
         List children = makeChildrenList(item1.state,item2.state);
-        for (String label: rightAuto.getSignature().getSymbols()) {
+        for (String label: rightSignature) {
             for (Rule<F> rule : rightAuto.getRulesBottomUp(label,children)) {
                 RItem item = new RItem(rule.getParent());
                 addItem(item,rightChart);
 
                 List ruleChildren = makeChildrenList(item1.getSymbolInRule(),item2.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = Tree.create(CONSTANTL);                     
+                Tree<StringOrVariable> leftHomTree = Tree.create(constantL);                     
                 Tree<StringOrVariable> rightHomTree = makeHomTree(label,false);
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
@@ -293,7 +294,7 @@ public class SynchronousBinarization<E, F> {
     
     private void cl(CItem itemC, LItem itemL, boolean reverse) {
         List children = makeChildrenList(itemC.leftState,itemL.state,reverse);
-        for (String label: leftAuto.getSignature().getSymbols()) {
+        for (String label: leftSignature) {
             for (Rule<E> rule : leftAuto.getRulesBottomUp(label,children)) {
                 CItem item = new CItem(rule.getParent(),itemC.rightState);
                 addItem(item,cChart);
@@ -318,7 +319,7 @@ public class SynchronousBinarization<E, F> {
     
     private void cr(CItem itemC, RItem itemR, boolean reverse) {
         List children = makeChildrenList(itemC.rightState,itemR.state,reverse);
-        for (String label: rightAuto.getSignature().getSymbols()) {
+        for (String label: rightSignature) {
             for (Rule<F> rule : rightAuto.getRulesBottomUp(label,children)) {
                 CItem item = new CItem(itemC.leftState,rule.getParent());
                 addItem(item,cChart);
@@ -342,9 +343,9 @@ public class SynchronousBinarization<E, F> {
     private void cc(CItem item1, CItem item2, boolean reverse) {
         List leftChildren = makeChildrenList(item1.leftState,item2.leftState);
         List rightChildren = makeChildrenList(item1.rightState,item2.rightState,reverse);
-        for (String leftLabel : leftAuto.getSignature().getSymbols()) {
+        for (String leftLabel : leftSignature) {
             for (Rule<E> leftRule : leftAuto.getRulesBottomUp(leftLabel,leftChildren)){
-                for (String rightLabel : rightAuto.getSignature().getSymbols()) {
+                for (String rightLabel : rightSignature) {
                     for (Rule<F> rightRule : rightAuto.getRulesBottomUp(rightLabel, rightChildren)) {
                         CItem item = new CItem(leftRule.getParent(),rightRule.getParent());
                         addItem(item, cChart);
@@ -433,7 +434,6 @@ public class SynchronousBinarization<E, F> {
         return homTree;
     }
     
-    // ist es richtig, dass Homomorphismus-Terme vom Typ <StringOrVariable> sein müssen?
     private Tree makeHomTree(String label, boolean reverse) { // binary
         StringOrVariable treeLabel = new StringOrVariable(label,false);
         Tree<StringOrVariable> firstVarTree = Tree.create(new StringOrVariable("?1", true));
@@ -465,7 +465,7 @@ public class SynchronousBinarization<E, F> {
         
         @Override
         public String getSymbolInRule() {
-            return grammarRule.getLabel() + leftState.toString() + rightState.toString();
+            return grammarRule.getLabel() + "+" + leftState.toString() + "+" + rightState.toString();
         }        
 
         @Override
@@ -505,7 +505,7 @@ public class SynchronousBinarization<E, F> {
         
         @Override
         public String getSymbolInRule() {
-            return grammarRule.getLabel() + "L" + state.toString();
+            return grammarRule.getLabel() + "+" + state.toString() + "+" + "_";
         }
 
         @Override
@@ -541,7 +541,7 @@ public class SynchronousBinarization<E, F> {
         
         @Override
         public String getSymbolInRule() {
-            return grammarRule.getLabel() + "R" + state.toString();
+            return grammarRule.getLabel() +  "+" + "_" + "+" + state.toString();
         }        
 
         @Override
