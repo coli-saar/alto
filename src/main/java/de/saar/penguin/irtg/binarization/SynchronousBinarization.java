@@ -465,7 +465,7 @@ public class SynchronousBinarization<E, F> {
         
         @Override
         public String getSymbolInRule() {
-            return grammarRule.getLabel() + "+" + leftState.toString() + "+" + rightState.toString();
+            return grammarRule.getLabel() + "-" + leftState.toString() + "-" + rightState.toString();
         }        
 
         @Override
@@ -505,7 +505,7 @@ public class SynchronousBinarization<E, F> {
         
         @Override
         public String getSymbolInRule() {
-            return grammarRule.getLabel() + "+" + state.toString() + "+" + "_";
+            return grammarRule.getLabel() + "-" + "L" + state.toString();
         }
 
         @Override
@@ -541,7 +541,7 @@ public class SynchronousBinarization<E, F> {
         
         @Override
         public String getSymbolInRule() {
-            return grammarRule.getLabel() +  "+" + "_" + "+" + state.toString();
+            return grammarRule.getLabel() + "-" + "R" + state.toString();
         }        
 
         @Override
