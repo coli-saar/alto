@@ -49,7 +49,7 @@ public class Main {
         }
     }
 
-    protected Main(Shell shell) {
+    public Main(Shell shell) {
         this.shell = shell;
     }
 

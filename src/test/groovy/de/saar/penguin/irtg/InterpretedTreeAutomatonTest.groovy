@@ -113,9 +113,27 @@ r2 -> S
         
         assert true;
     }
+    
+    @Test
+    public void testWriteThenParse1() {
+        writeThenParse(iparse(CFG_STR))
+    }
+    
+    private void writeThenParse(InterpretedTreeAutomaton irtg) {
+        String str = irtg.toString();
+        InterpretedTreeAutomaton parsed = iparse(str);
+        
+        System.err.println(str)
+        
+        assert irtg.equals(parsed);
+    }
 
     private static TreeAutomaton parse(String s) {
         return TreeAutomatonParser.parse(new StringReader(s));
+    }
+    
+    private static InterpretedTreeAutomaton iparse(String s) {
+        return IrtgParser.parse(new StringReader(s));
     }
     
     private static final String CFG_STR = """

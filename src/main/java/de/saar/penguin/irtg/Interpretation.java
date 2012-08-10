@@ -45,4 +45,24 @@ public class Interpretation<E> {
     public String toString() {
         return algebra.getClass() + "\n" + hom.toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Interpretation<E> other = (Interpretation<E>) obj;
+        if (this.algebra.getClass() != other.algebra.getClass() && (this.algebra == null || !this.algebra.getClass().equals(other.algebra.getClass()))) {
+            return false;
+        }
+        if (this.hom != other.hom && (this.hom == null || !this.hom.equals(other.hom))) {
+            return false;
+        }
+        return true;
+    }
+    
+    
 }

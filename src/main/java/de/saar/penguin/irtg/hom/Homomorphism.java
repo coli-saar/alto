@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -19,6 +20,7 @@ import java.util.Set;
  */
 public class Homomorphism {
     private static int gensymNext = 1;
+    private static Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("[a-zA-z*+_?]([a-zA-Z0-9_*+-]*)");
     private Map<String, Tree<StringOrVariable>> mappings;
     private Signature srcSignature, tgtSignature;
 
@@ -117,6 +119,10 @@ public class Homomorphism {
         
         return buf.toString();
     }
+    
+    public static String rhsAsString(Tree<StringOrVariable> t) {
+        return t.toString(HOM_NON_QUOTING_PATTERN);
+    }
 
     public Signature getSourceSignature() {
         return srcSignature;
@@ -125,6 +131,16 @@ public class Homomorphism {
     public Signature getTargetSignature() {
         return tgtSignature;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if( obj instanceof Homomorphism ) {
+            return mappings.equals(((Homomorphism) obj).mappings);
+        }
+        
+        return false;
+    }
     
+
     
 }
