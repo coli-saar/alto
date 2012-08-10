@@ -17,7 +17,6 @@ import de.saar.penguin.irtg.binarization.RegularBinarizer;
 import de.saar.penguin.irtg.binarization.StringAlgebraBinarizer;
 import de.saar.penguin.irtg.binarization.SynchronousBinarization;
 import de.saar.penguin.irtg.hom.Homomorphism;
-import de.saar.penguin.irtg.signature.MapSignature;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -522,7 +521,8 @@ public class InterpretedTreeAutomaton {
             pw.println(rule.getLabel() + children + " -> " + rule.getParent().toString() + isFinal + " [" + rule.getWeight() + "]");
 
             for (String interp : interpretationOrder) {
-                pw.println("  [" + interp + "] " + interpretations.get(interp).getHomomorphism().get(rule.getLabel()));
+                Homomorphism hom = interpretations.get(interp).getHomomorphism();
+                pw.println("  [" + interp + "] " + hom.rhsAsString(hom.get(rule.getLabel())));
             }
 
             pw.println();
@@ -530,4 +530,24 @@ public class InterpretedTreeAutomaton {
 
         return buf.toString();
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final InterpretedTreeAutomaton other = (InterpretedTreeAutomaton) obj;
+        if (this.automaton != other.automaton && (this.automaton == null || !this.automaton.equals(other.automaton))) {
+            return false;
+        }
+        if (this.interpretations != other.interpretations && (this.interpretations == null || !this.interpretations.equals(other.interpretations))) {
+            return false;
+        }
+        return true;
+    }
+    
+    
 }
