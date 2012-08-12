@@ -23,6 +23,7 @@ public class Homomorphism {
     private static Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("[a-zA-z*+_?]([a-zA-Z0-9_*+-]*)");
     private Map<String, Tree<StringOrVariable>> mappings;
     private Signature srcSignature, tgtSignature;
+    private boolean debug = false;
 
     public Homomorphism(Signature src, Signature tgt) {
         mappings = new HashMap<String, Tree<StringOrVariable>>();
@@ -53,7 +54,16 @@ public class Homomorphism {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                return construct(mappings.get(node.getLabel()), childrenValues, knownGensyms);
+                Tree<String> ret = construct(mappings.get(node.getLabel()), childrenValues, knownGensyms);
+                if( debug ) {
+                    System.err.println("\n" + node + ":");
+                    System.err.println("  " + rhsAsString(mappings.get(node.getLabel())));
+                    for( Tree<String> child : childrenValues ) {
+                        System.err.println("   + " + child);
+                    }
+                    System.err.println("  => " + ret);
+                }
+                return ret;
             }            
         });        
     }
@@ -102,7 +112,20 @@ public class Homomorphism {
     }
 
     public static int getIndexForVariable(StringOrVariable varname) {
-        return Integer.parseInt(varname.getValue().substring(1)) - 1;
+        int indexStartPos = 0;
+        String val = varname.getValue();
+        
+        while( indexStartPos < val.length() && ! Character.isDigit(val.charAt(indexStartPos)) ) {
+            indexStartPos++;
+        }
+        
+        if( indexStartPos < val.length() ) {
+            return Integer.parseInt(varname.getValue().substring(indexStartPos)) - 1;
+        } else {
+            return -1;
+        }
+        
+        
     }
 
     public Set<String> getDomain() {
@@ -140,7 +163,12 @@ public class Homomorphism {
         
         return false;
     }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
     
 
+    
     
 }

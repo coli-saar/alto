@@ -123,7 +123,7 @@ r2 -> S
         String str = irtg.toString();
         InterpretedTreeAutomaton parsed = iparse(str);
         
-        System.err.println(str)
+//        System.err.println(str)
         
         assert irtg.equals(parsed);
     }

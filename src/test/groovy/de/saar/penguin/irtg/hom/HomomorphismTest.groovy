@@ -14,6 +14,7 @@ import de.saar.chorus.term.parser.*
 import de.saar.chorus.term.*
 import de.up.ling.tree.*
 import static de.saar.penguin.irtg.util.TestingTools.*;
+import de.saar.basic.StringOrVariable
 
 /**
  *
@@ -60,7 +61,14 @@ class HomomorphismTest {
     }
     
 
+    @Test
+    public void testIndexForVar() {
+        assert Homomorphism.getIndexForVariable(new StringOrVariable("?1", true)) == 0;
+        assert Homomorphism.getIndexForVariable(new StringOrVariable("?A3", true)) == 2;
+        assert Homomorphism.getIndexForVariable(new StringOrVariable("?HalloHallo100", true)) == 99;
+    }
 
+    
     /*
     public static Homomorphism hom(Map<String,String> mappings) {
         Homomorphism ret = new Homomorphism();

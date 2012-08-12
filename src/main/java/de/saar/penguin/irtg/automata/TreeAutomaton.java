@@ -406,6 +406,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
         this.filter = filter;
     }
     
+    public void setSkipFail() {
+        filter = new SkipFailRulesFilter<State>();
+    }
+    
     private boolean isRulePrinting(Rule<State> rule) {
         if( filter == null ) {
             return true;
