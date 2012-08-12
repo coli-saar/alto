@@ -9,7 +9,6 @@ import de.saar.penguin.irtg.automata.ConcreteTreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.hom.Homomorphism;
-import de.saar.penguin.irtg.signature.MapSignature;
 import de.up.ling.tree.Tree;
 import java.util.*;
 

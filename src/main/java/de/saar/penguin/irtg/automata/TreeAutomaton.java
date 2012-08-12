@@ -50,6 +50,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected SetMultimap<State, Rule<State>> rulesForRhsState;
     protected Signature signature;
     private Predicate<Rule<State>> filter = null;
+    private boolean debug = false;
 
     public TreeAutomaton(Signature signature) {
         explicitRules = new HashMap<String, StateListToStateMap>();
@@ -702,12 +703,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         }
                     }
                 }
-
-//                if (node.equals(tree.getRoot())) {
-//                    ret.addAll(states);
-//                }
                 
-//                System.err.println(node.getLabel().toString() + childrenValues + " -> " + states);
+                if( debug ) {
+                    System.err.println("\n" + node + ":");
+                    System.err.println("   " + childrenValues + " -> " + states);
+                }
 
                 return states;
             }
@@ -1257,6 +1257,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return false;
         }
     }
+
+    public void setDebug(boolean debug) {
+        this.debug = debug;
+    }
+    
+    
 }
 
 
