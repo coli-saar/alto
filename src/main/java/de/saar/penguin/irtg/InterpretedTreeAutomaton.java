@@ -22,12 +22,14 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.math3.special.Gamma;
 
 /**
  *
@@ -157,6 +159,8 @@ public class InterpretedTreeAutomaton {
         return ret;
     }
 
+    
+
     @CallableFromShell(name = "emtrain")
     public void trainEM(ParsedCorpus trainingData) {
         if (debug) {
@@ -168,51 +172,11 @@ public class InterpretedTreeAutomaton {
         List<TreeAutomaton> parses = new ArrayList<TreeAutomaton>();
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
+        collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
 
-        for (TreeAutomaton parse : trainingData.getAllInstances()) {
-            parses.add(parse);
-
-            Set<Rule> rules = parse.getRuleSet();
-            Map<Rule, Rule> irtorHere = new HashMap<Rule, Rule>();
-            for (Rule intersectedRule : rules) {
-                Object intersectedParent = intersectedRule.getParent();
-                Rule<String> originalRule = getRuleInGrammar(intersectedRule);
-
-                irtorHere.put(intersectedRule, originalRule);
-                originalRuleToIntersectedRules.put(originalRule, intersectedRule);
-            }
-
-            intersectedRuleToOriginalRule.add(irtorHere);
-        }
 
         for (int iteration = 0; iteration < 10; iteration++) {
-            // initialize counts
-            Map<Rule<String>, Double> globalRuleCount = new HashMap<Rule<String>, Double>();
-            for (Rule<String> rule : automaton.getRuleSet()) {
-                globalRuleCount.put(rule, 0.0);
-            }
-
-            // E-step
-            for (int i = 0; i < parses.size(); i++) {
-                TreeAutomaton parse = parses.get(i);
-
-                Map<Object, Double> inside = parse.inside();
-                Map<Object, Double> outside = parse.outside(inside);
-
-                for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
-                    Object intersectedParent = intersectedRule.getParent();
-                    Rule<String> originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
-
-                    double oldRuleCount = globalRuleCount.get(originalRule);
-                    double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight();
-
-                    for (int j = 0; j < intersectedRule.getArity(); j++) {
-                        thisRuleCount *= inside.get(intersectedRule.getChildren()[j]);
-                    }
-
-                    globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
-                }
-            }
+            Map<Rule<String>, Double> globalRuleCount = estep(parses, intersectedRuleToOriginalRule);
 
             // sum over rules with same parent state to obtain state counts
             Map<String, Double> globalStateCount = new HashMap<String, Double>();
@@ -239,9 +203,136 @@ public class InterpretedTreeAutomaton {
             }
         }
     }
+    
+    /**
+     * Performs Variational Bayes training of the IRTG, given a corpus of charts.
+     * This implements the algorithm from Jones et al., "Semantic Parsing with
+     * Bayesian Tree Transducers", ACL 2012.
+     * 
+     * @param trainingData a corpus of parse charts
+     */
+    @CallableFromShell(name = "vbtrain")
+    public void trainVB(ParsedCorpus trainingData) {
+        // memorize mapping between
+        // rules of the parse charts and rules of the underlying RTG
+        List<TreeAutomaton> parses = new ArrayList<TreeAutomaton>();
+        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
+        collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, null);
+        
+        // initialize hyperparameters
+        List<Rule<String>> automatonRules = new ArrayList<Rule<String>>(getAutomaton().getRuleSet()); // bring rules in defined order
+        int numRules = automatonRules.size();
+        double[] alpha = new double[numRules];        
+        Arrays.fill(alpha, 1.0); // might want to initialize them differently
+        
+        // iterate
+        for( int iteration = 0; iteration < 10; iteration++ ) {
+            // for each state, compute sum of alphas for outgoing rules
+            Map<String,Double> sumAlphaForSameParent = new HashMap<String, Double>();
+            for( int i = 0; i < numRules; i++ ) {
+                String parent = automatonRules.get(i).getParent();
+                if( sumAlphaForSameParent.containsKey(parent)) {
+                    sumAlphaForSameParent.put(parent, sumAlphaForSameParent.get(parent) + alpha[i]);
+                } else {
+                    sumAlphaForSameParent.put(parent, alpha[i]);
+                }
+            }
+            
+            // re-estimate rule weights
+            for( int i = 0; i < numRules; i++ ) {
+                Rule<String> rule = automatonRules.get(i);
+                rule.setWeight(Math.exp(Gamma.digamma(alpha[i]) - Gamma.digamma(sumAlphaForSameParent.get(rule.getParent()))));
+            }
+            
+            // re-estimate hyperparameters
+            Map<Rule<String>, Double> ruleCounts = estep(parses, intersectedRuleToOriginalRule);
+            for( int i = 0; i < numRules; i++ ) {
+                alpha[i] += ruleCounts.get(automatonRules.get(i));
+            }
+        }
+    }
+
+    
+    /**
+     * Performs the E-step of the EM algorithm.
+     * This means that the expected counts are computed for all rules that occur in the
+     * parsed corpus.
+     * 
+     * @param parses
+     * @param intersectedRuleToOriginalRule
+     * @return 
+     */
+    private Map<Rule<String>, Double> estep(List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule) {
+        Map<Rule<String>, Double> globalRuleCount = new HashMap<Rule<String>, Double>();
+        for (Rule<String> rule : automaton.getRuleSet()) {
+            globalRuleCount.put(rule, 0.0);
+        }
+
+        for (int i = 0; i < parses.size(); i++) {
+            TreeAutomaton parse = parses.get(i);
+
+            Map<Object, Double> inside = parse.inside();
+            Map<Object, Double> outside = parse.outside(inside);
+
+            for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
+                Object intersectedParent = intersectedRule.getParent();
+                Rule<String> originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
+
+                double oldRuleCount = globalRuleCount.get(originalRule);
+                double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight();
+
+                for (int j = 0; j < intersectedRule.getArity(); j++) {
+                    thisRuleCount *= inside.get(intersectedRule.getChildren()[j]);
+                }
+
+                globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
+            }
+        }
+
+        return globalRuleCount;
+    }
+    
+    /**
+     * Extracts the parse charts from the training data. Furthermore,
+     * computes mappings from the rules in the training data to the rules
+     * in the underlying automaton of the IRTG, and vice versa.
+     * You may set "originalRulesToIntersectedRules" to null if you don't
+     * care about this mapping.
+     * 
+     * @param trainingData
+     * @param parses
+     * @param intersectedRuleToOriginalRule
+     * @param originalRuleToIntersectedRules 
+     */
+    private void collectParsesAndRules(ParsedCorpus trainingData, List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
+        parses.clear();
+        intersectedRuleToOriginalRule.clear();
+        
+        if( originalRuleToIntersectedRules != null ) {
+            originalRuleToIntersectedRules.clear();
+        }
+        
+        for (TreeAutomaton parse : trainingData.getAllInstances()) {
+            parses.add(parse);
+
+            Set<Rule> rules = parse.getRuleSet();
+            Map<Rule, Rule> irtorHere = new HashMap<Rule, Rule>();
+            for (Rule intersectedRule : rules) {
+                Rule<String> originalRule = getRuleInGrammar(intersectedRule);
+
+                irtorHere.put(intersectedRule, originalRule);
+
+                if (originalRuleToIntersectedRules != null) {
+                    originalRuleToIntersectedRules.put(originalRule, intersectedRule);
+                }
+            }
+
+            intersectedRuleToOriginalRule.add(irtorHere);
+        }
+    }
 
     // safe but inefficient
-    private Rule<String> getRuleInGrammar(Rule intersectedRule) {
+    Rule<String> getRuleInGrammar(Rule intersectedRule) {
         List<String> firstChildStates = new ArrayList<String>();
         String firstParentState = (String) getFirstEntry(intersectedRule.getParent());
         for (Object pairState : intersectedRule.getChildren()) {
@@ -324,14 +415,14 @@ public class InterpretedTreeAutomaton {
         if (orderedInterpretationList.size() != 2) {
             throw new UnsupportedOperationException("trying to binarize " + orderedInterpretationList.size() + " interpretations");
         }
-        
+
         String interpName1 = orderedInterpretationList.get(0);
         String interpName2 = orderedInterpretationList.get(1);
         Interpretation interp1 = interpretations.get(interpName1);
         Interpretation interp2 = interpretations.get(interpName2);
         RegularBinarizer bin1 = binarizers.get(interpName1);
         RegularBinarizer bin2 = binarizers.get(interpName2);
-        
+
         // select a constant as dummy symbol from both algebras 
         StringOrVariable constantL = getConstantFromAlgebra(interp1.getHomomorphism());
         StringOrVariable constantR = getConstantFromAlgebra(interp2.getHomomorphism());
@@ -340,23 +431,22 @@ public class InterpretedTreeAutomaton {
         ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
         Homomorphism newLeftHom = new Homomorphism(newAuto.getSignature(), interp1.getHomomorphism().getTargetSignature());
         Homomorphism newRightHom = new Homomorphism(newAuto.getSignature(), interp2.getHomomorphism().getTargetSignature());
-        
-        for (Rule rule : automaton.getRuleSet()) {  
+
+        for (Rule rule : automaton.getRuleSet()) {
             TreeAutomaton leftAutomaton = bin1.binarizeWithVariables(interp1.getHomomorphism().get(rule.getLabel()));
             TreeAutomaton rightAutomaton = bin2.binarizeWithVariables(interp2.getHomomorphism().get(rule.getLabel()));
             sb.binarize(rule, leftAutomaton, rightAutomaton, newAuto, newLeftHom, newRightHom);
         }
         for (String state : automaton.getFinalStates()) {
             newAuto.addFinalState(state);
-        }        
+        }
         InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAuto);
         ret.addInterpretation(interpName1, new Interpretation(bin1.getOutputAlgebra(), newLeftHom));
         ret.addInterpretation(interpName2, new Interpretation(bin2.getOutputAlgebra(), newRightHom));
 
         return ret;
     }
-   
-    
+
     private StringOrVariable getConstantFromAlgebra(Homomorphism hom) {
         for (String label : hom.getDomain()) {
             StringOrVariable constant = hom.get(label).dfs(new TreeVisitor<StringOrVariable, Void, StringOrVariable>() {
@@ -365,12 +455,12 @@ public class InterpretedTreeAutomaton {
                     if (node.getChildren().isEmpty() && !node.getLabel().isVariable()) {
                         return node.getLabel();
                     }
-               
+
                     for (int i = 0; i < childrenValues.size(); i++) {
-                        if (childrenValues.get(i) != null ) {
+                        if (childrenValues.get(i) != null) {
                             return childrenValues.get(i);
                         }
-                    } 
+                    }
                     return null;
                 }
             });
@@ -380,19 +470,18 @@ public class InterpretedTreeAutomaton {
         }
         throw new UnsupportedOperationException("Cannot find any symbols with arity 0 for this algebra.");
     }
-    
-    
+
     @CallableFromShell
     public InterpretedTreeAutomaton testBinarize() {
         RegularBinarizer bin1 = new StringAlgebraBinarizer();
         RegularBinarizer bin2 = new StringAlgebraBinarizer();
-        Map<String,RegularBinarizer> binarizers = new HashMap<String, RegularBinarizer>();
-        binarizers.put("i1",bin1);
-        binarizers.put("i2",bin2);
+        Map<String, RegularBinarizer> binarizers = new HashMap<String, RegularBinarizer>();
+        binarizers.put("i1", bin1);
+        binarizers.put("i2", bin2);
         InterpretedTreeAutomaton newAuto = binarize(binarizers);
         return newAuto;
     }
-    
+
     @CallableFromShell
     public InterpretedTreeAutomaton binarize() {
         /*
@@ -548,6 +637,4 @@ public class InterpretedTreeAutomaton {
         }
         return true;
     }
-    
-    
 }
