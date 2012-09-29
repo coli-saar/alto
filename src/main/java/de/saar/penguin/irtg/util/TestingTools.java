@@ -7,11 +7,15 @@ package de.saar.penguin.irtg.util;
 import de.saar.basic.StringOrVariable;
 import de.saar.chorus.term.Term;
 import de.saar.chorus.term.parser.TermParser;
+import de.saar.penguin.irtg.automata.ParseException;
+import de.saar.penguin.irtg.automata.TreeAutomaton;
+import de.saar.penguin.irtg.automata.TreeAutomatonParser;
 import de.saar.penguin.irtg.hom.Homomorphism;
 import de.saar.penguin.irtg.signature.MapSignature;
 import de.saar.penguin.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
+import java.io.StringReader;
 import java.util.Map;
 
 /**
@@ -26,6 +30,10 @@ public class TestingTools {
     public static Tree<StringOrVariable> ptv(String s) {
         Term x = TermParser.parse(s);
         return x.toTreeWithVariables();
+    }
+    
+    public static TreeAutomaton pa(String s) throws ParseException {
+        return TreeAutomatonParser.parse(new StringReader(s));
     }
     
     public static Homomorphism hom(Map<String,String> mappings, Signature sourceSignature) {

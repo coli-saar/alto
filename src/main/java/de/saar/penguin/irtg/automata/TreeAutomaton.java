@@ -1022,7 +1022,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     private class LanguageIterable implements Iterable<Tree<String>> {
         public Iterator<Tree<String>> iterator() {
-            return new LanguageIterator();
+            return new LanguageIterator(sortedLanguageIterator());
         }
     }
 
@@ -1036,7 +1036,48 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return new LanguageIterable();
     }
 
-    /**
+    public Iterator<Tree<String>> languageIterator() {
+        return new LanguageIterator(sortedLanguageIterator());
+    }
+    
+    public Iterator<WeightedTree> sortedLanguageIterator() {
+        return new SortedLanguageIterator<State>(this);
+    }
+    
+    
+    private class LanguageIterator implements Iterator<Tree<String>> {
+        private Iterator<WeightedTree> it;
+
+        public LanguageIterator(Iterator<WeightedTree> it) {
+            this.it = it;
+        }
+        
+        
+        @Override
+        public boolean hasNext() {
+            return it.hasNext();
+        }
+
+        @Override
+        public Tree<String> next() {
+            WeightedTree n = it.next();
+            
+            if( n == null ) {
+                return null;
+            } else {
+                return n.getTree();
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported.");
+        }
+        
+    }
+    
+    
+        /**
      * Returns an iterator over the language of this tree automaton.
      *
      * This only works reliably if the automaton is non-recursive, i.e. the
@@ -1053,214 +1094,212 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
-    public Iterator<Tree<String>> languageIterator() {
-        return new LanguageIterator();
-    }
 
-    private class LanguageIterator implements Iterator<Tree<String>> {
-        private Map<State, Tree<String>> tree = new HashMap<State, Tree<String>>();
-        private Map<State, List<Rule<State>>> rules = new HashMap<State, List<Rule<State>>>();
-        private Map<State, Integer> currentRule = new HashMap<State, Integer>();
-        private State finalState;
-        private boolean first = true;
-
-        public LanguageIterator() {
-            assert getFinalStates().size() == 1;
-            finalState = getFinalStates().iterator().next();
-            Comparator<Rule<State>> cyclicityComparator = new RuleCyclicityComparator();
-
-            for (State state : getAllStates()) {
-                // cache ordered list of all top-down rules for each state
-                List<Rule<State>> rulesForThisState = new ArrayList<Rule<State>>();
-                for (String label : getSignature().getSymbols()) {
-                    rulesForThisState.addAll(getRulesTopDown(label, state));
-                }
-
-                Collections.sort(rulesForThisState, cyclicityComparator);
-                rules.put(state, rulesForThisState);
-
-                // create tree object for each state
-                Tree<String> treeForState = Tree.create("");
-                treeForState.setCachingPolicy(false);
-
-                tree.put(state, treeForState);
-
-                // initialize rule indices
-                currentRule.put(state, 0);
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return checkHasNext(finalState);
-        }
-
-        private boolean checkHasNext(State state) {
-            int currentIndex = currentRule.get(state);
-            int numRules = rules.get(state).size();
-
-            // if the state has already been advanced past its limit, 
-            // it has no next tree
-            if (currentIndex >= numRules) {
-                return false;
-            }
-
-            // tree for this state can be advanced if the state has
-            // more rules
-            if (currentIndex < numRules - 1) {
-                return true;
-            }
-
-            // or if one of the children of the current rule can be advanced
-            for (State child : rules.get(state).get(currentIndex).getChildren()) {
-                if (checkHasNext(child)) {
-                    return true;
-                }
-            }
-
-            // otherwise, not
-            return false;
-        }
-
-        @Override
-        public Tree<String> next() {
-            boolean hasNext;
-
-            if (first) {
-                hasNext = first(finalState);
-                first = false;
-            } else {
-                hasNext = next(finalState);
-            }
-
-            if (hasNext) {
-                return tree.get(finalState);
-            } else {
-                throw new NoSuchElementException();
-            }
-        }
-
-        /*
-         * Initializes the data structures such that the first tree
-         * of all trees that can be built from state is selected.
-         */
-        private boolean first(State state) {
-            if (rules.get(state).isEmpty()) {
-                return false;
-            } else {
-                currentRule.put(state, 0);
-
-                Rule<State> current = rules.get(state).get(0);
-                return initializeWithRule(state, current);
-            }
-        }
-
-        /*
-         * Initializes the data structures such that the next tree
-         * is selected from the list of trees that can be built from state.
-         * If this is not possible, the method returns false.
-         */
-        private boolean next(State state) {
-            List<Rule<State>> rulesThisState = rules.get(state);
-            int currentIndex = currentRule.get(state);
-            Rule<State> current = rulesThisState.get(currentIndex);
-            int n = current.getArity();
-
-            // try to advance the tree for state by advancing a child
-            for (int i = n - 1; i >= 0; i--) {
-                if (next(current.getChildren()[i])) {
-                    for (int j = i + 1; j < n; j++) {
-                        first(current.getChildren()[j]);
-                    }
-
-                    return true;
-                }
-            }
-
-            // if that didn't work, advance to the next rule for this state
-            while (currentIndex < rulesThisState.size() - 1) {
-                currentIndex++;
-                currentRule.put(state, currentIndex);
-
-                // if we don't manage to build a tree using the new rule,
-                // skip that rule and try the next, until we run out of rules
-                if (initializeWithRule(state, rulesThisState.get(currentIndex))) {
-                    return true;
-                }
-            }
-
-            // if we ran out of rules for this state, return false
-            return false;
-        }
-
-        /**
-         * Initializes the data structures such that the given rule is used for
-         * building the tree for this state. Call this whenever a new rule has
-         * been selected for a state (e.g. by modifying currentRule[state]).
-         *
-         * @param state
-         * @param rule
-         * @return
-         */
-        private boolean initializeWithRule(State state, Rule<State> rule) {
-            Tree<String> treeHere = tree.get(state);
-
-            // open-heart surgery on the Tree object:
-            // destructively modify the subtrees to correspond to the
-            // tree objects for the child states of the rule
-            List<Tree<String>> children = treeHere.getChildren();
-            children.clear();
-            for (State child : rule.getChildren()) {
-                children.add(tree.get(child));
-            }
-
-            // also modify node label to fit with rule
-            treeHere.setLabel(rule.getLabel());
-
-            // call first on all subtrees to ensure that they all start
-            // with their own first trees
-            for (State child : rule.getChildren()) {
-                if (!first(child)) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("LanguageIterator does not support removal.");
-        }
-    }
-
-    private class RuleCyclicityComparator implements Comparator<Rule<State>> {
-        // return -1 iff r1 < r2
-        public int compare(Rule<State> r1, Rule<State> r2) {
-            boolean c1 = isCyclic(r1);
-            boolean c2 = isCyclic(r2);
-
-            if (c1 && !c2) {
-                // only r1 cyclic => r2 < r1
-                return 1;
-            } else if (!c1 && c2) {
-                // only r2 cyclic => r1 < r2
-                return -1;
-            } else {
-                return 0;
-            }
-        }
-
-        private boolean isCyclic(Rule<State> r) {
-            for (int i = 0; i < r.getChildren().length; i++) {
-                if (r.getChildren()[i].equals(r.getParent())) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
+//
+//    private class LanguageIterator implements Iterator<Tree<String>> {
+//        private Map<State, Tree<String>> tree = new HashMap<State, Tree<String>>();
+//        private Map<State, List<Rule<State>>> rules = new HashMap<State, List<Rule<State>>>();
+//        private Map<State, Integer> currentRule = new HashMap<State, Integer>();
+//        private State finalState;
+//        private boolean first = true;
+//
+//        public LanguageIterator() {
+//            assert getFinalStates().size() == 1;
+//            finalState = getFinalStates().iterator().next();
+//            Comparator<Rule<State>> cyclicityComparator = new RuleCyclicityComparator();
+//
+//            for (State state : getAllStates()) {
+//                // cache ordered list of all top-down rules for each state
+//                List<Rule<State>> rulesForThisState = new ArrayList<Rule<State>>();
+//                for (String label : getSignature().getSymbols()) {
+//                    rulesForThisState.addAll(getRulesTopDown(label, state));
+//                }
+//
+//                Collections.sort(rulesForThisState, cyclicityComparator);
+//                rules.put(state, rulesForThisState);
+//
+//                // create tree object for each state
+//                Tree<String> treeForState = Tree.create("");
+//                treeForState.setCachingPolicy(false);
+//
+//                tree.put(state, treeForState);
+//
+//                // initialize rule indices
+//                currentRule.put(state, 0);
+//            }
+//        }
+//
+//        @Override
+//        public boolean hasNext() {
+//            return checkHasNext(finalState);
+//        }
+//
+//        private boolean checkHasNext(State state) {
+//            int currentIndex = currentRule.get(state);
+//            int numRules = rules.get(state).size();
+//
+//            // if the state has already been advanced past its limit, 
+//            // it has no next tree
+//            if (currentIndex >= numRules) {
+//                return false;
+//            }
+//
+//            // tree for this state can be advanced if the state has
+//            // more rules
+//            if (currentIndex < numRules - 1) {
+//                return true;
+//            }
+//
+//            // or if one of the children of the current rule can be advanced
+//            for (State child : rules.get(state).get(currentIndex).getChildren()) {
+//                if (checkHasNext(child)) {
+//                    return true;
+//                }
+//            }
+//
+//            // otherwise, not
+//            return false;
+//        }
+//
+//        @Override
+//        public Tree<String> next() {
+//            boolean hasNext;
+//
+//            if (first) {
+//                hasNext = first(finalState);
+//                first = false;
+//            } else {
+//                hasNext = next(finalState);
+//            }
+//
+//            if (hasNext) {
+//                return tree.get(finalState);
+//            } else {
+//                throw new NoSuchElementException();
+//            }
+//        }
+//
+//        /*
+//         * Initializes the data structures such that the first tree
+//         * of all trees that can be built from state is selected.
+//         */
+//        private boolean first(State state) {
+//            if (rules.get(state).isEmpty()) {
+//                return false;
+//            } else {
+//                currentRule.put(state, 0);
+//
+//                Rule<State> current = rules.get(state).get(0);
+//                return initializeWithRule(state, current);
+//            }
+//        }
+//
+//        /*
+//         * Initializes the data structures such that the next tree
+//         * is selected from the list of trees that can be built from state.
+//         * If this is not possible, the method returns false.
+//         */
+//        private boolean next(State state) {
+//            List<Rule<State>> rulesThisState = rules.get(state);
+//            int currentIndex = currentRule.get(state);
+//            Rule<State> current = rulesThisState.get(currentIndex);
+//            int n = current.getArity();
+//
+//            // try to advance the tree for state by advancing a child
+//            for (int i = n - 1; i >= 0; i--) {
+//                if (next(current.getChildren()[i])) {
+//                    for (int j = i + 1; j < n; j++) {
+//                        first(current.getChildren()[j]);
+//                    }
+//
+//                    return true;
+//                }
+//            }
+//
+//            // if that didn't work, advance to the next rule for this state
+//            while (currentIndex < rulesThisState.size() - 1) {
+//                currentIndex++;
+//                currentRule.put(state, currentIndex);
+//
+//                // if we don't manage to build a tree using the new rule,
+//                // skip that rule and try the next, until we run out of rules
+//                if (initializeWithRule(state, rulesThisState.get(currentIndex))) {
+//                    return true;
+//                }
+//            }
+//
+//            // if we ran out of rules for this state, return false
+//            return false;
+//        }
+//
+//        /**
+//         * Initializes the data structures such that the given rule is used for
+//         * building the tree for this state. Call this whenever a new rule has
+//         * been selected for a state (e.g. by modifying currentRule[state]).
+//         *
+//         * @param state
+//         * @param rule
+//         * @return
+//         */
+//        private boolean initializeWithRule(State state, Rule<State> rule) {
+//            Tree<String> treeHere = tree.get(state);
+//
+//            // open-heart surgery on the Tree object:
+//            // destructively modify the subtrees to correspond to the
+//            // tree objects for the child states of the rule
+//            List<Tree<String>> children = treeHere.getChildren();
+//            children.clear();
+//            for (State child : rule.getChildren()) {
+//                children.add(tree.get(child));
+//            }
+//
+//            // also modify node label to fit with rule
+//            treeHere.setLabel(rule.getLabel());
+//
+//            // call first on all subtrees to ensure that they all start
+//            // with their own first trees
+//            for (State child : rule.getChildren()) {
+//                if (!first(child)) {
+//                    return false;
+//                }
+//            }
+//
+//            return true;
+//        }
+//
+//        @Override
+//        public void remove() {
+//            throw new UnsupportedOperationException("LanguageIterator does not support removal.");
+//        }
+//    }
+//
+//    private class RuleCyclicityComparator implements Comparator<Rule<State>> {
+//        // return -1 iff r1 < r2
+//        public int compare(Rule<State> r1, Rule<State> r2) {
+//            boolean c1 = isCyclic(r1);
+//            boolean c2 = isCyclic(r2);
+//
+//            if (c1 && !c2) {
+//                // only r1 cyclic => r2 < r1
+//                return 1;
+//            } else if (!c1 && c2) {
+//                // only r2 cyclic => r1 < r2
+//                return -1;
+//            } else {
+//                return 0;
+//            }
+//        }
+//
+//        private boolean isCyclic(Rule<State> r) {
+//            for (int i = 0; i < r.getChildren().length; i++) {
+//                if (r.getChildren()[i].equals(r.getParent())) {
+//                    return true;
+//                }
+//            }
+//
+//            return false;
+//        }
+//    }
 
     public void setDebug(boolean debug) {
         this.debug = debug;
