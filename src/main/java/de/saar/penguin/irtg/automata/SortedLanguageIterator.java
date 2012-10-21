@@ -8,6 +8,9 @@ import de.saar.basic.StringTools;
 import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;
 import de.up.ling.tree.Tree;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -255,6 +258,8 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                         unevaluatedItems.add(it);
                     }
                 }
+                
+//                evaluateUnevaluatedItems();
 
                 return ret.getWeightedTree();
             }
@@ -349,7 +354,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
      * An evaluated item, consisting of a weighted tree and the
      * original unevaluated item from which it was created.
      */
-    private static class EvaluatedItem implements Comparable<EvaluatedItem> {
+    static class EvaluatedItem implements Comparable<EvaluatedItem> {
         private UnevaluatedItem item;
         private WeightedTree weightedTree;
 
@@ -382,7 +387,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
      * to build a tree for the given rule by combining the i1-best tree for the
      * first child state, the i2-best tree for the second child state, etc.
      */
-    private static class UnevaluatedItem {
+    static class UnevaluatedItem {
         public List<Integer> positionsInChildLists;
 
         public UnevaluatedItem(List<Integer> positionsInChildLists) {
@@ -447,29 +452,26 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         @Override
         public int compare(WeightedTree w1, WeightedTree w2) {
             // streams that can't deliver values right now are dispreferred (= get minimum weight)
-            double weight1 = (w1 == null) ? Double.MIN_VALUE : w1.getWeight();
-            double weight2 = (w2 == null) ? Double.MIN_VALUE : w2.getWeight();
-            
-            // sort descending, i.e. streams with high weights go at the beginning of the list
-            return Double.compare(weight2, weight1);
-        }
-        
-    }
-    
-    private static class WeightedTreeStreamComparator implements Comparator<Stream<WeightedTree>> {
-        public static WeightedTreeStreamComparator INSTANCE = new WeightedTreeStreamComparator();
-        
-        @Override
-        public int compare(Stream<WeightedTree> o1, Stream<WeightedTree> o2) {
-            WeightedTree w1 = o1.peek();
-            WeightedTree w2 = o2.peek();
-            
-            // streams that can't deliver values right now are dispreferred (= get minimum weight)
-            double weight1 = (w1 == null) ? Double.MIN_VALUE : w1.getWeight();
-            double weight2 = (w2 == null) ? Double.MIN_VALUE : w2.getWeight();
+            double weight1 = (w1 == null) ? Double.NEGATIVE_INFINITY : w1.getWeight();
+            double weight2 = (w2 == null) ? Double.NEGATIVE_INFINITY : w2.getWeight();
             
             // sort descending, i.e. streams with high weights go at the beginning of the list
             return Double.compare(weight2, weight1);
         }        
+    }
+    
+    public static void main(String[] args) throws ParseException, FileNotFoundException {
+        TreeAutomaton auto = TreeAutomatonParser.parse(new FileReader(new File(args[0])));
+        int k = Integer.parseInt(args[1]);
+        SortedLanguageIterator it = new SortedLanguageIterator(auto);
+        
+        System.out.println(auto);
+        
+        for( int i = 0; i < k; i++ ) {
+            WeightedTree w = it.next();
+            
+            System.out.println("Tree: " + w.getTree());
+            System.out.println("Weight: " + w.getWeight() + "\n");
+        }
     }
 }
