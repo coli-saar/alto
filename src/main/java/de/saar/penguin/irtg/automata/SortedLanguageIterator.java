@@ -9,8 +9,12 @@ import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;
 import de.up.ling.tree.Tree;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -20,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.zip.GZIPInputStream;
 
 /**
  * An iterator for the tree language of an automaton, sorted by descending
@@ -460,8 +465,16 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }        
     }
     
-    public static void main(String[] args) throws ParseException, FileNotFoundException {
-        TreeAutomaton auto = TreeAutomatonParser.parse(new FileReader(new File(args[0])));
+    public static void main(String[] args) throws ParseException, FileNotFoundException, IOException {
+        Reader reader = null;
+        
+        if( args[0].endsWith(".gz")) {
+            reader = new InputStreamReader(new GZIPInputStream(new FileInputStream(new File(args[0]))));
+        } else {
+            reader = new FileReader(new File(args[0]));
+        }        
+        
+        TreeAutomaton auto = TreeAutomatonParser.parse(reader);
         int k = Integer.parseInt(args[1]);
         
         long s = System.currentTimeMillis();
@@ -472,6 +485,8 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         
 //        System.out.println(auto);
         
+        long totalStart = System.currentTimeMillis();
+        long numReadings = 0;
         for( int i = 0; i < k && it.hasNext(); i++ ) {
             long start = System.nanoTime();
             WeightedTree w = it.next();
@@ -479,6 +494,10 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
             
             System.out.println("" + (i+1) + ": " + w.getTree());
             System.out.println("  [" + w.getWeight() + ", " + (end-start)/1000 + " microsec]\n");
+            numReadings++;
         }
+        long totalEnd = System.currentTimeMillis();
+        
+        System.err.println("Enumerated " + numReadings + " trees in " + (totalEnd-totalStart) + " ms (" + (totalEnd-totalStart+0.0)/numReadings + " ms/tree)");
     }
 }

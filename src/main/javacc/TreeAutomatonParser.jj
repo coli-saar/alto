@@ -44,7 +44,8 @@ SKIP: { <"*/">: DEFAULT | <~[]> }
 
 TOKEN :
 {
-    < NAME:     ["a"-"z","A"-"Z","_", "'", "*", "+"] (["a"-"z","A"-"Z","_", "'", "<", ">", "+", "-", "0"-"9", "*", "."] )* > |
+    < NAME:     ["a"-"z","A"-"Z","_", "*", "$", "@", "+"] (["a"-"z","A"-"Z","_", "<", ">", "+", "-", "0"-"9", "@", "/", "*", ".", "$"] )* > |
+    <QUOTED_NAME: "\'" (~["\'"])* "\'"> |
     <NUMBER : ["0"-"9", "."] (["0"-"9", ".", "e", "E", "-"])* > |
     < FIN_MARK: [ "\u00b0", "!"] > 
    // < NEUTRAL_MARK: ["%"] > |
@@ -70,10 +71,10 @@ void automatonRule() :
     String parentState = null;
 }
 {
-    (label=<NAME>.image "(" childStates=StateList() ")" "->" parentState=State()) {
+    (label=name() "(" childStates=StateList() ")" "->" parentState=State()) {
       lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
     }
-    | (label=<NAME>.image "->" parentState=State()) {
+    | (label=name() "->" parentState=State()) {
       lastSeenRule = automaton.addRule(label.intern(), new ArrayList<String>(), parentState);
     }
 
@@ -94,7 +95,7 @@ String State() :
   String fin_mark = null;
 }
 {
-  state = <NAME>.image (fin_mark = <FIN_MARK>.image)* {
+  state = name() (fin_mark = <FIN_MARK>.image)* {
     internedState = state.intern();
     if( fin_mark != null ) {
       automaton.addFinalState(internedState);
@@ -103,6 +104,17 @@ String State() :
     return internedState;
   }
 }
+
+
+String name() :
+{
+    Token tok;
+}
+{
+    tok = <NAME> { return tok.image.intern(); }
+    | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1).intern(); }
+}
+
 
 
 void Weight() :
