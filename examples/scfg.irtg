@@ -3,8 +3,6 @@ interpretation english: de.saar.penguin.irtg.algebra.StringAlgebra
 interpretation german: de.saar.penguin.irtg.algebra.StringAlgebra
 
 
-
-
 r1(NP,VP) -> S!
   [english] *(?1,?2)
   [german] *(?1,?2)
@@ -57,3 +55,6 @@ r11 -> N
 r12 -> P
   [english] with
   [german] mit
+
+
+

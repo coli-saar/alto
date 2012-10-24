@@ -53,6 +53,6 @@ class RegularBinarizerTest {
                 pt("*(*( *(*('?1','?2'),'?3'), '?4'),'?5')")
             ])
         assertEquals(gold, new HashSet(auto.language()))
-    } 
+    }
 }
 
