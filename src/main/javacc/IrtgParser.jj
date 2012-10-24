@@ -20,6 +20,7 @@ import java.io.*;
 
 import de.saar.penguin.irtg.automata.*;
 import de.saar.penguin.irtg.hom.*;
+import de.saar.penguin.irtg.maxent.*;
 import de.saar.penguin.irtg.algebra.*;
 import de.saar.chorus.term.*;
 import de.up.ling.tree.*;
@@ -32,10 +33,11 @@ import de.saar.basic.*;
  */
 public class IrtgParser {
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
-    private InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(automaton);
     private Map<String,Homomorphism> homomorphisms = new HashMap<String,Homomorphism>();
+    private Map<String,Interpretation> interpretations = new HashMap<String,Interpretation>();
     private String lastSeenTerminal = null;
     private Rule<String> lastSeenRule = null;
+    private Map<String, FeatureFunction> features = new HashMap<String, FeatureFunction>();
 
     private static IrtgParser parser = new IrtgParser(new ByteArrayInputStream(new byte[]{}));
 
@@ -45,7 +47,17 @@ public class IrtgParser {
         parser.ReInit(reader);
 
 	parser.grammar();
-	return parser.irtg;
+
+        InterpretedTreeAutomaton ret = null;
+
+        if( parser.features.isEmpty() ) {
+            ret = new InterpretedTreeAutomaton(parser.automaton);
+        } else {
+            ret = new MaximumEntropyIrtg(parser.automaton, parser.features);
+        }
+
+        ret.addAllInterpretations(parser.interpretations);
+        return ret;
     }
 }
 PARSER_END(IrtgParser)
@@ -57,6 +69,7 @@ SKIP: { <"*/">: DEFAULT | <~[]> }
 TOKEN :
 {
     <INTERPRETATION: "interpretation"> |
+    <FEATURE: "feature"> |
     < NAME:     ["a"-"z","A"-"Z","_", "*", "$", "@", "+"] (["a"-"z","A"-"Z","_", "<", ">", "+", "-", "0"-"9", "@", "/", "*", ".", "$"] )* > |
     <QUOTED_NAME: "\'" (~["\'"])* "\'"> |
     <VARIABLE : ["?"] (["a"-"z", "A"-"Z", "_", "0"-"9", "-"])*> |
@@ -69,7 +82,7 @@ void grammar() :
 }
 {
     (InterpretationDeclaration() ) +
-    (RuleWithHomomorphisms() ) +
+    (RuleWithHomomorphisms() | FeatureDeclaration() ) +
 }
 
 void InterpretationDeclaration() :
@@ -84,7 +97,7 @@ void InterpretationDeclaration() :
         Algebra algebra = (Algebra) algebraClass.newInstance();
         Homomorphism hom = new Homomorphism(automaton.getSignature(), algebra.getSignature());
 
-        irtg.addInterpretation(id, new Interpretation(algebra, hom));
+        interpretations.put(id, new Interpretation(algebra, hom));
         homomorphisms.put(id, hom);
        } catch(Exception e) {
         throw new ParseException("Could not instantiate algebra class " + classname + " for interpretation " + id + ": " + e.toString());
@@ -212,6 +225,23 @@ Term Term() :
   | token = <VARIABLE> {
   	  return new Variable(token.image.intern());
   }
+}
+
+void FeatureDeclaration() :
+{
+    String id;
+    String classname;
+}
+{
+    <FEATURE> id=name() ":" classname=ClassName() {
+       try {
+        Class featureClass = Class.forName(classname);
+        FeatureFunction feature = (FeatureFunction) featureClass.newInstance();
+        features.put(id, feature);
+       } catch(Exception e) {
+        throw new ParseException("Could not instantiate FeatureFunction class " + classname + " for feature " + id + ": " + e.toString());
+       }
+     }
 }
 
 String name() :

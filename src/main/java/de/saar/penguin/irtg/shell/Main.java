@@ -8,7 +8,7 @@ import de.saar.basic.StringTools;
 import de.saar.penguin.irtg.InterpretedTreeAutomaton;
 import de.saar.penguin.irtg.IrtgParser;
 import de.saar.penguin.irtg.ParseException;
-import de.saar.penguin.irtg.ParsedCorpus;
+import de.saar.penguin.irtg.ChartCorpus;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.shell.Shell;
 import de.up.ling.shell.ShutdownShellException;
@@ -59,9 +59,9 @@ public class Main {
     }
     
     @CallableFromShell
-    public ParsedCorpus readParsedCorpus(Reader reader) throws IOException, ClassNotFoundException {
+    public ChartCorpus readParsedCorpus(Reader reader) throws IOException, ClassNotFoundException {
         String filename = StringTools.slurp(reader);
-        return ParsedCorpus.read(new FileInputStream(new File(filename)));
+        return ChartCorpus.read(new FileInputStream(new File(filename)));
     }
 
     @CallableFromShell

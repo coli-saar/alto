@@ -36,9 +36,9 @@ import org.apache.commons.math3.special.Gamma;
  * @author koller
  */
 public class InterpretedTreeAutomaton {
-    private TreeAutomaton<String> automaton;
-    private Map<String, Interpretation> interpretations;
-    private boolean debug = false;
+    protected TreeAutomaton<String> automaton;
+    protected Map<String, Interpretation> interpretations;
+    protected boolean debug = false;
 
     public InterpretedTreeAutomaton(TreeAutomaton<String> automaton) {
         this.automaton = automaton;
@@ -47,6 +47,10 @@ public class InterpretedTreeAutomaton {
 
     public void addInterpretation(String name, Interpretation interp) {
         interpretations.put(name, interp);
+    }
+
+    public void addAllInterpretations(Map<String, Interpretation> interps) {
+        interpretations.putAll(interps);
     }
 
     @CallableFromShell(name = "automaton")
@@ -159,10 +163,53 @@ public class InterpretedTreeAutomaton {
         return ret;
     }
 
-    
+    @CallableFromShell(name = "mltrain")
+    public void trainML(AnnotatedCorpus trainingData) throws UnsupportedOperationException {
+        final Map<String, Rule<String>> ruleForTerminal = new HashMap<String, Rule<String>>();
+        final Map<String, Long> ruleCounts = new HashMap<String, Long>();
+        final Map<String, Long> stateCounts = new HashMap<String, Long>();
+
+        // initialize data
+        for (Rule<String> rule : automaton.getRuleSet()) {
+            if (ruleForTerminal.containsKey(rule.getLabel())) {
+                throw new UnsupportedOperationException("ML training only supported if no two rules use the same terminal symbol.");
+            }
+
+            ruleForTerminal.put(rule.getLabel(), rule);
+            ruleCounts.put(rule.getLabel(), 0L);
+            stateCounts.put(rule.getParent(), 0L);
+        }
+
+        // compute absolute frequencies on annotated corpus
+        for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
+            instance.tree.dfs(new TreeVisitor<String, Void, Void>() {
+                @Override
+                public Void visit(Tree<String> node, Void data) {
+                    Rule<String> rule = ruleForTerminal.get(node.getLabel());
+
+                    ruleCounts.put(node.getLabel(), ruleCounts.get(node.getLabel()) + 1);
+                    stateCounts.put(rule.getParent(), stateCounts.get(rule.getParent()) + 1);
+
+                    return null;
+                }
+            });
+        }
+
+        // set all rule weights according to counts
+        for (String label : ruleForTerminal.keySet()) {
+            Rule<String> rule = ruleForTerminal.get(label);
+            long stateCount = stateCounts.get(rule.getParent());
+
+            if (stateCount == 0) {
+                rule.setWeight(0.0);
+            } else {
+                rule.setWeight(((double) ruleCounts.get(label)) / stateCount);
+            }
+        }
+    }
 
     @CallableFromShell(name = "emtrain")
-    public void trainEM(ParsedCorpus trainingData) {
+    public void trainEM(ChartCorpus trainingData) {
         if (debug) {
             System.out.println("\n\nInitial model:\n" + automaton);
         }
@@ -203,66 +250,64 @@ public class InterpretedTreeAutomaton {
             }
         }
     }
-    
+
     /**
-     * Performs Variational Bayes training of the IRTG, given a corpus of charts.
-     * This implements the algorithm from Jones et al., "Semantic Parsing with
-     * Bayesian Tree Transducers", ACL 2012.
-     * 
+     * Performs Variational Bayes training of the IRTG, given a corpus of
+     * charts. This implements the algorithm from Jones et al., "Semantic
+     * Parsing with Bayesian Tree Transducers", ACL 2012.
+     *
      * @param trainingData a corpus of parse charts
      */
     @CallableFromShell(name = "vbtrain")
-    public void trainVB(ParsedCorpus trainingData) {
+    public void trainVB(ChartCorpus trainingData) {
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
         List<TreeAutomaton> parses = new ArrayList<TreeAutomaton>();
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, null);
-        
+
         // initialize hyperparameters
         List<Rule<String>> automatonRules = new ArrayList<Rule<String>>(getAutomaton().getRuleSet()); // bring rules in defined order
         int numRules = automatonRules.size();
-        double[] alpha = new double[numRules];        
+        double[] alpha = new double[numRules];
         Arrays.fill(alpha, 1.0); // might want to initialize them differently
-        
+
         // iterate
-        for( int iteration = 0; iteration < 10; iteration++ ) {
+        for (int iteration = 0; iteration < 10; iteration++) {
             // for each state, compute sum of alphas for outgoing rules
-            Map<String,Double> sumAlphaForSameParent = new HashMap<String, Double>();
-            for( int i = 0; i < numRules; i++ ) {
+            Map<String, Double> sumAlphaForSameParent = new HashMap<String, Double>();
+            for (int i = 0; i < numRules; i++) {
                 String parent = automatonRules.get(i).getParent();
-                if( sumAlphaForSameParent.containsKey(parent)) {
+                if (sumAlphaForSameParent.containsKey(parent)) {
                     sumAlphaForSameParent.put(parent, sumAlphaForSameParent.get(parent) + alpha[i]);
                 } else {
                     sumAlphaForSameParent.put(parent, alpha[i]);
                 }
             }
-            
+
             // re-estimate rule weights
-            for( int i = 0; i < numRules; i++ ) {
+            for (int i = 0; i < numRules; i++) {
                 Rule<String> rule = automatonRules.get(i);
                 rule.setWeight(Math.exp(Gamma.digamma(alpha[i]) - Gamma.digamma(sumAlphaForSameParent.get(rule.getParent()))));
             }
-            
+
             // re-estimate hyperparameters
             Map<Rule<String>, Double> ruleCounts = estep(parses, intersectedRuleToOriginalRule);
-            for( int i = 0; i < numRules; i++ ) {
+            for (int i = 0; i < numRules; i++) {
                 alpha[i] += ruleCounts.get(automatonRules.get(i));
             }
         }
     }
 
-    
     /**
-     * Performs the E-step of the EM algorithm.
-     * This means that the expected counts are computed for all rules that occur in the
-     * parsed corpus.
-     * 
+     * Performs the E-step of the EM algorithm. This means that the expected
+     * counts are computed for all rules that occur in the parsed corpus.
+     *
      * @param parses
      * @param intersectedRuleToOriginalRule
-     * @return 
+     * @return
      */
-    private Map<Rule<String>, Double> estep(List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule) {
+    protected Map<Rule<String>, Double> estep(List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule) {
         Map<Rule<String>, Double> globalRuleCount = new HashMap<Rule<String>, Double>();
         for (Rule<String> rule : automaton.getRuleSet()) {
             globalRuleCount.put(rule, 0.0);
@@ -291,27 +336,27 @@ public class InterpretedTreeAutomaton {
 
         return globalRuleCount;
     }
-    
+
     /**
-     * Extracts the parse charts from the training data. Furthermore,
-     * computes mappings from the rules in the training data to the rules
-     * in the underlying automaton of the IRTG, and vice versa.
-     * You may set "originalRulesToIntersectedRules" to null if you don't
-     * care about this mapping.
-     * 
+     * Extracts the parse charts from the training data. Furthermore, computes
+     * mappings from the rules in the training data to the rules in the
+     * underlying automaton of the IRTG, and vice versa. You may set
+     * "originalRulesToIntersectedRules" to null if you don't care about this
+     * mapping.
+     *
      * @param trainingData
      * @param parses
      * @param intersectedRuleToOriginalRule
-     * @param originalRuleToIntersectedRules 
+     * @param originalRuleToIntersectedRules
      */
-    private void collectParsesAndRules(ParsedCorpus trainingData, List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
+    private void collectParsesAndRules(ChartCorpus trainingData, List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
         parses.clear();
         intersectedRuleToOriginalRule.clear();
-        
-        if( originalRuleToIntersectedRules != null ) {
+
+        if (originalRuleToIntersectedRules != null) {
             originalRuleToIntersectedRules.clear();
         }
-        
+
         for (TreeAutomaton parse : trainingData.getAllInstances()) {
             parses.add(parse);
 
@@ -361,53 +406,8 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell
-    public ParsedCorpus parseCorpus(Reader reader) throws IOException {
-        BufferedReader br = new BufferedReader(reader);
-        ParsedCorpus ret = new ParsedCorpus();
-        List<String> interpretationOrder = new ArrayList<String>();
-        Map<String, Object> currentInputs = new HashMap<String, Object>();
-        int currentInterpretationIndex = 0;
-        int lineNumber = 0;
-
-        while (true) {
-            String line = br.readLine();
-
-            if (line == null) {
-                return ret;
-            }
-
-            if (line.equals("")) {
-                continue;
-            }
-
-            if (lineNumber < getInterpretations().size()) {
-                interpretationOrder.add(line);
-            } else {
-                String current = interpretationOrder.get(currentInterpretationIndex);
-                Interpretation currentInterpretation = interpretations.get(current);
-
-                try {
-                    Object inputObject = parseString(current, line);
-                    currentInputs.put(current, inputObject);
-                } catch (ParserException ex) {
-                    System.out.println("An error occurred while parsing " + reader + ", line " + (lineNumber + 1) + ": " + ex.getMessage());
-                    return null;
-                }
-
-                currentInterpretationIndex++;
-                if (currentInterpretationIndex >= interpretationOrder.size()) {
-                    TreeAutomaton chart = parseInputObjects(currentInputs);
-                    chart.makeAllRulesExplicit();
-                    chart = chart.reduceBottomUp(); //.makeConcreteAutomaton();
-                    ret.addInstance(chart);
-
-                    currentInputs.clear();
-                    currentInterpretationIndex = 0;
-                }
-            }
-
-            lineNumber++;
-        }
+    public ChartCorpus parseCorpus(Reader reader) throws IOException {
+        return ChartCorpus.parseCorpus(reader, this);
     }
 
     public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {

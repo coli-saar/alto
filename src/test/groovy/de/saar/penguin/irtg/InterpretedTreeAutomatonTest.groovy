@@ -81,7 +81,7 @@ r2 -> S
     @Test
     public void testEM() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        ParsedCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        ChartCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
         irtg.trainEM(pco);
         
         assert true;
@@ -90,14 +90,14 @@ r2 -> S
     @Test
     public void testParseCorpus() {
        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        ParsedCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        ChartCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
         assertEquals(3, pco.getAllInstances().size());
     }
     
     @Test
     public void testSerializeParsedCorpus() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        ParsedCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        ChartCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
         
         ByteArrayOutputStream ostream = new ByteArrayOutputStream();
         pco.write(ostream);
@@ -106,7 +106,7 @@ r2 -> S
         byte[] buf = ostream.toByteArray();
 
         ByteArrayInputStream istream = new ByteArrayInputStream(buf);
-        ParsedCorpus copy = ParsedCorpus.read(istream);
+        ChartCorpus copy = ChartCorpus.read(istream);
         istream.close();
         
         irtg.trainEM(copy);
@@ -117,6 +117,32 @@ r2 -> S
     @Test
     public void testWriteThenParse1() {
         writeThenParse(iparse(CFG_STR))
+    }
+    
+    @Test
+    public void testML() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        AnnotatedCorpus ac = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
+        irtg.trainML(ac);
+        
+        TreeAutomaton auto = irtg.getAutomaton()
+        
+        compareWeight("r4", "VP", 0.5, auto);
+        compareWeight("r5", "VP", 0.5, auto);
+        
+        compareWeight("r7", "NP", 1/3.0, auto);
+        compareWeight("r2", "NP", 2/3.0, auto);
+    }
+    
+    private Rule<String> fr(String label, String parentState, TreeAutomaton rtg) {
+        return rtg.getRulesTopDown(label, parentState).iterator().next();
+    }
+    
+    private void compareWeight(String label, String parentState, double expectedWeight, TreeAutomaton auto) {
+       double actualWeight = fr(label, parentState, auto).getWeight();
+       double diff = Math.abs(actualWeight - actualWeight);
+       
+       assert diff < 0.0001 : "weight of " + label + " is " + actualWeight;
     }
     
     private void writeThenParse(InterpretedTreeAutomaton irtg) {
@@ -194,5 +220,15 @@ john watches the woman with the telescope
 john watches the telescope with the telescope
 john watches the telescope with the woman
 """;
+    
+    private static final String PCFG_MLTRAIN_STR = """
+i
+john watches the woman with the telescope
+r1(r7,r5( r4(r8, r2(r9,r10)), r6(r12, r2(r9,r11))))
+john watches the telescope with the telescope
+r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))
+john watches the telescope with the woman
+r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r10))))
+    """;
 }
 
