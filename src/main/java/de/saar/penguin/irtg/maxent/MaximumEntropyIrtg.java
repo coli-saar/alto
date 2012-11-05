@@ -8,11 +8,14 @@ import de.saar.penguin.irtg.AnnotatedCorpus;
 import de.saar.penguin.irtg.InterpretedTreeAutomaton;
 import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
+import de.saar.penguin.irtg.automata.Rule;
+import de.up.ling.shell.CallableFromShell;
+import java.io.*;
 import java.util.Map;
 import java.util.Set;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 
 /**
  *
@@ -20,7 +23,7 @@ import java.util.Set;
  */
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private Map<String, FeatureFunction> features;
-    private Map<String, Double> weights;
+    private Properties weights;
 
     public MaximumEntropyIrtg(TreeAutomaton<String> automaton, Map<String, FeatureFunction> features) {
         super(automaton);
@@ -37,11 +40,23 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     }
 
     @Override
+    @CallableFromShell(name = "parse")
     public TreeAutomaton parseFromReaders(Map<String, Reader> readers) throws ParserException, IOException {
         TreeAutomaton chart = super.parseFromReaders(readers);
 
-        // TODO: set weights in chart according to features and weights
-
+        Set<Rule<String>> rules = chart.getRuleSet();
+        Iterator<Rule<String>> ruleIter = rules.iterator();
+        while (ruleIter.hasNext()) {
+            Rule<String> rule = ruleIter.next();
+            double weight = 0.0;
+            for(String featureName : this.getFeatureNames()){
+                FeatureFunction featureFunction = this.getFeatureFunction(featureName);
+                double w = Double.valueOf(weights.getProperty(featureName));
+                double f = featureFunction.evaluate(rule);
+                weight += f * w;
+            }
+            rule.setWeight(weight);
+        }
         return chart;
     }
 
@@ -49,8 +64,10 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         // TODO: learn the weights
     }
 
-    public void readWeights(Reader reader) {
-        // TODO: read weights from the reader
+    @CallableFromShell(name = "weights")
+    public void readWeights(Reader reader) throws IOException {
+        weights = new Properties();
+        weights.load(reader);
     }
 
     public void writeWeights(Writer writer) {
