@@ -62,6 +62,23 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
     public void train(AnnotatedCorpus corpus) {
         // TODO: learn the weights
+        
+        // loop until Lambda = (lambda1,...,lambdan) converges:
+        //   foreach sentence s in corpus:
+        //     compute parse chart C for s using p_Lambda
+        //     compute inside and outside probabilities for all states and rules in C
+        //     foreach rule r in C:
+        //       foreach i with f_i(r) != 0
+        //         foreach k, l with inside_k(r) != 0 and outside_l(r) != 0:
+        //           mu<i,k+l> += ptilde(s) / Z_s * f_i(r) * inside_k(r) * outside_l(r)
+        //   foreach i:
+        //     solve sum_k mu<i,k> * e^(k * delta_i) = ptilde(f_i) for delta_i (e.g. using Newton)
+        //     lambda_i += delta_i
+        
+        // Wichtig ist dabei noch, dass Z_s einfach inside(S) ist.
+        // Der Algorithmus verwendet wieder M&T's Trick, Terme zusammenzufassen, in denen der Wert
+        // von f#(x,y) gleich ist, um Rechenzeit zu sparen. ptilde(s) und der Erwartungswert
+        // ptilde(f_i) werden berechnet, wie wir es vorhin besprochen haben.
     }
 
     @CallableFromShell(name = "weights")
