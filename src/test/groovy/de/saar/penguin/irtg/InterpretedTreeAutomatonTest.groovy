@@ -120,6 +120,16 @@ r2 -> S
     }
     
     @Test
+    public void testParseAnnotatedCorpus() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        AnnotatedCorpus pco = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
+        
+        assertEquals(3, pco.getInstances().size());
+        assertEquals(pt("r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))"), pco.getInstances().get(1).tree);
+        assertEquals(["john", "watches", "the", "telescope", "with", "the", "telescope"], pco.getInstances().get(1).inputObjects.get("i"));
+    }
+    
+    @Test
     public void testML() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
         AnnotatedCorpus ac = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);

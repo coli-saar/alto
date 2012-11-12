@@ -79,7 +79,7 @@ public class AnnotatedCorpus {
                     Instance inst = new Instance(derivationTree, currentInputs);
                     ret.instances.add(inst);
 
-                    currentInputs.clear();
+                    currentInputs = new HashMap<String, Object>();
                     currentInterpretationIndex = 0;
                 }
             }
