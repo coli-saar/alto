@@ -30,8 +30,8 @@ class MaximumEntropyIrtgTest {
 
         irtg.readWeights(new StringReader(WEIGHTS_STR));
         TreeAutomaton chart = irtg.parseFromReaders(i:new StringReader(SENTENCE_STR));
-        Set<Rule<String>> rules = chart.getRuleSet();
-        Iterator<Rule<String>> ruleIter = rules.iterator();
+        Set<Rule> rules = chart.getRuleSet();
+        Iterator<Rule> ruleIter = rules.iterator();
         while (ruleIter.hasNext()) {
             Rule<String> rule = ruleIter.next();
             assert rule.getWeight() > 0.0, "Rule weight must be greater than 0.0";
@@ -41,7 +41,7 @@ class MaximumEntropyIrtgTest {
     
     private static final String CFG_STR = """
 interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
-feature f1: de.saar.penguin.irtg.maxent.StaticFeatureFunction
+feature f1: de.saar.penguin.irtg.maxent.StaticFeature
 feature f2: de.saar.penguin.irtg.maxent.DetFeature
 r1(NP,VP) -> S!
   [i] *(?1,?2)
