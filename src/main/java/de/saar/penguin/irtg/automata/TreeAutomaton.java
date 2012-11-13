@@ -401,17 +401,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
         return ret;
     }
-    
+
     public void setRulePrintingFilter(Predicate<Rule<State>> filter) {
         this.filter = filter;
     }
-    
+
     public void setSkipFail() {
         filter = new SkipFailRulesFilter<State>();
     }
-    
+
     private boolean isRulePrinting(Rule<State> rule) {
-        if( filter == null ) {
+        if (filter == null) {
             return true;
         } else {
             return filter.apply(rule);
@@ -475,7 +475,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public String toString() {
         StringBuilder buf = new StringBuilder();
         long countSuppressed = 0;
-        
+
 //        System.err.println("tostring before makeExplicit: " + explicitRules);
 
         Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
@@ -492,14 +492,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 }
             }
         }
-        
-        if( countSuppressed > 0 ) {
+
+        if (countSuppressed > 0) {
             buf.append("(" + countSuppressed + " rules omitted)\n");
         }
 
         return buf.toString();
     }
-    
+
     public String toStringBottomUp() {
         return new UniversalAutomaton(getSignature()).intersect(this).toString();
     }
@@ -683,15 +683,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public <TreeLabels> Set<State> run(final Tree<TreeLabels> tree, final Function<Tree<TreeLabels>, State> subst) {
-//        final Set<State> ret = new HashSet<State>();
-        
         final Set<State> ret = (Set<State>) tree.dfs(new TreeVisitor<TreeLabels, Void, Set<State>>() {
             @Override
             public Set<State> combine(Tree<TreeLabels> node, List<Set<State>> childrenValues) {
                 TreeLabels f = node.getLabel();
                 Set<State> states = new HashSet<State>();
                 State substState = subst.apply(node);
-                
+
                 if (substState != null) {
                     states.add(substState);
                 } else if (childrenValues.isEmpty()) {
@@ -707,8 +705,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         }
                     }
                 }
-                
-                if( debug ) {
+
+                if (debug) {
                     System.err.println("\n" + node + ":");
                     System.err.println("   " + childrenValues + " -> " + states);
                 }
@@ -716,6 +714,60 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 return states;
             }
         });
+
+        return ret;
+    }
+
+    /**
+     * Computes the weight that this (weighted) tree automaton
+     * assigns to the given tree. The weight is the sum of the weights
+     * of all derivations. If the automaton doesn't accept the tree,
+     * then this method returns zero.
+     * 
+     * @param <TreeLabels>
+     * @param tree
+     * @return 
+     */
+    public <TreeLabels> double getWeight(final Tree<TreeLabels> tree) {
+        final List<State> children = new ArrayList<State>();
+        
+        Set<Pair<State, Double>> weights = (Set<Pair<State, Double>>) tree.dfs(new TreeVisitor<TreeLabels, Void, Set<Pair<State, Double>>>() {
+            @Override
+            public Set<Pair<State, Double>> combine(Tree<TreeLabels> node, List<Set<Pair<State, Double>>> childrenValues) {
+                TreeLabels f = node.getLabel();
+                Set<Pair<State, Double>> ret = new HashSet<Pair<State, Double>>();
+                
+                if( childrenValues.isEmpty() ) {
+                    for (Rule<State> rule : getRulesBottomUp(f.toString(), new ArrayList<State>())) {
+                        ret.add(new Pair<State, Double>(rule.getParent(), rule.getWeight()));
+                    }
+                } else {
+                    CartesianIterator<Pair<State,Double>> it = new CartesianIterator<Pair<State,Double>>(childrenValues);
+
+                    while (it.hasNext()) {
+                        List<Pair<State,Double>> pairs = it.next();
+                        double childWeights = 1;
+                        children.clear();
+                        
+                        for( Pair<State,Double> pair : pairs ) {
+                            childWeights *= pair.right;
+                            children.add(pair.left);
+                        }
+                        
+                        for (Rule<State> rule : getRulesBottomUp(f.toString(), children) ) {
+                            ret.add(new Pair<State, Double>(rule.getParent(), childWeights * rule.getWeight()));
+                        }
+                    }
+                }
+                
+                return ret;
+            }
+        });
+
+        double ret = 0;
+        for( Pair<State,Double> w : weights ) {
+            ret += w.right;
+        }
 
         return ret;
     }
@@ -1039,20 +1091,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Iterator<Tree<String>> languageIterator() {
         return new LanguageIterator(sortedLanguageIterator());
     }
-    
+
     public Iterator<WeightedTree> sortedLanguageIterator() {
         return new SortedLanguageIterator<State>(this);
     }
-    
-    
+
     private class LanguageIterator implements Iterator<Tree<String>> {
         private Iterator<WeightedTree> it;
 
         public LanguageIterator(Iterator<WeightedTree> it) {
             this.it = it;
         }
-        
-        
+
         @Override
         public boolean hasNext() {
             return it.hasNext();
@@ -1061,8 +1111,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         @Override
         public Tree<String> next() {
             WeightedTree n = it.next();
-            
-            if( n == null ) {
+
+            if (n == null) {
                 return null;
             } else {
                 return n.getTree();
@@ -1073,11 +1123,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
         public void remove() {
             throw new UnsupportedOperationException("Not supported.");
         }
-        
     }
-    
-    
-        /**
+
+    /**
      * Returns an iterator over the language of this tree automaton.
      *
      * This only works reliably if the automaton is non-recursive, i.e. the
@@ -1094,7 +1142,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
-
 //
 //    private class LanguageIterator implements Iterator<Tree<String>> {
 //        private Map<State, Tree<String>> tree = new HashMap<State, Tree<String>>();
@@ -1300,12 +1347,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //            return false;
 //        }
 //    }
-
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-    
-    
 }
 
 

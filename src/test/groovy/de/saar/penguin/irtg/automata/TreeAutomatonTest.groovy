@@ -49,7 +49,31 @@ class TreeAutomatonTest {
         Tree ta = pt("a");
         assertEquals(new HashSet(["p2","p3"]), auto2.run(ta));
     }
-
+    
+    @Test
+    public void testRunWeights() {
+        TreeAutomaton auto = parse("f(p2,p3) -> p1!\n a -> p2 [0.4]\n a -> p3 [0.6]");
+        Tree t = pt("f(a,a)");
+        
+        assert Math.abs(0.24 - auto.getWeight(t)) < 0.001;
+    }    
+    
+    @Test
+    public void testRunWeightsSumAtRoot() {
+        TreeAutomaton auto = parse("f(p2,p3) -> p1!\n f(p2,p2) -> p1!\n a -> p2 [0.4]\n a -> p3 [0.6]");
+        Tree t = pt("f(a,a)");
+        
+        assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
+    }
+    
+    @Test
+    public void testRunWeightsSumInMiddle() {
+        TreeAutomaton auto = parse("g(p1) -> p0!\n f(p2,p3) -> p1\n f(p2,p2) -> p1\n a -> p2 [0.4]\n a -> p3 [0.6]");
+        Tree t = pt("f(a,a)");
+        
+        assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
+    }
+    
     @Test
     public void testInvHom() {
         TreeAutomaton rhs = parse("c(q12,q23) -> q13\n c(q23,q34) -> q24\n c(q12,q24) -> q14!\n" +
