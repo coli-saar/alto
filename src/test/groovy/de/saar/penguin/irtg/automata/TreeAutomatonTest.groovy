@@ -69,10 +69,19 @@ class TreeAutomatonTest {
     @Test
     public void testRunWeightsSumInMiddle() {
         TreeAutomaton auto = parse("g(p1) -> p0!\n f(p2,p3) -> p1\n f(p2,p2) -> p1\n a -> p2 [0.4]\n a -> p3 [0.6]");
-        Tree t = pt("f(a,a)");
+        Tree t = pt("g(f(a,a))");
         
         assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
     }
+
+    @Test
+    public void testRunWeightsNotInLanguage() {
+        TreeAutomaton auto = parse("g(p1) -> p0!\n f(p2,p3) -> p1\n f(p2,p2) -> p1\n a -> p2 [0.4]\n a -> p3 [0.6]");
+        Tree t = pt("f(a,a)");
+        
+        assert Math.abs(auto.getWeight(t)) < 0.001;
+    }
+
     
     @Test
     public void testInvHom() {

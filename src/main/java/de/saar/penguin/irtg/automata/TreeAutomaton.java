@@ -719,54 +719,55 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Computes the weight that this (weighted) tree automaton
-     * assigns to the given tree. The weight is the sum of the weights
-     * of all derivations. If the automaton doesn't accept the tree,
-     * then this method returns zero.
-     * 
+     * Computes the weight that this (weighted) tree automaton assigns to the
+     * given tree. The weight is the sum of the weights of all derivations. If
+     * the automaton doesn't accept the tree, then this method returns zero.
+     *
      * @param <TreeLabels>
      * @param tree
-     * @return 
+     * @return
      */
     public <TreeLabels> double getWeight(final Tree<TreeLabels> tree) {
         final List<State> children = new ArrayList<State>();
-        
+
         Set<Pair<State, Double>> weights = (Set<Pair<State, Double>>) tree.dfs(new TreeVisitor<TreeLabels, Void, Set<Pair<State, Double>>>() {
             @Override
             public Set<Pair<State, Double>> combine(Tree<TreeLabels> node, List<Set<Pair<State, Double>>> childrenValues) {
                 TreeLabels f = node.getLabel();
                 Set<Pair<State, Double>> ret = new HashSet<Pair<State, Double>>();
-                
-                if( childrenValues.isEmpty() ) {
+
+                if (childrenValues.isEmpty()) {
                     for (Rule<State> rule : getRulesBottomUp(f.toString(), new ArrayList<State>())) {
                         ret.add(new Pair<State, Double>(rule.getParent(), rule.getWeight()));
                     }
                 } else {
-                    CartesianIterator<Pair<State,Double>> it = new CartesianIterator<Pair<State,Double>>(childrenValues);
+                    CartesianIterator<Pair<State, Double>> it = new CartesianIterator<Pair<State, Double>>(childrenValues);
 
                     while (it.hasNext()) {
-                        List<Pair<State,Double>> pairs = it.next();
+                        List<Pair<State, Double>> pairs = it.next();
                         double childWeights = 1;
                         children.clear();
-                        
-                        for( Pair<State,Double> pair : pairs ) {
+
+                        for (Pair<State, Double> pair : pairs) {
                             childWeights *= pair.right;
                             children.add(pair.left);
                         }
-                        
-                        for (Rule<State> rule : getRulesBottomUp(f.toString(), children) ) {
+
+                        for (Rule<State> rule : getRulesBottomUp(f.toString(), children)) {
                             ret.add(new Pair<State, Double>(rule.getParent(), childWeights * rule.getWeight()));
                         }
                     }
                 }
-                
+
                 return ret;
             }
         });
 
         double ret = 0;
-        for( Pair<State,Double> w : weights ) {
-            ret += w.right;
+        for (Pair<State, Double> w : weights) {
+            if (getFinalStates().contains(w.left)) {
+                ret += w.right;
+            }
         }
 
         return ret;
