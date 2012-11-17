@@ -30,51 +30,51 @@ class IrtgParserTest {
 
             /* automaton starts here */
 
-r1(NP,VP) -> S!
+S! -> r1(NP,VP)
   [i] *(?1,?2)
 
 
-r2(Det,N) -> NP
+NP -> r2(Det,N)
   [i] *(?1,?2)
 
 
-r3(N,PP) -> N
+N -> r3(N,PP)
   [i] *(?1,?2)
 
 
-r4(V,NP) -> VP [.6]
+VP -> r4(V,NP) [.6]
   [i] *(?1,?2)
 
 
-r5(VP,PP) -> VP [0.4]
+VP -> r5(VP,PP) [0.4]
   [i] *(?1,?2)
 
 
-r6(P,NP) -> PP
+PP -> r6(P,NP) 
   [i] *(?1,?2)
 
 
-r7 -> NP
+NP -> r7 
   [i] john
 
 
-r8 -> V
+V -> r8 
   [i] watches
 
 
-r9 -> Det
+Det -> r9
   [i] the
 
 
-r10 -> N
+N -> r10
   [i] woman
 
 
-r11 -> N
+N -> r11
   [i] telescope
 
 
-r12 -> P
+P -> r12
   [i] with
 
 
@@ -107,7 +107,7 @@ r12 -> P
         String grammarstring = '''
             interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
-            a -> Foo [i] 'foo bar'
+            Foo -> a [i] 'foo bar'
         ''';
 
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
@@ -124,7 +124,7 @@ r12 -> P
         String grammarstring = '''
             interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
-            a -> Foo [j] bar
+            Foo -> a [j] bar
         ''';
 
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
@@ -135,8 +135,8 @@ r12 -> P
         String grammarstring = '''
             interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
-            a -> Foo [i] bar
-            a -> Fooo [i] baz
+            Foo -> a  [i] bar
+            Fooo -> a  [i] baz
         ''';
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
     }

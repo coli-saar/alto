@@ -475,17 +475,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public String toString() {
         StringBuilder buf = new StringBuilder();
         long countSuppressed = 0;
-
-//        System.err.println("tostring before makeExplicit: " + explicitRules);
-
         Map<String, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
-//        System.err.println("tostring after makeExplicit: " + explicitRules);
 
         for (String f : rules.keySet()) {
             for (List<State> children : rules.get(f).keySet()) {
-                for (Rule rule : rules.get(f).get(children)) {
+                for (Rule<State> rule : rules.get(f).get(children)) {
                     if (isRulePrinting(rule)) {
-                        buf.append(rule.toString() + (getFinalStates().contains(rule.getParent()) ? "!" : "") + "\n");
+                        buf.append(rule.toString(getFinalStates().contains(rule.getParent()))  + "\n");
                     } else {
                         countSuppressed++;
                     }

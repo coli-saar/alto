@@ -78,11 +78,11 @@ public class Rule<State> implements Serializable {
 
     @Override
     public String toString() {
-        return toString("");
+        return toString(false);
     }
     
-    public String toString(String markerBeforeWeight) {
-        return getLabel() + (children.length == 0 ? "" : "(" + StringTools.join(children, ", ") + ")") + " -> " + parent + " " + markerBeforeWeight + " [" + weight + "]";
+    public String toString(boolean parentIsFinal) {
+        return parent + (parentIsFinal?"!":"") + " -> " + getLabel() + (children.length == 0 ? "" : "(" + StringTools.join(children, ", ") + ")") + " [" + weight + "]";
     }
 
     @Override

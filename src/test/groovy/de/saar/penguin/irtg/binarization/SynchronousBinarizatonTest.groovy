@@ -20,19 +20,19 @@ class SynchronousBinarizationTest {
 interpretation i1: de.saar.penguin.irtg.algebra.StringAlgebra
 interpretation i2: de.saar.penguin.irtg.algebra.StringAlgebra
 
-r1(A,B,C) -> S!
+S! -> r1(A,B,C) 
   [i1] *(?1,?2,?3)
   [i2] *(?3,?1,?2)
 
-r2 -> A
+A -> r2 
   [i1] a
   [i2] a
 
-r3 -> B
+B -> r3
   [i1] b
   [i2] b
 
-r4 -> C
+C -> r4 
   [i1] c
   [i2] c
         ''';
@@ -56,19 +56,19 @@ r4 -> C
 interpretation i1: de.saar.penguin.irtg.algebra.StringAlgebra
 interpretation i2: de.saar.penguin.irtg.algebra.StringAlgebra
 
-r1(A,B,C) -> S!
+S! -> r1(A,B,C)
   [i1] *(?1,?2,?3)
   [i2] *(?3,?2,?1)
 
-r2 -> A
+A -> r2 
   [i1] a
   [i2] a
 
-r3 -> B
+B -> r3 
   [i1] b
   [i2] b
 
-r4 -> C
+C -> r4 
   [i1] c
   [i2] c
         ''';
@@ -92,23 +92,23 @@ r4 -> C
 interpretation i1: de.saar.penguin.irtg.algebra.StringAlgebra
 interpretation i2: de.saar.penguin.irtg.algebra.StringAlgebra
 
-r1(A,B,C) -> S!
+S! -> r1(A,B,C)
   [i1] *(?1,?2,?3)
   [i2] *(?3,?2,?1)
 
-r2(D) -> A
+A -> r2(D)
   [i1] *(?1,a)
   [i2] *(e,f,?1)
 
-r3 -> B
+B -> r3 
   [i1] b
   [i2] b
 
-r4 -> C
+C -> r4 
   [i1] c
   [i2] c
 
-r5 -> D
+D -> r5 
   [i1] d
   [i2] d
         ''';

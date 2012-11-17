@@ -605,9 +605,9 @@ public class InterpretedTreeAutomaton {
         pw.println();
 
         for (Rule<String> rule : automaton.getRuleSet()) {
-            String isFinal = automaton.getFinalStates().contains(rule.getParent()) ? "!" : "";
-            String children = (rule.getArity() == 0 ? "" : "(" + StringTools.join(rule.getChildren(), ", ") + ")");
-            pw.println(rule.getLabel() + children + " -> " + rule.getParent().toString() + isFinal + " [" + rule.getWeight() + "]");
+//            String isFinal = automaton.getFinalStates().contains(rule.getParent()) ? "!" : "";
+//            String children = (rule.getArity() == 0 ? "" : "(" + StringTools.join(rule.getChildren(), ", ") + ")");
+            pw.println(rule.toString(automaton.getFinalStates().contains(rule.getParent())));
 
             for (String interp : interpretationOrder) {
                 Homomorphism hom = interpretations.get(interp).getHomomorphism();

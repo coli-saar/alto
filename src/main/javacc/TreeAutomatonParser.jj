@@ -71,13 +71,10 @@ void automatonRule() :
     String parentState = null;
 }
 {
-    (label=name() "(" childStates=StateList() ")" "->" parentState=State()) {
-      lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
+    parentState=State() "->" label=name() ("(" childStates=StateList() ")")? {
+        if( childStates == null ) childStates = new ArrayList<String>();
+        lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
     }
-    | (label=name() "->" parentState=State()) {
-      lastSeenRule = automaton.addRule(label.intern(), new ArrayList<String>(), parentState);
-    }
-
 }
 
 List<String> StateList() :
