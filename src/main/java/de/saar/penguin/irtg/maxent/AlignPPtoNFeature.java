@@ -16,10 +16,10 @@ public class AlignPPtoNFeature implements FeatureFunction {
     private static String N_LABEL = "N";
     @Override
     public double evaluate(Rule rule){
-        Pair parentState = (Pair) rule.getParent();
-        if (parentState.left.equals(N_LABEL)) {
+        String parentLabel = this.getLabelFor(rule.getParent());
+        if (parentLabel.equals(N_LABEL)) {
             for (Object child : rule.getChildren()) {
-                String label = this.getLabelFor((Pair) child);
+                String label = this.getLabelFor(child);
                 if (label.equals(PP_LABEL)) {
                     return 1.0;
                 }
@@ -28,10 +28,14 @@ public class AlignPPtoNFeature implements FeatureFunction {
         return 0.0;
     }
 
-    private String getLabelFor(Pair state) {
-        if (state.left instanceof Pair) {
-            return this.getLabelFor((Pair) state.left);
+    private String getLabelFor(Object state) {
+        if (state instanceof Pair) {
+            Pair s = (Pair) state;
+            if (s.left instanceof Pair) {
+                return this.getLabelFor((Pair) s.left);
+            }
+            return (String) s.left;
         }
-        return (String) state.left;
+        return (String) state;
     }
 }
