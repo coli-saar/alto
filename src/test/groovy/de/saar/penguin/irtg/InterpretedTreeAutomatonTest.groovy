@@ -26,10 +26,10 @@ class InterpretedTreeAutomatonTest {
     public void testParse() {
         String string = "john watches the woman with the telescope";
 
-        TreeAutomaton rtg = parse("john -> NP\n watches -> V\n" +
-            "the -> Det\n woman -> N\n with -> P\n telescope -> N\n" +
-            "s(NP,VP) -> S!\n np(Det,N) -> NP\n n(N,PP) -> N\n" +
-            "vp(V,NP) -> VP\n vp(VP,PP) -> VP\n pp(P,NP) -> PP"
+        TreeAutomaton rtg = parse("NP -> john \n V -> watches \n" +
+            "Det -> the \n N -> woman \n P -> with \n N -> telescope \n" +
+            "S! -> s(NP,VP)\n NP -> np(Det,N)\n N -> n(N,PP)\n" +
+            "VP -> vp(V,NP)\n VP -> vp(VP,PP)\n PP -> pp(P,NP)"
             );
 
         String concat = "*(?1,?2)";
@@ -58,10 +58,10 @@ class InterpretedTreeAutomatonTest {
         String grammarstring = '''
 interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
-r1(S, S) -> S!
+S! -> r1(S, S)
   [i] *(?1, ?2)
 
-r2 -> S
+S -> r2 
   [i] a
         ''';
 
@@ -175,49 +175,52 @@ r2 -> S
     private static final String CFG_STR = """
 interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
-r1(NP,VP) -> S!
+
+S! -> r1(NP,VP)
   [i] *(?1,?2)
 
 
-r4(V,NP) -> VP 
+NP -> r2(Det,N)
   [i] *(?1,?2)
 
 
-r5(VP,PP) -> VP
+N -> r3(N,PP)
   [i] *(?1,?2)
 
 
-r6(P,NP) -> PP
+VP -> r4(V,NP) [.6]
   [i] *(?1,?2)
 
 
-r7 -> NP
+VP -> r5(VP,PP) [0.4]
+  [i] *(?1,?2)
+
+
+PP -> r6(P,NP) 
+  [i] *(?1,?2)
+
+
+NP -> r7 
   [i] john
 
 
-r2(Det,N) -> NP
-  [i] *(?1,?2)
-
-
-r8 -> V
+V -> r8 
   [i] watches
 
 
-r9 -> Det
+Det -> r9
   [i] the
 
 
-r10 -> N
+N -> r10
   [i] woman
 
 
-r11 -> N
+N -> r11
   [i] telescope
 
-r3(N,PP) -> N
-  [i] *(?1,?2)
 
-r12 -> P
+P -> r12
   [i] with
 
 

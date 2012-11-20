@@ -3,56 +3,56 @@ interpretation english: de.saar.penguin.irtg.algebra.StringAlgebra
 interpretation german: de.saar.penguin.irtg.algebra.StringAlgebra
 
 
-r1(NP,VP) -> S!
+S! -> r1(NP,VP)
   [english] *(?1,?2)
   [german] *(?1,?2)
 
 
-r2(Det,N) -> NP
+NP -> r2(Det,N)
   [english] *(?1,?2)
   [german] *(?1,?2)
 
-r3(N,PP) -> N
+N -> r3(N,PP)
   [english] *(?1,?2)
   [german] *(?1,?2)
 
-r4(V,NP) -> VP
+VP -> r4(V,NP)
   [english] *(?1,?2)
   [german] *(?1,?2)
 
-r5(VP,PP) -> VP
+VP -> r5(VP,PP)
   [english] *(?1,?2)
   [german] *(?1,?2)
 
-r6(P,NP) -> PP
+PP -> r6(P,NP)
   [english] *(?1,?2)
   [german] *(?1,?2)
 
-r7 -> NP
+NP -> r7
   [english] john
   [german] hans
 
-r8 -> V
+V -> r8
   [english] watches
   [german] betrachtet
 
-r9 -> Det
+Det -> r9
   [english] the
   [german] die
 
-r9b -> Det
+Det -> r9b
   [english] the
   [german] dem
 
-r10 -> N
+N -> r10
   [english] woman
   [german] frau
 
-r11 -> N
+N -> r11
   [english] telescope
   [german] fernrohr
 
-r12 -> P
+P -> r12
   [english] with
   [german] mit
 

@@ -17,21 +17,21 @@ import static org.junit.Assert.*
 class TreeAutomatonParserTest {
     @Test
     public void testParserNotNull() {
-        TreeAutomaton automaton = parse("a -> q1\n f(q1,q1) -> q2!");
+        TreeAutomaton automaton = parse("q1 -> a\n q2! -> f(q1,q1)");
 
         assert automaton != null;
     }
 
     @Test
     public void testParserNoNewlines() {
-        TreeAutomaton automaton = parse("a -> q1 f(q1,q1) -> q2!");
+        TreeAutomaton automaton = parse("q1 -> a q2! -> f(q1,q1)");
 
         assert automaton != null;
     }
     
     @Test
     public void testParserWithComments() {
-        TreeAutomaton automaton = parse("a -> q1 /* foo -> bar */ f(q1,  /* lalala */ q1) -> q2!");
+        TreeAutomaton automaton = parse("q1 -> a /* foo -> bar */ q2! -> f(q1,  /* lalala */ q1)");
 
         assert automaton != null;
     }
@@ -39,7 +39,7 @@ class TreeAutomatonParserTest {
     
     @Test
     public void testParser1() {
-        TreeAutomaton automaton = parse("a -> q1\n f(q1,q1) -> q2 !");
+        TreeAutomaton automaton = parse("q1 -> a \n q2 ! -> f(q1,q1)");
 
         assertEquals(new HashSet([r("q1", "a", [])]), automaton.getRulesBottomUp("a", []));
         assertEquals(new HashSet([r("q2", "f", ["q1","q1"])]), automaton.getRulesBottomUp("f", ["q1", "q1"]));
@@ -48,13 +48,13 @@ class TreeAutomatonParserTest {
 
     @Test
     public void testParser2() {
-        TreeAutomaton automaton = parse("f(p2,p3) -> p1!\n a -> p2\n a -> p3");
+        TreeAutomaton automaton = parse("p1! -> f(p2,p3)\n p2 -> a\n p3 -> a");
         assertEquals(new HashSet([r("p2", "a", []), r("p3", "a", [])]), automaton.getRulesBottomUp("a", []));
     }
 
     @Test
     public void testWeights() {
-        TreeAutomaton automaton = parse("a -> q1 [2]\n b -> q2 [1]\n f(q1,q1) -> q! [1]\n f(q1,q2) -> q! [1.5]");
+        TreeAutomaton automaton = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
         assertEquals(new HashSet([rw("q1", "a", [], 2)]), automaton.getRulesBottomUp("a", []));
         assertEquals(new HashSet([rw("q", "f", ["q1", "q2"], 1.5)]), automaton.getRulesBottomUp("f", ["q1", "q2"]));
     }

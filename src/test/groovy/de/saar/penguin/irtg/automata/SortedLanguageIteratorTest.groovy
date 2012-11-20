@@ -26,7 +26,7 @@ public class SortedLanguageIteratorTest {
     @Test
     public void testOneRuleNonRecursiveAutomaton() {
 //        System.err.println("\n\n*** testOneRuleNonRecursiveAutomaton ***");
-        TreeAutomaton a = pa("b -> qb [0.5]\n f(qb) -> qa! [0.7]");
+        TreeAutomaton a = pa("qb -> b [0.5]\n qa! -> f(qb) [0.7]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
         WeightedTree w = it.next();
@@ -40,7 +40,7 @@ public class SortedLanguageIteratorTest {
     public void testMultiRulesNonRecursiveAutomaton() {
 //        System.err.println("\n\n*** testMultiRulesNonRecursiveAutomaton ***");
         
-        TreeAutomaton a = pa("b -> qb [0.5]\n f(qb) -> qa! [0.7]\ng(qb) -> qa! [0.3]");
+        TreeAutomaton a = pa("qb -> b [0.5]\n qa! -> f(qb) [0.7]\n qa! -> g(qb) [0.3]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
         WeightedTree w = it.next();
@@ -57,7 +57,7 @@ public class SortedLanguageIteratorTest {
     @Test
     public void testRecursive() {
 //        System.err.println("\n\n*** testRecursive ***");
-        TreeAutomaton a = pa("b -> qb [0.5]\n f(qb) -> qb! [0.5]");
+        TreeAutomaton a = pa("qb -> b [0.5]\n qb! -> f(qb) [0.5]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
         WeightedTree w = it.next();
@@ -80,7 +80,7 @@ public class SortedLanguageIteratorTest {
     
     @Test
     public void testMultiFinalStates() {
-        TreeAutomaton a = pa("b -> qb [0.5]\n f(qb) -> qb! [0.5]\n g(qb) -> qa! [0.4]");
+        TreeAutomaton a = pa("qb -> b [0.5]\n qb! -> f(qb) [0.5]\n qa! -> g(qb) [0.4]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
         WeightedTree w = it.next();
@@ -128,17 +128,20 @@ public class SortedLanguageIteratorTest {
     
     @Test
     public void testLanguage() {
-//        System.err.println("\n\n*** testLanguage ***");
-        TreeAutomaton auto = pa("a -> q1 [2]\n b -> q2 [1]\n f(q1,q1) -> q! [1]\n f(q1,q2) -> q! [1.5]");
+        TreeAutomaton auto = pa("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2)  [1.5]");
         Set lang = new HashSet(collectTrees(auto)*.toString());
         Set gold = new HashSet([pt("f(a,a)"), pt("f(a,b)")]*.toString());
         assertEquals(gold, lang);
     }
     
+    // TODO:         
+    // TreeAutomaton auto = pa("q1 -> a \n q1 -> b \n q2 -> c \n q2 -> d \n q! -> f(q1,q2) \n q1 -> g(q1,q2) ");
+    // exceeds heap
+
+    
     @Test
     public void testLanguage2() {
-//        System.err.println("\n\n*** testLanguage2 ***");
-        TreeAutomaton auto = pa("a -> q1\n b -> q1\n c -> q2\n d -> q2\n f(q1,q2) -> q!\n g(q1,q2) -> q!");
+        TreeAutomaton auto = pa("q1 -> a \n q1 -> b \n q2 -> c \n q2 -> d \n q! -> f(q1,q2) \n q! -> g(q1,q2) ");
         Set lang = new HashSet(collectTrees(auto)*.toString());
         Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
         assertEquals(gold, lang)
@@ -146,8 +149,7 @@ public class SortedLanguageIteratorTest {
     
     @Test
     public void testEmptyLanguageIterator() {
-//        System.err.println("\n\n*** testEmptyLanguage ***");
-        TreeAutomaton auto = pa("g(q1,q2) -> q!");
+        TreeAutomaton auto = pa("q! -> g(q1,q2) ");
         Set lang = new HashSet(collectTrees(auto)*.toString());
         Set gold = new HashSet();        
         assertEquals(gold, lang)

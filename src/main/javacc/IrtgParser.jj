@@ -134,13 +134,10 @@ void AutomatonRule() :
     String parentState = null;
 }
 {
-    (label=name() "(" childStates=StateList() ")" "->" parentState=State()) {
-      lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
-      lastSeenTerminal = label;
-    }
-    | (label=name() "->" parentState=State()) {
-      lastSeenRule = automaton.addRule(label.intern(), new ArrayList<String>(), parentState);
-      lastSeenTerminal = label;
+    parentState=State() "->" label=name() ("(" childStates=StateList() ")")? {
+        if( childStates == null ) childStates = new ArrayList<String>();
+        lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
+        lastSeenTerminal = label;
     }
 
 }
