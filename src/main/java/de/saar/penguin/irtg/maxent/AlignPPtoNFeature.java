@@ -21,6 +21,7 @@ public class AlignPPtoNFeature implements FeatureFunction {
             for (Object child : rule.getChildren()) {
                 String label = this.getLabelFor(child);
                 if (label.equals(PP_LABEL)) {
+                    System.err.println("feature weight = 1 for " + rule);
                     return 1.0;
                 }
             }

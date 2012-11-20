@@ -8,9 +8,12 @@ import cc.mallet.optimize.LimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
 import de.saar.penguin.irtg.AnnotatedCorpus;
 import de.saar.penguin.irtg.InterpretedTreeAutomaton;
+import de.saar.penguin.irtg.IrtgParser;
+import de.saar.penguin.irtg.ParseException;
 import de.saar.penguin.irtg.algebra.ParserException;
 import de.saar.penguin.irtg.automata.TreeAutomaton;
 import de.saar.penguin.irtg.automata.Rule;
+import de.saar.penguin.irtg.automata.SortedLanguageIterator;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import java.io.*;
@@ -19,8 +22,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.AbstractCollection;
 import java.util.List;
 import java.util.Properties;
 
@@ -31,6 +32,10 @@ import java.util.Properties;
  */
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
+    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException {
+        MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader("examples/maxent-test.irtg"));
+        i.testTraining();
+    }
     private List<String> featureNames;
     private FeatureFunction[] features;
     private double[] weights;
@@ -39,9 +44,10 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
     /**
      * Constructor
+     *
      * @param automaton the TreeAutomaton build by grammar rules
      * @param featureMap the map contains feature functions accessed by their
-     *        names. These functions are used to calculate probabilities for the RTG
+     * names. These functions are used to calculate probabilities for the RTG
      */
     public MaximumEntropyIrtg(TreeAutomaton<String> automaton, Map<String, FeatureFunction> featureMap) {
         super(automaton);
@@ -49,7 +55,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         if (featureMap == null) {
             throw new NullPointerException("MaximumEntropyIrtg(automaton, featureMap): featureMap must not be null");
         }
-        
+
         // instantiate member variables
         this.featureNames = new ArrayList<String>();
 
@@ -60,7 +66,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         // and their corresponding weights
         this.weights = new double[this.featureNames.size()];
 
-        for (int i=0; i < this.featureNames.size(); i++) {
+        for (int i = 0; i < this.featureNames.size(); i++) {
             // fill the array for the feature functions using the parameter featureMap
             this.features[i] = featureMap.get(featureNames.get(i));
             // and the weights array using a default value
@@ -70,6 +76,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
     /**
      * Returns the list of the feature function names
+     *
      * @return List<String>() containing the names of all feature functions
      */
     public List<String> getFeatureNames() {
@@ -78,6 +85,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
     /**
      * Returns the array of the feature function weights
+     *
      * @return double[] containing the weights of all feature functions
      */
     public double[] getFeatureWeights() {
@@ -86,24 +94,25 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
     /**
      * Returns the feature function referenced by name
+     *
      * @param name the name of the feature function
-     * @return the feature function with the name <tt>name</tt>
-     *         if no corresponding function is found
+     * @return the feature function with the name <tt>name</tt> if no
+     * corresponding function is found
      * @throws ArrayIndexOutOfBoundsException if no feature function for
-     *         <tt>name</tt> can be found
+     * <tt>name</tt> can be found
      */
     public FeatureFunction getFeatureFunction(String name) throws ArrayIndexOutOfBoundsException {
         int index = this.featureNames.indexOf(name);
         return this.getFeatureFunction(index);
     }
 
-    
     /**
      * Returns the feature function referenced by index
+     *
      * @param index the index of the feature function
      * @return the feature function with the <tt>index</tt>
-     * @throws ArrayIndexOutOfBoundsException if <tt>index</tt> is negative
-     *         or not less the number of feature functions
+     * @throws ArrayIndexOutOfBoundsException if <tt>index</tt> is negative or
+     * not less the number of feature functions
      */
     private FeatureFunction getFeatureFunction(int index) throws ArrayIndexOutOfBoundsException {
         return this.features[index];
@@ -112,11 +121,12 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private int getNumFeatures() {
         return this.features.length;
     }
-    
+
     /**
      * Creates a parse chart for the input and weights the chart's rules
+     *
      * @param readers the readers (e.g. File- or StringReader) containing
-     *        sentences and their interpretation
+     * sentences and their interpretation
      * @return the weighted parse chart as TreeAutomaton
      * @throws ParserException if a reader cannot be handled by the parser
      * @throws IOException if the reader cannot read its stream properly
@@ -124,7 +134,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     @Override
     @CallableFromShell(name = "parse")
     public TreeAutomaton parseFromReaders(Map<String, Reader> readers) throws ParserException, IOException {
-        TreeAutomaton chart = super.parseFromReaders(readers);
+        TreeAutomaton chart = super.parseFromReaders(readers).reduceBottomUp();
 
         for (Rule rule : (Set<Rule>) chart.getRuleSet()) {
             double weight = 0.0;
@@ -140,26 +150,36 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             rule.setWeight(Math.exp(weight));
         }
 
+//        System.err.println(chart);
+
         return chart;
     }
 
     @CallableFromShell(name = "train")
     public double[] testTraining() throws IOException, ParserException {
-        /*************************************************/
-        /*************************************************/
+        /**
+         * **********************************************
+         */
+        /**
+         * **********************************************
+         */
         String TRAIN_STR = "i\n"
                 + "john watches the woman with the telescope\n"
                 + "r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))\n";
         AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN_STR), this);
         this.train(anCo);
-        /*************************************************/
-        /*************************************************/
-        
+        /**
+         * **********************************************
+         */
+        /**
+         * **********************************************
+         */
         return this.weights;
     }
 
     /**
      * Trains the weights for the rules according to the training data
+     *
      * @param corpus the training data containing sentences and their parse tree
      * @throws ParserException
      */
@@ -207,51 +227,51 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                 double sum2 = 0.0;
                 java.util.Arrays.fill(this.gradientSum1, 0.0);
                 java.util.Arrays.fill(this.gradientSum2, 0.0);
-                
-                for (AnnotatedCorpus.Instance instance : this.trainingData.getInstances()) {
-                    String s = join((List<String>) instance.inputObjects.get(this.interpretation));
+
+                for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
+                    String s = join((List<String>) instance.inputObjects.get(interpretation));
                     Map<String, Reader> readers = new HashMap<String, Reader>();
-                    readers.put(this.interpretation, new StringReader(s));
+                    readers.put(interpretation, new StringReader(s));
                     TreeAutomaton chart = null;
-                    
+
                     try {
-                        chart = MaximumEntropyIrtg.this.parseFromReaders(readers);
-                    } catch(ParserException e) {
-                        assert false : "getValue(): the parser could not read the input";
-                    } catch(IOException e) {
+                        chart = parseFromReaders(readers);
+                    } catch (ParserException e) {
+                        throw new RuntimeException("getValue(): the parser could not read the input", e);
+                    } catch (IOException e) {
                         assert false : "getValue(): an error on accessing the reader has occurred";
                     }
-                    
+
                     assert (chart != null);
+
+                    inside = chart.inside();
+                    outside = chart.outside(inside);
 
                     // part 1: log-likelihood
                     sum1 += Math.log(chart.getWeight(instance.tree));
                     double innerSum = 0.0;
-                    
+
+
+                    ////// TODO!!!!! -> sum_qf inside(qf)
                     for (Tree y : (Set<Tree>) chart.language()) {
                         innerSum += chart.getWeight(y);
                     }
-                    
+
                     sum2 += Math.log(innerSum);
-                    
+
                     // part 2: the gradient
                     // inside uses the rule's weight
                     // therefore it must be calculated every time
-                    this.inside = chart.inside();
-                    this.outside = chart.outside(this.inside);
-                    // chart.outside() throws a NullPointerException because
-                    // in TreeAutomaton.evaluateInSemiringTopDown()
-                    // E parentValue = ret.get(rule.getParent()); is null
 
                     List<Rule> rules = new ArrayList<Rule>();
                     rules.addAll(MaximumEntropyIrtg.this.automaton.getRuleSet());
                     double[] pLambdaR = new double[rules.size()];
                     double insideS = 0.0;
-                    
+
                     for (Object start : chart.getFinalStates()) {
                         insideS += this.inside.get(start);
                     }
-                    
+
                     for (int i = 0; i < rules.size(); i++) {
                         Rule r = rules.get(i);
                         Double outside = this.outside.get(r.getParent());
@@ -267,44 +287,52 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                             pLambdaR[i] = 0.0;
                         }
                     }
-                    
+
                     List<String> ruleNames = this.getRuleNames(rules);
                     double pLambda = this.calcPLambda(instance.tree, pLambdaR, ruleNames);
-                    
+
                     for (int i = 0; i < MaximumEntropyIrtg.this.getNumFeatures(); i++) {
                         FeatureFunction ff = MaximumEntropyIrtg.this.getFeatureFunction(i);
                         double fi = this.calcFI(instance.tree, rules, ff);
                         this.gradientSum1[i] += fi;
                         this.gradientSum2[i] += fi * pLambda;
+                        System.err.println("gradient sums: " + fi + ", " + fi*pLambda);
                     }
                 }
-                
-                this.cachedValue = (sum1/n) - (sum2/n);
+
+                this.cachedValue = (sum1 / n) - (sum2 / n);
+
                 for (int i = 0; i < this.cachedGradient.length; i++) {
-                    this.cachedGradient[i] = (this.gradientSum1[i]/n) - (this.gradientSum2[i]/n);
+                    this.cachedGradient[i] = (this.gradientSum1[i] / n) - (this.gradientSum2[i] / n);
                 }
+
                 this.cachedStale = false;
+
+                System.err.println("log-lik: " + cachedValue);
+                System.err.print("gradient: ");
+                printArray(cachedGradient);
             }
-            
+
+
             return this.cachedValue;
         }
-        
+
         private double calcFI(final Tree tree, final List<Rule> rules, final FeatureFunction f) {
             double fi = 0.0;
-            
+
             for (Rule r : rules) {
                 if (r.getLabel().equals((String) tree.getLabel())) {
                     fi += f.evaluate(r);
                 }
             }
-            
+
             for (Tree child : (List<Tree>) tree.getChildren()) {
                 fi += calcFI(child, rules, f);
             }
-            
+
             return fi;
         }
-        
+
         private List<String> getRuleNames(List<Rule> rules) {
             List<String> ret = new ArrayList<String>();
             for (Rule r : rules) {
@@ -312,19 +340,19 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             }
             return ret;
         }
-        
+
         private double calcPLambda(final Tree tree, final double[] pLambdaR, final List<String> ruleNames) {
             String ruleName = (String) tree.getLabel();
             int i = ruleNames.indexOf(ruleName);
             double pLambda = pLambdaR[i];
-            
+
             for (Tree child : (List<Tree>) tree.getChildren()) {
                 pLambda += calcPLambda(child, pLambdaR, ruleNames);
             }
-            
+
             return pLambda;
         }
-         
+
         @Override
         public void getValueGradient(double[] gradient) {
             // TODO: compute <f~i> - <fi> here, for all i
@@ -335,15 +363,14 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             // f_i(x,y) = sum_u(f_i(r)) mit r=Regel im Knoten u vom Baum y
             //
             // p~(x) = 1/N
-            // p_lambda(y|x) = sum_u (outside(A)*p(r)*inside(B)*inside(C) / inside(S))
+            // p_lambda(y|x) * fi(x,y) = sum_u (outside(A)*p(r)*inside(B)*inside(C) * f_i(r) / inside(S))
             //                 mit r = Regel im Knoten u vom Baum y und p(r) = r.getWeight()
-            // f_i(x,y) = sum_u(f_i(r)) mit r=Regel im Knoten u vom Baum y
             // 
             if (this.cachedStale) {
                 getValue();
             }
             assert (gradient != null && gradient.length == this.cachedGradient.length);
-            System.arraycopy (this.cachedGradient, 0, gradient, 0, this.cachedGradient.length);
+            System.arraycopy(this.cachedGradient, 0, gradient, 0, this.cachedGradient.length);
         }
 
         @Override
@@ -364,6 +391,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         @Override
         public void setParameters(double[] doubles) {
             MaximumEntropyIrtg.this.weights = doubles;
+            System.err.print("new lambdas: ");
+            printArray(weights);
             this.cachedStale = true;
         }
 
@@ -372,6 +401,13 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             MaximumEntropyIrtg.this.weights[i] = d;
             this.cachedStale = true;
         }
+    }
+
+    private void printArray(double[] x) {
+        for (int i = 0; i < x.length; i++) {
+            System.err.print(x[i] + " ");
+        }
+        System.err.println();
     }
 
     @CallableFromShell(name = "weights")
@@ -395,20 +431,22 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public void writeWeights(Writer writer) {
         // TODO: print weights to the writer
     }
-    
+
     private static String join(List<String> strings) {
         return join(strings, " ");
     }
 
     private static String join(List<String> strings, String delimiter) {
-        if (strings == null || strings.isEmpty()) return "";
+        if (strings == null || strings.isEmpty()) {
+            return "";
+        }
         Iterator<String> iter = strings.iterator();
         StringBuilder builder = new StringBuilder(iter.next());
-        
+
         while (iter.hasNext()) {
             builder.append(delimiter).append(iter.next());
         }
-        
+
         return builder.toString();
     }
 }

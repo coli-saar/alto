@@ -41,6 +41,7 @@ import java.util.Set;
  * @author koller
  */
 public abstract class TreeAutomaton<State> implements Serializable {
+
     protected Map<String, StateListToStateMap> explicitRules; // one for each label
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
@@ -420,6 +421,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     private static class LanguageCollectingSemiring implements Semiring<List<Tree<String>>> {
         // +: concatenate the two languages
+
         public List<Tree<String>> add(List<Tree<String>> x, List<Tree<String>> y) {
             x.addAll(y);
             return x;
@@ -481,7 +483,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             for (List<State> children : rules.get(f).keySet()) {
                 for (Rule<State> rule : rules.get(f).get(children)) {
                     if (isRulePrinting(rule)) {
-                        buf.append(rule.toString(getFinalStates().contains(rule.getParent()))  + "\n");
+                        buf.append(rule.toString(getFinalStates().contains(rule.getParent())) + "\n");
                     } else {
                         countSuppressed++;
                     }
@@ -877,9 +879,16 @@ public abstract class TreeAutomaton<State> implements Serializable {
             if (rulesForRhsState.containsKey(s)) {
                 for (Rule<State> rule : rulesForRhsState.get(s)) {
                     E parentValue = ret.get(rule.getParent());
-                    for (int i = 0; i < rule.getArity(); i++) {
-                        if (rule.getChildren()[i].equals(s)) {
-                            accu = semiring.add(accu, semiring.multiply(parentValue, evaluator.evaluateRule(rule, i)));
+
+                    if (parentValue != null) {
+                        // If parentValue is null, this indicates that we are considering a rule with a parent
+                        // that is not top-down reachable (if it were reachable, then its value should have been
+                        // computed before ours). Such rules are ignored.                        
+                        
+                        for (int i = 0; i < rule.getArity(); i++) {
+                            if (rule.getChildren()[i].equals(s)) {
+                                accu = semiring.add(accu, semiring.multiply(parentValue, evaluator.evaluateRule(rule, i)));
+                            }
                         }
                     }
                 }
@@ -962,6 +971,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     protected class StateListToStateMap implements Serializable {
+
         private Map<State, StateListToStateMap> nextStep;
         private Set<Rule<State>> rulesHere;
         private int arity;
@@ -1070,6 +1080,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private class LanguageIterable implements Iterable<Tree<String>> {
+
         public Iterator<Tree<String>> iterator() {
             return new LanguageIterator(sortedLanguageIterator());
         }
@@ -1094,6 +1105,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private class LanguageIterator implements Iterator<Tree<String>> {
+
         private Iterator<WeightedTree> it;
 
         public LanguageIterator(Iterator<WeightedTree> it) {
