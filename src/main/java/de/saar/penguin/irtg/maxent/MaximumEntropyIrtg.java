@@ -20,35 +20,107 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.AbstractCollection;
 import java.util.List;
 import java.util.Properties;
 
 /**
  *
  * @author koller
+ * @author Danilo Baumgarten
  */
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
-    private Map<String, FeatureFunction> features;
-    private Map<String, Double> weights;
-    private static double INITIAL_WEIGHT = 0.0;
-    private static double CONVERGE_DELTA = 0.0001;
+    private List<String> featureNames;
+    private FeatureFunction[] features;
+    private double[] weights;
+    private static final double INITIAL_WEIGHT = 0.001;
+    private static final double CONVERGE_DELTA = 0.0001;
 
-    public MaximumEntropyIrtg(TreeAutomaton<String> automaton, Map<String, FeatureFunction> features) {
+    /**
+     * Constructor
+     * @param automaton the TreeAutomaton build by grammar rules
+     * @param featureMap the map contains feature functions accessed by their
+     *        names. These functions are used to calculate probabilities for the RTG
+     */
+    public MaximumEntropyIrtg(TreeAutomaton<String> automaton, Map<String, FeatureFunction> featureMap) {
         super(automaton);
 
-        this.features = features;
-        this.weights = new HashMap<String, Double>();
+        if (featureMap == null) {
+            throw new NullPointerException("MaximumEntropyIrtg(automaton, featureMap): featureMap must not be null");
+        }
+        
+        // instantiate member variables
+        this.featureNames = new ArrayList<String>();
+
+        // the names of the feature functions are the keys of featureMap
+        this.featureNames.addAll(featureMap.keySet());
+        // the size of the names list is used to initialize the arrays for the feature functions
+        this.features = new FeatureFunction[this.featureNames.size()];
+        // and their corresponding weights
+        this.weights = new double[this.featureNames.size()];
+
+        for (int i=0; i < this.featureNames.size(); i++) {
+            // fill the array for the feature functions using the parameter featureMap
+            this.features[i] = featureMap.get(featureNames.get(i));
+            // and the weights array using a default value
+            this.weights[i] = INITIAL_WEIGHT;
+        }
     }
 
-    public Set<String> getFeatureNames() {
-        return features.keySet();
+    /**
+     * Returns the list of the feature function names
+     * @return List<String>() containing the names of all feature functions
+     */
+    public List<String> getFeatureNames() {
+        return this.featureNames;
     }
 
-    public FeatureFunction getFeatureFunction(String name) {
-        return features.get(name);
+    /**
+     * Returns the array of the feature function weights
+     * @return double[] containing the weights of all feature functions
+     */
+    public double[] getFeatureWeights() {
+        return this.weights;
     }
 
+    /**
+     * Returns the feature function referenced by name
+     * @param name the name of the feature function
+     * @return the feature function with the name <tt>name</tt>
+     *         if no corresponding function is found
+     * @throws ArrayIndexOutOfBoundsException if no feature function for
+     *         <tt>name</tt> can be found
+     */
+    public FeatureFunction getFeatureFunction(String name) throws ArrayIndexOutOfBoundsException {
+        int index = this.featureNames.indexOf(name);
+        return this.getFeatureFunction(index);
+    }
+
+    
+    /**
+     * Returns the feature function referenced by index
+     * @param index the index of the feature function
+     * @return the feature function with the <tt>index</tt>
+     * @throws ArrayIndexOutOfBoundsException if <tt>index</tt> is negative
+     *         or not less the number of feature functions
+     */
+    private FeatureFunction getFeatureFunction(int index) throws ArrayIndexOutOfBoundsException {
+        return this.features[index];
+    }
+
+    private int getNumFeatures() {
+        return this.features.length;
+    }
+    
+    /**
+     * Creates a parse chart for the input and weights the chart's rules
+     * @param readers the readers (e.g. File- or StringReader) containing
+     *        sentences and their interpretation
+     * @return the weighted parse chart as TreeAutomaton
+     * @throws ParserException if a reader cannot be handled by the parser
+     * @throws IOException if the reader cannot read its stream properly
+     */
     @Override
     @CallableFromShell(name = "parse")
     public TreeAutomaton parseFromReaders(Map<String, Reader> readers) throws ParserException, IOException {
@@ -57,14 +129,10 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         for (Rule rule : (Set<Rule>) chart.getRuleSet()) {
             double weight = 0.0;
 
-            for (String featureName : getFeatureNames()) {
-                FeatureFunction featureFunction = getFeatureFunction(featureName);
+            for (int i = 0; i < this.getNumFeatures(); i++) {
+                FeatureFunction featureFunction = this.getFeatureFunction(i);
 
-                if (!weights.containsKey(featureName)) {
-                    weights.put(featureName, INITIAL_WEIGHT);
-                }
-
-                double w = weights.get(featureName);
+                double w = this.weights[i];
                 double f = featureFunction.evaluate(rule);
                 weight += f * w;
             }
@@ -75,182 +143,274 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         return chart;
     }
 
-//    public void train(AnnotatedCorpus corpus) {
-    public void train(AnnotatedCorpus corpus) throws IOException, ParserException {
-        // entfernen sobald klar ist, wie die chart korrekt ermittelt wird
-        Map<AnnotatedCorpus.Instance, String> sentences = new HashMap<AnnotatedCorpus.Instance, String>();
-        sentences.put(corpus.getInstances().get(0), "john watches the woman with the telescope");
-        sentences.put(corpus.getInstances().get(0), "john watches the telescope with the telescope");
-        sentences.put(corpus.getInstances().get(0), "john watches the telescope with the woman");
+    @CallableFromShell(name = "train")
+    public double[] testTraining() throws IOException, ParserException {
+        /*************************************************/
+        /*************************************************/
+        String TRAIN_STR = "i\n"
+                + "john watches the woman with the telescope\n"
+                + "r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))\n";
+        AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN_STR), this);
+        this.train(anCo);
+        /*************************************************/
+        /*************************************************/
+        
+        return this.weights;
+    }
 
-        // calculate all ptilde(f_i)
-        Map<AnnotatedCorpus.Instance, Map<Rule, Double>> expectations = this.expectations(corpus.getInstances());
-
-        List<Double> delta = new ArrayList<Double>();
-        Map<String, Map<Double, Double>> mu = new HashMap<String, Map<Double, Double>>();
-        // loop until Lambda = (lambda1,...,lambdan) converges:
-        while (Collections.max(delta) > this.CONVERGE_DELTA) {
-            //   foreach sentence s in corpus:
-            for (AnnotatedCorpus.Instance i : corpus.getInstances()) {
-                // compute parse chart C for s using p_Lambda
-                Map<String, Reader> readers = new HashMap<String, Reader>();
-                readers.put("i", new StringReader(sentences.get(i)));
-                TreeAutomaton chart = this.parseFromReaders(readers);
-                // compute inside and outside probabilities for all states and rules in C
-                Map<String, Double> inside = chart.inside();
-                Map<String, Double> outside = chart.outside(inside);
-
-                // foreach rule r in C:
-                // warum nicht G? in der chart kommen regeln doch mehrfach vor.
-                Set<Rule> rules = chart.getRuleSet();
-                Iterator<Rule> ruleIter = rules.iterator();
-                while (ruleIter.hasNext()) {
-                    Rule rule = ruleIter.next();
-                    String label = rule.getLabel();
-
-                    // Wichtig ist dabei noch, dass Z_s einfach inside(S) ist.
-                    double z_s = inside.get("r1"); // TODO: How to get the starting rule
-                    double expectS = 0.0; // ptilde(s) = sum_y ptilde(x,y)
-                    for (Rule r : expectations.get(i).keySet()) {
-                        expectS += expectations.get(i).get(r);
-                    }
-                    // foreach i with f_i(r) != 0
-                    for (String featureName : this.getFeatureNames()) {
-                        FeatureFunction featureFunction = this.getFeatureFunction(featureName);
-                        if (weights.get(featureName) > 0.0) {
-                            double k = inside.get(label);
-                            double l = outside.get(label);
-                            // for k, l with inside_k(r) != 0 and outside_l(r) != 0:
-                            if ((k > 0.0) && (l > 0.0)) {
-                                // mu<i,k+l> += ptilde(s) / Z_s * f_i(r) * inside_k(r) * outside_l(r)
-                                if (!mu.containsKey(featureName)) {
-                                    mu.put(featureName, new HashMap<Double, Double>());
-                                }
-                                Map<Double, Double> mui = mu.get(featureName);
-                                double oldValue = (mui.containsKey(k + l)) ? mui.get(k + l) : 0.0;
-                                double value = expectS / z_s * featureFunction.evaluate(rule) * k * l;
-                                mui.put(k + l, oldValue + value);
-                            }
-                        }
-                    }
-                }
-            }
-            //   foreach i:
-            for (String featureName : this.getFeatureNames()) {
-                // solve sum_k mu<i,k> * e^(k * delta_i) = ptilde(f_i) for delta_i (e.g. using Newton)
-                // lambda_i += delta_i
-            }
-        }
-
-        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxentIrtgOptimizable());
+    /**
+     * Trains the weights for the rules according to the training data
+     * @param corpus the training data containing sentences and their parse tree
+     * @throws ParserException
+     */
+    public void train(AnnotatedCorpus corpus) throws ParserException {
+        String interp = (String) corpus.getInstances().get(0).inputObjects.keySet().toArray()[0];
+        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, interp));
         bfgs.optimize();
     }
 
-    private class MaxentIrtgOptimizable implements Optimizable.ByGradientValue {
+    private class MaxEntIrtgOptimizable implements Optimizable.ByGradientValue {
 
-        private boolean cacheStale = true;
+        private boolean cachedStale = true;
+        private double cachedValue;
+        private double[] cachedGradient;
+        private double[] gradientSum1;
+        private double[] gradientSum2;
+        private AnnotatedCorpus trainingData;
+        private String interpretation;
+        private Set<Tree<String>> trees;
+        private Map<Object, Double> inside;
+        private Map<Object, Double> outside;
 
-        @Override
-        public void getValueGradient(double[] arg0) {
-            // TODO: compute <f~i> - <fi> here, for all i
-            getValue();
-            
-            // return gradient  System.arraycopy
-            
-            throw new UnsupportedOperationException("Not supported yet.");
+        public MaxEntIrtgOptimizable(AnnotatedCorpus corpus, String interp) {
+            this.cachedStale = true;
+            this.trainingData = corpus;
+            this.interpretation = interp;
+            this.trees = MaximumEntropyIrtg.this.automaton.language();
+            this.cachedGradient = new double[MaximumEntropyIrtg.this.getNumFeatures()];
+            this.gradientSum1 = new double[this.cachedGradient.length];
+            this.gradientSum2 = new double[this.cachedGradient.length];
         }
 
         @Override
         public double getValue() {
             // TODO: compute log-likelihood here
-            if (cacheStale) {
+            // L(Lambda) = sum_x,y(p~(x,y)*sum_i(lambda_i*f_i(x,y)) - 
+            //             sum_x(p~(x)*log(sum_y(e^(sum_i(lambda_i*f_i(x,y))))))
+            // p~(x,y) = 1/N
+            // sum_i(lambda_i*f_i(x,y)) = log(chart.getWeights(y))
+            //
+            // p~(x) = 1/N
+            // e^(sum_i(lambda_i*f_i(x,y))) = chart.getWeights(y)
+            if (this.cachedStale) {
                 // recompute
-                cacheStale = false;
-            } else {
-                // return cached value
+                int n = this.trainingData.getInstances().size();
+                double sum1 = 0.0;
+                double sum2 = 0.0;
+                java.util.Arrays.fill(this.gradientSum1, 0.0);
+                java.util.Arrays.fill(this.gradientSum2, 0.0);
+                
+                for (AnnotatedCorpus.Instance instance : this.trainingData.getInstances()) {
+                    String s = join((List<String>) instance.inputObjects.get(this.interpretation));
+                    Map<String, Reader> readers = new HashMap<String, Reader>();
+                    readers.put(this.interpretation, new StringReader(s));
+                    TreeAutomaton chart = null;
+                    
+                    try {
+                        chart = MaximumEntropyIrtg.this.parseFromReaders(readers);
+                    } catch(ParserException e) {
+                        assert false : "getValue(): the parser could not read the input";
+                    } catch(IOException e) {
+                        assert false : "getValue(): an error on accessing the reader has occurred";
+                    }
+                    
+                    assert (chart != null);
+
+                    // part 1: log-likelihood
+                    sum1 += Math.log(chart.getWeight(instance.tree));
+                    double innerSum = 0.0;
+                    
+                    for (Tree y : (Set<Tree>) chart.language()) {
+                        innerSum += chart.getWeight(y);
+                    }
+                    
+                    sum2 += Math.log(innerSum);
+                    
+                    // part 2: the gradient
+                    // inside uses the rule's weight
+                    // therefore it must be calculated every time
+                    this.inside = chart.inside();
+                    this.outside = chart.outside(this.inside);
+                    // chart.outside() throws a NullPointerException because
+                    // in TreeAutomaton.evaluateInSemiringTopDown()
+                    // E parentValue = ret.get(rule.getParent()); is null
+
+                    List<Rule> rules = new ArrayList<Rule>();
+                    rules.addAll(chart.getRuleSet());
+                    double[] pLambdaR = new double[rules.size()];
+                    double insideS = 0.0;
+                    
+                    for (Object start : chart.getFinalStates()) {
+                        insideS += this.inside.get(start);
+                    }
+                    
+                    for (int i = 0; i < rules.size(); i++) {
+                        Rule r = rules.get(i);
+                        Double outside = this.outside.get(r.getParent());
+                        if (outside != null) {
+                            double insideOutside = outside * r.getWeight();
+
+                            for (Object state : r.getChildren()) {
+                                insideOutside *= this.inside.get(state);
+                            }
+
+                            pLambdaR[i] = insideOutside / insideS;
+                        } else {
+                            pLambdaR[i] = 0.0;
+                        }
+                    }
+                    
+                    List<String> ruleNames = this.getRuleNames(rules);
+                    double pLambda = this.calcPLambda(instance.tree, pLambdaR, ruleNames);
+                    
+                    for (int i = 0; i < MaximumEntropyIrtg.this.getNumFeatures(); i++) {
+                        FeatureFunction ff = MaximumEntropyIrtg.this.getFeatureFunction(i);
+                        double fi = this.calcFI(instance.tree, rules, ff);
+                        this.gradientSum1[i] += fi;
+                        this.gradientSum2[i] += fi * pLambda;
+                    }
+                }
+                
+                this.cachedValue = (sum1/n) - (sum2/n);
+                for (int i = 0; i < this.cachedGradient.length; i++) {
+                    this.cachedGradient[i] = (this.gradientSum1[i]/n) - (this.gradientSum2[i]/n);
+                }
+                this.cachedStale = false;
             }
-            throw new UnsupportedOperationException("Not supported yet.");
+            
+            return this.cachedValue;
+        }
+        
+        private double calcFI(final Tree tree, final List<Rule> rules, final FeatureFunction f) {
+            double fi = 0.0;
+            
+            for (Rule r : rules) {
+                if (r.getLabel().equals((String) tree.getLabel())) {
+                    fi += f.evaluate(r);
+                }
+            }
+            
+            for (Tree child : (List<Tree>) tree.getChildren()) {
+                fi += calcFI(child, rules, f);
+            }
+            
+            return fi;
+        }
+        
+        private List<String> getRuleNames(List<Rule> rules) {
+            List<String> ret = new ArrayList<String>();
+            for (Rule r : rules) {
+                ret.add(r.getLabel());
+            }
+            return ret;
+        }
+        
+        private double calcPLambda(final Tree tree, final double[] pLambdaR, final List<String> ruleNames) {
+            String ruleName = (String) tree.getLabel();
+            int i = ruleNames.indexOf(ruleName);
+            double pLambda = pLambdaR[i];
+            
+            for (Tree child : (List<Tree>) tree.getChildren()) {
+                pLambda += calcPLambda(child, pLambdaR, ruleNames);
+            }
+            
+            return pLambda;
+        }
+         
+        @Override
+        public void getValueGradient(double[] gradient) {
+            // TODO: compute <f~i> - <fi> here, for all i
+            // sum_x,y(p~(x,y)*f_i(x,y)) - sum_x,y(p~(x)*p_lambda(y|x)*f_i(x,y))
+            // sum_x,y in both cases (x,y) from corpus only
+            // no additional trees y from automaton required
+            // p~(x,y) = 1/N
+            // f_i(x,y) = sum_u(f_i(r)) mit r=Regel im Knoten u vom Baum y
+            //
+            // p~(x) = 1/N
+            // p_lambda(y|x) = sum_u (outside(A)*p(r)*inside(B)*inside(C) / inside(S))
+            //                 mit r = Regel im Knoten u vom Baum y und p(r) = r.getWeight()
+            // f_i(x,y) = sum_u(f_i(r)) mit r=Regel im Knoten u vom Baum y
+            // 
+            if (this.cachedStale) {
+                getValue();
+            }
+            assert (gradient != null && gradient.length == this.cachedGradient.length);
+            System.arraycopy (this.cachedGradient, 0, gradient, 0, this.cachedGradient.length);
         }
 
         @Override
         public int getNumParameters() {
-            throw new UnsupportedOperationException("Not supported yet.");
+            return MaximumEntropyIrtg.this.weights.length;
         }
 
         @Override
         public void getParameters(double[] doubles) {
-            System.out.println(weights);
-
-            throw new UnsupportedOperationException("Not supported yet.");
+            doubles = MaximumEntropyIrtg.this.weights;
         }
 
         @Override
-        public double getParameter(int i) {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public double getParameter(int i) throws ArrayIndexOutOfBoundsException {
+            return MaximumEntropyIrtg.this.weights[i];
         }
 
         @Override
         public void setParameters(double[] doubles) {
-            cacheStale = true;
-            throw new UnsupportedOperationException("Not supported yet.");
+            MaximumEntropyIrtg.this.weights = doubles;
+            this.cachedStale = true;
         }
 
         @Override
-        public void setParameter(int i, double d) {
-            cacheStale = true;
-            throw new UnsupportedOperationException("Not supported yet.");
+        public void setParameter(int i, double d) throws ArrayIndexOutOfBoundsException {
+            MaximumEntropyIrtg.this.weights[i] = d;
+            this.cachedStale = true;
         }
-    }
-
-    private Map<AnnotatedCorpus.Instance, Map<Rule, Double>> expectations(List<AnnotatedCorpus.Instance> corpus) {
-        Map<AnnotatedCorpus.Instance, Map<Rule, Double>> expects = new HashMap<AnnotatedCorpus.Instance, Map<Rule, Double>>();
-        Map<AnnotatedCorpus.Instance, Map<String, Integer>> count = new HashMap<AnnotatedCorpus.Instance, Map<String, Integer>>();
-        double countSigma = 0.0;
-        for (AnnotatedCorpus.Instance i : corpus) {
-            count.put(i, new HashMap<String, Integer>());
-            countSigma = this.countRules(i.tree, count.get(i));
-        }
-        for (AnnotatedCorpus.Instance i : corpus) {
-            Map<Rule, Double> expect = new HashMap<Rule, Double>();
-            for (Rule rule : this.automaton.getRuleSet()) {
-                if (count.get(i).containsKey(rule.getLabel())) {
-                    expect.put(rule, count.get(i).get(rule.getLabel()) / countSigma);
-                } else {
-                    expect.put(rule, 0.0);
-                }
-            }
-            expects.put(i, expect);
-        }
-        return expects;
-    }
-
-    private int countRules(Tree<String> tree, Map<String, Integer> counts) {
-        int ret;
-        if (counts.containsKey(tree.getLabel())) {
-            counts.put(tree.getLabel(), 1 + counts.get(tree.getLabel()));
-            ret = 1;
-        } else {
-            ret = 0;
-        }
-        List<Tree<String>> children = tree.getChildren();
-        for (Tree<String> child : children) {
-            ret += this.countRules(child, counts);
-        }
-        return ret;
     }
 
     @CallableFromShell(name = "weights")
     public void readWeights(Reader reader) throws IOException {
         Properties props = new Properties();
         props.load(reader);
+
         for (Map.Entry<Object, Object> entry : props.entrySet()) {
             String key = String.valueOf(entry.getKey());
-            Double value = Double.valueOf(String.valueOf(entry.getValue()));
-            this.weights.put(key, value);
+            double weight = Double.valueOf(String.valueOf(entry.getValue()));
+            int index = this.getFeatureNames().indexOf(key);
+
+            if (index >= 0) { // no need to check the upper bound, because both collections have the same size
+                this.weights[index] = weight;
+            }
+
         }
+
     }
 
     public void writeWeights(Writer writer) {
         // TODO: print weights to the writer
+    }
+    
+    private static String join(List<String> strings) {
+        return join(strings, " ");
+    }
+
+    private static String join(List<String> strings, String delimiter) {
+        if (strings == null || strings.isEmpty()) return "";
+        Iterator<String> iter = strings.iterator();
+        StringBuilder builder = new StringBuilder(iter.next());
+        
+        while (iter.hasNext()) {
+            builder.append(delimiter).append(iter.next());
+        }
+        
+        return builder.toString();
     }
 }
