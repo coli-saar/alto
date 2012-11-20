@@ -5,6 +5,7 @@
 package de.saar.penguin.irtg.maxent;
 
 import de.saar.penguin.irtg.automata.Rule;
+import de.saar.basic.Pair;
 
 /**
  *
@@ -15,13 +16,22 @@ public class AlignPPtoNFeature implements FeatureFunction {
     private static String N_LABEL = "N";
     @Override
     public double evaluate(Rule rule){
-        if(rule.getParent().equals(N_LABEL) && (rule.getChildren().length > 0)){
-            for(Object child : rule.getChildren()){
-                if(child.equals(PP_LABEL)){
+        Pair parentState = (Pair) rule.getParent();
+        if (parentState.left.equals(N_LABEL)) {
+            for (Object child : rule.getChildren()) {
+                String label = this.getLabelFor((Pair) child);
+                if (label.equals(PP_LABEL)) {
                     return 1.0;
                 }
             }
         }
         return 0.0;
+    }
+
+    private String getLabelFor(Pair state) {
+        if (state.left instanceof Pair) {
+            return this.getLabelFor((Pair) state.left);
+        }
+        return (String) state.left;
     }
 }
