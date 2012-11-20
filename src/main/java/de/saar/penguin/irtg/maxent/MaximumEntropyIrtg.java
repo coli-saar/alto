@@ -178,7 +178,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         private double[] gradientSum2;
         private AnnotatedCorpus trainingData;
         private String interpretation;
-        private Set<Tree<String>> trees;
         private Map<Object, Double> inside;
         private Map<Object, Double> outside;
 
@@ -186,7 +185,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             this.cachedStale = true;
             this.trainingData = corpus;
             this.interpretation = interp;
-            this.trees = MaximumEntropyIrtg.this.automaton.language();
             this.cachedGradient = new double[MaximumEntropyIrtg.this.getNumFeatures()];
             this.gradientSum1 = new double[this.cachedGradient.length];
             this.gradientSum2 = new double[this.cachedGradient.length];
@@ -246,7 +244,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     // E parentValue = ret.get(rule.getParent()); is null
 
                     List<Rule> rules = new ArrayList<Rule>();
-                    rules.addAll(chart.getRuleSet());
+                    rules.addAll(MaximumEntropyIrtg.this.automaton.getRuleSet());
                     double[] pLambdaR = new double[rules.size()];
                     double insideS = 0.0;
                     
