@@ -52,4 +52,4 @@ P -> r12
 
 
 feature f1: de.saar.penguin.irtg.maxent.AlignPPtoNFeature
-/* feature f2: de.saar.penguin.irtg.maxent.StaticFeature */
+feature f2: de.saar.penguin.irtg.maxent.AlignPPtoVPFeature
