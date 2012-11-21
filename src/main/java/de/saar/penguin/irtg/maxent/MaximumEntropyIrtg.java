@@ -41,7 +41,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private FeatureFunction[] features;
     private double[] weights;
     private static final double INITIAL_WEIGHT = 0.0;
-    private static final double CONVERGE_DELTA = 0.9;
+    private static final double CONVERGE_DELTA = 0.1;
 
     /**
      * Constructor
@@ -156,33 +156,11 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         return chart;
     }
 
-    @CallableFromShell(name = "train")
-    public double[] testTraining() throws IOException, ParserException {
-        /**
-         * **********************************************
-         */
-        /**
-         * **********************************************
-         */
-        String TRAIN_STR = "i\n"
-                + "john watches the woman with the telescope\n"
-                + "r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))\n";
-        AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN_STR), this);
-        train(anCo);
-        /**
-         * **********************************************
-         */
-        /**
-         * **********************************************
-         */
-        return weights;
-    }
-
     /**
      * Trains the weights for the rules according to the training data
      *
      * @param corpus the training data containing sentences and their parse tree
-     * @throws ParserException
+     * @throws ParserException if part of the corpus cannot be handled by the parser
      */
     public void train(AnnotatedCorpus corpus) throws ParserException {
         String interp = (String) corpus.getInstances().get(0).inputObjects.keySet().toArray()[0];
@@ -191,44 +169,107 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         bfgs.optimize();
     }
 
+    /**
+     * Reads the feature function weights from a reader, e.g., string or file
+     * The data must be formatted as Java properties
+     * 
+     * @param reader the reader to read the data from
+     * @throws IOException if the reader cannot read its stream properly
+     */
+    @CallableFromShell(name = "weights")
+    public void readWeights(Reader reader) throws IOException {
+        Properties props = new Properties();
+        props.load(reader);
+
+        for (Map.Entry<Object, Object> entry : props.entrySet()) {
+            String key = String.valueOf(entry.getKey());
+            double weight = Double.valueOf(String.valueOf(entry.getValue()));
+            int index = getFeatureNames().indexOf(key);
+
+            if (index >= 0) { // no need to check the upper bound, because both collections have the same size
+                weights[index] = weight;
+            }
+
+        }
+
+    }
+
+    public void writeWeights(Writer writer) {
+        // TODO: print weights to the writer
+    }
+
+    /**
+     * Internal class for training the feature function weights. We use the mallet framework
+     * for training so this class implements a mallet interface
+     */
     private class MaxEntIrtgOptimizable implements Optimizable.ByGradientValue {
 
         private boolean cachedStale = true;
         private double cachedValue;
         private double[] cachedGradient;
-        private double[] gradientSum1;
-        private double[] gradientSum2;
         private AnnotatedCorpus trainingData;
         private String interpretation;
-        private Map<Object, Double> inside;
-        private Map<Object, Double> outside;
+        private Map<String, double[]> f;
 
+        /**
+         * Constructor
+         *
+         * @param corpus the annotated training data
+         * @param interp the training data may contain multiple interpretations.
+         * This parameter tells us which one to use
+         */
         public MaxEntIrtgOptimizable(AnnotatedCorpus corpus, String interp) {
             cachedStale = true;
             trainingData = corpus;
             interpretation = interp;
             cachedGradient = new double[getNumFeatures()];
-            gradientSum1 = new double[cachedGradient.length];
-            gradientSum2 = new double[cachedGradient.length];
+            
+            // precompute f_i(r) for every known rule
+            f = new HashMap<String, double[]>();
+            for (Rule r : (Set<Rule<String>>) automaton.getRuleSet()) {
+                double[] fi = new double[getNumFeatures()];
+                for (int i = 0; i < getNumFeatures(); i++) {
+                    FeatureFunction ff = getFeatureFunction(i);
+                    fi[i] = ff.evaluate(r);
+                }
+                f.put(r.getLabel(), fi);
+            }
         }
 
+        /**
+         * Primarily this function returns the computed log-likelihood for
+         * the optimization. Beyond that it computes the also needed gradient.
+         */
         @Override
         public double getValue() {
-            // TODO: compute log-likelihood here
-            // L(Lambda) = sum_x,y(p~(x,y)*sum_i(lambda_i*f_i(x,y)) - 
-            //             sum_x(p~(x)*log(sum_y(e^(sum_i(lambda_i*f_i(x,y))))))
-            // p~(x,y) = 1/N
-            // sum_i(lambda_i*f_i(x,y)) = log(chart.getWeights(y))
-            //
-            // p~(x) = 1/N
-            // sum_y(e^(sum_i(lambda_i*f_i(x,y))) = inside(S)
+            /**
+             * log-likelihood:
+             * L(Lambda) = sum_x,y(p~(x,y)*sum_i(lambda_i*f_i(x,y)) - sum_x(p~(x)*log(sum_y(e^(sum_i(lambda_i*f_i(x,y))))))
+             * sum_x,y : sum over every instance of training data
+             * p~(x,y) : 1/N
+             * sum_i(lambda_i*f_i(x,y)) : log(chart.getWeights(y))
+             * 
+             * sum_x : sum over every instance of training data
+             * p~(x) : 1/N
+             * sum_y(e^(sum_i(lambda_i*f_i(x,y)))) : inside(S)
+             * 
+             * gradient (<f~i> - <fi>):
+             * g_i = sum_x,y(p~(x,y)*f_i(x,y)) - sum_x,y(p~(x)*p_lambda(y|x)*f_i(x,y))
+             * sum_x,y : in both cases sum over every instance of training data
+             * f_i(x,y) : sum over all f_i(r) with Rule r used in a node of the tree
+             * p_lambda(y|x)*f_i(x,y) : E(f_i|S) (Chiang, 04)
+             * E(f_i|S) = sum_r(f_i(r)*E(r))
+             * sum_r : sum over all rules of the parse chart
+             * E(r) = outside(A)*p(r)*inside(B)*inside(C) / inside(S) | for r(A -> B C)
+             * p(r) : r.getWeight()
+             */
             if (cachedStale) {
                 // recompute
                 int n = trainingData.getInstances().size();
-                double sum1 = 0.0;
-                double sum2 = 0.0;
-                java.util.Arrays.fill(gradientSum1, 0.0);
-                java.util.Arrays.fill(gradientSum2, 0.0);
+                double sum1 = 0.0; // sum_x,y(sum_i(lambda_i*f_i(x,y))
+                double sum2 = 0.0; // sum_x(log(sum_y(e^(sum_i(lambda_i*f_i(x,y))))))
+                double[] fiY = new double[cachedGradient.length]; // sum_x,y(f_i(x,y))
+                double[] expectation = new double[cachedGradient.length]; // sum_x,y(E(f_i|S))
 
                 for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
                     String s = join((List<String>) instance.inputObjects.get(interpretation));
@@ -241,61 +282,62 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     } catch (ParserException e) {
                         throw new RuntimeException("getValue(): the parser could not read the input", e);
                     } catch (IOException e) {
-                        assert false : "getValue(): an error on accessing the reader has occurred";
+                        throw new RuntimeException("getValue(): an error on accessing the reader has occurred", e);
                     }
 
                     assert (chart != null);
 
-                    inside = chart.inside();
-                    outside = chart.outside(inside);
+                    // compute inside & outside for the states of the parse chart
+                    Map<Object, Double> inside = chart.inside();
+                    Map<Object, Double> outside = chart.outside(inside);
                     double insideS = 0.0;
 
+                    // compute inside(S) : the inside value of the starting states
                     for (Object start : chart.getFinalStates()) {
                         insideS += inside.get(start);
                     }
 
-                    // part 1: log-likelihood
+                    // compute parts of the log-likelihood
+                    // L(Lambda) = sum1/n - sum2/n
                     sum1 += Math.log(chart.getWeight(instance.tree));
                     sum2 += Math.log(insideS);
 
-                    // part 2: the gradient
-                    Map<String, double[]> f = new TreeMap<String, double[]>();
+                    //compute parts of the gradient
                     for (Rule r : (Set<Rule>) chart.getRuleSet()) {
-                        double expect_r;
+                        double expect_r; // E(r)
                         Double outVal = outside.get(r.getParent());
                         if (outVal != null) {
-                            double insideOutside = outVal * r.getWeight();
+                            double insideOutside = outVal * r.getWeight(); // outside(A)*p(r)
 
                             for (Object state : r.getChildren()) {
                                 Double inVal = inside.get(state);
                                 if (inVal != null) {
-                                    insideOutside *= inVal;
+                                    insideOutside *= inVal; // (...)*inside(B)*inside(C)
                                 } else {
                                     insideOutside = 0.0;
                                 }
                             }
 
-                            expect_r = insideOutside / insideS;
+                            expect_r = insideOutside / insideS; // (...) / inside(S)
                         } else {
                             expect_r = 0.0;
                         }
-                        double[] fi = new double[getNumFeatures()];
-                        for (int i = 0; i < getNumFeatures(); i++) {
-                            FeatureFunction ff = getFeatureFunction(i);
-                            double val = ff.evaluate(r);
-                            fi[i] = val;
-                            gradientSum2[i] += val * expect_r;
+                        double[] fi = f.get(r.getLabel());
+                        for (int i = 0; i < fi.length; i++) {
+                            expectation[i] += fi[i] * expect_r; // (...)*f_i(r)
                         }
-                        f.put(r.getLabel(), fi);
                     }
                     
-                    calcFI(instance.tree, f);
+                    // compute f_i(x,y)
+                    getFiFor(instance.tree, fiY);
                 }
 
+                // L(Lambda) = sum1/n - sum2/n
                 cachedValue = (sum1 - sum2) / n;
 
                 for (int i = 0; i < cachedGradient.length; i++) {
-                    cachedGradient[i] = (gradientSum1[i] - gradientSum2[i]) / n;
+                    // g_i = sum_x,y(f_i(x,y))/n - sum_x,y(E(f_i|S))/n
+                    cachedGradient[i] = (fiY[i] - expectation[i]) / n;
                 }
 
                 cachedStale = false;
@@ -305,30 +347,21 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             return cachedValue;
         }
 
-        private void calcFI(final Tree tree, final Map<String, double[]> f) {
+        private void getFiFor(final Tree tree, double[] fiY) {
             double[] fi = f.get((String) tree.getLabel());
-            for (int i = 0; i < getNumFeatures(); i++) {
-                gradientSum1[i] += fi[i];
+            for (int i = 0; i < fi.length; i++) {
+                // add f_i for this rule
+                fiY[i] += fi[i];
             }
 
             for (Tree child : (List<Tree>) tree.getChildren()) {
-                calcFI(child, f);
+                getFiFor(child, fiY);
             }
         }
 
         @Override
         public void getValueGradient(double[] gradient) {
-            // TODO: compute <f~i> - <fi> here, for all i
-            // sum_x,y(p~(x,y)*f_i(x,y)) - sum_x,y(p~(x)*p_lambda(y|x)*f_i(x,y))
-            // sum_x,y in both cases (x,y) from corpus only
-            // no additional trees y from automaton required
-            // p~(x,y) = 1/N
-            // f_i(x,y) = sum_u(f_i(r)) mit r=Regel im Knoten u vom Baum y
-            //
-            // p~(x) = 1/N
-            // p_lambda(y|x) * fi(x,y) = sum_r (outside(A)*p(r)*inside(B)*inside(C) * f_i(r) / inside(S))
-            //                 mit r = Regel aus der Parsechart und p(r) = r.getWeight()
-            // 
+            // we compute the gradient together with the value
             if (cachedStale) {
                 getValue();
             }
@@ -366,6 +399,26 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         }
     }
 
+
+    /**
+     * TESTING
+     * Function to test the training algorithm
+     */
+    @CallableFromShell(name = "train")
+    public double[] testTraining() throws IOException, ParserException {
+        String TRAIN_STR = "i\n"
+                + "john watches the woman with the telescope\n"
+//                + "r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))\n";
+                + "r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))\n";
+        AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN_STR), this);
+        train(anCo);
+        return weights;
+    }
+
+    /**
+     * TESTING
+     * Helper for readable array output
+     */
     private void printArray(double[] x) {
         for (int i = 0; i < x.length; i++) {
             System.err.print(x[i] + " ");
@@ -373,32 +426,24 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         System.err.println();
     }
 
-    @CallableFromShell(name = "weights")
-    public void readWeights(Reader reader) throws IOException {
-        Properties props = new Properties();
-        props.load(reader);
-
-        for (Map.Entry<Object, Object> entry : props.entrySet()) {
-            String key = String.valueOf(entry.getKey());
-            double weight = Double.valueOf(String.valueOf(entry.getValue()));
-            int index = getFeatureNames().indexOf(key);
-
-            if (index >= 0) { // no need to check the upper bound, because both collections have the same size
-                weights[index] = weight;
-            }
-
-        }
-
-    }
-
-    public void writeWeights(Writer writer) {
-        // TODO: print weights to the writer
-    }
-
+    /**
+     * Helping function to join a list of strings
+     * Uses white space as delimiter
+     * 
+     * @param strings the list of strings
+     * @return the joined string
+     */
     private static String join(List<String> strings) {
         return join(strings, " ");
     }
 
+    /**
+     * Helping function to join a list of strings
+     * 
+     * @param strings the list of strings
+     * @param delimiter the delimiter between the strings
+     * @return the joined string
+     */
     private static String join(List<String> strings, String delimiter) {
         if (strings == null || strings.isEmpty()) {
             return "";
