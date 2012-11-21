@@ -11,7 +11,7 @@ import de.saar.basic.Pair;
  *
  * @author danilo
  */
-public class AlignPPtoNFeature implements FeatureFunction {
+public class AlignPPtoNFeature extends FeatureFunction {
     private static String PP_LABEL = "PP";
     private static String N_LABEL = "N";
     @Override
@@ -21,22 +21,10 @@ public class AlignPPtoNFeature implements FeatureFunction {
             for (Object child : rule.getChildren()) {
                 String label = this.getLabelFor(child);
                 if (label.equals(PP_LABEL)) {
-                    System.err.println("feature weight = 1 for " + rule);
                     return 1.0;
                 }
             }
         }
         return 0.0;
-    }
-
-    private String getLabelFor(Object state) {
-        if (state instanceof Pair) {
-            Pair s = (Pair) state;
-            if (s.left instanceof Pair) {
-                return this.getLabelFor((Pair) s.left);
-            }
-            return (String) s.left;
-        }
-        return (String) state;
     }
 }
