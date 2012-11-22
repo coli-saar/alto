@@ -36,6 +36,9 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException {
         MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader("examples/maxent-test.irtg"));
         i.testTraining();
+        StringWriter output = new StringWriter();
+        i.writeWeights(output);
+        System.err.println("Output:\n" + output.toString());
     }
     private List<String> featureNames;
     private FeatureFunction[] features;
@@ -194,8 +197,14 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
     }
 
-    public void writeWeights(Writer writer) {
-        // TODO: print weights to the writer
+    public void writeWeights(Writer writer) throws IOException {
+        Properties props = new Properties();
+
+        for (int i = 0; i < weights.length; i++) {
+            props.put(featureNames.get(i), String.valueOf(weights[i]));
+        }
+
+        props.store(writer, null);
     }
 
     /**
