@@ -61,42 +61,44 @@ class MaximumEntropyIrtgTest {
     public void testMaxEntTraining() {
         InterpretedTreeAutomaton irtg = iparse(CFG_STR);
         assert irtg instanceof MaximumEntropyIrtg;
-        AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN2_STR), irtg);
-        /*
+        AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN1_STR), irtg);
         irtg.train(anCo);
         double[] fWeights = irtg.getFeatureWeights();
-        assertEquals( 0.0, fWeights[0]);
-        assertEquals( 1.0, fWeights[1]);
-        */
+        assert (fWeights[0] > fWeights[1]), "weights are not optimized";
+
+        anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN2_STR), irtg);
+        irtg.train(anCo);
+        fWeights = irtg.getFeatureWeights();
+        assert (fWeights[0] < fWeights[1]), "weights are not optimized";
     }
     
     private static final String CFG_STR = """
 interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
-feature f1: de.saar.penguin.irtg.maxent.StaticFeature
+feature f1: de.saar.penguin.irtg.maxent.AlignPPtoVPFeature
 feature f2: de.saar.penguin.irtg.maxent.AlignPPtoNFeature
-r1(NP,VP) -> S!
+S! -> r1(NP,VP)
   [i] *(?1,?2)
-r4(V,NP) -> VP 
+VP -> r4(V,NP)
   [i] *(?1,?2)
-r5(VP,PP) -> VP
+VP -> r5(VP,PP)
   [i] *(?1,?2)
-r6(P,NP) -> PP
+PP -> r6(P,NP)
   [i] *(?1,?2)
-r7 -> NP
+NP -> r7
   [i] john
-r2(Det,N) -> NP
+NP -> r2(Det,N)
   [i] *(?1,?2)
-r8 -> V
+V -> r8
   [i] watches
-r9 -> Det
+Det -> r9
   [i] the
-r10 -> N
+N -> r10
   [i] woman
-r11 -> N
+N -> r11
   [i] telescope
-r3(N,PP) -> N
+N -> r3(N,PP)
   [i] *(?1,?2)
-r12 -> P
+P -> r12
   [i] with""";
 
     private static final String WEIGHTS_STR = """
@@ -126,16 +128,5 @@ r1(r7,r4( r8, r2(r9,r3(r11, r6(r12, r2(r9,r10))))))
     
     private static InterpretedTreeAutomaton iparse(String s) {
         return IrtgParser.parse(new StringReader(s));
-    }
-}
-
-public class StaticFeature implements FeatureFunction {
-    private double staticFeatureValue;
-    public StaticFeatureFunction(){
-        this.staticFeatureValue = 0.5;
-    }
-
-    public double evaluate(Rule rule){
-        return this.staticFeatureValue;
     }
 }
