@@ -197,6 +197,14 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
     }
 
+
+    /**
+     * Writes the feature function weights to a writer, e.g., string or file
+     * The data will be formatted as Java properties
+     * 
+     * @param writer the writer to store the data into
+     * @throws IOException if the writer cannot store the data properly
+     */
     public void writeWeights(Writer writer) throws IOException {
         Properties props = new Properties();
 
