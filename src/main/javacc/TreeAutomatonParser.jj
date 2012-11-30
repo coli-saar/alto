@@ -104,15 +104,6 @@ String State() :
 }
 
 
-String name() :
-{
-    Token tok;
-}
-{
-    tok = <NAME> { return tok.image.intern(); }
-    | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1).intern(); }
-}
-
 
 
 void Weight() :
