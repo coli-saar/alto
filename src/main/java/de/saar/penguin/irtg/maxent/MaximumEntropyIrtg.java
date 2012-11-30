@@ -427,7 +427,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                 + "john watches the woman with the telescope\n"
 //                + "r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))\n";
                 + "r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))\n";
-        AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN_STR), this);
+        AnnotatedCorpus anCo = readAnnotatedCorpus(new StringReader(TRAIN_STR));
         train(anCo);
         return weights;
     }
