@@ -103,87 +103,94 @@ in this IRTG, as well as the algebra for each interpretation. It then
 continues with entries such as
 
 \begin{verbatim}
-r1(NP,VP) -> S!
+S! -> r1(NP,VP)
   [english] *(?1,?2)
   [german] *(?1,?2)
 \end{verbatim}
 
 The first line of each entry is the rule of the RTG $G$ in the center of
-the IRTG, written bottom-up. The rule in the example specifies that if
-the children of some node $u$ in a derivation tree can be assigned the
-states \verb?NP? and \verb?VP?, and if $u$ has the node label
-\verb?r1?, then $u$ can be assigned the state \verb?S?. We deviate
-from \cite{koller11} in that we assume that every rule only contains a
-single label (and not an entire term), and that no two rules use the
-same label. Note that the exclamation mark behind \verb?S? marks
-\verb?S? as a final state of the automaton (or the start symbol of the
-RTG).
+the IRTG.  We assume that the RTG is normalized, i.e.\ every rule
+contains a single terminal symbol.  Thus the example rule specifies
+that we can expand a nonterminal symbol \verb?S? into a node whose
+label is the terminal symbol \verb?r1? and whose children are labeled
+with the nonterminals \verb?NP? and \verb?VP?.  Equivalently, you can
+think of the rule as the rule of a top-down tree automaton, which says
+that if we try to accept some node $u$ with label \verb?r1? in state
+\verb?S?, then we may assign the children of $u$ the states \verb?NP?
+and \verb?VP?.  The exclamation mark behind \verb?S? marks \verb?S? as
+the start symbol of the RTG or the initial state of the tree
+automaton, respectively.
 
-The values for the homomorphisms are defined in the remaining lines of
-the entry. There is one line for each interpretation, which specified
-the value of the homomorphism of that interpretation for the label
-that is processed by the current grammar rule.  Variables are written
-as terms of the form \texttt{?n}, where \verb?n? is a number. Note
-that if $n$ states occur on the left-hand side of the grammar rule
-(i.e., the label has arity $n$), you can use only the variables
-\texttt{?1}, \ldots, \texttt{?n} in the homomorphism term. The example
-rule specifies that $h_\mathrm{english}(r_1) = *(x_1,x_2)$ and
-$h_\mathrm{german}(r_1) = *(x_1,x_2)$; the symbol * is interpreted as
-concatenation in the string algebra.
+The RTGs that the IRTG tool can read are restricted in two ways: every
+rule may only contain a single terminal symbol (i.e., the RTG is
+normalized), and every terminal symbol may only occur in a single
+rule.  This allows us to define the values for the homomorphism in a
+very compact way.  After each RTG rule, there is one line for each
+interpretation which specifies the value of the homomorphism of that
+interpretation for the terminal symbol that is processed by the
+current grammar rule.  Variables are written as terms of the form
+\texttt{?n}, where \verb?n? is a number. Note that if $n$ states occur
+on the left-hand side of the grammar rule (i.e., the label has arity
+$n$), you can use only the variables \texttt{?1}, \ldots, \texttt{?n}
+in the homomorphism term. The example rule specifies that
+$h_\mathrm{english}(r_1) = *(x_1,x_2)$ and $h_\mathrm{german}(r_1) =
+*(x_1,x_2)$; the symbol * is interpreted as concatenation in the
+string algebra.
 
 The example grammar also contains terminal rules of the following
 form:
 
 \begin{verbatim}
-r11 -> N
+N -> r11
   [english] telescope
   [german] fernrohr
 \end{verbatim}
 
-This rule states that a leaf node with label \verb?r11? may be
-assigned the state \verb?N? by the automaton. Notice that \verb?r11?
-is a symbol of arity zero, and therefore there are no states (and no
-brackets) on the left-hand side of the grammar rule. The homomorphisms
-are specified as before, as $h_\mathrm{english}(r_{11}) =
-\mathtt{telescope}$ and $h_\mathrm{german}(r_{11}) =
-\mathtt{fernrohr}$.
+This rule states that the nonterminal \verb?N? may be expanded into
+the terminal symbol \verb?r11?. Notice that \verb?r11?  is a symbol of
+arity zero, and therefore there are no states (and no brackets) on the
+right-hand side of the grammar rule. The homomorphisms are specified as
+before, as $h_\mathrm{english}(r_{11}) = \mathtt{telescope}$ and
+$h_\mathrm{german}(r_{11}) = \mathtt{fernrohr}$.
 
 
 \subsection{Parsing}
 
-Now let's use this grammar for parsing an English string.
+Now let's use this grammar for parsing an English string.\footnote{In
+  reality, the IRTG tool will print many more rules, all involving the
+  state \texttt{q\_FAIL\_}. We have omitted these rules for brevity here.}
 
 \begin{verbatim}
 > chart = g.parse(english:"john watches the woman with the telescope")
 > chart
-r12 -> P,4-5  [1.0]
-r11 -> N,6-7  [1.0]
-r10 -> N,3-4  [1.0]
-r9b -> Det,5-6  [1.0]
-r9b -> Det,2-3  [1.0]
-r6(P,4-5, NP,5-7) -> PP,4-7  [1.0]
-r7 -> NP,0-1  [1.0]
-r8 -> V,1-2  [1.0]
-r9 -> Det,5-6  [1.0]
-r9 -> Det,2-3  [1.0]
-r1(NP,0-1, VP,1-4) -> S,0-4  [1.0]
-r1(NP,0-1, VP,1-7) -> S,0-7  [1.0]!
-r2(Det,5-6, N,6-7) -> NP,5-7  [1.0]
-r2(Det,2-3, N,3-4) -> NP,2-4  [1.0]
-r2(Det,2-3, N,3-7) -> NP,2-7  [1.0]
-r3(N,3-4, PP,4-7) -> N,3-7  [1.0]
-r4(V,1-2, NP,2-4) -> VP,1-4  [1.0]
-r4(V,1-2, NP,2-7) -> VP,1-7  [1.0]
-r5(VP,1-4, PP,4-7) -> VP,1-7  [1.0]
+P,4-5 -> r12  [1.0]
+N,6-7 -> r11 [1.0]
+N,3-4 -> r10 [1.0]
+Det,5-6 -> r9b [1.0]
+Det,2-3 -> r9b  [1.0]
+PP,4-7 -> r6(P,4-5, NP,5-7) [1.0]
+NP,0-1 -> r7 [1.0]
+V,1-2 -> r8 [1.0]
+Det,5-6 -> r9 [1.0]
+Det,2-3 -> r9 [1.0]
+S,0-4 -> r1(NP,0-1, VP,1-4) [1.0]
+S,0-7! -> r1(NP,0-1, VP,1-7) [1.0]
+NP,5-7 -> r2(Det,5-6, N,6-7) [1.0]
+NP,2-4 -> r2(Det,2-3, N,3-4) [1.0]
+NP,2-7 -> r2(Det,2-3, N,3-7) [1.0]
+N,3-7 -> r3(N,3-4, PP,4-7) [1.0]
+VP,1-4 -> r4(V,1-2, NP,2-4) [1.0]
+VP,1-7 -> r4(V,1-2, NP,2-7) [1.0]
+VP,1-7 -> r5(VP,1-4, PP,4-7) [1.0]
 \end{verbatim}
 
 Several things happened here. First, we called the \verb?parse? method
-of the object stored in the variable \verb?irtg? to parse the sentence
+of the object stored in the variable \verb?g? to parse the sentence
 ``John watches the woman with the telescope'' on the \verb?english?
 interpretation. This happens by computing the decomposition automaton
 $D_w$ for this string in the string algebra and intersecting $G$ with
-the homomorphic pre-image $h_\mathrm{english}(D_w)$. The result of
-this intersection is an RTG $G'$, which we store in the variable
+the homomorphic pre-image $h_\mathrm{english}^{-1}(D_w)$. The result of
+this intersection is an RTG $G'$, which we assign to the variable
 \verb?chart?. Notice that the values of expressions (such as the
 objects stored in a variable) are really Java objects of certain
 classes, and have methods that can be called.
@@ -198,14 +205,15 @@ input sentence.
 
 Finally, notice that each rule of \verb?chart? comes with a weight,
 printed in square brackets behind the rule. These weights are there
-because unlike the system described by \cite{koller11}, the IRTG works
-with \emph{weighted} grammars, and $G'$ is the \emph{weighted}
-intersection of $G$ and the pre-image. Because we neither specified
-weights for the rules of $G$ nor for the pre-image grammar, all of
-them default to 1, which is where the 1.0 weights come from.
+because the IRTG tool works with \emph{weighted} grammars, and $G'$ is
+the \emph{weighted} intersection of $G$ and the pre-image. Because we
+neither specified weights for the rules of $G$ nor for the pre-image
+grammar, all of them default to 1, which is where the 1.0 weights come
+from.
 
-We can now ask the IRTG tool to show us all derivation trees of the
-input sentence:
+We can now ask the IRTG tool to show us all \emph{derivation trees}
+(i.e., those trees in $L(G)$ that map to the inputs) of the input
+sentence:
 
 \begin{verbatim}
 > chart.language()
@@ -275,12 +283,32 @@ As above, there are four instead of one strings because the grammar does
 not represent case and gender agreement on the German side.
 
 
-\subsection{EM training}
+\subsection{Learning IRTG weights}
 
-Finally, there is experimental support in the IRTG tool for using EM
-training to learn weights for the weighted RTG.  We will demonstrate
-this with a PCFG grammar. First we load an IRTG encoding of a
-context-free grammar in which all weights are 1.
+Algorithms like the Viterbi algorithm we mentioned above are meant to
+be used with RTGs that have meaningful weights.  These weights are
+typically learned from corpora of inputs that are suitable for the
+IRTG, perhaps together with annotations that specify the correct
+derivation tree for each input tuple.  The IRTG tool supports several
+training algorithms, but none of them have been tested on large data
+sets, so they may not be as efficient as necessary.
+
+\paragraph{Supervised training.}
+Consider the case of supervised training first.  In this case, each
+training instance in a corpus for training an IRTG with $k$
+interpretations consists of $k$ lines of text, each of which is the
+string representation of the input object on one dimension, plus a
+$k+1$-st line for the correct derivation tree that generated these
+input objects.  An annotated corpus with $n$ training instances
+consists first of a header of $k$ lines and then of $n$ blocks of
+$k+1$ lines, one for each training instance.  The header simply lists
+the names of the interpretations in some arbitrary order; the IRTG
+tool then assumes that the same order is used for the input objects in
+each training instance.
+
+Consider the following example. Let's say we have an IRTG \verb?g2?
+which looks as follows. It represents a weighted context-free grammar
+in which all weights are 1.
 
 \begin{verbatim}
 > g2 = irtg(["examples/cfg.irtg"])
@@ -298,6 +326,45 @@ r10 -> N  [1.0]
 r4(V, NP) -> VP  [1.0]
 r5(VP, PP) -> VP  [1.0]
 \end{verbatim}
+
+An example for the training data is given in the file
+\verb?pcfg-annotated-training.txt? in the \verb?examples?
+directory. The file looks as follows:
+
+\begin{verbatim}
+i
+john watches the woman with the telescope
+r1(r7,r5(r4(r8, r2(r9,r10)), r6(r12, r2(r9,r11))))
+john watches the telescope with the telescope
+r1(r7,r5(r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))
+john watches the telescope with the woman
+r1(r7,r5(r4(r8, r2(r9,r11)), r6(r12, r2(r9,r10))))
+\end{verbatim}
+
+We can use it to learn the weights for the PCFG \verb?g2? using
+maximum likelihood estimation as follows.
+
+\begin{verbatim}
+> c1 = g2.readUnannotatedCorpus(["examples/pcfg-annotated-training.txt"])
+> g2.mltrain(c1)
+> g2.automaton()
+PP -> r6(P, NP) [1.0]
+NP -> r7 [0.3333333333333333]
+V -> r8 [1.0]
+S! -> r1(NP, VP) [1.0]
+Det -> r9 [1.0]
+NP -> r2(Det, N) [0.6666666666666666]
+P -> r12 [1.0]
+N -> r11 [0.6666666666666666]
+N -> r3(N, PP) [0.0]
+VP -> r4(V, NP) [0.5]
+N -> r10 [0.3333333333333333]
+VP -> r5(VP, PP) [0.5]
+\end{verbatim}
+
+\paragraph{Unsupervised training.}
+
+
 
 We can then learn PCFG weights for this grammar using Expectation
 Maximization (EM) training. We use the file

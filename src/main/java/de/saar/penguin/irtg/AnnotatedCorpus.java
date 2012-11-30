@@ -39,7 +39,7 @@ public class AnnotatedCorpus {
         return instances;
     }
 
-    public static AnnotatedCorpus readAnnotatedCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException {
+    static AnnotatedCorpus readAnnotatedCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException {
         AnnotatedCorpus ret = new AnnotatedCorpus();
         BufferedReader br = new BufferedReader(reader);
         List<String> interpretationOrder = new ArrayList<String>();
@@ -86,5 +86,10 @@ public class AnnotatedCorpus {
 
             lineNumber++;
         }
+    }
+    
+    @Override
+    public String toString() {
+        return "[annotated corpus with " + instances.size() + " instances]";
     }
 }

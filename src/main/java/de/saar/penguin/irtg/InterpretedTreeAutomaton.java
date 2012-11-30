@@ -23,6 +23,7 @@ import de.up.ling.tree.TreeVisitor;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -129,7 +130,7 @@ public class InterpretedTreeAutomaton {
      */
     private Set<Object> decode(TreeAutomaton chart, Interpretation interp) {
         TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
-        Set<Tree<String>> outputLanguage = outputChart.language();
+        Collection<Tree<String>> outputLanguage = outputChart.language();
 
         Set<Object> ret = new HashSet<Object>();
         for (Tree<String> term : outputLanguage) {
@@ -153,7 +154,7 @@ public class InterpretedTreeAutomaton {
 
     private Set<Tree> decodeToTerms(TreeAutomaton chart, Interpretation interp) {
         TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
-        Set<Tree<String>> outputLanguage = outputChart.language();
+        Collection<Tree<String>> outputLanguage = outputChart.language();
 
         Set<Tree> ret = new HashSet<Tree>();
         for (Tree<String> term : outputLanguage) {
@@ -406,8 +407,13 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell
-    public ChartCorpus parseCorpus(Reader reader) throws IOException {
+    public ChartCorpus readUnannotatedCorpus(Reader reader) throws IOException {
         return ChartCorpus.parseCorpus(reader, this);
+    }
+    
+    @CallableFromShell
+    public AnnotatedCorpus readAnnotatedCorpus(Reader reader) throws IOException {
+        return AnnotatedCorpus.readAnnotatedCorpus(reader, this);
     }
 
     public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {

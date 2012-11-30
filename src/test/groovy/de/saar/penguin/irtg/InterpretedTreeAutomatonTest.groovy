@@ -81,7 +81,7 @@ S -> r2
     @Test
     public void testEM() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        ChartCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        ChartCorpus pco = irtg.readUnannotatedCorpus(new StringReader(PCFG_EMTRAIN_STR));
         irtg.trainEM(pco);
         
         assert true;
@@ -90,14 +90,14 @@ S -> r2
     @Test
     public void testParseCorpus() {
        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        ChartCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        ChartCorpus pco = irtg.readUnannotatedCorpus(new StringReader(PCFG_EMTRAIN_STR));
         assertEquals(3, pco.getAllInstances().size());
     }
     
     @Test
     public void testSerializeParsedCorpus() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        ChartCorpus pco = irtg.parseCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        ChartCorpus pco = irtg.readUnannotatedCorpus(new StringReader(PCFG_EMTRAIN_STR));
         
         ByteArrayOutputStream ostream = new ByteArrayOutputStream();
         pco.write(ostream);
@@ -122,7 +122,7 @@ S -> r2
     @Test
     public void testParseAnnotatedCorpus() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        AnnotatedCorpus pco = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
+        AnnotatedCorpus pco = irtg.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR));
         
         assertEquals(3, pco.getInstances().size());
         assertEquals(pt("r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))"), pco.getInstances().get(1).tree);
