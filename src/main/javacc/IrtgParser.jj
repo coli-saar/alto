@@ -72,6 +72,7 @@ TOKEN :
     <FEATURE: "feature"> |
     < NAME:     ["a"-"z","A"-"Z","_", "*", "$", "@", "+"] (["a"-"z","A"-"Z","_", "<", ">", "+", "-", "0"-"9", "@", "/", "*", ".", "$"] )* > |
     <QUOTED_NAME: "\'" (~["\'"])* "\'"> |
+    <DOUBLE_QUOTED_NAME: "\"" (~["\""])* "\""> |
     <VARIABLE : ["?"] (["a"-"z", "A"-"Z", "_", "0"-"9", "-"])*> |
     <NUMBER : ["0"-"9", "."] (["0"-"9", ".", "e", "E", "-"])* > |
     < FIN_MARK: [ "\u00b0", "!"] > 
@@ -248,4 +249,5 @@ String name() :
 {
     tok = <NAME> { return tok.image.intern(); }
     | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
+    | tok = <DOUBLE_QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
 }
