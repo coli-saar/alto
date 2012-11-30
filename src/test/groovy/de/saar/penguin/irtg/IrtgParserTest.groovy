@@ -90,7 +90,7 @@ P -> r12
         TreeAutomaton chart = irtg.parseInputObjects(["i": words]);
         chart.makeAllRulesExplicit();
 
-//        System.err.println("\n\nreduced:\n" + chart.reduce());
+        //        System.err.println("\n\nreduced:\n" + chart.reduce());
 
         assert chart.accepts(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
         assert chart.accepts(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
@@ -108,6 +108,39 @@ P -> r12
             interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
 
             Foo -> a [i] 'foo bar'
+        ''';
+
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+    }
+
+    @Test
+    public void testQuotedName2() {
+        String grammarstring = '''
+            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
+
+            Foo -> a [i] '"'
+        ''';
+
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+    }
+    
+    @Test
+    public void testDoubleQuotedName() {
+        String grammarstring = '''
+            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
+
+            Foo -> a [i] "foo bar"
+        ''';
+
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+    }
+    
+    @Test
+    public void testDoubleQuotedName2() {
+        String grammarstring = '''
+            interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
+
+            Foo -> a [i] "'"
         ''';
 
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));

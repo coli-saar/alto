@@ -58,6 +58,34 @@ class TreeAutomatonParserTest {
         assertEquals(new HashSet([rw("q1", "a", [], 2)]), automaton.getRulesBottomUp("a", []));
         assertEquals(new HashSet([rw("q", "f", ["q1", "q2"], 1.5)]), automaton.getRulesBottomUp("f", ["q1", "q2"]));
     }
+    
+    private void assertRulesBottomUp(TreeAutomaton automaton, String label, List childStates, List<Rule> rules) {
+        assertEquals(new HashSet(rules), automaton.getRulesBottomUp(label, childStates));
+    }
+    
+    @Test
+    public void testQuotedName() {
+        TreeAutomaton automaton = parse("Foo -> \'foo bar\'");
+        assertRulesBottomUp(automaton, "foo bar", [], [r("Foo", "foo bar", [])]);        
+    }
+    
+    @Test
+    public void testQuotedName2() {
+        TreeAutomaton automaton = parse("Foo -> \'\"\'");
+        assertRulesBottomUp(automaton, "\"", [], [r("Foo", "\"", [])]);
+    }
+    
+    @Test
+    public void testDoubleQuotedName() {
+        TreeAutomaton automaton = parse("Foo -> \"foo bar\"");
+        assertRulesBottomUp(automaton, "foo bar", [], [r("Foo", "foo bar", [])]);
+    }
+    
+    @Test
+    public void testDoubleQuotedName2() {
+        TreeAutomaton automaton = parse("Foo -> \"\'\"");
+        assertRulesBottomUp(automaton, "\'", [], [r("Foo", "\'", [])]);
+    }
 
     private static TreeAutomaton parse(String s) {
         return TreeAutomatonParser.parse(new StringReader(s));
