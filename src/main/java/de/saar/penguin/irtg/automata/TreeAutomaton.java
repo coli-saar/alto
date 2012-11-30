@@ -25,14 +25,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.Set;
 
@@ -374,18 +372,25 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Computes the tree language accepted by this automaton. This only works if
-     * the automaton is acyclic (in which case the language is also finite).
+     * Computes the tree language accepted by this automaton. Notice that
+     * if the language is infinite, this method will not terminate. Get
+     * a languageIterator() in this case, in order to enumerate as many
+     * trees as you want.
      *
      * @return
      */
     @CallableFromShell(joinList = "\n")
     public Set<Tree<String>> language() {
+        Set<Tree<String>> ret = new HashSet<Tree<String>>();
+        Iterator<Tree<String>> it = languageIterator();
+        
+        while( it.hasNext() ) {
+            ret.add(it.next());
+        }
+        
+        return ret;
+        
         /*
-         * The current implementation is probably not particularly efficient.
-         * It could be improved by using CartesianIterators for each rule.
-         * Or don't return the Set as a whole, but just an Iterator.
-         */
         Map<State, List<Tree<String>>> languagesForStates =
                 evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree<String>>>() {
             public List<Tree<String>> evaluateRule(Rule<State> rule) {
@@ -400,12 +405,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
             ret.addAll(languagesForStates.get(finalState));
         }
         return ret;
+        */
     }
 
     public void setRulePrintingFilter(Predicate<Rule<State>> filter) {
         this.filter = filter;
     }
 
+    @CallableFromShell
     public void setSkipFail() {
         filter = new SkipFailRulesFilter<State>();
     }
