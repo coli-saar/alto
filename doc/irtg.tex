@@ -2,7 +2,9 @@
 
 \usepackage{url}
 \usepackage{natbib}
+\usepackage{color}
 
+\newcommand{\todo}[1]{\textcolor{red}{(#1)}}
 
 \title{The IRTG Tool\\Version 1.0}
 \author{Alexander Koller\\University of Potsdam\\\url{koller@ling.uni-potsdam.de}}
@@ -95,7 +97,7 @@ to read this grammar from the file \verb?scfg.irtg? in the
 to the variable \verb?g?. The square brackets around the file name are
 important, because this is what instructs the shell to read from a
 file with a given name. Without the square brackets, the shell would
-simply take the contents of the shell as the grammar.
+simply take the contents of the string as the grammar.
 
 Take a moment to look at the file \url{examples/scfg.irtg}. The file
 starts with a preamble which specified names for the interpretations
@@ -307,24 +309,25 @@ tool then assumes that the same order is used for the input objects in
 each training instance.
 
 Consider the following example. Let's say we have an IRTG \verb?g2?
-which looks as follows. It represents a weighted context-free grammar
-in which all weights are 1.
+which looks as follows. There is a single interpretation, whose name
+is \verb?i?, and the automaton is shown below. \verb?g2? represents a
+weighted context-free grammar in which all weights are 1.
 
 \begin{verbatim}
 > g2 = irtg(["examples/cfg.irtg"])
 > g2.automaton()
-r6(P, NP) -> PP  [1.0]
-r7 -> NP  [1.0]
-r8 -> V  [1.0]
-r9 -> Det  [1.0]
-r1(NP, VP) -> S  [1.0]!
-r12 -> P  [1.0]
-r2(Det, N) -> NP  [1.0]
-r3(N, PP) -> N  [1.0]
-r11 -> N  [1.0]
-r10 -> N  [1.0]
-r4(V, NP) -> VP  [1.0]
-r5(VP, PP) -> VP  [1.0]
+PP -> r6(P, NP) [1.0]
+NP -> r7 [1.0]
+V -> r8 [1.0]
+Det -> r9 [1.0]
+S! -> r1(NP, VP) [1.0]
+P -> r12 [1.0]
+NP -> r2(Det, N) [1.0]
+N -> r3(N, PP) [1.0]
+N -> r11 [1.0]
+N -> r10 [1.0]
+VP -> r4(V, NP) [1.0]
+VP -> r5(VP, PP) [1.0]
 \end{verbatim}
 
 An example for the training data is given in the file
@@ -342,10 +345,12 @@ r1(r7,r5(r4(r8, r2(r9,r11)), r6(r12, r2(r9,r10))))
 \end{verbatim}
 
 We can use it to learn the weights for the PCFG \verb?g2? using
-maximum likelihood estimation as follows.
+maximum likelihood estimation by first loading the corpus into an
+\verb?AnnotatedCorpus? object, \verb?c1?, and then calling the
+IRTG's \verb?mltrain? method to perform the training.
 
 \begin{verbatim}
-> c1 = g2.readUnannotatedCorpus(["examples/pcfg-annotated-training.txt"])
+> c1 = g2.readAnnotatedCorpus(["examples/pcfg-annotated-training.txt"])
 > g2.mltrain(c1)
 > g2.automaton()
 PP -> r6(P, NP) [1.0]
@@ -362,105 +367,198 @@ N -> r10 [0.3333333333333333]
 VP -> r5(VP, PP) [0.5]
 \end{verbatim}
 
+Notice that while this particular IRTG (and therefore this particular
+annotated corpus) only had a single interpretation, exactly the same
+methods can be used to train a synchronous IRTG.  Note also that we
+used square bracket notation to instruct the shell to read the corpus
+from a file.
+
+
 \paragraph{Unsupervised training.}
-
-
-
-We can then learn PCFG weights for this grammar using Expectation
-Maximization (EM) training. We use the file
-\url{examples/pcfg-training.txt} as training data. Each training
-instance consists of several lines, one for each interpretation of the
-IRTG. The order of the interpretations is specified at the start of
-the file. In the example, there is only a single interpretation,
-\verb?i?, so each line (except for the first one) counts as a single
-training instance. We can perform EM training as follows:
+If annotations are not available, we can try to estimate IRTG weights
+from unannotated training data. An unannotated corpus looks exactly
+like the annotated corpora described above, except that each
+individual training instance only consists of a block of $k$ lines for
+the input objects on each interpretation. As an example, here are the
+contents of the file \verb?pcfg-unannotated-training.txt? from the
+\verb?examples? directory:
 
 \begin{verbatim}
-> g2.emtrain(["examples/pcfg-training.txt"])
-> g2.automaton()
-r6(P, NP) -> PP  [1.0]
-r7 -> NP  [0.3333333333333333]
-r8 -> V  [1.0]
-r9 -> Det  [1.0]
-r1(NP, VP) -> S  [1.0]!
-r12 -> P  [1.0]
-r2(Det, N) -> NP  [0.6666666666666667]
-r3(N, PP) -> N  [0.04888355312945965]
-r11 -> N  [0.8718567429646621]
-r10 -> N  [0.07925970390587832]
-r4(V, NP) -> VP  [0.5270903186242554]
-r5(VP, PP) -> VP  [0.4729096813757445]
+i
+john watches the woman with the telescope
+john watches the telescope with the telescope
+john watches the telescope with the woman
 \end{verbatim}
 
-(Notice again that we have used square bracket notation to read data
-from files instead of using the string value directly, as in the
-parsing examples above.)
+We can use this unannotated corpus to perform unsupervised estimation
+of the rule weights in the grammar.  For instance, we can use the
+IRTG's \verb?emtrain? method to perform Expectation Maximiziation (EM)
+training.
 
-The EM algorithm has adjusted the rule weights to fit the
-observations. \verb?g2? is an ordinary IRTG and can be used in exactly
-the same ways as before; the only difference is that we did not read
-it directly from a file, but set the weights through training.
+\begin{verbatim}
+> g3 = irtg(["examples/cfg.irtg"])
+> c2 = g3.readUnannotatedCorpus(["examples/pcfg-training.txt"])
+> g3.emtrain(c2)
+> g3.automaton()
+PP -> r6(P, NP) [1.0]
+NP -> r7 [0.3333333333333333]
+V -> r8 [1.0]
+Det -> r9 [1.0]
+S! -> r1(NP, VP) [1.0]
+P -> r12 [1.0]
+NP -> r2(Det, N) [0.6666666666666667]
+N -> r3(N, PP) [0.04888355312945965]
+N -> r11 [0.8718567429646621]
+N -> r10 [0.07925970390587832]
+VP -> r4(V, NP) [0.5270903186242554]
+VP -> r5(VP, PP) [0.4729096813757445]
+\end{verbatim}
+
+In addition to EM, the IRTG tool also implements the Variational Bayes
+training algorithm described by \todo{jones etal}.  You can perform VB
+training by calling \verb?g3.vbtrain(c2)?.  Note that just like in the
+supervised case, all of these training algorithms apply directly to
+IRTGs with multiple interpretations.
+
 
 
 \section{Using the IRTG Tool} \label{sec:using}
 
-I will now go through the methods for each class that are available
-from the shell.
+The IRTG tool is distributed as a Java Jar file, which you are free to
+use in your own program. The API docs can be found at
+\todo{http://www.ling.uni-potsdam.de/tcl/irtg/apidocs}.
 
-This section needs to be improved at some point.
+There are two recommended ways to use the IRTG tool as an interactive
+main program: through the built-in shell, or using the Scala
+\todo{REPL} interpreter.  Each of these provides mechanisms for
+evaluating expressions, storing values in variables, and reading data
+from files.  In general, the built-in shell is a little more
+convenient to use for simple things (such as the tutorial above), but
+the Scala approach allows you to use arbitrary methods of the IRTG
+objects, and offers you the full power of Scala to process your
+results.
 
-\subsection{Main}
+\subsection{The built-in shell}
 
-The following methods can be called directly as \verb?method()?,
-instead of in the form \verb?object.method()?.
+The built-in shell of the IRTG tool is started by calling the main
+class of the Jar file:
 
-A \verb?Reader? can be obtained in the shell with an expression of the
-form \verb?"blah"? (in which case the reader returns the string
-``blah'') or the form \verb?["blah"]? (in which case the reader
-returns the contents of the file with name ``blah'').
+\begin{verbatim}
+$ java -jar irtg-1.0.jar
+> 
+\end{verbatim}
 
-A \verb?Map? can be obtained in the shell with a method call of the
-form \verb?object.method(a:x, b:y)?. This call will create a map in
-which the value of x is stored under the key ``a'' and the value of y
-under the key ``b''.
+Commands in the shell take one of two forms: an expression, e.g.\
+\verb?g.automaton()?, or an assignment of an expression to a variable,
+e.g.\ \verb?g = irtg(["examples/cfg.irtg"])?.  In the first case, the
+shell simply prints the value of the expression, except if the
+expression is of type \verb?void? or the result is \verb?null?. In the
+second case, the shell executes the assignment and does not print
+anything.
 
-\begin{description}
-\item[InterpretedTreeAutomaton irtg(Reader reader)] Returns the IRTG
-  described by the reader.
-\item[void println(Object x)] Prints the string representation of
-  \verb?x?.
-\item[void type(Object x)] Prints the Java class of the object to
-  which \verb?x? evaluates.
-\item[void quit()] Exits the shell.
-\end{description}
+Expressions come in various forms, as follows:
+\begin{itemize}
+\item A \emph{variable} evaluates to its current value. If the
+  variable has not been assigned a value yet, the shell prints an
+  error message.
+\item A \emph{string literal}, of the form \verb?"foo bar"?, evaluates
+  to a \verb?StringReader? for the string inside the quotes. 
+\item A \emph{file reader literal}, of the form \verb?["cfg.irtg"]?,
+  evaluates to a \verb?FileReader? for the file whose name is given
+  inside the quotes.
+\item \emph{Method calls}, described in detail below. Method
+  calls may not be chained; an expression of the form
+  \verb?obj.meth1().meth2()? is illegal in the IRTG shell.
+\end{itemize}
+
+Note that both string literals and file reader literals evaluate to
+subclasses of \verb?Reader?.  Many methods that are meant for use in
+the shell take parameters of class \verb?Reader?.  This leaves you
+free to choose whether you want to specify the value of the string
+directly in the shell, or whether you want to read it from a file.
+
+Method calls are normally of the form \verb?obj.method(arg1,arg2)?,
+and evaluate to the value of the given method call on the given object
+with the given arguments.  As a special case, the shell provides a
+unique object of class \verb?de.saar.penguin.irtg.shell.Main?, and you
+can call the methods of this object without specifying the object,
+i.e.\ you simply call \verb?method(arg1,arg2)?.  This is particularly
+useful for very general methods such as \verb?println? and
+\verb?quit?.
+
+An object's method may only be called from the shell if it has the
+annotation \verb?@CallableFromShell?.  The Javadoc of each method
+specifies whether that method has this annotation.  As a further
+convenience, some methods take arguments of class \verb?Map?.  You can
+pass values into this \verb?Map? by providing method arguments of the
+form \verb?key:value?, where \verb?key? is some string (without
+quotes) and \verb?value? is an arbitrary expression.  An example of
+such a call is \verb?irtg.parse(i: "john sleeps")?, where the
+\verb?parse? method is passed a map which contains a StringReader for
+the string ``john sleeps'' under the key ``i''.
+
+We refer to the Javadoc for more details on the methods that are
+available in the shell.  The most important classes to look at are
+\verb?Main?, \verb?TreeAutomaton?, and
+\verb?InterpretedTreeAutomaton?.
 
 
-\subsection{InterpretedTreeAutomaton}
+\subsection{The Scala shell}
 
-\begin{description}
-\item[BottomUpTreeAutomaton automaton()] Returns the RTG in the center
-  of the IRTG as a tree automaton.
-\item[Interpretation interpretation(Reader label)] Returns the
-  interpretation with the given name.
-\item[BottomUpAutomaton parse(Map inputs)] Returns the result of
-  parsing the given inputs. \verb?inputs? is a map from
-  interpretation names to the inputs on these interpretations.
-\item[Set decode(Reader outputInterpretation, Map inputs)] Returns the
-  result of parsing the given inputs (see \verb?parse?) and mapping
-  them to the given output interpretation.
-\item[trainEm(Reader reader)] Adjusts the RTG weights from the given
-  training data using EM training.
-\end{description}
+Alternatively, you can use the Scala shell as a front-end to the IRTG
+library. Scala is a functional programming language that compiles into
+Java bytecode, so you can access all classes in the IRTG jar file from
+a Scala program. Scala also comes with an interactive shell, which
+compiles individual Scala expressions and commands and executes
+them. This makes Scala a convenient tool for interacting with the IRTG
+library.
 
-\subsection{BottomUpTreeAutomaton}
+You can load the IRTG tool, with some Scala-specific extensions, into
+a Scala shell by executing the command \verb?bin/irtg-scala-shell?
+from your command line.  You can then load an IRTG and use it to
+translate a string (as in the tutorial above) as follows:
 
-\begin{description}
-\item[long countTrees()] Returns the number of trees in the (finite)
-  language of the tree automaton.
-\item[Tree viterbi()] Computes the tree in the language of the tree
-  automaton with the highest weight.
-\item[Set language()] Returns the language of the tree automaton.
-\end{description}
+\begin{verbatim}
+scala> val irtg = IrtgParser.parse(file("examples/scfg.irtg"))
+irtg: de.saar.penguin.irtg.InterpretedTreeAutomaton = 
+interpretation german: de.saar.penguin.irtg.algebra.StringAlgebra
+interpretation english: de.saar.penguin.irtg.algebra.StringAlgebra
+
+N -> r3(N, PP) [1.0]
+  [german] *(?1,?2)
+  [english] *(?1,?2)
+(...)
+
+scala> irtg.decode("german", 
+            "english" -> "john watches the woman with the telescope")
+res0: java.util.Set[java.lang.Object] = 
+   [[hans, betrachtet, die, frau, mit, die, fernrohr], 
+    [hans, betrachtet, dem, frau, mit, die, fernrohr], 
+    [hans, betrachtet, die, frau, mit, dem, fernrohr], 
+    [hans, betrachtet, dem, frau, mit, dem, fernrohr]]
+\end{verbatim}
+
+The power of the Scala IRTG shell lies in the fact that Scala is a
+full-blown programming language, which allows you to evaluate
+arbitrary expressions using arbitrary methods of the objects in the
+IRTG library. The shell provides a number of methods for convenience:
+\begin{itemize}
+\item \verb?file(str)? returns a \verb?FileReader? for the file with
+  the name \verb?str? (see the first command in the
+  example). \verb?fistream(str)? returns a \verb?FileInputStream? for
+  the given file name.
+\item There is an implicit conversion from strings to
+  \verb?StringReader?s, which is applied by Scala wherever necessary
+  (e.g.\ in the ``john watches the woman'' string in the second
+  command in the example).
+\item The implicit conversions between Scala and Java collections from
+  \verb?JavaConversions? are imported (so Scala functions could be
+  used to iterate over the \verb?Set? in the example).
+\item The syntax \verb?key1 -> val1, key2 -> val2? may be used to
+  create a map in which the given keys are mapped to the given
+  values (as in \verb?"english" -> "john watches ..."? above).
+\end{itemize}
+
 
 
 
@@ -469,14 +567,14 @@ under the key ``b''.
 
 A crucial ingredient of an IRTG grammar is the algebra. This is the
 only part of the grammar which cannot be specified in the grammar
-file. The IRTG tool comes with a number of predefined algebras, but
-you can (and probably will) also implement your own algebras. You can
-use these algebras just like the predefined algebras, by referencing
-them in the preamble of an IRTG grammar file. The algorithms for
-parsing, training, and decoding will work for your algebra as well. In
-fact, it is the key advantage of working with IRTGs that
-algebra-specific aspects of parsing are completely separated from the
-core parsing engine.
+file. The IRTG tool comes with a number of predefined algebras (see
+the Javadoc), but you can (and probably will) also implement your own
+algebras. You can use these algebras just like the predefined
+algebras, by referencing them in the preamble of an IRTG grammar
+file. The algorithms for parsing, training, and decoding will work for
+your algebra as well. In fact, it is the key advantage of working with
+IRTGs that algebra-specific aspects of parsing are completely
+separated from the core parsing engine.
 
 An algebra in the IRTG tool is a Java class that implements the
 interface \verb?Algebra?.  \verb?Algebra? is a generic interface,
@@ -487,32 +585,30 @@ algebra contains all values that are represented by the Java type
 interface \verb?Algebra<List<String>>?, which means that its values
 are lists of strings (namely, a list of the words in a sentence).
 
-The interface \verb?Algebra? defines three methods, which your class
+The interface \verb?Algebra? defines four methods, which your class
 must implement. These methods are as follows.
 
 \begin{description}
 \item[evaluate] The \verb?evaluate? method evaluates a term of the
   algebra to an element of the algebra. The term is represented as a
-  \verb?Tree? object with string labels. (See
-  \verb?StringAlgebra#evaluate? for some methods that can be used on
-  trees.)
+  \verb?Tree? object with string labels.
 \item[parseString] The \verb?parseString? method parses the string
   representation of an algebra object and returns the algebra
-  object. If the objects of your algebra are represented as terms, you
-  may be interested in using the method \verb?TermParser#parse? to
-  parse the string representation of the term into a \verb?Term?
-  object and then evaluating that term further.
+  object.
+\item[getSignature] The \verb?getSignature? method returns the ranked
+  signature of your algebra. See the documentation of the class
+  \verb?Signature? for details.
 \item[decompose] The \verb?decompose? method computes the
   decomposition automaton for the given algebra object $a$. The
-  decomposition automaton accepts exactly those terms that evaluate to
-  $a$. Typically, your algebra class will define a private nested
-  class that is derived from \verb?BottomUpAutomaton?, and return a
+  decomposition automaton should accept exactly those terms that
+  evaluate to $a$. Typically, your algebra class will define a private
+  nested class that is derived from \verb?TreeAutomaton?, and return a
   new object of this class as the return value of \verb?decompose?.
 \end{description}
 
 Not every algebra class will do something useful in all of these
 methods. The other methods are welcome to throw an
-\verb?UnsupportedOperationException?.
+\verb?UnsupportedOperationException?. In particular:
 
 \begin{itemize}
 \item If you are certain that you will never parse an object of your
@@ -544,6 +640,22 @@ semicolon (;).
 
 \section{Conclusion} \label{sec:conclusion}
 
+The IRTG tool is a work in progress. We have tested it extensively,
+but so far only on grammars and data of moderate size. If you use the
+IRTG tool on larger amounts of data and find inefficiencies, we would
+be grateful to hear about it. Our aim is to optimize the
+implementations of the core algorithms over next releases, and to add
+further functionality.
+
+This documentation is similarly a work in progress. Any questions and
+suggestions for improvements are very welcome.
+
+
+\section{Version history}
+
+\begin{itemize}
+\item 1.0, XXXX: Initial public release.
+\end{itemize}
 
 
 \bibliographystyle{apalike}
