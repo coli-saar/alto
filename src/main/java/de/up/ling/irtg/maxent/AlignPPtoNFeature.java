@@ -5,7 +5,6 @@
 package de.up.ling.irtg.maxent;
 
 import de.up.ling.irtg.automata.Rule;
-import de.saar.basic.Pair;
 
 /**
  *
