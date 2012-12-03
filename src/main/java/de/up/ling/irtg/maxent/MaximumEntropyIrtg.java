@@ -13,12 +13,10 @@ import de.up.ling.irtg.ParseException;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.SortedLanguageIterator;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import java.io.*;
 import java.util.HashMap;
-import java.util.TreeMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
@@ -450,7 +448,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param strings the list of strings
      * @return the joined string
      */
-    private static String join(List<String> strings) {
+    public static String join(List<String> strings) {
         return join(strings, " ");
     }
 
@@ -461,7 +459,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param delimiter the delimiter between the strings
      * @return the joined string
      */
-    private static String join(List<String> strings, String delimiter) {
+    public static String join(List<String> strings, String delimiter) {
         if (strings == null || strings.isEmpty()) {
             return "";
         }
