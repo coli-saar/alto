@@ -102,7 +102,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>de.saar.penguin.irtg.shell.Main</mainClass>
+                            <mainClass>de.up.ling.irtg.shell.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -113,7 +113,7 @@
 	      <artifactId>maven-javadoc-plugin</artifactId>
 	      <version>2.9</version>
 	      <configuration>
-		<excludePackageNames>de.saar.penguin.irtg.algebra.lambda:de.saar.penguin.irtg.maxent</excludePackageNames>
+		<excludePackageNames>de.up.ling.irtg.algebra.lambda:de.up.ling.irtg.maxent</excludePackageNames>
 
 		<show>public</show>
 		<links>
