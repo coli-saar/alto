@@ -427,7 +427,7 @@ IRTGs with multiple interpretations.
 
 The IRTG tool is distributed as a Java Jar file, which you are free to
 use in your own program. The API docs can be found at
-\todo{http://www.ling.uni-potsdam.de/tcl/irtg/apidocs}.
+http://www.ling.uni-potsdam.de/tcl/irtg/apidocs.
 
 There are two recommended ways to use the IRTG tool as an interactive
 main program: through the built-in shell, or using the Scala REPL
@@ -480,7 +480,7 @@ directly in the shell, or whether you want to read it from a file.
 Method calls are normally of the form \verb?obj.method(arg1,arg2)?,
 and evaluate to the value of the given method call on the given object
 with the given arguments.  As a special case, the shell provides a
-unique object of class \verb?de.saar.penguin.irtg.shell.Main?, and you
+unique object of class \verb?de.up.ling.irtg.shell.Main?, and you
 can call the methods of this object without specifying the object,
 i.e.\ you simply call \verb?method(arg1,arg2)?.  This is particularly
 useful for very general methods such as \verb?println? and
@@ -520,9 +520,9 @@ translate a string (as in the tutorial above) as follows:
 
 \begin{verbatim}
 scala> val irtg = IrtgParser.parse(file("examples/scfg.irtg"))
-irtg: de.saar.penguin.irtg.InterpretedTreeAutomaton = 
-interpretation german: de.saar.penguin.irtg.algebra.StringAlgebra
-interpretation english: de.saar.penguin.irtg.algebra.StringAlgebra
+irtg: de.up.ling.irtg.InterpretedTreeAutomaton = 
+interpretation german: de.up.ling.irtg.algebra.StringAlgebra
+interpretation english: de.up.ling.irtg.algebra.StringAlgebra
 
 N -> r3(N, PP) [1.0]
   [german] *(?1,?2)
@@ -631,7 +631,7 @@ be to package your algebra class into a Jar file of its own (say,
 starting the shell as follows:
 
 \begin{verbatim}
-$ java -cp irtg-1.0.jar:foo.jar de.saar.penguin.irtg.shell.Main
+$ java -cp irtg-1.0.jar:foo.jar de.up.ling.irtg.shell.Main
 \end{verbatim}
 
 Notice that if you use Windows, you must replace the colon (:) by a

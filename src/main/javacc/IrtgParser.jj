@@ -10,7 +10,7 @@ options {
   FORCE_LA_CHECK=true;
 }
 PARSER_BEGIN(IrtgParser)
-package de.saar.penguin.irtg;
+package de.up.ling.irtg;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
@@ -18,10 +18,10 @@ import java.util.HashMap;
 import java.util.*;
 import java.io.*;
 
-import de.saar.penguin.irtg.automata.*;
-import de.saar.penguin.irtg.hom.*;
-import de.saar.penguin.irtg.maxent.*;
-import de.saar.penguin.irtg.algebra.*;
+import de.up.ling.irtg.automata.*;
+import de.up.ling.irtg.hom.*;
+import de.up.ling.irtg.maxent.*;
+import de.up.ling.irtg.algebra.*;
 import de.saar.chorus.term.*;
 import de.up.ling.tree.*;
 import de.saar.basic.*;

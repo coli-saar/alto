@@ -1,6 +1,6 @@
 
-interpretation english: de.saar.penguin.irtg.algebra.StringAlgebra
-interpretation german: de.saar.penguin.irtg.algebra.StringAlgebra
+interpretation english: de.up.ling.irtg.algebra.StringAlgebra
+interpretation german: de.up.ling.irtg.algebra.StringAlgebra
 
 
 S! -> r1(NP,VP)

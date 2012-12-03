@@ -1,6 +1,6 @@
 
-interpretation i1: de.saar.penguin.irtg.algebra.StringAlgebra
-interpretation i2: de.saar.penguin.irtg.algebra.StringAlgebra
+interpretation i1: de.up.ling.irtg.algebra.StringAlgebra
+interpretation i2: de.up.ling.irtg.algebra.StringAlgebra
 
 
 S! -> r1(A,B,C)

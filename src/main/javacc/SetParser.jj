@@ -10,7 +10,7 @@ options {
   FORCE_LA_CHECK=true;
 }
 PARSER_BEGIN(SetParser)
-package de.saar.penguin.irtg.algebra;
+package de.up.ling.irtg.algebra;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;

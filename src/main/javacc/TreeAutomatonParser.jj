@@ -10,7 +10,7 @@ options {
   FORCE_LA_CHECK=true;
 }
 PARSER_BEGIN(TreeAutomatonParser)
-package de.saar.penguin.irtg.automata;
+package de.up.ling.irtg.automata;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;

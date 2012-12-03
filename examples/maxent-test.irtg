@@ -1,5 +1,5 @@
 
-interpretation i: de.saar.penguin.irtg.algebra.StringAlgebra
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
 
 
 
@@ -51,5 +51,5 @@ P -> r12
 
 
 
-feature f1: de.saar.penguin.irtg.maxent.AlignPPtoNFeature
-feature f2: de.saar.penguin.irtg.maxent.AlignPPtoVPFeature
+feature f1: de.up.ling.irtg.maxent.AlignPPtoNFeature
+feature f2: de.up.ling.irtg.maxent.AlignPPtoVPFeature

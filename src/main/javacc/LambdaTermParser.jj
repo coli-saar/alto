@@ -10,7 +10,7 @@ options {
   //FORCE_LA_CHECK=true;
 }
 PARSER_BEGIN(LambdaTermParser)
-package de.saar.penguin.irtg.algebra.lambda;
+package de.up.ling.irtg.algebra.lambda;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
