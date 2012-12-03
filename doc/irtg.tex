@@ -415,7 +415,8 @@ VP -> r5(VP, PP) [0.4729096813757445]
 \end{verbatim}
 
 In addition to EM, the IRTG tool also implements the Variational Bayes
-training algorithm described by \todo{jones etal}.  You can perform VB
+training algorithm described by
+\citet{jones12:_seman_parsin_bayes_tree_trans}.  You can perform VB
 training by calling \verb?g3.vbtrain(c2)?.  Note that just like in the
 supervised case, all of these training algorithms apply directly to
 IRTGs with multiple interpretations.
@@ -429,14 +430,13 @@ use in your own program. The API docs can be found at
 \todo{http://www.ling.uni-potsdam.de/tcl/irtg/apidocs}.
 
 There are two recommended ways to use the IRTG tool as an interactive
-main program: through the built-in shell, or using the Scala
-\todo{REPL} interpreter.  Each of these provides mechanisms for
-evaluating expressions, storing values in variables, and reading data
-from files.  In general, the built-in shell is a little more
-convenient to use for simple things (such as the tutorial above), but
-the Scala approach allows you to use arbitrary methods of the IRTG
-objects, and offers you the full power of Scala to process your
-results.
+main program: through the built-in shell, or using the Scala REPL
+interpreter.  Each of these provides mechanisms for evaluating
+expressions, storing values in variables, and reading data from files.
+In general, the built-in shell is a little more convenient to use for
+simple things (such as the tutorial above), but the Scala approach
+allows you to use arbitrary methods of the IRTG objects, and offers
+you the full power of Scala to process your results.
 
 \subsection{The built-in shell}
 

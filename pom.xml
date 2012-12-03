@@ -111,7 +111,17 @@
 	    <plugin>
 	      <groupId>org.apache.maven.plugins</groupId>
 	      <artifactId>maven-javadoc-plugin</artifactId>
-	      <version>2.6</version>
+	      <version>2.9</version>
+	      <configuration>
+		<excludePackageNames>de.saar.penguin.irtg.algebra.lambda:de.saar.penguin.irtg.maxent</excludePackageNames>
+
+		<show>public</show>
+		<links>
+		  <link>http://www.ling.uni-potsdam.de/tcl/basics/apidocs/</link>
+		  <link>http://docs.guava-libraries.googlecode.com/git-history/v12.0/javadoc</link>
+		</links>
+		<detectLinks>true</detectLinks>
+	      </configuration>
 	    </plugin>
         </plugins>
 
@@ -167,13 +177,13 @@
       <repository>
 	<id>tcl-repository</id>
 	<name>Potsdam TCL Maven repository</name>
-	<url>scpexe://koller@localhost/tmp</url>
+	<url>scpexe://tcl@bramaputra.ling.uni-potsdam.de//home/tcl/tcl-web/maven2/releases</url>
       </repository>
 
       <site>
 	<id>irtg-site</id>
 	<name>Potsdam IRTG website</name>
-	<url>scpexe://koller@localhost/tmp/irtg</url>
+	<url>scpexe://tcl@bramaputra.ling.uni-potsdam.de//home/tcl/tcl-web/irtg</url>
       </site>
       
       <downloadUrl>http://www.ling.uni-potsdam.de/tcl/maven2/releases</downloadUrl>
