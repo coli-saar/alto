@@ -1,0 +1,42 @@
+*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*
+*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*
+*x*                                                                     *x*
+*x*            Copyright (C) 1995 University of Pennsylvania            *x*
+*x*                                                                     *x*
+*x*    The data in this file are part of a preliminary version of the   *x*
+*x*    Penn Treebank Corpus and should not be redistributed.  Any       *x*
+*x*    research using this corpus or based on it should acknowledge     *x*
+*x*    that fact, as well as the preliminary nature of the corpus.      *x*
+*x*                                                                     *x*
+*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*
+*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*
+
+( ('' '') 
+  (SBARQ-CLF 
+    (WHNP-1 (WP What) )
+    (SQ 
+      (NP-SBJ (-NONE- *T*-1) )
+      (VP (VBZ 's) 
+        (NP-PRD 
+          (NP (IN that) )
+          (SBAR 
+            (WHNP-2 (-NONE- 0) )
+            (S 
+              (NP-SBJ (PRP you) )
+              (VP (VBP say) 
+                (NP (-NONE- *T*-2) )))))))
+    ('' '') (. ?) ) (. ?) )
+( (S 
+    (NP-SBJ (NNP Dan) (NNP Morgan) )
+    (VP (VBD told) 
+      (NP (PRP himself) )
+      (SBAR (-NONE- 0) 
+        (S 
+          (NP-SBJ (PRP he) )
+          (VP (MD would) 
+            (VP (VB forget) 
+              (NP (NNP Ann) (NNP Turner) ))))))
+    (. .) ))
+( (`` ``) 
+  (INTJ (UH Yes) (. .) ))
+( (NP (CD Five) (NNS days) (. .) ))
