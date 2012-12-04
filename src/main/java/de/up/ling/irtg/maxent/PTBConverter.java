@@ -5,6 +5,8 @@
 package de.up.ling.irtg.maxent;
 
 import de.up.ling.irtg.AnnotatedCorpus;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.IrtgParser;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,10 +23,14 @@ public class PTBConverter {
 
     public static void main(String[] args) throws IOException, de.up.ling.irtg.ParseException {
         PTBConverter lc = new PTBConverter();
-        lc.read(new FileReader("examples/ptb-test.mrg"));
-        lc.writeRules(new FileWriter("examples/ptb-rules.irtg"));
-        lc.writeCorpus(new FileWriter("examples/ptb-corpus.irtg"));
-        de.up.ling.irtg.InterpretedTreeAutomaton irtg = de.up.ling.irtg.IrtgParser.parse(new FileReader("examples/ptb-rules.irtg"));
+        String prefix = args[0];
+        
+        lc.read(new FileReader(prefix + ".mrg"));
+        lc.writeRules(new FileWriter(prefix + "-grammar.irtg"));
+        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"));
+        
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
+        
         System.err.println("Converted rules: " + String.valueOf(lc.getNumOfRules()));
         int i = irtg.getAutomaton().getRuleSet().size();
         System.err.println("Parsed rules: " + String.valueOf(i));
@@ -141,12 +147,12 @@ public class PTBConverter {
 
         for (int c; (c = reader.read()) != -1;) {
 
-            if (c == 40) {
+            if (c == '(') {
                 Tree<String> subTree = addTree(reader, rule, inputObjects);
                 if (subTree != null) {
                     tree = tree.addSubtree(subTree);
                 }
-            } else if (c == 41) {
+            } else if (c == ')') {
                 if (((String) tree.getLabel()).isEmpty()) {
                     if (!object.isEmpty()) {
                         object = object.toLowerCase();

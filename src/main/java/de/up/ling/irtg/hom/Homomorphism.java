@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  */
 public class Homomorphism {
     private static int gensymNext = 1;
-    private static Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("[a-zA-z*+_?]([a-zA-Z0-9_*+-]*)");
+    private static Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
     private Map<String, Tree<StringOrVariable>> mappings;
     private Signature srcSignature, tgtSignature;
     private boolean debug = false;

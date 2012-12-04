@@ -5,6 +5,7 @@
 package de.up.ling.irtg.automata;
 
 import de.saar.basic.StringTools;
+import de.up.ling.tree.Tree;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,12 +14,13 @@ import java.util.List;
 
 /**
  * Caution: When comparing rules with equals and hashCode, the rule weight is
- * NOT taken into account. This is so rules can be destructively reweighted
- * in training.
- * 
+ * NOT taken into account. This is so rules can be destructively reweighted in
+ * training.
+ *
  * @author koller
  */
 public class Rule<State> implements Serializable {
+
     private State parent;
     private String label;
     private State[] children;
@@ -42,12 +44,10 @@ public class Rule<State> implements Serializable {
     public Rule(State parent, String label, List<State> children) {
         this(parent, label, children, 1);
     }
-    
+
     public static <State> Rule<State> c(State parent, String label, State... children) {
         return new Rule(parent, label, children);
     }
-    
-    
 
     public State[] getChildren() {
         return children;
@@ -68,21 +68,38 @@ public class Rule<State> implements Serializable {
     public void setWeight(double weight) {
         this.weight = weight;
     }
-    
-    
-    
+
     public int getArity() {
         return children.length;
     }
-    
 
     @Override
     public String toString() {
         return toString(false);
     }
-    
+
     public String toString(boolean parentIsFinal) {
-        return parent + (parentIsFinal?"!":"") + " -> " + getLabel() + (children.length == 0 ? "" : "(" + StringTools.join(children, ", ") + ")") + " [" + weight + "]";
+        boolean first = true;
+        StringBuilder ret = new StringBuilder(Tree.encodeLabel(parent.toString()) + (parentIsFinal ? "!" : "") + " -> " + Tree.encodeLabel(getLabel()));
+
+        if (children.length > 0) {
+            ret.append("(");
+
+            for (State child : children) {
+                if (first) {
+                    first = false;
+                } else {
+                    ret.append(", ");
+                }
+
+                ret.append(Tree.encodeLabel(child.toString()));
+            }
+
+            ret.append(")");
+        }
+
+        ret.append(" [" + weight + "]");
+        return ret.toString();
     }
 
     @Override
@@ -118,13 +135,12 @@ public class Rule<State> implements Serializable {
 //        hash = 23 * hash + (int) (Double.doubleToLongBits(this.weight) ^ (Double.doubleToLongBits(this.weight) >>> 32));
         return hash;
     }
-    
+
     public static <State> Collection<State> extractParentStates(Collection<Rule<State>> rules) {
         List<State> ret = new ArrayList<State>();
-        for( Rule<State> rule : rules ) {
+        for (Rule<State> rule : rules) {
             ret.add(rule.getParent());
         }
         return ret;
     }
-    
 }
