@@ -4,16 +4,25 @@
  */
 package de.up.ling.irtg.maxent;
 
+import de.saar.chorus.term.parser.TermParser;
 import de.up.ling.irtg.AnnotatedCorpus;
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.IrtgParser;
+import de.up.ling.irtg.ParseException;
+import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.algebra.PtbTreeAlgebra;
+import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeParser;
+import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Collections;
-import java.io.*;
 
 /**
  *
@@ -21,125 +30,203 @@ import java.io.*;
  */
 public class PTBConverter {
 
-    public static void main(String[] args) throws IOException, de.up.ling.irtg.ParseException {
+    public static void main(String[] args) throws IOException, ParseException, ParserException {
         PTBConverter lc = new PTBConverter();
-        String prefix = args[0];
+        String prefix = (args.length > 0) ? args[0] : "examples/ptb-test";
         
         lc.read(new FileReader(prefix + ".mrg"));
         lc.writeRules(new FileWriter(prefix + "-grammar.irtg"));
-        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"));
+//        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"));
         
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
+//        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
         
-        System.err.println("Converted rules: " + String.valueOf(lc.getNumOfRules()));
-        int i = irtg.getAutomaton().getRuleSet().size();
-        System.err.println("Parsed rules: " + String.valueOf(i));
+//        System.err.println("Converted rules: " + String.valueOf(lc.getNumOfRules()));
+//        int i = irtg.getAutomaton().getRuleSet().size();
+//        System.err.println("Parsed rules: " + String.valueOf(i));
     }
 
-    private static List<String> specialTerminals;
-    private AnnotatedCorpus corpus;
-    private List<PTBRule> rules;
-    private PTBRule quoteStartRule;
-    private PTBRule quoteEndRule;
+    private Map<String, String> ruleMap;
+    private List<Tree<String>> ptbTrees;
+    private List<Tree<String>> irtgTrees;
+    private AnnotatedCorpus ptbCorpus;
+    private AnnotatedCorpus irtgCorpus;
+    private InterpretedTreeAutomaton ita;
+    private Homomorphism hIrtg;
+    private Homomorphism hPtb;
 
     public PTBConverter() {
-        specialTerminals = new ArrayList<String>();
-        Collections.addAll(specialTerminals, new String[] {";",":","!","?","&","%","/","\\","interpretation","feature"});
-        corpus = new AnnotatedCorpus();
-        rules = new ArrayList<PTBRule>();
-        quoteStartRule = new PTBRule();
-        quoteStartRule.left = "QUOTE-S";
-        quoteStartRule.interpretation = "\"''\"";
-        quoteStartRule.name = "r1";
-        rules.add(quoteStartRule);
-        quoteEndRule = new PTBRule();
-        quoteEndRule.left = "QUOTE-E";
-        quoteEndRule.interpretation = "\"''\"";
-        quoteEndRule.name = "r2";
-        rules.add(quoteEndRule);
+        ptbCorpus = new AnnotatedCorpus();
+        irtgCorpus = new AnnotatedCorpus();
+        ptbTrees = new ArrayList<Tree<String>>();
+        irtgTrees = new ArrayList<Tree<String>>();
+        ruleMap = new HashMap<String, String>();
+        ConcreteTreeAutomaton cta = new ConcreteTreeAutomaton();
+        ita = new InterpretedTreeAutomaton(cta);
+        StringAlgebra stringAlgebra = new StringAlgebra();
+        hIrtg = new Homomorphism(ita.getAutomaton().getSignature(), stringAlgebra.getSignature());
+        ita.addInterpretation("i", new Interpretation(stringAlgebra, hIrtg));
+
+        PtbTreeAlgebra ptbAlgebra = new PtbTreeAlgebra();
+        hPtb = new Homomorphism(ita.getAutomaton().getSignature(), ptbAlgebra.getSignature());
+        ita.addInterpretation("ptb", new Interpretation(ptbAlgebra, hPtb));
     }
 
-    public int getNumOfRules() {
-        return rules.size();
+    public List<Tree<String>> getPtbTrees() {
+        return ptbTrees;
     }
 
-    public void read(Reader reader) throws IOException {
-        for (int c; (c = reader.read()) != -1;) {
-            
-            if (c == 40) {
-                List<String> inputObjects = new ArrayList<String>();
-                PTBRule parent = new PTBRule();
-                Tree<String> tree = addTree(reader, parent, inputObjects);
+    public void read(Reader reader) throws IOException, ParserException {
+        PtbTreeAlgebra pta = new PtbTreeAlgebra();
+        
+        Tree<String> ptbTree = null;
+        do {
+            ptbTree = pta.parseFromReader(reader);
+            if (ptbTree != null) {
+                ptbTrees.add(ptbTree);
+            }
+        } while (ptbTree != null);
+        
+        ConcreteTreeAutomaton c = (ConcreteTreeAutomaton) ita.getAutomaton();
+        for (Tree<String> ptbT : ptbTrees) {
+            extractRules(ptbT);
+            c.addFinalState(ptbT.getLabel());
+            Tree<String> irtgTree = ptb2Irtg(ptbT);
+            irtgTrees.add(irtgTree);
+            List<String> inputObjects = ptbT.getLeafLabels();
+            Map<String, Object> ptbObjects = new HashMap<String, Object>();
+            ptbObjects.put("ptb", inputObjects);
+            Map<String, Object> irtgObjects = new HashMap<String, Object>();
+            irtgObjects.put("i", inputObjects);
+            ptbCorpus.getInstances().add(new AnnotatedCorpus.Instance(ptbT, ptbObjects));
+            irtgCorpus.getInstances().add(new AnnotatedCorpus.Instance(irtgTree, irtgObjects));
+        }
+        for (AnnotatedCorpus.Instance instance : ptbCorpus.getInstances()) {
+            String sentence = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get("ptb"));
+            System.err.println(sentence);
+            System.err.println("    " + instance.tree);
+        }
+        for (AnnotatedCorpus.Instance instance : irtgCorpus.getInstances()) {
+            String sentence = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get("i"));
+            System.err.println(sentence);
+            System.err.println("    " + instance.tree);
+        }
+        Map<String, Reader> rdrs = new HashMap<String, Reader>();
+        rdrs.put("i", new StringReader("QS Yes PERIOD"));
+        ita.decode(new StringReader("ptb"), rdrs);
+    }
 
-                if (tree != null) {
-                    PTBRule rule = null;
-                    if (tree.getLabel().isEmpty() && !tree.getChildren().isEmpty()) {
-                        List<Tree<String>> children = tree.getChildren();
-                        if (children.size() == 1) {
-                            tree = children.get(0);
-                        } else {
-                            for (int i = 0; i < children.size(); i++) {
-                                if (!children.get(i).getChildren().isEmpty()) {
-                                    tree = children.get(i);
-                                    rule = findRule(tree.getLabel());
-                                    for (int j = i-1; j >= 0; j--) {
-                                        Tree<String> subTree = children.get(j);
-                                        tree.getChildren().add(0, subTree);
-                                        PTBRule subRule = findRule(subTree.getLabel());
-                                        rule.right.add(0, subRule.left);
-                                    }
-                                    for (int j = i+1; j < children.size(); j++) {
-                                        Tree<String> subTree = children.get(j);
-                                        tree.getChildren().add(subTree);
-                                        PTBRule subRule = findRule(subTree.getLabel());
-                                        rule.right.add(subRule.left);
-                                    }
-                                    break;
-                                }
+    public void extractRules(Tree<String> tree) {
+        final ConcreteTreeAutomaton c = (ConcreteTreeAutomaton) ita.getAutomaton();
+        tree.dfs(new TreeVisitor<String, Void, Boolean>() {
+            @Override
+            public Boolean combine(Tree<String> node, List<Boolean> childrenValues) {
+                if (node.getChildren().isEmpty()) {
+                    return true; // we have a leaf node
+                }
+                String ruleString = nodeToRuleString(node);
+                if (!ruleMap.containsKey(ruleString)) {
+                    // add new rule
+                    String ruleName = "r" + String.valueOf(ruleMap.size()+1);
+                    ruleMap.put(ruleString, ruleName);
+                    List<String> childStates = new ArrayList<String>();
+                    StringBuilder irtgInterp = new StringBuilder();
+                    StringBuilder ptbInterp = new StringBuilder();
+                    ptbInterp.append(node.getLabel());
+                    String label;
+                    if (childrenValues.get(0)) {
+                        label = node.getChildren().get(0).getLabel();
+                        irtgInterp.append(label);
+                        ptbInterp.append("(");
+                        ptbInterp.append(label);
+                        ptbInterp.append(")");
+                    } else {
+                        for (int i = 0; i < childrenValues.size(); i++) {
+                            label = node.getChildren().get(i).getLabel();
+                            childStates.add(label);
+                            if (i == 0) {
+                                ptbInterp.append("(");
+                            } else {
+                                ptbInterp.append(",");
                             }
+                            ptbInterp.append("?");
+                            ptbInterp.append(i+1);
+                        }
+                        ptbInterp.append(")");
+                        if (childrenValues.size() == 1) {
+                            irtgInterp.append("?1");
+                        } else {
+                            irtgInterp.append(computeInterpretation(1, childrenValues.size()));
                         }
                     }
-                    if (rule == null) {
-                        rule = findRule(tree.getLabel());
-                    }
-                    rule.possibleStart = true;
-                    Map<String, Object> inputObj = new HashMap<String, Object>();
-                    inputObj.put("i", inputObjects);
-                    AnnotatedCorpus.Instance instance = new AnnotatedCorpus.Instance(tree, inputObj);
-                    corpus.getInstances().add(instance);
+                    hIrtg.add(ruleName, TermParser.parse(irtgInterp.toString()).toTreeWithVariables());
+                    hPtb.add(ruleName, TermParser.parse(ptbInterp.toString()).toTreeWithVariables());
+                    c.addRule(ruleName, childStates, node.getLabel());
                 }
-
+                return false;
             }
-
+        });
+    }
+    
+    private String nodeToRuleString(Tree<String> node) {
+        StringBuilder ret = new StringBuilder();
+        ret.append(node.getLabel());
+        for (Tree<String> n : node.getChildren()) {
+            ret.append("/");
+            ret.append(n.getLabel());
         }
+        return ret.toString();
+    }
 
+    private String computeInterpretation(int count, int max) {
+        StringBuilder ret = new StringBuilder();
+        ret.append("*(?");
+        if ((count + 1) == max) {
+            ret.append(count);
+            ret.append(",?");
+            ret.append(max);
+        } else {
+            ret.append(count);
+            ret.append(",");
+            ret.append(computeInterpretation(count+1,max));
+        }
+        ret.append(")");
+        return ret.toString();
+    }
+
+    public Tree<String> ptb2Irtg(Tree<String> tree) {
+        return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
+            @Override
+            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
+                if (node.getChildren().isEmpty()) {
+                    return null; // we have a leaf node
+                }
+                String ruleString = nodeToRuleString(node);
+                String ruleName = ruleMap.get(ruleString);
+                if (ruleName == null) {
+                    System.err.println("Rule not found for: " + node.toString());
+                    return null;
+                }
+                if ((childrenValues.size() == 1) && (childrenValues.get(0) == null)) {
+                    return Tree.create(ruleName);
+                }
+                return Tree.create(ruleName, childrenValues);
+            }            
+        });        
     }
 
     public void writeRules(Writer writer) throws IOException {
-        String nl = System.getProperty("line.separator");
-        writer.write("interpretation i: de.up.ling.irtg.algebra.StringAlgebra" + nl + nl);
-
-        for (PTBRule r : rules) {
-            writer.write(r.toString() + nl);
-        }
-
+        writer.write(ita.toString());
         writer.close();
     }
 
     public void writeCorpus(Writer writer) throws IOException {
         // TODO: write the corpus
-        String nl = System.getProperty("line.separator");
-        writer.write("i" + nl);
-
-        for (AnnotatedCorpus.Instance instance : corpus.getInstances()) {
-            String sentence = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get("i"));
-            writer.write(sentence + nl);
-            writer.write(instance.tree + nl);
-        }
 
         writer.close();
     }
 
+    
+    @Deprecated
     private Tree addTree(Reader reader, PTBRule parentRule, List<String> inputObjects) throws IOException {
         String object = "";
         PTBRule rule = new PTBRule();
@@ -159,7 +246,7 @@ public class PTBConverter {
                         inputObjects.add(object);
                         if (object.contains("'")) {
                             object = '"' + object + '"';
-                        } else if (specialTerminals.contains(object) || startsWithInt(object) ||
+                        } else if (startsWithInt(object) ||
                                 object.contains("-") || object.contains(",") || object.contains(".")) {
                             object = "'" + object + "'";
                         }
@@ -172,10 +259,6 @@ public class PTBConverter {
                         }
                         PTBRule r = findRule(rule);
                         if (r == null) {
-                            if (!rule.left.isEmpty()) {
-                                rule.name = "r" + String.valueOf(rules.size() + 1);
-                                rules.add(rule);
-                            }
                         } else {
                             rule = r;
                         }
@@ -200,14 +283,10 @@ public class PTBConverter {
                 }
             } else if ((c == 96) && rule.left.isEmpty()) {
                 reader.skip(5);
-                parentRule.right.add(quoteStartRule.left);
                 inputObjects.add("''");
-                return Tree.create(quoteStartRule.name);
             } else if ((c == 39) && rule.left.isEmpty()) {
                 reader.skip(5);
-                parentRule.right.add(quoteEndRule.left);
                 inputObjects.add("''");
-                return Tree.create(quoteEndRule.name);
             } else {
                 if((c == 45) && object.isEmpty() && rule.left.isEmpty()) {
                     skipNullElement(reader);
@@ -225,6 +304,7 @@ public class PTBConverter {
         return null;
     }
     
+    @Deprecated
     private void skipNullElement(Reader reader) throws IOException {
         for (int c; (c = reader.read()) != -1;) {
             if (c == 41) {
@@ -233,24 +313,27 @@ public class PTBConverter {
         }
     }
     
+    @Deprecated
     private PTBRule findRule(PTBRule rule) {
-        for (PTBRule r : rules) {
+/*        for (PTBRule r : rules) {
             if(r.equals(rule)) {
                 return r;
             }
         }
-        return null;
+*/        return null;
     }
     
+    @Deprecated
     private PTBRule findRule(String label) {
-        for (PTBRule r : rules) {
+/*        for (PTBRule r : rules) {
             if(r.name.equals(label)) {
                 return r;
             }
         }
-        return null;
+*/        return null;
     }
     
+    @Deprecated
     private class PTBRule {
         public String left;
         public List<String> right;
@@ -316,6 +399,7 @@ public class PTBConverter {
         }
     }
     
+    @Deprecated
     public static boolean startsWithInt(String s) {
         char start = s.charAt(0);
         try {  
