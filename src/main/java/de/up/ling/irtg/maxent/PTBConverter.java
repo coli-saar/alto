@@ -36,7 +36,7 @@ public class PTBConverter {
         
         lc.read(new FileReader(prefix + ".mrg"));
         lc.writeRules(new FileWriter(prefix + "-grammar.irtg"));
-//        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"));
+        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"));
         
 //        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
         
@@ -98,13 +98,6 @@ public class PTBConverter {
             inputObjectsMap.put("i", sentence);
             inputObjectsMap.put("ptb", ptbObjects);
             corpus.getInstances().add(new AnnotatedCorpus.Instance(irtgTree, inputObjectsMap));
-        }
-        for (AnnotatedCorpus.Instance instance : corpus.getInstances()) {
-            String sentence = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get("i"));
-            String ptb = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get("ptb"));
-            System.err.println(sentence);
-            System.err.println("    " + ptb);
-            System.err.println("    " + instance.tree);
         }
         Map<String, Reader> rdrs = new HashMap<String, Reader>();
         rdrs.put("i", new StringReader("QS Yes PERIOD"));
@@ -216,8 +209,21 @@ public class PTBConverter {
     }
 
     public void writeCorpus(Writer writer) throws IOException {
-        // TODO: write the corpus
-
+        String nl = System.getProperty("line.separator");
+        if (corpus.getInstances().isEmpty()) {
+            writer.close();
+            return;
+        }
+        for (String interp : corpus.getInstances().get(0).inputObjects.keySet()) {
+            writer.write(interp + nl);
+        }
+        for (AnnotatedCorpus.Instance instance : corpus.getInstances()) {
+            for (String interp : corpus.getInstances().get(0).inputObjects.keySet()) {
+                String interpretation = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get(interp));
+                writer.write(interpretation + nl);
+            }
+            writer.write(instance.tree.toString() + nl);
+        }
         writer.close();
     }
 
