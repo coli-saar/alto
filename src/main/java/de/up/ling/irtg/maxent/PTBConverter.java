@@ -48,15 +48,14 @@ public class PTBConverter {
     private Map<String, String> ruleMap;
     private List<Tree<String>> ptbTrees;
     private List<Tree<String>> irtgTrees;
-    private AnnotatedCorpus ptbCorpus;
+    private AnnotatedCorpus corpus;
     private AnnotatedCorpus irtgCorpus;
     private InterpretedTreeAutomaton ita;
     private Homomorphism hIrtg;
     private Homomorphism hPtb;
 
     public PTBConverter() {
-        ptbCorpus = new AnnotatedCorpus();
-        irtgCorpus = new AnnotatedCorpus();
+        corpus = new AnnotatedCorpus();
         ptbTrees = new ArrayList<Tree<String>>();
         irtgTrees = new ArrayList<Tree<String>>();
         ruleMap = new HashMap<String, String>();
@@ -92,27 +91,24 @@ public class PTBConverter {
             c.addFinalState(ptbT.getLabel());
             Tree<String> irtgTree = ptb2Irtg(ptbT);
             irtgTrees.add(irtgTree);
-            List<String> inputObjects = ptbT.getLeafLabels();
-            Map<String, Object> ptbObjects = new HashMap<String, Object>();
-            ptbObjects.put("ptb", inputObjects);
-            Map<String, Object> irtgObjects = new HashMap<String, Object>();
-            irtgObjects.put("i", inputObjects);
-            ptbCorpus.getInstances().add(new AnnotatedCorpus.Instance(ptbT, ptbObjects));
-            irtgCorpus.getInstances().add(new AnnotatedCorpus.Instance(irtgTree, irtgObjects));
+            List<String> sentence = ptbT.getLeafLabels();
+            List<String> ptbObjects = new ArrayList<String>();
+            ptbObjects.add(ptbT.toString());
+            Map<String, Object> inputObjectsMap = new HashMap<String, Object>();
+            inputObjectsMap.put("i", sentence);
+            inputObjectsMap.put("ptb", ptbObjects);
+            corpus.getInstances().add(new AnnotatedCorpus.Instance(irtgTree, inputObjectsMap));
         }
-        for (AnnotatedCorpus.Instance instance : ptbCorpus.getInstances()) {
-            String sentence = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get("ptb"));
-            System.err.println(sentence);
-            System.err.println("    " + instance.tree);
-        }
-        for (AnnotatedCorpus.Instance instance : irtgCorpus.getInstances()) {
+        for (AnnotatedCorpus.Instance instance : corpus.getInstances()) {
             String sentence = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get("i"));
+            String ptb = MaximumEntropyIrtg.join((List<String>)instance.inputObjects.get("ptb"));
             System.err.println(sentence);
+            System.err.println("    " + ptb);
             System.err.println("    " + instance.tree);
         }
         Map<String, Reader> rdrs = new HashMap<String, Reader>();
         rdrs.put("i", new StringReader("QS Yes PERIOD"));
-        ita.decode(new StringReader("ptb"), rdrs);
+//        ita.decode(new StringReader("ptb"), rdrs);
     }
 
     public void extractRules(Tree<String> tree) {
