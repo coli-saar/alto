@@ -107,7 +107,7 @@ public class InterpretedTreeAutomaton {
             ret = ret.intersect(interp.parse(input));
         }
 
-        return ret;
+        return ret.reduceBottomUp();
     }
 
     @CallableFromShell(name = "decode", joinList = "\n")
@@ -121,13 +121,6 @@ public class InterpretedTreeAutomaton {
         return decodeFromReaders(outputInterpretation, readers);
     }
 
-    /*
-     public Set<Object> decode(String outputInterpretation, Map<String, Object> inputs) {
-     TreeAutomaton chart = parseInputObjects(inputs);
-     return decode(chart, interpretations.get(outputInterpretation));
-     }
-     * 
-     */
     private Set<Object> decode(TreeAutomaton chart, Interpretation interp) {
         TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
         Collection<Tree<String>> outputLanguage = outputChart.language();

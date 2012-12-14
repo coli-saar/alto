@@ -80,7 +80,7 @@ public class Rule<State> implements Serializable {
 
     public String toString(boolean parentIsFinal) {
         boolean first = true;
-        StringBuilder ret = new StringBuilder(parent + (parentIsFinal ? "!" : "") + " -> " + getLabel());
+        StringBuilder ret = new StringBuilder(Tree.encodeLabel(parent) + (parentIsFinal ? "!" : "") + " -> " + Tree.encodeLabel(getLabel()));
 
         if (children.length > 0) {
             ret.append("(");
@@ -92,7 +92,7 @@ public class Rule<State> implements Serializable {
                     ret.append(", ");
                 }
 
-                ret.append(child.toString());
+                ret.append(Tree.encodeLabel(child));
             }
 
             ret.append(")");

@@ -247,6 +247,17 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     }
     
     @Test
+    public void testReduceUnreachableFinalStates() {
+        TreeAutomaton auto = parse("""q! -> a""");
+        auto.addFinalState("qx");
+        
+        TreeAutomaton red = auto.reduceBottomUp();
+        
+        assert red.getFinalStates().contains("q");
+        assert ! red.getFinalStates().contains("qx");
+    }
+    
+    @Test
     public void testIntersectWeights() {
         TreeAutomaton auto1 = parse("q1 -> a  [0.5]\n q2! -> f(q1,q1) ");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a [0.4]\n p3 -> a [0.6]");

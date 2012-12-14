@@ -154,5 +154,46 @@ public class SortedLanguageIteratorTest {
         Set gold = new HashSet();        
         assertEquals(gold, lang)
     }
+    
+    @Test
+    public void testPtbDecoded() {
+        TreeAutomaton auto = pa(PTB_DECODED);
+        Set lang = new HashSet(collectTrees(auto)*.toString());
+        assert lang.size() == 1;
+        System.err.println(lang);
+    }
 
+    
+    private static final String PTB_DECODED = """
+MD1_5-6 -> MD1(qh7) [1.0]
+NNP1_0-1 -> NNP1(qh4) [1.0]
+NNP1_1-2 -> NNP1(qh20) [1.0]
+NNP1_7-8 -> NNP1(qh16) [1.0]
+NNP1_8-9 -> NNP1(qh6) [1.0]
+NP-SBJ1_4-5 -> NP-SBJ1(PRP1_4-5) [1.0]
+NP-SBJ2_0-2 -> NP-SBJ2(NNP1_0-1, NNP1_1-2) [1.0]
+NP1_3-4 -> NP1(PRP1_3-4) [1.0]
+NP2_7-9 -> NP2(NNP1_7-8, NNP1_8-9) [1.0]
+PRP1_3-4 -> PRP1(qh12) [1.0]
+PRP1_4-5 -> PRP1(qh21) [1.0]
+S2_4-9 -> S2(NP-SBJ1_4-5, VP2_5-9) [1.0]
+S3_0-10! -> S3(NP-SBJ2_0-2, VP3_2-9, SEP-PER1_9-10) [1.0]
+SBAR1_4-9 -> SBAR1(S2_4-9) [1.0]
+SEP-PER1_9-10 -> SEP-PER1(qh18) [1.0]
+VB1_6-7 -> VB1(qh13) [1.0]
+VBD1_2-3 -> VBD1(qh8) [1.0]
+VP2_5-9 -> VP2(MD1_5-6, VP2_6-9) [1.0]
+VP2_6-9 -> VP2(VB1_6-7, NP2_7-9) [1.0]
+VP3_2-9 -> VP3(VBD1_2-3, NP1_3-4, SBAR1_4-9) [1.0]
+qh12 -> himself [1.0]
+qh13 -> forget [1.0]
+qh16 -> Ann [1.0]
+qh18 -> PERIOD [1.0]
+qh20 -> Morgan [1.0]
+qh21 -> he [1.0]
+qh4 -> Dan [1.0]
+qh6 -> Turner [1.0]
+qh7 -> would [1.0]
+qh8 -> told [1.0]
+    """;
 }

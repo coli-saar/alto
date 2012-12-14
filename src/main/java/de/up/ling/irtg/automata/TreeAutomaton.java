@@ -39,7 +39,6 @@ import java.util.Set;
  * @author koller
  */
 public abstract class TreeAutomaton<State> implements Serializable {
-
     protected Map<String, StateListToStateMap> explicitRules; // one for each label
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
@@ -373,10 +372,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Computes the tree language accepted by this automaton. Notice that
-     * if the language is infinite, this method will not terminate. Get
-     * a languageIterator() in this case, in order to enumerate as many
-     * trees as you want.
+     * Computes the tree language accepted by this automaton. Notice that if the
+     * language is infinite, this method will not terminate. Get a
+     * languageIterator() in this case, in order to enumerate as many trees as
+     * you want.
      *
      * @return
      */
@@ -384,29 +383,29 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Set<Tree<String>> language() {
         Set<Tree<String>> ret = new HashSet<Tree<String>>();
         Iterator<Tree<String>> it = languageIterator();
-        
-        while( it.hasNext() ) {
+
+        while (it.hasNext()) {
             ret.add(it.next());
         }
-        
-        return ret;
-        
-        /*
-        Map<State, List<Tree<String>>> languagesForStates =
-                evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree<String>>>() {
-            public List<Tree<String>> evaluateRule(Rule<State> rule) {
-                List<Tree<String>> ret = new ArrayList<Tree<String>>();
-                ret.add(Tree.create(rule.getLabel()));
-                return ret;
-            }
-        });
 
-        Set<Tree<String>> ret = new HashSet<Tree<String>>();
-        for (State finalState : getFinalStates()) {
-            ret.addAll(languagesForStates.get(finalState));
-        }
         return ret;
-        */
+
+        /*
+         Map<State, List<Tree<String>>> languagesForStates =
+         evaluateInSemiring(new LanguageCollectingSemiring(), new RuleEvaluator<State, List<Tree<String>>>() {
+         public List<Tree<String>> evaluateRule(Rule<State> rule) {
+         List<Tree<String>> ret = new ArrayList<Tree<String>>();
+         ret.add(Tree.create(rule.getLabel()));
+         return ret;
+         }
+         });
+
+         Set<Tree<String>> ret = new HashSet<Tree<String>>();
+         for (State finalState : getFinalStates()) {
+         ret.addAll(languagesForStates.get(finalState));
+         }
+         return ret;
+         */
     }
 
     public void setRulePrintingFilter(Predicate<Rule<State>> filter) {
@@ -428,7 +427,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     private static class LanguageCollectingSemiring implements Semiring<List<Tree<String>>> {
         // +: concatenate the two languages
-
         public List<Tree<String>> add(List<Tree<String>> x, List<Tree<String>> y) {
             x.addAll(y);
             return x;
@@ -803,12 +801,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
         }
 
-        // copy all productive final states
-        for (State state : getFinalStates()) {
-            if (productiveStates.contains(state)) {
-                ret.addFinalState(state);
-            }
-        }
+        // copy all final states that are actually states in the reduced automaton
+        ret.finalStates = new HashSet<State>(getFinalStates());
+        ret.finalStates.retainAll(ret.allStates);
 
         return ret;
     }
@@ -891,7 +886,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         // If parentValue is null, this indicates that we are considering a rule with a parent
                         // that is not top-down reachable (if it were reachable, then its value should have been
                         // computed before ours). Such rules are ignored.                        
-                        
+
                         for (int i = 0; i < rule.getArity(); i++) {
                             if (rule.getChildren()[i].equals(s)) {
                                 accu = semiring.add(accu, semiring.multiply(parentValue, evaluator.evaluateRule(rule, i)));
@@ -978,7 +973,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     protected class StateListToStateMap implements Serializable {
-
         private Map<State, StateListToStateMap> nextStep;
         private Set<Rule<State>> rulesHere;
         private int arity;
@@ -1087,7 +1081,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private class LanguageIterable implements Iterable<Tree<String>> {
-
         public Iterator<Tree<String>> iterator() {
             return new LanguageIterator(sortedLanguageIterator());
         }
@@ -1112,7 +1105,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private class LanguageIterator implements Iterator<Tree<String>> {
-
         private Iterator<WeightedTree> it;
 
         public LanguageIterator(Iterator<WeightedTree> it) {

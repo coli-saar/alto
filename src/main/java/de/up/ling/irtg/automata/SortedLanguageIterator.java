@@ -54,12 +54,12 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }
         
         // combine streams for the different start symbols
+        visitedStates = new HashSet<State>();
         globalStream = new SortedMergedStream<WeightedTree>(WeightedTreeComparator.INSTANCE);
         for( State q : auto.getFinalStates() ) {
-            ((SortedMergedStream<WeightedTree>) globalStream).addStream(streamForState.get(q));
+            StreamForState sq = streamForState.get(q);
+            ((SortedMergedStream<WeightedTree>) globalStream).addStream(sq);
         }
-
-        visitedStates = new HashSet<State>();
     }
 
     @Override
@@ -153,6 +153,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         public String toString() {
             StringBuilder ret = new StringBuilder();
 
+            ret.append("statestream(" + state + ") ");
             ret.append(" known: " + known + "\n");
             for (StreamForRule ft : ruleStreams) {
                 ret.append(ft.toString() + "\n");
