@@ -25,6 +25,7 @@ import de.up.ling.irtg.algebra.*;
 import de.saar.chorus.term.*;
 import de.up.ling.tree.*;
 import de.saar.basic.*;
+import java.lang.reflect.*;
 
 
 /**
@@ -58,6 +59,16 @@ public class IrtgParser {
 
         ret.addAllInterpretations(parser.interpretations);
         return ret;
+    }
+
+    private static Constructor<FeatureFunction> findFeatureConstructor(String className, int n) throws ClassNotFoundException, NoSuchMethodException {
+        Class<FeatureFunction> cl = (Class<FeatureFunction>) Class.forName(className);
+        
+        Class[] args = new Class[n];
+        Arrays.fill(args, String.class);
+        
+        Constructor<FeatureFunction> con = cl.getConstructor(args);
+        return con;
     }
 }
 PARSER_END(IrtgParser)
@@ -229,12 +240,17 @@ void FeatureDeclaration() :
 {
     String id;
     String classname;
+    List<String> arguments = new ArrayList<String>();
 }
 {
-    <FEATURE> id=name() ":" classname=ClassName() {
+    <FEATURE> id=name() ":" classname=ClassName() ("(" arguments=StateList() ")")? {
        try {
-        Class featureClass = Class.forName(classname);
-        FeatureFunction feature = (FeatureFunction) featureClass.newInstance();
+        Constructor<FeatureFunction> con = findFeatureConstructor(classname, arguments.size());
+
+        String[] args = new String[arguments.size()];
+        arguments.toArray(args);
+
+        FeatureFunction feature = con.newInstance(args);
         features.put(id, feature);
        } catch(Exception e) {
         throw new ParseException("Could not instantiate FeatureFunction class " + classname + " for feature " + id + ": " + e.toString());

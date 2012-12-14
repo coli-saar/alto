@@ -39,6 +39,15 @@ class MaximumEntropyIrtgTest {
     }
     
     @Test
+    public void testFeatureWithArgs() {
+        MaximumEntropyIrtg irtg = (MaximumEntropyIrtg) iparse(ARGFT_GRAMMAR);
+        assertEquals( new ArrayList(["f1","f2"]), irtg.getFeatureNames());
+
+        assertEquals("one", irtg.getFeatureFunction("f1").getX());
+        assertEquals("two", irtg.getFeatureFunction("f2").getX());
+    }
+    
+    @Test
     public void testFeatures() {
         FeatureFunction featureFunction = new AlignPPtoNFeature();
         de.saar.basic.Pair parent1 = new de.saar.basic.Pair<String,String>("N","0-4");
@@ -126,7 +135,17 @@ john watches the telescope with the woman
 r1(r7,r4( r8, r2(r9,r3(r11, r6(r12, r2(r9,r10))))))
     """;
     
+    private static final String ARGFT_GRAMMAR = """
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+feature f1: de.up.ling.irtg.maxent.TestFeature('one')
+feature f2: de.up.ling.irtg.maxent.TestFeature('two')
+
+    """;
+    
     private static InterpretedTreeAutomaton iparse(String s) {
         return IrtgParser.parse(new StringReader(s));
     }
+    
+    
 }
