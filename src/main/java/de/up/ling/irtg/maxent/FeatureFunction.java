@@ -14,14 +14,14 @@ import de.saar.basic.Pair;
 public abstract class FeatureFunction<State> {
     public abstract double evaluate(Rule<State> object);
 
-    protected String getLabelFor(Object state) {
+    protected State getLabelFor(Object state) {
         if (state instanceof Pair) {
             Pair s = (Pair) state;
             if (s.left instanceof Pair) {
                 return this.getLabelFor((Pair) s.left);
             }
-            return (String) s.left;
+            return (State) s.left;
         }
-        return (String) state;
+        return (State) state;
     }
 }
