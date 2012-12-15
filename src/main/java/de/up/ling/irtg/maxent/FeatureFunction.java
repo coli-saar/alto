@@ -14,6 +14,11 @@ import de.saar.basic.Pair;
 public abstract class FeatureFunction<State> {
     public abstract double evaluate(Rule<State> object);
 
+    @Override
+    public String toString() {
+        return this.getClass().getName();
+    }
+
     protected State getLabelFor(Object state) {
         if (state instanceof Pair) {
             Pair s = (Pair) state;
