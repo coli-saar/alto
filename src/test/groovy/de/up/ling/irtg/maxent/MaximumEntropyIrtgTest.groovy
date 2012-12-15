@@ -49,7 +49,7 @@ class MaximumEntropyIrtgTest {
     
     @Test
     public void testFeatures() {
-        FeatureFunction featureFunction = new AlignPPtoNFeature();
+        FeatureFunction featureFunction = new ChildOfFeature("N", "PP");
         de.saar.basic.Pair parent1 = new de.saar.basic.Pair<String,String>("N","0-4");
         de.saar.basic.Pair[] children = new de.saar.basic.Pair<String,String>[2];
         children[0] = new de.saar.basic.Pair<String,String>("N","0-2");
