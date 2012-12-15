@@ -36,4 +36,17 @@ public class ChildOfFeature extends FeatureFunction<String> {
         }
         return 0.0;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        ret.append(super.toString());
+        ret.append("('");
+        ret.append(parentLabel);
+        ret.append("','");
+        ret.append(childLabel);
+        ret.append("')");
+        return ret.toString();
+    }
+
 }
