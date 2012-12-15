@@ -83,8 +83,8 @@ class MaximumEntropyIrtgTest {
     
     private static final String CFG_STR = """
 interpretation i: de.up.ling.irtg.algebra.StringAlgebra
-feature f1: de.up.ling.irtg.maxent.AlignPPtoVPFeature
-feature f2: de.up.ling.irtg.maxent.AlignPPtoNFeature
+feature f1: de.up.ling.irtg.maxent.ChildOfFeature('VP','PP')
+feature f2: de.up.ling.irtg.maxent.ChildOfFeature('N','PP')
 S! -> r1(NP,VP)
   [i] *(?1,?2)
 VP -> r4(V,NP)
