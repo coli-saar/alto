@@ -41,11 +41,11 @@ public class ChildOfFeature extends FeatureFunction<String> {
     public String toString() {
         StringBuilder ret = new StringBuilder();
         ret.append(super.toString());
-        ret.append("('");
-        ret.append(parentLabel);
-        ret.append("','");
-        ret.append(childLabel);
-        ret.append("')");
+        ret.append("(");
+        ret.append(masking(parentLabel));
+        ret.append(",");
+        ret.append(masking(childLabel));
+        ret.append(")");
         return ret.toString();
     }
 
