@@ -33,4 +33,14 @@ public class TestFeature extends FeatureFunction<String> {
             return 0.0;
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder ret = new StringBuilder();
+        ret.append(super.toString());
+        ret.append("('");
+        ret.append(x);
+        ret.append("')");
+        return ret.toString();
+    }
 }
