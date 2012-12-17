@@ -11,14 +11,14 @@
 *x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*
 *x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*x*
 
-( (QUOTE-S QS) 
-  (INTJ (UH Yes) (SEP-PER PERIOD) ))
-( (QUOTE-S QS) 
+( ('' '') 
+  (INTJ (UH Yes) (. .) ))
+( (`` `) 
   (SBARQ-CLF 
     (WHNP-1 (WP What) )
     (SQ 
       (NP-SBJ (-NONE- *T*-1) )
-      (VP (VBZ s) 
+      (VP (VBZ 's) 
         (NP-PRD 
           (NP (IN that) )
           (SBAR 
@@ -27,7 +27,7 @@
               (NP-SBJ (PRP you) )
               (VP (VBP say) 
                 (NP (-NONE- *T*-2) )))))))
-    (QUOTE-E QE) (SEP-PER QMARK) ) (SEP-PER QMARK) )
+    ('' '') (. ?) ) (. ?) )
 ( (S 
     (NP-SBJ (NNP Dan) (NNP Morgan) )
     (VP (VBD told) 
@@ -38,5 +38,5 @@
           (VP (MD would) 
             (VP (VB forget) 
               (NP (NNP Ann) (NNP Turner) ))))))
-    (SEP-PER PERIOD) ))
-( (NP (CD Five) (NNS days) (SEP-PER PERIOD) ))
+    (. .) ))
+( (NP (CD Five) (NNS days) (. .) ))
