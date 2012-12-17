@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package de.up.ling.irtg.maxent;
 
 import cc.mallet.optimize.LimitedMemoryBFGS;
@@ -10,16 +6,16 @@ import de.up.ling.irtg.AnnotatedCorpus;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;
-import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
+import de.saar.basic.StringTools;
+import de.up.ling.irtg.algebra.ParserException;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -31,18 +27,33 @@ import java.util.Properties;
  */
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
-    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException {
-        MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader("examples/maxent-test.irtg"));
-        i.testTraining();
+    /**
+     * For testing only
+     */
+    public static void main(String[] args) throws ParseException, IOException, ParserException {
+        MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader("examples/ptb-test-grammar.irtg"));
+        AnnotatedCorpus anCo = i.readAnnotatedCorpus(new FileReader("examples/ptb-test-corpus.txt"));
+        String TRAIN_STR = "i\n"
+                + "john watches the woman with the telescope\n"
+//                + "r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))\n";
+                + "r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))\n";
+//        AnnotatedCorpus anCo = i.readAnnotatedCorpus(new StringReader(TRAIN_STR));
+        i.train(anCo);
         StringWriter output = new StringWriter();
         i.writeWeights(output);
+/*        Map<String, Reader> test = new HashMap<String, Reader>();
+        test.put("i", new StringReader("Dan Morgan told himself he would forget Ann Turner PERIOD"));
+        TreeAutomaton chart = i.parse(test);
+        for (Object t : chart.language()) {
+            System.err.println(t.toString());
+        } */
         System.err.println("Output:\n" + output.toString());
     }
-    private List<String> featureNames;
-    private FeatureFunction[] features;
-    private double[] weights;
-    private static final double INITIAL_WEIGHT = 0.0;
-    private static final double CONVERGE_DELTA = 0.1;
+    
+    private List<String> featureNames;                    // list of names of feature functions
+    private FeatureFunction[] features;                   // list of feature functions
+    private double[] weights;                             // weights for feature functions
+    private static final double INITIAL_WEIGHT = 0.001; // initial value for a feature's weight 
 
     /**
      * Constructor
@@ -51,16 +62,24 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param featureMap the map contains feature functions accessed by their
      * names. These functions are used to calculate probabilities for the RTG
      */
-    public MaximumEntropyIrtg(TreeAutomaton<String> automaton, Map<String, FeatureFunction> featureMap) {
+    public MaximumEntropyIrtg(TreeAutomaton<String> automaton, final Map<String, FeatureFunction> featureMap) {
         super(automaton);
-
-        if (featureMap == null) {
-            throw new NullPointerException("MaximumEntropyIrtg(automaton, featureMap): featureMap must not be null");
-        }
 
         // instantiate member variables
         featureNames = new ArrayList<String>();
+        // store the features
+        setFeatures(featureMap);
+    }
 
+    /**
+     * Sets the feature functions
+     *
+     * @param featureMap the mapping of names to feature functions
+     */
+    public final void setFeatures(final Map<String, FeatureFunction> featureMap) {
+        if (featureMap == null) {
+            return;
+        }
         // the names of the feature functions are the keys of featureMap
         featureNames.addAll(featureMap.keySet());
         // the size of the names list is used to initialize the arrays for the feature functions
@@ -91,6 +110,9 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @return double[] containing the weights of all feature functions
      */
     public double[] getFeatureWeights() {
+        if (featureNames.isEmpty()) {
+            throw new NullPointerException("No features functions set yet.");
+        }
         return weights;
     }
 
@@ -117,11 +139,14 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * not less the number of feature functions
      */
     private FeatureFunction getFeatureFunction(int index) throws ArrayIndexOutOfBoundsException {
+        if (featureNames.isEmpty()) {
+            throw new NullPointerException("No features functions set yet.");
+        }
         return features[index];
     }
 
     private int getNumFeatures() {
-        return features.length;
+        return featureNames.size();
     }
 
     /**
@@ -141,10 +166,10 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         for (Rule rule : (Set<Rule>) chart.getRuleSet()) {
             double weight = 0.0;
 
-            for (int i = 0; i < this.getNumFeatures(); i++) {
-                FeatureFunction featureFunction = this.getFeatureFunction(i);
+            for (int i = 0; i < getNumFeatures(); i++) {
+                FeatureFunction featureFunction = getFeatureFunction(i);
 
-                double w = this.weights[i];
+                double w = getFeatureWeights()[i];
                 double f = featureFunction.evaluate(rule);
                 weight += f * w;
             }
@@ -161,13 +186,17 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * Trains the weights for the rules according to the training data
      *
      * @param corpus the training data containing sentences and their parse tree
-     * @throws ParserException if part of the corpus cannot be handled by the parser
      */
-    public void train(AnnotatedCorpus corpus) throws ParserException {
-        String interp = (String) corpus.getInstances().get(0).inputObjects.keySet().toArray()[0];
-        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, interp));
-        bfgs.setTolerance(CONVERGE_DELTA);
-        bfgs.optimize();
+    public void train(AnnotatedCorpus corpus) {
+        if (featureNames.isEmpty()) {
+            throw new NullPointerException("No features functions set yet.");
+        }
+        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, "i"));
+        try {
+            bfgs.optimize();
+        } catch (cc.mallet.optimize.OptimizationException e) {
+            System.err.println(e);
+        }
     }
 
     /**
@@ -188,13 +217,12 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             int index = getFeatureNames().indexOf(key);
 
             if (index >= 0) { // no need to check the upper bound, because both collections have the same size
-                weights[index] = weight;
+                getFeatureWeights()[index] = weight;
             }
 
         }
 
     }
-
 
     /**
      * Writes the feature function weights to a writer, e.g., string or file
@@ -206,11 +234,33 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public void writeWeights(Writer writer) throws IOException {
         Properties props = new Properties();
 
-        for (int i = 0; i < weights.length; i++) {
-            props.put(featureNames.get(i), String.valueOf(weights[i]));
+        for (int i = 0; i < getFeatureWeights().length; i++) {
+            props.put(featureNames.get(i), String.valueOf(getFeatureWeights()[i]));
         }
 
         props.store(writer, null);
+    }
+
+    /**
+     * Returns a string representing the object and its elements
+     * 
+     * @return String the string representing the object
+     */
+    @Override
+    public String toString() {
+        String nl = System.getProperty("line.separator");
+        StringBuilder ret = new StringBuilder();
+        ret.append(super.toString());
+
+        for (int i = 0; i < featureNames.size(); i++) {
+            ret.append("feature ");
+            ret.append(featureNames.get(i));
+            ret.append(": ");
+            ret.append(features[i].toString());
+            ret.append(nl);
+        }
+
+        return ret.toString();
     }
 
     /**
@@ -287,7 +337,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                 double[] expectation = new double[cachedGradient.length]; // sum_x,y(E(f_i|S))
 
                 for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
-                    String s = join((List<String>) instance.inputObjects.get(interpretation));
+                    String s = StringTools.join((List<String>) instance.inputObjects.get(interpretation), " ");
                     Map<String, Reader> readers = new HashMap<String, Reader>();
                     readers.put(interpretation, new StringReader(s));
                     TreeAutomaton chart = null;
@@ -414,22 +464,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         }
     }
 
-
-    /**
-     * TESTING
-     * Function to test the training algorithm
-     */
-    @CallableFromShell(name = "train")
-    public double[] testTraining() throws IOException, ParserException {
-        String TRAIN_STR = "i\n"
-                + "john watches the woman with the telescope\n"
-//                + "r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))\n";
-                + "r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))\n";
-        AnnotatedCorpus anCo = readAnnotatedCorpus(new StringReader(TRAIN_STR));
-        train(anCo);
-        return weights;
-    }
-
     /**
      * TESTING
      * Helper for readable array output
@@ -441,35 +475,4 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         System.err.println();
     }
 
-    /**
-     * Helping function to join a list of strings
-     * Uses white space as delimiter
-     * 
-     * @param strings the list of strings
-     * @return the joined string
-     */
-    public static String join(List<String> strings) {
-        return join(strings, " ");
-    }
-
-    /**
-     * Helping function to join a list of strings
-     * 
-     * @param strings the list of strings
-     * @param delimiter the delimiter between the strings
-     * @return the joined string
-     */
-    public static String join(List<String> strings, String delimiter) {
-        if (strings == null || strings.isEmpty()) {
-            return "";
-        }
-        Iterator<String> iter = strings.iterator();
-        StringBuilder builder = new StringBuilder(iter.next());
-
-        while (iter.hasNext()) {
-            builder.append(delimiter).append(iter.next());
-        }
-
-        return builder.toString();
-    }
 }
