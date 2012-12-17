@@ -29,4 +29,11 @@ public abstract class FeatureFunction<State> {
         }
         return (State) state;
     }
+
+    protected String masking(String s) {
+        if (s.contains("'")) {
+            return "\"" + s + "\"";
+        }
+        return "'" + s + "'";
+    }
 }
