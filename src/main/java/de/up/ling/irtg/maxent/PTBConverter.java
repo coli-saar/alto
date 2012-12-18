@@ -2,7 +2,6 @@ package de.up.ling.irtg.maxent;
 
 import de.saar.basic.StringOrVariable;
 import de.saar.basic.StringTools;
-import de.saar.chorus.term.parser.TermParser;
 import de.up.ling.irtg.AnnotatedCorpus;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.ParseException;
@@ -10,6 +9,7 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.PtbTreeAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -189,12 +189,8 @@ public class PTBConverter {
                         stringOrVariable = true;
                     }
                     // add interpretations the the homomorphisms
-                    String parsable = strInterp.toString();
-                    if (parsable.equals("`")) {
-                        parsable = "'" + parsable + "'";
-                    }
-                    hStr.add(ruleName, Tree.create(new StringOrVariable(parsable, false)));
-                    hPtb.add(ruleName, Tree.create(new StringOrVariable(ptbInterp.toString(), stringOrVariable)));
+                    hStr.add(ruleName, Tree.create(new StringOrVariable(strInterp.toString(), false)));
+                    hPtb.add(ruleName, Tree.create(new StringOrVariable(ptbInterp.toString(), true)));
                     // add the rule to the automaton
                     c.addRule(ruleName, childStates, node.getLabel());
                 }
@@ -349,8 +345,12 @@ public class PTBConverter {
      * 
      */
     public void addFeatures() {
-        addManualFeatures();
-        addAllRuleFeatures();
+        List<String> featuredRules = new ArrayList<String>();
+//        addManualFeatures();
+//        addAllRuleFeatures();
+        addParentRelatedFeatures(featuredRules);
+        addTerminalRelatedFeatures(featuredRules);
+        addChildRelatedFeatures();
         
         maxEntIrtg.setFeatures(featureMap);
     }
@@ -370,6 +370,87 @@ public class PTBConverter {
             featureName = "f" + String.valueOf(++num);
             featureMap.put(featureName, new TestFeature(r));
         }
+    }
+
+    public void addChildRelatedFeatures() {
+        Map<String,List<String>> stateRules = new HashMap<String,List<String>>();
+        for (Rule<String> r : maxEntIrtg.getAutomaton().getRuleSet()) {
+            String parentState = r.getParent();
+            Object[] children = r.getChildren();
+            for (Object child : children) {
+                String state = (String) child;
+                if (stateRules.containsKey(state) && !stateRules.get(state).contains(parentState)) {
+                    stateRules.get(state).add(parentState);
+                } else {
+                    List<String> rules = new ArrayList<String>();
+                    rules.add(parentState);
+                    stateRules.put(state, rules);
+                }
+            }
+        }
+        int num = featureMap.size();
+        String featureName;
+        for (String state : stateRules.keySet()) {
+            List<String> parentStates = stateRules.get(state);
+            if (parentStates.size() > 1) {
+                for (String p : parentStates) {
+                    featureName = "f" + String.valueOf(++num);
+                    featureMap.put(featureName, new ChildOfFeature(p, state));
+                }
+            }
+        }
+    }
+
+    private void addRuleFeatures(final Map<String,List<String>> stateRules, List<String> featuredRules) {
+        int num = featureMap.size();
+        String featureName;
+        for (String state : stateRules.keySet()) {
+            List<String> rules = stateRules.get(state);
+            if (rules.size() > 1) {
+                for (String r : rules) {
+                    if (!featuredRules.contains(r)) {
+                        featureName = "f" + String.valueOf(++num);
+                        featureMap.put(featureName, new TestFeature(r));
+                        featuredRules.add(r);
+                    }
+                }
+            }
+        }
+    }
+
+    public void addParentRelatedFeatures(List<String> featuredRules) {
+        Map<String,List<String>> stateRules = new HashMap<String,List<String>>();
+        for (Rule<String> r : maxEntIrtg.getAutomaton().getRuleSet()) {
+            String ruleName = r.getLabel();
+            String state = r.getParent();
+            if (stateRules.containsKey(state) && !stateRules.get(state).contains(ruleName)) {
+                stateRules.get(state).add(ruleName);
+            } else {
+                List<String> rules = new ArrayList<String>();
+                rules.add(ruleName);
+                stateRules.put(state, rules);
+            }
+        }
+        addRuleFeatures(stateRules, featuredRules);
+    }
+
+    public void addTerminalRelatedFeatures(List<String> featuredRules) {
+        Map<String,List<String>> interpRules = new HashMap<String,List<String>>();
+        for (Rule<String> r : maxEntIrtg.getAutomaton().getRuleSet()) {
+            String ruleName = r.getLabel();
+            Object[] children = r.getChildren();
+            if (children.length == 0) {
+                String interp = hStr.get(ruleName).toString();
+                if (interpRules.containsKey(interp) && !interpRules.get(interp).contains(ruleName)) {
+                    interpRules.get(interp).add(ruleName);
+                } else {
+                    List<String> rules = new ArrayList<String>();
+                    rules.add(ruleName);
+                    interpRules.put(interp, rules);
+                }
+            }
+        }
+        addRuleFeatures(interpRules, featuredRules);
     }
 
 }
