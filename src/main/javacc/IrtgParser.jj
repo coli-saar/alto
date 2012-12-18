@@ -264,6 +264,6 @@ String name() :
 }
 {
     tok = <NAME> { return tok.image.intern(); }
-    | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
-    | tok = <DOUBLE_QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
+    | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1).intern(); }
+    | tok = <DOUBLE_QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1).intern(); }
 }

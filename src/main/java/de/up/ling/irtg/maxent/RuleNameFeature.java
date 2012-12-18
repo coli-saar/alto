@@ -26,7 +26,7 @@ public class RuleNameFeature extends FeatureFunction<String> {
 
     @Override
     public double evaluate(Rule<String> object) {
-        if( object.getLabel().equals(x) ) {
+        if( object.getLabel() == x ) { // VORSICHT
             return 1.0;
         } else {
             return 0.0;
