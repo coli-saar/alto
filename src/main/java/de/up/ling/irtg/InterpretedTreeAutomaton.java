@@ -37,6 +37,7 @@ import org.apache.commons.math3.special.Gamma;
  * @author koller
  */
 public class InterpretedTreeAutomaton {
+
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;
@@ -403,7 +404,7 @@ public class InterpretedTreeAutomaton {
     public ChartCorpus readUnannotatedCorpus(Reader reader) throws IOException {
         return ChartCorpus.parseCorpus(reader, this);
     }
-    
+
     @CallableFromShell
     public AnnotatedCorpus readAnnotatedCorpus(Reader reader) throws IOException {
         return AnnotatedCorpus.readAnnotatedCorpus(reader, this);
@@ -610,7 +611,8 @@ public class InterpretedTreeAutomaton {
 
             for (String interp : interpretationOrder) {
                 Homomorphism hom = interpretations.get(interp).getHomomorphism();
-                pw.println("  [" + interp + "] " + hom.rhsAsString(hom.get(rule.getLabel())));
+                Tree<StringOrVariable> rhs = hom.get(rule.getLabel());
+                pw.println("  [" + interp + "] " + Homomorphism.rhsAsString(rhs));
             }
 
             pw.println();

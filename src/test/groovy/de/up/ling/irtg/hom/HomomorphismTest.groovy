@@ -67,6 +67,14 @@ class HomomorphismTest {
         assert Homomorphism.getIndexForVariable(new StringOrVariable("?A3", true)) == 2;
         assert Homomorphism.getIndexForVariable(new StringOrVariable("?HalloHallo100", true)) == 99;
     }
+    
+    @Test
+    public void testToString() {
+        //Homomorphism h = hom(["f":"g(?1)"])
+        assertEquals("g(?1)", Homomorphism.rhsAsString(ptv("g(?1)")));
+        assertEquals("*(?1,?2)", Homomorphism.rhsAsString(ptv("*(?1,?2)")));
+        assertEquals("'`'", Homomorphism.rhsAsString(Tree.create("`")));
+    }
 
     
     /*

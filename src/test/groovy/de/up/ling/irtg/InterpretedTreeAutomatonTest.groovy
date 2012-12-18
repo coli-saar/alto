@@ -161,7 +161,7 @@ S -> r2
         
 //        System.err.println(str)
         
-        assert irtg.equals(parsed);
+        assert irtg.equals(parsed) : parsed;
     }
 
     private static TreeAutomaton parse(String s) {

@@ -138,8 +138,8 @@ r1(r7,r4( r8, r2(r9,r3(r11, r6(r12, r2(r9,r10))))))
     private static final String ARGFT_GRAMMAR = """
 interpretation i: de.up.ling.irtg.algebra.StringAlgebra
 
-feature f1: de.up.ling.irtg.maxent.TestFeature('one')
-feature f2: de.up.ling.irtg.maxent.TestFeature('two')
+feature f1: de.up.ling.irtg.maxent.RuleNameFeature('one')
+feature f2: de.up.ling.irtg.maxent.RuleNameFeature('two')
 
     """;
     

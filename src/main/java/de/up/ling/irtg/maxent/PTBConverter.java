@@ -368,7 +368,7 @@ public class PTBConverter {
         String featureName;
         for (String r : ruleMap.values()) {
             featureName = "f" + String.valueOf(++num);
-            featureMap.put(featureName, new TestFeature(r));
+            featureMap.put(featureName, new RuleNameFeature(r));
         }
     }
 
@@ -410,7 +410,7 @@ public class PTBConverter {
                 for (String r : rules) {
                     if (!featuredRules.contains(r)) {
                         featureName = "f" + String.valueOf(++num);
-                        featureMap.put(featureName, new TestFeature(r));
+                        featureMap.put(featureName, new RuleNameFeature(r));
                         featuredRules.add(r);
                     }
                 }

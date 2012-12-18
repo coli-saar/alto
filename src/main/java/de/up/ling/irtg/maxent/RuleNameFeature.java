@@ -7,17 +7,16 @@ package de.up.ling.irtg.maxent;
 import de.up.ling.irtg.automata.Rule;
 
 /**
- * A trivial feature class that is only used for testing.
- * It is only suitable to illustrate how to declare a feature
- * function whose constructor takes arguments.
- * Do not use this in your own program. 
+ * A feature that returns 1 iff the rule name matches
+ * the name that is passed to the constructor. The feature
+ * function returns 0 otherwise.
  * 
  * @author koller
  */
-public class TestFeature extends FeatureFunction<String> {
+public class RuleNameFeature extends FeatureFunction<String> {
     private String x;
 
-    public TestFeature(String x) {
+    public RuleNameFeature(String x) {
         this.x = x;
     }
 
