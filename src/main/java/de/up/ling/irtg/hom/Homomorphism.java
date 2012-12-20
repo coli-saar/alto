@@ -9,6 +9,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -171,5 +172,24 @@ public class Homomorphism {
     
 
     
+    
+    public boolean isNonDeleting() {
+        for( String label : mappings.keySet() ) {
+            Tree<StringOrVariable> rhs = mappings.get(label);
+            Set<StringOrVariable> variables = new HashSet<StringOrVariable>();
+            for( StringOrVariable l : rhs.getLeafLabels() ) {
+                if( l.isVariable() ) {
+                    variables.add(l);
+                }
+            }
+            
+            if( variables.size() < srcSignature.getArity(label)) {
+//                System.err.println("hom is nondeleting: " + label + "/" + srcSignature.getArity(label) +  " -> " + rhs);
+                return false;
+            }
+        }
+        
+        return true;        
+    }
     
 }

@@ -38,7 +38,9 @@ import org.apache.commons.math3.special.Gamma;
  */
 public class InterpretedTreeAutomaton {
     public static void main(String[] args) throws ParseException, FileNotFoundException, ParserException, IOException {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("/tmp/wsj.00-grammar.irtg"));
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("/Users/koller/Desktop/ptb-test-grammar.irtg"));        
+        irtg.getAutomaton().analyze();
+        
         Map<String,Reader> inputs = new HashMap<String, Reader>();
         inputs.put("i", new StringReader("Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 ."));
         irtg.parseFromReaders(inputs);

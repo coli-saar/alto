@@ -10,8 +10,11 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.SortedMultiset;
+import com.google.common.collect.TreeMultiset;
 import de.saar.basic.AkSetMultimap;
 import de.saar.basic.CartesianIterator;
+import de.saar.basic.IdentityHashSet;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
@@ -60,7 +63,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        allStates = new HashSet<State>();
         allStates = new HashMap<State, State>();
         isExplicit = false;
-        rulesForRhsState = HashMultimap.create();
+//        rulesForRhsState = HashMultimap.create();
+        rulesForRhsState = new IdentitySetMultimap<State, Rule<State>>();
         this.signature = signature;
     }
 
@@ -141,18 +145,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Set<State> getAllStates() {
         return allStates.keySet();
     }
-    
+
     protected State addState(State state) {
         State ret = allStates.get(state);
-        
-        if( ret == null ) {
+
+        if (ret == null) {
             allStates.put(state, state);
             ret = state;
         }
-        
+
         return ret;
     }
-    
+
     protected State addFinalState(State state) {
         State normalized = addState(state);
         finalStates.add(normalized);
@@ -162,9 +166,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
     /**
      * Caches a rule for future use. Once a rule has been cached, it will be
      * found by getRulesBottomUpFromExplicit and getRulesTopDownFromExplicit.
-     * The method normalizes states of the automaton, in such a way that
-     * states that are equals() are also ==. The method destructively modifies
-     * the states that are mentioned in the rule object to these normalized states.
+     * The method normalizes states of the automaton, in such a way that states
+     * that are equals() are also ==. The method destructively modifies the
+     * states that are mentioned in the rule object to these normalized states.
      *
      * @param rule
      */
@@ -173,7 +177,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         if (allStates != null) {
             State[] children = rule.getChildren();
             rule.setParent(addState(rule.getParent()));
-            
+
             for (int i = 0; i < rule.getArity(); i++) {
                 children[i] = addState(children[i]);
             }
@@ -187,23 +191,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         // store as top-down rule
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(rule.getLabel());
         if (topdown == null) {
-//            topdown = HashMultimap.create();
-
-//            topdown = Multimaps.newSetMultimap(new IdentityHashMap<State, Collection<Rule<State>>>(),
-//                    new Supplier<Set<Rule<State>>>() {
-//                        @Override
-//                        public Set<Rule<State>> get() {
-//                            return new HashSet<Rule<State>>();
-//                        }
-//                    });
-
-            topdown = new AkSetMultimap<State, Rule<State>>() {
-                @Override
-                protected Map<State, Set<Rule<State>>> createMap() {
-                    return new IdentityHashMap<State, Set<Rule<State>>>();
-                }
-            };
-
+            topdown = new IdentitySetMultimap<State, Rule<State>>();
             explicitRulesTopDown.put(rule.getLabel(), topdown);
         }
         topdown.put(rule.getParent(), rule);
@@ -213,6 +201,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
             rulesForRhsState.put(rhs, rule);
         }
 
+    }
+
+    private static class IdentitySetMultimap<K, V> extends AkSetMultimap<K, V> {
+        @Override
+        protected Map<K, Set<V>> createMap() {
+            return new IdentityHashMap<K, Set<V>>();
+        }
+
+        @Override
+        protected Set<V> createSet() {
+            return new IdentityHashSet<V>();
+        }
     }
 
     /**
@@ -661,7 +661,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return an automaton representing the homomorphic pre-image.
      */
     public TreeAutomaton<String> inverseHomomorphism(Homomorphism hom) {
-        return new InverseHomAutomaton<State>(this, hom);
+        if (hom.isNonDeleting()) {
+            return new NondeletingInverseHomAutomaton<State>(this, hom);
+        } else {
+            return new InverseHomAutomaton<State>(this, hom);
+        }
     }
 
     /**
@@ -1391,6 +1395,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //    }
     public void setDebug(boolean debug) {
         this.debug = debug;
+    }
+    
+    public void analyze() {
+        SortedMultiset<Integer> counts = TreeMultiset.create();
+        for( Rule<State> rule : getRuleSet() ) {
+            counts.add(rule.getArity());
+        }
+        
+        System.err.println("Counts of rule arities:");
+        for( Integer arity : counts.elementSet() ) {
+            System.err.println(String.format("%3d %d", arity, counts.count(arity)));
+        }
     }
 }
 
