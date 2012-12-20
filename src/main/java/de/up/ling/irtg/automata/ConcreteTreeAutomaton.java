@@ -51,17 +51,13 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 //        return explicitRules.get(label).getArity();
 //    }
 
-    public void addFinalState(State state) {
-        finalStates.add(state);
+    @Override
+    public State addFinalState(State state) {
+        return super.addFinalState(state);
     }
 
     @Override
     public Set<State> getFinalStates() {
         return finalStates;
-    }
-
-    @Override
-    public Set<State> getAllStates() {
-        return allStates;
     }
 }

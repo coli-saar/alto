@@ -38,10 +38,10 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
 
         // _must_ do this here to cache mapping from strings to rhs states
         for (State s : rhsAutomaton.getAllStates()) {
-            allStates.add(s.toString());
-            rhsState.put(s.toString(), s);
+            String normalized = addState(s.toString());
+            rhsState.put(normalized, s);
         }
-        allStates.add(FAIL_STATE);
+        addState(FAIL_STATE);
     }
 
     @Override

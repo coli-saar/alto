@@ -18,7 +18,7 @@ import java.util.*;
 class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
-    private Set<String> allLabels;
+//    private Set<String> allLabels;
     private static final boolean DEBUG = false;
 
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
@@ -28,7 +28,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         this.right = right;
 
         finalStates = null;
-        allStates = null;
+        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
     }
 
     /**
@@ -311,6 +311,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     @Override
     public Set<Pair<LeftState, RightState>> getFinalStates() {
         if (finalStates == null) {
+            getAllStates(); // initialize data structure for addState
             finalStates = new HashSet<Pair<LeftState, RightState>>();
             collectStatePairs(left.getFinalStates(), right.getFinalStates(), finalStates);
         }
@@ -326,7 +327,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         CartesianIterator it = new CartesianIterator(stateSets);
         while (it.hasNext()) {
             List<Object> states = it.next();
-            pairStates.add(new Pair(states.get(0), states.get(1)));
+            pairStates.add(addState(new Pair(states.get(0), states.get(1))));
         }
     }
 
@@ -385,14 +386,13 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     @Override
     public Set<Pair<LeftState, RightState>> getAllStates() {
         if (allStates == null) {
-            allStates = new HashSet<Pair<LeftState, RightState>>();
-            collectStatePairs(left.getAllStates(), right.getAllStates(), allStates);
+            Set<Pair<LeftState,RightState>> set = new HashSet<Pair<LeftState, RightState>>();
+            collectStatePairs(left.getAllStates(), right.getAllStates(), set);
+            for( Pair<LeftState,RightState> pq : set ) {
+                addState(pq);
+            }
         }
 
-        return allStates;
+        return super.getAllStates();
     }
-//    @Override
-//    public int getArity(String label) {
-//        return left.getArity(label);
-//    }
 }

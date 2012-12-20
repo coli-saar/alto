@@ -21,7 +21,7 @@ public class UniversalAutomaton extends TreeAutomaton<String> {
         super(signature);
         
         finalStates.add(STATE);
-        allStates.add(STATE);
+        addState(STATE);
     }
 
     @Override

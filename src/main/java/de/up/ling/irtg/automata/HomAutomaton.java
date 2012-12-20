@@ -30,11 +30,8 @@ class HomAutomaton extends TreeAutomaton<String> {
         this.base = base;
         this.hom = hom;
 
-        allStates = new HashSet<String>();
-
-        finalStates = new HashSet<String>();
         for (Object st : base.getFinalStates()) {
-            finalStates.add(st.toString());
+            addFinalState(st.toString());
         }
     }
 
@@ -49,15 +46,14 @@ class HomAutomaton extends TreeAutomaton<String> {
                 final Tree<StringOrVariable> homImage = hom.get(rule.getLabel());
 
                 if (homImage.getLabel().isVariable()) {
-                    // special case for homomorphisms of the form ?1: store chain rule
-                    //assert rule.getChildren().length == 1;
+                    // special case for homomorphisms of the form ?1 or ?2 etc.: store chain rule
 
-                    chainRules.put(rule.getChildren()[0], rule.getParent());
+                    int childPosition = Homomorphism.getIndexForVariable(homImage.getLabel());
+                    chainRules.put(rule.getChildren()[childPosition], rule.getParent());
                 } else {
                     // otherwise, iterate over homomorphic image of rule label and
                     // introduce rules as we go along
                     homImage.dfs(new TreeVisitor<StringOrVariable, Void, String>() {
-
                         @Override
                         public String combine(Tree<StringOrVariable> node, List<String> childrenValues) {
                             StringOrVariable label = node.getLabel();
@@ -76,7 +72,8 @@ class HomAutomaton extends TreeAutomaton<String> {
                                     weight = 1;
                                 }
 
-                                storeRule(new Rule<String>(parentState, label.toString(), childrenValues, weight));
+                                Rule<String> newRule = new Rule<String>(parentState, label.toString(), childrenValues, weight);
+                                storeRule(newRule);
                                 labels.add(label.toString());
                                 return parentState;
                             }
@@ -86,9 +83,12 @@ class HomAutomaton extends TreeAutomaton<String> {
                 
                 // now process chain rules
                 for( Entry<Object,Object> entry : chainRules.entries() ) {
+                    String lowerParent = addState(entry.getKey().toString());
+                    String upperParent = addState(entry.getValue().toString());
+                    
                     for( String label : labels ) {
-                        for( Rule<String> ruleForEntry : getRulesTopDownFromExplicit(label, entry.getKey().toString()) ) {
-                            storeRule(new Rule<String>(entry.getValue().toString(), label, ruleForEntry.getChildren()));
+                        for( Rule<String> ruleForEntry : getRulesTopDownFromExplicit(label, lowerParent) ) {
+                            storeRule(new Rule<String>(upperParent, label, ruleForEntry.getChildren()));
                         }
                     }
                 }
@@ -99,7 +99,7 @@ class HomAutomaton extends TreeAutomaton<String> {
     }
 
     private String gensymState() {
-        return "qh" + (gensymNext++);
+        return addState("qh" + (gensymNext++));
     }
 
     @Override
@@ -122,6 +122,6 @@ class HomAutomaton extends TreeAutomaton<String> {
     @Override
     public Set<String> getAllStates() {
         makeAllRulesExplicit();
-        return allStates;
+        return super.getAllStates();
     }
 }

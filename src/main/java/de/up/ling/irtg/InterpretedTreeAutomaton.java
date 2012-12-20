@@ -37,6 +37,12 @@ import org.apache.commons.math3.special.Gamma;
  * @author koller
  */
 public class InterpretedTreeAutomaton {
+    public static void main(String[] args) throws ParseException, FileNotFoundException, ParserException, IOException {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("/tmp/wsj.00-grammar.irtg"));
+        Map<String,Reader> inputs = new HashMap<String, Reader>();
+        inputs.put("i", new StringReader("Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 ."));
+        irtg.parseFromReaders(inputs);
+    }
 
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;

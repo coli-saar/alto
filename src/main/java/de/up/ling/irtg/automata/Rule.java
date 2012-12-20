@@ -61,6 +61,12 @@ public class Rule<State> implements Serializable {
         return parent;
     }
 
+    public void setParent(State parent) {
+        this.parent = parent;
+    }
+    
+    
+
     public double getWeight() {
         return weight;
     }

@@ -109,7 +109,7 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
         }
 
         private void collectStatesAndLabels(Tree<String> node, String state) {
-            allStates.add(state);
+            state = addState(state);
             labels.add(node.getLabel());
 
             if (node.getChildren().isEmpty()) {

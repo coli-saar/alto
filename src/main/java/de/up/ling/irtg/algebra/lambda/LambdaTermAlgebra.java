@@ -170,7 +170,7 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
         @Override
         public Set<LambdaTerm> getAllStates() {
             makeAllRulesExplicit();
-            return allStates;
+            return super.getAllStates();
         }
     }
 }

@@ -10,6 +10,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
+import de.saar.basic.AkSetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -27,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,8 +44,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected Map<String, StateListToStateMap> explicitRules; // one for each label
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
-    protected Set<State> allStates;
-    private final Map<String, State> dummyLtsSubstitution = new HashMap<String, State>();
+//    protected Set<State> allStates;
+    protected Map<State, State> allStates;
+//    private final Map<String, State> dummyLtsSubstitution = new HashMap<String, State>();
     protected boolean isExplicit;
     protected SetMultimap<State, Rule<State>> rulesForRhsState;
     protected Signature signature;
@@ -52,9 +55,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     public TreeAutomaton(Signature signature) {
         explicitRules = new HashMap<String, StateListToStateMap>();
-        explicitRulesTopDown = new HashMap<String, SetMultimap<State, Rule<State>>>();
+        explicitRulesTopDown = new IdentityHashMap<String, SetMultimap<State, Rule<State>>>();
         finalStates = new HashSet<State>();
-        allStates = new HashSet<State>();
+//        allStates = new HashSet<State>();
+        allStates = new HashMap<State, State>();
         isExplicit = false;
         rulesForRhsState = HashMultimap.create();
         this.signature = signature;
@@ -121,20 +125,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns the arity of a terminal symbol. Apparently this method is not
-     * being used anywhere, so I'm deleting it for now.
-     *
-     * @param label
-     * @return
-     */
-//    abstract public int getArity(String label);
-    /**
-     * Returns all terminal symbols that this automaton knows about.
-     *
-     * @return
-     */
-//    abstract public Set<String> getAllLabels();
-    /**
      * Returns the final states of the automaton.
      *
      * @return
@@ -149,16 +139,47 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Set<State> getAllStates() {
-        return allStates;
+        return allStates.keySet();
+    }
+    
+    protected State addState(State state) {
+        State ret = allStates.get(state);
+        
+        if( ret == null ) {
+            allStates.put(state, state);
+            ret = state;
+        }
+        
+        return ret;
+    }
+    
+    protected State addFinalState(State state) {
+        State normalized = addState(state);
+        finalStates.add(normalized);
+        return normalized;
     }
 
     /**
      * Caches a rule for future use. Once a rule has been cached, it will be
      * found by getRulesBottomUpFromExplicit and getRulesTopDownFromExplicit.
+     * The method normalizes states of the automaton, in such a way that
+     * states that are equals() are also ==. The method destructively modifies
+     * the states that are mentioned in the rule object to these normalized states.
      *
      * @param rule
      */
     protected void storeRule(Rule<State> rule) {
+        // collect and normalize states
+        if (allStates != null) {
+            State[] children = rule.getChildren();
+            rule.setParent(addState(rule.getParent()));
+            
+            for (int i = 0; i < rule.getArity(); i++) {
+                children[i] = addState(children[i]);
+            }
+        }
+
+
         // store as bottom-up rule
         StateListToStateMap smap = getOrCreateStateMap(rule.getLabel());
         smap.put(rule);
@@ -166,7 +187,23 @@ public abstract class TreeAutomaton<State> implements Serializable {
         // store as top-down rule
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(rule.getLabel());
         if (topdown == null) {
-            topdown = HashMultimap.create();
+//            topdown = HashMultimap.create();
+
+//            topdown = Multimaps.newSetMultimap(new IdentityHashMap<State, Collection<Rule<State>>>(),
+//                    new Supplier<Set<Rule<State>>>() {
+//                        @Override
+//                        public Set<Rule<State>> get() {
+//                            return new HashSet<Rule<State>>();
+//                        }
+//                    });
+
+            topdown = new AkSetMultimap<State, Rule<State>>() {
+                @Override
+                protected Map<State, Set<Rule<State>>> createMap() {
+                    return new IdentityHashMap<State, Set<Rule<State>>>();
+                }
+            };
+
             explicitRulesTopDown.put(rule.getLabel(), topdown);
         }
         topdown.put(rule.getParent(), rule);
@@ -176,13 +213,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
             rulesForRhsState.put(rhs, rule);
         }
 
-        // collect states
-        if (allStates != null) {
-            allStates.add(rule.getParent());
-            for (int i = 0; i < rule.getArity(); i++) {
-                allStates.add(rule.getChildren()[i]);
-            }
-        }
     }
 
     /**
@@ -213,14 +243,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     protected Set<Rule<State>> getRulesTopDownFromExplicit(String label, State parentState) {
         if (useCachedRuleTopDown(label, parentState)) {
-            if (!explicitRulesTopDown.containsKey(label) || !explicitRulesTopDown.get(label).containsKey(parentState)) {
-                return new HashSet<Rule<State>>();
-            } else {
-                return explicitRulesTopDown.get(label).get(parentState);
+            SetMultimap<State, Rule<State>> rulesHere = explicitRulesTopDown.get(label);
+
+            if (rulesHere != null) {
+                Set<Rule<State>> ret = rulesHere.get(parentState);
+                if (ret != null) {
+                    return ret;
+                }
             }
-        } else {
-            return new HashSet<Rule<State>>();
         }
+
+        return new HashSet<Rule<State>>();
     }
 
     /**
@@ -803,7 +836,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         // copy all final states that are actually states in the reduced automaton
         ret.finalStates = new HashSet<State>(getFinalStates());
-        ret.finalStates.retainAll(ret.allStates);
+        ret.finalStates.retainAll(ret.getAllStates());
 
         return ret;
     }
@@ -833,8 +866,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
         for (State s : getStatesInBottomUpOrder()) {
             E accu = semiring.zero();
 
-            for (String label : getSignature().getSymbols()) {
+            for (String label : getLabelsTopDown(s)) {
                 Set<Rule<State>> rules = getRulesTopDown(label, s);
+//                System.err.println(s + "/" + label + " -> " + rules);
 
                 for (Rule<State> rule : rules) {
                     E valueThisRule = evaluator.evaluateRule(rule);
