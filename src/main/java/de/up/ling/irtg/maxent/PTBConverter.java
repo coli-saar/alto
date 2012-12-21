@@ -14,10 +14,12 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -105,7 +107,13 @@ public class PTBConverter {
      */
     public void convert() {
         ConcreteTreeAutomaton c = (ConcreteTreeAutomaton) maxEntIrtg.getAutomaton();
+        Map<String,String> binaryLabels = new HashMap<String, String>();
         for (Tree<String> ptbTree : ptbTrees) {
+            // store representation of PTB tree
+            List<String> ptbObjects = new ArrayList<String>();
+            ptbObjects.add(ptbTree.toString());
+            // binarize the PTB-tree
+            ptbTree = PtbTreeAlgebra.binarize(ptbTree, binaryLabels);
             // extract and store the rules used in the PTB-tree
             extractRules(ptbTree);
             // add the root label to the final states
@@ -116,8 +124,6 @@ public class PTBConverter {
             
             //create a corpus instance
             List<String> sentence = ptbTree.getLeafLabels();
-            List<String> ptbObjects = new ArrayList<String>();
-            ptbObjects.add(ptbTree.toString());
             Map<String, Object> inputObjectsMap = new HashMap<String, Object>();
             // with the actual sentence
             inputObjectsMap.put("i", sentence);
@@ -146,7 +152,8 @@ public class PTBConverter {
              */
             @Override
             public Boolean combine(Tree<String> node, List<Boolean> childrenValues) {
-                if (node.getChildren().isEmpty()) {
+                List<Tree<String>> nodeChildren = node.getChildren();
+                if (nodeChildren.isEmpty()) {
                     return true; // we have a leaf node
                 }
                 // create a string representation for the rule, i.e. 'S/NP/VP'
@@ -158,39 +165,27 @@ public class PTBConverter {
                     // remember that we have the rule already
                     ruleMap.put(ruleString, ruleName);
                     List<String> childStates = new ArrayList<String>(); // list of states on the right side
-                    StringBuilder strInterp = new StringBuilder(); // interpretation for StringAlgebra
-                    StringBuilder ptbInterp = new StringBuilder(); // interpretation for PtbTreeAlgebra
-                    ptbInterp.append(node.getLabel()); // the PTB interpretation starts with the parent state / node label
+                    List<Tree<StringOrVariable>> ptbChildren = new ArrayList<Tree<StringOrVariable>>();
                     String label;
-                    boolean stringOrVariable = false;
                     if (childrenValues.get(0)) { // the node's child is a leaf node --> terminal symbol
-                        label = node.getChildren().get(0).getLabel(); // terminal symbol
-                        strInterp.append(label);
-                        ptbInterp.append("(");
-                        ptbInterp.append(label);
-                        ptbInterp.append(")");
+                        label = nodeChildren.get(0).getLabel(); // terminal symbol
+                        hStr.add(ruleName, Tree.create(new StringOrVariable(label, false)));
+                        ptbChildren.add(Tree.create(new StringOrVariable(label, false)));
                     } else {
                         // collect the child states and create the PTB interpretation
                         // the PTB interpretation is not nested but straight forward
                         for (int i = 0; i < childrenValues.size(); i++) {
-                            label = node.getChildren().get(i).getLabel();
+                            label = nodeChildren.get(i).getLabel();
                             childStates.add(label);
-                            if (i == 0) {
-                                ptbInterp.append("(");
-                            } else {
-                                ptbInterp.append(",");
-                            }
-                            ptbInterp.append("?");
-                            ptbInterp.append(i+1);
+                            String ptbLabel = "?" + String.valueOf(i+1);
+                            ptbChildren.add(Tree.create(new StringOrVariable(ptbLabel, true)));
                         }
-                        ptbInterp.append(")");
                         // create the nested intepretation for the StringAlgebra
-                        strInterp.append(computeInterpretation(1, childrenValues.size()));
-                        stringOrVariable = true;
+                        Tree<StringOrVariable> strInterp = computeInterpretation(1, childrenValues.size());
+                        hStr.add(ruleName, strInterp);
                     }
                     // add interpretations the the homomorphisms
-                    hStr.add(ruleName, Tree.create(new StringOrVariable(strInterp.toString(), false)));
-                    hPtb.add(ruleName, Tree.create(new StringOrVariable(ptbInterp.toString(), true)));
+                    hPtb.add(ruleName, Tree.create(new StringOrVariable(node.getLabel(), false), ptbChildren));
                     // add the rule to the automaton
                     c.addRule(ruleName, childStates, node.getLabel());
                 }
@@ -224,29 +219,25 @@ public class PTBConverter {
      * @param max the number of elements of the interpretation
      * @return String the interpretation
      */
-    private String computeInterpretation(int start, int max) {
+    private Tree<StringOrVariable> computeInterpretation(int start, int max) {
         if (max == 1) {
-            // only one element
-            return "?1";
-        } else if (max < start) {
+            return Tree.create(new StringOrVariable("?1", true));
+        }
+        if (max < start) {
             // that's not right
-            return "";
+            return null;
         }
-        StringBuilder ret = new StringBuilder();
-        ret.append("*(?");
+        List<Tree<StringOrVariable>> strChildren = new ArrayList<Tree<StringOrVariable>>();
+        String startLabel = "?" + String.valueOf(start);
+        strChildren.add(Tree.create(new StringOrVariable(startLabel, true)));
         if ((start + 1) == max) {
-            // these are the last 2 elements resulting in something like "*(?X, ?Y)"
-            ret.append(start);
-            ret.append(",?");
-            ret.append(max);
+            // last element to compute
+            String maxLabel = "?" + String.valueOf(max);
+            strChildren.add(Tree.create(new StringOrVariable(maxLabel, true)));
         } else {
-            ret.append(start);
-            ret.append(",");
-            // recursive call
-            ret.append(computeInterpretation(start+1,max));
+            strChildren.add(computeInterpretation(start+1,max));
         }
-        ret.append(")");
-        return ret.toString();
+        return Tree.create(new StringOrVariable("*", false), strChildren);
     }
 
     /**
@@ -319,15 +310,17 @@ public class PTBConverter {
             return;
         }
         
+        Set<String> interpretations = corpus.getInstances().get(0).inputObjects.keySet();
+        
         // write the indices for all interpretations
-        for (String interp : corpus.getInstances().get(0).inputObjects.keySet()) {
+        for (String interp : interpretations) {
             writer.write(interp + nl);
         }
         
         // write every instance
         for (AnnotatedCorpus.Instance instance : corpus.getInstances()) {
             // for every instance write their interpretations
-            for (String interp : corpus.getInstances().get(0).inputObjects.keySet()) {
+            for (String interp : interpretations) {
                 String interpretation = StringTools.join((List<String>)instance.inputObjects.get(interp), " ");
                 writer.write(interpretation + nl);
             }
@@ -346,7 +339,6 @@ public class PTBConverter {
      */
     public void addFeatures() {
         List<String> featuredRules = new ArrayList<String>();
-//        addManualFeatures();
 //        addAllRuleFeatures();
         addParentRelatedFeatures(featuredRules);
         addTerminalRelatedFeatures(featuredRules);
@@ -355,18 +347,11 @@ public class PTBConverter {
         maxEntIrtg.setFeatures(featureMap);
     }
 
-    public void addManualFeatures() {
-        int num = featureMap.size() + 1;
-        String featureName = "f" + String.valueOf(num);
-        featureMap.put(featureName, new ChildOfFeature("N","PP"));
-        featureName = "f" + String.valueOf(++num);
-        featureMap.put(featureName, new ChildOfFeature("VP","PP"));
-    }
-
     public void addAllRuleFeatures() {
         int num = featureMap.size();
         String featureName;
-        for (String r : ruleMap.values()) {
+        Collection<String> rules = ruleMap.values();
+        for (String r : rules) {
             featureName = "f" + String.valueOf(++num);
             featureMap.put(featureName, new RuleNameFeature(r));
         }
@@ -374,7 +359,8 @@ public class PTBConverter {
 
     public void addChildRelatedFeatures() {
         Map<String,List<String>> stateRules = new HashMap<String,List<String>>();
-        for (Rule<String> r : maxEntIrtg.getAutomaton().getRuleSet()) {
+        Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        for (Rule<String> r : ruleSet) {
             String parentState = r.getParent();
             Object[] children = r.getChildren();
             for (Object child : children) {
@@ -390,7 +376,8 @@ public class PTBConverter {
         }
         int num = featureMap.size();
         String featureName;
-        for (String state : stateRules.keySet()) {
+        Set<String> states = stateRules.keySet();
+        for (String state : states) {
             List<String> parentStates = stateRules.get(state);
             if (parentStates.size() > 1) {
                 for (String p : parentStates) {
@@ -404,7 +391,8 @@ public class PTBConverter {
     private void addRuleFeatures(final Map<String,List<String>> stateRules, List<String> featuredRules) {
         int num = featureMap.size();
         String featureName;
-        for (String state : stateRules.keySet()) {
+        Set<String> states = stateRules.keySet();
+        for (String state : states) {
             List<String> rules = stateRules.get(state);
             if (rules.size() > 1) {
                 for (String r : rules) {
@@ -436,7 +424,8 @@ public class PTBConverter {
 
     public void addTerminalRelatedFeatures(List<String> featuredRules) {
         Map<String,List<String>> interpRules = new HashMap<String,List<String>>();
-        for (Rule<String> r : maxEntIrtg.getAutomaton().getRuleSet()) {
+        Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        for (Rule<String> r : ruleSet) {
             String ruleName = r.getLabel();
             Object[] children = r.getChildren();
             if (children.length == 0) {
