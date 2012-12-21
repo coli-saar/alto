@@ -1,11 +1,17 @@
 package de.up.ling.irtg.algebra;
 
+import de.up.ling.tree.TreeVisitor;
 import de.up.ling.tree.Tree;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -14,6 +20,9 @@ import java.util.List;
  */
 public class PtbTreeAlgebra extends TreeAlgebra {
     private static final String START_SEQUENCE = "( ";
+    private static Pattern LABEL_PATTERN = Pattern.compile("([a-zA-Z-]+)([0-9]+)");
+    private static Map<String, String> BINARY_LABELS;
+    private static final String BIN_LABEL_PREFIX = "ART-BIN";
 
     /**
      * For testing only
@@ -22,6 +31,36 @@ public class PtbTreeAlgebra extends TreeAlgebra {
         PtbTreeAlgebra pta = new PtbTreeAlgebra();
         Tree<String> tree = pta.parseString("( (`` ``) (INTJ (UH Yes) (. .) ))");
         System.err.println(tree.toString());
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("``4/UH1","~XXX");
+        tree = binarize(tree, map);
+        System.err.println(tree.toString());
+    }
+
+    /**
+     * Parses PTB-formatted string
+     *
+     * @param representation the string containing the data
+     * @returns Tree<String> containing the parsed PTB-tree
+     * @throws ParserException if an error occurs on parsing the input
+     */
+    @Override
+    public Tree<String> evaluate(Tree<String> tree) {
+        return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
+            @Override
+            public Tree<String> combine(Tree<String> node, List<Tree<String>> childValues) {
+                List<Tree<String>> newChildValues = new ArrayList<Tree<String>>();
+                for (int i = 0; i < childValues.size(); i++) {
+                    Tree<String> child = childValues.get(i);
+                    if (child.getLabel().startsWith(BIN_LABEL_PREFIX)) {
+                        newChildValues.addAll(child.getChildren());
+                    } else {
+                        newChildValues.add(child);
+                    }
+                }
+                return Tree.create(node.getLabel(),newChildValues);
+            }            
+        });        
     }
 
     /**
@@ -73,7 +112,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
         }
         // there are occurrences in which we have more than on tree representing the sentence
         if (children.size() > 1) {
-            // for unification we select on tree and insert the others into that one
+            // for unification we select one tree and insert the others into that one
             for (int i = 0; i < children.size(); i++) {
                 // a tree containing only a terminal symbol has only one child (the one with the terminal)
                 // therefore we're looking for trees with more children or more depth
@@ -90,6 +129,9 @@ public class PtbTreeAlgebra extends TreeAlgebra {
                         Tree<String> subTree = children.get(j);
                         tree.getChildren().add(subTree);
                     }
+                    String label = tree.getLabel();
+                    label = label.substring(0, label.length()-1) + String.valueOf(tree.getChildren().size());
+                    tree.setLabel(label);
                     break;
                 }
             }
@@ -185,5 +227,67 @@ public class PtbTreeAlgebra extends TreeAlgebra {
                 return;
             }
         }
+    }
+    
+    /**
+     * Binarizes a PTB tree
+     *
+     * @param tree the PTB tree
+     * @return Tree<String> the binarized tree
+     */
+    public static Tree<String> binarize(Tree<String> tree, Map<String,String> binaryLabels) {
+        BINARY_LABELS = binaryLabels;
+        return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
+            @Override
+            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
+                if (childrenValues.isEmpty()) {
+                    return node;
+                } else if (childrenValues.size() <= 2) {
+                    return Tree.create(node.getLabel(), childrenValues);
+                }
+                do {
+                    childrenValues = binarize(childrenValues);
+                } while (childrenValues.size() > 2);
+                Matcher matcher = LABEL_PATTERN.matcher(node.getLabel());
+                String label = (matcher.find()) ? matcher.group(1) + "2" : node.getLabel() + "2";
+                return Tree.create(label, childrenValues);
+            }            
+        });        
+    }
+    
+    /**
+     * Binarizes a list of trees
+     *
+     * @param list the list of trees 
+     * @return List<Tree<String>> the binarized list
+     */
+    public static List<Tree<String>> binarize(List<Tree<String>> oldList) {
+        List<Tree<String>> newList = new ArrayList<Tree<String>>();
+        Iterator<Tree<String>> iter = oldList.iterator();
+        do {
+            Tree<String> node1 = iter.next();
+            if (iter.hasNext()) {
+                Tree<String> node2 = iter.next();
+                String binLabelKey = node1.getLabel() + "/" + node2.getLabel();
+                String label;
+                if (BINARY_LABELS == null) {
+                    label = "~";
+                } else {
+                    if (BINARY_LABELS.containsKey(binLabelKey)) {
+                        label = BINARY_LABELS.get(binLabelKey);
+                    } else {
+                        label = BIN_LABEL_PREFIX + String.valueOf(BINARY_LABELS.size()+1);
+                        BINARY_LABELS.put(binLabelKey, label);
+                    }
+                }
+                List<Tree<String>> children = new ArrayList<Tree<String>>();
+                children.add(node1);
+                children.add(node2);
+                newList.add(Tree.create(label, children));
+            } else {
+                newList.add(node1);
+            }
+        } while (iter.hasNext());
+        return newList;
     }
 }
