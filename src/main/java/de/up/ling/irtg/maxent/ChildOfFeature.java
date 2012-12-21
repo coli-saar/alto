@@ -26,10 +26,10 @@ public class ChildOfFeature extends FeatureFunction<String> {
     @Override
     public double evaluate(Rule rule){
         String pLabel = this.getLabelFor(rule.getParent());
-        if (pLabel.startsWith(parentLabel)) {
+        if (pLabel == parentLabel) {
             for (Object child : rule.getChildren()) {
                 String cLabel = this.getLabelFor(child);
-                if (cLabel.startsWith(childLabel)) {
+                if (cLabel == childLabel) {
                     return 1.0;
                 }
             }
