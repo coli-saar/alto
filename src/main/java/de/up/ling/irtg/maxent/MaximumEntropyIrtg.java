@@ -19,6 +19,8 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -31,7 +33,10 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * For testing only
      */
     public static void main(String[] args) throws ParseException, IOException, ParserException {
+        MaximumEntropyIrtg.log.info("Starting training of MaximumEntropyIrtg...");
+        MaximumEntropyIrtg.log.info("Reading grammar...");
         MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader("examples/ptb-test-grammar.irtg"));
+        MaximumEntropyIrtg.log.info("Reading corpus...");
         AnnotatedCorpus anCo = i.readAnnotatedCorpus(new FileReader("examples/ptb-test-corpus.txt"));
         String TRAIN_STR = "i\n"
                 + "john watches the woman with the telescope\n"
@@ -54,6 +59,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private FeatureFunction[] features;                   // list of feature functions
     private double[] weights;                             // weights for feature functions
     private static final double INITIAL_WEIGHT = 0.001; // initial value for a feature's weight 
+    private static final Logger log = Logger.getLogger( MaximumEntropyIrtg.class.getName() );
+
 
     /**
      * Constructor
@@ -69,6 +76,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         featureNames = new ArrayList<String>();
         // store the features
         setFeatures(featureMap);
+        
+        log.setLevel(Level.ALL);
     }
 
     /**
@@ -78,6 +87,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      */
     public final void setFeatures(final Map<String, FeatureFunction> featureMap) {
         if (featureMap == null) {
+            features = null;
+            weights = null;
             return;
         }
         // the names of the feature functions are the keys of featureMap
@@ -161,23 +172,25 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     @Override
     @CallableFromShell(name = "parse")
     public TreeAutomaton parseFromReaders(Map<String, Reader> readers) throws ParserException, IOException {
-        TreeAutomaton chart = super.parseFromReaders(readers).reduceBottomUp();
+        TreeAutomaton chart = super.parseFromReaders(readers);
 
-        for (Rule rule : (Set<Rule>) chart.getRuleSet()) {
-            double weight = 0.0;
+        Set<Rule> ruleSet = (Set<Rule>) chart.getRuleSet();
+        int numFeatures = getNumFeatures();
+        if (features != null) {
+            for (Rule rule : ruleSet) {
+                double weight = 0.0;
 
-            for (int i = 0; i < getNumFeatures(); i++) {
-                FeatureFunction featureFunction = getFeatureFunction(i);
+                for (int i = 0; i < numFeatures; i++) {
+                    FeatureFunction featureFunction = features[i];
 
-                double w = getFeatureWeights()[i];
-                double f = featureFunction.evaluate(rule);
-                weight += f * w;
+                    double w = weights[i];
+                    double f = featureFunction.evaluate(rule);
+                    weight += f * w;
+                }
+
+                rule.setWeight(Math.exp(weight));
             }
-
-            rule.setWeight(Math.exp(weight));
         }
-
-//        System.err.println(chart);
 
         return chart;
     }
@@ -234,8 +247,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public void writeWeights(Writer writer) throws IOException {
         Properties props = new Properties();
 
-        for (int i = 0; i < getFeatureWeights().length; i++) {
-            props.put(featureNames.get(i), String.valueOf(getFeatureWeights()[i]));
+        for (int i = 0; i < weights.length; i++) {
+            props.put(featureNames.get(i), String.valueOf(weights[i]));
         }
 
         props.store(writer, null);
@@ -291,14 +304,21 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             
             // precompute f_i(r) for every known rule
             f = new HashMap<String, double[]>();
-            for (Rule r : (Set<Rule<String>>) automaton.getRuleSet()) {
-                double[] fi = new double[getNumFeatures()];
-                for (int i = 0; i < getNumFeatures(); i++) {
-                    FeatureFunction ff = getFeatureFunction(i);
+            Set<Rule<String>> ruleSet = (Set<Rule<String>>) automaton.getRuleSet();
+            int numOfFeatures = getNumFeatures();
+            if (features == null) {
+                throw new NullPointerException("called Optimizable withour any features present.");
+            }
+            MaximumEntropyIrtg.log.info("Init MaxEntIrtgOptimizable. Compute f_i for every rule...");
+            for (Rule r : ruleSet) {
+                double[] fi = new double[numOfFeatures];
+                for (int i = 0; i < numOfFeatures; i++) {
+                    FeatureFunction ff = features[i];
                     fi[i] = ff.evaluate(r);
                 }
                 f.put(r.getLabel(), fi);
             }
+            MaximumEntropyIrtg.log.info("Done.");
         }
 
         /**
@@ -330,6 +350,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
              */
             if (cachedStale) {
                 // recompute
+                MaximumEntropyIrtg.log.info("(Re)compute log-likelihood and gradient...");
                 int n = trainingData.getInstances().size();
                 double sum1 = 0.0; // sum_x,y(sum_i(lambda_i*f_i(x,y))
                 double sum2 = 0.0; // sum_x(log(sum_y(e^(sum_i(lambda_i*f_i(x,y))))))
@@ -343,6 +364,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     TreeAutomaton chart = null;
 
                     try {
+                        MaximumEntropyIrtg.log.info("Compute chart for training instance...");
                         chart = parseFromReaders(readers);
                     } catch (ParserException e) {
                         throw new RuntimeException("getValue(): the parser could not read the input", e);
@@ -350,15 +372,16 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                         throw new RuntimeException("getValue(): an error on accessing the reader has occurred", e);
                     }
 
+                    MaximumEntropyIrtg.log.info("Done.");
                     assert (chart != null);
 
                     // compute inside & outside for the states of the parse chart
                     Map<Object, Double> inside = chart.inside();
                     Map<Object, Double> outside = chart.outside(inside);
                     double insideS = 0.0;
-
                     // compute inside(S) : the inside value of the starting states
-                    for (Object start : chart.getFinalStates()) {
+                    Set finalStates = chart.getFinalStates();
+                    for (Object start : finalStates) {
                         insideS += inside.get(start);
                     }
 
@@ -368,7 +391,9 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     sum2 += Math.log(insideS);
 
                     //compute parts of the gradient
-                    for (Rule r : (Set<Rule>) chart.getRuleSet()) {
+                    MaximumEntropyIrtg.log.info("Compute expectations for gradient...");
+                    Set<Rule> ruleSet = (Set<Rule>) chart.getRuleSet();
+                    for (Rule r : ruleSet) {
                         double expect_r; // E(r)
                         Double outVal = outside.get(r.getParent());
                         if (outVal != null) {
@@ -392,9 +417,12 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                             expectation[i] += fi[i] * expect_r; // (...)*f_i(r)
                         }
                     }
+                    MaximumEntropyIrtg.log.info("Done.");
                     
                     // compute f_i(x,y)
+                    MaximumEntropyIrtg.log.info("Compute f_i for the tree of the training instance...");
                     getFiFor(instance.tree, fiY);
+                    MaximumEntropyIrtg.log.info("Done.");
                 }
 
                 // L(Lambda) = sum1/n - sum2/n
@@ -406,7 +434,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                 }
 
                 cachedStale = false;
-                System.err.println("value: " + cachedValue);
+                MaximumEntropyIrtg.log.info("log-likelihood: " + cachedValue);
             }
 
             return cachedValue;
@@ -419,7 +447,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                 fiY[i] += fi[i];
             }
 
-            for (Tree child : (List<Tree>) tree.getChildren()) {
+            List<Tree> children = (List<Tree>) tree.getChildren();
+            for (Tree child : children) {
                 getFiFor(child, fiY);
             }
         }
