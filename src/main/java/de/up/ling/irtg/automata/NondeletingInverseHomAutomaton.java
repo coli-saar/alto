@@ -76,4 +76,10 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
     public Set<Rule<String>> getRulesTopDown(String label, String parentState) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
+    
+    
+    @Override
+    public boolean isBottomUpDeterministic() {
+        return rhsAutomaton.isBottomUpDeterministic();
+    }
 }

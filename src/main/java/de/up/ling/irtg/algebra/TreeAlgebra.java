@@ -120,6 +120,11 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
                 collectStatesAndLabels(node.getChildren().get(i), state + i);
             }
         }
+
+        @Override
+        public boolean isBottomUpDeterministic() {
+            return true;
+        }
     }
 
     @Override

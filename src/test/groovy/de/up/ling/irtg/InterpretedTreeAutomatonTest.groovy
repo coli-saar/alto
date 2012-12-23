@@ -6,7 +6,7 @@
 package de.up.ling.irtg
 
 
-import org.junit.*
+import org.junit.Test
 import java.util.*
 import java.io.*
 import de.up.ling.irtg.automata.*
@@ -106,9 +106,10 @@ S -> r2
         byte[] buf = ostream.toByteArray();
 
         ByteArrayInputStream istream = new ByteArrayInputStream(buf);
-        ChartCorpus copy = ChartCorpus.read(istream);
+        ChartCorpus copy = ChartCorpus.read(istream);        
         istream.close();
         
+        irtg.normalizeStates(copy);
         irtg.trainEM(copy);
         
         assert true;

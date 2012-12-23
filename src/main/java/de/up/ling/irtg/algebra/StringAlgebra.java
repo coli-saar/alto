@@ -193,6 +193,13 @@ public class StringAlgebra implements Algebra<List<String>> {
         public Set<Span> getFinalStates() {
             return finalStates;
         }
+
+        @Override
+        public boolean isBottomUpDeterministic() {
+            // automaton becomes nondeterministic if the same word
+            // occurs twice in the string
+            return new HashSet<String>(words).size() == words.size();
+        }
     }
 
     public static class Span implements Serializable {

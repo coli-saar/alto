@@ -47,25 +47,27 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected Map<String, StateListToStateMap> explicitRules; // one for each label
     protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
-//    protected Set<State> allStates;
     protected Map<State, State> allStates;
-//    private final Map<String, State> dummyLtsSubstitution = new HashMap<String, State>();
     protected boolean isExplicit;
     protected SetMultimap<State, Rule<State>> rulesForRhsState;
     protected Signature signature;
     private Predicate<Rule<State>> filter = null;
     private boolean debug = false;
+    private List<Rule<State>> unprocessedUpdatesForRulesForRhsState;
+    private List<Rule<State>> unprocessedUpdatesForTopDown;
+    protected boolean explicitIsBottomUpDeterministic = true;
 
     public TreeAutomaton(Signature signature) {
         explicitRules = new HashMap<String, StateListToStateMap>();
         explicitRulesTopDown = new IdentityHashMap<String, SetMultimap<State, Rule<State>>>();
         finalStates = new HashSet<State>();
-//        allStates = new HashSet<State>();
         allStates = new HashMap<State, State>();
         isExplicit = false;
-//        rulesForRhsState = HashMultimap.create();
         rulesForRhsState = new IdentitySetMultimap<State, Rule<State>>();
         this.signature = signature;
+
+        unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule<State>>();
+        unprocessedUpdatesForTopDown = new ArrayList<Rule<State>>();
     }
 
     public Signature getSignature() {
@@ -93,6 +95,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     abstract public Set<Rule<State>> getRulesTopDown(String label, State parentState);
+
+    abstract public boolean isBottomUpDeterministic();
 
     /**
      * Returns a set that contains all terminal symbols f such that the
@@ -156,6 +160,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
+    
+    public State normalizeState(State state) {
+        return allStates.get(state);
+    }
 
     protected State addFinalState(State state) {
         State normalized = addState(state);
@@ -186,21 +194,45 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         // store as bottom-up rule
         StateListToStateMap smap = getOrCreateStateMap(rule.getLabel());
-        smap.put(rule);
-
-        // store as top-down rule
-        SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(rule.getLabel());
-        if (topdown == null) {
-            topdown = new IdentitySetMultimap<State, Rule<State>>();
-            explicitRulesTopDown.put(rule.getLabel(), topdown);
-        }
-        topdown.put(rule.getParent(), rule);
-
-        // store pointer from rhs states to rule
-        for (State rhs : rule.getChildren()) {
-            rulesForRhsState.put(rhs, rule);
+        AdditionClass additionClass = smap.put(rule);
+        
+        if( additionClass == AdditionClass.OTHER_RULE_WAS_KNOWN_FOR_RHS ) {
+            explicitIsBottomUpDeterministic = false;
         }
 
+        // remember that rules also need to be stored top-down
+        unprocessedUpdatesForTopDown.add(rule);
+
+        // remember that rules need to be indexed for RHS -> rule
+        unprocessedUpdatesForRulesForRhsState.add(rule);
+    }
+
+    protected void processNewTopDownRules() {
+        if (!unprocessedUpdatesForTopDown.isEmpty()) {
+            for (Rule<State> rule : unprocessedUpdatesForTopDown) {
+                SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(rule.getLabel());
+                if (topdown == null) {
+                    topdown = new IdentitySetMultimap<State, Rule<State>>();
+                    explicitRulesTopDown.put(rule.getLabel(), topdown);
+                }
+
+                topdown.put(rule.getParent(), rule);
+            }
+
+            unprocessedUpdatesForTopDown.clear();
+        }
+    }
+
+    protected void processNewRulesForRhs() {
+        if (!unprocessedUpdatesForRulesForRhsState.isEmpty()) {
+            for (Rule<State> rule : unprocessedUpdatesForRulesForRhsState) {
+                for (State rhs : rule.getChildren()) {
+                    rulesForRhsState.put(rhs, rule);
+                }
+            }
+
+            unprocessedUpdatesForRulesForRhsState.clear();
+        }
     }
 
     private static class IdentitySetMultimap<K, V> extends AkSetMultimap<K, V> {
@@ -225,7 +257,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     protected Set<Rule<State>> getRulesBottomUpFromExplicit(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
-
+        
         if (smap == null) {
             return new HashSet<Rule<State>>();
         } else {
@@ -242,6 +274,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     protected Set<Rule<State>> getRulesTopDownFromExplicit(String label, State parentState) {
+        processNewTopDownRules();
+
         if (useCachedRuleTopDown(label, parentState)) {
             SetMultimap<State, Rule<State>> rulesHere = explicitRulesTopDown.get(label);
 
@@ -633,6 +667,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         // that are returned by getAllLabels() may have entries in explicitRulesTopDown.
         // This happens when the automaton doesn't contain any rules for these labels,
         // e.g. for InverseHomAutomata (see getAllLabels of that class).
+        processNewTopDownRules();
+
         SetMultimap<State, Rule<State>> topdown = explicitRulesTopDown.get(label);
         if (isExplicit) {
             return true;
@@ -706,7 +742,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
         });
     }
-
     /**
      * Runs the automaton bottom-up on a given tree, assuming a certain
      * assignment of states to nodes. This assignment is specified in the second
@@ -718,11 +753,110 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * running the automaton, the labels of the tree are therefore converted to
      * strings in order to look up the rules.
      *
-     * @param tree
+     * @param node
      * @param subst
      * @return
      */
-    public <TreeLabels> Set<State> run(final Tree<TreeLabels> tree, final Function<Tree<TreeLabels>, State> subst) {
+    private final List<State> EMPTY_STATE_LIST = new ArrayList<State>();
+    private final Set<State> EMPTY_STATE_SET = new HashSet<State>();
+
+    public <TreeLabels> Set<State> run(final Tree<TreeLabels> node, final Function<Tree<TreeLabels>, State> subst) {
+        if (isBottomUpDeterministic()) {
+            State result = runDeterministic(node, subst);
+
+            Set<State> ret = new HashSet<State>();
+            if (result != null) {
+                ret.add(result);
+            }
+
+            return ret;
+        } else {
+            return runUsingDfs(node, subst);
+        }
+    }
+
+    private <TreeLabels> State runDeterministic(final Tree<TreeLabels> node, final Function<Tree<TreeLabels>, State> subst) {
+        TreeLabels f = node.getLabel();
+        State substState = subst.apply(node);
+
+        if (substState != null) {
+            return substState;
+        } else {
+            List<State> childStates = new ArrayList<State>();
+
+            for (int i = 0; i < node.getChildren().size(); i++) {
+                State childState = runDeterministic(node.getChildren().get(i), subst);
+                if (childState == null) {
+                    return null;
+                } else {
+                    childStates.add(childState);
+                }
+            }
+
+            Set<Rule<State>> rules = getRulesBottomUp(f.toString(), childStates);
+            if (rules.isEmpty()) {
+                return null;
+            } else {
+                return rules.iterator().next().getParent();
+            }
+        }
+    }
+
+    private <TreeLabels> Set<State> runDirectly(final Tree<TreeLabels> node, final Function<Tree<TreeLabels>, State> subst) {
+        TreeLabels f = node.getLabel();
+        Set<State> states = new HashSet<State>();
+        State substState = subst.apply(node);
+
+        if (substState != null) {
+            states.add(substState);
+        } else if (node.getChildren().isEmpty()) {
+            for (Rule<State> rule : getRulesBottomUp(f.toString(), EMPTY_STATE_LIST)) {
+                states.add(rule.getParent());
+            }
+        } else {
+            boolean allChildrenSingleton = true;
+            List<Set<State>> stateSetsPerChild = new ArrayList<Set<State>>();
+
+            for (int i = 0; i < node.getChildren().size(); i++) {
+                Tree<TreeLabels> child = node.getChildren().get(i);
+                Set<State> childStates = run(child, subst);
+
+                if (childStates.isEmpty()) {
+                    return EMPTY_STATE_SET;
+                } else if (childStates.size() > 1) {
+                    allChildrenSingleton = false;
+                }
+
+                stateSetsPerChild.add(childStates);
+            }
+
+            if (allChildrenSingleton) {
+                List<State> children = new ArrayList<State>(stateSetsPerChild.size());
+                for (int i = 0; i < stateSetsPerChild.size(); i++) {
+                    children.add(stateSetsPerChild.get(i).iterator().next());
+                }
+                for (Rule<State> rule : getRulesBottomUp(f.toString(), children)) {
+                    states.add(rule.getParent());
+                }
+            } else {
+                CartesianIterator<State> it = new CartesianIterator<State>(stateSetsPerChild);
+                int iterations = 0;
+
+                while (it.hasNext()) {
+                    iterations++;
+                    for (Rule<State> rule : getRulesBottomUp(f.toString(), it.next())) {
+                        states.add(rule.getParent());
+                    }
+                }
+
+                System.err.println("iterations: " + iterations);
+            }
+        }
+
+        return states;
+    }
+
+    private <TreeLabels> Set<State> runUsingDfs(final Tree<TreeLabels> tree, final Function<Tree<TreeLabels>, State> subst) {
         final Set<State> ret = (Set<State>) tree.dfs(new TreeVisitor<TreeLabels, Void, Set<State>>() {
             @Override
             public Set<State> combine(Tree<TreeLabels> node, List<Set<State>> childrenValues) {
@@ -737,11 +871,40 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         states.add(rule.getParent());
                     }
                 } else {
-                    CartesianIterator<State> it = new CartesianIterator<State>(childrenValues);
+                    boolean someChildEmpty = false;
+                    boolean allChildrenSingleton = true;
 
-                    while (it.hasNext()) {
-                        for (Rule<State> rule : getRulesBottomUp(f.toString(), it.next())) {
-                            states.add(rule.getParent());
+                    for (int i = 0; i < childrenValues.size(); i++) {
+                        switch (childrenValues.get(i).size()) {
+                            case 0:
+                                someChildEmpty = true;
+                                allChildrenSingleton = false;
+                                break;
+                            case 1:
+                                break;
+                            default:
+                                allChildrenSingleton = false;
+                        }
+                    }
+
+                    if (!someChildEmpty) {
+                        if (allChildrenSingleton) {
+                            List<State> children = new ArrayList<State>(childrenValues.size());
+                            for (int i = 0; i < childrenValues.size(); i++) {
+                                children.add(childrenValues.get(i).iterator().next());
+                            }
+                            for (Rule<State> rule : getRulesBottomUp(f.toString(), children)) {
+                                states.add(rule.getParent());
+                            }
+                        } else {
+                            CartesianIterator<State> it = new CartesianIterator<State>(childrenValues);
+
+                            while (it.hasNext()) {
+                                for (Rule<State> rule : getRulesBottomUp(f.toString(), it.next())) {
+                                    states.add(rule.getParent());
+                                }
+                            }
+
                         }
                     }
                 }
@@ -913,11 +1076,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         List<State> statesInOrder = getStatesInBottomUpOrder();
         Collections.reverse(statesInOrder);
 
+        processNewRulesForRhs();
+
         for (State s : statesInOrder) {
             E accu = semiring.zero();
+            Set<Rule<State>> rules = rulesForRhsState.get(s);
 
-            if (rulesForRhsState.containsKey(s)) {
-                for (Rule<State> rule : rulesForRhsState.get(s)) {
+            if (rules != null) {
+                for (Rule<State> rule : rules) {
                     E parentValue = ret.get(rule.getParent());
 
                     if (parentValue != null) {
@@ -941,6 +1107,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
+
+    public static enum AdditionClass {
+        RULE_WAS_KNOWN, OTHER_RULE_WAS_KNOWN_FOR_RHS, FIRST_RULE_FOR_RHS
+    };
 
     /**
      * Returns a topological ordering of the states, such that later nodes
@@ -1018,13 +1188,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         public StateListToStateMap(String label) {
             rulesHere = new HashSet<Rule<State>>();
-            nextStep = new HashMap<State, StateListToStateMap>();
+            nextStep = new IdentityHashMap<State, StateListToStateMap>();
             arity = -1;
             this.label = label;
         }
 
-        public void put(Rule<State> rule) {
-            put(rule, 0, 1);
+        public AdditionClass put(Rule<State> rule) {
+            AdditionClass ret = put(rule, 0);
 
             if (arity != -1) {
                 if (arity != rule.getChildren().length) {
@@ -1033,11 +1203,25 @@ public abstract class TreeAutomaton<State> implements Serializable {
             } else {
                 arity = rule.getChildren().length;
             }
+            
+            return ret;
         }
 
-        private void put(Rule<State> rule, int index, double weight) {
+        private AdditionClass put(Rule<State> rule, int index) {
             if (index == rule.getArity()) {
-                rulesHere.add(rule);
+                AdditionClass ret = null;
+                boolean rulesHereWasEmpty = rulesHere.isEmpty();
+                boolean otherRuleWasKnown = rulesHere.add(rule);
+                
+                if( rulesHereWasEmpty ) {
+                    ret = AdditionClass.FIRST_RULE_FOR_RHS;
+                } else if( otherRuleWasKnown ) {
+                    ret = AdditionClass.OTHER_RULE_WAS_KNOWN_FOR_RHS;
+                } else {
+                    ret = AdditionClass.RULE_WAS_KNOWN;
+                }
+                
+                return ret;
             } else {
                 State nextState = rule.getChildren()[index];
                 StateListToStateMap sub = nextStep.get(nextState);
@@ -1047,7 +1231,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     nextStep.put(nextState, sub);
                 }
 
-                sub.put(rule, index + 1, weight);
+                return sub.put(rule, index + 1);
             }
         }
 
@@ -1396,15 +1580,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-    
+
     public void analyze() {
         SortedMultiset<Integer> counts = TreeMultiset.create();
-        for( Rule<State> rule : getRuleSet() ) {
+        for (Rule<State> rule : getRuleSet()) {
             counts.add(rule.getArity());
         }
-        
+
         System.err.println("Counts of rule arities:");
-        for( Integer arity : counts.elementSet() ) {
+        for (Integer arity : counts.elementSet()) {
             System.err.println(String.format("%3d %d", arity, counts.count(arity)));
         }
     }

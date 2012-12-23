@@ -229,6 +229,11 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         public Set<Set<List<String>>> getAllStates() {
             return new HashSet<Set<List<String>>>();
         }
+
+        @Override
+        public boolean isBottomUpDeterministic() {
+            return true;
+        }
     }
 
     @Override

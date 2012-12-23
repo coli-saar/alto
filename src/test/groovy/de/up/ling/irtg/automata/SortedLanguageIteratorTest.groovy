@@ -160,7 +160,7 @@ public class SortedLanguageIteratorTest {
         TreeAutomaton auto = pa(PTB_DECODED);
         Set lang = new HashSet(collectTrees(auto)*.toString());
         assert lang.size() == 1;
-        System.err.println(lang);
+//        System.err.println(lang);
     }
 
     

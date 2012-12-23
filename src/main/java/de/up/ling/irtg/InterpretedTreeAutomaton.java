@@ -38,12 +38,16 @@ import org.apache.commons.math3.special.Gamma;
  */
 public class InterpretedTreeAutomaton {
     public static void main(String[] args) throws ParseException, FileNotFoundException, ParserException, IOException {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("/Users/koller/Desktop/ptb-test-grammar.irtg"));        
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("/tmp/n/wsj.00-grammar.irtg"));        
         irtg.getAutomaton().analyze();
         
         Map<String,Reader> inputs = new HashMap<String, Reader>();
         inputs.put("i", new StringReader("Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 ."));
+        
+        long start = System.currentTimeMillis();
         irtg.parseFromReaders(inputs);
+        long end = System.currentTimeMillis();
+        System.err.println("parsing took " + (end-start) + " ms");
     }
 
     protected TreeAutomaton<String> automaton;
@@ -315,7 +319,7 @@ public class InterpretedTreeAutomaton {
         for (Rule<String> rule : automaton.getRuleSet()) {
             globalRuleCount.put(rule, 0.0);
         }
-
+        
         for (int i = 0; i < parses.size(); i++) {
             TreeAutomaton parse = parses.get(i);
 
@@ -325,7 +329,7 @@ public class InterpretedTreeAutomaton {
             for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
                 Object intersectedParent = intersectedRule.getParent();
                 Rule<String> originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
-
+                
                 double oldRuleCount = globalRuleCount.get(originalRule);
                 double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight();
 
@@ -384,9 +388,10 @@ public class InterpretedTreeAutomaton {
         List<String> firstChildStates = new ArrayList<String>();
         String firstParentState = (String) getFirstEntry(intersectedRule.getParent());
         for (Object pairState : intersectedRule.getChildren()) {
-            firstChildStates.add((String) getFirstEntry(pairState));
+            String firstState = (String) getFirstEntry(pairState);
+            firstChildStates.add(firstState);
         }
-
+        
         for (Rule<String> candidate : automaton.getRulesBottomUp(intersectedRule.getLabel(), firstChildStates)) {
             if (firstParentState.equals(candidate.getParent())) {
                 return candidate;
@@ -416,6 +421,27 @@ public class InterpretedTreeAutomaton {
     @CallableFromShell
     public AnnotatedCorpus readAnnotatedCorpus(Reader reader) throws IOException {
         return AnnotatedCorpus.readAnnotatedCorpus(reader, this);
+    }
+    
+    public void normalizeStates(ChartCorpus corpus) {
+        for( TreeAutomaton chart : corpus.getAllInstances() ) {
+            Set<Rule> rules = chart.getRuleSet();
+            for( Rule rule : rules ) {
+                normalizeState(rule.getParent());
+                for( Object child : rule.getChildren() ) {
+                    normalizeState(child);
+                }
+            }
+        }
+    }
+    
+    private void normalizeState(Object state) {
+        if( state instanceof Pair ) {
+            Pair pairState = (Pair) state;
+            if( ! (pairState.left instanceof Pair) ) {
+                pairState.left = automaton.normalizeState(pairState.left.toString());
+            }
+        }
     }
 
     public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {

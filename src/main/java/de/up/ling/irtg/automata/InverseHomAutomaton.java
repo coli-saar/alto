@@ -213,6 +213,11 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
         }
     }
 
+    @Override
+    public boolean isBottomUpDeterministic() {
+        return rhsAutomaton.isBottomUpDeterministic();
+    }
+
 
     private class Item {
         public State state;
