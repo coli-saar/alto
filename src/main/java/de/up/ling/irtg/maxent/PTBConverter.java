@@ -18,8 +18,11 @@ import java.util.Collection;
 import java.util.List;
 import java.io.*;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -27,24 +30,37 @@ import java.util.Set;
  */
 public class PTBConverter {
 
-    /**
-     * For testing
-     */
+    private static final Logger log = Logger.getLogger( MaximumEntropyIrtg.class.getName() );
+    
+    /***/
     public static void main(String[] args) throws IOException, ParseException, ParserException {
-        PTBConverter lc = new PTBConverter();
         String prefix = (args.length > 0) ? args[0] : "examples/ptb-test";
+        PTBConverter lc = new PTBConverter();
         
-        lc.read(new FileReader(prefix + ".mrg"));                   // read the data
-        lc.convert();                                               // convert the trees
-        lc.writeGrammar(new FileWriter(prefix + "-grammar.irtg"));    // write the grammar
-        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"));     // write the corpus
-        
-        de.up.ling.irtg.InterpretedTreeAutomaton irtg = de.up.ling.irtg.IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
-        System.err.println("Converted rules: " + String.valueOf(lc.ruleMap.size()));
-        int i = irtg.getAutomaton().getRuleSet().size();
-        System.err.println("Parsed rules: " + String.valueOf(i));
-    }
+        PTBConverter.log.info("Reading PTB data...");
+        lc.read(new FileReader(prefix + ".mrg"));
+        PTBConverter.log.info("Converting PTB trees...");
+        lc.convert();
+        PTBConverter.log.log(Level.INFO, "Converted rules: {0}", String.valueOf(lc.ruleMap.size()));
+        PTBConverter.log.info("Adding features...");
+        int numFeatures = lc.addFeatures();
+        PTBConverter.log.log(Level.INFO, "Features: {0}", String.valueOf(numFeatures));
+        PTBConverter.log.info("Writing grammar...");
+        lc.writeGrammar(new FileWriter(prefix + "-grammar.irtg"));
+        PTBConverter.log.info("Writing corpus...");
+        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"));
+        lc = null;
 
+        PTBConverter.log.info("Parsing grammar...");
+        MaximumEntropyIrtg irtg = (MaximumEntropyIrtg) de.up.ling.irtg.IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
+        int i = irtg.getAutomaton().getRuleSet().size();
+        PTBConverter.log.log(Level.INFO, "Parsed rules: {0}", String.valueOf(i));
+        PTBConverter.log.info("Checking for loops... ");
+        irtg.checkForLoops();
+        irtg = null;
+        PTBConverter.log.info("Done");
+    }
+    
     public Map<String, String> ruleMap;             // mapping of string representation and name of a rule, i.e. "S/NP/VP" -> "r1"
     private Map<String, FeatureFunction> featureMap; // mapping of names to feature functions
     private List<Tree<String>> ptbTrees;             // list of PTB-trees
@@ -69,6 +85,8 @@ public class PTBConverter {
         PtbTreeAlgebra ptbAlgebra = new PtbTreeAlgebra();
         hPtb = new Homomorphism(maxEntIrtg.getAutomaton().getSignature(), ptbAlgebra.getSignature());
         maxEntIrtg.addInterpretation("ptb", new Interpretation(ptbAlgebra, hPtb));
+
+        log.setLevel(Level.ALL);
     }
 
     /**
@@ -152,14 +170,14 @@ public class PTBConverter {
              */
             @Override
             public Boolean combine(Tree<String> node, List<Boolean> childrenValues) {
-                List<Tree<String>> nodeChildren = node.getChildren();
-                if (nodeChildren.isEmpty()) {
+                if (childrenValues.isEmpty()) {
                     return true; // we have a leaf node
                 }
                 // create a string representation for the rule, i.e. 'S/NP/VP'
                 String ruleString = nodeToRuleString(node);
                 // create and store the rule if it not exists
                 if (!ruleMap.containsKey(ruleString)) {
+                    List<Tree<String>> nodeChildren = node.getChildren();
                     // create rule name (rXXX)
                     String ruleName = "r" + String.valueOf(ruleMap.size()+1);
                     // remember that we have the rule already
@@ -337,14 +355,15 @@ public class PTBConverter {
      * actual creation.
      * 
      */
-    public void addFeatures() {
-        List<String> featuredRules = new ArrayList<String>();
+    public int addFeatures() {
+        Set<String> featuredRules = new HashSet<String>();
 //        addAllRuleFeatures();
         addParentRelatedFeatures(featuredRules);
         addTerminalRelatedFeatures(featuredRules);
         addChildRelatedFeatures();
         
         maxEntIrtg.setFeatures(featureMap);
+        return featureMap.size();
     }
 
     public void addAllRuleFeatures() {
@@ -358,7 +377,7 @@ public class PTBConverter {
     }
 
     public void addChildRelatedFeatures() {
-        Map<String,List<String>> stateRules = new HashMap<String,List<String>>();
+        Map<String,Set<String>> stateRules = new HashMap<String,Set<String>>();
         Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
         for (Rule<String> r : ruleSet) {
             String parentState = r.getParent();
@@ -368,7 +387,7 @@ public class PTBConverter {
                 if (stateRules.containsKey(state) && !stateRules.get(state).contains(parentState)) {
                     stateRules.get(state).add(parentState);
                 } else {
-                    List<String> rules = new ArrayList<String>();
+                    Set<String> rules = new HashSet<String>();
                     rules.add(parentState);
                     stateRules.put(state, rules);
                 }
@@ -378,7 +397,7 @@ public class PTBConverter {
         String featureName;
         Set<String> states = stateRules.keySet();
         for (String state : states) {
-            List<String> parentStates = stateRules.get(state);
+            Set<String> parentStates = stateRules.get(state);
             if (parentStates.size() > 1) {
                 for (String p : parentStates) {
                     featureName = "f" + String.valueOf(++num);
@@ -388,54 +407,56 @@ public class PTBConverter {
         }
     }
 
-    private void addRuleFeatures(final Map<String,List<String>> stateRules, List<String> featuredRules) {
+    private void addRuleFeatures(final Map<String,Set<String>> stateRules, Set<String> featuredRules) {
         int num = featureMap.size();
         String featureName;
-        Set<String> states = stateRules.keySet();
-        for (String state : states) {
-            List<String> rules = stateRules.get(state);
-            if (rules.size() > 1) {
-                for (String r : rules) {
-                    if (!featuredRules.contains(r)) {
-                        featureName = "f" + String.valueOf(++num);
-                        featureMap.put(featureName, new RuleNameFeature(r));
-                        featuredRules.add(r);
-                    }
+        Collection<Set<String>> rules = stateRules.values();
+        for (Set<String> rulesSet : rules) {
+            if (rulesSet.size() > 1) {
+                for (String r : rulesSet) {
+                    featureName = "f" + String.valueOf(++num);
+                    featureMap.put(featureName, new RuleNameFeature(r));
+                    featuredRules.add(r);
                 }
             }
         }
     }
 
-    public void addParentRelatedFeatures(List<String> featuredRules) {
-        Map<String,List<String>> stateRules = new HashMap<String,List<String>>();
-        for (Rule<String> r : maxEntIrtg.getAutomaton().getRuleSet()) {
+    public void addParentRelatedFeatures(Set<String> featuredRules) {
+        Map<String,Set<String>> stateRules = new HashMap<String,Set<String>>();
+        Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        for (Rule<String> r : ruleSet) {
             String ruleName = r.getLabel();
-            String state = r.getParent();
-            if (stateRules.containsKey(state) && !stateRules.get(state).contains(ruleName)) {
-                stateRules.get(state).add(ruleName);
-            } else {
-                List<String> rules = new ArrayList<String>();
-                rules.add(ruleName);
-                stateRules.put(state, rules);
+            if (!featuredRules.contains(ruleName)) {
+                String state = r.getParent();
+                if (stateRules.containsKey(state)) {
+                    stateRules.get(state).add(ruleName);
+                } else {
+                    Set<String> rules = new HashSet<String>();
+                    rules.add(ruleName);
+                    stateRules.put(state, rules);
+                }
             }
         }
         addRuleFeatures(stateRules, featuredRules);
     }
 
-    public void addTerminalRelatedFeatures(List<String> featuredRules) {
-        Map<String,List<String>> interpRules = new HashMap<String,List<String>>();
+    public void addTerminalRelatedFeatures(Set<String> featuredRules) {
+        Map<String,Set<String>> interpRules = new HashMap<String,Set<String>>();
         Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
         for (Rule<String> r : ruleSet) {
             String ruleName = r.getLabel();
-            Object[] children = r.getChildren();
-            if (children.length == 0) {
-                String interp = hStr.get(ruleName).toString();
-                if (interpRules.containsKey(interp) && !interpRules.get(interp).contains(ruleName)) {
-                    interpRules.get(interp).add(ruleName);
-                } else {
-                    List<String> rules = new ArrayList<String>();
-                    rules.add(ruleName);
-                    interpRules.put(interp, rules);
+            if (!featuredRules.contains(ruleName)) {
+                Object[] children = r.getChildren();
+                if (children.length == 0) {
+                    String interp = hStr.get(ruleName).toString();
+                    if (interpRules.containsKey(interp)) {
+                        interpRules.get(interp).add(ruleName);
+                    } else {
+                        Set<String> rules = new HashSet<String>();
+                        rules.add(ruleName);
+                        interpRules.put(interp, rules);
+                    }
                 }
             }
         }
