@@ -24,11 +24,12 @@ public class ChildOfFeature extends FeatureFunction<String> {
     }
 
     @Override
-    public double evaluate(Rule<String> rule){
-        if (rule.getParent() == parentLabel) {
-            Object[] children = rule.getChildren();
-            for (Object child : children) {
-                if (child == childLabel) {
+    public double evaluate(Rule rule){
+        String pLabel = this.getLabelFor(rule.getParent());
+        if (pLabel == parentLabel) {
+            for (Object child : rule.getChildren()) {
+                String cLabel = this.getLabelFor(child);
+                if (cLabel == childLabel) {
                     return 1.0;
                 }
             }
