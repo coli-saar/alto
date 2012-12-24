@@ -35,23 +35,23 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public static void main(String[] args) throws ParseException, IOException, ParserException {
         MaximumEntropyIrtg.log.info("Starting training of MaximumEntropyIrtg...");
         MaximumEntropyIrtg.log.info("Reading grammar...");
+//        MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader("examples/maxent-test.irtg"));
         MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader("examples/ptb-test-grammar.irtg"));
         MaximumEntropyIrtg.log.info("Reading corpus...");
-        AnnotatedCorpus anCo = i.readAnnotatedCorpus(new FileReader("examples/ptb-test-corpus.txt"));
         String TRAIN_STR = "i\n"
                 + "john watches the woman with the telescope\n"
 //                + "r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))\n";
                 + "r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))\n";
 //        AnnotatedCorpus anCo = i.readAnnotatedCorpus(new StringReader(TRAIN_STR));
+        AnnotatedCorpus anCo = i.readAnnotatedCorpus(new FileReader("examples/ptb-test-corpus.txt"));
         i.train(anCo);
         StringWriter output = new StringWriter();
         i.writeWeights(output);
 /*        Map<String, Reader> test = new HashMap<String, Reader>();
         test.put("i", new StringReader("Dan Morgan told himself he would forget Ann Turner PERIOD"));
         TreeAutomaton chart = i.parse(test);
-        for (Object t : chart.language()) {
-            System.err.println(t.toString());
-        } */
+        System.err.println(chart.viterbi().toString());
+        */
         System.err.println("Output:\n" + output.toString());
     }
     
@@ -59,6 +59,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private FeatureFunction[] features;                   // list of feature functions
     private double[] weights;                             // weights for feature functions
     private static final double INITIAL_WEIGHT = 0.001; // initial value for a feature's weight 
+    private static final String NL = System.getProperty("line.separator");
     private static final Logger log = Logger.getLogger( MaximumEntropyIrtg.class.getName() );
 
 
@@ -261,8 +262,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      */
     @Override
     public String toString() {
-        String nl = System.getProperty("line.separator");
-        StringBuilder ret = new StringBuilder();
+        StringWriter ret = new StringWriter();
         ret.append(super.toString());
 
         for (int i = 0; i < featureNames.size(); i++) {
@@ -270,12 +270,58 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             ret.append(featureNames.get(i));
             ret.append(": ");
             ret.append(features[i].toString());
-            ret.append(nl);
+            ret.append(NL);
         }
 
         return ret.toString();
     }
 
+    public void checkForLoops() {
+        List<Rule<String>> rulesWithOneChild = new ArrayList<Rule<String>>();
+        Set<Rule<String>> rulesSet = getAutomaton().getRuleSet();
+        for (Rule<String> r : rulesSet) {
+            if (r.getArity() == 1) {
+                rulesWithOneChild.add(r);
+            }
+        }
+        List<Rule<String>> loopRules = new ArrayList<Rule<String>>();
+        boolean hasLoops = false;
+        for (Rule<String> r : rulesWithOneChild) {
+            if (hasLoop(r, r, rulesWithOneChild, 0)) {
+                loopRules.add(r);
+                if (!hasLoops) {
+                    log.warning("Loop found.");
+                    hasLoops = true;
+                }
+            }
+        }
+        if (hasLoops) {
+            StringBuilder out = new StringBuilder();
+            for (Rule<String> r : loopRules) {
+                out.append(NL);
+                out.append(r.toString());
+            }
+            log.log(Level.WARNING, "These are the rules leading to or are part of a loop:{0}", out.toString());
+        } else {
+            log.info("No loops found.");
+        }
+    }
+
+    private boolean hasLoop(Rule<String> start, Rule<String> current, List<Rule<String>> rules, int depth) {
+        if (depth > (rules.size() + 20)) {
+            return true;
+        }
+        for (Rule<String> r : rules) {
+            Object[] children = current.getChildren();
+            if (((String)children[0]).equals(r.getParent())) {
+                if (hasLoop(start, r, rules, depth+1)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    
     /**
      * Internal class for training the feature function weights. We use the mallet framework
      * for training so this class implements a mallet interface
