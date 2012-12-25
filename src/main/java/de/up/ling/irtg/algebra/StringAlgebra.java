@@ -20,11 +20,11 @@ import java.util.Set;
 /**
  *
  * The signature of the string algebra consists of a binary concatenation
- * operation. It also contains a nullary constant for each word that has
- * ever been read using the parseString method of this particular StringAlgebra
- * object. Notice that the contents of the Signature object may change
- * if further strings are parsed with the same algebra object.
- * 
+ * operation. It also contains a nullary constant for each word that has ever
+ * been read using the parseString method of this particular StringAlgebra
+ * object. Notice that the contents of the Signature object may change if
+ * further strings are parsed with the same algebra object.
+ *
  * @author koller
  */
 public class StringAlgebra implements Algebra<List<String>> {
@@ -38,23 +38,23 @@ public class StringAlgebra implements Algebra<List<String>> {
 
     public StringAlgebra() {
         signature.addSymbol(CONCAT, 2);
-    }    
+    }
 
     @Override
     public List<String> evaluate(Tree<String> t) {
         final List<String> ret = new ArrayList<String>();
-        
+
         t.dfs(new TreeVisitor<String, Void, Void>() {
             @Override
             public Void combine(Tree<String> node, List<Void> childrenValues) {
-                if( childrenValues.isEmpty() ) {
+                if (childrenValues.isEmpty()) {
                     ret.add(node.getLabel());
                 }
-                
+
                 return null;
             }
         });
-        
+
         return ret;
     }
 
@@ -67,7 +67,7 @@ public class StringAlgebra implements Algebra<List<String>> {
     public List<String> parseString(String representation) {
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
         signature.addAllSymbols(symbols);
-        
+
         return symbols;
     }
 
@@ -79,6 +79,7 @@ public class StringAlgebra implements Algebra<List<String>> {
     private class CkyAutomaton extends TreeAutomaton<Span> {
         private List<String> words;
         private Set<String> allLabels;
+        private boolean isBottomUpDeterministic;
 
         public CkyAutomaton(List<String> words) {
             super(StringAlgebra.this.getSignature());
@@ -89,6 +90,10 @@ public class StringAlgebra implements Algebra<List<String>> {
             allLabels = new HashSet<String>();
             allLabels.add(CONCAT);
             allLabels.addAll(words);
+
+            // automaton becomes nondeterministic if the same word
+            // occurs twice in the string
+            isBottomUpDeterministic = new HashSet<String>(words).size() == words.size();
         }
 
         @Override
@@ -171,15 +176,15 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         @Override
         public boolean hasRuleWithPrefix(String label, List<Span> prefixOfChildren) {
-            if( label.equals(CONCAT)) {
-                switch(prefixOfChildren.size()) {
+            if (label.equals(CONCAT)) {
+                switch (prefixOfChildren.size()) {
                     case 0:
                     case 1:
                         return true;
-                        
+
                     case 2:
                         return prefixOfChildren.get(0).end == prefixOfChildren.get(1).start;
-                        
+
                     default:
                         throw new RuntimeException("checking rule prefix for CONCAT with arity > 2");
                 }
@@ -187,7 +192,6 @@ public class StringAlgebra implements Algebra<List<String>> {
                 return words.contains(label);
             }
         }
-        
 
         @Override
         public Set<Span> getFinalStates() {
@@ -196,9 +200,7 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         @Override
         public boolean isBottomUpDeterministic() {
-            // automaton becomes nondeterministic if the same word
-            // occurs twice in the string
-            return new HashSet<String>(words).size() == words.size();
+            return isBottomUpDeterministic;
         }
     }
 

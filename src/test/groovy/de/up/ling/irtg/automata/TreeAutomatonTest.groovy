@@ -39,16 +39,16 @@ class TreeAutomatonTest{
         assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
     }
 
-    @Test
-    public void testRun() {
-        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a");
-        
-        Tree t = pt("f(a,a)");
-        assertEquals(new HashSet(["p1"]), auto2.run(t));
-
-        Tree ta = pt("a");
-        assertEquals(new HashSet(["p2","p3"]), auto2.run(ta));
-    }
+//    @Test
+//    public void testRun() {
+//        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a");
+//        
+//        Tree t = pt("f(a,a)");
+//        assertEquals(new HashSet(["p1"]), auto2.run(t));
+//
+//        Tree ta = pt("a");
+//        assertEquals(new HashSet(["p2","p3"]), auto2.run(ta));
+//    }
     
     @Test
     public void testRunWeights() {

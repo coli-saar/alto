@@ -160,7 +160,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
-    
+
     public State normalizeState(State state) {
         return allStates.get(state);
     }
@@ -195,8 +195,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         // store as bottom-up rule
         StateListToStateMap smap = getOrCreateStateMap(rule.getLabel());
         AdditionClass additionClass = smap.put(rule);
-        
-        if( additionClass == AdditionClass.OTHER_RULE_WAS_KNOWN_FOR_RHS ) {
+
+        if (additionClass == AdditionClass.OTHER_RULE_WAS_KNOWN_FOR_RHS) {
             explicitIsBottomUpDeterministic = false;
         }
 
@@ -257,7 +257,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     protected Set<Rule<State>> getRulesBottomUpFromExplicit(String label, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(label);
-        
+
         if (smap == null) {
             return new HashSet<Rule<State>>();
         } else {
@@ -771,7 +771,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
             return ret;
         } else {
-            return runUsingDfs(node, subst);
+//            return runUsingDfs(node, subst);
+            return new HashSet<State>(runDirectly(node, subst));
         }
     }
 
@@ -802,44 +803,112 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    private <TreeLabels> Set<State> runDirectly(final Tree<TreeLabels> node, final Function<Tree<TreeLabels>, State> subst) {
+    private <TreeLabels> void runD1(TreeLabels f, List<State> states) {
+        for (Rule<State> rule : getRulesBottomUp(f.toString(), EMPTY_STATE_LIST)) {
+            states.add(rule.getParent());
+        }
+    }
+
+    enum D1aResult {
+        OK, EMPTY, NON_SINGLETON
+    };
+
+    private <TreeLabels> D1aResult runD1a(Tree<TreeLabels> node, final Function<Tree<TreeLabels>, State> subst, List<List<State>> stateSetsPerChild) {
+        D1aResult ret = null;
+
+        for (int i = 0; i < node.getChildren().size(); i++) {
+            Tree<TreeLabels> child = node.getChildren().get(i);
+            List<State> childStates = runDirectly(child, subst);
+
+            if (childStates.isEmpty()) {
+                return D1aResult.EMPTY;
+            } else if (childStates.size() > 1) {
+                ret = D1aResult.NON_SINGLETON;
+            }
+
+            stateSetsPerChild.add(childStates);
+        }
+
+        if (ret == null) {
+            return D1aResult.OK;
+        } else {
+            return ret;
+        }
+    }
+
+    private <TreeLabels> void runD1Singleton(TreeLabels f, List<State> states, List<List<State>> stateSetsPerChild) {
+        List<State> children = new ArrayList<State>(stateSetsPerChild.size());
+        for (int i = 0; i < stateSetsPerChild.size(); i++) {
+            children.add(stateSetsPerChild.get(i).get(0));
+        }
+        for (Rule<State> rule : getRulesBottomUp(f.toString(), children)) {
+            states.add(rule.getParent());
+        }
+    }
+
+    private <TreeLabels> void runD2Nonsing(TreeLabels f, List<State> states, List<List<State>> stateSetsPerChild) {
+        ListCartesianIterator<State> it = new ListCartesianIterator<State>(stateSetsPerChild);
+        int iterations = 0;
+
+        while (it.hasNext()) {
+            iterations++;
+            for (Rule<State> rule : getRulesBottomUp(f.toString(), it.next())) {
+                states.add(rule.getParent());
+            }
+        }
+    }
+
+    private <TreeLabels> List<State> runDirectly(final Tree<TreeLabels> node, final Function<Tree<TreeLabels>, State> subst) {
         TreeLabels f = node.getLabel();
-        Set<State> states = new HashSet<State>();
+        List<State> states = new ArrayList<State>();
         State substState = subst.apply(node);
 
         if (substState != null) {
             states.add(substState);
         } else if (node.getChildren().isEmpty()) {
-            for (Rule<State> rule : getRulesBottomUp(f.toString(), EMPTY_STATE_LIST)) {
-                states.add(rule.getParent());
-            }
+            runD1(f, states);
         } else {
             boolean allChildrenSingleton = true;
-            List<Set<State>> stateSetsPerChild = new ArrayList<Set<State>>();
+            List<List<State>> stateSetsPerChild = new ArrayList<List<State>>();
 
-            for (int i = 0; i < node.getChildren().size(); i++) {
-                Tree<TreeLabels> child = node.getChildren().get(i);
-                Set<State> childStates = run(child, subst);
+            D1aResult ret = runD1a(node, subst, stateSetsPerChild);
 
-                if (childStates.isEmpty()) {
-                    return EMPTY_STATE_SET;
-                } else if (childStates.size() > 1) {
-                    allChildrenSingleton = false;
-                }
+            /*
+             for (int i = 0; i < node.getChildren().size(); i++) {
+             Tree<TreeLabels> child = node.getChildren().get(i);
+             List<State> childStates = runDirectly(child, subst);
 
-                stateSetsPerChild.add(childStates);
+             if (childStates.isEmpty()) {
+             return EMPTY_STATE_LIST;
+             } else if (childStates.size() > 1) {
+             allChildrenSingleton = false;
+             }
+
+             stateSetsPerChild.add(childStates);
+             }
+             */
+
+            if (ret == D1aResult.NON_SINGLETON) {
+                allChildrenSingleton = false;
             }
 
             if (allChildrenSingleton) {
-                List<State> children = new ArrayList<State>(stateSetsPerChild.size());
-                for (int i = 0; i < stateSetsPerChild.size(); i++) {
-                    children.add(stateSetsPerChild.get(i).iterator().next());
-                }
-                for (Rule<State> rule : getRulesBottomUp(f.toString(), children)) {
-                    states.add(rule.getParent());
-                }
+                runD1Singleton(f, states, stateSetsPerChild);
+
+                /*
+                 List<State> children = new ArrayList<State>(stateSetsPerChild.size());
+                 for (int i = 0; i < stateSetsPerChild.size(); i++) {
+                 children.add(stateSetsPerChild.get(i).iterator().next());
+                 }
+                 for (Rule<State> rule : getRulesBottomUp(f.toString(), children)) {
+                 states.add(rule.getParent());
+                 }
+                 */
             } else {
-                CartesianIterator<State> it = new CartesianIterator<State>(stateSetsPerChild);
+                runD2Nonsing(f, states, stateSetsPerChild);
+                
+                /*
+                ListCartesianIterator<State> it = new ListCartesianIterator<State>(stateSetsPerChild);
                 int iterations = 0;
 
                 while (it.hasNext()) {
@@ -848,12 +917,147 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         states.add(rule.getParent());
                     }
                 }
+                */
 
-                System.err.println("iterations: " + iterations);
+//                System.err.println("iterations: " + iterations);
             }
         }
 
         return states;
+    }
+
+    private static class ListCartesianIterator<E> implements Iterator<List<E>> {
+        private List<List<E>> lists;
+        private int N;
+        private int[] lengths;
+        private int[] indices;
+        private ArrayList<E> ret;
+        private boolean first = true;
+        private boolean empty = false;
+
+        public ListCartesianIterator(List<List<E>> lists) {
+            this.lists = lists;
+
+            N = lists.size();
+            lengths = new int[N];
+            indices = new int[N];
+            ret = new ArrayList<E>(N);
+
+            for (int i = 0; i < N; i++) {
+                lengths[i] = lists.get(i).size();
+                indices[i] = 0;
+
+                if (lists.get(i).isEmpty()) {
+                    empty = true;
+                    break;
+                } else {
+                    ret.add(lists.get(i).get(0));
+                }
+            }
+        }
+
+        public boolean hasNext() {
+            if (empty) {
+                return false;
+            }
+
+            for (int i = 0; i < N; i++) {
+                if (indices[i] < lengths[i] - 1) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public List<E> next() {
+            if (first) {
+                first = false;
+                return ret;
+            } else {
+                for (int i = 0; i < N; i++) {
+                    if (indices[i] < lengths[i] - 1) {
+                        indices[i]++;
+                        ret.set(i, lists.get(i).get(indices[i]));
+                        return ret;
+                    } else {
+                        indices[i] = 0;
+                        ret.set(i, lists.get(i).get(indices[i]));
+                    }
+                }
+
+                return null;
+            }
+        }
+
+        public void remove() {
+            throw new UnsupportedOperationException("Not supported yet.");
+        }
+    }
+
+    private <TreeLabels> List<State> runUsingDfsWithArrays(final Tree<TreeLabels> tree, final Function<Tree<TreeLabels>, State> subst) {
+        final List<State> ret = (List<State>) tree.dfs(new TreeVisitor<TreeLabels, Void, List<State>>() {
+            @Override
+            public List<State> combine(Tree<TreeLabels> node, List<List<State>> childrenValues) {
+                TreeLabels f = node.getLabel();
+                List<State> states = new ArrayList<State>();
+                State substState = subst.apply(node);
+
+                if (substState != null) {
+                    states.add(substState);
+                } else if (childrenValues.isEmpty()) {
+                    for (Rule<State> rule : getRulesBottomUp(f.toString(), new ArrayList<State>())) {
+                        states.add(rule.getParent());
+                    }
+                } else {
+                    boolean someChildEmpty = false;
+                    boolean allChildrenSingleton = true;
+
+                    for (int i = 0; i < childrenValues.size(); i++) {
+                        switch (childrenValues.get(i).size()) {
+                            case 0:
+                                someChildEmpty = true;
+                                allChildrenSingleton = false;
+                                break;
+                            case 1:
+                                break;
+                            default:
+                                allChildrenSingleton = false;
+                        }
+                    }
+
+                    if (!someChildEmpty) {
+                        if (allChildrenSingleton) {
+                            List<State> children = new ArrayList<State>(childrenValues.size());
+                            for (int i = 0; i < childrenValues.size(); i++) {
+                                children.add(childrenValues.get(i).iterator().next());
+                            }
+                            for (Rule<State> rule : getRulesBottomUp(f.toString(), children)) {
+                                states.add(rule.getParent());
+                            }
+                        } else {
+                            ListCartesianIterator<State> it = new ListCartesianIterator<State>(childrenValues);
+
+                            while (it.hasNext()) {
+                                for (Rule<State> rule : getRulesBottomUp(f.toString(), it.next())) {
+                                    states.add(rule.getParent());
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                if (debug) {
+                    System.err.println("\n" + node + ":");
+                    System.err.println("   " + childrenValues + " -> " + states);
+                }
+
+                return states;
+            }
+        });
+
+        return ret;
     }
 
     private <TreeLabels> Set<State> runUsingDfs(final Tree<TreeLabels> tree, final Function<Tree<TreeLabels>, State> subst) {
@@ -1203,7 +1407,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             } else {
                 arity = rule.getChildren().length;
             }
-            
+
             return ret;
         }
 
@@ -1212,15 +1416,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 AdditionClass ret = null;
                 boolean rulesHereWasEmpty = rulesHere.isEmpty();
                 boolean otherRuleWasKnown = rulesHere.add(rule);
-                
-                if( rulesHereWasEmpty ) {
+
+                if (rulesHereWasEmpty) {
                     ret = AdditionClass.FIRST_RULE_FOR_RHS;
-                } else if( otherRuleWasKnown ) {
+                } else if (otherRuleWasKnown) {
                     ret = AdditionClass.OTHER_RULE_WAS_KNOWN_FOR_RHS;
                 } else {
                     ret = AdditionClass.RULE_WAS_KNOWN;
                 }
-                
+
                 return ret;
             } else {
                 State nextState = rule.getChildren()[index];
