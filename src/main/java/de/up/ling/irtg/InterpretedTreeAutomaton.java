@@ -38,7 +38,8 @@ import org.apache.commons.math3.special.Gamma;
  */
 public class InterpretedTreeAutomaton {
     public static void main(String[] args) throws ParseException, FileNotFoundException, ParserException, IOException {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("/tmp/n/wsj.00-grammar.irtg"));        
+        String filename = args[0];
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(filename));
         irtg.getAutomaton().analyze();
         
         Map<String,Reader> inputs = new HashMap<String, Reader>();
