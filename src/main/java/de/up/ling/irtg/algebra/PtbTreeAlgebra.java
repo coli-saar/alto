@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
  */
 public class PtbTreeAlgebra extends TreeAlgebra {
     private static final String START_SEQUENCE = "( ";
+    private static Pattern TRACE_PATTERN = Pattern.compile("(.+)([-=])(\\d+)");
     private static Pattern LABEL_PATTERN = Pattern.compile("([a-zA-Z-]+)([0-9]+)");
     private static Map<String, String> BINARY_LABELS;
     private static final String BIN_LABEL_PREFIX = "ART-BIN";
@@ -175,18 +176,28 @@ public class PtbTreeAlgebra extends TreeAlgebra {
                         children.add(Tree.create(buffer.toString()));
                     }
                 }
-
+                
                 // add the #ofChildNodes to the label
                 // at a later point the label (state) get a corresponding list of rules but only the right arity
                 label += String.valueOf(children.size());
                 // no children indicates no valid tree -> returning null
-                return (children.isEmpty()) ? null : Tree.create(label, children);
+                if (children.isEmpty()) {
+                    return null;
+                }
+                if (children.size() == 1) {
+                    Tree<String> child = children.get(0);
+                    if (child.getLabel().equals(label)) {
+                        return child;
+                    }
+                }
+                return Tree.create(label, children);
             } else if (c == ' ') { // delimiter for symbols (e.g. "(<NONTERMINAL> <TERMINAL>)")
                 // check the buffer
                 if ((buffer.length() > 0) && label.isEmpty()) {
                     label = buffer.toString();
                     // remove trace indices
-                    label = label.replaceAll("(-\\d)|(=\\d)", "");
+                    Matcher matcher = TRACE_PATTERN.matcher(label);
+                    label = matcher.find() ? matcher.group(1) : label;
                     // clear the buffer
                     buffer = new StringBuffer();
                 }
