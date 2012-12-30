@@ -13,7 +13,7 @@
     <dependency>
       <groupId>de.saar.coli</groupId>
       <artifactId>basics</artifactId>
-      <version>[1.2.25,)</version>
+      <version>[1.2.26,)</version>
     </dependency>
     
     <dependency>
