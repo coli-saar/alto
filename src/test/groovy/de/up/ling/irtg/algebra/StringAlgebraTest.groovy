@@ -5,7 +5,7 @@
 
 package de.up.ling.irtg.algebra
 
-import org.junit.*
+import org.junit.Test
 import java.util.*
 import java.io.*
 import de.up.ling.irtg.automata.*

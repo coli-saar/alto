@@ -43,5 +43,10 @@ public class UniversalAutomaton extends TreeAutomaton<String> {
         
         return ret;
     }
+
+    @Override
+    public boolean isBottomUpDeterministic() {
+        return true;
+    }
     
 }

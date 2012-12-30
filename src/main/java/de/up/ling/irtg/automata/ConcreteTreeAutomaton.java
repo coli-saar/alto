@@ -60,4 +60,11 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public Set<State> getFinalStates() {
         return finalStates;
     }
+
+    @Override
+    public boolean isBottomUpDeterministic() {
+        return explicitIsBottomUpDeterministic;
+    }
+    
+    
 }

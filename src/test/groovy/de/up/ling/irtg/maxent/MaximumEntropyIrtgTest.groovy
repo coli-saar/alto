@@ -6,7 +6,7 @@
 package de.up.ling.irtg.maxent
 
 
-import org.junit.*
+import org.junit.Test
 import java.util.*
 import java.io.*
 import de.up.ling.irtg.automata.*

@@ -124,4 +124,9 @@ class HomAutomaton extends TreeAutomaton<String> {
         makeAllRulesExplicit();
         return super.getAllStates();
     }
+
+    @Override
+    public boolean isBottomUpDeterministic() {
+        return base.isBottomUpDeterministic();
+    }
 }

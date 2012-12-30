@@ -172,5 +172,10 @@ public class LambdaTermAlgebra implements Algebra<LambdaTerm> {
             makeAllRulesExplicit();
             return super.getAllStates();
         }
+
+        @Override
+        public boolean isBottomUpDeterministic() {
+            return true;
+        }
     }
 }

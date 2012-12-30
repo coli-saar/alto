@@ -125,6 +125,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         }
     }
 
+    @Override
+    public boolean isBottomUpDeterministic() {
+        return left.isBottomUpDeterministic() && right.isBottomUpDeterministic();
+    }
+
     private class CompleteEarleyItem {
         Rule<LeftState> leftRule;
         Rule<RightState> rightRule;
@@ -240,7 +245,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     // bottom-up intersection algorithm 
-    // for some reason, this algorithm no longer works (why? it makes tests fail!)
     @Override
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
@@ -266,11 +270,13 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     }
                 }
             }
-            
+
 //            System.err.println("after init: " + explicitRules.size());
 //            System.err.println(explicitRules);
 
             // compute rules and states bottom-up 
+            long unsuccessful = 0;
+            long iterations = 0;
             while (!agenda.isEmpty()) {
                 Pair<LeftState, RightState> state = agenda.remove();
                 List<Rule<LeftState>> possibleRules = rulesByChildState.get(state.left);
@@ -284,11 +290,17 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     CartesianIterator<RightState> it = new CartesianIterator<RightState>(partnerStates);
                     List<Pair<LeftState, RightState>> newStates = new ArrayList<Pair<LeftState, RightState>>();
                     while (it.hasNext()) {
-                        Set<Rule<RightState>> rightRules =
-                                right.getRulesBottomUp(leftRule.getLabel(), it.next());
+                        iterations++;
+                        Set<Rule<RightState>> rightRules = right.getRulesBottomUp(leftRule.getLabel(), it.next());
+                        
+                        if( rightRules.isEmpty() ) {
+                            unsuccessful++;
+                        }
+                        
                         for (Rule<RightState> rightRule : rightRules) {
                             Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
                             storeRule(rule);
+                            
                             if (seenStates.add(rule.getParent())) {
                                 newStates.add(rule.getParent());
                             }
@@ -302,6 +314,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
 
             isExplicit = true;
+            System.err.println(iterations + " iterations, " + unsuccessful + " unsucc");
+
+//            System.err.println("after run: " + explicitRules.size());
+//            System.err.println(toString());
         }
     }
 
