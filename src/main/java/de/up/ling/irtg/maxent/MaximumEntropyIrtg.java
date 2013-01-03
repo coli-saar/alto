@@ -2,7 +2,7 @@ package de.up.ling.irtg.maxent;
 
 import cc.mallet.optimize.LimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
-import de.up.ling.irtg.AnnotatedCorpus;
+import de.up.ling.irtg.corpus.AnnotatedCorpus;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;

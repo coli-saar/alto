@@ -2,7 +2,7 @@ package de.up.ling.irtg.maxent;
 
 import de.saar.basic.StringOrVariable;
 import de.saar.basic.StringTools;
-import de.up.ling.irtg.AnnotatedCorpus;
+import de.up.ling.irtg.corpus.AnnotatedCorpus;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.ParseException;
 import de.up.ling.irtg.algebra.ParserException;

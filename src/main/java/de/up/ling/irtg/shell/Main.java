@@ -8,7 +8,7 @@ import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;
-import de.up.ling.irtg.ChartCorpus;
+import de.up.ling.irtg.corpus.ChartCorpus;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.shell.Shell;
 import de.up.ling.shell.ShutdownShellException;
@@ -61,7 +61,7 @@ public class Main {
     @CallableFromShell
     public ChartCorpus readParsedCorpus(Reader reader) throws IOException, ClassNotFoundException {
         String filename = StringTools.slurp(reader);
-        return ChartCorpus.read(new FileInputStream(new File(filename)));
+        return new ChartCorpus(new File(filename));
     }
 
     @CallableFromShell

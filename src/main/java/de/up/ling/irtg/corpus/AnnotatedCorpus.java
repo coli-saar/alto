@@ -2,8 +2,10 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg;
+package de.up.ling.irtg.corpus;
 
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
@@ -39,7 +41,7 @@ public class AnnotatedCorpus {
         return instances;
     }
 
-    static AnnotatedCorpus readAnnotatedCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException {
+    public static AnnotatedCorpus readAnnotatedCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException {
         AnnotatedCorpus ret = new AnnotatedCorpus();
         BufferedReader br = new BufferedReader(reader);
         List<String> interpretationOrder = new ArrayList<String>();

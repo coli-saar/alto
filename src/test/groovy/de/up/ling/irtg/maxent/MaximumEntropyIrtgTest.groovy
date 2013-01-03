@@ -17,6 +17,8 @@ import de.up.ling.irtg.algebra.*;
 import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
 import de.up.ling.irtg.*
+import de.up.ling.irtg.corpus.*
+
 /**
  *
  * @author koller

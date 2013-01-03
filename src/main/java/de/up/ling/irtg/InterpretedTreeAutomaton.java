@@ -4,6 +4,9 @@
  */
 package de.up.ling.irtg;
 
+import de.up.ling.irtg.corpus.ChartCorpus;
+import de.up.ling.irtg.corpus.AnnotatedCorpus;
+import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
@@ -112,7 +115,7 @@ public class InterpretedTreeAutomaton {
         return parseFromReaders(readers);
     }
 
-    TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
+    public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
         TreeAutomaton ret = automaton;
 
         for (String interpName : inputs.keySet()) {
@@ -365,7 +368,7 @@ public class InterpretedTreeAutomaton {
             originalRuleToIntersectedRules.clear();
         }
 
-        for (TreeAutomaton parse : trainingData.getAllInstances()) {
+        for (TreeAutomaton parse : trainingData ) {
             parses.add(parse);
 
             Set<Rule> rules = parse.getRuleSet();
@@ -413,19 +416,45 @@ public class InterpretedTreeAutomaton {
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-
+    
+    
+    /**
+     * BUG: This can't be expected to work right now, because state names have to be
+     * remapped to be identical (and not just equals) to the state names in the IRTG automaton.
+     * 
+     * @param reader
+     * @return
+     * @throws IOException 
+     */
     @CallableFromShell
-    public ChartCorpus readUnannotatedCorpus(Reader reader) throws IOException {
-        return ChartCorpus.parseCorpus(reader, this);
+    public ChartCorpus readChartCorpus(Reader reader) throws IOException {
+        return new ChartCorpus(new File(StringTools.slurp(reader)));
     }
-
+    
+    public ChartCorpus readChartCorpus(Supplier<InputStream> istream) {
+        return new ChartCorpus(istream);
+    }
+    
+    /**
+     * This assumes that the corpus text file can be obtained from the reader.
+     */
+    @CallableFromShell
+    public void parseUnannotatedCorpus(Reader unannotatedCorpus, OutputStream ostream) throws IOException {
+        ChartCorpus.parseCorpus(unannotatedCorpus, this, ostream);
+    }
+    
     @CallableFromShell
     public AnnotatedCorpus readAnnotatedCorpus(Reader reader) throws IOException {
         return AnnotatedCorpus.readAnnotatedCorpus(reader, this);
     }
     
+    /**
+     * BUG: This no longer works with the current version of ChartCorpus.
+     * 
+     * @param corpus 
+     */
     public void normalizeStates(ChartCorpus corpus) {
-        for( TreeAutomaton chart : corpus.getAllInstances() ) {
+        for( TreeAutomaton chart : corpus ) {
             Set<Rule> rules = chart.getRuleSet();
             for( Rule rule : rules ) {
                 normalizeState(rule.getParent());

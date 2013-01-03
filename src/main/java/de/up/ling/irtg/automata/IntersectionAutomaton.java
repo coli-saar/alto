@@ -314,7 +314,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
 
             isExplicit = true;
-            System.err.println(iterations + " iterations, " + unsuccessful + " unsucc");
+            if( DEBUG )
+                System.err.println(iterations + " iterations, " + unsuccessful + " unsucc");
 
 //            System.err.println("after run: " + explicitRules.size());
 //            System.err.println(toString());
