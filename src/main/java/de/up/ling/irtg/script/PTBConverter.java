@@ -1,4 +1,4 @@
-package de.up.ling.irtg.maxent;
+package de.up.ling.irtg.script;
 
 import de.saar.basic.StringOrVariable;
 import de.saar.basic.StringTools;
@@ -11,6 +11,10 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.maxent.ChildOfFeature;
+import de.up.ling.irtg.maxent.FeatureFunction;
+import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
+import de.up.ling.irtg.maxent.RuleNameFeature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
