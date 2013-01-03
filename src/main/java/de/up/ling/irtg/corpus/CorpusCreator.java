@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.corpus;
 
-import de.up.ling.irtg.automata.TreeAutomaton;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -21,7 +20,7 @@ public class CorpusCreator {
         ostream.writeObject(fileTypeMarker);
     }
     
-    public void addInstance(TreeAutomaton inst) throws IOException {
+    public void addInstance(Object inst) throws IOException {
         ostream.writeObject(inst);
     }
     

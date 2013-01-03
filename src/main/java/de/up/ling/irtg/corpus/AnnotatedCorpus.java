@@ -4,16 +4,21 @@
  */
 package de.up.ling.irtg.corpus;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.corpus.AnnotatedCorpus.Instance;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +26,9 @@ import java.util.Map;
  *
  * @author koller
  */
-public class AnnotatedCorpus {
+public class AnnotatedCorpus implements Iterable<Instance> {
+    private static final String MARKER = "IrtgAnnotatedCorpusWithCharts";
+
     public static class Instance {
         public Tree<String> tree;
         public Map<String, Object> inputObjects;
@@ -30,6 +37,13 @@ public class AnnotatedCorpus {
             this.tree = tree;
             this.inputObjects = inputObjects;
         }
+
+        @Override
+        public String toString() {
+            return "Instance{" + "tree=" + tree + ", inputObjects=" + inputObjects + '}';
+        }
+        
+        
     }
     private List<Instance> instances;
 
@@ -89,9 +103,51 @@ public class AnnotatedCorpus {
             lineNumber++;
         }
     }
-    
+
+    public static void parseAnnotatedCorpusWithCharts(Reader reader, InterpretedTreeAutomaton irtg, OutputStream ostream, String relevantInputInterpretation) throws IOException {
+        AnnotatedCorpus ann = readAnnotatedCorpus(reader, irtg);
+        CorpusCreator creator = new CorpusCreator(MARKER, ostream);
+        int lineNumber = 1;
+
+        for (Instance inst : ann) {
+            if (relevantInputInterpretation != null) {
+                String line = inst.inputObjects.get(relevantInputInterpretation).toString();
+                System.out.print(String.format("%4d %-60.60s%s", lineNumber++, line, (line.length() > 60 ? "... " : "    ")));
+            }
+
+            long startTime = System.currentTimeMillis();
+
+            try {
+                Map<String,Object> mapToParse = new HashMap<String, Object>();
+                mapToParse.put(relevantInputInterpretation, inst.inputObjects.get(relevantInputInterpretation));
+                
+                
+                TreeAutomaton chart = irtg.parseInputObjects(mapToParse);
+                
+//                System.err.println(chart);
+                
+                creator.addInstance(new Pair(inst.tree.toString(), chart));
+
+                if (relevantInputInterpretation != null) {
+                    System.out.println("done, " + (System.currentTimeMillis() - startTime) / 1000 + " sec");
+                }
+            } catch (Exception e) {
+                if (relevantInputInterpretation != null) {
+                    System.out.println(" ==> error: " + e);
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        creator.finished();
+    }
+
     @Override
     public String toString() {
         return "[annotated corpus with " + instances.size() + " instances]";
+    }
+
+    public Iterator<Instance> iterator() {
+        return instances.iterator();
     }
 }
