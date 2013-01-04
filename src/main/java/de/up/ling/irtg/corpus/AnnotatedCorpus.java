@@ -21,15 +21,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author koller
  */
 public class AnnotatedCorpus implements Iterable<Instance> {
+
     private static final String MARKER = "IrtgAnnotatedCorpusWithCharts";
 
     public static class Instance {
+
         public Tree<String> tree;
         public Map<String, Object> inputObjects;
 
@@ -42,8 +49,6 @@ public class AnnotatedCorpus implements Iterable<Instance> {
         public String toString() {
             return "Instance{" + "tree=" + tree + ", inputObjects=" + inputObjects + '}';
         }
-        
-        
     }
     private List<Instance> instances;
 
@@ -104,39 +109,59 @@ public class AnnotatedCorpus implements Iterable<Instance> {
         }
     }
 
-    public static void parseAnnotatedCorpusWithCharts(Reader reader, InterpretedTreeAutomaton irtg, OutputStream ostream, String relevantInputInterpretation) throws IOException {
+    public static void parseAnnotatedCorpusWithCharts(Reader reader, final InterpretedTreeAutomaton irtg, OutputStream ostream, final String relevantInputInterpretation) throws IOException {
         AnnotatedCorpus ann = readAnnotatedCorpus(reader, irtg);
-        CorpusCreator creator = new CorpusCreator(MARKER, ostream);
+        final CorpusCreator creator = new CorpusCreator(MARKER, ostream);
         int lineNumber = 1;
 
-        for (Instance inst : ann) {
-            if (relevantInputInterpretation != null) {
-                String line = inst.inputObjects.get(relevantInputInterpretation).toString();
-                System.out.print(String.format("%4d %-60.60s%s", lineNumber++, line, (line.length() > 60 ? "... " : "    ")));
-            }
+        ExecutorService executorService = Executors.newFixedThreadPool(4);
+        List<Callable<Void>> tasks = new ArrayList<Callable<Void>>();
 
-            long startTime = System.currentTimeMillis();
+        for (final Instance inst : ann) {
+            final int l = lineNumber++;
 
-            try {
-                Map<String,Object> mapToParse = new HashMap<String, Object>();
-                mapToParse.put(relevantInputInterpretation, inst.inputObjects.get(relevantInputInterpretation));
-                
-                
-                TreeAutomaton chart = irtg.parseInputObjects(mapToParse);
-                
-//                System.err.println(chart);
-                
-                creator.addInstance(new Pair(inst.tree.toString(), chart));
+            tasks.add(new Callable<Void>() {
+                public Void call() throws Exception {
+                    if (relevantInputInterpretation != null) {
+                        String line = inst.inputObjects.get(relevantInputInterpretation).toString();
+                        System.out.println(String.format("%4d %-60.60s%s", l, line, (line.length() > 60 ? "... " : "    ")));
+                        System.out.flush();
+                    }
 
-                if (relevantInputInterpretation != null) {
-                    System.out.println("done, " + (System.currentTimeMillis() - startTime) / 1000 + " sec");
+                    long startTime = System.currentTimeMillis();
+
+                    try {
+                        Map<String, Object> mapToParse = new HashMap<String, Object>();
+                        mapToParse.put(relevantInputInterpretation, inst.inputObjects.get(relevantInputInterpretation));
+
+
+                        TreeAutomaton chart = irtg.parseInputObjects(mapToParse);
+
+                        synchronized (creator) {
+                            creator.addInstance(new Pair(inst.tree.toString(), chart));
+                        }
+
+                        if (relevantInputInterpretation != null) {
+                            System.out.println(" --> " + l + " done, " + (System.currentTimeMillis() - startTime) / 1000 + " sec");
+                            System.out.flush();
+                        }
+                    } catch (Throwable e) {
+                        if (relevantInputInterpretation != null) {
+                            System.out.println(" ==> " + l + " error: " + e);
+                            e.printStackTrace();
+                            System.out.flush();
+                        }
+                    }
+
+                    return null;
                 }
-            } catch (Exception e) {
-                if (relevantInputInterpretation != null) {
-                    System.out.println(" ==> error: " + e);
-                    e.printStackTrace();
-                }
-            }
+            });
+        }
+
+        try {
+            executorService.invokeAll(tasks);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(AnnotatedCorpus.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         creator.finished();

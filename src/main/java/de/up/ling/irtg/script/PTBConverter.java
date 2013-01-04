@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.PtbTreeAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.corpus.AnnotatedCorpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.maxent.ChildOfFeature;
 import de.up.ling.irtg.maxent.FeatureFunction;
@@ -21,12 +22,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.io.*;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.zip.GZIPInputStream;
 
 /**
  *
@@ -34,25 +38,37 @@ import java.util.logging.Logger;
  */
 public class PTBConverter {
 
-    private static final Logger log = Logger.getLogger( MaximumEntropyIrtg.class.getName() );
-    
-    /***/
+    private static final Logger log = Logger.getLogger(MaximumEntropyIrtg.class.getName());
+
+    /**
+     * 
+     */
     public static void main(String[] args) throws IOException, ParseException, ParserException {
-        String prefix = (args.length > 0) ? args[0] : "examples/ptb-test";
+        String filename = (args.length > 0) ? args[0] : "examples/ptb-test.mrg";
+        String sortByInterpretation = (args.length > 1) ? args[1] : null;
+
         PTBConverter lc = new PTBConverter();
-        
+
+        String prefix = getFilenamePrefix(filename);
+
         PTBConverter.log.info("Reading PTB data...");
-        lc.read(new FileReader(prefix + ".mrg"));
+        lc.read(getReaderForFilename(filename));
+
         PTBConverter.log.info("Converting PTB trees...");
         lc.convert();
         PTBConverter.log.log(Level.INFO, "Converted rules: {0}", String.valueOf(lc.ruleMap.size()));
+
         PTBConverter.log.info("Adding features...");
         int numFeatures = lc.addFeatures();
         PTBConverter.log.log(Level.INFO, "Features: {0}", String.valueOf(numFeatures));
+
         PTBConverter.log.info("Writing grammar...");
         lc.writeGrammar(new FileWriter(prefix + "-grammar.irtg"));
+
         PTBConverter.log.info("Writing corpus...");
-        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"));
+        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"), sortByInterpretation);
+
+
         lc = null;
 
         PTBConverter.log.info("Parsing grammar...");
@@ -64,7 +80,26 @@ public class PTBConverter {
         irtg = null;
         PTBConverter.log.info("Done");
     }
-    
+
+    private static Reader getReaderForFilename(String filename) throws FileNotFoundException, IOException {
+        if (filename.endsWith(".gz")) {
+            return new InputStreamReader(new GZIPInputStream(new FileInputStream(filename)));
+        } else {
+            return new FileReader(filename);
+        }
+    }
+
+    private static String getFilenamePrefix(String filenameWithPath) {
+        String filename = new File(filenameWithPath).getName();
+        
+        if (filename.endsWith(".mrg")) {
+            return filename.substring(0, filename.length() - 4);
+        } else if (filename.endsWith(".mrg.gz")) {
+            return filename.substring(0, filename.length() - 7);
+        } else {
+            return filename;
+        }
+    }
     public Map<String, String> ruleMap;             // mapping of string representation and name of a rule, i.e. "S/NP/VP" -> "r1"
     private Map<String, FeatureFunction> featureMap; // mapping of names to feature functions
     private List<Tree<String>> ptbTrees;             // list of PTB-trees
@@ -95,7 +130,7 @@ public class PTBConverter {
 
     /**
      * Returns the list of PTB-trees
-     * 
+     *
      * @return List<Tree<String>> the list of PTB-trees
      */
     public List<Tree<String>> getPtbTrees() {
@@ -104,7 +139,7 @@ public class PTBConverter {
 
     /**
      * Reads the list of PTB-trees given by <tt>reader</tt>
-     * 
+     *
      * @param reader the reader containing the data
      * @throws IOException if an error occurs on reading the data
      */
@@ -118,9 +153,9 @@ public class PTBConverter {
                 // store the parsed tree
                 ptbTrees.add(ptbTree);
             }
-        // break if the parsed tree is null
-        // that means whether we read everything or something went wrong
-        // anyway there's no use in continuing
+            // break if the parsed tree is null
+            // that means whether we read everything or something went wrong
+            // anyway there's no use in continuing
         } while (ptbTree != null);
     }
 
@@ -129,7 +164,7 @@ public class PTBConverter {
      */
     public void convert() {
         ConcreteTreeAutomaton c = (ConcreteTreeAutomaton) maxEntIrtg.getAutomaton();
-        Map<String,String> binaryLabels = new HashMap<String, String>();
+        Map<String, String> binaryLabels = new HashMap<String, String>();
         for (Tree<String> ptbTree : ptbTrees) {
             // store representation of PTB tree
             List<String> ptbObjects = new ArrayList<String>();
@@ -143,7 +178,7 @@ public class PTBConverter {
             // convert the PTB-Tree to an IRTG-tree
             Tree<String> irtgTree = ptb2Irtg(ptbTree);
             irtgTrees.add(irtgTree);
-            
+
             //create a corpus instance
             List<String> sentence = ptbTree.getLeafLabels();
             Map<String, Object> inputObjectsMap = new HashMap<String, Object>();
@@ -159,7 +194,7 @@ public class PTBConverter {
 
     /**
      * Extracts all rules from the given PTB-tree
-     * 
+     *
      * @param tree the PTB-tree
      */
     public void extractRules(Tree<String> tree) {
@@ -167,9 +202,10 @@ public class PTBConverter {
         tree.dfs(new TreeVisitor<String, Void, Boolean>() {
             /**
              * Extracts and stores the rule in <tt>node</tt>
-             * 
+             *
              * @param node the PTB-(sub)tree
-             * @param childrenValues a list of flags whether the child node is a leaf node or not
+             * @param childrenValues a list of flags whether the child node is a
+             * leaf node or not
              * @return Boolean whether <tt>node</tt> is a leaf node or not
              */
             @Override
@@ -183,7 +219,7 @@ public class PTBConverter {
                 if (!ruleMap.containsKey(ruleString)) {
                     List<Tree<String>> nodeChildren = node.getChildren();
                     // create rule name (rXXX)
-                    String ruleName = "r" + String.valueOf(ruleMap.size()+1);
+                    String ruleName = "r" + String.valueOf(ruleMap.size() + 1);
                     // remember that we have the rule already
                     ruleMap.put(ruleString, ruleName);
                     List<String> childStates = new ArrayList<String>(); // list of states on the right side
@@ -199,7 +235,7 @@ public class PTBConverter {
                         for (int i = 0; i < childrenValues.size(); i++) {
                             label = nodeChildren.get(i).getLabel();
                             childStates.add(label);
-                            String ptbLabel = "?" + String.valueOf(i+1);
+                            String ptbLabel = "?" + String.valueOf(i + 1);
                             ptbChildren.add(Tree.create(new StringOrVariable(ptbLabel, true)));
                         }
                         // create the nested intepretation for the StringAlgebra
@@ -215,10 +251,10 @@ public class PTBConverter {
             }
         });
     }
-    
+
     /**
      * Creates a string representation for the rule at the PTB-node
-     * 
+     *
      * @param node the PTB-(sub)tree
      * @return String the rule representation
      */
@@ -235,9 +271,11 @@ public class PTBConverter {
     }
 
     /**
-     * Computes the (nested) interpretation for rules containing no terminal symbol
-     * 
-     * @param start the number of the first element of the interpretation, e.g., 1
+     * Computes the (nested) interpretation for rules containing no terminal
+     * symbol
+     *
+     * @param start the number of the first element of the interpretation, e.g.,
+     * 1
      * @param max the number of elements of the interpretation
      * @return String the interpretation
      */
@@ -257,14 +295,14 @@ public class PTBConverter {
             String maxLabel = "?" + String.valueOf(max);
             strChildren.add(Tree.create(new StringOrVariable(maxLabel, true)));
         } else {
-            strChildren.add(computeInterpretation(start+1,max));
+            strChildren.add(computeInterpretation(start + 1, max));
         }
         return Tree.create(new StringOrVariable("*", false), strChildren);
     }
 
     /**
      * Converts a PTB-tree to an IRTG-tree
-     * 
+     *
      * @param tree the PTB-tree
      * @return Tree<String> the converted IRTG-tree
      */
@@ -275,14 +313,15 @@ public class PTBConverter {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             /**
              * Returns the IRTG-(sub)tree corresponding to <tt>node</tt>
-             * 
+             *
              * @param node the PTB-(sub)tree
-             * @param childrenValues the already converted child nodes of <tt>node</tt>
+             * @param childrenValues the already converted child nodes of
+             * <tt>node</tt>
              * @return Tree<String> the IRTG-(sub)tree
              */
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                if ((node== null) || node.getChildren().isEmpty()) {
+                if ((node == null) || node.getChildren().isEmpty()) {
                     return null; // we have a leaf node. nothing to do here
                 }
                 // create a string representation for the rule, i.e. 'S/NP/VP'
@@ -300,13 +339,13 @@ public class PTBConverter {
                 }
                 // create a IRTG-styled tree with the rule name as label and childrenValues as child nodes
                 return Tree.create(ruleName, childrenValues);
-            }            
-        });        
+            }
+        });
     }
 
     /**
      * Writes the grammar rules to a writer, e.g., string or file
-     * 
+     *
      * @param writer the writer to store the data into
      * @throws IOException if the writer cannot store the data properly
      */
@@ -320,30 +359,42 @@ public class PTBConverter {
 
     /**
      * Writes the annotated corpus to a writer, e.g., string or file
-     * 
+     *
      * @param writer the writer to store the data into
      * @throws IOException if the writer cannot store the data properly
      */
-    public void writeCorpus(Writer writer) throws IOException {
+    public void writeCorpus(Writer writer, final String sortByInterpretation) throws IOException {
         String nl = System.getProperty("line.separator");
-        if (corpus.getInstances().isEmpty()) {
+        List<Instance> instances = corpus.getInstances();
+
+
+        if (instances.isEmpty()) {
             // if the corpus is empty we have nothing to do
             writer.close();
             return;
         }
-        
-        Set<String> interpretations = corpus.getInstances().get(0).inputObjects.keySet();
-        
+
+        Set<String> interpretations = instances.get(0).inputObjects.keySet();
+
         // write the indices for all interpretations
         for (String interp : interpretations) {
             writer.write(interp + nl);
         }
-        
+
+        // if requested, sort instances by length in interpretation sortByInterpretation
+        if (sortByInterpretation != null) {
+            Collections.sort(instances, new Comparator<Instance>() {
+                public int compare(Instance t, Instance t1) {
+                    return t.inputObjects.get(sortByInterpretation).toString().length() - t1.inputObjects.get(sortByInterpretation).toString().length();
+                }
+            });
+        }
+
         // write every instance
         for (AnnotatedCorpus.Instance instance : corpus.getInstances()) {
             // for every instance write their interpretations
             for (String interp : interpretations) {
-                String interpretation = StringTools.join((List<String>)instance.inputObjects.get(interp), " ");
+                String interpretation = StringTools.join((List<String>) instance.inputObjects.get(interp), " ");
                 writer.write(interpretation + nl);
             }
             // and their tree
@@ -354,10 +405,10 @@ public class PTBConverter {
 
     /**
      * Creates a list of feature functions used with the MaximumEntropyIrtg.
-     * There are endless ways to create such a list. This is a wrapper
-     * function. Choose a specific function or a combination of them for the
-     * actual creation.
-     * 
+     * There are endless ways to create such a list. This is a wrapper function.
+     * Choose a specific function or a combination of them for the actual
+     * creation.
+     *
      */
     public int addFeatures() {
         Set<String> featuredRules = new HashSet<String>();
@@ -365,7 +416,7 @@ public class PTBConverter {
         addParentRelatedFeatures(featuredRules);
         addTerminalRelatedFeatures(featuredRules);
         addChildRelatedFeatures();
-        
+
         maxEntIrtg.setFeatures(featureMap);
         return featureMap.size();
     }
@@ -381,7 +432,7 @@ public class PTBConverter {
     }
 
     public void addChildRelatedFeatures() {
-        Map<String,Set<String>> stateRules = new HashMap<String,Set<String>>();
+        Map<String, Set<String>> stateRules = new HashMap<String, Set<String>>();
         Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
         for (Rule<String> r : ruleSet) {
             String parentState = r.getParent();
@@ -411,7 +462,7 @@ public class PTBConverter {
         }
     }
 
-    private void addRuleFeatures(final Map<String,Set<String>> stateRules, Set<String> featuredRules) {
+    private void addRuleFeatures(final Map<String, Set<String>> stateRules, Set<String> featuredRules) {
         int num = featureMap.size();
         String featureName;
         Collection<Set<String>> rules = stateRules.values();
@@ -427,7 +478,7 @@ public class PTBConverter {
     }
 
     public void addParentRelatedFeatures(Set<String> featuredRules) {
-        Map<String,Set<String>> stateRules = new HashMap<String,Set<String>>();
+        Map<String, Set<String>> stateRules = new HashMap<String, Set<String>>();
         Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
         for (Rule<String> r : ruleSet) {
             String ruleName = r.getLabel();
@@ -446,7 +497,7 @@ public class PTBConverter {
     }
 
     public void addTerminalRelatedFeatures(Set<String> featuredRules) {
-        Map<String,Set<String>> interpRules = new HashMap<String,Set<String>>();
+        Map<String, Set<String>> interpRules = new HashMap<String, Set<String>>();
         Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
         for (Rule<String> r : ruleSet) {
             String ruleName = r.getLabel();
@@ -466,5 +517,4 @@ public class PTBConverter {
         }
         addRuleFeatures(interpRules, featuredRules);
     }
-
 }
