@@ -8,7 +8,6 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -20,10 +19,11 @@ import java.util.regex.Pattern;
  */
 public class PtbTreeAlgebra extends TreeAlgebra {
     private static final String START_SEQUENCE = "( ";
-    private static Pattern TRACE_PATTERN = Pattern.compile("(.+)([-=])(\\d+)");
-    private static Pattern LABEL_PATTERN = Pattern.compile("([a-zA-Z-]+)([0-9]+)");
-    private static Map<String, String> BINARY_LABELS;
-    private static final String BIN_LABEL_PREFIX = "ART-BIN";
+    private static Pattern TRACE_PATTERN = Pattern.compile("([^-=]+)([-=])(.+)");
+    private static Pattern TMP_PATTERN = Pattern.compile("(.+)(\\^)(.+)");
+    public static final String LABEL_PREFIX = "ART-";
+    private static final String UN_LABEL_PREFIX = LABEL_PREFIX + "UN";
+    private static final String BIN_LABEL_PREFIX = LABEL_PREFIX + "BIN";
 
     /**
      * For testing only
@@ -32,9 +32,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
         PtbTreeAlgebra pta = new PtbTreeAlgebra();
         Tree<String> tree = pta.parseString("( (`` ``) (INTJ (UH Yes) (. .) ))");
         System.err.println(tree.toString());
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("``4/UH1","~XXX");
-        tree = binarize(tree, map);
+        tree = binarize(tree);
         System.err.println(tree.toString());
     }
 
@@ -55,6 +53,8 @@ public class PtbTreeAlgebra extends TreeAlgebra {
                     Tree<String> child = childValues.get(i);
                     if (child.getLabel().startsWith(BIN_LABEL_PREFIX)) {
                         newChildValues.addAll(child.getChildren());
+                    } else if (child.getLabel().startsWith(UN_LABEL_PREFIX)) {
+                        newChildValues.add(child.getChildren().get(0));
                     } else {
                         newChildValues.add(child);
                     }
@@ -130,9 +130,6 @@ public class PtbTreeAlgebra extends TreeAlgebra {
                         Tree<String> subTree = children.get(j);
                         tree.getChildren().add(subTree);
                     }
-                    String label = tree.getLabel();
-                    label = label.substring(0, label.length()-1) + String.valueOf(tree.getChildren().size());
-                    tree.setLabel(label);
                     break;
                 }
             }
@@ -141,6 +138,22 @@ public class PtbTreeAlgebra extends TreeAlgebra {
             tree = children.get(0);
         }
         return tree;
+    }
+    
+    /**
+     * Parses PTB-formatted trees from reader
+     *
+     * @param reader the reader containing the data
+     * @returns Tree<String> containing the parsed PTB-tree
+     * @throws IOException if an error occurs on reading chars from <tt>reader</tt>
+     */
+    private String stripPosTag(StringBuffer buf) {
+        String s = buf.toString();
+        // remove trace indices
+        Matcher matcher = TRACE_PATTERN.matcher(s);
+        s = matcher.find() ? matcher.group(1) : s;
+        // clear the buffer
+        return s;
     }
     
     /**
@@ -170,23 +183,20 @@ public class PtbTreeAlgebra extends TreeAlgebra {
                     // there are 2 possibilities:
                     if (label.isEmpty()) {
                         // 1. the buffer contains a non-terminal symbol
-                        label = buffer.toString();
+                        label = stripPosTag(buffer);
                     } else {
                         // 2. the buffer contains a terminal symbol
                         children.add(Tree.create(buffer.toString()));
                     }
                 }
                 
-                // add the #ofChildNodes to the label
-                // at a later point the label (state) get a corresponding list of rules but only the right arity
-                label += String.valueOf(children.size());
                 // no children indicates no valid tree -> returning null
                 if (children.isEmpty()) {
                     return null;
                 }
                 if (children.size() == 1) {
                     Tree<String> child = children.get(0);
-                    if (child.getLabel().equals(label)) {
+                    if (!child.getChildren().isEmpty() && child.getLabel().equals(label)) {
                         return child;
                     }
                 }
@@ -194,11 +204,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
             } else if (c == ' ') { // delimiter for symbols (e.g. "(<NONTERMINAL> <TERMINAL>)")
                 // check the buffer
                 if ((buffer.length() > 0) && label.isEmpty()) {
-                    label = buffer.toString();
-                    // remove trace indices
-                    Matcher matcher = TRACE_PATTERN.matcher(label);
-                    label = matcher.find() ? matcher.group(1) : label;
-                    // clear the buffer
+                    label = stripPosTag(buffer);
                     buffer = new StringBuffer();
                 }
             } else {
@@ -241,64 +247,76 @@ public class PtbTreeAlgebra extends TreeAlgebra {
     }
     
     /**
-     * Binarizes a PTB tree
+     * Binarizes a PTB tree (as in Matsukaki et al.,2005)
      *
      * @param tree the PTB tree
      * @return Tree<String> the binarized tree
      */
-    public static Tree<String> binarize(Tree<String> tree, Map<String,String> binaryLabels) {
-        BINARY_LABELS = binaryLabels;
+    public static Tree<String> binarize(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
                 if (childrenValues.isEmpty()) {
                     return node;
-                } else if (childrenValues.size() <= 2) {
+                }
+                if (!childrenValues.get(0).getChildren().isEmpty()) {
+                    for (Tree<String> child : childrenValues) {
+                        child.setLabel(child.getLabel() + "^" + node.getLabel());
+                    }
+                }
+                if (childrenValues.size() == 1) {
                     return Tree.create(node.getLabel(), childrenValues);
                 }
-                do {
-                    childrenValues = binarize(childrenValues);
-                } while (childrenValues.size() > 2);
-                Matcher matcher = LABEL_PATTERN.matcher(node.getLabel());
-                String label = (matcher.find()) ? matcher.group(1) + "2" : node.getLabel() + "2";
-                return Tree.create(label, childrenValues);
+                if (childrenValues.size() == 2) {
+                    return Tree.create(node.getLabel(), childrenValues);
+                }
+                List<Tree<String>> newChildrenValues = new ArrayList<Tree<String>>();
+                newChildrenValues.add(childrenValues.get(0));
+                newChildrenValues.add(binarize(childrenValues, 1, node.getLabel()));
+                return Tree.create(node.getLabel(), newChildrenValues);
             }            
         });        
     }
-    
+
     /**
-     * Binarizes a list of trees
+     * Binarizes a list of trees (as in Mazukaki et al 2005)
      *
      * @param list the list of trees 
      * @return List<Tree<String>> the binarized list
      */
-    public static List<Tree<String>> binarize(List<Tree<String>> oldList) {
-        List<Tree<String>> newList = new ArrayList<Tree<String>>();
-        Iterator<Tree<String>> iter = oldList.iterator();
-        do {
-            Tree<String> node1 = iter.next();
-            if (iter.hasNext()) {
-                Tree<String> node2 = iter.next();
-                String binLabelKey = node1.getLabel() + "/" + node2.getLabel();
-                String label;
-                if (BINARY_LABELS == null) {
-                    label = "~";
-                } else {
-                    if (BINARY_LABELS.containsKey(binLabelKey)) {
-                        label = BINARY_LABELS.get(binLabelKey);
-                    } else {
-                        label = BIN_LABEL_PREFIX + String.valueOf(BINARY_LABELS.size()+1);
-                        BINARY_LABELS.put(binLabelKey, label);
-                    }
-                }
-                List<Tree<String>> children = new ArrayList<Tree<String>>();
-                children.add(node1);
-                children.add(node2);
-                newList.add(Tree.create(label, children));
-            } else {
-                newList.add(node1);
-            }
-        } while (iter.hasNext());
-        return newList;
+/*    public static Tree<String> binarize(List<Tree<String>> children, int index, String parentLabel) {
+        List<Tree<String>> newChildren = new ArrayList<Tree<String>>();
+        Tree<String> left = children.get(index);
+        newChildren.add(left);
+        Matcher matcher = TMP_PATTERN.matcher(left.getLabel());
+        String label = matcher.find() ? matcher.group(1) : left.getLabel();
+        if (children.size() > index+1) {
+            Tree<String> right = binarize(children, index+1, parentLabel);
+            newChildren.add(right);
+            matcher = TMP_PATTERN.matcher(right.getLabel());
+            label += "-" + (matcher.find() ? matcher.group(1) : right.getLabel());
+        } else {
+            label += "-NIL";
+        }
+        label += "^" + parentLabel;
+        return Tree.create(label, newChildren);
+    }*/
+    /**
+     * Binarizes a list of trees (as in Mazukaki et al 2005)
+     *
+     * @param list the list of trees 
+     * @return List<Tree<String>> the binarized list
+     */
+    public static Tree<String> binarize(List<Tree<String>> children, int index, String parentLabel) {
+        List<Tree<String>> newChildren = new ArrayList<Tree<String>>();
+        newChildren.add(children.get(index));
+        String label;
+        if (children.size() > index+1) {
+            newChildren.add(binarize(children, index+1, parentLabel));
+            label = BIN_LABEL_PREFIX + "^" + parentLabel;
+        } else {
+            label = UN_LABEL_PREFIX + "^" + parentLabel;
+        }
+        return Tree.create(label, newChildren);
     }
 }
