@@ -6,23 +6,24 @@ package de.up.ling.irtg.automata;
 
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.AkSetMultimap;
+import de.saar.basic.StringOrVariable;
 import de.up.ling.irtg.algebra.PtbTreeAlgebra;
+import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author danilo
  */
 public class ChartAutomaton extends ConcreteTreeAutomaton<de.saar.basic.Pair<String, String>> {
-    private static final Logger log = Logger.getLogger( ChartAutomaton.class.getName() );
-    
+    private static Map<String, Set<String>> terminalRules;
     private static Map<String, Rule<String>> ruleMapping;
     private static SetMultimap<String, Rule<String>> rulesFor1stChildState;
     private static boolean cachedRuleMapping = false;
@@ -35,13 +36,36 @@ public class ChartAutomaton extends ConcreteTreeAutomaton<de.saar.basic.Pair<Str
         ruleCheck = new HashSet<String>();
     }
     
-    public static ChartAutomaton create(Object[] bottom, TreeAutomaton<String> auto) {
-        if (automaton == null) {
-            automaton = auto;
-            automaton.processNewRulesForRhs();
+    public static void init(Homomorphism hom, TreeAutomaton<String> auto) {
+        automaton = auto;
+        automaton.processNewRulesForRhs();
+        terminalRules = new HashMap<String, Set<String>>();
+        Set<Entry<String, Tree<StringOrVariable>>> homMapping = hom.getMappings().entrySet();
+        for (Entry<String, Tree<StringOrVariable>> entry : homMapping) {
+            Tree<StringOrVariable> tree = entry.getValue();
+            if (tree.getChildren().isEmpty()) {
+                String ruleName = entry.getKey();
+                String label = tree.getLabel().getValue();
+                Set<String> tRules = terminalRules.get(label);
+                if (tRules == null) {
+                    tRules = new HashSet<String>();
+                }
+                tRules.add(ruleName);
+                terminalRules.put(label, tRules);
+            }
         }
+    }
+
+    public static ChartAutomaton create(List<String> input) {
+        Object[] bottomRules = new Object[input.size()];
+        int i = 0;
+        for (String terminal : input) {
+            Set<String> ruleNames = terminalRules.get(terminal);
+            bottomRules[i++] = ruleNames;
+        }
+
         ChartAutomaton ret = new ChartAutomaton();
-        ret.build(bottom);
+        ret.build(bottomRules);
         return ret;
     }
     
@@ -67,9 +91,6 @@ public class ChartAutomaton extends ConcreteTreeAutomaton<de.saar.basic.Pair<Str
         }
         indexedStateRules = new Object[bottom.length];
         for (int i = bottom.length-1; i >= 0; i--) {
-/*            if ((i%5) == 0) {
-                ChartAutomaton.log.log(Level.INFO, "Processing rules at index {0}...", i);
-            } */
             indexedStateRules[i] = new ArrayList<Rule<State>>();
             Set<String> bottomRules = (Set<String>) bottom[i];
             for (String bRule : bottomRules) {
@@ -207,10 +228,7 @@ public class ChartAutomaton extends ConcreteTreeAutomaton<de.saar.basic.Pair<Str
             this.symbol = symbol;
             this.start = start;
             this.end = end;
-            caching();
-        }
-        
-        public void caching() {
+
             String ret = String.valueOf(start) + "-" + String.valueOf(end);
             cachedPair = new de.saar.basic.Pair<String, String>(symbol, ret);
             cachedString = symbol + "," + ret;
