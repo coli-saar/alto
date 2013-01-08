@@ -32,12 +32,13 @@ import java.util.logging.Logger;
  */
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public static final boolean TRAINING = false;
+    public static final boolean STD_PARSER = false;
 
     /**
      * For testing only
      */
     public static void main(String[] args) throws ParseException, IOException, ParserException {
-        String prefix = (args.length > 0) ? args[0] : "examples/ptb-test";
+        String prefix = (args.length > 0) ? args[0] : "ptb-test";
         MaximumEntropyIrtg.log.log(Level.INFO, "Starting {0} of MaximumEntropyIrtg...", (TRAINING ? "training" : "evaluation"));
         MaximumEntropyIrtg.log.info("Reading grammar...");
 //        MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader("examples/maxent-test.irtg"));
@@ -69,6 +70,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private FeatureFunction[] features;                   // list of feature functions
     private double[] weights;                             // weights for feature functions
     private String strAlgebraInterp = "";
+    private boolean initializedChartGenerator = false;
     private List<TreeAutomaton> cachedCharts;
     private static final double INITIAL_WEIGHT = 0.01; // initial value for a feature's weight 
     private Map<String, double[]> f;
@@ -220,14 +222,11 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         
         String s = StringTools.join(input, " ");
         MaximumEntropyIrtg.log.log(Level.INFO, "Compute chart for \"{0}\" ...", s);
-        
-        Object[] bottomRules = new Object[input.size()];
-        int i = 0;
-        for (String terminal : input) {
-            Set<String> ruleNames = interp.getHomomorphism().getTerminalRuleNames(terminal);
-            bottomRules[i++] = ruleNames;
+        if (!initializedChartGenerator) {
+            de.up.ling.irtg.automata.ChartAutomaton.init(interp.getHomomorphism(), automaton);
         }
-        TreeAutomaton ret = de.up.ling.irtg.automata.ChartAutomaton.create(bottomRules, automaton);
+        
+        TreeAutomaton ret = de.up.ling.irtg.automata.ChartAutomaton.create(input);
         
         ret = ret.reduceBottomUp();
         setWeightsOnChart(ret);
@@ -450,7 +449,20 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                         chart = cachedCharts.get(j);
                         setWeightsOnChart(chart);
                     } else {
-                        chart = parseInput(instance.inputObjects);
+                        if (STD_PARSER) {
+                            String s = StringTools.join(((List<String>)instance.inputObjects.get("i")), " ");
+                            Map<String, Reader> reader = new HashMap<String, Reader>();
+                            reader.put("i", new StringReader(s));
+                            try {
+                                chart =  parseFromReaders(reader);
+                            } catch (ParserException ex) {
+                                MaximumEntropyIrtg.log.log(Level.SEVERE, null, ex);
+                            } catch (IOException ex) {
+                                MaximumEntropyIrtg.log.log(Level.SEVERE, null, ex);
+                            }
+                        } else {
+                            chart =  parseInput(instance.inputObjects);
+                        }
                         cachedCharts.add(chart);
                     }
                     assert (chart != null);
