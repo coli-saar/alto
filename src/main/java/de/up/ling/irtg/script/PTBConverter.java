@@ -46,8 +46,9 @@ public class PTBConverter {
     public static void main(String[] args) throws IOException, ParseException, ParserException {
         String filename = (args.length > 0) ? args[0] : "examples/ptb-test.mrg";
         String sortByInterpretation = (args.length > 1) ? args[1] : null;
+        int tokenSize = (args.length > 2) ? Integer.valueOf(args[2]) : 15;
 
-        PTBConverter lc = new PTBConverter();
+        PTBConverter lc = new PTBConverter(tokenSize);
 
         String prefix = getFilenamePrefix(filename);
 
@@ -100,7 +101,7 @@ public class PTBConverter {
             return filename;
         }
     }
-    public Map<String, String> ruleMap;             // mapping of string representation and name of a rule, i.e. "S/NP/VP" -> "r1"
+    private Map<String, String> ruleMap;             // mapping of string representation and name of a rule, i.e. "S/NP/VP" -> "r1"
     private Map<String, FeatureFunction> featureMap; // mapping of names to feature functions
     private List<Tree<String>> ptbTrees;             // list of PTB-trees
     private List<Tree<String>> irtgTrees;            // list of IRTG-trees
@@ -108,8 +109,10 @@ public class PTBConverter {
     private MaximumEntropyIrtg maxEntIrtg;           // the automaton storing the grammar
     private Homomorphism hStr;                       // homomorphism for StringAlgebra
     private Homomorphism hPtb;                       // homomorphism for PtbTreeAlgebra
+    private int maxTerminalsPerSentence;             // max. sentence length (in words)
 
-    public PTBConverter() {
+    public PTBConverter(int maxTerminals) {
+        maxTerminalsPerSentence = maxTerminals;
         corpus = new AnnotatedCorpus();
         ptbTrees = new ArrayList<Tree<String>>();
         irtgTrees = new ArrayList<Tree<String>>();
@@ -149,7 +152,7 @@ public class PTBConverter {
 
         do {
             ptbTree = pta.parseFromReader(reader);
-            if (ptbTree != null) {
+            if ((ptbTree != null) && (pta.getNumWords() <= maxTerminalsPerSentence)) {
                 // store the parsed tree
                 ptbTrees.add(ptbTree);
             }
@@ -164,13 +167,13 @@ public class PTBConverter {
      */
     public void convert() {
         ConcreteTreeAutomaton c = (ConcreteTreeAutomaton) maxEntIrtg.getAutomaton();
-        Map<String, String> binaryLabels = new HashMap<String, String>();
+        PtbTreeAlgebra.binarizeInit();
         for (Tree<String> ptbTree : ptbTrees) {
             // store representation of PTB tree
             List<String> ptbObjects = new ArrayList<String>();
             ptbObjects.add(ptbTree.toString());
             // binarize the PTB-tree
-            ptbTree = PtbTreeAlgebra.binarize(ptbTree, binaryLabels);
+            ptbTree = PtbTreeAlgebra.binarize(ptbTree);
             // extract and store the rules used in the PTB-tree
             extractRules(ptbTree);
             // add the root label to the final states
@@ -412,10 +415,10 @@ public class PTBConverter {
      */
     public int addFeatures() {
         Set<String> featuredRules = new HashSet<String>();
-//        addAllRuleFeatures();
-        addParentRelatedFeatures(featuredRules);
-        addTerminalRelatedFeatures(featuredRules);
-        addChildRelatedFeatures();
+        addAllRuleFeatures();
+//        addParentRelatedFeatures(featuredRules);
+//        addTerminalRelatedFeatures(featuredRules);
+//        addChildRelatedFeatures();
 
         maxEntIrtg.setFeatures(featureMap);
         return featureMap.size();
