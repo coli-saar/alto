@@ -26,42 +26,16 @@ public class Homomorphism {
     private Map<String, Tree<StringOrVariable>> mappings;
     private Signature srcSignature, tgtSignature;
     private boolean debug = false;
-/******************************************************************************/
-    private boolean cachedTerminals;
-    private Map<String, Set<String>> terminalRules;
-/******************************************************************************/
     
     public Homomorphism(Signature src, Signature tgt) {
         mappings = new HashMap<String, Tree<StringOrVariable>>();
         srcSignature = src;
         tgtSignature = tgt;
-/******************************************************************************/
-        cachedTerminals = false;
-        terminalRules = new HashMap<String, Set<String>>();
-/******************************************************************************/
     }
 
-/******************************************************************************/
-    public Set<String> getTerminalRuleNames(String terminal) {
-        if (!cachedTerminals || terminalRules.isEmpty()) {
-            for (Entry<String, Tree<StringOrVariable>> entry : mappings.entrySet()) {
-                Tree<StringOrVariable> tree = entry.getValue();
-                if (tree.getChildren().isEmpty()) {
-                    String ruleName = entry.getKey();
-                    String label = tree.getLabel().getValue();
-                    Set<String> tRules = terminalRules.get(label);
-                    if (tRules == null) {
-                        tRules = new HashSet<String>();
-                    }
-                    tRules.add(ruleName);
-                    terminalRules.put(label, tRules);
-                }
-            }
-            cachedTerminals = true;
-        }
-        return terminalRules.get(terminal);
+    public final Map<String, Tree<StringOrVariable>> getMappings() {
+        return mappings;
     }
-/******************************************************************************/
     
     public void add(String label, Tree<StringOrVariable> mapping) {
         mappings.put(label, mapping);
