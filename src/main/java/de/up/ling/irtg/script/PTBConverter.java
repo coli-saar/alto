@@ -38,7 +38,8 @@ import java.util.zip.GZIPInputStream;
  */
 public class PTBConverter {
 
-    private static final Logger log = Logger.getLogger(MaximumEntropyIrtg.class.getName());
+    private static final Logger log = Logger.getLogger(PTBConverter.class.getName());
+    private static final boolean CONVERT = false;
 
     /**
      * 
@@ -46,40 +47,37 @@ public class PTBConverter {
     public static void main(String[] args) throws IOException, ParseException, ParserException {
         String filename = (args.length > 0) ? args[0] : "examples/ptb-test.mrg";
         String sortByInterpretation = (args.length > 1) ? args[1] : null;
-        int tokenSize = (args.length > 2) ? Integer.valueOf(args[2]) : 15;
+        int tokenSize = (args.length > 2) ? Integer.valueOf(args[2]) : 18;
+        boolean convert = (args.length > 3) ? (!args[3].equals("noconvert")) : CONVERT;
+        String prefix = getFilenamePrefix(filename);
+        String corpusFilename = prefix + ((convert) ? "-corpus-training.txt" : "-corpus-testing.txt");
 
         PTBConverter lc = new PTBConverter(tokenSize);
 
-        String prefix = getFilenamePrefix(filename);
 
         PTBConverter.log.info("Reading PTB data...");
         lc.read(getReaderForFilename(filename));
 
-        PTBConverter.log.info("Converting PTB trees...");
-        lc.convert();
-        PTBConverter.log.log(Level.INFO, "Converted rules: {0}", String.valueOf(lc.ruleMap.size()));
+        if (convert) {
+            PTBConverter.log.info("Converting PTB trees...");
+            lc.convert();
+            PTBConverter.log.log(Level.INFO, "Converted rules: {0}", String.valueOf(lc.ruleMap.size()));
 
-        PTBConverter.log.info("Adding features...");
-        int numFeatures = lc.addFeatures();
-        PTBConverter.log.log(Level.INFO, "Features: {0}", String.valueOf(numFeatures));
+            PTBConverter.log.info("Adding features...");
+            int numFeatures = lc.addFeatures();
+            PTBConverter.log.log(Level.INFO, "Features: {0}", String.valueOf(numFeatures));
 
-        PTBConverter.log.info("Writing grammar...");
-        lc.writeGrammar(new FileWriter(prefix + "-grammar.irtg"));
+            PTBConverter.log.info("Writing grammar...");
+            lc.writeGrammar(new FileWriter(prefix + "-grammar.irtg"));
+        } else {
+            PTBConverter.log.info("Processing PTB trees...");
+            lc.process();
+        }
 
         PTBConverter.log.info("Writing corpus...");
-        lc.writeCorpus(new FileWriter(prefix + "-corpus.txt"), sortByInterpretation);
+        lc.writeCorpus(new FileWriter(corpusFilename), sortByInterpretation);
 
-
-        lc = null;
-
-        PTBConverter.log.info("Parsing grammar...");
-        MaximumEntropyIrtg irtg = (MaximumEntropyIrtg) de.up.ling.irtg.IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
-        int i = irtg.getAutomaton().getRuleSet().size();
-        PTBConverter.log.log(Level.INFO, "Parsed rules: {0}", String.valueOf(i));
-        PTBConverter.log.info("Checking for loops... ");
-        irtg.checkForLoops();
-        irtg = null;
-        PTBConverter.log.info("Done");
+        PTBConverter.log.info("Done.");
     }
 
     private static Reader getReaderForFilename(String filename) throws FileNotFoundException, IOException {
@@ -167,13 +165,12 @@ public class PTBConverter {
      */
     public void convert() {
         ConcreteTreeAutomaton c = (ConcreteTreeAutomaton) maxEntIrtg.getAutomaton();
-        PtbTreeAlgebra.binarizeInit();
         for (Tree<String> ptbTree : ptbTrees) {
             // store representation of PTB tree
             List<String> ptbObjects = new ArrayList<String>();
             ptbObjects.add(ptbTree.toString());
             // binarize the PTB-tree
-            ptbTree = PtbTreeAlgebra.binarize(ptbTree);
+            ptbTree = PtbTreeAlgebra.binarizeAndRelabel(ptbTree);
             // extract and store the rules used in the PTB-tree
             extractRules(ptbTree);
             // add the root label to the final states
@@ -191,6 +188,22 @@ public class PTBConverter {
             inputObjectsMap.put("ptb", ptbObjects);
             // and add the instance to the corpus
             corpus.getInstances().add(new AnnotatedCorpus.Instance(irtgTree, inputObjectsMap));
+        }
+
+    }
+
+    /**
+     * Converts all PTB-trees to IRTG-trees and collects the rules
+     */
+    public void process() {
+        int a = 0;
+        for (Tree<String> ptbTree : ptbTrees) {
+            List<String> sentence = ptbTree.getLeafLabels();
+            Map<String, Object> inputObjectsMap = new HashMap<String, Object>();
+            // with the actual sentence
+            inputObjectsMap.put("i", sentence);
+            // and add the instance to the corpus
+            corpus.getInstances().add(new AnnotatedCorpus.Instance(ptbTree, inputObjectsMap));
         }
 
     }
@@ -333,7 +346,7 @@ public class PTBConverter {
                 String ruleName = ruleMap.get(ruleString);
                 if (ruleName == null) {
                     // the tree contains a rule we have not stored. something went wrong
-                    System.err.println("Rule not found for: " + node.toString());
+                    log.log(Level.SEVERE, "Rule not found for: {0}", node.toString());
                     return null;
                 }
                 if ((childrenValues.size() == 1) && (childrenValues.get(0) == null)) {
@@ -394,7 +407,7 @@ public class PTBConverter {
         }
 
         // write every instance
-        for (AnnotatedCorpus.Instance instance : corpus.getInstances()) {
+        for (AnnotatedCorpus.Instance instance : instances) {
             // for every instance write their interpretations
             for (String interp : interpretations) {
                 String interpretation = StringTools.join((List<String>) instance.inputObjects.get(interp), " ");
@@ -418,7 +431,7 @@ public class PTBConverter {
         addAllRuleFeatures();
 //        addParentRelatedFeatures(featuredRules);
 //        addTerminalRelatedFeatures(featuredRules);
-//        addChildRelatedFeatures();
+        addChildRelatedFeatures();
 
         maxEntIrtg.setFeatures(featureMap);
         return featureMap.size();
