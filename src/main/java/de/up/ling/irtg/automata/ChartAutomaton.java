@@ -17,12 +17,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 /**
  *
  * @author danilo
  */
 public class ChartAutomaton extends ConcreteTreeAutomaton<de.saar.basic.Pair<String, String>> {
+    private static final Logger log = Logger.getLogger( ChartAutomaton.class.getName() );
+
     private static Map<String, Set<String>> terminalRules;
     private static Map<String, Rule<String>> ruleMapping;
     private static SetMultimap<String, Rule<String>> rulesFor1stChildState;
@@ -61,6 +65,10 @@ public class ChartAutomaton extends ConcreteTreeAutomaton<de.saar.basic.Pair<Str
         int i = 0;
         for (String terminal : input) {
             Set<String> ruleNames = terminalRules.get(terminal);
+            if (ruleNames == null) {
+                ChartAutomaton.log.log(Level.WARNING, "No lexical rule for \"{0}\" found...", terminal);
+                return null;
+            }
             bottomRules[i++] = ruleNames;
         }
 
@@ -114,7 +122,7 @@ public class ChartAutomaton extends ConcreteTreeAutomaton<de.saar.basic.Pair<Str
     
     private Rule<State> addStateRule(Rule<String> rule, List<State> children) {
         if (children.isEmpty()) {
-            System.err.println("Warning: Unexpected number of child nodes.");
+            log.log(Level.WARNING, "Unexpected number of child nodes.");
             return null;
         }
         int start = children.get(0).start;
