@@ -1,7 +1,11 @@
 package de.up.ling.irtg.algebra;
 
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.corpus.AnnotatedCorpus;
 import de.up.ling.tree.TreeVisitor;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeParser;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -9,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,14 +24,11 @@ import java.util.regex.Pattern;
  * @author Danilo Baumgarten
  */
 public class PtbTreeAlgebra extends TreeAlgebra {
+    private static final Logger log = Logger.getLogger(PtbTreeAlgebra.class.getName());
     private static final String START_SEQUENCE = "( ";
     private static Pattern TRACE_PATTERN = Pattern.compile("([^-=]+)([-=])(.+)");
-    private static Pattern TMP_PATTERN = Pattern.compile("(.+)(\\^)(.+)");
-    private static Map<String, String> LABELS;
+    private static Pattern PARENT_PATTERN = Pattern.compile("(\\D+)(\\d+)(.*)");
     public static final String LABEL_PREFIX = "ART-";
-    private static final String UN_LABEL_PREFIX = LABEL_PREFIX + "UN";
-    private static final String BIN_LABEL_PREFIX = LABEL_PREFIX + "BIN";
-    
     private int numWords;
 
     /**
@@ -34,35 +37,46 @@ public class PtbTreeAlgebra extends TreeAlgebra {
     public static void main(String[] args) throws ParserException {
         PtbTreeAlgebra pta = new PtbTreeAlgebra();
         Tree<String> tree = pta.parseString("( (`` ``) (INTJ (UH Yes) (. .) ))");
-        System.err.println(tree.toString());
-        tree = binarize(tree);
-        System.err.println(tree.toString());
+        PtbTreeAlgebra.log.log(Level.INFO, tree.toString());
+        tree = binarizeAndRelabel(tree);
+        PtbTreeAlgebra.log.log(Level.INFO, tree.toString());
     }
 
     /**
-     * Parses PTB-formatted string
-     *
-     * @param representation the string containing the data
-     * @returns Tree<String> containing the parsed PTB-tree
-     * @throws ParserException if an error occurs on parsing the input
+     * Evaluates the given tree
+     * i.e. removes the effects of the transformation process (artificial nodes, relabeling, ...)
+     * 
+     * @param tree the tree, e.g., generated from chart
+     * @return Tree<String> the evaluated tree
      */
     @Override
     public Tree<String> evaluate(Tree<String> tree) {
+        tree.draw();
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
-            public Tree<String> combine(Tree<String> node, List<Tree<String>> childValues) {
+            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
                 List<Tree<String>> newChildValues = new ArrayList<Tree<String>>();
-                for (int i = 0; i < childValues.size(); i++) {
-                    Tree<String> child = childValues.get(i);
-                    if (child.getLabel().startsWith(BIN_LABEL_PREFIX)) {
+                // remove the effects of the binarization
+                // i.e. replace artificial nodes with their children
+                for (int i = 0; i < childrenValues.size(); i++) {
+                    Tree<String> child = childrenValues.get(i);
+                    if (child.getLabel().startsWith(LABEL_PREFIX)) {
                         newChildValues.addAll(child.getChildren());
-                    } else if (child.getLabel().startsWith(UN_LABEL_PREFIX)) {
-                        newChildValues.add(child.getChildren().get(0));
                     } else {
                         newChildValues.add(child);
                     }
                 }
-                return Tree.create(node.getLabel(),newChildValues);
+                
+                // remove effects of relabeling
+                // i.e. the parent annotation and the appended size of children
+                String label;
+                if (!childrenValues.isEmpty()) {
+                    Matcher match = PARENT_PATTERN.matcher(node.getLabel());
+                    label = match.matches() ? match.group(1) : node.getLabel();
+                } else {
+                    label = node.getLabel();
+                }
+                return Tree.create(label,newChildValues);
             }            
         });        
     }
@@ -77,6 +91,73 @@ public class PtbTreeAlgebra extends TreeAlgebra {
     }
 
     /**
+     * Reads an annotated corpus following the condition of only one
+     * interpretation, i.e. with StringAlgebra
+     *
+     * @param reader the reader, e.g. file or string reader, containing the data
+     * @returns AnnotatedCorpus an instance of the corpus class with all the parsed data
+     * @throws IOException if an error occurs on reading data from <tt>reader</tt>
+     */
+    public static AnnotatedCorpus readPtbCorpus(Reader reader) throws IOException {
+        AnnotatedCorpus ret = new AnnotatedCorpus();
+        BufferedReader br = new BufferedReader(reader);
+        StringAlgebra strAlgebra = new StringAlgebra();
+        Map<String, Object> currentInputs = new HashMap<String, Object>();
+        String interpName = new String();
+        boolean interpretation = true;
+        boolean firstLine = true;
+
+        while (true) {
+            // read a line from the input
+            String line = br.readLine();
+
+            // return the corpus when reaching EOF
+            if (line == null) {
+                return ret;
+            }
+
+            // skip empty lines
+            if (line.equals("")) {
+                continue;
+            }
+
+            // the first line contains the name of the interpretation
+            if (firstLine) {
+                interpName = line;
+                firstLine = false;
+            } else {
+                // alternate between reading the representation and the tree
+                if (interpretation) {
+                    // let StringAlgebra parse the representation
+                    Object inputObject = strAlgebra.parseString(line);
+                    // and map the interpretation name to the parsed iput
+                    currentInputs.put(interpName, inputObject);
+                    interpretation = false;
+                } else {
+                    // parse the tree
+                    Tree<String> tree = TreeParser.parse(line);
+                    // create a corpus instance
+                    AnnotatedCorpus.Instance inst = new AnnotatedCorpus.Instance(tree, currentInputs);
+                    // and add the instance to the corpus
+                    ret.getInstances().add(inst);
+                    currentInputs = new HashMap<String, Object>();
+                    
+                    interpretation = true;
+                }
+            }
+        }
+    }
+
+    @Override
+    public TreeAutomaton decompose(Tree<String> value) {
+        // the binarization is only for internal handling
+        // ptb-like trees therefore must be binarized before further processing
+        value = binarizeAndRelabel(value);
+//        value.draw();
+        return super.decompose(value);
+    }
+
+    /**
      * Parses PTB-formatted string
      *
      * @param representation the string containing the data
@@ -85,14 +166,25 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      */
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
+        Tree<String> ret;
+        
+        // first try to the actual parser
         try {
             StringReader reader = new StringReader(representation);
-            return parseFromReader(reader);
+            ret = parseFromReader(reader);
         } catch (IOException e) {
             throw new ParserException(e);
         }
+        
+        // if there's neither an exception nor a tree,
+        // the input is possibly a tree as a string
+        if (ret == null) {
+            ret = TreeParser.parse(representation);
+        }
+        
+        return ret;
     }
-    
+
     /**
      * Parses PTB-formatted trees from reader
      *
@@ -103,6 +195,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
     public Tree<String> parseFromReader(Reader reader) throws IOException {
         numWords = 0;
         // first we're looking for the beginning of a tree
+        // in mrg-files the first symbol starts after two left round brackets
         String input = "";
         do {
             int c = reader.read();
@@ -164,7 +257,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
         String s = buf.toString();
         // remove trace indices
         Matcher matcher = TRACE_PATTERN.matcher(s);
-        s = matcher.find() ? matcher.group(1) : s;
+        s = matcher.matches() ? matcher.group(1) : s;
         // clear the buffer
         return s;
     }
@@ -199,7 +292,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
                         label = stripPosTag(buffer);
                     } else {
                         // 2. the buffer contains a terminal symbol
-                        children.add(Tree.create(buffer.toString()));
+                        children.add(Tree.create(buffer.toString().toLowerCase()));
                         numWords++;
                     }
                 }
@@ -242,7 +335,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
         }
 
         // we reached the end of the reader without reading the closing char ')' for this tree
-        System.err.println("Unexpected end of parsed input.");
+        log.log(Level.SEVERE, "Unexpected end of parsed input.");
         return null;
     }
     
@@ -260,37 +353,47 @@ public class PtbTreeAlgebra extends TreeAlgebra {
         }
     }
 
-    public static void binarizeInit() {
-        LABELS = new HashMap<String, String>();
-    }
     /**
      * Binarizes a PTB tree (as in Matsukaki et al.,2005)
+     * and re-labels the nodes
      *
      * @param tree the PTB tree
      * @return Tree<String> the binarized tree
      */
-    public static Tree<String> binarize(Tree<String> tree) {
+    public static Tree<String> binarizeAndRelabel(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
+                // leaf node: nothing to do
                 if (childrenValues.isEmpty()) {
                     return node;
                 }
-/*                if (!childrenValues.get(0).getChildren().isEmpty()) {
+
+                // Re-Labeling:
+                // 1. strip symbols to the main POS and add the #children due to the constraint
+                //    every rule with the same parent state must have the same arity
+                String label = node.getLabel() + String.valueOf(childrenValues.size());
+                // 2. parent annotation (as in Johnson, 1998)
+                if (!childrenValues.get(0).getChildren().isEmpty()) {
                     for (Tree<String> child : childrenValues) {
-                        child.setLabel(child.getLabel() + "^" + node.getLabel());
+                        child.setLabel(child.getLabel() + "^" + label);
                     }
                 }
-*/                if (childrenValues.size() == 1) {
-                    return Tree.create(node.getLabel(), childrenValues);
+                
+                // unary nodes need no binarization
+                if (childrenValues.size() == 1) {
+                    return Tree.create(label, childrenValues);
                 }
+                // already binary nodes need no binarization
                 if (childrenValues.size() == 2) {
-                    return Tree.create(node.getLabel(), childrenValues);
+                    return Tree.create(label, childrenValues);
                 }
+                // binarize nodes with children > 2
                 List<Tree<String>> newChildrenValues = new ArrayList<Tree<String>>();
                 newChildrenValues.add(childrenValues.get(0));
                 newChildrenValues.add(binarize(childrenValues, 1));
-                return Tree.create(node.getLabel(), newChildrenValues);
+                
+                return Tree.create(label, newChildrenValues);
             }            
         });        
     }
@@ -302,6 +405,59 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * @return List<Tree<String>> the binarized list
      */
     public static Tree<String> binarize(List<Tree<String>> children, int index) {
+        List<Tree<String>> newChildren = new ArrayList<Tree<String>>();
+        // add the first child to the list
+        newChildren.add(children.get(index));
+        // create an artificial label
+        String label = LABEL_PREFIX + concatLabels(children, index);
+        
+        if (children.size() > index+1) {
+            // binarize remaining children and add the resulting tree to the list
+            newChildren.add(binarize(children, index+1));
+        }
+        
+        return Tree.create(label, newChildren);
+    }
+
+    /**
+     * Concatenates all root-labels of a given list of trees from an index on
+     *
+     * @param labels the list of trees 
+     * @param index the from where on the root labels will be concatenated
+     * @return String the concatenated labels
+     */
+    public static String concatLabels(List<Tree<String>> labels, int index) {
+        Pattern parentPattern = Pattern.compile("(.+)(\\^)(.+)");
+        StringBuilder ret = new StringBuilder();
+        Matcher match = parentPattern.matcher(labels.get(index).getLabel());
+        match.matches();
+        // add only the stripped label without parent annotation
+        ret.append(match.group(1));
+        // and keep the parent label for later use
+        String suffix = match.group(3);
+        
+        // proceed with remaining elements
+        for (int i = index+1; i < labels.size(); i++) {
+            ret.append("-");
+            match = parentPattern.matcher(labels.get(i).getLabel());
+            match.matches();
+            ret.append(match.group(1));
+        }
+        
+        // re-add the parent label
+        ret.append("^");
+        ret.append(suffix);
+        
+        return ret.toString();
+    }
+
+    /**
+     * Binarizes a list of trees (as in Mazukaki et al 2005)
+     *
+     * @param list the list of trees 
+     * @return List<Tree<String>> the binarized list
+     */
+/*    public static Tree<String> binarize(List<Tree<String>> children, int index) {
         List<Tree<String>> newChildren = new ArrayList<Tree<String>>();
         newChildren.add(children.get(index));
         String label;
@@ -322,5 +478,5 @@ public class PtbTreeAlgebra extends TreeAlgebra {
             }
         }
         return Tree.create(label, newChildren);
-    }
+    }*/
 }
