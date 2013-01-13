@@ -37,10 +37,10 @@ class PtbTreeAlgebraTest {
     public void testPtbTreeAlgebra() {
         PtbTreeAlgebra pta = new PtbTreeAlgebra();
         Tree<String> tree = pta.parseString("( (`` ``) (INTJ (UH Yes) (. .) ))");
-        assertEquals("INTJ('``'('``'),UH(Yes),'.'('.'))", tree.toString());
+        assertEquals("INTJ('``'('``'),UH(yes),'.'('.'))", tree.toString());
 
         PtbTreeAlgebra.binarizeInit();
-        tree = PtbTreeAlgebra.binarize(tree);
-        assertEquals("INTJ('``'('``'),ART-BIN2(UH(Yes),ART-UN1('.'('.'))))", tree.toString());
+        tree = PtbTreeAlgebra.binarizeAndRelabel(tree);
+        assertEquals("INTJ3('``1^INTJ3'('``'),'ART-UH1-.1^INTJ3'('UH1^INTJ3'(yes),'ART-.1^INTJ3'('.1^INTJ3'('.'))))", tree.toString());
     }
 }
