@@ -33,7 +33,9 @@ import java.util.logging.Logger;
  * @author Danilo Baumgarten
  */
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
-    public static final boolean TRAINING = false;
+    public static final boolean TRAINING = true;
+    public static final boolean READ_CHARTS = true;
+    public static final boolean WRITE_CHARTS = false;
 
     /**
      * For testing only
@@ -50,14 +52,30 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         MaximumEntropyIrtg.log.info("Reading corpus...");
         if (training) {
             AnnotatedCorpus anCo = i.readAnnotatedCorpus(new FileReader(prefix + "-corpus-training.txt"));
+            if (READ_CHARTS) {
+                MaximumEntropyIrtg.log.info("Reading charts...");
+                i.readCharts(new FileInputStream(prefix + "-training.charts"));
+            }
             i.train(anCo);
             MaximumEntropyIrtg.log.info("Writing feature weights...");
             i.writeWeights(new FileWriter(prefix + "-weights.props"));
+            if (WRITE_CHARTS) {
+                MaximumEntropyIrtg.log.info("Writing charts...");
+                i.writeCharts(new FileOutputStream(prefix + "-training.charts"));
+            }
         } else {
             AnnotatedCorpus anCo = de.up.ling.irtg.algebra.PtbTreeAlgebra.readPtbCorpus(new FileReader(prefix + "-corpus-testing.txt"));
+            if (READ_CHARTS) {
+                MaximumEntropyIrtg.log.info("Reading charts...");
+                i.readCharts(new FileInputStream(prefix + "-testing.charts"));
+            }
             MaximumEntropyIrtg.log.info("Reading feature weights...");
             i.readWeights(new FileReader(prefix + "-weights.props"));
             i.evaluate(anCo);
+            if (WRITE_CHARTS) {
+                MaximumEntropyIrtg.log.info("Writing charts...");
+                i.writeCharts(new FileOutputStream(prefix + "-testing.charts"));
+            }
         }
     }
 
@@ -376,11 +394,17 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
         MaximumEntropyIrtg.log.info("Evaluating...");
         List<AnnotatedCorpus.Instance> instances = corpus.getInstances();
-        for (AnnotatedCorpus.Instance instance : instances) {
+        for (int i = 0; i < instances.size(); i++) {
+            AnnotatedCorpus.Instance instance = instances.get(i);
             String sentence = StringTools.join((List<String>) instance.inputObjects.get(representationInterpName), " ");
             Map<String, Reader> test = new HashMap<String, Reader>();
             test.put(representationInterpName, new StringReader(sentence));
-            TreeAutomaton chart = parseInput(instance.inputObjects);
+            TreeAutomaton chart = null;
+            if (cachedCharts.size() > i) {
+                chart = cachedCharts.get(i);
+            } else {
+                chart = parseInput(instance.inputObjects);
+            }
             if (chart == null) {
                 noChart++;
                 continue;
@@ -444,6 +468,37 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         }
 
         props.store(writer, null);
+    }
+
+    public void writeCharts(FileOutputStream fstream) throws IOException {
+        ObjectOutputStream out = new ObjectOutputStream(fstream);
+        for (TreeAutomaton chart : cachedCharts) {
+            out.writeObject(chart);
+        }
+        out.close();
+        fstream.close();
+    }
+
+    public void readCharts(FileInputStream fstream) throws IOException {
+        ObjectInputStream in = new ObjectInputStream(fstream);
+        TreeAutomaton chart = readChart(in);
+        while (chart != null) {
+            cachedCharts.add(chart);
+            chart = readChart(in);
+        }
+        in.close();
+        fstream.close();
+    }
+
+    public TreeAutomaton readChart(ObjectInputStream in) throws IOException {
+        try {
+            return (TreeAutomaton) in.readObject();
+        } catch (ClassNotFoundException ex) {
+            MaximumEntropyIrtg.log.log(Level.SEVERE, null, ex);
+        } catch (EOFException ex) {
+            return null;
+        }
+        return null;
     }
 
     /**
