@@ -51,7 +51,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      */
     @Override
     public Tree<String> evaluate(Tree<String> tree) {
-        tree.draw();
+//        tree.draw();
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
