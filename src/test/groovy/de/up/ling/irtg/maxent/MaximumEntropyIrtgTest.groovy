@@ -22,6 +22,7 @@ import de.up.ling.irtg.corpus.*
 /**
  *
  * @author koller
+ * @author Danilo Baumgarten
  */
 class MaximumEntropyIrtgTest {
     @Test
@@ -66,21 +67,6 @@ class MaximumEntropyIrtgTest {
         children[1] = new de.saar.basic.Pair<String,String>("XX","0-0");
         Rule r3= new Rule<de.saar.basic.Pair<String,String>>(parent1, "r2", children, 0.0);
         assert featureFunction.evaluate(r3) == 0.0, "feature weight shall be 0.0";
-    }
-    
-    @Test
-    public void testMaxEntTraining() {
-        InterpretedTreeAutomaton irtg = iparse(CFG_STR);
-        assert irtg instanceof MaximumEntropyIrtg;
-        AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN1_STR), irtg);
-        irtg.train(anCo);
-        double[] fWeights = irtg.getFeatureWeights();
-        assert (fWeights[0] > fWeights[1]), "weights are not optimized";
-
-        anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN2_STR), irtg);
-        irtg.train(anCo);
-        fWeights = irtg.getFeatureWeights();
-        assert (fWeights[0] < fWeights[1]), "weights are not optimized";
     }
     
     private static final String CFG_STR = """
