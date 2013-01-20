@@ -39,7 +39,7 @@ class PtbTreeAlgebraTest {
         Tree<String> tree = pta.parseString("( (`` ``) (INTJ (UH Yes) (. .) ))");
         assertEquals("INTJ('``'('``'),UH(yes),'.'('.'))", tree.toString());
 
-        tree = PtbTreeAlgebra.binarizeAndRelabel(tree);
+        tree = pta.binarizeAndRelabel(tree);
         assertEquals("INTJ3('``1^INTJ3'('``'),'ART-UH1-.1^INTJ3'('UH1^INTJ3'(yes),'ART-.1^INTJ3'('.1^INTJ3'('.'))))", tree.toString());
     }
 }
