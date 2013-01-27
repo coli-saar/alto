@@ -28,7 +28,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
     private static final Pattern STRIP_PATTERN = Pattern.compile("([^-=]+)([-=])(.+)");
     private static final Pattern LABELFX_PATTERN = Pattern.compile("(\\D+)(\\d+)(.*)");
     private static final Pattern CONCAT_PATTERN = Pattern.compile("(.+)(\\^)(.+)");
-    private static final String LABEL_PREFIX = "ART-";
+    public static final String LABEL_PREFIX = "ART-";
 
     private int numWords;
     private boolean useParentAnnotation;
