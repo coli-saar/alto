@@ -46,7 +46,7 @@ class HomomorphismTest {
         Tree gold = pt("g(l(e),h(k(b)))");
         Tree rhs = h.apply(t); // this needs to be here
 
-        assertEquals(TermParser.parse("g(?2,h(?1))").toTreeWithVariables(), h.get("f"));
+        assertEquals(pth("g(?2,h(?1))"), h.get("f"));
     }
     
     @Test

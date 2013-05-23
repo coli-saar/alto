@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.binarization;
 
-import de.saar.basic.StringOrVariable;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -428,14 +427,14 @@ public class SynchronousBinarization<E, F> {
     }
     
     private Tree makeHomTree(String label){     // unary
-        StringOrVariable treeLabel = new StringOrVariable(label,false);
+        HomomorphismSymbol treeLabel = HomomorphismSymbol.createConstant(label);
         List children = makeChildrenList(Tree.create(HomomorphismSymbol.createVariable("?1")));
         Tree homTree = Tree.create(treeLabel,children);
         return homTree;
     }
     
     private Tree makeHomTree(String label, boolean reverse) { // binary
-        StringOrVariable treeLabel = new StringOrVariable(label,false);
+        HomomorphismSymbol treeLabel = HomomorphismSymbol.createConstant(label);
         Tree<HomomorphismSymbol> firstVarTree = Tree.create(HomomorphismSymbol.createVariable("?1"));
         Tree<HomomorphismSymbol> secondVarTree = Tree.create(HomomorphismSymbol.createVariable("?2"));
         List children = makeChildrenList(firstVarTree,secondVarTree,reverse);

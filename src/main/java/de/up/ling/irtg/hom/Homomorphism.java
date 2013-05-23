@@ -24,7 +24,7 @@ public class Homomorphism {
     private Map<String, Tree<HomomorphismSymbol>> mappings;
     private Signature srcSignature, tgtSignature;
     private boolean debug = false;
-    
+
     public Homomorphism(Signature src, Signature tgt) {
         mappings = new HashMap<String, Tree<HomomorphismSymbol>>();
         srcSignature = src;
@@ -34,11 +34,11 @@ public class Homomorphism {
     public final Map<String, Tree<HomomorphismSymbol>> getMappings() {
         return mappings;
     }
-    
+
     public void add(String label, Tree<HomomorphismSymbol> mapping) {
         mappings.put(label, mapping);
-        
-        if( tgtSignature.isWritable() ) {
+
+        if (tgtSignature.isWritable()) {
             tgtSignature.addAllConstants(mapping);
         }
     }
@@ -46,75 +46,78 @@ public class Homomorphism {
     public Tree<HomomorphismSymbol> get(String label) {
         return mappings.get(label);
     }
-    
+
     /*
      * Applies the homomorphism to the given tree. Returns the homomorphic image
      * of the tree under this homomorphism.
      * 
      */
-    public Tree<String> apply(Tree<String> tree) {        
-        final Map<String,String> knownGensyms = new HashMap<String, String>();
-        
+    public Tree<String> apply(Tree<String> tree) {
+        final Map<String, String> knownGensyms = new HashMap<String, String>();
+
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
                 Tree<String> ret = construct(mappings.get(node.getLabel()), childrenValues, knownGensyms);
-                if( debug ) {
+                if (debug) {
                     System.err.println("\n" + node + ":");
                     System.err.println("  " + rhsAsString(mappings.get(node.getLabel())));
-                    for( Tree<String> child : childrenValues ) {
+                    for (Tree<String> child : childrenValues) {
                         System.err.println("   + " + child);
                     }
                     System.err.println("  => " + ret);
                 }
                 return ret;
-            }            
-        });        
+            }
+        });
     }
     
-    /*
-     * THIS IS A HACK THAT NEEDS TO BE FIXED SOON!!
-     * 
-     * In "construct", we assume that a gensym label is just a string that starts with a +. It makes no sense to distinguish
-     * between variables and non-variables, but not between ordinary labels and gensym labels. Either we should make everything
-     * just strings and interpret variables appropriately in #construct, or HomomorphismSymbol needs a third type for gensyms.
-     * 
-     * Note that homomorphisms with gensyms are not, strictly speaking, homomorphisms in the theoretical sense of the word.
-     * It will in general not be possible to compute e.g. pre-image of an automaton under such "homomorphisms".
-     * 
-     */
     
-    public Tree<String> construct(final Tree<HomomorphismSymbol> tree, final List<Tree<String>> subtrees, final Map<String,String> knownGensyms) {
+    
+    /**
+     * Applies the homomorphism to a given input tree. Variables are substituted according to the "subtrees"
+     * parameter: ?1, ?x1 etc. refer to the first entry in the list, and so on. The "knownGensyms" parameter
+     * specifies previously generated symbols for gensym labels in the homomorphic image.
+     * 
+     * @param tree
+     * @param subtrees
+     * @param knownGensyms
+     * @return 
+     */
+    public Tree<String> construct(final Tree<HomomorphismSymbol> tree, final List<Tree<String>> subtrees, final Map<String, String> knownGensyms) {
         final Tree<String> ret = tree.dfs(new TreeVisitor<HomomorphismSymbol, String, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<HomomorphismSymbol> node, List<Tree<String>> childrenValues) {
                 HomomorphismSymbol label = node.getLabel();
-                
-                if( label.isVariable() ) {
-                    return subtrees.get(getIndexForVariable(label));
-                } else if( label.getValue().contains("+") ) {
-                    return Tree.create(gensym(label.getValue(), knownGensyms), childrenValues);
-                } else {
-                    return Tree.create(label.getValue(), childrenValues);
+
+                switch (label.getType()) {
+                    case VARIABLE:
+                        return subtrees.get(label.getIndex());
+                    case GENSYM:
+                        return Tree.create(gensym(label.getValue(), knownGensyms), childrenValues);
+                    case CONSTANT:
+                        return Tree.create(label.getValue(), childrenValues);
+                    default:
+                        throw new RuntimeException("undefined homomorphism symbol type");
                 }
             }
         });
 
         return ret;
     }
-    
-    private String gensym(String gensymString, Map<String,String> knownGensyms) {
+
+    private String gensym(String gensymString, Map<String, String> knownGensyms) {
         int start = gensymString.indexOf("+");
         String prefix = gensymString.substring(0, start);
-        String gensymKey = gensymString.substring(start);        
-        
-        if( ! knownGensyms.containsKey(gensymKey) ) {
+        String gensymKey = gensymString.substring(start);
+
+        if (!knownGensyms.containsKey(gensymKey)) {
             knownGensyms.put(gensymKey, "_" + (gensymNext++));
         }
-        
+
         return prefix + knownGensyms.get(gensymKey);
     }
-    
+
     private static boolean isDigit(char character) {
         return (character >= '0') && (character <= '9');
     }
@@ -124,29 +127,29 @@ public class Homomorphism {
         String val = varname.getValue();
         int ret = 0;
         boolean foundIndex = false;
-        
-        while( indexStartPos < val.length() && ! isDigit(val.charAt(indexStartPos)) ) {
+
+        while (indexStartPos < val.length() && !isDigit(val.charAt(indexStartPos))) {
             indexStartPos++;
         }
-        
-        while( indexStartPos < val.length() ) {
+
+        while (indexStartPos < val.length()) {
             char c = val.charAt(indexStartPos++);
-                        
-            if( isDigit(c) ) {
+
+            if (isDigit(c)) {
                 foundIndex = true;
-                ret = 10*ret + (c-'0');
+                ret = 10 * ret + (c - '0');
             }
         }
-        
-        if( foundIndex ) {
+
+        if (foundIndex) {
 //            return Integer.parseInt(varname.getValue().substring(indexStartPos)) - 1;
 //            System.err.println(val + " -> " + ret);
-            return ret-1;
+            return ret - 1;
         } else {
             return -1;
         }
-        
-        
+
+
     }
 
     public Set<String> getDomain() {
@@ -156,14 +159,14 @@ public class Homomorphism {
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-        
-        for( String key : mappings.keySet() ) {
+
+        for (String key : mappings.keySet()) {
             buf.append(key + " -> " + rhsAsString(mappings.get(key)) + "\n");
         }
-        
+
         return buf.toString();
     }
-    
+
     public static String rhsAsString(Tree<HomomorphismSymbol> t) {
         t.setCachingPolicy(false);
         return t.toString(HOM_NON_QUOTING_PATTERN);
@@ -179,37 +182,33 @@ public class Homomorphism {
 
     @Override
     public boolean equals(Object obj) {
-        if( obj instanceof Homomorphism ) {
+        if (obj instanceof Homomorphism) {
             return mappings.equals(((Homomorphism) obj).mappings);
         }
-        
+
         return false;
     }
 
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-    
 
-    
-    
     public boolean isNonDeleting() {
-        for( String label : mappings.keySet() ) {
+        for (String label : mappings.keySet()) {
             Tree<HomomorphismSymbol> rhs = mappings.get(label);
             Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
-            for( HomomorphismSymbol l : rhs.getLeafLabels() ) {
-                if( l.isVariable() ) {
+            for (HomomorphismSymbol l : rhs.getLeafLabels()) {
+                if (l.isVariable()) {
                     variables.add(l);
                 }
             }
-            
-            if( variables.size() < srcSignature.getArity(label)) {
+
+            if (variables.size() < srcSignature.getArity(label)) {
 //                System.err.println("hom is nondeleting: " + label + "/" + srcSignature.getArity(label) +  " -> " + rhs);
                 return false;
             }
         }
-        
-        return true;        
+
+        return true;
     }
-    
 }

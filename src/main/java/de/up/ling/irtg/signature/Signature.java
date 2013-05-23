@@ -5,7 +5,6 @@
 package de.up.ling.irtg.signature;
 
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.hom.HomomorphismSymbols;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.Collection;

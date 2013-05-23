@@ -109,4 +109,37 @@ public class HomomorphismSymbol {
     private static boolean isDigit(char character) {
         return (character >= '0') && (character <= '9');
     }
+
+    @Override
+    public String toString() {
+        return value;
+    }   
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 71 * hash + (this.type != null ? this.type.hashCode() : 0);
+        hash = 71 * hash + (this.value != null ? this.value.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final HomomorphismSymbol other = (HomomorphismSymbol) obj;
+        if (this.type != other.type) {
+            return false;
+        }
+        if ((this.value == null) ? (other.value != null) : !this.value.equals(other.value)) {
+            return false;
+        }
+        return true;
+    }
+    
+    
 }
