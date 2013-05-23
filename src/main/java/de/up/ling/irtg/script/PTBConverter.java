@@ -1,7 +1,6 @@
 
 package de.up.ling.irtg.script;
 
-import de.saar.basic.StringOrVariable;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.corpus.AnnotatedCorpus;
 import de.up.ling.irtg.Interpretation;
@@ -13,6 +12,7 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.corpus.AnnotatedCorpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.maxent.ChildOfFeature;
 import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
@@ -317,7 +317,7 @@ public class PTBConverter {
                 if (!ruleMap.containsKey(ruleString)) {
                     List<Tree<String>> nodeChildren = node.getChildren();
                     List<String> childStates = new ArrayList<String>(); // list of states on the right side
-                    List<Tree<StringOrVariable>> ptbChildren = new ArrayList<Tree<StringOrVariable>>();
+                    List<Tree<HomomorphismSymbol>> ptbChildren = new ArrayList<Tree<HomomorphismSymbol>>();
                     String label;
 
                     // create rule name (rXXX)
@@ -327,8 +327,8 @@ public class PTBConverter {
 
                     if (childrenValues.get(0)) { // the node's child is a leaf node --> terminal symbol
                         label = nodeChildren.get(0).getLabel(); // terminal symbol
-                        hStr.add(ruleName, Tree.create(new StringOrVariable(label, false)));
-                        ptbChildren.add(Tree.create(new StringOrVariable(label, false)));
+                        hStr.add(ruleName, Tree.create(HomomorphismSymbol.createConstant(label)));
+                        ptbChildren.add(Tree.create(HomomorphismSymbol.createConstant(label)));
                     } else {
                         // collect the child states and create the PTB interpretation
                         // the PTB interpretation is not nested but straight forward
@@ -336,16 +336,16 @@ public class PTBConverter {
                             label = nodeChildren.get(i).getLabel();
                             childStates.add(label);
                             String ptbLabel = "?" + String.valueOf(i + 1);
-                            ptbChildren.add(Tree.create(new StringOrVariable(ptbLabel, true)));
+                            ptbChildren.add(Tree.create(HomomorphismSymbol.createConstant(ptbLabel)));
                         }
 
                         // create the nested intepretation for the StringAlgebra
-                        Tree<StringOrVariable> strInterp = computeInterpretation(1, childrenValues.size());
+                        Tree<HomomorphismSymbol> strInterp = computeInterpretation(1, childrenValues.size());
                         hStr.add(ruleName, strInterp);
                     }
 
                     // add interpretations the the homomorphisms
-                    hPtb.add(ruleName, Tree.create(new StringOrVariable(node.getLabel(), false), ptbChildren));
+                    hPtb.add(ruleName, Tree.create(HomomorphismSymbol.createConstant(node.getLabel()), ptbChildren));
 
                     // add the rule to the automaton
                     c.addRule(ruleName, childStates, node.getLabel());
@@ -431,10 +431,10 @@ public class PTBConverter {
      * @param max the number of elements of the interpretation
      * @return String the interpretation
      */
-    private Tree<StringOrVariable> computeInterpretation(final int start, final int max) {
+    private Tree<HomomorphismSymbol> computeInterpretation(final int start, final int max) {
         // if there is only one element create the tree and return it
         if (max == 1) {
-            return Tree.create(new StringOrVariable("?1", true));
+            return Tree.create(HomomorphismSymbol.createVariable("?1"));
         }
 
         // if (max < start) becomes true this functions is missused
@@ -442,25 +442,25 @@ public class PTBConverter {
             return null;
         }
         
-        List<Tree<StringOrVariable>> strChildren = new ArrayList<Tree<StringOrVariable>>();
+        List<Tree<HomomorphismSymbol>> strChildren = new ArrayList<Tree<HomomorphismSymbol>>();
         
         // create a variable name
         String startLabel = "?" + String.valueOf(start);
         // and add the variable to the list
-        strChildren.add(Tree.create(new StringOrVariable(startLabel, true)));
+        strChildren.add(Tree.create(HomomorphismSymbol.createVariable(startLabel)));
         
         // proceed with the remaining elements
         if ((start + 1) == max) { // last element to compute
             // create variable name
             String maxLabel = "?" + String.valueOf(max);
             // and add the variable to the list
-            strChildren.add(Tree.create(new StringOrVariable(maxLabel, true)));
+            strChildren.add(Tree.create(HomomorphismSymbol.createVariable(maxLabel)));
         } else { // more than one remaining element
             // recursive step
             strChildren.add(computeInterpretation(start + 1, max));
         }
 
-        return Tree.create(new StringOrVariable("*", false), strChildren);
+        return Tree.create(HomomorphismSymbol.createConstant("*"), strChildren);
     }
 
     /**
@@ -550,7 +550,7 @@ public class PTBConverter {
                     ruleStringBuilder.append((String) child);
                 }
             } else {
-                Tree<StringOrVariable> t = hStr.get(rule.getLabel());
+                Tree<HomomorphismSymbol> t = hStr.get(rule.getLabel());
                 ruleStringBuilder.append("/");
                 ruleStringBuilder.append(t.getLabel().getValue());
             }

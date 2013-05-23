@@ -11,6 +11,7 @@ import de.up.ling.irtg.automata.ParseException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomatonParser;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.MapSignature;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
@@ -32,6 +33,10 @@ public class TestingTools {
         return x.toTreeWithVariables();
     }
     
+    public static Tree<HomomorphismSymbol> pth(String s) {
+        return HomomorphismSymbol.treeFromNames(pt(s));
+    }
+    
     public static TreeAutomaton pa(String s) throws ParseException {
         return TreeAutomatonParser.parse(new StringReader(s));
     }
@@ -40,7 +45,7 @@ public class TestingTools {
         Homomorphism ret = new Homomorphism(sourceSignature, new MapSignature());
         
         for( String sym : mappings.keySet() ) {
-            ret.add(sym, ptv(mappings.get(sym)));
+            ret.add(sym, pth(mappings.get(sym)));
         }
         
         return ret;

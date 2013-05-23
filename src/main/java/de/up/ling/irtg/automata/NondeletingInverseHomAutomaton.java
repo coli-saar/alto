@@ -5,8 +5,8 @@
 package de.up.ling.irtg.automata;
 
 import com.google.common.base.Function;
-import de.saar.basic.StringOrVariable;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -50,9 +50,9 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
         } else {
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
 
-            Set<State> resultStates = rhsAutomaton.run(hom.get(label), new Function<Tree<StringOrVariable>, State>() {
+            Set<State> resultStates = rhsAutomaton.run(hom.get(label), new Function<Tree<HomomorphismSymbol>, State>() {
                 @Override
-                public State apply(Tree<StringOrVariable> f) {
+                public State apply(Tree<HomomorphismSymbol> f) {
                     if (f.getLabel().isVariable()) {
                         String child = childStates.get(Homomorphism.getIndexForVariable(f.getLabel()));
                         return rhsState.get(child);

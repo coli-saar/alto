@@ -6,9 +6,9 @@ package de.up.ling.irtg.automata;
 
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.AkSetMultimap;
-import de.saar.basic.StringOrVariable;
 import de.up.ling.irtg.algebra.PtbTreeAlgebra;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,9 +44,9 @@ public class ChartAutomaton extends ConcreteTreeAutomaton<de.saar.basic.Pair<Str
         automaton = auto;
         automaton.processNewRulesForRhs();
         terminalRules = new HashMap<String, Set<String>>();
-        Set<Entry<String, Tree<StringOrVariable>>> homMapping = hom.getMappings().entrySet();
-        for (Entry<String, Tree<StringOrVariable>> entry : homMapping) {
-            Tree<StringOrVariable> tree = entry.getValue();
+        Set<Entry<String, Tree<HomomorphismSymbol>>> homMapping = hom.getMappings().entrySet();
+        for (Entry<String, Tree<HomomorphismSymbol>> entry : homMapping) {
+            Tree<HomomorphismSymbol> tree = entry.getValue();
             if (tree.getChildren().isEmpty()) {
                 String ruleName = entry.getKey();
                 String label = tree.getLabel().getValue();

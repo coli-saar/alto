@@ -7,9 +7,9 @@ package de.up.ling.irtg.automata;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.AkSetMultimap;
 import de.saar.basic.Pair;
-import de.saar.basic.StringOrVariable;
 import de.up.ling.irtg.algebra.PtbTreeAlgebra;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,11 +53,11 @@ public class ChartBuilder {
         automaton = auto;
         automaton.processNewRulesForRhs();
         terminalRules = new HashMap<String, Set<String>>();
-        Set<Entry<String, Tree<StringOrVariable>>> homMapping = hom.getMappings().entrySet();
+        Set<Entry<String, Tree<HomomorphismSymbol>>> homMapping = hom.getMappings().entrySet();
         
         // create mapping of terminal symbols and their production rules
-        for (Entry<String, Tree<StringOrVariable>> entry : homMapping) {
-            Tree<StringOrVariable> tree = entry.getValue();
+        for (Entry<String, Tree<HomomorphismSymbol>> entry : homMapping) {
+            Tree<HomomorphismSymbol> tree = entry.getValue();
             if (tree.getChildren().isEmpty()) {
                 String ruleName = entry.getKey();
                 String label = tree.getLabel().getValue();

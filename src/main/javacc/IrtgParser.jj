@@ -22,7 +22,7 @@ import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.*;
 import de.up.ling.irtg.maxent.*;
 import de.up.ling.irtg.algebra.*;
-import de.saar.chorus.term.*;
+//import de.saar.chorus.term.*;
 import de.up.ling.tree.*;
 import de.saar.basic.*;
 import java.lang.reflect.*;
@@ -191,11 +191,11 @@ void Weight() :
 void HomomorphismRule() :
 {
     String interpName = null;
-    Term term = null;
+    Tree<HomomorphismSymbol> term = null;
 }
 {
     "[" interpName=name() "]" term=Term() {
-        Tree<StringOrVariable> rhs = term.toTreeWithVariables();
+        Tree<HomomorphismSymbol> rhs = term; //HomomorphismSymbol.treeFromNames(term.toTree());
         Homomorphism hom = homomorphisms.get(interpName);
 
         if( hom == null ) {
@@ -212,27 +212,27 @@ void HomomorphismRule() :
 
 
 
-Term Term() :
+Tree<HomomorphismSymbol> Term() :
 {
 	String label;
         Token token;
-	List<Term> subterms = new ArrayList<Term>();
-	Term subterm;
+	List<Tree<HomomorphismSymbol>> subterms = new ArrayList<Tree<HomomorphismSymbol>>();
+	Tree<HomomorphismSymbol> subterm;
 }
 {
 	label = name() "("
                (subterm = Term() { subterms.add(subterm); })
                ("," subterm = Term() { subterms.add(subterm); })*
         	 ")" {
-		return new Compound(label, subterms);
+		return Tree.create(HomomorphismSymbol.createConstant(label), subterms);
 	}
 
   | label = name() {
-	  return new Constant(label);
+	  return Tree.create(HomomorphismSymbol.createConstant(label));
   }
 
   | token = <VARIABLE> {
-  	  return new Variable(token.image.intern());
+        return Tree.create(HomomorphismSymbol.createVariable(token.image.intern()));
   }
 }
 

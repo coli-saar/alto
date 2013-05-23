@@ -133,10 +133,12 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
         signature.addAllSymbols(ret);
         return ret;
     }
-
+    
+    /*  ** unused? **
     public Tree<StringOrVariable> parseStringWithVariables(String representation) {
         Tree<StringOrVariable> ret = TermParser.parse(representation).toTreeWithVariables();
-        signature.addAllSymbolsWithoutVariables(ret);
+        signature.addAllConstants(ret);
         return ret;
     }
+    */
 }

@@ -9,6 +9,7 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import java.util.*;
 
@@ -29,13 +30,13 @@ public class SynchronousBinarization<E, F> {
     private Collection<String> leftSignature;
     private Collection<String> rightSignature;
     private Rule grammarRule;
-    private StringOrVariable constantL;
-    private StringOrVariable constantR;
+    private HomomorphismSymbol constantL;
+    private HomomorphismSymbol constantR;
     private ConcreteTreeAutomaton<String> outputAutomaton;
     private Homomorphism leftHomOut;
     private Homomorphism rightHomOut;
 
-    public SynchronousBinarization(StringOrVariable constantL, StringOrVariable constantR) {
+    public SynchronousBinarization(HomomorphismSymbol constantL, HomomorphismSymbol constantR) {
         this.constantL = constantL;
         this.constantR = constantR;
     }
@@ -148,8 +149,8 @@ public class SynchronousBinarization<E, F> {
         for (CItem itemC : cChart) {
             if (leftAuto.getFinalStates().contains(itemC.leftState) && rightAuto.getFinalStates().contains(itemC.rightState)) {
                 List ruleChildren = makeChildrenList(itemC.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable("?1", true));
-                Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable("?1", true)); 
+                Tree<HomomorphismSymbol> leftHomTree = Tree.create(HomomorphismSymbol.createVariable("?1"));
+                Tree<HomomorphismSymbol> rightHomTree = Tree.create(HomomorphismSymbol.createVariable("?1"));
                 outputRule((String)grammarRule.getParent(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -160,11 +161,11 @@ public class SynchronousBinarization<E, F> {
         CItem item = new CItem(leftRule.getParent(),rightRule.getParent());
         addItem(item,cChart);
 
-        int index = Homomorphism.getIndexForVariable(new StringOrVariable(leftRule.getLabel(),true));
+        int index = HomomorphismSymbol.createVariable(leftRule.getLabel()).getIndex();
         List ruleChildren = makeChildrenList(grammarRule.getChildren()[index]);
         
-        Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable("?1", true));
-        Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable("?1", true));    
+        Tree<HomomorphismSymbol> leftHomTree = Tree.create(HomomorphismSymbol.createVariable("?1"));
+        Tree<HomomorphismSymbol> rightHomTree = Tree.create(HomomorphismSymbol.createVariable("?1"));    
         outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
     }
     
@@ -172,8 +173,8 @@ public class SynchronousBinarization<E, F> {
         CItem item = new CItem(leftRule.getParent(),rightRule.getParent());
         addItem(item,cChart);
 
-        Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable(leftRule.getLabel(),false));
-        Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable(rightRule.getLabel(),false));
+        Tree<HomomorphismSymbol> leftHomTree = Tree.create(HomomorphismSymbol.createConstant(leftRule.getLabel()));
+        Tree<HomomorphismSymbol> rightHomTree = Tree.create(HomomorphismSymbol.createConstant(rightRule.getLabel()));
         outputRule(item.getSymbolInRule(), new ArrayList(), leftHomTree, rightHomTree);
     }
     
@@ -181,8 +182,8 @@ public class SynchronousBinarization<E, F> {
         LItem item = new LItem(leftRule.getParent());
         addItem(item,leftChart);
 
-        Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable(leftRule.getLabel(),false));
-        Tree<StringOrVariable> rightHomTree = Tree.create(constantR);
+        Tree<HomomorphismSymbol> leftHomTree = Tree.create(HomomorphismSymbol.createConstant(leftRule.getLabel()));
+        Tree<HomomorphismSymbol> rightHomTree = Tree.create(constantR);
         outputRule(item.getSymbolInRule(), new ArrayList(), leftHomTree, rightHomTree);
     }
     
@@ -190,8 +191,8 @@ public class SynchronousBinarization<E, F> {
         RItem item = new RItem(rightRule.getParent());
         addItem(item,rightChart);
 
-        Tree<StringOrVariable> leftHomTree = Tree.create(constantL);            
-        Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable(rightRule.getLabel(),false));
+        Tree<HomomorphismSymbol> leftHomTree = Tree.create(constantL);            
+        Tree<HomomorphismSymbol> rightHomTree = Tree.create(HomomorphismSymbol.createConstant(rightRule.getLabel()));
         outputRule(item.getSymbolInRule(), new ArrayList(), leftHomTree, rightHomTree);
     }  
     
@@ -203,8 +204,8 @@ public class SynchronousBinarization<E, F> {
                 addItem(item,leftChart);
                 
                 List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = makeHomTree(label);
-                Tree<StringOrVariable> rightHomTree = Tree.create(constantR);
+                Tree<HomomorphismSymbol> leftHomTree = makeHomTree(label);
+                Tree<HomomorphismSymbol> rightHomTree = Tree.create(constantR);
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -217,8 +218,8 @@ public class SynchronousBinarization<E, F> {
                 addItem(item,rightChart);
 
                 List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = Tree.create(constantL);            
-                Tree<StringOrVariable> rightHomTree = makeHomTree(label); 
+                Tree<HomomorphismSymbol> leftHomTree = Tree.create(constantL);            
+                Tree<HomomorphismSymbol> rightHomTree = makeHomTree(label); 
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -232,8 +233,8 @@ public class SynchronousBinarization<E, F> {
                 addItem(item,cChart);
 
                 List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = makeHomTree(label);
-                Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable("?1", true));
+                Tree<HomomorphismSymbol> leftHomTree = makeHomTree(label);
+                Tree<HomomorphismSymbol> rightHomTree = Tree.create(HomomorphismSymbol.createVariable("?1"));
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -246,8 +247,8 @@ public class SynchronousBinarization<E, F> {
                 addItem(item,cChart);
 
                 List ruleChildren = makeChildrenList(oldItem.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable("?1", true));
-                Tree<StringOrVariable> rightHomTree = makeHomTree(label);
+                Tree<HomomorphismSymbol> leftHomTree = Tree.create(HomomorphismSymbol.createVariable("?1"));
+                Tree<HomomorphismSymbol> rightHomTree = makeHomTree(label);
                 outputRule(item.getSymbolInRule(),ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -261,8 +262,8 @@ public class SynchronousBinarization<E, F> {
                 addItem(item,leftChart);
 
                 List ruleChildren = makeChildrenList(item1.getSymbolInRule(),item2.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = makeHomTree(label,false);
-                Tree<StringOrVariable> rightHomTree = Tree.create(constantR);  
+                Tree<HomomorphismSymbol> leftHomTree = makeHomTree(label,false);
+                Tree<HomomorphismSymbol> rightHomTree = Tree.create(constantR);  
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -276,8 +277,8 @@ public class SynchronousBinarization<E, F> {
                 addItem(item,rightChart);
 
                 List ruleChildren = makeChildrenList(item1.getSymbolInRule(),item2.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = Tree.create(constantL);                     
-                Tree<StringOrVariable> rightHomTree = makeHomTree(label,false);
+                Tree<HomomorphismSymbol> leftHomTree = Tree.create(constantL);                     
+                Tree<HomomorphismSymbol> rightHomTree = makeHomTree(label,false);
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -299,8 +300,8 @@ public class SynchronousBinarization<E, F> {
                 addItem(item,cChart);
 
                 List ruleChildren = makeChildrenList(itemC.getSymbolInRule(),itemL.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = makeHomTree(label,reverse);                     
-                Tree<StringOrVariable> rightHomTree = Tree.create(new StringOrVariable("?1", true));
+                Tree<HomomorphismSymbol> leftHomTree = makeHomTree(label,reverse);                     
+                Tree<HomomorphismSymbol> rightHomTree = Tree.create(HomomorphismSymbol.createVariable("?1"));
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -324,8 +325,8 @@ public class SynchronousBinarization<E, F> {
                 addItem(item,cChart);
 
                 List ruleChildren = makeChildrenList(itemC.getSymbolInRule(),itemR.getSymbolInRule());
-                Tree<StringOrVariable> leftHomTree = Tree.create(new StringOrVariable("?1", true));                    
-                Tree<StringOrVariable> rightHomTree = makeHomTree(label,reverse);                     
+                Tree<HomomorphismSymbol> leftHomTree = Tree.create(HomomorphismSymbol.createVariable("?1"));                    
+                Tree<HomomorphismSymbol> rightHomTree = makeHomTree(label,reverse);                     
                 outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
             }
         }
@@ -350,8 +351,8 @@ public class SynchronousBinarization<E, F> {
                         addItem(item, cChart);
                         
                         List ruleChildren = makeChildrenList(item1.getSymbolInRule(), item2.getSymbolInRule());
-                        Tree<StringOrVariable> leftHomTree = makeHomTree(leftLabel,false);                    
-                        Tree<StringOrVariable> rightHomTree = makeHomTree(rightLabel,reverse);                     
+                        Tree<HomomorphismSymbol> leftHomTree = makeHomTree(leftLabel,false);                    
+                        Tree<HomomorphismSymbol> rightHomTree = makeHomTree(rightLabel,reverse);                     
                         outputRule(item.getSymbolInRule(), ruleChildren, leftHomTree, rightHomTree);
                     }
                 }
@@ -393,7 +394,7 @@ public class SynchronousBinarization<E, F> {
         return (i1i2New && i2i1New);
     }
     
-    private void outputRule(String parent, List children, Tree<StringOrVariable> leftHomTree, Tree<StringOrVariable> rightHomTree) {
+    private void outputRule(String parent, List children, Tree<HomomorphismSymbol> leftHomTree, Tree<HomomorphismSymbol> rightHomTree) {
         Rule<String> newRule = new Rule<String>(parent, gensym(), children);
         
         outputAutomaton.addRule(newRule);
@@ -428,15 +429,15 @@ public class SynchronousBinarization<E, F> {
     
     private Tree makeHomTree(String label){     // unary
         StringOrVariable treeLabel = new StringOrVariable(label,false);
-        List children = makeChildrenList(Tree.create(new StringOrVariable("?1", true)));
+        List children = makeChildrenList(Tree.create(HomomorphismSymbol.createVariable("?1")));
         Tree homTree = Tree.create(treeLabel,children);
         return homTree;
     }
     
     private Tree makeHomTree(String label, boolean reverse) { // binary
         StringOrVariable treeLabel = new StringOrVariable(label,false);
-        Tree<StringOrVariable> firstVarTree = Tree.create(new StringOrVariable("?1", true));
-        Tree<StringOrVariable> secondVarTree = Tree.create(new StringOrVariable("?2", true));
+        Tree<HomomorphismSymbol> firstVarTree = Tree.create(HomomorphismSymbol.createVariable("?1"));
+        Tree<HomomorphismSymbol> secondVarTree = Tree.create(HomomorphismSymbol.createVariable("?2"));
         List children = makeChildrenList(firstVarTree,secondVarTree,reverse);
         Tree homTree = Tree.create(treeLabel,children);
         return homTree;        

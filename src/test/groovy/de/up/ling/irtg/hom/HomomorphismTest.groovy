@@ -14,7 +14,6 @@ import de.saar.chorus.term.parser.*
 import de.saar.chorus.term.*
 import de.up.ling.tree.*
 import static de.up.ling.irtg.util.TestingTools.*;
-import de.saar.basic.StringOrVariable
 
 /**
  *
@@ -63,16 +62,16 @@ class HomomorphismTest {
 
     @Test
     public void testIndexForVar() {
-        assert Homomorphism.getIndexForVariable(new StringOrVariable("?1", true)) == 0;
-        assert Homomorphism.getIndexForVariable(new StringOrVariable("?A3", true)) == 2;
-        assert Homomorphism.getIndexForVariable(new StringOrVariable("?HalloHallo100", true)) == 99;
+        assert HomomorphismSymbol.createVariable("?1").getIndex() == 0;
+        assert HomomorphismSymbol.createVariable("?A3").getIndex() == 2;
+        assert HomomorphismSymbol.createVariable("?HalloHallo100").getIndex() == 99;
     }
     
     @Test
     public void testToString() {
         //Homomorphism h = hom(["f":"g(?1)"])
-        assertEquals("g(?1)", Homomorphism.rhsAsString(ptv("g(?1)")));
-        assertEquals("*(?1,?2)", Homomorphism.rhsAsString(ptv("*(?1,?2)")));
+        assertEquals("g(?1)", Homomorphism.rhsAsString(pth("g(?1)")));
+        assertEquals("*(?1,?2)", Homomorphism.rhsAsString(pth("*(?1,?2)")));
         assertEquals("'`'", Homomorphism.rhsAsString(Tree.create("`")));
     }
 

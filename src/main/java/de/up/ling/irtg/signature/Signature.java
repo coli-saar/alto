@@ -4,7 +4,8 @@
  */
 package de.up.ling.irtg.signature;
 
-import de.saar.basic.StringOrVariable;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.hom.HomomorphismSymbols;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.Collection;
@@ -44,11 +45,11 @@ public abstract class Signature {
         }
     }
     
-    public void addAllSymbolsWithoutVariables(Tree<StringOrVariable> tree) {
-        tree.dfs(new TreeVisitor<StringOrVariable, Void, Void>() {
+    public void addAllConstants(Tree<HomomorphismSymbol> tree) {
+        tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Void>() {
             @Override
-            public Void combine(Tree<StringOrVariable> node, List<Void> childrenValues) {
-                if( ! node.getLabel().isVariable() ) {
+            public Void combine(Tree<HomomorphismSymbol> node, List<Void> childrenValues) {
+                if( node.getLabel().isConstant() ) {
                     addSymbol(node.getLabel().toString(), childrenValues.size());
                 }
                 

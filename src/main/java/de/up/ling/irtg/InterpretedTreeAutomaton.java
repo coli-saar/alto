@@ -20,6 +20,7 @@ import de.up.ling.irtg.binarization.RegularBinarizer;
 import de.up.ling.irtg.binarization.StringAlgebraBinarizer;
 import de.up.ling.irtg.binarization.SynchronousBinarization;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -488,8 +489,8 @@ public class InterpretedTreeAutomaton {
         RegularBinarizer bin2 = binarizers.get(interpName2);
 
         // select a constant as dummy symbol from both algebras 
-        StringOrVariable constantL = getConstantFromAlgebra(interp1.getHomomorphism());
-        StringOrVariable constantR = getConstantFromAlgebra(interp2.getHomomorphism());
+        HomomorphismSymbol constantL = getConstantFromAlgebra(interp1.getHomomorphism());
+        HomomorphismSymbol constantR = getConstantFromAlgebra(interp2.getHomomorphism());
 
         SynchronousBinarization sb = new SynchronousBinarization(constantL, constantR);
         ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
@@ -511,11 +512,11 @@ public class InterpretedTreeAutomaton {
         return ret;
     }
 
-    private StringOrVariable getConstantFromAlgebra(Homomorphism hom) {
+    private HomomorphismSymbol getConstantFromAlgebra(Homomorphism hom) {
         for (String label : hom.getDomain()) {
-            StringOrVariable constant = hom.get(label).dfs(new TreeVisitor<StringOrVariable, Void, StringOrVariable>() {
+            HomomorphismSymbol constant = hom.get(label).dfs(new TreeVisitor<HomomorphismSymbol, Void, HomomorphismSymbol>() {
                 @Override
-                public StringOrVariable combine(Tree<StringOrVariable> node, List<StringOrVariable> childrenValues) {
+                public HomomorphismSymbol combine(Tree<HomomorphismSymbol> node, List<HomomorphismSymbol> childrenValues) {
                     if (node.getChildren().isEmpty() && !node.getLabel().isVariable()) {
                         return node.getLabel();
                     }
@@ -576,7 +577,7 @@ public class InterpretedTreeAutomaton {
             String ruleLabel = rule.getLabel();
 
             if (rule.getArity() > 2) {
-                Tree<StringOrVariable> hRule = homomorphism.get(ruleLabel);
+                Tree<HomomorphismSymbol> hRule = homomorphism.get(ruleLabel);
                 String parent = rule.getParent();
                 String label = makeBinaryLabel(ruleLabel + "-b", 0, true);
 
@@ -601,15 +602,15 @@ public class InterpretedTreeAutomaton {
         return ret;
     }
 
-    private void binarizeRule(Homomorphism newHomomorphism, Set<Rule<String>> newRules, Tree<StringOrVariable> oldHomomorphismSubtree, String parentNT, String label, Rule rule) {
+    private void binarizeRule(Homomorphism newHomomorphism, Set<Rule<String>> newRules, Tree<HomomorphismSymbol> oldHomomorphismSubtree, String parentNT, String label, Rule rule) {
         List<String> childStatesInNewRule = new ArrayList<String>();
         int varCounter = 0;
-        List<Tree<StringOrVariable>> childrenInOldHom = oldHomomorphismSubtree.getChildren();
-        List<Tree<StringOrVariable>> childrenInNewHom = new ArrayList<Tree<StringOrVariable>>();
+        List<Tree<HomomorphismSymbol>> childrenInOldHom = oldHomomorphismSubtree.getChildren();
+        List<Tree<HomomorphismSymbol>> childrenInNewHom = new ArrayList<Tree<HomomorphismSymbol>>();
 
         for (int pos = 0; pos < childrenInOldHom.size(); pos++) {
-            Tree<StringOrVariable> arg = childrenInOldHom.get(pos);
-            StringOrVariable argLabel = arg.getLabel();
+            Tree<HomomorphismSymbol> arg = childrenInOldHom.get(pos);
+            HomomorphismSymbol argLabel = arg.getLabel();
 
             if (argLabel.isVariable()) {
                 int index = Homomorphism.getIndexForVariable(argLabel);
@@ -617,7 +618,7 @@ public class InterpretedTreeAutomaton {
                 childStatesInNewRule.add(nonterminal);
 
                 varCounter++;
-                StringOrVariable var = new StringOrVariable("?" + varCounter, true);
+                HomomorphismSymbol var = HomomorphismSymbol.createVariable("?" + varCounter);
                 childrenInNewHom.add(Tree.create(var));
             } else if (arg.getChildren().isEmpty()) {           // leaf
                 childrenInNewHom.add(Tree.create(argLabel));
@@ -627,7 +628,7 @@ public class InterpretedTreeAutomaton {
                 childStatesInNewRule.add(newNonterminal);
 
                 varCounter++;
-                StringOrVariable var = new StringOrVariable("?" + varCounter, true);
+                HomomorphismSymbol var = HomomorphismSymbol.createVariable("?" + varCounter);
                 childrenInNewHom.add(Tree.create(var));
 
                 binarizeRule(newHomomorphism, newRules, arg, newNonterminal, newTerminal, rule);
@@ -635,7 +636,7 @@ public class InterpretedTreeAutomaton {
         }
 
 
-        Tree<StringOrVariable> hForRule = Tree.create(oldHomomorphismSubtree.getLabel(), childrenInNewHom);
+        Tree<HomomorphismSymbol> hForRule = Tree.create(oldHomomorphismSubtree.getLabel(), childrenInNewHom);
         Rule<String> binRule = new Rule(parentNT, label, childStatesInNewRule);
         newRules.add(binRule);
         newHomomorphism.add(label, hForRule);
@@ -675,7 +676,7 @@ public class InterpretedTreeAutomaton {
 
             for (String interp : interpretationOrder) {
                 Homomorphism hom = interpretations.get(interp).getHomomorphism();
-                Tree<StringOrVariable> rhs = hom.get(rule.getLabel());
+                Tree<HomomorphismSymbol> rhs = hom.get(rule.getLabel());
                 pw.println("  [" + interp + "] " + Homomorphism.rhsAsString(rhs));
             }
 

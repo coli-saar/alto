@@ -6,8 +6,8 @@ package de.up.ling.irtg.automata;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
-import de.saar.basic.StringOrVariable;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.HashSet;
@@ -43,7 +43,7 @@ class HomAutomaton extends TreeAutomaton<String> {
             final Set<String> labels = new HashSet<String>();
 
             for (final Rule<Object> rule : baseRuleSet) {
-                final Tree<StringOrVariable> homImage = hom.get(rule.getLabel());
+                final Tree<HomomorphismSymbol> homImage = hom.get(rule.getLabel());
 
                 if (homImage.getLabel().isVariable()) {
                     // special case for homomorphisms of the form ?1 or ?2 etc.: store chain rule
@@ -53,10 +53,10 @@ class HomAutomaton extends TreeAutomaton<String> {
                 } else {
                     // otherwise, iterate over homomorphic image of rule label and
                     // introduce rules as we go along
-                    homImage.dfs(new TreeVisitor<StringOrVariable, Void, String>() {
+                    homImage.dfs(new TreeVisitor<HomomorphismSymbol, Void, String>() {
                         @Override
-                        public String combine(Tree<StringOrVariable> node, List<String> childrenValues) {
-                            StringOrVariable label = node.getLabel();
+                        public String combine(Tree<HomomorphismSymbol> node, List<String> childrenValues) {
+                            HomomorphismSymbol label = node.getLabel();
 
                             if (label.isVariable()) {
                                 return rule.getChildren()[Homomorphism.getIndexForVariable(label)].toString();
