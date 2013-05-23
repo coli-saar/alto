@@ -118,40 +118,6 @@ public class Homomorphism {
         return prefix + knownGensyms.get(gensymKey);
     }
 
-    private static boolean isDigit(char character) {
-        return (character >= '0') && (character <= '9');
-    }
-
-    public static int getIndexForVariable(HomomorphismSymbol varname) {
-        int indexStartPos = 0;
-        String val = varname.getValue();
-        int ret = 0;
-        boolean foundIndex = false;
-
-        while (indexStartPos < val.length() && !isDigit(val.charAt(indexStartPos))) {
-            indexStartPos++;
-        }
-
-        while (indexStartPos < val.length()) {
-            char c = val.charAt(indexStartPos++);
-
-            if (isDigit(c)) {
-                foundIndex = true;
-                ret = 10 * ret + (c - '0');
-            }
-        }
-
-        if (foundIndex) {
-//            return Integer.parseInt(varname.getValue().substring(indexStartPos)) - 1;
-//            System.err.println(val + " -> " + ret);
-            return ret - 1;
-        } else {
-            return -1;
-        }
-
-
-    }
-
     public Set<String> getDomain() {
         return mappings.keySet();
     }

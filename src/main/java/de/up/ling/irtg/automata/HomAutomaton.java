@@ -48,7 +48,7 @@ class HomAutomaton extends TreeAutomaton<String> {
                 if (homImage.getLabel().isVariable()) {
                     // special case for homomorphisms of the form ?1 or ?2 etc.: store chain rule
 
-                    int childPosition = Homomorphism.getIndexForVariable(homImage.getLabel());
+                    int childPosition = homImage.getLabel().getIndex();
                     chainRules.put(rule.getChildren()[childPosition], rule.getParent());
                 } else {
                     // otherwise, iterate over homomorphic image of rule label and
@@ -59,7 +59,7 @@ class HomAutomaton extends TreeAutomaton<String> {
                             HomomorphismSymbol label = node.getLabel();
 
                             if (label.isVariable()) {
-                                return rule.getChildren()[Homomorphism.getIndexForVariable(label)].toString();
+                                return rule.getChildren()[label.getIndex()].toString();
                             } else {
                                 String parentState = null;
                                 double weight = 0;

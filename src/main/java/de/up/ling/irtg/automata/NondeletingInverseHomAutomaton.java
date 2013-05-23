@@ -54,7 +54,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
                 @Override
                 public State apply(Tree<HomomorphismSymbol> f) {
                     if (f.getLabel().isVariable()) {
-                        String child = childStates.get(Homomorphism.getIndexForVariable(f.getLabel()));
+                        String child = childStates.get(f.getLabel().getIndex());
                         return rhsState.get(child);
                     } else {
                         return null;

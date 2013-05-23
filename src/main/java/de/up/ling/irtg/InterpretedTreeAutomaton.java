@@ -613,7 +613,7 @@ public class InterpretedTreeAutomaton {
             HomomorphismSymbol argLabel = arg.getLabel();
 
             if (argLabel.isVariable()) {
-                int index = Homomorphism.getIndexForVariable(argLabel);
+                int index = argLabel.getIndex();
                 String nonterminal = (String) rule.getChildren()[index];
                 childStatesInNewRule.add(nonterminal);
 
