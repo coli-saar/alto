@@ -18,6 +18,7 @@ import java.io.OutputStream;
  *
  * @author koller
  */
+@Deprecated
 public class AnnotatedCorpusParser {
     public static void main(String[] args) throws FileNotFoundException, ParseException, IOException {
         String printThisInterpretation = (args.length > 3) ? args[3] : null;        

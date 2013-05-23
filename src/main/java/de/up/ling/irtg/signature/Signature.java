@@ -38,12 +38,6 @@ public abstract class Signature {
         });
     }
     
-    public void addAllSymbols(List<String> words) {
-        for( String word : words ) {
-            addSymbol(word, 0);
-        }
-    }
-    
     public void addAllConstants(Tree<HomomorphismSymbol> tree) {
         tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Void>() {
             @Override

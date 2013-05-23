@@ -10,7 +10,6 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
-import de.saar.basic.StringOrVariable;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
@@ -454,6 +453,7 @@ public class InterpretedTreeAutomaton {
      * 
      * @param corpus 
      */
+    /*
     public void normalizeStates(ChartCorpus corpus) {
         for( TreeAutomaton chart : corpus ) {
             Set<Rule> rules = chart.getRuleSet();
@@ -475,6 +475,8 @@ public class InterpretedTreeAutomaton {
         }
     }
 
+*/
+    
     public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
         List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
         if (orderedInterpretationList.size() != 2) {
