@@ -7,6 +7,8 @@ package de.up.ling.irtg.maxent
 
 
 import org.junit.Test
+import org.junit.BeforeClass
+import java.util.logging.Level
 import java.util.*
 import java.io.*
 import de.up.ling.irtg.automata.*
@@ -25,10 +27,17 @@ import de.up.ling.irtg.corpus.*
  * @author Danilo Baumgarten
  */
 class MaximumEntropyIrtgTest {
+    @BeforeClass
+    public static void setup() {
+        MaximumEntropyIrtg.setLoggingLevel(Level.OFF);
+    }
+    
+    
     @Test
     public void testMaxentIrtgParsing() {
         InterpretedTreeAutomaton irtg = iparse(CFG_STR);
         assert irtg instanceof MaximumEntropyIrtg;
+        
         assertEquals( new ArrayList(["f1","f2"]), irtg.getFeatureNames());
 
         irtg.readWeights(new StringReader(WEIGHTS_STR));

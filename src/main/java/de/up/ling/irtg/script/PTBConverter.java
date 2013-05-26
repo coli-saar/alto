@@ -1,6 +1,7 @@
 
 package de.up.ling.irtg.script;
 
+import com.google.common.collect.Iterables;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.corpus.AnnotatedCorpus;
 import de.up.ling.irtg.Interpretation;
@@ -96,7 +97,7 @@ public class PTBConverter {
         } else {
             log.info("Processing PTB trees...");
             lc.process();
-            log.log(Level.INFO, "Processed sentences: {0}", String.valueOf(lc.corpus.getInstances().size()));
+            log.log(Level.INFO, "Processed sentences: {0}", String.valueOf(lc.corpus.getNumberOfInstances()));
 
             log.info("Writing corpus...");
             lc.writeCorpus(new FileWriter(corpusFilename), sortByInterpretation);
@@ -245,7 +246,7 @@ public class PTBConverter {
             inputObjectsMap.put("i", sentence);
 
             // add the instance to the corpus
-            corpus.getInstances().add(new AnnotatedCorpus.Instance(ptbTree, inputObjectsMap));
+//            corpus.getInstances().add(new AnnotatedCorpus.Instance(ptbTree, inputObjectsMap)); //// XXXXX TODO XXXXX
         }
     }
 
@@ -285,7 +286,7 @@ public class PTBConverter {
             inputObjectsMap.put("ptb", ptbObjects);
 
             // add the instance to the corpus
-            corpus.getInstances().add(new AnnotatedCorpus.Instance(irtgTree, inputObjectsMap));
+//            corpus.getInstances().add(new AnnotatedCorpus.Instance(irtgTree, inputObjectsMap));  /// XXXXXX TODO XXXXXXX
         }
 
     }
@@ -587,7 +588,11 @@ public class PTBConverter {
      */
     public void writeCorpus(final Writer writer, final String sortByInterpretation) throws IOException {
         String nl = System.getProperty("line.separator");
-        List<Instance> instances = corpus.getInstances();
+        
+        // this copying is annoying, but probably unavoidable given the sorting by interpretation.
+        // but this code should be moved into AnnotatedCorpus anyway. TODO
+        List<Instance> instances = new ArrayList<Instance>();
+        Iterables.addAll(instances, corpus.getInstances());
 
         if (instances.isEmpty()) {
             // if the corpus is empty we have nothing to do
@@ -595,7 +600,7 @@ public class PTBConverter {
             return;
         }
 
-        Set<String> interpretations = instances.get(0).inputObjects.keySet();
+        Set<String> interpretations = instances.get(0).getInputObjects().keySet();
 
         // write the indices for all interpretations
         for (String interp : interpretations) {
@@ -606,7 +611,7 @@ public class PTBConverter {
         if (sortByInterpretation != null) {
             Collections.sort(instances, new Comparator<Instance>() {
                 public int compare(Instance t, Instance t1) {
-                    return t.inputObjects.get(sortByInterpretation).toString().length() - t1.inputObjects.get(sortByInterpretation).toString().length();
+                    return t.getInputObjects().get(sortByInterpretation).toString().length() - t1.getInputObjects().get(sortByInterpretation).toString().length();
                 }
             });
         }
@@ -615,12 +620,12 @@ public class PTBConverter {
         for (AnnotatedCorpus.Instance instance : instances) {
             // for every instance write their interpretations
             for (String interp : interpretations) {
-                String interpretation = StringTools.join((List<String>) instance.inputObjects.get(interp), " ");
+                String interpretation = StringTools.join((List<String>) instance.getInputObjects().get(interp), " ");
                 writer.write(interpretation + nl);
             }
 
             // and their tree
-            writer.write(instance.tree.toString() + nl);
+            writer.write(instance.getTree().toString() + nl);
         }
 
         writer.close();

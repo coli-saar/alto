@@ -4,45 +4,43 @@
  */
 package de.up.ling.irtg.corpus;
 
-import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.AnnotatedCorpus.Instance;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author koller
  */
-public class AnnotatedCorpus implements Iterable<Instance> {
-
-    private static final String MARKER = "IrtgAnnotatedCorpusWithCharts";
+public class AnnotatedCorpus  { //implements Iterable<Instance>
+//    private static final String MARKER = "IrtgAnnotatedCorpusWithCharts";
 
     public static class Instance {
-
-        public Tree<String> tree;
-        public Map<String, Object> inputObjects;
+        private Tree<String> tree;
+        private Map<String, Object> inputObjects;
 
         public Instance(Tree<String> tree, Map<String, Object> inputObjects) {
             this.tree = tree;
             this.inputObjects = inputObjects;
+        }
+
+        public Tree<String> getTree() {
+            return tree;
+        }
+
+        public Map<String, Object> getInputObjects() {
+            return inputObjects;
         }
 
         @Override
@@ -55,8 +53,12 @@ public class AnnotatedCorpus implements Iterable<Instance> {
     public AnnotatedCorpus() {
         instances = new ArrayList<AnnotatedCorpus.Instance>();
     }
+    
+    public int getNumberOfInstances() {
+        return instances.size();
+    }
 
-    public List<Instance> getInstances() {
+    public Iterable<Instance> getInstances() {
         return instances;
     }
 
@@ -109,6 +111,7 @@ public class AnnotatedCorpus implements Iterable<Instance> {
         }
     }
 
+    /*
     public static void parseAnnotatedCorpusWithCharts(Reader reader, final InterpretedTreeAutomaton irtg, OutputStream ostream, final String relevantInputInterpretation) throws IOException {
         AnnotatedCorpus ann = readAnnotatedCorpus(reader, irtg);
         final CorpusCreator creator = new CorpusCreator(MARKER, ostream);
@@ -166,6 +169,7 @@ public class AnnotatedCorpus implements Iterable<Instance> {
 
         creator.finished();
     }
+    */
 
     @Override
     public String toString() {

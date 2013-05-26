@@ -193,7 +193,7 @@ public class InterpretedTreeAutomaton {
 
         // compute absolute frequencies on annotated corpus
         for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
-            instance.tree.dfs(new TreeVisitor<String, Void, Void>() {
+            instance.getTree().dfs(new TreeVisitor<String, Void, Void>() {
                 @Override
                 public Void visit(Tree<String> node, Void data) {
                     Rule<String> rule = ruleForTerminal.get(node.getLabel());

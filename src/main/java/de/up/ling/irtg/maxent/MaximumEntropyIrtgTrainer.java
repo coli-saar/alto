@@ -11,6 +11,8 @@ import de.up.ling.irtg.corpus.AnnotatedCorpus;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg.NoFeaturesException;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg.NoRepresentationException;
 import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -41,6 +43,7 @@ public class MaximumEntropyIrtgTrainer {
         String prefix = (args.length > 0) ? args[0] : "ptb-test";
         boolean readCharts = (args.length > 1) ? (args[1].equals("readcharts")) : READ_CHARTS;
         boolean writeCharts = (args.length > 2) ? (args[2].equals("writecharts")) : WRITE_CHARTS;
+        List<TreeAutomaton> cachedCharts = new ArrayList<TreeAutomaton>();
 
         log.log(Level.INFO, "Reading grammar...");
         MaximumEntropyIrtg maxEntIrtg = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
@@ -63,10 +66,10 @@ public class MaximumEntropyIrtgTrainer {
         
         if (readCharts) {
             log.info("Reading charts...");
-            maxEntIrtg.readCharts(new FileInputStream(prefix + "-training.charts"));
+            readCharts(cachedCharts, new FileInputStream(prefix + "-training.charts"));
         }
         
-        trainer.train(anCo);
+        trainer.train(anCo, cachedCharts);
 
         log.info("Writing feature weights...");
         try {
@@ -78,7 +81,7 @@ public class MaximumEntropyIrtgTrainer {
         
         if (writeCharts) {
             log.info("Writing charts...");
-            maxEntIrtg.writeCharts(new FileOutputStream(prefix + "-training.charts"));
+            writeCharts(cachedCharts, new FileOutputStream(prefix + "-training.charts"));
         }
     }
     
@@ -103,14 +106,18 @@ public class MaximumEntropyIrtgTrainer {
         maxEntIrtg.prepare(useIrtgParser, precomputeFI);
     }
     
+    public void train(AnnotatedCorpus corpus) {
+        train(corpus, null);
+    }
+    
     /**
      * Trains the weights for the rules according to the training data
      *
      * @param corpus the training data containing sentences and their parse tree
      */
-    public void train(final AnnotatedCorpus corpus) {
+    public void train(final AnnotatedCorpus corpus, List<TreeAutomaton> cachedCharts) {
         // create the optimzer with own optimizable class
-        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus));
+        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, cachedCharts));
         
         // start optimization
         try {
@@ -134,11 +141,11 @@ public class MaximumEntropyIrtgTrainer {
      * for training so this class implements a mallet interface
      */
     private class MaxEntIrtgOptimizable implements Optimizable.ByGradientValue {
-
         private boolean cachedStale = true;
         private double cachedValue;
         private double[] cachedGradient;
         private AnnotatedCorpus trainingData;
+        private List<TreeAutomaton> cachedCharts;
 
         /**
          * Constructor
@@ -147,10 +154,11 @@ public class MaximumEntropyIrtgTrainer {
          * @param interp the training data may contain multiple interpretations.
          * This parameter tells us which one to use
          */
-        public MaxEntIrtgOptimizable(final AnnotatedCorpus corpus) {
+        public MaxEntIrtgOptimizable(final AnnotatedCorpus corpus, List<TreeAutomaton> cachedCharts) {
             cachedStale = true;
             trainingData = corpus;
             cachedGradient = new double[maxEntIrtg.getNumFeatures()];
+            this.cachedCharts = cachedCharts;
         }
 
         /**
@@ -182,23 +190,23 @@ public class MaximumEntropyIrtgTrainer {
              */
             if (cachedStale) {
                 // recompute
-                log.info("(Re)compute log-likelihood and gradient...");
-                int n = trainingData.getInstances().size();
+//                log.info("(Re)compute log-likelihood and gradient...");
+                int n = trainingData.getNumberOfInstances();
                 double sum1 = 0.0; // sum_x,y(sum_i(lambda_i*f_i(x,y))
                 double sum2 = 0.0; // sum_x(log(sum_y(e^(sum_i(lambda_i*f_i(x,y))))))
                 double[] fiY = new double[cachedGradient.length]; // sum_x,y(f_i(x,y))
                 double[] expectation = new double[cachedGradient.length]; // sum_x,y(E(f_i|S))
                 int faultyCharts = 0;
-
-                for (int j = 0; j < n; j++) {
-                    AnnotatedCorpus.Instance instance = trainingData.getInstances().get(j);
+                int j = 0;
+                
+                for( AnnotatedCorpus.Instance instance : trainingData.getInstances() ) {
                     TreeAutomaton chart = null;
                     
                     // get the chart for the instance; use cache if possible or compute one
-                    if (maxEntIrtg.getNumCachedCharts() > j) {
-                        chart = maxEntIrtg.getCachedChart(j, true);
+                    if (cachedCharts != null && j < cachedCharts.size() ) {
+                        chart = cachedCharts.get(j);
                     } else {
-                        chart = maxEntIrtg.parse(instance.inputObjects, true);
+                        chart = maxEntIrtg.parse(instance.getInputObjects(), true);
                     }
                     // if the chart could not be computed track it and continue with the next instance
                     if (chart == null) {
@@ -219,7 +227,7 @@ public class MaximumEntropyIrtgTrainer {
 
                     // compute parts of the log-likelihood
                     // L(Lambda) = sum1/n - sum2/n
-                    sum1 += Math.log(chart.getWeight(instance.tree));
+                    sum1 += Math.log(chart.getWeight(instance.getTree()));
                     sum2 += Math.log(insideS);
 
                     //compute parts of the gradient
@@ -252,7 +260,9 @@ public class MaximumEntropyIrtgTrainer {
                     
                     // compute f_i(x,y)
 //                    log.info("Compute f_i for the tree of the training instance...");
-                    maxEntIrtg.getFiFor(instance.tree, fiY);
+                    maxEntIrtg.getFiFor(instance.getTree(), fiY);
+                    
+                    j++;
                 }
 
                 // L(Lambda) = sum1/n - sum2/n
@@ -361,5 +371,65 @@ public class MaximumEntropyIrtgTrainer {
             }
             cachedStale = true;
         }
+    }
+    
+    /**
+     * Reads a chart from a stream, e.g., string or file
+     *
+     * @param in the input stream
+     * @return TreeAutomaton the read chart
+     * @throws IOException if an error occurs on reading the stream
+     */
+    private static TreeAutomaton readChart(ObjectInputStream in) throws IOException {
+        try {
+            return (TreeAutomaton) in.readObject();
+        } catch (ClassNotFoundException ex) {
+            System.err.println(ex);
+            return null;
+        } catch (EOFException ex) {
+            return null;
+        }
+    }
+
+    /**
+     * Reads all charts from a file stream and caches them
+     *
+     * @param in the input stream
+     * @throws IOException if an error occurs on reading the stream
+     */
+    public static void readCharts(List<TreeAutomaton> cachedCharts, FileInputStream fstream) throws IOException {
+        ObjectInputStream in = new ObjectInputStream(fstream);
+
+        // read the first chart
+        TreeAutomaton chart = readChart(in);
+
+        // as long as there can a chart be read cache it and try to read the next one
+        while (chart != null) {
+            cachedCharts.add(chart);
+            chart = readChart(in);
+        }
+
+        // finish stream handles
+        in.close();
+        fstream.close();
+    }
+
+    /**
+     * Writes the cached charts into a file stream
+     *
+     * @param fstream the output stream
+     * @throws IOException if an error occurs on writing into the stream
+     */
+    public static void writeCharts(List<TreeAutomaton> cachedCharts, FileOutputStream fstream) throws IOException {
+        ObjectOutputStream out = new ObjectOutputStream(fstream);
+
+        // write every chart into the stream
+        for (TreeAutomaton chart : cachedCharts) {
+            out.writeObject(chart);
+        }
+
+        // finish stream handles
+        out.close();
+        fstream.close();
     }
 }
