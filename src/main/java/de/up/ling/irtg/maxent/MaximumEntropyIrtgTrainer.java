@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * 
  * @author Danilo Baumgarten
  */
 public class MaximumEntropyIrtgTrainer {
@@ -24,6 +24,8 @@ public class MaximumEntropyIrtgTrainer {
     private static final boolean READ_CHARTS = false;
     private static final boolean WRITE_CHARTS = false;
     private MaximumEntropyIrtg maxEntIrtg;
+    
+    // Note that chart caching is disabled while chart loading is still broken.
 
     /**
      * Reads a grammar and a corpus and tries to optimize the feature weights
@@ -46,7 +48,7 @@ public class MaximumEntropyIrtgTrainer {
 
         // init trainer - the first bool is for using the parser of InterpretedTreeAutomaton
         // the second one is for pre-computing all f_i
-        MaximumEntropyIrtgTrainer trainer = new MaximumEntropyIrtgTrainer(maxEntIrtg, false, false);
+        MaximumEntropyIrtgTrainer trainer = new MaximumEntropyIrtgTrainer(maxEntIrtg);
 
         log.info("Reading corpus...");
         AnnotatedCorpus anCo = maxEntIrtg.readAnnotatedCorpus(new FileReader(prefix + "-corpus-training.txt"));
@@ -80,25 +82,19 @@ public class MaximumEntropyIrtgTrainer {
      * @throws NoFeaturesException if the MaximumEntropyIrtg doesn't contain
      * features
      */
-    public MaximumEntropyIrtgTrainer(final MaximumEntropyIrtg maxEntIrtg, final boolean useIrtgParser, final boolean precomputeFI) {
+    public MaximumEntropyIrtgTrainer(final MaximumEntropyIrtg maxEntIrtg) {
         this.maxEntIrtg = maxEntIrtg;
-
-        // start pre-computing (if wanted) and the autodetection of appropriate algebras
-//        maxEntIrtg.prepare(useIrtgParser, precomputeFI);
         maxEntIrtg.precomputeFeatureValues();
     }
 
-    /*
-     public void train(AnnotatedCorpus corpus) {
-     train(corpus, null);
-     }
-     */
+    
     /**
-     * Trains the weights for the rules according to the training data
+     * Trains the weights for the rules according to the training data.
      *
      * @param corpus the training data containing sentences and their parse tree
+     * @return true iff L-BFGS optimization was successful
      */
-    public void train(final AnnotatedCorpus corpus, List<TreeAutomaton> cachedCharts) {
+    public boolean train(final AnnotatedCorpus corpus, List<TreeAutomaton> cachedCharts) {
         // create the optimzer with own optimizable class
         LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, cachedCharts));
 
@@ -117,6 +113,8 @@ public class MaximumEntropyIrtgTrainer {
         } else {
             log.info("Optimization was unsuccessful.");
         }
+        
+        return bfgs.isConverged();
     }
 
     /**
@@ -202,10 +200,10 @@ public class MaximumEntropyIrtgTrainer {
                     }
 
                     // compute inside & outside for the states of the parse chart
-//                    log.log(Level.INFO, "Compute inside & outside");
                     Map<Object, Double> inside = chart.inside();
                     Map<Object, Double> outside = chart.outside(inside);
                     double insideS = 0.0;
+                    
                     // compute inside(S) : the inside value of the starting states
                     Set finalStates = chart.getFinalStates();
                     for (Object start : finalStates) {
@@ -217,8 +215,7 @@ public class MaximumEntropyIrtgTrainer {
                     sum1 += Math.log(chart.getWeight(instance.getTree()));
                     sum2 += Math.log(insideS);
 
-                    //compute parts of the gradient
-//                    log.info("Compute expectations for gradient...");
+                    // compute parts of the gradient
                     Set<Rule> ruleSet = (Set<Rule>) chart.getRuleSet();
                     for (Rule r : ruleSet) {
                         double expect_r; // E(r)
@@ -239,6 +236,7 @@ public class MaximumEntropyIrtgTrainer {
                         } else {
                             expect_r = 0.0;
                         }
+                        
                         double[] fi = maxEntIrtg.getFeatureValue(r.getLabel());
                         for (int i = 0; i < fi.length; i++) {
                             expectation[i] += fi[i] * expect_r; // (...)*f_i(r)
@@ -246,7 +244,6 @@ public class MaximumEntropyIrtgTrainer {
                     }
 
                     // compute f_i(x,y)
-//                    log.info("Compute f_i for the tree of the training instance...");
                     maxEntIrtg.getFiFor(instance.getTree(), fiY);
 
                     j++;
@@ -261,7 +258,6 @@ public class MaximumEntropyIrtgTrainer {
                 }
 
                 cachedStale = false;
-//                log.log(Level.INFO, "log-likelihood: {0}", cachedValue);
 
                 if (faultyCharts > 0) {
                     log.log(Level.WARNING, "Skipped {0} instances. No suitable chart found.", faultyCharts);
@@ -282,12 +278,14 @@ public class MaximumEntropyIrtgTrainer {
             if (cachedStale) {
                 getValue();
             }
+            
             assert (gradient != null && gradient.length == cachedGradient.length);
+            
             System.arraycopy(cachedGradient, 0, gradient, 0, cachedGradient.length);
         }
 
         /*
-         * Simba the number of feature weights
+         * Returns the number of parameters.
          * 
          * @return int the number of feature weights
          */
