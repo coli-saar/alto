@@ -29,16 +29,16 @@ class MaximumEntropyIrtgTrainerTest {
     public void testMaxEntTraining() {
         InterpretedTreeAutomaton irtg = iparse(CFG_STR);
         assert irtg instanceof MaximumEntropyIrtg;
-        irtg.prepare(false, true);
+//        irtg.prepare(false, true);
         MaximumEntropyIrtgTrainer trainer = new MaximumEntropyIrtgTrainer(irtg, false, true);
 
         AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN1_STR), irtg);
-        trainer.train(anCo);
+        trainer.train(anCo, null);
         double[] fWeights = irtg.getFeatureWeights();
         assert (fWeights[0] > fWeights[1]), "weights are not optimized";
 
         anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN2_STR), irtg);
-        trainer.train(anCo);
+        trainer.train(anCo, null);
         fWeights = irtg.getFeatureWeights();
         assert (fWeights[0] < fWeights[1]), "weights are not optimized";
     }

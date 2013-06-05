@@ -1,4 +1,3 @@
-
 package de.up.ling.irtg.maxent;
 
 import cc.mallet.optimize.LimitedMemoryBFGS;
@@ -8,8 +7,6 @@ import de.up.ling.irtg.ParseException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.AnnotatedCorpus;
-import de.up.ling.irtg.maxent.MaximumEntropyIrtg.NoFeaturesException;
-import de.up.ling.irtg.maxent.MaximumEntropyIrtg.NoRepresentationException;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,19 +20,18 @@ import java.util.logging.Logger;
  * @author Danilo Baumgarten
  */
 public class MaximumEntropyIrtgTrainer {
-
-    private static final Logger log = Logger.getLogger( MaximumEntropyIrtgTrainer.class.getName() );
+    private static final Logger log = Logger.getLogger(MaximumEntropyIrtgTrainer.class.getName());
     private static final boolean READ_CHARTS = false;
     private static final boolean WRITE_CHARTS = false;
-
     private MaximumEntropyIrtg maxEntIrtg;
 
     /**
      * Reads a grammar and a corpus and tries to optimize the feature weights
-     * Optionally reads and/or writes the charts of corpus entries
-     * from/to file to save time
-     * 
-     * @param args an array of string containing the optional arguments from the call
+     * Optionally reads and/or writes the charts of corpus entries from/to file
+     * to save time
+     *
+     * @param args an array of string containing the optional arguments from the
+     * call
      * @throws IOException if an error occurs on accessing the files
      * @throws ParseException if parsing the grammar fails
      */
@@ -47,69 +43,56 @@ public class MaximumEntropyIrtgTrainer {
 
         log.log(Level.INFO, "Reading grammar...");
         MaximumEntropyIrtg maxEntIrtg = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
-        
+
         // init trainer - the first bool is for using the parser of InterpretedTreeAutomaton
         // the second one is for pre-computing all f_i
-        MaximumEntropyIrtgTrainer trainer;
-        try {
-            trainer = new MaximumEntropyIrtgTrainer(maxEntIrtg, false, false);
-        } catch (NoRepresentationException ex) {
-            log.log(Level.SEVERE, null, ex);
-            return;
-        } catch (NoFeaturesException ex) {
-            log.log(Level.SEVERE, null, ex);
-            return;
-        }
-        
+        MaximumEntropyIrtgTrainer trainer = new MaximumEntropyIrtgTrainer(maxEntIrtg, false, false);
+
         log.info("Reading corpus...");
         AnnotatedCorpus anCo = maxEntIrtg.readAnnotatedCorpus(new FileReader(prefix + "-corpus-training.txt"));
-        
+
         if (readCharts) {
             log.info("Reading charts...");
             readCharts(cachedCharts, new FileInputStream(prefix + "-training.charts"));
         }
-        
+
         trainer.train(anCo, cachedCharts);
 
         log.info("Writing feature weights...");
-        try {
-            maxEntIrtg.writeWeights(new FileWriter(prefix + "-weights.props"));
-        } catch (NoFeaturesException ex) {
-            log.log(Level.SEVERE, null, ex);
-            return;
-        }
-        
+        maxEntIrtg.writeWeights(new FileWriter(prefix + "-weights.props"));
+
         if (writeCharts) {
             log.info("Writing charts...");
             writeCharts(cachedCharts, new FileOutputStream(prefix + "-training.charts"));
         }
     }
-    
+
     /**
-     * Constructor
-     * Calls prepare() one the given MaximumEntropyIrtg with passed-on parameters
-     * 
+     * Constructor Calls prepare() one the given MaximumEntropyIrtg with
+     * passed-on parameters
+     *
      * @param maxEntIrtg the MaximumEntropyIrtg to train
      * @param useIrtgParser a flag whether to use the parser of
      * InterpretedTreeAutomaton or not
      * @param precomputeFI a flag whether to pre-compute all feature values
-     * @throws NoRepresentationException if the MaximumEntropyIrtg doesn't contain
-     * a suitable interpretation to produce training charts
-     * @throws NoFeaturesException if the MaximumEntropyIrtg doesn't contain features
+     * @throws NoRepresentationException if the MaximumEntropyIrtg doesn't
+     * contain a suitable interpretation to produce training charts
+     * @throws NoFeaturesException if the MaximumEntropyIrtg doesn't contain
+     * features
      */
-    public MaximumEntropyIrtgTrainer(final MaximumEntropyIrtg maxEntIrtg, final boolean useIrtgParser, final boolean precomputeFI)
-            throws NoRepresentationException, NoFeaturesException
-    {
+    public MaximumEntropyIrtgTrainer(final MaximumEntropyIrtg maxEntIrtg, final boolean useIrtgParser, final boolean precomputeFI) {
         this.maxEntIrtg = maxEntIrtg;
 
         // start pre-computing (if wanted) and the autodetection of appropriate algebras
-        maxEntIrtg.prepare(useIrtgParser, precomputeFI);
+//        maxEntIrtg.prepare(useIrtgParser, precomputeFI);
+        maxEntIrtg.precomputeFeatureValues();
     }
-    
-    public void train(AnnotatedCorpus corpus) {
-        train(corpus, null);
-    }
-    
+
+    /*
+     public void train(AnnotatedCorpus corpus) {
+     train(corpus, null);
+     }
+     */
     /**
      * Trains the weights for the rules according to the training data
      *
@@ -118,7 +101,7 @@ public class MaximumEntropyIrtgTrainer {
     public void train(final AnnotatedCorpus corpus, List<TreeAutomaton> cachedCharts) {
         // create the optimzer with own optimizable class
         LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, cachedCharts));
-        
+
         // start optimization
         try {
             bfgs.optimize();
@@ -127,7 +110,7 @@ public class MaximumEntropyIrtgTrainer {
             // so we just log the exception and go on
             log.log(Level.WARNING, e.toString());
         }
-        
+
         // check if the optimization was successful
         if (bfgs.isConverged()) {
             log.info("Optimization was successful.");
@@ -135,10 +118,10 @@ public class MaximumEntropyIrtgTrainer {
             log.info("Optimization was unsuccessful.");
         }
     }
-    
+
     /**
-     * Internal class for training the feature function weights. We use the mallet framework
-     * for training so this class implements a mallet interface
+     * Internal class for training the feature function weights. We use the
+     * mallet framework for training so this class implements a mallet interface
      */
     private class MaxEntIrtgOptimizable implements Optimizable.ByGradientValue {
         private boolean cachedStale = true;
@@ -158,35 +141,38 @@ public class MaximumEntropyIrtgTrainer {
             cachedStale = true;
             trainingData = corpus;
             cachedGradient = new double[maxEntIrtg.getNumFeatures()];
-            this.cachedCharts = cachedCharts;
+
+            if (cachedCharts == null) {
+                this.cachedCharts = new ArrayList<TreeAutomaton>();
+            } else {
+                this.cachedCharts = cachedCharts;
+            }
         }
 
         /**
-         * Primarily this function returns the computed log-likelihood for
-         * the optimization. Beyond that it computes the also needed gradient.
+         * Primarily this function returns the computed log-likelihood for the
+         * optimization. Beyond that it computes the also needed gradient.
          */
         @Override
         public double getValue() {
             /**
-             * log-likelihood:
-             * L(Lambda) = sum_x,y(p~(x,y)*sum_i(lambda_i*f_i(x,y)) - sum_x(p~(x)*log(sum_y(e^(sum_i(lambda_i*f_i(x,y))))))
-             * sum_x,y : sum over every instance of training data
-             * p~(x,y) : 1/N
+             * log-likelihood: L(Lambda) =
+             * sum_x,y(p~(x,y)*sum_i(lambda_i*f_i(x,y)) -
+             * sum_x(p~(x)*log(sum_y(e^(sum_i(lambda_i*f_i(x,y)))))) sum_x,y :
+             * sum over every instance of training data p~(x,y) : 1/N
              * sum_i(lambda_i*f_i(x,y)) : log(chart.getWeights(y))
-             * 
-             * sum_x : sum over every instance of training data
-             * p~(x) : 1/N
+             *
+             * sum_x : sum over every instance of training data p~(x) : 1/N
              * sum_y(e^(sum_i(lambda_i*f_i(x,y)))) : inside(S)
-             * 
-             * gradient (<f~i> - <fi>):
-             * g_i = sum_x,y(p~(x,y)*f_i(x,y)) - sum_x,y(p~(x)*p_lambda(y|x)*f_i(x,y))
-             * sum_x,y : in both cases sum over every instance of training data
-             * f_i(x,y) : sum over all f_i(r) with Rule r used in a node of the tree
-             * p_lambda(y|x)*f_i(x,y) : E(f_i|S) (Chiang, 04)
-             * E(f_i|S) = sum_r(f_i(r)*E(r))
-             * sum_r : sum over all rules of the parse chart
-             * E(r) = outside(A)*p(r)*inside(B)*inside(C) / inside(S) | for r(A -> B C)
-             * p(r) : r.getWeight()
+             *
+             * gradient (<f~i> - <fi>): g_i = sum_x,y(p~(x,y)*f_i(x,y)) -
+             * sum_x,y(p~(x)*p_lambda(y|x)*f_i(x,y)) sum_x,y : in both cases sum
+             * over every instance of training data f_i(x,y) : sum over all
+             * f_i(r) with Rule r used in a node of the tree
+             * p_lambda(y|x)*f_i(x,y) : E(f_i|S) (Chiang, 04) E(f_i|S) =
+             * sum_r(f_i(r)*E(r)) sum_r : sum over all rules of the parse chart
+             * E(r) = outside(A)*p(r)*inside(B)*inside(C) / inside(S) | for r(A
+             * -> B C) p(r) : r.getWeight()
              */
             if (cachedStale) {
                 // recompute
@@ -198,15 +184,16 @@ public class MaximumEntropyIrtgTrainer {
                 double[] expectation = new double[cachedGradient.length]; // sum_x,y(E(f_i|S))
                 int faultyCharts = 0;
                 int j = 0;
-                
-                for( AnnotatedCorpus.Instance instance : trainingData.getInstances() ) {
+
+                for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
                     TreeAutomaton chart = null;
-                    
+
                     // get the chart for the instance; use cache if possible or compute one
-                    if (cachedCharts != null && j < cachedCharts.size() ) {
+                    if (j < cachedCharts.size()) {
                         chart = cachedCharts.get(j);
                     } else {
-                        chart = maxEntIrtg.parse(instance.getInputObjects(), true);
+                        chart = maxEntIrtg.parseMaxent(instance.getInputObjects());
+//                        cachedCharts.add(chart);  // TODO - chart caching does not work
                     }
                     // if the chart could not be computed track it and continue with the next instance
                     if (chart == null) {
@@ -257,11 +244,11 @@ public class MaximumEntropyIrtgTrainer {
                             expectation[i] += fi[i] * expect_r; // (...)*f_i(r)
                         }
                     }
-                    
+
                     // compute f_i(x,y)
 //                    log.info("Compute f_i for the tree of the training instance...");
                     maxEntIrtg.getFiFor(instance.getTree(), fiY);
-                    
+
                     j++;
                 }
 
@@ -275,7 +262,7 @@ public class MaximumEntropyIrtgTrainer {
 
                 cachedStale = false;
 //                log.log(Level.INFO, "log-likelihood: {0}", cachedValue);
-                
+
                 if (faultyCharts > 0) {
                     log.log(Level.WARNING, "Skipped {0} instances. No suitable chart found.", faultyCharts);
                 }
@@ -306,13 +293,7 @@ public class MaximumEntropyIrtgTrainer {
          */
         @Override
         public int getNumParameters() {
-            double[] parameters;
-            try {
-                parameters = maxEntIrtg.getFeatureWeights();
-            } catch (NoFeaturesException ex) {
-                log.log(Level.SEVERE, null, ex);
-                return 0;
-            }
+            double[] parameters = maxEntIrtg.getFeatureWeights();
             return parameters.length;
         }
 
@@ -323,11 +304,7 @@ public class MaximumEntropyIrtgTrainer {
          */
         @Override
         public void getParameters(double[] doubles) {
-            try {
-                System.arraycopy(maxEntIrtg.getFeatureWeights(), 0, doubles, 0, getNumParameters());
-            } catch (NoFeaturesException ex) {
-                throw new RuntimeException(ex);
-            }
+            System.arraycopy(maxEntIrtg.getFeatureWeights(), 0, doubles, 0, getNumParameters());
         }
 
         /*
@@ -338,11 +315,7 @@ public class MaximumEntropyIrtgTrainer {
          */
         @Override
         public double getParameter(final int i) {
-            try {
-                return maxEntIrtg.getFeatureWeight(i);
-            } catch (NoFeaturesException ex) {
-                throw new RuntimeException(ex);
-            }
+            return maxEntIrtg.getFeatureWeight(i);
         }
 
         /*
@@ -364,15 +337,11 @@ public class MaximumEntropyIrtgTrainer {
          */
         @Override
         public void setParameter(final int i, final double d) {
-            try {
-                maxEntIrtg.setFeatureWeight(i, d);
-            } catch (NoFeaturesException ex) {
-                throw new ArrayIndexOutOfBoundsException(ex.toString());
-            }
+            maxEntIrtg.setFeatureWeight(i, d);
             cachedStale = true;
         }
     }
-    
+
     /**
      * Reads a chart from a stream, e.g., string or file
      *

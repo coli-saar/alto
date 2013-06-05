@@ -5,17 +5,12 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
-import de.up.ling.irtg.Interpretation;
-import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.algebra.TreeAlgebra;
-import de.up.ling.irtg.automata.ChartBuilder;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,20 +23,6 @@ import java.util.logging.Logger;
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private static final Logger log = Logger.getLogger(MaximumEntropyIrtg.class.getName());
     private static final double INITIAL_WEIGHT = 0.5; // initial value for a feature's weight 
-    
-    @Deprecated
-    private boolean useIrtgParser;
-    
-    @Deprecated
-    private boolean precomputeFI;
-    
-    @Deprecated
-    private String representationInterpName = "";
-    
-    @Deprecated
-    private String treeInterpName = "";
-    
-    
     private double[] weights;                       // weights for feature functions
     private FeatureFunction[] features;             // list of feature functions
     private List<String> featureNames;              // list of names of feature functions
@@ -57,8 +38,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public MaximumEntropyIrtg(TreeAutomaton<String> automaton, final Map<String, FeatureFunction> featureMap) {
         super(automaton);
 
-        useIrtgParser = false;
-        precomputeFI = false;
+        f = new HashMap<String, double[]>();
 
         // store the features
         setFeatures(featureMap);
@@ -109,11 +89,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param weight the new weight
      * @throws NoFeaturesException if no features are present
      */
-    public void setFeatureWeight(int index, double weight) throws NoFeaturesException {
-        if (featureNames == null) {
-            throw new NoFeaturesException("No features present");
-        }
-
+    public void setFeatureWeight(int index, double weight) {
         weights[index] = weight;
     }
 
@@ -121,7 +97,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * Returns the array of feature values for a rule with the given label.
      *
      * @param ruleLabel the rule label
-     * @return double[] containing the values of all feature functions for this rule
+     * @return double[] containing the values of all feature functions for this
+     * rule
      */
     public double[] getFeatureValue(String ruleLabel) {
         if (f == null) {
@@ -139,12 +116,12 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @return double the weight of the feature function
      * @throws NoFeaturesException if no features are present
      */
-    public double getFeatureWeight(int i) throws NoFeaturesException {
-        if (featureNames == null) {
-            throw new NoFeaturesException("No features present");
+    public double getFeatureWeight(int i) {
+        if (weights != null && i < weights.length) {
+            return weights[i];
+        } else {
+            return Double.NaN;
         }
-
-        return weights[i];
     }
 
     /**
@@ -153,11 +130,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @return double[] containing the weights of all feature functions
      * @throws NoFeaturesException if no features are present
      */
-    public double[] getFeatureWeights() throws NoFeaturesException {
-        if (featureNames == null) {
-            throw new NoFeaturesException("No features functions set yet.");
-        }
-
+    public double[] getFeatureWeights() {
         return weights;
     }
 
@@ -178,11 +151,10 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * corresponding function is found
      * @throws NoFeaturesException if no features are present
      */
-    public FeatureFunction getFeatureFunction(String name) throws NoFeaturesException {
+    public FeatureFunction getFeatureFunction(String name) {
         int index = featureNames.indexOf(name);
         return getFeatureFunction(index);
     }
-    
 
     /**
      * Returns the feature function referenced by index
@@ -191,12 +163,12 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @return the feature function with the <tt>index</tt>
      * @throws NoFeaturesException if no features are present
      */
-    public FeatureFunction getFeatureFunction(int index) throws NoFeaturesException {
-        if (featureNames == null) {
-            throw new NoFeaturesException("No features functions set yet.");
+    public FeatureFunction getFeatureFunction(int index) {
+        if (features != null && index < features.length) {
+            return features[index];
+        } else {
+            return null;
         }
-
-        return features[index];
     }
 
     /**
@@ -207,38 +179,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public int getNumFeatures() {
         return (featureNames == null) ? 0 : featureNames.size();
     }
-
-    /**
-     * Returns the number of cached charts
-     *
-     * @return number of cached charts
-     */
-    /*
-    public int getNumCachedCharts() {
-        return cachedCharts.size();
-    }
-
-*/
-    
-    /**
-     * Returns a specific cached chart
-     *
-     * @param index the index of the chart
-     * @param setWeights flag whether to calculate the weights on the chart or
-     * not
-     * @return TreeAutomaton the cached chart
-     */
-    /*
-    public TreeAutomaton getCachedChart(int index, boolean setWeights) {
-        TreeAutomaton chart = cachedCharts.get(index);
-
-        if (setWeights && (chart != null)) {
-            setWeightsOnChart(chart);
-        }
-
-        return chart;
-    }
-    */
 
     /**
      * Calculate every feature's value for a tree
@@ -264,11 +204,10 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         }
     }
 
-
     /**
      * Pre-compute f_i(r) for every known rule
      */
-    private void precomputeFeatures() {
+    public void precomputeFeatureValues() {
         log.info("Compute f_i for every rule...");
         f = new HashMap<String, double[]>();
         Set<Rule<String>> ruleSet = (Set<Rule<String>>) automaton.getRuleSet();
@@ -289,140 +228,17 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     }
 
     /**
-     * Tries to auto-detect the interpretation names for the representation (use
-     * to create the chart) and the tree (used the evaluate the result) only if
-     * their values aren't already set
-     */
-    private void autoDetectInterpretations() throws NoRepresentationException {
-
-        // try the detection only if one of the name is not already set
-        if (representationInterpName.isEmpty() || treeInterpName.isEmpty()) {
-            Set<Entry<String, Interpretation>> entrySet = this.getInterpretations().entrySet();
-
-            // check every entry of the set of interpretations
-            for (Entry<String, Interpretation> i : entrySet) {
-
-                // for now only StringAlgebra is used for input strings to compute charts
-                if (representationInterpName.isEmpty() && (i.getValue().getAlgebra() instanceof StringAlgebra)) {
-                    representationInterpName = i.getKey();
-                } else if (treeInterpName.isEmpty()) {
-                    TreeAlgebra testAlgebra = null;
-
-                    // try to find a TreeAlgebra
-                    try {
-                        testAlgebra = (TreeAlgebra) i.getValue().getAlgebra();
-                    } catch (Exception e) {
-                        // pass
-                    }
-
-                    if (testAlgebra != null) {
-                        treeInterpName = i.getKey();
-                    }
-                }
-            }
-        }
-
-        // representationInterpName not set means there is no suitable
-        // interpretation to use for parsable input
-        if (representationInterpName.isEmpty()) {
-            throw new NoRepresentationException("No interpretation for StringAlgebra found...");
-        }
-    }
-
-    /**
-     * Prepares the MaximumEntropyIrtg for further things to do i.e. the values
-     * for the features will be computed (if pre-computing is enabled) and the
-     * interpretations will be auto-detected
-     *
-     * @param useIrtgParser Flag whether to use the parsing of
-     * InterpretedTreeAutomaton or not
-     * @param precomputeFI Flag whether to pre-compute the values for every
-     * feature or not
-     * @throws NoRepresentationException if the MaximumEntropyIrtg doesn't
-     * contain a suitable interpretation to produce training charts
-     * @throws NoFeaturesException if the MaximumEntropyIrtg doesn't contain
-     * features
-     */
-    public void prepare(boolean useIrtgParser, boolean precomputeFI) throws NoRepresentationException, NoFeaturesException {
-        this.useIrtgParser = useIrtgParser;
-        this.precomputeFI = precomputeFI;
-
-        if (featureNames == null) {
-            throw new NoFeaturesException("No features functions set yet.");
-        }
-
-        // if set compute all feature values for every rule
-        if (precomputeFI) {
-            precomputeFeatures();
-        }
-
-        // guess the interpretations usable for parsing (obligatory) and evaluating (optional)
-        autoDetectInterpretations();
-    }
-
-    /**
      * Parses an input of representations and their name and computes a chart
      * for this input The member variable <tt>useIrtgParser</tt> indicates which
      * parser to use True: the parser of InterpretedTreeAutomaton will be used
      * False: an implementation of a CKY-parser will be used
      *
      * @param inputs mapping of representations and their names
-     * @param cacheResult flag whether to cache the resulting chart or not
      * @return TreeAutomaton the computed chart
      */
-    public TreeAutomaton parse(Map<String, Object> inputs, boolean cacheResult) {
-        TreeAutomaton ret = null;
-
-        if (useIrtgParser) {
-            // use parser of super class
-            /* FIXME: using the complete map consisting of
-             * {"ptb":"...<tree-as-string-here>..."; "i":"<the-text-here>"}
-             * results in an empty chart even though we take special care of the
-             * ptb-representation.
-             * For now we create a new map with the string representation only.
-             */
-            List<String> input = (List<String>) inputs.get(representationInterpName);
-            Map<String, Object> inputObjects = new HashMap<String, Object>();
-            inputObjects.put(representationInterpName, input);
-
-//            log.log(Level.INFO, "Compute chart for \"{0}\"", StringTools.join(input, " "));
-            ret = parseInputObjects(inputObjects);
-            setWeightsOnChart(ret);
-        } else {
-            // use own parser
-            ret = parseInput(inputs);
-        }
-
-        return ret;
-    }
-
-    /**
-     * Parses an input of representations and their name and computes a chart
-     * for this input
-     *
-     * @param inputs mapping of representations and their names
-     * @return TreeAutomaton the computed chart
-     */
-    private TreeAutomaton parseInput(Map<String, Object> inputs) {
-        Interpretation interp = interpretations.get(representationInterpName);
-        List<String> input = (List<String>) inputs.get(representationInterpName);
-
-//        log.log(Level.INFO, "Compute chart for \"{0}\"", StringTools.join(input, " "));
-        ChartBuilder chartBuilder = ChartBuilder.getInstance();
-        if (!chartBuilder.isInitialized()) {
-            chartBuilder.init(interp.getHomomorphism(), automaton);
-        }
-
-        // compute the chart
-        TreeAutomaton ret = chartBuilder.build(input);
-
-        // if computation was successful reduce the automaton
-        // and set weights on its rules
-        if (ret != null) {
-            ret = ret.reduceBottomUp();
-            setWeightsOnChart(ret);
-        }
-
+    public TreeAutomaton parseMaxent(Map<String, Object> inputs) {
+        TreeAutomaton ret = super.parseInputObjects(inputs);
+        setWeightsOnChart(ret);
         return ret;
     }
 
@@ -433,10 +249,10 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param chart the automaton to set the rule weights for
      */
     private void setWeightsOnChart(TreeAutomaton chart) {
-        if (!precomputeFI) {
-            // without pre-computation a new map must be created
-            f = new HashMap<String, double[]>();
-        }
+//        if (!precomputeFI) {
+        // without pre-computation a new map must be created
+//            f = new HashMap<String, double[]>();
+//        }
 
         Set<Rule> ruleSet = (Set<Rule>) chart.getRuleSet();
         int numOfFeatures = getNumFeatures();
@@ -515,24 +331,19 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      *
      * @param writer the writer to store the data into
      * @throws IOException if the writer cannot store the data properly
-     * @throws NoFeaturesException if the MaximumEntropyIrtg doesn't contain
-     * features
      */
-    public void writeWeights(Writer writer) throws IOException, NoFeaturesException {
+    public void writeWeights(Writer writer) throws IOException {
         Properties props = new Properties();
 
-        if (featureNames == null) {
-            throw new NoFeaturesException("No features functions set yet.");
-        }
-
-        for (int i = 0; i < weights.length; i++) {
-            props.put(featureNames.get(i), String.valueOf(weights[i]));
+        if (weights != null) {
+            for (int i = 0; i < weights.length; i++) {
+                props.put(featureNames.get(i), String.valueOf(weights[i]));
+            }
         }
 
         props.store(writer, null);
     }
 
-    
     /**
      * Returns a string representing the object and its elements
      *
@@ -558,23 +369,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         return ret.toString();
     }
 
-    /**
-     * Exception class to declare class specific faults
-     */
-    public class NoFeaturesException extends Exception {
-        private NoFeaturesException(String s) {
-            super(s);
-        }
-    }
-
-    /**
-     * Exception class to declare class specific faults
-     */
-    public class NoRepresentationException extends Exception {
-        private NoRepresentationException(String s) {
-            super(s);
-        }
-    }
 
     public static void setLoggingLevel(Level level) {
         log.setLevel(level);
@@ -618,58 +412,190 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
  i.writeCharts(new FileOutputStream(prefix + "-testing.charts"));
  }
  */
+/**
+ * Setter for representationInterpName If newer set, the appropriate
+ * interpretation will be tried to auto-detect
+ *
+ * @param interpName name of the interpretation subsequently used to set up a
+ * chart public final void setRepresentationInterpName(String interpName) {
+ * representationInterpName = interpName; }
+ *
+ * Setter for treeInterpName If newer set, the appropriate interpretation will
+ * be tried to auto-detect
+ *
+ * @param interpName name of the interpretation subsequently used to validate
+ * the best tree public final void setTreeInterpName(String interpName) {
+ * treeInterpName = interpName; }
+ */
+/**
+ * Returns the most probable tree for a chart If the MaximumEntropyIrtg contains
+ * an interpretation for TreeAlgebra the homomorphism automaton will be computed
+ * and its most probable tree evaluated Without a suitable Algebra the most
+ * probable tree of the chart itself will be returned
+ *
+ * @param chart the weighted chart
+ * @return Tree the most probable tree for <tt>chart</tt>
+ *
+ * public Tree getBestTree(TreeAutomaton chart) { // is there a suitable algebra
+ * if (!treeInterpName.isEmpty()) { Interpretation treeInterp =
+ * getInterpretations().get(treeInterpName);
+ *
+ * // get the algebra only if it isn't set already and there is a
+ * interpretation if ((treeAlgebra == null) && (treeInterp != null)) { try {
+ * treeAlgebra = (TreeAlgebra) treeInterp.getAlgebra().getClass().newInstance();
+ * } catch (Exception ex) { log.log(Level.SEVERE, null, ex); } }
+ *
+ * // having an algebra compute the homomorphism and evaluate the most probable
+ * tree if (treeAlgebra != null) { TreeAutomaton<String> outputChart =
+ * chart.homomorphism(treeInterp.getHomomorphism()); return
+ * treeAlgebra.evaluate(outputChart.viterbi()); } }
+ *
+ * // there is no suitable algebra --> return the most probable tree for the
+ * chart return chart.viterbi(); }
+ */
+//    @Deprecated
+//    private boolean useIrtgParser;
+//    @Deprecated
+//    private boolean precomputeFI;
+//    @Deprecated
+//    private String representationInterpName = "";
+//    @Deprecated
+//    private String treeInterpName = "";
+/**
+ * Returns the number of cached charts
+ *
+ * @return number of cached charts
+ */
+/*
+ public int getNumCachedCharts() {
+ return cachedCharts.size();
+ }
 
+ */
+/**
+ * Returns a specific cached chart
+ *
+ * @param index the index of the chart
+ * @param setWeights flag whether to calculate the weights on the chart or not
+ * @return TreeAutomaton the cached chart
+ */
+/*
+ public TreeAutomaton getCachedChart(int index, boolean setWeights) {
+ TreeAutomaton chart = cachedCharts.get(index);
 
-    /**
-     * Setter for representationInterpName
-     * If newer set, the appropriate interpretation will be tried to auto-detect
-     *
-     * @param interpName name of the interpretation subsequently used to set up a chart
-    public final void setRepresentationInterpName(String interpName) {
-        representationInterpName = interpName;
-    }
+ if (setWeights && (chart != null)) {
+ setWeightsOnChart(chart);
+ }
 
-     * Setter for treeInterpName
-     * If newer set, the appropriate interpretation will be tried to auto-detect
-     *
-     * @param interpName name of the interpretation subsequently used to validate the best tree
-    public final void setTreeInterpName(String interpName) {
-        treeInterpName = interpName;
-    }
-    */
+ return chart;
+ }
+ */
+/**
+ * Tries to auto-detect the interpretation names for the representation (use to
+ * create the chart) and the tree (used the evaluate the result) only if their
+ * values aren't already set
+ *
+ * private void autoDetectInterpretations() throws NoRepresentationException {
+ *
+ * // try the detection only if one of the name is not already set if
+ * (representationInterpName.isEmpty() || treeInterpName.isEmpty()) {
+ * Set<Entry<String, Interpretation>> entrySet =
+ * this.getInterpretations().entrySet();
+ *
+ * // check every entry of the set of interpretations for (Entry<String,
+ * Interpretation> i : entrySet) {
+ *
+ * // for now only StringAlgebra is used for input strings to compute charts if
+ * (representationInterpName.isEmpty() && (i.getValue().getAlgebra() instanceof
+ * StringAlgebra)) { representationInterpName = i.getKey(); } else if
+ * (treeInterpName.isEmpty()) { TreeAlgebra testAlgebra = null;
+ *
+ * // try to find a TreeAlgebra try { testAlgebra = (TreeAlgebra)
+ * i.getValue().getAlgebra(); } catch (Exception e) { // pass }
+ *
+ * if (testAlgebra != null) { treeInterpName = i.getKey(); } } } }
+ *
+ * // representationInterpName not set means there is no suitable //
+ * interpretation to use for parsable input if
+ * (representationInterpName.isEmpty()) { throw new
+ * NoRepresentationException("No interpretation for StringAlgebra found..."); }
+ * }
+ */
+/**
+ * Prepares the MaximumEntropyIrtg for further things to do i.e. the values for
+ * the features will be computed (if pre-computing is enabled) and the
+ * interpretations will be auto-detected
+ *
+ * @param useIrtgParser Flag whether to use the parsing of
+ * InterpretedTreeAutomaton or not
+ * @param precomputeFI Flag whether to pre-compute the values for every feature
+ * or not
+ * @throws NoRepresentationException if the MaximumEntropyIrtg doesn't contain a
+ * suitable interpretation to produce training charts
+ * @throws NoFeaturesException if the MaximumEntropyIrtg doesn't contain
+ * features
+ *
+ * public void prepare(boolean useIrtgParser, boolean precomputeFI) throws
+ * NoRepresentationException, NoFeaturesException { this.useIrtgParser =
+ * useIrtgParser; this.precomputeFI = precomputeFI;
+ *
+ * if (featureNames == null) { throw new NoFeaturesException("No features
+ * functions set yet."); }
+ *
+ * // if set compute all feature values for every rule if (precomputeFI) {
+ * precomputeFeatures(); }
+ *
+ * // guess the interpretations usable for parsing (obligatory) and evaluating
+ * (optional) autoDetectInterpretations(); }
+ *
+ */
+/* FIXME: using the complete map consisting of
+ * {"ptb":"...<tree-as-string-here>..."; "i":"<the-text-here>"}
+ * results in an empty chart even though we take special care of the
+ * ptb-representation.
+ * For now we create a new map with the string representation only.
+ */
 
+/*
+ TreeAutomaton ret = null;
+        
+ if (useIrtgParser) {
+ // use parser of super class
+ List<String> input = (List<String>) inputs.get(representationInterpName);
+ Map<String, Object> inputObjects = new HashMap<String, Object>();
+ inputObjects.put(representationInterpName, input);
 
-    /**
-     * Returns the most probable tree for a chart If the MaximumEntropyIrtg
-     * contains an interpretation for TreeAlgebra the homomorphism automaton
-     * will be computed and its most probable tree evaluated Without a suitable
-     * Algebra the most probable tree of the chart itself will be returned
-     *
-     * @param chart the weighted chart
-     * @return Tree the most probable tree for <tt>chart</tt>
-    
-    public Tree getBestTree(TreeAutomaton chart) {
-        // is there a suitable algebra
-        if (!treeInterpName.isEmpty()) {
-            Interpretation treeInterp = getInterpretations().get(treeInterpName);
+ //            log.log(Level.INFO, "Compute chart for \"{0}\"", StringTools.join(input, " "));
+ ret = parseInputObjects(inputObjects);
+ setWeightsOnChart(ret);
+ } else {
+ // use own parser
+ ret = parseInput(inputs);
+ }
 
-            // get the algebra only if it isn't set already and there is a interpretation
-            if ((treeAlgebra == null) && (treeInterp != null)) {
-                try {
-                    treeAlgebra = (TreeAlgebra) treeInterp.getAlgebra().getClass().newInstance();
-                } catch (Exception ex) {
-                    log.log(Level.SEVERE, null, ex);
-                }
-            }
-
-            // having an algebra compute the homomorphism and evaluate the most probable tree
-            if (treeAlgebra != null) {
-                TreeAutomaton<String> outputChart = chart.homomorphism(treeInterp.getHomomorphism());
-                return treeAlgebra.evaluate(outputChart.viterbi());
-            }
-        }
-
-        // there is no suitable algebra --> return the most probable tree for the chart
-        return chart.viterbi();
-    }
-    */
+ return ret;
+ */
+/**
+ * Parses an input of representations and their name and computes a chart for
+ * this input
+ *
+ * @param inputs mapping of representations and their names
+ * @return TreeAutomaton the computed chart
+ *
+ * private TreeAutomaton parseInput(Map<String, Object> inputs) { Interpretation
+ * interp = interpretations.get(representationInterpName); List<String> input =
+ * (List<String>) inputs.get(representationInterpName);
+ *
+ * // log.log(Level.INFO, "Compute chart for \"{0}\"", StringTools.join(input,
+ * " ")); ChartBuilder chartBuilder = ChartBuilder.getInstance(); if
+ * (!chartBuilder.isInitialized()) { chartBuilder.init(interp.getHomomorphism(),
+ * automaton); }
+ *
+ * // compute the chart TreeAutomaton ret = chartBuilder.build(input);
+ *
+ * // if computation was successful reduce the automaton // and set weights on
+ * its rules if (ret != null) { ret = ret.reduceBottomUp();
+ * setWeightsOnChart(ret); }
+ *
+ * return ret; }
+ */
