@@ -85,19 +85,19 @@ P -> r12
 
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
         
-        System.err.println("parsed: " + irtg.getAutomaton())
+//        System.err.println("parsed: " + irtg.getAutomaton())
 
         String string = "john watches the woman with the telescope";
         List words = irtg.parseString("i", string);
         TreeAutomaton chart = irtg.parseInputObjects(["i": words]);
 
-                System.err.println("\n\nreduced:\n" );
+//                System.err.println("\n\nreduced:\n" );
 
-                System.err.println("chart: " + chart);
+//                System.err.println("chart: " + chart);
 
         chart.makeAllRulesExplicit();
 
-                System.err.println("\n\nreduced:\n" + chart.reduceBottomUp());
+//                System.err.println("\n\nreduced:\n" + chart.reduceBottomUp());
 
         assert chart.accepts(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
         assert chart.accepts(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));

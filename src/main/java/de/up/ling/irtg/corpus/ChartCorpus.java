@@ -108,7 +108,7 @@ public class ChartCorpus implements Serializable, Iterable<TreeAutomaton> {
             } else {
                 if (firstLineOfBlock == null) {
                     firstLineOfBlock = line;
-                    System.out.print(String.format("%4d %-40.40s%s", lineNumber + 1, line, (line.length() > 40 ? "... " : "    ")));
+//                    System.out.print(String.format("%4d %-40.40s%s", lineNumber + 1, line, (line.length() > 40 ? "... " : "    ")));
                     startTime = System.currentTimeMillis();
                 }
 
@@ -119,7 +119,7 @@ public class ChartCorpus implements Serializable, Iterable<TreeAutomaton> {
                     Object inputObject = irtg.parseString(current, line);
                     currentInputs.put(current, inputObject);
                 } catch (ParserException ex) {
-                    System.out.println(" ==> error: " + ex.getMessage());
+//                    System.out.println(" ==> error: " + ex.getMessage());
                     continue;
                 }
 
@@ -130,7 +130,7 @@ public class ChartCorpus implements Serializable, Iterable<TreeAutomaton> {
                     chart = chart.reduceBottomUp();
                     creator.addInstance(chart);
 
-                    System.out.println("done, " + (System.currentTimeMillis() - startTime) / 1000 + " sec");
+//                    System.out.println("done, " + (System.currentTimeMillis() - startTime) / 1000 + " sec");
                     currentInputs.clear();
                     currentInterpretationIndex = 0;
                     firstLineOfBlock = null;

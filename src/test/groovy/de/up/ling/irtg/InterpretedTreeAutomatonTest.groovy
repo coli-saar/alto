@@ -93,7 +93,7 @@ S -> r2
         ChartCorpus pco = writeThenReadCorpus(irtg, new StringReader(PCFG_EMTRAIN_STR));
         assertEquals(3, pco.getInstancesAsList().size());
         
-        System.err.println("read corpus: " + pco.getInstancesAsList());
+//        System.err.println("read corpus: " + pco.getInstancesAsList());
         
     }
 

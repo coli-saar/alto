@@ -116,6 +116,11 @@ public class MaximumEntropyIrtgTrainer {
         
         return bfgs.isConverged();
     }
+    
+    
+    public static void setLoggingLevel(Level level) {
+        log.setLevel(level);
+    }
 
     /**
      * Internal class for training the feature function weights. We use the

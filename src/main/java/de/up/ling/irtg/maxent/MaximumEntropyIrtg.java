@@ -21,7 +21,6 @@ import java.util.logging.Logger;
  * @author Danilo Baumgarten
  */
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
-    private static final Logger log = Logger.getLogger(MaximumEntropyIrtg.class.getName());
     private static final double INITIAL_WEIGHT = 0.5; // initial value for a feature's weight 
     private double[] weights;                       // weights for feature functions
     private FeatureFunction[] features;             // list of feature functions
@@ -208,7 +207,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * Pre-compute f_i(r) for every known rule
      */
     public void precomputeFeatureValues() {
-        log.info("Compute f_i for every rule...");
         f = new HashMap<String, double[]>();
         Set<Rule<String>> ruleSet = (Set<Rule<String>>) automaton.getRuleSet();
         int numOfFeatures = getNumFeatures();
@@ -367,11 +365,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         }
 
         return ret.toString();
-    }
-
-
-    public static void setLoggingLevel(Level level) {
-        log.setLevel(level);
     }
 }
 /**
