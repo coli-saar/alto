@@ -30,15 +30,15 @@ class MaximumEntropyIrtgTrainerTest {
         InterpretedTreeAutomaton irtg = iparse(CFG_STR);
         assert irtg instanceof MaximumEntropyIrtg;
 //        irtg.prepare(false, true);
-        MaximumEntropyIrtgTrainer trainer = new MaximumEntropyIrtgTrainer(irtg, false, true);
+        MaximumEntropyIrtgTrainer trainer = new MaximumEntropyIrtgTrainer(irtg);
 
         AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN1_STR), irtg);
-        trainer.train(anCo, null);
+        trainer.train(anCo);
         double[] fWeights = irtg.getFeatureWeights();
         assert (fWeights[0] > fWeights[1]), "weights are not optimized";
 
         anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN2_STR), irtg);
-        trainer.train(anCo, null);
+        trainer.train(anCo);
         fWeights = irtg.getFeatureWeights();
         assert (fWeights[0] < fWeights[1]), "weights are not optimized";
     }

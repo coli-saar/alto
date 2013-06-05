@@ -58,7 +58,7 @@ public class MaximumEntropyIrtgTrainer {
             readCharts(cachedCharts, new FileInputStream(prefix + "-training.charts"));
         }
 
-        trainer.train(anCo, cachedCharts);
+        trainer.train(anCo);
 
         log.info("Writing feature weights...");
         maxEntIrtg.writeWeights(new FileWriter(prefix + "-weights.props"));
@@ -94,9 +94,9 @@ public class MaximumEntropyIrtgTrainer {
      * @param corpus the training data containing sentences and their parse tree
      * @return true iff L-BFGS optimization was successful
      */
-    public boolean train(final AnnotatedCorpus corpus, List<TreeAutomaton> cachedCharts) {
+    public boolean train(final AnnotatedCorpus corpus) {
         // create the optimzer with own optimizable class
-        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, cachedCharts));
+        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus));
 
         // start optimization
         try {
@@ -126,7 +126,6 @@ public class MaximumEntropyIrtgTrainer {
         private double cachedValue;
         private double[] cachedGradient;
         private AnnotatedCorpus trainingData;
-        private List<TreeAutomaton> cachedCharts;
 
         /**
          * Constructor
@@ -135,16 +134,10 @@ public class MaximumEntropyIrtgTrainer {
          * @param interp the training data may contain multiple interpretations.
          * This parameter tells us which one to use
          */
-        public MaxEntIrtgOptimizable(final AnnotatedCorpus corpus, List<TreeAutomaton> cachedCharts) {
+        public MaxEntIrtgOptimizable(final AnnotatedCorpus corpus) {
             cachedStale = true;
             trainingData = corpus;
             cachedGradient = new double[maxEntIrtg.getNumFeatures()];
-
-            if (cachedCharts == null) {
-                this.cachedCharts = new ArrayList<TreeAutomaton>();
-            } else {
-                this.cachedCharts = cachedCharts;
-            }
         }
 
         /**
@@ -184,15 +177,9 @@ public class MaximumEntropyIrtgTrainer {
                 int j = 0;
 
                 for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
-                    TreeAutomaton chart = null;
-
-                    // get the chart for the instance; use cache if possible or compute one
-                    if (j < cachedCharts.size()) {
-                        chart = cachedCharts.get(j);
-                    } else {
-                        chart = maxEntIrtg.parseMaxent(instance.getInputObjects());
-//                        cachedCharts.add(chart);  // TODO - chart caching does not work
-                    }
+                    TreeAutomaton chart = maxEntIrtg.parseMaxent(instance.getInputObjects());
+                    // TODO - once chart caching works again, use cached chart here
+                    
                     // if the chart could not be computed track it and continue with the next instance
                     if (chart == null) {
                         faultyCharts++;
