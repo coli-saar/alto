@@ -18,6 +18,8 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.binarization.RegularBinarizer;
 import de.up.ling.irtg.binarization.StringAlgebraBinarizer;
 import de.up.ling.irtg.binarization.SynchronousBinarization;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.shell.CallableFromShell;
@@ -175,7 +177,7 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell(name = "mltrain")
-    public void trainML(AnnotatedCorpus trainingData) throws UnsupportedOperationException {
+    public void trainML(Corpus trainingData) throws UnsupportedOperationException {
         final Map<String, Rule<String>> ruleForTerminal = new HashMap<String, Rule<String>>();
         final Map<String, Long> ruleCounts = new HashMap<String, Long>();
         final Map<String, Long> stateCounts = new HashMap<String, Long>();
@@ -192,8 +194,8 @@ public class InterpretedTreeAutomaton {
         }
 
         // compute absolute frequencies on annotated corpus
-        for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
-            instance.getTree().dfs(new TreeVisitor<String, Void, Void>() {
+        for (Instance instance : trainingData) {
+            instance.getDerivationTree().dfs(new TreeVisitor<String, Void, Void>() {
                 @Override
                 public Void visit(Tree<String> node, Void data) {
                     Rule<String> rule = ruleForTerminal.get(node.getLabel());

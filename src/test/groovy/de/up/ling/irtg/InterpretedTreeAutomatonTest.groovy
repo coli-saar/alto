@@ -118,17 +118,20 @@ S -> r2
     @Test
     public void testParseAnnotatedCorpus() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        AnnotatedCorpus pco = irtg.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR));
+        Corpus pco = Corpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
         
-        assertEquals(3, pco.getInstances().size());
-        assertEquals(pt("r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))"), pco.getInstances().get(1).tree);
-        assertEquals(["john", "watches", "the", "telescope", "with", "the", "telescope"], pco.getInstances().get(1).inputObjects.get("i"));
+        assertEquals(3, pco.getNumberOfInstances());
+        Iterator<Instance> it = pco.iterator();
+        it.next();
+        Instance secondInstance = it.next();
+        assertEquals(pt("r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))"), secondInstance.getDerivationTree());
+        assertEquals(["john", "watches", "the", "telescope", "with", "the", "telescope"], secondInstance.getInputObjects().get("i"));
     }
     
     @Test
     public void testML() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        AnnotatedCorpus ac = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
+        Corpus ac = Corpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
         irtg.trainML(ac);
         
         TreeAutomaton auto = irtg.getAutomaton()
