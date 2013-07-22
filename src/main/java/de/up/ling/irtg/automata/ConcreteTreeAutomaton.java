@@ -8,11 +8,13 @@ package de.up.ling.irtg.automata;
 import de.up.ling.irtg.signature.MapSignature;
 import java.util.List;
 import java.util.Set;
+import javax.persistence.Entity;
 
 /**
  *
  * @author koller
  */
+@Entity
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public ConcreteTreeAutomaton() {
         super(new MapSignature());

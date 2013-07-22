@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE jdo SYSTEM "http://java.sun.com/dtd/jdo_1_0.dtd">
+
+<jdo>
+    <package name="de.up.ling.irtg.automata">
+        <class name="TreeAutomaton" />	
+    </package>
+</jdo>

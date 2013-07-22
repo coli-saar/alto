@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.shell;
 
+import com.objectdb.Enhancer;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
@@ -11,6 +12,7 @@ import de.up.ling.irtg.ParseException;
 import de.up.ling.irtg.corpus.ChartCorpus;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.shell.Shell;
 import de.up.ling.shell.ShutdownShellException;
@@ -24,20 +26,44 @@ import java.io.Reader;
  * @author koller
  */
 public class Main {
+
     private static final String OUTPUT_END_MARKER = "---";
     private static final String ERROR_MARKER = "*** ";
     private Shell shell;
 
     public static void main(String[] args) throws Exception {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/cfg.irtg"));
-        Corpus corpus = Corpus.readUnannotatedCorpus(new FileReader("examples/pcfg-training.irtg"), irtg);
-        Charts.computeCharts(corpus, irtg, "parsed-corpus.odb");
+        Enhancer.enhance("de.up.ling.irtg.automata.*");
+//        Enhancer.enhance("de.up.ling.irtg.automata.ConcreteTreeAutomaton");
         
+        if (true) {
+            new File("parsed-corpus.odb").delete();
+            new File("parsed-corpus.odb$").delete();
+            
+            InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/cfg.irtg"));
+            Corpus corpus = Corpus.readUnannotatedCorpus(new FileReader("examples/pcfg-training.txt"), irtg);
+            Charts.computeCharts(corpus, irtg, "parsed-corpus.odb");
+        } else {
+
+            InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/cfg.irtg"));
+            Corpus corpus = Corpus.readUnannotatedCorpus(new FileReader("examples/pcfg-training.txt"), irtg);
+            Charts charts = new Charts("parsed-corpus.odb");
+            corpus.attachCharts(charts);
+
+            System.err.println("#inst: " + corpus.getNumberOfInstances());
+
+            int count = 1;
+            for (Instance inst : corpus) {
+                System.err.println("\n-------------\ninstance " + (count++) + "\n------------\n");
+                System.err.println(inst.getInputObjects());
+                System.err.println(inst.getChart());
+            }
+        }
+
         System.exit(0);
-        
-        
-        
-        
+
+
+
+
         int serverPort = 0;
 
         for (int i = 0; i < args.length; i++) {
@@ -67,7 +93,7 @@ public class Main {
     public InterpretedTreeAutomaton irtg(Reader reader) throws ParseException {
         return IrtgParser.parse(reader);
     }
-    
+
     @CallableFromShell
     public ChartCorpus readParsedCorpus(Reader reader) throws IOException, ClassNotFoundException {
         String filename = StringTools.slurp(reader);

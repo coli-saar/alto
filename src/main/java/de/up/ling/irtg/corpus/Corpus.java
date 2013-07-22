@@ -17,15 +17,18 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author koller
  */
 public class Corpus implements Iterable<Instance> {
+    private static Pattern WHITESPACE_PATTERN = Pattern.compile("\\s*");
     private List<Instance> instances;
     private Charts charts;
     private boolean isAnnotated;
+    private static final boolean DEBUG = true;
 
     public Corpus() {
         instances = new ArrayList<Instance>();
@@ -39,6 +42,10 @@ public class Corpus implements Iterable<Instance> {
 
     public boolean hasCharts() {
         return charts != null;
+    }
+
+    public void attachCharts(Charts charts) {
+        this.charts = charts;
     }
 
     public int getNumberOfInstances() {
@@ -77,47 +84,66 @@ public class Corpus implements Iterable<Instance> {
         int lineNumber = 0;
 
         while (true) {
-            String line = br.readLine();
-
+            String line = readNextLine(br);
+            lineNumber++;
+            
             if (line == null) {
                 return ret;
             }
 
-            if (line.equals("")) {
-                continue;
-            }
-
-            if (lineNumber < irtg.getInterpretations().size()) {
+            if (lineNumber-1 < irtg.getInterpretations().size()) {
+                if(DEBUG) System.err.println("-> interp " + line);
                 interpretationOrder.add(line);
             } else {
-                if (currentInterpretationIndex < interpretationOrder.size()) {
-                    String current = interpretationOrder.get(currentInterpretationIndex);
+                String current = interpretationOrder.get(currentInterpretationIndex);
 
-                    try {
-                        Object inputObject = irtg.parseString(current, line);
-                        currentInputs.put(current, inputObject);
-                    } catch (ParserException ex) {
-                        throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + (lineNumber + 1) + ": " + ex.getMessage());
-                    }
+                try {
+                    if(DEBUG) System.err.println("-> input " + line);
+                    Object inputObject = irtg.parseString(current, line);
+                    currentInputs.put(current, inputObject);
+                } catch (ParserException ex) {
+                    throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + lineNumber + ": " + ex.getMessage());
+                }
 
-                    currentInterpretationIndex++;
-                } else {
+                currentInterpretationIndex++;
+
+                if (currentInterpretationIndex == interpretationOrder.size()) {
                     Instance inst = new Instance();
                     inst.setInputObjects(currentInputs);
 
                     if (annotated) {
-                        Tree<String> derivationTree = TreeParser.parse(line);
+                        String annoLine = readNextLine(br);
+                        lineNumber++;
+                        
+                        if( annoLine == null ) {
+                            throw new CorpusReadingException("Expected an annotation in line " + lineNumber);
+                        }
+                        
+                        
+                        Tree<String> derivationTree = TreeParser.parse(annoLine);
                         inst.setDerivationTree(derivationTree);
                     }
-
+                    
                     ret.instances.add(inst);
 
+                    if(DEBUG) System.err.println("-> read instance: " + currentInputs);
+
                     currentInputs = new HashMap<String, Object>();
-                    currentInterpretationIndex = 0;
+                    currentInterpretationIndex = 0;                    
                 }
             }
-
-            lineNumber++;
         }
+    }
+    
+    private static String readNextLine(BufferedReader br) throws IOException {
+        String ret = null;
+        
+        do {
+            ret = br.readLine();
+        } while( ret != null && WHITESPACE_PATTERN.matcher(ret).matches() );
+        
+        if(DEBUG) System.err.println("**read line: " + ret);
+        
+        return ret;
     }
 }

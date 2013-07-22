@@ -56,6 +56,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     private List<Rule<State>> unprocessedUpdatesForRulesForRhsState;
     private List<Rule<State>> unprocessedUpdatesForTopDown;
     protected boolean explicitIsBottomUpDeterministic = true;
+    
 
     public TreeAutomaton(Signature signature) {
         explicitRules = new HashMap<String, StateListToStateMap>();
@@ -302,7 +303,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         makeAllRulesExplicit();
 
-        for (StateListToStateMap map : explicitRules.values()) {
+        for (StateListToStateMap<State> map : explicitRules.values()) {
             for (Set<Rule<State>> set : map.getAllRules().values()) {
                 ret.addAll(set);
             }
@@ -1400,7 +1401,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
-    protected class StateListToStateMap implements Serializable {
+    protected static class StateListToStateMap<State> implements Serializable {
         private Map<State, StateListToStateMap> nextStep;
         private Set<Rule<State>> rulesHere;
         private int arity;
