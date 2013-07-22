@@ -4,72 +4,52 @@
  */
 package de.up.ling.irtg.corpus;
 
+import com.google.common.base.Supplier;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import zip.ZipEntriesCreator;
+import zip.ZipEntryIterator;
 
 /**
  *
  * @author koller
  */
 public class Charts implements Iterable<TreeAutomaton> {
-
-    static {
-        System.setProperty("objectdb.conf", "./objectdb.conf");
-    }
-    private EntityManager em;
-
-    public Charts(String connectionURL) {
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory(connectionURL);
-        em = emf.createEntityManager();
-    }
-
-    private class ResultsIterator implements Iterator<TreeAutomaton> {
-
-        private long i = 1;
-        private long numResults;
-
-        public ResultsIterator() {
-            Query countQuery = em.createQuery("select count(o) from ConcreteTreeAutomaton o");
-            numResults = (Long) countQuery.getSingleResult();
-        }
-
-        public boolean hasNext() {
-            return i <= numResults;
-        }
-
-        public TreeAutomaton next() {
-            return em.find(ConcreteTreeAutomaton.class, i++);
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
+    Supplier<InputStream> supplier;
+    
+    public Charts(Supplier<InputStream> supplier) {
+        this.supplier = supplier;
     }
 
     public Iterator<TreeAutomaton> iterator() {
-        return new ResultsIterator();
+        try {
+            return new ZipEntryIterator<TreeAutomaton>(supplier.get());
+        } catch (IOException ex) {
+            Logger.getLogger(Charts.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
 
-    public static void computeCharts(Corpus corpus, InterpretedTreeAutomaton irtg, String connectionURL) throws Exception {
-        System.setProperty("objectdb.conf", "./objectdb.conf");
+    public static void computeCharts(Corpus corpus, InterpretedTreeAutomaton irtg, OutputStream ostream) throws Exception {
+        ZipEntriesCreator zec = new ZipEntriesCreator(ostream);
         
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory(connectionURL);
-        EntityManager em = emf.createEntityManager();
-
-        em.getTransaction().begin();
-
         for (Instance inst : corpus) {
             TreeAutomaton chart = irtg.parseInputObjects(inst.getInputObjects());
             ConcreteTreeAutomaton x = chart.asConcreteTreeAutomaton();
-            em.persist(x);
+            zec.add(x);
         }
-
-        em.getTransaction().commit();
+        
+        zec.close();
     }
 }
