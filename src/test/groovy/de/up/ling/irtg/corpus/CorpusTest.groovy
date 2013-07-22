@@ -33,7 +33,7 @@ class CorpusTest {
         // read parsed corpus and check that charts are correct
         Charts charts = new Charts(new Supplier<InputStream>() {
                 InputStream get() { return new ByteArrayInputStream(ostream.toByteArray()); }
-        });
+            });
         corpus.attachCharts(charts);
         
         int count = 0;
@@ -44,7 +44,22 @@ class CorpusTest {
         
         assert count == 3;
     }
-	
+    
+    @Test
+    public void testNewCorpusUnanno() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        Corpus corpus = Corpus.readCorpus(new StringReader(NEW_CORPUS), irtg);
+        assert corpus.getNumberOfInstances() == 3;
+        assert ! corpus.isAnnotated();
+    }
+    
+     @Test
+    public void testNewCorpusAnno() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        Corpus corpus = Corpus.readCorpus(new StringReader(NEW_CORPUS_ANNO), irtg);
+        assert corpus.getNumberOfInstances() == 3;
+        assert corpus.isAnnotated();
+    }
                     
     private static final String CFG_STR = """
 interpretation i: de.up.ling.irtg.algebra.StringAlgebra
@@ -107,5 +122,29 @@ john watches the woman with the telescope
 john watches the telescope with the telescope
 john watches the telescope with the woman
 """;
+    
+    private static final String NEW_CORPUS = """
+# IRTG unannotated corpus file, v1.0
+#
+# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+john watches the woman with the telescope
+john watches the telescope with the telescope
+john watches the telescope with the woman
+""";
+    
+    private static final String NEW_CORPUS_ANNO = """
+# IRTG annotated corpus file, v1.0
+#
+# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+ 
+john watches the woman with the telescope
+r1(r7,r5( r4(r8, r2(r9,r10)), r6(r12, r2(r9,r11))))
+john watches the telescope with the telescope
+r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))
+john watches the telescope with the woman
+r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r10))))
+
+    """;
 }
 

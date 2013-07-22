@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -24,7 +25,12 @@ import java.util.regex.Pattern;
  * @author koller
  */
 public class Corpus implements Iterable<Instance> {
+    private static String CORPUS_VERSION = "1.0";
     private static Pattern WHITESPACE_PATTERN = Pattern.compile("\\s*");
+    private static Pattern UNANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG unannotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
+    private static Pattern ANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG annotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
+    private static Pattern COMMENT_PATTERN = Pattern.compile("\\s*#.*");
+    private static Pattern INTERPRETATION_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*interpretation\\s+([^: ]+)\\s*:\\s*(\\S+).*", Pattern.CASE_INSENSITIVE);
     private List<Instance> instances;
     private Charts charts;
     private boolean isAnnotated;
@@ -65,14 +71,120 @@ public class Corpus implements Iterable<Instance> {
         }
     }
 
-    public static Corpus readAnnotatedCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
-        return readCorpus(reader, irtg, true);
+    public static Corpus readCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
+        Corpus ret = new Corpus();
+        boolean annotated = false;
+
+        BufferedReader br = new BufferedReader(reader);
+        List<String> interpretationOrder = new ArrayList<String>();
+        Map<String, Object> currentInputs = new HashMap<String, Object>();
+        int currentInterpretationIndex = 0;
+        int lineNumber = 0;
+        String line = null;
+
+        // read and check header
+        while (true) {
+            line = readNextLine(br);
+            lineNumber++;
+            
+            if (line == null) {
+                return ret;
+            }
+
+            Matcher unannoMatcher = UNANNOTATED_CORPUS_DECLARATION_PATTERN.matcher(line);
+            if (unannoMatcher.matches()) {
+                annotated = false;
+                if (!CORPUS_VERSION.equals(unannoMatcher.group(1))) {
+                    throw new CorpusReadingException("Expecting corpus file format version " + CORPUS_VERSION + ", but file is version " + unannoMatcher.group(1));
+                }
+                continue;
+            }
+
+            Matcher annoMatcher = ANNOTATED_CORPUS_DECLARATION_PATTERN.matcher(line);
+            if (annoMatcher.matches()) {
+                annotated = true;
+                if (!CORPUS_VERSION.equals(annoMatcher.group(1))) {
+                    throw new CorpusReadingException("Expecting corpus file format version " + CORPUS_VERSION + ", but file is version " + annoMatcher.group(1));
+                }
+                continue;
+            }
+
+            Matcher interpretationMatcher = INTERPRETATION_DECLARATION_PATTERN.matcher(line);
+            if (interpretationMatcher.matches()) {
+                String interpretationName = interpretationMatcher.group(1);
+
+                if (!irtg.getInterpretations().containsKey(interpretationName)) {
+                    throw new CorpusReadingException("Corpus file specified interpretation '" + interpretationName + "', which is not declared in IRTG");
+                }
+
+                interpretationOrder.add(interpretationName);
+                continue;
+            }
+
+            Matcher commentMatcher = COMMENT_PATTERN.matcher(line);
+            if (commentMatcher.matches()) {
+                continue;
+            }
+
+            // first non-comment, non-empty, non-metadata-declaring line => finished reading metadata
+            break;
+        }
+
+        // check metadata
+        if (interpretationOrder.size() != irtg.getInterpretations().size()) {
+            throw new CorpusReadingException("Corpus file specified interpretation order incompletely: " + interpretationOrder);
+        }
+        
+        ret.isAnnotated = annotated;
+        
+        // read actual corpus
+        while (true) {
+            if (line == null) {
+                return ret;
+            }
+            
+            Matcher commentMatcher = COMMENT_PATTERN.matcher(line);
+            if (commentMatcher.matches()) {
+                continue;
+            }
+
+            String current = interpretationOrder.get(currentInterpretationIndex++);
+
+            try {
+                Object inputObject = irtg.parseString(current, line);
+                currentInputs.put(current, inputObject);
+            } catch (ParserException ex) {
+                throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + lineNumber + ": " + ex.getMessage());
+            }
+
+            if (currentInterpretationIndex == interpretationOrder.size()) {
+                Instance inst = new Instance();
+                inst.setInputObjects(currentInputs);
+
+                if (annotated) {
+                    String annoLine = readNextLine(br);
+                    lineNumber++;
+
+                    if (annoLine == null) {
+                        throw new CorpusReadingException("Expected an annotation in line " + lineNumber);
+                    }
+
+                    Tree<String> derivationTree = TreeParser.parse(annoLine);
+                    inst.setDerivationTree(derivationTree);
+                }
+
+                ret.instances.add(inst);
+                currentInputs = new HashMap<String, Object>();
+                currentInterpretationIndex = 0;
+            }
+
+            line = readNextLine(br);
+            lineNumber++;
+        }
     }
 
-    public static Corpus readUnannotatedCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
-        return readCorpus(reader, irtg, false);
-    }
-
+    
+    /*
     private static Corpus readCorpus(Reader reader, InterpretedTreeAutomaton irtg, boolean annotated) throws IOException, CorpusReadingException {
         Corpus ret = new Corpus();
         ret.isAnnotated = annotated;
@@ -86,19 +198,23 @@ public class Corpus implements Iterable<Instance> {
         while (true) {
             String line = readNextLine(br);
             lineNumber++;
-            
+
             if (line == null) {
                 return ret;
             }
 
-            if (lineNumber-1 < irtg.getInterpretations().size()) {
-                if(DEBUG) System.err.println("-> interp " + line);
+            if (lineNumber - 1 < irtg.getInterpretations().size()) {
+                if (DEBUG) {
+                    System.err.println("-> interp " + line);
+                }
                 interpretationOrder.add(line);
             } else {
                 String current = interpretationOrder.get(currentInterpretationIndex);
 
                 try {
-                    if(DEBUG) System.err.println("-> input " + line);
+                    if (DEBUG) {
+                        System.err.println("-> input " + line);
+                    }
                     Object inputObject = irtg.parseString(current, line);
                     currentInputs.put(current, inputObject);
                 } catch (ParserException ex) {
@@ -114,36 +230,44 @@ public class Corpus implements Iterable<Instance> {
                     if (annotated) {
                         String annoLine = readNextLine(br);
                         lineNumber++;
-                        
-                        if( annoLine == null ) {
+
+                        if (annoLine == null) {
                             throw new CorpusReadingException("Expected an annotation in line " + lineNumber);
                         }
-                        
-                        
+
+
                         Tree<String> derivationTree = TreeParser.parse(annoLine);
                         inst.setDerivationTree(derivationTree);
                     }
-                    
+
                     ret.instances.add(inst);
 
-                    if(DEBUG) System.err.println("-> read instance: " + currentInputs);
+                    if (DEBUG) {
+                        System.err.println("-> read instance: " + currentInputs);
+                    }
 
                     currentInputs = new HashMap<String, Object>();
-                    currentInterpretationIndex = 0;                    
+                    currentInterpretationIndex = 0;
                 }
             }
         }
     }
+
+*/
+    
+    
     
     private static String readNextLine(BufferedReader br) throws IOException {
         String ret = null;
-        
+
         do {
             ret = br.readLine();
-        } while( ret != null && WHITESPACE_PATTERN.matcher(ret).matches() );
-        
-        if(DEBUG) System.err.println("**read line: " + ret);
-        
+        } while (ret != null && WHITESPACE_PATTERN.matcher(ret).matches());
+
+        if (DEBUG) {
+            System.err.println("**read line: " + ret);
+        }
+
         return ret;
     }
 }

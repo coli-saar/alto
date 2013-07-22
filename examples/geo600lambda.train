@@ -1,5 +1,9 @@
-english
-lambda
+# IRTG unannotated corpus file, v1.0
+#
+# interpretation english: de.up.ling.irtg.algebra.StringAlgebra
+# interpretation lambda: de.up.ling.irtg.algebra.StringAlgebra
+
+
 what is the highest point in florida
 (argmax $0 (and (place:t $0) (loc:t $0 florida:s)) (elevation:i $0))
 what are the high points of states surrounding mississippi

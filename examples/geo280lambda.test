@@ -1,5 +1,8 @@
-english
-lambda
+# IRTG unannotated corpus file, v1.0
+#
+# interpretation english: de.up.ling.irtg.algebra.StringAlgebra
+# interpretation lambda: de.up.ling.irtg.algebra.StringAlgebra
+
 which state is the smallest
 (argmin $0 (state:t $0) (size:i $0))
 which is the longest river in usa
