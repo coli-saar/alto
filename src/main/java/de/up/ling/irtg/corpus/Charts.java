@@ -37,7 +37,7 @@ public class Charts implements Iterable<TreeAutomaton> {
         }
     }
 
-    public static void computeCharts(Corpus corpus, InterpretedTreeAutomaton irtg, OutputStream ostream) throws Exception {
+    public static void computeCharts(Corpus corpus, InterpretedTreeAutomaton irtg, OutputStream ostream) throws IOException  {
         ZipEntriesCreator zec = new ZipEntriesCreator(ostream);
         
         for (Instance inst : corpus) {

@@ -37,12 +37,12 @@ class MaximumEntropyIrtgTrainerTest {
         assert irtg instanceof MaximumEntropyIrtg;
         MaximumEntropyIrtgTrainer trainer = new MaximumEntropyIrtgTrainer(irtg);
 
-        AnnotatedCorpus anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN1_STR), irtg);
+        Corpus anCo = Corpus.readCorpus(new StringReader(TRAIN1_STR), irtg);
         trainer.train(anCo);
         double[] fWeights = irtg.getFeatureWeights();
         assert (fWeights[0] > fWeights[1]), "weights are not optimized";
 
-        anCo = AnnotatedCorpus.readAnnotatedCorpus(new StringReader(TRAIN2_STR), irtg);
+        anCo = Corpus.readCorpus(new StringReader(TRAIN2_STR), irtg);
         trainer.train(anCo);
         fWeights = irtg.getFeatureWeights();
         assert (fWeights[0] < fWeights[1]), "weights are not optimized";
@@ -83,7 +83,10 @@ f2 = 0.8""";
     private static final String SENTENCE_STR = "john watches the woman with the telescope";
 	
     private static final String TRAIN1_STR = """
-i
+# IRTG annotated corpus file, v1.0
+#
+# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
 john watches the woman with the telescope
 r1(r7,r5( r4(r8, r2(r9,r10)), r6(r12, r2(r9,r11))))
 john watches the telescope with the telescope
@@ -93,7 +96,10 @@ r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r10))))
     """;
 
     private static final String TRAIN2_STR = """
-i
+# IRTG annotated corpus file, v1.0
+#
+# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
 john watches the woman with the telescope
 r1(r7,r4( r8, r2(r9,r3(r10, r6(r12, r2(r9,r11))))))
 john watches the telescope with the telescope

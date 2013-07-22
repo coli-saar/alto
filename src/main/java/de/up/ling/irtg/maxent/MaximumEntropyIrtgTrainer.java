@@ -6,7 +6,9 @@ import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.corpus.AnnotatedCorpus;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.CorpusReadingException;
+import de.up.ling.irtg.corpus.Instance;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +39,7 @@ public class MaximumEntropyIrtgTrainer {
      * @throws IOException if an error occurs on accessing the files
      * @throws ParseException if parsing the grammar fails
      */
-    public static void main(final String[] args) throws IOException, ParseException {
+    public static void main(final String[] args) throws IOException, ParseException, CorpusReadingException {
         String prefix = (args.length > 0) ? args[0] : "ptb-test";
         boolean readCharts = (args.length > 1) ? (args[1].equals("readcharts")) : READ_CHARTS;
         boolean writeCharts = (args.length > 2) ? (args[2].equals("writecharts")) : WRITE_CHARTS;
@@ -51,7 +53,12 @@ public class MaximumEntropyIrtgTrainer {
         MaximumEntropyIrtgTrainer trainer = new MaximumEntropyIrtgTrainer(maxEntIrtg);
 
         log.info("Reading corpus...");
-        AnnotatedCorpus anCo = maxEntIrtg.readAnnotatedCorpus(new FileReader(prefix + "-corpus-training.txt"));
+        Corpus anCo = maxEntIrtg.readCorpus(new FileReader(prefix + "-corpus-training.txt"));
+        
+        if( ! anCo.isAnnotated() ) {
+            System.err.println("Maxent model must be trained on annotated corpus!");
+            System.exit(1);
+        }
 
         if (readCharts) {
             log.info("Reading charts...");
@@ -94,7 +101,7 @@ public class MaximumEntropyIrtgTrainer {
      * @param corpus the training data containing sentences and their parse tree
      * @return true iff L-BFGS optimization was successful
      */
-    public boolean train(final AnnotatedCorpus corpus) {
+    public boolean train(final Corpus corpus) {
         // create the optimzer with own optimizable class
         LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus));
 
@@ -130,7 +137,7 @@ public class MaximumEntropyIrtgTrainer {
         private boolean cachedStale = true;
         private double cachedValue;
         private double[] cachedGradient;
-        private AnnotatedCorpus trainingData;
+        private Corpus trainingData;
 
         /**
          * Constructor
@@ -139,7 +146,7 @@ public class MaximumEntropyIrtgTrainer {
          * @param interp the training data may contain multiple interpretations.
          * This parameter tells us which one to use
          */
-        public MaxEntIrtgOptimizable(final AnnotatedCorpus corpus) {
+        public MaxEntIrtgOptimizable(final Corpus corpus) {
             cachedStale = true;
             trainingData = corpus;
             cachedGradient = new double[maxEntIrtg.getNumFeatures()];
@@ -181,7 +188,7 @@ public class MaximumEntropyIrtgTrainer {
                 int faultyCharts = 0;
                 int j = 0;
 
-                for (AnnotatedCorpus.Instance instance : trainingData.getInstances()) {
+                for (Instance instance : trainingData ) {
                     TreeAutomaton chart = maxEntIrtg.parseMaxent(instance.getInputObjects());
                     // TODO - once chart caching works again, use cached chart here
                     
@@ -204,7 +211,7 @@ public class MaximumEntropyIrtgTrainer {
 
                     // compute parts of the log-likelihood
                     // L(Lambda) = sum1/n - sum2/n
-                    sum1 += Math.log(chart.getWeight(instance.getTree()));
+                    sum1 += Math.log(chart.getWeight(instance.getDerivationTree()));
                     sum2 += Math.log(insideS);
 
                     // compute parts of the gradient
@@ -236,7 +243,7 @@ public class MaximumEntropyIrtgTrainer {
                     }
 
                     // compute f_i(x,y)
-                    maxEntIrtg.getFiFor(instance.getTree(), fiY);
+                    maxEntIrtg.getFiFor(instance.getDerivationTree(), fiY);
 
                     j++;
                 }

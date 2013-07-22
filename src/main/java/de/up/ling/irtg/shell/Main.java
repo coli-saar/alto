@@ -4,16 +4,12 @@
  */
 package de.up.ling.irtg.shell;
 
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;
-import de.up.ling.irtg.corpus.ChartCorpus;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.shell.Shell;
 import de.up.ling.shell.ShutdownShellException;
-import java.io.File;
-import java.io.IOException;
 import java.io.Reader;
 
 /**
@@ -54,12 +50,6 @@ public class Main {
     @CallableFromShell
     public InterpretedTreeAutomaton irtg(Reader reader) throws ParseException {
         return IrtgParser.parse(reader);
-    }
-
-    @CallableFromShell
-    public ChartCorpus readParsedCorpus(Reader reader) throws IOException, ClassNotFoundException {
-        String filename = StringTools.slurp(reader);
-        return new ChartCorpus(new File(filename));
     }
 
     @CallableFromShell

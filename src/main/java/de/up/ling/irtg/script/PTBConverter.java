@@ -3,7 +3,6 @@ package de.up.ling.irtg.script;
 
 import com.google.common.collect.Iterables;
 import de.saar.basic.StringTools;
-import de.up.ling.irtg.corpus.AnnotatedCorpus;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;
@@ -11,7 +10,8 @@ import de.up.ling.irtg.algebra.PtbTreeAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.corpus.AnnotatedCorpus.Instance;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.maxent.ChildOfFeature;
@@ -50,7 +50,7 @@ public class PTBConverter {
     private Map<String, FeatureFunction> featureMap; // mapping of names to feature functions
     private List<Tree<String>> ptbTrees;             // list of PTB-trees
     private List<Tree<String>> irtgTrees;            // list of IRTG-trees
-    private AnnotatedCorpus corpus;                  // annotated corpus
+    private Corpus corpus;                           // annotated corpus
     private MaximumEntropyIrtg maxEntIrtg;           // the automaton storing the grammar
     private Homomorphism hStr;                       // homomorphism for StringAlgebra
     private Homomorphism hPtb;                       // homomorphism for PtbTreeAlgebra
@@ -172,7 +172,7 @@ public class PTBConverter {
         maxTerminalsPerSentence = maxTerminals;
         
         // init members
-        corpus = new AnnotatedCorpus();
+        corpus = new Corpus();
         ptbTrees = new ArrayList<Tree<String>>();
         irtgTrees = new ArrayList<Tree<String>>();
         ruleMap = new HashMap<String, String>();
@@ -592,7 +592,7 @@ public class PTBConverter {
         // this copying is annoying, but probably unavoidable given the sorting by interpretation.
         // but this code should be moved into AnnotatedCorpus anyway. TODO
         List<Instance> instances = new ArrayList<Instance>();
-        Iterables.addAll(instances, corpus.getInstances());
+        Iterables.addAll(instances, corpus);
 
         if (instances.isEmpty()) {
             // if the corpus is empty we have nothing to do
@@ -617,7 +617,7 @@ public class PTBConverter {
         }
 
         // write every instance
-        for (AnnotatedCorpus.Instance instance : instances) {
+        for (Instance instance : instances) {
             // for every instance write their interpretations
             for (String interp : interpretations) {
                 String interpretation = StringTools.join((List<String>) instance.getInputObjects().get(interp), " ");
@@ -625,7 +625,7 @@ public class PTBConverter {
             }
 
             // and their tree
-            writer.write(instance.getTree().toString() + nl);
+            writer.write(instance.getDerivationTree().toString() + nl);
         }
 
         writer.close();

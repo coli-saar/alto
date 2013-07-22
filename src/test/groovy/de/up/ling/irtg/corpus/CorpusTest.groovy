@@ -27,13 +27,11 @@ class CorpusTest {
         // parse corpus and save to byte stream
         ByteArrayOutputStream ostream = new ByteArrayOutputStream();        
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        Corpus corpus = Corpus.readUnannotatedCorpus(new StringReader(PCFG_EMTRAIN_STR), irtg);        
+        Corpus corpus = Corpus.readCorpus(new StringReader(UNANNOTATED_CORPUS), irtg);        
         Charts.computeCharts(corpus, irtg, ostream);
         
         // read parsed corpus and check that charts are correct
-        Charts charts = new Charts(new Supplier<InputStream>() {
-                InputStream get() { return new ByteArrayInputStream(ostream.toByteArray()); }
-            });
+        Charts charts = new Charts(new ByteArrayInputStreamSupplier(ostream.toByteArray()));
         corpus.attachCharts(charts);
         
         int count = 0;
@@ -48,7 +46,7 @@ class CorpusTest {
     @Test
     public void testNewCorpusUnanno() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        Corpus corpus = Corpus.readCorpus(new StringReader(NEW_CORPUS), irtg);
+        Corpus corpus = Corpus.readCorpus(new StringReader(UNANNOTATED_CORPUS), irtg);
         assert corpus.getNumberOfInstances() == 3;
         assert ! corpus.isAnnotated();
     }
@@ -56,7 +54,7 @@ class CorpusTest {
      @Test
     public void testNewCorpusAnno() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        Corpus corpus = Corpus.readCorpus(new StringReader(NEW_CORPUS_ANNO), irtg);
+        Corpus corpus = Corpus.readCorpus(new StringReader(ANNOTATED_CORPUS), irtg);
         assert corpus.getNumberOfInstances() == 3;
         assert corpus.isAnnotated();
     }
@@ -123,7 +121,7 @@ john watches the telescope with the telescope
 john watches the telescope with the woman
 """;
     
-    private static final String NEW_CORPUS = """
+    private static final String UNANNOTATED_CORPUS = """
 # IRTG unannotated corpus file, v1.0
 #
 # interpretation i: de.up.ling.irtg.algebra.StringAlgebra
@@ -133,7 +131,7 @@ john watches the telescope with the telescope
 john watches the telescope with the woman
 """;
     
-    private static final String NEW_CORPUS_ANNO = """
+    private static final String ANNOTATED_CORPUS = """
 # IRTG annotated corpus file, v1.0
 #
 # interpretation i: de.up.ling.irtg.algebra.StringAlgebra

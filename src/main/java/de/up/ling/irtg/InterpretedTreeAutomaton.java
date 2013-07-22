@@ -4,9 +4,6 @@
  */
 package de.up.ling.irtg;
 
-import de.up.ling.irtg.corpus.ChartCorpus;
-import de.up.ling.irtg.corpus.AnnotatedCorpus;
-import com.google.common.base.Supplier;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
@@ -18,7 +15,10 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.binarization.RegularBinarizer;
 import de.up.ling.irtg.binarization.StringAlgebraBinarizer;
 import de.up.ling.irtg.binarization.SynchronousBinarization;
+import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.CorpusReadingException;
+import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
@@ -46,16 +46,15 @@ public class InterpretedTreeAutomaton {
         String filename = args[0];
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(filename));
         irtg.getAutomaton().analyze();
-        
-        Map<String,Reader> inputs = new HashMap<String, Reader>();
+
+        Map<String, Reader> inputs = new HashMap<String, Reader>();
         inputs.put("i", new StringReader("Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 ."));
-        
+
         long start = System.currentTimeMillis();
         irtg.parseFromReaders(inputs);
         long end = System.currentTimeMillis();
-        System.err.println("parsing took " + (end-start) + " ms");
+        System.err.println("parsing took " + (end - start) + " ms");
     }
-
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;
@@ -222,7 +221,13 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell(name = "emtrain")
-    public void trainEM(ChartCorpus trainingData) {
+    public void trainEM(Corpus trainingData) {
+        if (!trainingData.hasCharts()) {
+            System.err.println("EM training can only be performed on a corpus with attached charts.");
+            return;
+        }
+
+
         if (debug) {
             System.out.println("\n\nInitial model:\n" + automaton);
         }
@@ -272,7 +277,12 @@ public class InterpretedTreeAutomaton {
      * @param trainingData a corpus of parse charts
      */
     @CallableFromShell(name = "vbtrain")
-    public void trainVB(ChartCorpus trainingData) {
+    public void trainVB(Corpus trainingData) {
+        if (!trainingData.hasCharts()) {
+            System.err.println("VB training can only be performed on a corpus with attached charts.");
+            return;
+        }
+
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
         List<TreeAutomaton> parses = new ArrayList<TreeAutomaton>();
@@ -325,7 +335,7 @@ public class InterpretedTreeAutomaton {
         for (Rule<String> rule : automaton.getRuleSet()) {
             globalRuleCount.put(rule, 0.0);
         }
-        
+
         for (int i = 0; i < parses.size(); i++) {
             TreeAutomaton parse = parses.get(i);
 
@@ -335,7 +345,7 @@ public class InterpretedTreeAutomaton {
             for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
                 Object intersectedParent = intersectedRule.getParent();
                 Rule<String> originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
-                
+
                 double oldRuleCount = globalRuleCount.get(originalRule);
                 double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight();
 
@@ -362,7 +372,7 @@ public class InterpretedTreeAutomaton {
      * @param intersectedRuleToOriginalRule
      * @param originalRuleToIntersectedRules
      */
-    private void collectParsesAndRules(ChartCorpus trainingData, List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
+    private void collectParsesAndRules(Corpus trainingData, List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ListMultimap<Rule, Rule> originalRuleToIntersectedRules) {
         parses.clear();
         intersectedRuleToOriginalRule.clear();
 
@@ -370,10 +380,10 @@ public class InterpretedTreeAutomaton {
             originalRuleToIntersectedRules.clear();
         }
 
-        for (TreeAutomaton parse : trainingData ) {
-            parses.add(parse);
+        for (Instance instance : trainingData) {
+            parses.add(instance.getChart());
 
-            Set<Rule> rules = parse.getRuleSet();
+            Set<Rule> rules = instance.getChart().getRuleSet();
             Map<Rule, Rule> irtorHere = new HashMap<Rule, Rule>();
             for (Rule intersectedRule : rules) {
                 Rule<String> originalRule = getRuleInGrammar(intersectedRule);
@@ -397,7 +407,7 @@ public class InterpretedTreeAutomaton {
             String firstState = (String) getFirstEntry(pairState);
             firstChildStates.add(firstState);
         }
-        
+
         for (Rule<String> candidate : automaton.getRulesBottomUp(intersectedRule.getLabel(), firstChildStates)) {
             if (firstParentState.equals(candidate.getParent())) {
                 return candidate;
@@ -418,67 +428,49 @@ public class InterpretedTreeAutomaton {
     public void setDebug(boolean debug) {
         this.debug = debug;
     }
-    
-    
-    /**
-     * BUG: This can't be expected to work right now, because state names have to be
-     * remapped to be identical (and not just equals) to the state names in the IRTG automaton.
-     * 
-     * @param reader
-     * @return
-     * @throws IOException 
-     */
+
+    // "reader" is the reader from which the corpus will be read
+    // TODO: state names must be remapped
     @CallableFromShell
-    public ChartCorpus readChartCorpus(Reader reader) throws IOException {
-        return new ChartCorpus(new File(StringTools.slurp(reader)));
-    }
-    
-    public ChartCorpus readChartCorpus(Supplier<InputStream> istream) {
-        return new ChartCorpus(istream);
-    }
-    
-    /**
-     * This assumes that the corpus text file can be obtained from the reader.
-     */
-    @CallableFromShell
-    public void parseUnannotatedCorpus(Reader unannotatedCorpus, OutputStream ostream) throws IOException {
-        ChartCorpus.parseCorpus(unannotatedCorpus, this, ostream);
-    }
-    
-    @CallableFromShell
-    public AnnotatedCorpus readAnnotatedCorpus(Reader reader) throws IOException {
-        return AnnotatedCorpus.readAnnotatedCorpus(reader, this);
-    }
-    
-    /**
-     * BUG: This no longer works with the current version of ChartCorpus.
-     * 
-     * @param corpus 
-     */
-    /*
-    public void normalizeStates(ChartCorpus corpus) {
-        for( TreeAutomaton chart : corpus ) {
-            Set<Rule> rules = chart.getRuleSet();
-            for( Rule rule : rules ) {
-                normalizeState(rule.getParent());
-                for( Object child : rule.getChildren() ) {
-                    normalizeState(child);
-                }
-            }
-        }
-    }
-    
-    private void normalizeState(Object state) {
-        if( state instanceof Pair ) {
-            Pair pairState = (Pair) state;
-            if( ! (pairState.left instanceof Pair) ) {
-                pairState.left = automaton.normalizeState(pairState.left.toString());
-            }
-        }
+    public Corpus readCorpus(Reader reader) throws IOException, CorpusReadingException {
+        return Corpus.readCorpus(reader, this);
     }
 
-*/
+    // "reader" is a reader that contains the name of the file from which the charts will be read
+    @CallableFromShell
+    public void attachCharts(Corpus corpus, Reader reader) throws IOException {
+        String filename = StringTools.slurp(reader);
+        corpus.attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
+    }
+
+    /**
+     * BUG: This no longer works with the current version of ChartCorpus.
+     *
+     * @param corpus
+     */
+    /*
+     public void normalizeStates(ChartCorpus corpus) {
+     for( TreeAutomaton chart : corpus ) {
+     Set<Rule> rules = chart.getRuleSet();
+     for( Rule rule : rules ) {
+     normalizeState(rule.getParent());
+     for( Object child : rule.getChildren() ) {
+     normalizeState(child);
+     }
+     }
+     }
+     }
     
+     private void normalizeState(Object state) {
+     if( state instanceof Pair ) {
+     Pair pairState = (Pair) state;
+     if( ! (pairState.left instanceof Pair) ) {
+     pairState.left = automaton.normalizeState(pairState.left.toString());
+     }
+     }
+     }
+
+     */
     public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
         List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
         if (orderedInterpretationList.size() != 2) {

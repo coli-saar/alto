@@ -80,9 +80,10 @@ S -> r2
             chart.language());
     }
     
+    /*
     private ChartCorpus writeThenReadCorpus(InterpretedTreeAutomaton irtg, Reader corpus) {
         ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-        irtg.parseUnannotatedCorpus(corpus, ostream);        
+        irtg.readCorpus(corpus, ostream);        
         return irtg.readChartCorpus(new ByteArrayInputStreamSupplier(ostream.toByteArray()));
     }
     
@@ -96,7 +97,8 @@ S -> r2
 //        System.err.println("read corpus: " + pco.getInstancesAsList());
         
     }
-
+*/
+    
     /* crashes with NPE in e-step 
     @Test
     public void testEM() {
@@ -118,7 +120,7 @@ S -> r2
     @Test
     public void testParseAnnotatedCorpus() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        Corpus pco = Corpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
+        Corpus pco = Corpus.readCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
         
         assertEquals(3, pco.getNumberOfInstances());
         Iterator<Instance> it = pco.iterator();
@@ -131,7 +133,7 @@ S -> r2
     @Test
     public void testML() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        Corpus ac = Corpus.readAnnotatedCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
+        Corpus ac = Corpus.readCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
         irtg.trainML(ac);
         
         TreeAutomaton auto = irtg.getAutomaton()
@@ -227,14 +229,20 @@ P -> r12
 """;
     
     private static final String PCFG_EMTRAIN_STR = """
-i
+# IRTG unannotated corpus file, v1.0
+#
+# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
 john watches the woman with the telescope
 john watches the telescope with the telescope
 john watches the telescope with the woman
 """;
     
     private static final String PCFG_MLTRAIN_STR = """
-i
+# IRTG annotated corpus file, v1.0
+#
+# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
 john watches the woman with the telescope
 r1(r7,r5( r4(r8, r2(r9,r10)), r6(r12, r2(r9,r11))))
 john watches the telescope with the telescope
