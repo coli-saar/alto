@@ -27,13 +27,12 @@ import java.io.Reader;
  * @author koller
  */
 public class Main {
-
     private static final String OUTPUT_END_MARKER = "---";
     private static final String ERROR_MARKER = "*** ";
     private Shell shell;
 
     public static void main(String[] args) throws Exception {
-        if (true) {
+        if (false) {
             new File("parsed-corpus.odb").delete();
             new File("parsed-corpus.odb$").delete();
             

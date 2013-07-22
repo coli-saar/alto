@@ -28,7 +28,7 @@ public class Corpus implements Iterable<Instance> {
     private List<Instance> instances;
     private Charts charts;
     private boolean isAnnotated;
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     public Corpus() {
         instances = new ArrayList<Instance>();

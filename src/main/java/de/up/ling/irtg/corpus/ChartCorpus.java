@@ -37,11 +37,9 @@ import java.util.logging.Logger;
 public class ChartCorpus implements Serializable, Iterable<TreeAutomaton> {
     private static final String MARKER = "IrtgChartCorpus";
     private Supplier<InputStream> streamSupplier;
-    private ObjectInputStream inputStream;
 
     public ChartCorpus(Supplier<InputStream> streamSupplier) {
         this.streamSupplier = streamSupplier;
-        inputStream = null;
     }
 
     public ChartCorpus(final File file) {
