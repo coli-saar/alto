@@ -9,16 +9,10 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;
 import de.up.ling.irtg.corpus.ChartCorpus;
-import de.up.ling.irtg.corpus.Charts;
-import de.up.ling.irtg.corpus.Corpus;
-import de.up.ling.irtg.corpus.FileInputStreamSupplier;
-import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.shell.Shell;
 import de.up.ling.shell.ShutdownShellException;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
@@ -32,35 +26,6 @@ public class Main {
     private Shell shell;
 
     public static void main(String[] args) throws Exception {
-        if (false) {
-            new File("parsed-corpus.odb").delete();
-            new File("parsed-corpus.odb$").delete();
-            
-            InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/cfg.irtg"));
-            Corpus corpus = Corpus.readUnannotatedCorpus(new FileReader("examples/pcfg-training.txt"), irtg);
-            Charts.computeCharts(corpus, irtg, new FileOutputStream("parsed-corpus.odb"));
-        } else {
-
-            InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/cfg.irtg"));
-            Corpus corpus = Corpus.readUnannotatedCorpus(new FileReader("examples/pcfg-training.txt"), irtg);
-            Charts charts = new Charts(new FileInputStreamSupplier(new File("parsed-corpus.odb")));
-            corpus.attachCharts(charts);
-
-            System.err.println("#inst: " + corpus.getNumberOfInstances());
-
-            int count = 1;
-            for (Instance inst : corpus) {
-                System.err.println("\n-------------\ninstance " + (count++) + "\n------------\n");
-                System.err.println(inst.getInputObjects());
-                System.err.println(inst.getChart());
-            }
-        }
-
-        System.exit(0);
-
-
-
-
         int serverPort = 0;
 
         for (int i = 0; i < args.length; i++) {
