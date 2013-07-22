@@ -9,6 +9,7 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
+import de.saar.basic.ZipIterator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
