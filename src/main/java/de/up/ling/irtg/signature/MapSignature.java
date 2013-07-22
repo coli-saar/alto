@@ -15,7 +15,6 @@ import java.util.Map;
  */
 public class MapSignature extends Signature implements Serializable {
     private Map<String,Integer> symbols;
-//    private Map<String,String> 
 
     public MapSignature() {
         symbols = new HashMap<String, Integer>();

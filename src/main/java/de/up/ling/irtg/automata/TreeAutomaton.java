@@ -614,6 +614,22 @@ public abstract class TreeAutomaton<State> implements Serializable {
             isExplicit = true;
         }
     }
+    
+    public ConcreteTreeAutomaton<State> asConcreteTreeAutomaton() {
+        ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
+        
+        makeAllRulesExplicit();
+        
+        for( Rule<State> rule : getRuleSet() ) {
+            ret.addRule(rule);
+        }
+        
+        for( State f : getFinalStates() ) {
+            ret.addFinalState(f);
+        }
+        
+        return ret;
+    }
 
     /*
      public ConcreteTreeAutomaton<State> makeConcreteAutomaton() {

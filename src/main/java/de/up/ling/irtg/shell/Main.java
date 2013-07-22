@@ -9,11 +9,13 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;
 import de.up.ling.irtg.corpus.ChartCorpus;
+import de.up.ling.irtg.corpus.Charts;
+import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.shell.Shell;
 import de.up.ling.shell.ShutdownShellException;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
 
@@ -22,12 +24,20 @@ import java.io.Reader;
  * @author koller
  */
 public class Main {
-
     private static final String OUTPUT_END_MARKER = "---";
     private static final String ERROR_MARKER = "*** ";
     private Shell shell;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/cfg.irtg"));
+        Corpus corpus = Corpus.readUnannotatedCorpus(new FileReader("examples/pcfg-training.irtg"), irtg);
+        Charts.computeCharts(corpus, irtg, "parsed-corpus.odb");
+        
+        System.exit(0);
+        
+        
+        
+        
         int serverPort = 0;
 
         for (int i = 0; i < args.length; i++) {
