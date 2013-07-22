@@ -14,12 +14,8 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
-import javax.persistence.Query;
-import zip.ZipEntriesCreator;
-import zip.ZipEntryIterator;
+import de.up.ling.zip.ZipEntriesCreator;
+import de.up.ling.zip.ZipEntryIterator;
 
 /**
  *

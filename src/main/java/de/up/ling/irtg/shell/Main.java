@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.shell;
 
-import com.objectdb.Enhancer;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
