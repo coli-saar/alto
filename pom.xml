@@ -9,12 +9,12 @@
     <name>irtg</name>
     <url>http://maven.apache.org</url>
   
-  <dependencies>
-    <dependency>
-      <groupId>de.saar.coli</groupId>
-      <artifactId>basics</artifactId>
-      <version>[1.2.28,)</version>
-    </dependency>
+    <dependencies>
+        <dependency>
+            <groupId>de.saar.coli</groupId>
+            <artifactId>basics</artifactId>
+            <version>[1.2.29,)</version>
+        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -34,12 +34,6 @@
             <artifactId>mallet</artifactId>
             <version>2.0.7</version>
         </dependency>
-    
-        <dependency>
-            <groupId>com.objectdb</groupId>
-            <artifactId>objectdb</artifactId>
-            <version>2.5.0</version>
-        </dependency>
         
         <dependency>
             <groupId>junit</groupId>
@@ -47,19 +41,14 @@
             <version>4.6</version>
             <scope>test</scope>
         </dependency>
-
+        
         <dependency>
-            <groupId>org.spockframework</groupId>
-            <artifactId>spock-core</artifactId>
-            <version>0.6-groovy-1.8</version>
+            <artifactId>groovy-all</artifactId>
+            <groupId>org.codehaus.groovy</groupId>
+            <version>2.0.5</version>
             <scope>test</scope>
         </dependency>
-    <dependency>
-      <artifactId>groovy-all</artifactId>
-      <groupId>org.codehaus.groovy</groupId>
-      <version>2.0.5</version>
-    </dependency>
-  </dependencies>
+    </dependencies>
 
     <build>
         <plugins>
@@ -157,18 +146,18 @@
                             <minimizeJar>true</minimizeJar>
                             <filters>
                                 <filter>
-				    <artifact>*:*</artifact>
+                                    <artifact>*:*</artifact>
                                     <excludes>
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>                                       
                                     </excludes>
                                 </filter>
-				<filter>
+                                <filter>
                                     <includes>
                                         <include>de/up/ling/irtg/automata/*.jdo</include>
                                     </includes>
-				</filter>
+                                </filter>
                             </filters>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -193,30 +182,30 @@
             </plugin>
 
 
-<!--
-          <plugin>
-            <artifactId>maven-compiler-plugin</artifactId>
-            <version>2.3.2</version>
-            <dependencies>
-              <dependency>
-                <groupId>org.codehaus.groovy</groupId>
-                <artifactId>groovy-eclipse-compiler</artifactId>
-                <version>2.6.0-01</version>
-              </dependency>
-            </dependencies>
-            <configuration>
-              <compilerId>groovy-eclipse-compiler</compilerId>
-               <source>1.6</source>
-               <target>1.6</target>
-            </configuration>
-          </plugin>
-          <plugin>
-            <artifactId>groovy-eclipse-compiler</artifactId>
-            <groupId>org.codehaus.groovy</groupId>
-            <version>2.6.0-01</version>
-            <extensions>true</extensions>
-          </plugin>
--->
+            <!--
+                      <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.3.2</version>
+                        <dependencies>
+                          <dependency>
+                            <groupId>org.codehaus.groovy</groupId>
+                            <artifactId>groovy-eclipse-compiler</artifactId>
+                            <version>2.6.0-01</version>
+                          </dependency>
+                        </dependencies>
+                        <configuration>
+                          <compilerId>groovy-eclipse-compiler</compilerId>
+                           <source>1.6</source>
+                           <target>1.6</target>
+                        </configuration>
+                      </plugin>
+                      <plugin>
+                        <artifactId>groovy-eclipse-compiler</artifactId>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <version>2.6.0-01</version>
+                        <extensions>true</extensions>
+                      </plugin>
+            -->
 
         </plugins>
 
