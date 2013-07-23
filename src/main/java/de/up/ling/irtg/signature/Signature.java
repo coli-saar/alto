@@ -7,6 +7,9 @@ package de.up.ling.irtg.signature;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -14,18 +17,35 @@ import java.util.List;
  *
  * @author koller
  */
-public abstract class Signature {
-    public abstract Collection<String> getSymbols();  // try to avoid using this, it may be hard to compute
+public class Signature implements Serializable {
+    private Interner<String> interner;
+    private Int2IntMap arities;
+
+    public Signature() {
+        interner = new Interner<String>();
+        arities = new Int2IntOpenHashMap();
+    }
     
-    public abstract int getArity(String symbol);
-    public abstract boolean contains(String symbol);
+    public Collection<String> getSymbols() {
+        return interner.getKnownObjects();
+    }
     
-    public void addSymbol(String symbol, int arity) {
-        throw new UnsupportedOperationException("Adding symbols to this signature is not allowed.");
+    public int getArity(String symbol) {
+        return arities.get(interner.resolveObject(symbol));
+    }
+    
+    public boolean contains(String symbol) {
+        return interner.isKnownObject(symbol);
+    }
+    
+    public int addSymbol(String symbol, int arity) {
+        int ret = interner.addObject(symbol);
+        arities.put(ret, arity);
+        return ret;
     }
     
     public boolean isWritable() {
-        return false;
+        return true;
     }
     
     public void addAllSymbols(Tree<String> tree) {

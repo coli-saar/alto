@@ -6,7 +6,6 @@ package de.up.ling.irtg.algebra;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.signature.MapSignature;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -30,7 +29,7 @@ import java.util.Set;
 public class StringAlgebra implements Algebra<List<String>> {
     public static final String CONCAT = "*";
     private static final Set<String> CONCAT_SET = new HashSet<String>();
-    private MapSignature signature = new MapSignature();
+    private Signature signature = new Signature();
 
     static {
         CONCAT_SET.add(CONCAT);

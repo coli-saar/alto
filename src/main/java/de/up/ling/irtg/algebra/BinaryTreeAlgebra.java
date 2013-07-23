@@ -8,7 +8,6 @@ import de.saar.basic.StringTools;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.signature.MapSignature;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -116,7 +115,7 @@ public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
     @Override
     public Signature getSignature() {
         Signature underlyingSignature = underlyingAlgebra.getSignature();
-        MapSignature ret = new MapSignature();
+        Signature ret = new Signature();
         
         ret.addSymbol(APPEND, 2);
         

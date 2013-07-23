@@ -6,11 +6,8 @@ package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import de.saar.basic.StringOrVariable;
-import de.saar.chorus.term.parser.TermParser;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.signature.MapSignature;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
@@ -24,7 +21,7 @@ import java.util.Set;
  * @author koller
  */
 public class TreeAlgebra implements Algebra<Tree<String>> {
-    private final MapSignature signature = new MapSignature();
+    private final Signature signature = new Signature();
 
     @Override
     public Tree<String> evaluate(Tree<String> t) {

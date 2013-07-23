@@ -5,7 +5,7 @@
 
 package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.signature.MapSignature;
+import de.up.ling.irtg.signature.Signature;
 import java.util.List;
 import java.util.Set;
 
@@ -15,13 +15,13 @@ import java.util.Set;
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public ConcreteTreeAutomaton() {
-        super(new MapSignature());
+        super(new Signature());
         isExplicit = true;
     }
     
     public Rule<State> addRule(Rule<State> rule) {
         storeRule(rule);
-        ((MapSignature) signature).addSymbol(rule.getLabel(), rule.getChildren().length);
+        signature.addSymbol(rule.getLabel(), rule.getChildren().length);
         return rule;
     }
 
