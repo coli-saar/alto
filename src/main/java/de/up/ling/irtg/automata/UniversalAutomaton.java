@@ -25,21 +25,21 @@ public class UniversalAutomaton extends TreeAutomaton<String> {
     }
 
     @Override
-    public Set<Rule<String>> getRulesBottomUp(String label, List<String> childStates) {
+    public Set<Rule<String>> getRulesBottomUp(int label, List<String> childStates) {
         Set<Rule<String>> ret = new HashSet<Rule<String>>();
-        ret.add(createRule(STATE, label, childStates));
+        ret.add(createRule(STATE, label, (String[]) childStates.toArray(), 1));
         return ret;
     }
 
     @Override
-    public Set<Rule<String>> getRulesTopDown(String label, String parentState) {
+    public Set<Rule<String>> getRulesTopDown(int label, String parentState) {
         Set<Rule<String>> ret = new HashSet<Rule<String>>();
         List<String> childStates = new ArrayList<String>();
         for( int i = 0; i < signature.getArity(label); i++ ) {
             childStates.add(STATE);
         }
         
-        ret.add(createRule(STATE, label, childStates));
+        ret.add(createRule(STATE, label, (String[]) childStates.toArray(), 1));
         
         return ret;
     }

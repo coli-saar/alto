@@ -19,6 +19,7 @@ import java.util.PriorityQueue;
  * @author koller
  */
 public class HuangKbest<State> {
+    /*
     private int K;
     private Map<State, PriorityQueue<Derivation>> cand;
     private ListMultimap<State, Derivation> trees;
@@ -128,4 +129,5 @@ public class HuangKbest<State> {
         
         return l1;
     }
+    */
 }

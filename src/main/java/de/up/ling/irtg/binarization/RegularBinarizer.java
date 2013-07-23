@@ -92,6 +92,8 @@ public abstract class RegularBinarizer<E> {
             stateNameMap.put(stateToRename, newStateName);
         }
 
+        /*** commented out in signature revision ***
+        
         // go through all rules and copy while renaming
         for (Rule<E> rule : automaton.getRuleSet()) {
             if (rule.getLabel().startsWith(VARIABLE_MARKER)) {
@@ -109,6 +111,7 @@ public abstract class RegularBinarizer<E> {
                 intoAutomaton.addRule(newRule);
             }
         }
+        */
 
         // collect list of variable states
         List<String> variableNames = new ArrayList<String>(variableToState.keySet());

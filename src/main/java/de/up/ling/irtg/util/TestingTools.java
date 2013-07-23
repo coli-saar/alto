@@ -27,13 +27,17 @@ public class TestingTools {
         return TreeParser.parse(s);
     }
     
+    public static Tree<Integer> pti(String s, Signature sig) {
+        return sig.addAllSymbols(pt(s));
+    }
+    
     public static Tree<StringOrVariable> ptv(String s) {
         Term x = TermParser.parse(s);
         return x.toTreeWithVariables();
     }
     
-    public static Tree<HomomorphismSymbol> pth(String s) {
-        return HomomorphismSymbol.treeFromNames(pt(s));
+    public static Tree<HomomorphismSymbol> pth(String s, Signature sig) {
+        return HomomorphismSymbol.treeFromNames(pt(s), sig);
     }
     
     public static TreeAutomaton pa(String s) throws ParseException {
@@ -44,7 +48,7 @@ public class TestingTools {
         Homomorphism ret = new Homomorphism(sourceSignature, new Signature());
         
         for( String sym : mappings.keySet() ) {
-            ret.add(sym, pth(mappings.get(sym)));
+            ret.add(sourceSignature.getIdForSymbol(sym), pth(mappings.get(sym), ret.getTargetSignature()));
         }
         
         return ret;

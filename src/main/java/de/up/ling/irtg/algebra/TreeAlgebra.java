@@ -21,11 +21,11 @@ import java.util.Set;
  * @author koller
  */
 public class TreeAlgebra implements Algebra<Tree<String>> {
-    private final Signature signature = new Signature();
+    protected final Signature signature = new Signature();
 
     @Override
-    public Tree<String> evaluate(Tree<String> t) {
-        return t;
+    public Tree<String> evaluate(Tree<Integer> t) {
+        return signature.resolve(t);
     }
 
     @Override
@@ -39,16 +39,16 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
     }
 
     private class TreeDecomposingAutomaton extends TreeAutomaton<String> {
-        private Tree<String> tree;
-        private final Set<String> labels;
-        private ListMultimap<String, String> leafLabelsToStates;
+        private Tree<Integer> tree;
+        private final Set<Integer> labels;
+        private ListMultimap<Integer, String> leafLabelsToStates;
 
-        public TreeDecomposingAutomaton(Tree<String> tree) {
+        public TreeDecomposingAutomaton(Tree<String> derivedTree) {
             super(TreeAlgebra.this.getSignature());
 
-            this.tree = tree;
+            this.tree = TreeAlgebra.this.getSignature().addAllSymbols(derivedTree);
 
-            labels = new HashSet<String>();
+            labels = new HashSet<Integer>();
             leafLabelsToStates = ArrayListMultimap.create();
 
             collectStatesAndLabels(tree, "q");
@@ -56,12 +56,12 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
         }
 
         @Override
-        public Set<Rule<String>> getRulesBottomUp(String label, List<String> childStates) {
+        public Set<Rule<String>> getRulesBottomUp(int label, List<String> childStates) {
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
 
             if (childStates.isEmpty()) {
                 for (String state : leafLabelsToStates.get(label)) {
-                    Rule<String> rule = new Rule<String>(state, label, childStates);
+                    Rule<String> rule = createRule(state, label, childStates);
                     storeRule(rule);
                     ret.add(rule);
                 }
@@ -76,7 +76,7 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
                 }
 
                 if (correctChildren && tree.select(potentialParent, 1).getLabel().equals(label)) {
-                    Rule<String> rule = new Rule<String>(potentialParent, label, childStates);
+                    Rule<String> rule = createRule(potentialParent, label, childStates);
                     storeRule(rule);
                     ret.add(rule);
                 }
@@ -86,9 +86,9 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
         }
 
         @Override
-        public Set<Rule<String>> getRulesTopDown(String label, String parentState) {
+        public Set<Rule<String>> getRulesTopDown(int label, String parentState) {
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
-            Tree<String> t = tree.select(parentState, 1);
+            Tree<Integer> t = tree.select(parentState, 1);
 
             if (t.getLabel().equals(label)) {
                 List<String> children = new ArrayList<String>();
@@ -96,7 +96,7 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
                     children.add(parentState + i);
                 }
 
-                Rule<String> rule = new Rule<String>(parentState, label, children);
+                Rule<String> rule = createRule(parentState, label, children);
                 ret.add(rule);
                 storeRule(rule);
             }
@@ -105,7 +105,7 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
             return ret;
         }
 
-        private void collectStatesAndLabels(Tree<String> node, String state) {
+        private void collectStatesAndLabels(Tree<Integer> node, String state) {
             state = addState(state);
             labels.add(node.getLabel());
 

@@ -14,19 +14,19 @@ import de.up.ling.irtg.automata.Rule;
  * @author koller
  */
 public class RuleNameFeature extends FeatureFunction<String> {
-    private String x;
+    private int x;
 
-    public RuleNameFeature(String x) {
+    public RuleNameFeature(int x) {
         this.x = x;
     }
 
-    public String getX() {
+    public int getX() {
         return x;
     }
 
     @Override
     public double evaluate(Rule<String> object) {
-        if( object.getLabel() == x ) { // VORSICHT
+        if( object.getLabel() == x ) { 
             return 1.0;
         } else {
             return 0.0;

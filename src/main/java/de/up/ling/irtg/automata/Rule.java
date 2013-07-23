@@ -84,7 +84,7 @@ public class Rule<State> implements Serializable {
     }
 
     public String toString(TreeAutomaton auto) {
-        return toString(auto, false);
+        return toString(auto, auto.getFinalStates().contains(parent));
     }
 
     public String toString(TreeAutomaton auto, boolean parentIsFinal) {
@@ -109,6 +109,14 @@ public class Rule<State> implements Serializable {
 
         ret.append(" [" + weight + "]");
         return ret.toString();
+    }
+    
+    public static <E>  List<String> rulesToStrings(Collection<Rule<E>> rules, TreeAutomaton<E> auto) {
+        List<String> ret = new ArrayList<String>();
+        for( Rule rule : rules ) {
+            ret.add(rule.toString(auto));
+        }
+        return ret;
     }
 
     @Override

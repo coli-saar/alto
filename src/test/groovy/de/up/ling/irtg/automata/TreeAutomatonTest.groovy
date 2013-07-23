@@ -13,30 +13,42 @@ import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.up.ling.tree.*
 import de.up.ling.irtg.hom.*
+import de.up.ling.irtg.signature.*
 import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
 import static de.up.ling.irtg.util.TestingTools.*;
-import spock.lang.*
+//import spock.lang.*
 
 /**
  *
  * @author koller
  */
 class TreeAutomatonTest{
+    static TreeAutomaton auto;
+    static Signature sig;
+    
+    private static setAutomaton(String s) {
+        auto = parse(s);
+        sig = auto.getSignature();
+    }
+    
     @Test
     public void testIntersection() {
         TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
         TreeAutomaton intersect = auto1.intersect(auto2);
 
-        assertEquals(new HashSet([r(p("q1","p2"), "a", []), r(p("q1", "p3"), "a", [])]), 
-            intersect.getRulesBottomUp("a", []));
+        assertEquals(new HashSet([rs(p("q1","p2"), "a", [], intersect), rs(p("q1", "p3"), "a", [], intersect)]), 
+            rbu("a", [], intersect));
 
-        assertEquals(new HashSet([r(p("q2", "p1"), "f", [p("q1","p2"), p("q1","p3")])]), 
-            intersect.getRulesBottomUp("f", [p("q1","p2"), p("q1","p3")]));
+        assertEquals(new HashSet([rs(p("q2", "p1"), "f", [p("q1","p2"), p("q1","p3")], intersect)]), 
+            rbu("f", [p("q1","p2"), p("q1","p3")], intersect));
 
         assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
-        assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
+    }
+    
+    private Set<Rule> rbu(String label, List children, TreeAutomaton auto) {
+        return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), children);
     }
 
 //    @Test
@@ -52,32 +64,32 @@ class TreeAutomatonTest{
     
     @Test
     public void testRunWeights() {
-        TreeAutomaton auto = parse("p1! -> f(p2,p3)\n p2 -> a [0.4]\n p3 -> a [0.6]");
-        Tree t = pt("f(a,a)");
+        setAutomaton("p1! -> f(p2,p3)\n p2 -> a [0.4]\n p3 -> a [0.6]");
+        Tree t = ptii("f(a,a)");
         
         assert Math.abs(0.24 - auto.getWeight(t)) < 0.001;
     }    
     
     @Test
     public void testRunWeightsSumAtRoot() {
-        TreeAutomaton auto = parse("p1! -> f(p2,p3) \n p1! -> f(p2,p2) \n p2 -> a  [0.4]\n p3 -> a [0.6]");
-        Tree t = pt("f(a,a)");
+        setAutomaton("p1! -> f(p2,p3) \n p1! -> f(p2,p2) \n p2 -> a  [0.4]\n p3 -> a [0.6]");
+        Tree t = ptii("f(a,a)");
         
         assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
     }
     
     @Test
     public void testRunWeightsSumInMiddle() {
-        TreeAutomaton auto = parse("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a  [0.6]");
-        Tree t = pt("g(f(a,a))");
+        setAutomaton("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a  [0.6]");
+        Tree t = ptii("g(f(a,a))");
         
         assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
     }
 
     @Test
     public void testRunWeightsNotInLanguage() {
-        TreeAutomaton auto = parse("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a [0.6]");
-        Tree t = pt("f(a,a)");
+        setAutomaton("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a [0.6]");
+        Tree t = ptii("f(a,a)");
         
         assert Math.abs(auto.getWeight(t)) < 0.001;
     }
@@ -187,25 +199,25 @@ class TreeAutomatonTest{
     
     @Test
     public void testLanguage() {
-        TreeAutomaton auto = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
+        setAutomaton("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
         Set lang = new HashSet(auto.language()*.toString());
-        Set gold = new HashSet([pt("f(a,a)"), pt("f(a,b)")]*.toString());
+        Set gold = new HashSet([ptii("f(a,a)"), ptii("f(a,b)")]*.toString());
         assertEquals(gold, lang);
     }
     
     @Test
     public void testLanguage2() {
-        TreeAutomaton auto = parse("q1 -> a\n q1 -> b\n q2 -> c\n q2 -> d\n q! -> f(q1,q2)\n q! -> g(q1,q2)");
+        setAutomaton("q1 -> a\n q1 -> b\n q2 -> c\n q2 -> d\n q! -> f(q1,q2)\n q! -> g(q1,q2)");
         Set lang = new HashSet(auto.language()*.toString());
-        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
+        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {ptii(it).toString()});
         assertEquals(gold, lang)
     }
     
     @Test
     public void testLanguageIterator() {
-        TreeAutomaton auto = parse("q1 -> a\n q1 -> b\n q2 -> c\n q2 -> d\n q! -> f(q1,q2)\n q! -> g(q1,q2)");
+        setAutomaton("q1 -> a\n q1 -> b\n q2 -> c\n q2 -> d\n q! -> f(q1,q2)\n q! -> g(q1,q2)");
         Set lang = new HashSet();
-        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
+        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {ptii(it).toString()});
         
         for( Tree t : auto.languageIterable() ) {
             lang.add(t.toString())
@@ -216,7 +228,7 @@ class TreeAutomatonTest{
     
     @Test
     public void testEmptyLanguageIterator() {
-        TreeAutomaton auto = parse("q! -> g(q1,q2)");
+        setAutomaton("q! -> g(q1,q2)");
         Set lang = new HashSet();
         Set gold = new HashSet();
         
@@ -324,7 +336,9 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     }
     
     private void _testRun(String auto, String tree, List gold) {
-        assert pa(auto).run(pt(tree)).equals(new HashSet(gold));
+        TreeAutomaton a = pa(auto);
+        
+        assert a.run(pti(tree,a.getSignature())).equals(new HashSet(gold));
     }
     
     
@@ -364,6 +378,14 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
 
     private static Rule r(parent, label, children) {
         return new Rule(parent, label, children);
+    }
+    
+    private static Rule rs(parent, String label, children, TreeAutomaton automaton) {
+        return new Rule(parent, automaton.getSignature().getIdForSymbol(label), children, 1);
+    }
+    
+    private static Tree<Integer> ptii(String s) {
+        return pti(s, sig);
     }
 }
 

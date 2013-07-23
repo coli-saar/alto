@@ -94,12 +94,12 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * @return Tree<String> the evaluated tree
      */
     @Override
-    public Tree<String> evaluate(final Tree<String> tree) {
-//        tree.draw();
-        return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
+    public Tree<String> evaluate(final Tree<Integer> tree) {
+        return tree.dfs(new TreeVisitor<Integer, Void, Tree<String>>() {
             @Override
-            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
+            public Tree<String> combine(Tree<Integer> node, List<Tree<String>> childrenValues) {
                 List<Tree<String>> newChildValues = new ArrayList<Tree<String>>();
+                String labelAsString = signature.resolveSymbolId(node.getLabel());
                 
                 // remove the effects of the binarization
                 // i.e. replace artificial nodes with their children
@@ -115,11 +115,12 @@ public class PtbTreeAlgebra extends TreeAlgebra {
                 // remove effects of relabeling
                 // i.e. the parent annotation and the appended size of children
                 String label;
+                
                 if (!childrenValues.isEmpty()) {
-                    Matcher match = LABELFX_PATTERN.matcher(node.getLabel());
-                    label = match.matches() ? match.group(1) : node.getLabel();
+                    Matcher match = LABELFX_PATTERN.matcher(labelAsString);
+                    label = match.matches() ? match.group(1) : labelAsString;
                 } else {
-                    label = node.getLabel();
+                    label = labelAsString;
                 }
 
                 return Tree.create(label,newChildValues);
@@ -170,6 +171,8 @@ public class PtbTreeAlgebra extends TreeAlgebra {
         if (ret == null) {
             ret = TreeParser.parse(representation);
         }
+        
+        signature.addAllSymbols(ret);
         
         return ret;
     }

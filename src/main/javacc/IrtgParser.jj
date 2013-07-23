@@ -22,6 +22,7 @@ import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.*;
 import de.up.ling.irtg.maxent.*;
 import de.up.ling.irtg.algebra.*;
+import de.up.ling.irtg.signature.*;
 //import de.saar.chorus.term.*;
 import de.up.ling.tree.*;
 import de.saar.basic.*;
@@ -36,7 +37,7 @@ public class IrtgParser {
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
     private Map<String,Homomorphism> homomorphisms = new HashMap<String,Homomorphism>();
     private Map<String,Interpretation> interpretations = new HashMap<String,Interpretation>();
-    private String lastSeenTerminal = null;
+    private int lastSeenTerminal = 0;
     private Rule<String> lastSeenRule = null;
     private Map<String, FeatureFunction> features = new HashMap<String, FeatureFunction>();
 
@@ -148,8 +149,8 @@ void AutomatonRule() :
 {
     parentState=State() "->" label=name() ("(" childStates=StateList() ")")? {
         if( childStates == null ) childStates = new ArrayList<String>();
-        lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
-        lastSeenTerminal = label;
+        lastSeenRule = automaton.addRule(automaton.createRule(parentState, label, childStates));
+        lastSeenTerminal = automaton.getSignature().getIdForSymbol(label);
     }
 
 }
@@ -194,7 +195,7 @@ void HomomorphismRule() :
     Tree<HomomorphismSymbol> term = null;
 }
 {
-    "[" interpName=name() "]" term=Term() {
+    "[" interpName=name() "]" term=Term(interpName) {
         Tree<HomomorphismSymbol> rhs = term; //HomomorphismSymbol.treeFromNames(term.toTree());
         Homomorphism hom = homomorphisms.get(interpName);
 
@@ -202,7 +203,7 @@ void HomomorphismRule() :
             throw new ParseException("Homomorphism declaration for unknown interpretation '" + interpName + "'");
         } else if( hom.get(lastSeenTerminal) != null ) {
             if( ! hom.get(lastSeenTerminal).equals(rhs) ) {
-                throw new ParseException("Redefined value of interpretation '" + interpName + "' for " + lastSeenTerminal + " as " + term + " (was: " + hom.get(lastSeenTerminal) + ")");
+                throw new ParseException("Redefined value of interpretation '" + interpName + "' for " + hom.getSourceSignature().resolveSymbolId(lastSeenTerminal) + " as " + term + " (was: " + hom.get(lastSeenTerminal) + ")");
             }
        } else {
           hom.add(lastSeenTerminal, rhs);
@@ -212,27 +213,28 @@ void HomomorphismRule() :
 
 
 
-Tree<HomomorphismSymbol> Term() :
+Tree<HomomorphismSymbol> Term(String interpName) :
 {
 	String label;
         Token token;
 	List<Tree<HomomorphismSymbol>> subterms = new ArrayList<Tree<HomomorphismSymbol>>();
 	Tree<HomomorphismSymbol> subterm;
+        Signature sig = homomorphisms.get(interpName).getTargetSignature();
 }
 {
 	label = name() "("
-               (subterm = Term() { subterms.add(subterm); })
-               ("," subterm = Term() { subterms.add(subterm); })*
+               (subterm = Term(interpName) { subterms.add(subterm); })
+               ("," subterm = Term(interpName) { subterms.add(subterm); })*
         	 ")" {
-		return Tree.create(HomomorphismSymbol.createConstant(label), subterms);
+		return Tree.create(HomomorphismSymbol.createConstant(label, sig, subterms.size()), subterms);
 	}
 
   | label = name() {
-	  return Tree.create(HomomorphismSymbol.createConstant(label));
+	  return Tree.create(HomomorphismSymbol.createConstant(label, sig, 0));
   }
 
   | token = <VARIABLE> {
-        return Tree.create(HomomorphismSymbol.createVariable(token.image.intern()));
+        return Tree.create(HomomorphismSymbol.createVariable(token.image));
   }
 }
 

@@ -13,6 +13,7 @@ import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.up.ling.tree.*
 import de.up.ling.irtg.hom.*
+import de.up.ling.irtg.signature.*
 import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
 import static de.up.ling.irtg.util.TestingTools.*;
@@ -23,6 +24,11 @@ import static de.up.ling.irtg.util.TestingTools.*;
  * @author koller
  */
 public class SortedLanguageIteratorTest {
+    private _assertTreeEquals(WeightedTree result, String gold, TreeAutomaton a) {
+        assert result.getTree().equals(pti(gold, a.getSignature()));
+    }
+    
+    
     @Test
     public void testOneRuleNonRecursiveAutomaton() {
 //        System.err.println("\n\n*** testOneRuleNonRecursiveAutomaton ***");
@@ -30,7 +36,7 @@ public class SortedLanguageIteratorTest {
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
         WeightedTree w = it.next();
-        assert w.getTree().equals(pt("f(b)"))
+        _assertTreeEquals(w, "f(b)", a);
         assert w.getWeight() == 0.35
         
         assert ! it.hasNext()
@@ -44,11 +50,11 @@ public class SortedLanguageIteratorTest {
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
         WeightedTree w = it.next();
-        assertEquals(pt("f(b)"), w.getTree())
+        _assertTreeEquals(w, "f(b)", a);
         assert w.getWeight() == 0.35
 
         w = it.next();
-        assertEquals(pt("g(b)"), w.getTree())
+        _assertTreeEquals(w, "g(b)", a);
         assert w.getWeight() == 0.15
         
         assert ! it.hasNext()
@@ -62,17 +68,17 @@ public class SortedLanguageIteratorTest {
         
         WeightedTree w = it.next();
         assert w != null : "tree 1 null"
-        assert w.getTree().equals(pt("b"))
+        _assertTreeEquals(w, "b", a);
         assert w.getWeight() == 0.5
 
         w = it.next();
         assert w != null : "tree 2 null"
-        assert w.getTree().equals(pt("f(b)"))
+        _assertTreeEquals(w, "f(b)", a);
         assert w.getWeight() == 0.25
 
         w = it.next();
         assert w != null : "tree 3 null"
-        assert w.getTree().equals(pt("f(f(b))"))
+        _assertTreeEquals(w, "f(f(b))", a);
         assert w.getWeight() == 0.125
         
         assert it.hasNext()
@@ -85,27 +91,27 @@ public class SortedLanguageIteratorTest {
         
         WeightedTree w = it.next();
         assert w != null : "tree 1 null"
-        assert w.getTree().equals(pt("b"))
+        _assertTreeEquals(w, "b", a);
         assert w.getWeight() == 0.5
 
         w = it.next();
         assert w != null : "tree 2 null"
-        assert w.getTree().equals(pt("f(b)"))
+        _assertTreeEquals(w, "f(b)", a);
         assert w.getWeight() == 0.25
         
         w = it.next();
         assert w != null : "tree 3 null"
-        assert w.getTree().equals(pt("g(b)"))
+        _assertTreeEquals(w, "g(b)", a);
         assert w.getWeight() == 0.2
 
         w = it.next();
         assert w != null : "tree 4 null"
-        assert w.getTree().equals(pt("f(f(b))"))
+        _assertTreeEquals(w, "f(f(b))", a);
         assert w.getWeight() == 0.125
         
         w = it.next();
         assert w != null : "tree 5 null"
-        assert w.getTree().equals(pt("g(f(b))"))
+        _assertTreeEquals(w, "g(f(b))", a);
         assert w.getWeight() == 0.1
         
         assert it.hasNext()
@@ -129,8 +135,9 @@ public class SortedLanguageIteratorTest {
     @Test
     public void testLanguage() {
         TreeAutomaton auto = pa("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2)  [1.5]");
+        Signature sig = auto.getSignature();
         Set lang = new HashSet(collectTrees(auto)*.toString());
-        Set gold = new HashSet([pt("f(a,a)"), pt("f(a,b)")]*.toString());
+        Set gold = new HashSet([pti("f(a,a)", sig), pti("f(a,b)", sig)]*.toString());
         assertEquals(gold, lang);
     }
     
@@ -142,8 +149,9 @@ public class SortedLanguageIteratorTest {
     @Test
     public void testLanguage2() {
         TreeAutomaton auto = pa("q1 -> a \n q1 -> b \n q2 -> c \n q2 -> d \n q! -> f(q1,q2) \n q! -> g(q1,q2) ");
+        Signature sig = auto.getSignature();
         Set lang = new HashSet(collectTrees(auto)*.toString());
-        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
+        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pti(it,sig).toString()});
         assertEquals(gold, lang)
     }
     

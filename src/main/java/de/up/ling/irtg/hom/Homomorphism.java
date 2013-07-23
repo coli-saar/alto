@@ -19,23 +19,23 @@ import java.util.regex.Pattern;
  * @author koller
  */
 public class Homomorphism {
-    private static int gensymNext = 1;
+//    private static int gensymNext = 1;
     private static Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-Z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
-    private Map<String, Tree<HomomorphismSymbol>> mappings;
+    private Map<Integer, Tree<HomomorphismSymbol>> mappings;
     private Signature srcSignature, tgtSignature;
     private boolean debug = false;
 
     public Homomorphism(Signature src, Signature tgt) {
-        mappings = new HashMap<String, Tree<HomomorphismSymbol>>();
+        mappings = new HashMap<Integer, Tree<HomomorphismSymbol>>();
         srcSignature = src;
         tgtSignature = tgt;
     }
 
-    public final Map<String, Tree<HomomorphismSymbol>> getMappings() {
+    public final Map<Integer, Tree<HomomorphismSymbol>> getMappings() {
         return mappings;
     }
 
-    public void add(String label, Tree<HomomorphismSymbol> mapping) {
+    public void add(int label, Tree<HomomorphismSymbol> mapping) {
         mappings.put(label, mapping);
 
         if (tgtSignature.isWritable()) {
@@ -43,7 +43,7 @@ public class Homomorphism {
         }
     }
 
-    public Tree<HomomorphismSymbol> get(String label) {
+    public Tree<HomomorphismSymbol> get(int label) {
         return mappings.get(label);
     }
 
@@ -52,17 +52,17 @@ public class Homomorphism {
      * of the tree under this homomorphism.
      * 
      */
-    public Tree<String> apply(Tree<String> tree) {
-        final Map<String, String> knownGensyms = new HashMap<String, String>();
+    public Tree<Integer> apply(Tree<Integer> tree) {
+//        final Map<String, String> knownGensyms = new HashMap<String, String>();
 
-        return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
+        return tree.dfs(new TreeVisitor<Integer, Void, Tree<Integer>>() {
             @Override
-            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                Tree<String> ret = construct(mappings.get(node.getLabel()), childrenValues, knownGensyms);
+            public Tree<Integer> combine(Tree<Integer> node, List<Tree<Integer>> childrenValues) {
+                Tree<Integer> ret = construct(mappings.get(node.getLabel()), childrenValues);
                 if (debug) {
                     System.err.println("\n" + node + ":");
                     System.err.println("  " + rhsAsString(mappings.get(node.getLabel())));
-                    for (Tree<String> child : childrenValues) {
+                    for (Tree<Integer> child : childrenValues) {
                         System.err.println("   + " + child);
                     }
                     System.err.println("  => " + ret);
@@ -76,25 +76,22 @@ public class Homomorphism {
     
     /**
      * Applies the homomorphism to a given input tree. Variables are substituted according to the "subtrees"
-     * parameter: ?1, ?x1 etc. refer to the first entry in the list, and so on. The "knownGensyms" parameter
-     * specifies previously generated symbols for gensym labels in the homomorphic image.
+     * parameter: ?1, ?x1 etc. refer to the first entry in the list, and so on.
      * 
      * @param tree
      * @param subtrees
      * @param knownGensyms
      * @return 
      */
-    public Tree<String> construct(final Tree<HomomorphismSymbol> tree, final List<Tree<String>> subtrees, final Map<String, String> knownGensyms) {
-        final Tree<String> ret = tree.dfs(new TreeVisitor<HomomorphismSymbol, String, Tree<String>>() {
+    public Tree<Integer> construct(final Tree<HomomorphismSymbol> tree, final List<Tree<Integer>> subtrees) {
+        final Tree<Integer> ret = tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<Integer>>() {
             @Override
-            public Tree<String> combine(Tree<HomomorphismSymbol> node, List<Tree<String>> childrenValues) {
+            public Tree<Integer> combine(Tree<HomomorphismSymbol> node, List<Tree<Integer>> childrenValues) {
                 HomomorphismSymbol label = node.getLabel();
 
                 switch (label.getType()) {
                     case VARIABLE:
-                        return subtrees.get(label.getIndex());
-                    case GENSYM:
-                        return Tree.create(gensym(label.getValue(), knownGensyms), childrenValues);
+                        return subtrees.get(label.getValue());
                     case CONSTANT:
                         return Tree.create(label.getValue(), childrenValues);
                     default:
@@ -106,6 +103,7 @@ public class Homomorphism {
         return ret;
     }
 
+    /*
     private String gensym(String gensymString, Map<String, String> knownGensyms) {
         int start = gensymString.indexOf("+");
         String prefix = gensymString.substring(0, start);
@@ -117,25 +115,40 @@ public class Homomorphism {
 
         return prefix + knownGensyms.get(gensymKey);
     }
+    */
 
-    public Set<String> getDomain() {
+    public Set<Integer> getDomain() {
         return mappings.keySet();
     }
 
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
-
-        for (String key : mappings.keySet()) {
-            buf.append(key + " -> " + rhsAsString(mappings.get(key)) + "\n");
+        
+        for (Integer key : mappings.keySet()) {
+            buf.append(srcSignature.resolveSymbolId(key) + " -> " + rhsAsString(mappings.get(key)) + "\n");
         }
 
         return buf.toString();
     }
 
-    public static String rhsAsString(Tree<HomomorphismSymbol> t) {
-        t.setCachingPolicy(false);
-        return t.toString(HOM_NON_QUOTING_PATTERN);
+    public String rhsAsString(Tree<HomomorphismSymbol> t) {
+        Tree<String> resolvedTree = t.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<String>>() {
+            @Override
+            public Tree<String> combine(Tree<HomomorphismSymbol> node, List<Tree<String>> childrenValues) {
+                switch(node.getLabel().getType()) {
+                    case CONSTANT:
+                        return Tree.create(tgtSignature.resolveSymbolId(node.getLabel().getValue()), childrenValues);
+                    case VARIABLE:
+                        return Tree.create("?" + (node.getLabel().getValue()+1));
+                    default:
+                        return Tree.create("***");
+                }
+            }
+        });
+        
+        resolvedTree.setCachingPolicy(false);
+        return resolvedTree.toString(HOM_NON_QUOTING_PATTERN);
     }
 
     public Signature getSourceSignature() {
@@ -160,7 +173,7 @@ public class Homomorphism {
     }
 
     public boolean isNonDeleting() {
-        for (String label : mappings.keySet()) {
+        for (Integer label : mappings.keySet()) {
             Tree<HomomorphismSymbol> rhs = mappings.get(label);
             Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
             for (HomomorphismSymbol l : rhs.getLeafLabels()) {
@@ -169,8 +182,7 @@ public class Homomorphism {
                 }
             }
 
-            if (variables.size() < srcSignature.getArity(label)) {
-//                System.err.println("hom is nondeleting: " + label + "/" + srcSignature.getArity(label) +  " -> " + rhs);
+            if (variables.size() < srcSignature.getArity((int) label)) {
                 return false;
             }
         }

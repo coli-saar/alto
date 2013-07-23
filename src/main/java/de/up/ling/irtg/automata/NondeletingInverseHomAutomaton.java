@@ -44,13 +44,13 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
     }
 
     @Override
-    public Set<Rule<String>> getRulesBottomUp(String label, final List<String> childStates) {
+    public Set<Rule<String>> getRulesBottomUp(int label, final List<String> childStates) {
         if (useCachedRuleBottomUp(label, childStates)) {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
 
-            Set<State> resultStates = rhsAutomaton.run(hom.get(label), new Function<Tree<HomomorphismSymbol>, State>() {
+            Set<State> resultStates = rhsAutomaton.run(hom.get(label), HomomorphismSymbol.getHomSymbolToIntFunction(), new Function<Tree<HomomorphismSymbol>, State>() {
                 @Override
                 public State apply(Tree<HomomorphismSymbol> f) {
                     if (f.getLabel().isVariable()) {
@@ -63,7 +63,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
             });
 
             for (State r : resultStates) {
-                Rule<String> rule = new Rule<String>(r.toString(), label, childStates);
+                Rule<String> rule = createRule(r.toString(), label, childStates);
                 storeRule(rule);
                 ret.add(rule);
             }
@@ -73,7 +73,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
     }
 
     @Override
-    public Set<Rule<String>> getRulesTopDown(String label, String parentState) {
+    public Set<Rule<String>> getRulesTopDown(int label, String parentState) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     

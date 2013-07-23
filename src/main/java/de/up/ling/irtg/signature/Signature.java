@@ -30,12 +30,20 @@ public class Signature implements Serializable {
         return interner.getKnownObjects();
     }
     
-    public int getArity(String symbol) {
+    public int getArityForLabel(String symbol) {
         return arities.get(interner.resolveObject(symbol));
+    }
+    
+    public int getArity(int symbolId) {
+        return arities.get(symbolId);
     }
     
     public String resolveSymbolId(int id) {
         return interner.resolveId(id);
+    }
+    
+    public int getIdForSymbol(String symbol) {
+        return interner.resolveObject(symbol);
     }
     
     public boolean contains(String symbol) {
@@ -52,12 +60,25 @@ public class Signature implements Serializable {
         return true;
     }
     
-    public void addAllSymbols(Tree<String> tree) {
-        tree.dfs(new TreeVisitor<String, Void, Void>() {
+    public int getMaxSymbolId() {
+        return interner.getNextIndex()-1;
+    }
+    
+    public Tree<String> resolve(Tree<Integer> tree) {
+        return tree.dfs(new TreeVisitor<Integer, Void, Tree<String>>() {
             @Override
-            public Void combine(Tree<String> node, List<Void> childrenValues) {
-                addSymbol(node.getLabel(), childrenValues.size());
-                return null;
+            public Tree<String> combine(Tree<Integer> node, List<Tree<String>> childrenValues) {
+                return Tree.create(resolveSymbolId(node.getLabel()), childrenValues);
+            }           
+        });
+    }
+    
+    public Tree<Integer> addAllSymbols(Tree<String> tree) {
+        return tree.dfs(new TreeVisitor<String, Void, Tree<Integer>>() {
+            @Override
+            public Tree<Integer> combine(Tree<String> node, List<Tree<Integer>> childrenValues) {
+                int sym = addSymbol(node.getLabel(), childrenValues.size());
+                return Tree.create(sym, childrenValues);
             }
         });
     }

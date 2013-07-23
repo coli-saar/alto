@@ -74,7 +74,7 @@ void automatonRule() :
 {
     parentState=State() "->" label=name() ("(" childStates=StateList() ")")? {
         if( childStates == null ) childStates = new ArrayList<String>();
-        lastSeenRule = automaton.addRule(label.intern(), childStates, parentState);
+        lastSeenRule = automaton.addRule(automaton.createRule(parentState, label, childStates));
     }
 }
 
@@ -122,7 +122,7 @@ String name() :
     Token tok;
 }
 {
-    tok = <NAME> { return tok.image.intern(); }
+    tok = <NAME> { return tok.image; }
     | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
     | tok = <DOUBLE_QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
 }

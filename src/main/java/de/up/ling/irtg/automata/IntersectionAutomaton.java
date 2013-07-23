@@ -21,7 +21,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
 //    private Set<String> allLabels;
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
 
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
@@ -101,7 +101,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
 //        System.err.println("prefix check: " + newIncompleteItem.leftRule.getLabel() + "/" + newIncompleteItem.getRightChildren());
 //        System.err.println(" -- " + right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren()));
-        if (right.hasRuleWithPrefix(newIncompleteItem.leftRule.getLabel(), newIncompleteItem.getRightChildren())) {
+        if (right.hasRuleWithPrefix(remapLabel(newIncompleteItem.leftRule.getLabel()), newIncompleteItem.getRightChildren())) {
             agenda.offer(newIncompleteItem);
 
             if (DEBUG) {
@@ -111,8 +111,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     private void predict(LeftState state, Queue<IncompleteEarleyItem> agenda) {
-        for (String label : left.getLabelsTopDown(state)) {
-            if (right.hasRuleWithPrefix(label, new ArrayList<RightState>())) {
+        for (Integer label : left.getLabelsTopDown(state)) {
+            if (right.hasRuleWithPrefix(remapLabel(label), new ArrayList<RightState>())) {
                 for (Rule<LeftState> rule : left.getRulesTopDown(label, state)) {
                     final IncompleteEarleyItem incompleteEarleyItem = new IncompleteEarleyItem(rule, null, null);
                     agenda.offer(incompleteEarleyItem);
@@ -123,6 +123,18 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 }
             }
         }
+    }
+
+    /**
+     * Translates a label ID of the left automaton (= of the intersection
+     * automaton) to the label ID of the right automaton for the same label.
+     * Returns 0 if the right automaton does not define this label.
+     *
+     * @param leftLabelId
+     * @return
+     */
+    private int remapLabel(int leftLabelId) {
+        return right.getSignature().getIdForSymbol(left.getSignature().resolveSymbolId(leftLabelId));
     }
 
     @Override
@@ -259,7 +271,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
             for (Rule<LeftState> leftRule : left.getRuleSet()) {
                 if (leftRule.getArity() == 0) {
-                    Set<Rule<RightState>> preterminalRulesForLabel = right.getRulesBottomUp(leftRule.getLabel(), noRightChildren);
+                    Set<Rule<RightState>> preterminalRulesForLabel = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), noRightChildren);
+
+//                    System.err.println("left rule: " + leftRule);
+//                    System.err.println("right partners: " + preterminalRulesForLabel);
 
                     for (Rule<RightState> rightRule : preterminalRulesForLabel) {
                         Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
@@ -271,6 +286,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 }
             }
 
+            System.err.println("after preterminals, agenda: " + agenda);
+
 //            System.err.println("after init: " + explicitRules.size());
 //            System.err.println(explicitRules);
 
@@ -281,7 +298,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 Pair<LeftState, RightState> state = agenda.remove();
                 List<Rule<LeftState>> possibleRules = rulesByChildState.get(state.left);
 
+                System.err.println("pop: " + state);
+                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
+
                 for (Rule<LeftState> leftRule : possibleRules) {
+                    System.err.println("consider leftrule: " + leftRule.toString(left));
+
                     List<Set<RightState>> partnerStates = new ArrayList<Set<RightState>>();
                     for (LeftState leftState : leftRule.getChildren()) {
                         partnerStates.add(partners.get(leftState));
@@ -291,16 +313,23 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     List<Pair<LeftState, RightState>> newStates = new ArrayList<Pair<LeftState, RightState>>();
                     while (it.hasNext()) {
                         iterations++;
-                        Set<Rule<RightState>> rightRules = right.getRulesBottomUp(leftRule.getLabel(), it.next());
-                        
-                        if( rightRules.isEmpty() ) {
+
+                        List<RightState> partnersHere = it.next();
+                        System.err.println("right partners: " + partnersHere);
+
+                        Set<Rule<RightState>> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
+                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
+
+
+                        if (rightRules.isEmpty()) {
                             unsuccessful++;
                         }
-                        
+
                         for (Rule<RightState> rightRule : rightRules) {
                             Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
+                            System.err.println("** add combined rule: " + rule.toString(this));
                             storeRule(rule);
-                            
+
                             if (seenStates.add(rule.getParent())) {
                                 newStates.add(rule.getParent());
                             }
@@ -314,11 +343,18 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
 
             isExplicit = true;
-            if( DEBUG )
+
+            System.err.println("intersection auto: " + this);
+
+
+            if (DEBUG) {
                 System.err.println(iterations + " iterations, " + unsuccessful + " unsucc");
+            }
 
 //            System.err.println("after run: " + explicitRules.size());
 //            System.err.println(toString());
+
+
         }
     }
 
@@ -355,7 +391,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     @Override
-    public Set<Rule<Pair<LeftState, RightState>>> getRulesBottomUp(String label, List<Pair<LeftState, RightState>> childStates) {
+    public Set<Rule<Pair<LeftState, RightState>>> getRulesBottomUp(int label, List<Pair<LeftState, RightState>> childStates) {
         if (useCachedRuleBottomUp(label, childStates)) {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
@@ -384,7 +420,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     @Override
-    public Set<Rule<Pair<LeftState, RightState>>> getRulesTopDown(String label, Pair<LeftState, RightState> parentState) {
+    public Set<Rule<Pair<LeftState, RightState>>> getRulesTopDown(int label, Pair<LeftState, RightState> parentState) {
         if (!useCachedRuleTopDown(label, parentState)) {
             Set<Rule<LeftState>> leftRules = left.getRulesTopDown(label, parentState.left);
             Set<Rule<RightState>> rightRules = right.getRulesTopDown(label, parentState.right);

@@ -18,7 +18,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * TODO: Currently labels are being resolved back to strings in order to evaluate.
+ * This can probably be done more efficiently.
+ * 
  * @author koller
  */
 public class SetAlgebra implements Algebra<Set<List<String>>> {
@@ -30,8 +32,9 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     private static final int MAX_TUPLE_LENGTH = 3;
     private final Map<String, Set<List<String>>> atomicInterpretations;
     private final Set<String> allIndividuals;
-    private final Set<String> allLabels;
+//    private final Set<String> allLabels;
     private final Set<List<String>> allIndividualsAsTuples;
+    private final Signature signature;
 
     public SetAlgebra() {
         this(new HashMap<String, Set<List<String>>>());
@@ -39,6 +42,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
 
     public SetAlgebra(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
+        signature = new Signature();
 
         allIndividuals = new HashSet<String>();
         allIndividualsAsTuples = new HashSet<List<String>>();
@@ -54,28 +58,33 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
             }
         }
 
-        allLabels = new HashSet<String>();
-        allLabels.addAll(atomicInterpretations.keySet());
+//        allLabels = new HashSet<String>();
+        for( String a : atomicInterpretations.keySet() ) {
+            signature.addSymbol(a, 0);
+        }
+        
         for (int i = 1; i <= MAX_TUPLE_LENGTH; i++) {
-            allLabels.add(PROJECT + i);
-            allLabels.add(INTERSECT + i);
+            signature.addSymbol(PROJECT + i, 1);
+            signature.addSymbol(INTERSECT + i, 2);
         }
         for (String individual : allIndividuals) {
-            allLabels.add(UNIQ + individual);
+            signature.addSymbol(UNIQ + individual, 1);
         }
     }
 
     @Override
-    public Set<List<String>> evaluate(final Tree<String> t) {
-        return (Set<List<String>>) t.dfs(new TreeVisitor<String, Void, Set<List<String>>>() {
+    public Set<List<String>> evaluate(final Tree<Integer> t) {
+        return (Set<List<String>>) t.dfs(new TreeVisitor<Integer, Void, Set<List<String>>>() {
             @Override
-            public Set<List<String>> combine(Tree<String> node, List<Set<List<String>>> childrenValues) {
+            public Set<List<String>> combine(Tree<Integer> node, List<Set<List<String>>> childrenValues) {
                 return evaluate(node.getLabel(), childrenValues);
             }
         });
     }
 
-    private Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) {
+    private Set<List<String>> evaluate(int labelId, List<Set<List<String>>> childrenValues) {
+        String label = signature.resolveSymbolId(labelId);
+        
         if (label.startsWith(PROJECT)) {
             return project(childrenValues.get(0), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(INTERSECT)) {
@@ -150,7 +159,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
 
     @Override
     public Signature getSignature() {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return signature;
     }
 
     private class SetDecompositionAutomaton extends TreeAutomaton<Set<List<String>>> {
@@ -181,7 +190,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         }
 
         @Override
-        public Set<Rule<Set<List<String>>>> getRulesBottomUp(String label, List<Set<List<String>>> childStates) {
+        public Set<Rule<Set<List<String>>>> getRulesBottomUp(int label, List<Set<List<String>>> childStates) {
             if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
@@ -190,7 +199,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
                 
                 // require that set in parent state must be non-empty; otherwise there is simply no rule
                 if (parents != null && !parents.isEmpty()) {
-                    Rule<Set<List<String>>> rule = new Rule<Set<List<String>>>(parents, label, childStates);
+                    Rule<Set<List<String>>> rule = createRule(parents, label, childStates);
                     ret.add(rule);
                     storeRule(rule);
                 }
@@ -200,7 +209,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         }
 
         @Override
-        public Set<Rule<Set<List<String>>>> getRulesTopDown(String label, Set<List<String>> parentState) {
+        public Set<Rule<Set<List<String>>>> getRulesTopDown(int label, Set<List<String>> parentState) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 

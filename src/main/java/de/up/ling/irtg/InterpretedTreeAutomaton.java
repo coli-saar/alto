@@ -141,10 +141,10 @@ public class InterpretedTreeAutomaton {
 
     private Set<Object> decode(TreeAutomaton chart, Interpretation interp) {
         TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
-        Collection<Tree<String>> outputLanguage = outputChart.language();
+        Collection<Tree<Integer>> outputLanguage = outputChart.language();
 
         Set<Object> ret = new HashSet<Object>();
-        for (Tree<String> term : outputLanguage) {
+        for (Tree<Integer> term : outputLanguage) {
             ret.add(interp.getAlgebra().evaluate(term));
         }
 
@@ -152,23 +152,23 @@ public class InterpretedTreeAutomaton {
     }
 
     @CallableFromShell(name = "decodeToTerms", joinList = "\n")
-    public Set<Tree> decodeToTermsFromReaders(Reader outputInterpretation, Map<String, Reader> readers) throws ParserException, IOException {
+    public Set<Tree<Integer>> decodeToTermsFromReaders(Reader outputInterpretation, Map<String, Reader> readers) throws ParserException, IOException {
         TreeAutomaton chart = parseFromReaders(readers);
         String interp = StringTools.slurp(outputInterpretation);
         return decodeToTerms(chart, interpretations.get(interp));
     }
 
-    public Set<Tree> decodeToTerms(String outputInterpretation, Map<String, Object> inputs) {
+    public Set<Tree<Integer>> decodeToTerms(String outputInterpretation, Map<String, Object> inputs) {
         TreeAutomaton chart = parseInputObjects(inputs);
         return decodeToTerms(chart, interpretations.get(outputInterpretation));
     }
 
-    private Set<Tree> decodeToTerms(TreeAutomaton chart, Interpretation interp) {
+    private Set<Tree<Integer>> decodeToTerms(TreeAutomaton chart, Interpretation interp) {
         TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
-        Collection<Tree<String>> outputLanguage = outputChart.language();
+        Collection<Tree<Integer>> outputLanguage = outputChart.language();
 
-        Set<Tree> ret = new HashSet<Tree>();
-        for (Tree<String> term : outputLanguage) {
+        Set<Tree<Integer>> ret = new HashSet<Tree<Integer>>();
+        for (Tree<Integer> term : outputLanguage) {
             ret.add(term);
         }
 
@@ -177,8 +177,8 @@ public class InterpretedTreeAutomaton {
 
     @CallableFromShell(name = "mltrain")
     public void trainML(Corpus trainingData) throws UnsupportedOperationException {
-        final Map<String, Rule<String>> ruleForTerminal = new HashMap<String, Rule<String>>();
-        final Map<String, Long> ruleCounts = new HashMap<String, Long>();
+        final Map<Integer, Rule<String>> ruleForTerminal = new HashMap<Integer, Rule<String>>(); // label -> rules
+        final Map<Integer, Long> ruleCounts = new HashMap<Integer, Long>();
         final Map<String, Long> stateCounts = new HashMap<String, Long>();
 
         // initialize data
@@ -194,9 +194,9 @@ public class InterpretedTreeAutomaton {
 
         // compute absolute frequencies on annotated corpus
         for (Instance instance : trainingData) {
-            instance.getDerivationTree().dfs(new TreeVisitor<String, Void, Void>() {
+            instance.getDerivationTree().dfs(new TreeVisitor<Integer, Void, Void>() {
                 @Override
-                public Void visit(Tree<String> node, Void data) {
+                public Void visit(Tree<Integer> node, Void data) {
                     Rule<String> rule = ruleForTerminal.get(node.getLabel());
 
                     ruleCounts.put(node.getLabel(), ruleCounts.get(node.getLabel()) + 1);
@@ -208,7 +208,7 @@ public class InterpretedTreeAutomaton {
         }
 
         // set all rule weights according to counts
-        for (String label : ruleForTerminal.keySet()) {
+        for (int label : ruleForTerminal.keySet()) {
             Rule<String> rule = ruleForTerminal.get(label);
             long stateCount = stateCounts.get(rule.getParent());
 
@@ -509,7 +509,7 @@ public class InterpretedTreeAutomaton {
     }
 
     private HomomorphismSymbol getConstantFromAlgebra(Homomorphism hom) {
-        for (String label : hom.getDomain()) {
+        for (int label : hom.getDomain()) {
             HomomorphismSymbol constant = hom.get(label).dfs(new TreeVisitor<HomomorphismSymbol, Void, HomomorphismSymbol>() {
                 @Override
                 public HomomorphismSymbol combine(Tree<HomomorphismSymbol> node, List<HomomorphismSymbol> childrenValues) {
@@ -543,6 +543,7 @@ public class InterpretedTreeAutomaton {
         return newAuto;
     }
 
+    
     @CallableFromShell
     public InterpretedTreeAutomaton binarize() {
         /*
@@ -570,18 +571,18 @@ public class InterpretedTreeAutomaton {
 
 
         for (Rule<String> rule : rules) {
-            String ruleLabel = rule.getLabel();
+            int ruleLabel = rule.getLabel();
 
             if (rule.getArity() > 2) {
                 Tree<HomomorphismSymbol> hRule = homomorphism.get(ruleLabel);
                 String parent = rule.getParent();
                 String label = makeBinaryLabel(ruleLabel + "-b", 0, true);
 
-                Set<Rule<String>> newRules = new HashSet<Rule<String>>();
-                binarizeRule(newHomomorphism, newRules, hRule, parent, label, rule);
-                for (Rule<String> r : newRules) {
-                    newAutomaton.addRule(r);
-                }
+//                Set<Rule<String>> newRules = new HashSet<Rule<String>>();
+                binarizeRule(newHomomorphism, newAutomaton, hRule, parent, label, rule);
+//                for (Rule<String> r : newRules) {
+//                    newAutomaton.addRule(r);
+//                }
             } else { // rules of arity <= 2
                 newAutomaton.addRule(rule);
                 newHomomorphism.add(ruleLabel, homomorphism.get(ruleLabel));
@@ -598,7 +599,7 @@ public class InterpretedTreeAutomaton {
         return ret;
     }
 
-    private void binarizeRule(Homomorphism newHomomorphism, Set<Rule<String>> newRules, Tree<HomomorphismSymbol> oldHomomorphismSubtree, String parentNT, String label, Rule rule) {
+    private void binarizeRule(Homomorphism newHomomorphism, ConcreteTreeAutomaton newAutomaton, Tree<HomomorphismSymbol> oldHomomorphismSubtree, String parentNT, String label, Rule rule) {
         List<String> childStatesInNewRule = new ArrayList<String>();
         int varCounter = 0;
         List<Tree<HomomorphismSymbol>> childrenInOldHom = oldHomomorphismSubtree.getChildren();
@@ -609,7 +610,7 @@ public class InterpretedTreeAutomaton {
             HomomorphismSymbol argLabel = arg.getLabel();
 
             if (argLabel.isVariable()) {
-                int index = argLabel.getIndex();
+                int index = argLabel.getValue();
                 String nonterminal = (String) rule.getChildren()[index];
                 childStatesInNewRule.add(nonterminal);
 
@@ -627,15 +628,15 @@ public class InterpretedTreeAutomaton {
                 HomomorphismSymbol var = HomomorphismSymbol.createVariable("?" + varCounter);
                 childrenInNewHom.add(Tree.create(var));
 
-                binarizeRule(newHomomorphism, newRules, arg, newNonterminal, newTerminal, rule);
+                binarizeRule(newHomomorphism, newAutomaton, arg, newNonterminal, newTerminal, rule);
             }
         }
 
 
         Tree<HomomorphismSymbol> hForRule = Tree.create(oldHomomorphismSubtree.getLabel(), childrenInNewHom);
-        Rule<String> binRule = new Rule(parentNT, label, childStatesInNewRule);
-        newRules.add(binRule);
-        newHomomorphism.add(label, hForRule);
+        Rule<String> binRule = newAutomaton.createRule(parentNT, label, childStatesInNewRule);
+        newAutomaton.addRule(binRule);
+        newHomomorphism.add(newHomomorphism.getSourceSignature().getIdForSymbol(label), hForRule);
     }
 
     private String makeBinaryLabel(String prefix, int argNum, boolean terminal) {
@@ -668,12 +669,12 @@ public class InterpretedTreeAutomaton {
         for (Rule<String> rule : automaton.getRuleSet()) {
 //            String isFinal = automaton.getFinalStates().contains(rule.getParent()) ? "!" : "";
 //            String children = (rule.getArity() == 0 ? "" : "(" + StringTools.join(rule.getChildren(), ", ") + ")");
-            pw.println(rule.toString(automaton.getFinalStates().contains(rule.getParent())));
+            pw.println(rule.toString(automaton, automaton.getFinalStates().contains(rule.getParent())));
 
             for (String interp : interpretationOrder) {
                 Homomorphism hom = interpretations.get(interp).getHomomorphism();
                 Tree<HomomorphismSymbol> rhs = hom.get(rule.getLabel());
-                pw.println("  [" + interp + "] " + Homomorphism.rhsAsString(rhs));
+                pw.println("  [" + interp + "] " + hom.rhsAsString(rhs));
             }
 
             pw.println();

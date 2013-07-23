@@ -11,15 +11,15 @@ import de.up.ling.tree.Tree;
  * @author koller
  */
 public class WeightedTree implements Comparable<WeightedTree> {
-    private Tree<String> tree;
+    private Tree<Integer> tree;
     private double weight;
 
-    public WeightedTree(Tree<String> tree, double weight) {
+    public WeightedTree(Tree<Integer> tree, double weight) {
         this.tree = tree;
         this.weight = weight;
     }
 
-    public Tree<String> getTree() {
+    public Tree<Integer> getTree() {
         return tree;
     }
 

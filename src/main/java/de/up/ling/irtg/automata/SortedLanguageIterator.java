@@ -282,7 +282,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                 double weight = 1;
                 boolean available = true;
                 boolean keepItemAround = true;
-                List<Tree<String>> children = new ArrayList<Tree<String>>();
+                List<Tree<Integer>> children = new ArrayList<Tree<Integer>>();
 
                 // for each child, attempt to obtain the k-best tree, where k
                 // is the index specified for this child in the unevaluated item

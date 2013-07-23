@@ -16,33 +16,43 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- *
+ * TODO: #evaluate maps the tree back and forth between symbols and IDs
+ * a number of times. Similarly with the decomposition automata in #decompose.
+ * This should be done more efficiently by mapping
+ * between the signatures of this algebra and the underlying tree algebra
+ * (at least, the IDs are shifted by one because of @)
+ * 
  * @author koller
  */
 public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
     public static final String APPEND = "@";
+    private int appendSymbol;
     private Algebra<Tree<String>> underlyingAlgebra;
+    private Signature signature;
 
     public BinaryTreeAlgebra(Algebra<Tree<String>> underlyingAlgebra) {
         this.underlyingAlgebra = underlyingAlgebra;
+        signature = new Signature();
+        
+        appendSymbol = signature.addSymbol(APPEND, 2);
     }
     
     @Override
-    public Tree<String> evaluate(Tree<String> t) {
-        List<Tree<String>> underlyingTree = t.dfs(new TreeVisitor<String, Void, List<Tree<String>>>() {
+    public Tree<String> evaluate(Tree<Integer> t) {
+        List<Tree<String>> underlyingTree = t.dfs(new TreeVisitor<Integer, Void, List<Tree<String>>>() {
             @Override
-            public List<Tree<String>> combine(Tree<String> node, List<List<Tree<String>>> childrenValues) {
-                if( node.getLabel().equals(APPEND)) {
+            public List<Tree<String>> combine(Tree<Integer> node, List<List<Tree<String>>> childrenValues) {
+                if( node.getLabel() == appendSymbol ) {
                     List<Tree<String>> ret = childrenValues.get(0);
                     ret.addAll(childrenValues.get(1));
                     return ret;
                 } else if( childrenValues.isEmpty() ) {
-                    Tree<String> tree = Tree.create(node.getLabel());
+                    Tree<String> tree = Tree.create(signature.resolveSymbolId(node.getLabel()));
                     List<Tree<String>> ret = new ArrayList<Tree<String>>();
                     ret.add(tree);
                     return ret;
                 } else {
-                    Tree<String> tree = Tree.create(node.getLabel(), childrenValues.get(0));
+                    Tree<String> tree = Tree.create(signature.resolveSymbolId(node.getLabel()), childrenValues.get(0));
                     List<Tree<String>> ret = new ArrayList<Tree<String>>();
                     ret.add(tree);
                     return ret;
@@ -50,7 +60,7 @@ public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
             }            
         });
         
-        return underlyingAlgebra.evaluate(underlyingTree.get(0));
+        return underlyingAlgebra.evaluate(underlyingAlgebra.getSignature().addAllSymbols(underlyingTree.get(0)));
     }
 
     @Override
@@ -61,14 +71,14 @@ public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
         for( Rule rule : underlyingAutomaton.getRuleSet() ) {
             List children = Arrays.asList(rule.getChildren());
             
-            if( rule.getArity() <= 2 ) {                
-                ret.addRule(rule.getLabel(), makeStrings(children), rule.getParent().toString());
+            if( rule.getArity() <= 2 ) {
+                ret.addRule(ret.createRule(rule.getParent().toString(), underlyingAutomaton.getSignature().resolveSymbolId(rule.getLabel()), makeStrings(children)));
             } else {
                 String ruleName = rule.getParent().toString() + "+" + rule.getLabel() + "+" + StringTools.join(children, "+");
                 addBinarizationRules(makeStrings(children), ruleName, ret);
                 List<String> newChildren = new ArrayList<String>();
                 newChildren.add(ruleName);
-                ret.addRule(rule.getLabel(), newChildren, rule.getParent().toString());
+                ret.addRule(ret.createRule(rule.getParent().toString(), underlyingAutomaton.getSignature().resolveSymbolId(rule.getLabel()), newChildren));
             }
         }
         
@@ -109,24 +119,28 @@ public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
     
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
-        return underlyingAlgebra.parseString(representation);
+        Tree<String> ret = underlyingAlgebra.parseString(representation);
+        
+        ret.dfs(new TreeVisitor<String, Void, Void>() {
+            @Override
+            public Void combine(Tree<String> node, List<Void> childrenValues) {
+                int arity = underlyingAlgebra.getSignature().getArityForLabel(node.getLabel());
+                
+                if( arity <= 2 ) {
+                    signature.addSymbol(node.getLabel(), arity);
+                } else {
+                    signature.addSymbol(node.getLabel(), 0);
+                }
+                
+                return null;
+            }           
+        });
+        
+        return ret;
     }
 
     @Override
     public Signature getSignature() {
-        Signature underlyingSignature = underlyingAlgebra.getSignature();
-        Signature ret = new Signature();
-        
-        ret.addSymbol(APPEND, 2);
-        
-        for( String sym : underlyingSignature.getSymbols() ) {
-            if( underlyingSignature.getArity(sym) <= 2 ) {
-                ret.addSymbol(sym, underlyingSignature.getArity(sym));
-            } else {
-                ret.addSymbol(sym, 0);
-            }
-        }
-        
-        return ret;
+        return signature;
     }
 }

@@ -40,7 +40,7 @@ class HomAutomaton extends TreeAutomaton<String> {
         if (!isExplicit) {
             Set<Rule> baseRuleSet = base.getRuleSet();
             SetMultimap<Object, Object> chainRules = HashMultimap.create();
-            final Set<String> labels = new HashSet<String>();
+            final Set<Integer> labels = new HashSet<Integer>();
 
             for (final Rule<Object> rule : baseRuleSet) {
                 final Tree<HomomorphismSymbol> homImage = hom.get(rule.getLabel());
@@ -48,7 +48,7 @@ class HomAutomaton extends TreeAutomaton<String> {
                 if (homImage.getLabel().isVariable()) {
                     // special case for homomorphisms of the form ?1 or ?2 etc.: store chain rule
 
-                    int childPosition = homImage.getLabel().getIndex();
+                    int childPosition = homImage.getLabel().getValue();
                     chainRules.put(rule.getChildren()[childPosition], rule.getParent());
                 } else {
                     // otherwise, iterate over homomorphic image of rule label and
@@ -72,9 +72,9 @@ class HomAutomaton extends TreeAutomaton<String> {
                                     weight = 1;
                                 }
 
-                                Rule<String> newRule = new Rule<String>(parentState, label.toString(), childrenValues, weight);
+                                Rule<String> newRule = createRule(parentState, label.getValue(), childrenValues, weight);
                                 storeRule(newRule);
-                                labels.add(label.toString());
+                                labels.add(label.getValue());
                                 return parentState;
                             }
                         }
@@ -86,9 +86,9 @@ class HomAutomaton extends TreeAutomaton<String> {
                     String lowerParent = addState(entry.getKey().toString());
                     String upperParent = addState(entry.getValue().toString());
                     
-                    for( String label : labels ) {
+                    for( Integer label : labels ) {
                         for( Rule<String> ruleForEntry : getRulesTopDownFromExplicit(label, lowerParent) ) {
-                            storeRule(new Rule<String>(upperParent, label, ruleForEntry.getChildren()));
+                            storeRule(createRule(upperParent, label, ruleForEntry.getChildren(), 1)); // TODO: correct weight
                         }
                     }
                 }
@@ -103,13 +103,13 @@ class HomAutomaton extends TreeAutomaton<String> {
     }
 
     @Override
-    public Set<Rule<String>> getRulesBottomUp(String label, List<String> childStates) {
+    public Set<Rule<String>> getRulesBottomUp(int label, List<String> childStates) {
         makeAllRulesExplicit();
         return getRulesBottomUpFromExplicit(label, childStates);
     }
 
     @Override
-    public Set<Rule<String>> getRulesTopDown(String label, String parentState) {
+    public Set<Rule<String>> getRulesTopDown(int label, String parentState) {
         makeAllRulesExplicit();
         return getRulesTopDownFromExplicit(label, parentState);
     }

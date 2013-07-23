@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -25,7 +23,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private double[] weights;                       // weights for feature functions
     private FeatureFunction[] features;             // list of feature functions
     private List<String> featureNames;              // list of names of feature functions
-    private Map<String, double[]> f;                // f[r][i] = value of i-th ft function on rule with label r
+    private Map<Integer, double[]> f;                // f[r][i] = value of i-th ft function on rule with label r
 
     /**
      * Constructor
@@ -37,7 +35,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     public MaximumEntropyIrtg(TreeAutomaton<String> automaton, final Map<String, FeatureFunction> featureMap) {
         super(automaton);
 
-        f = new HashMap<String, double[]>();
+        f = new HashMap<Integer, double[]>();
 
         // store the features
         setFeatures(featureMap);
@@ -99,7 +97,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @return double[] containing the values of all feature functions for this
      * rule
      */
-    public double[] getFeatureValue(String ruleLabel) {
+    public double[] getFeatureValue(int ruleLabel) {
         if (f == null) {
             throw new UnsupportedOperationException("No feature values calculated. Call precomputeFeatures() or compute a chart first.");
         }
@@ -185,8 +183,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param tree the tree to compute the values for
      * @param fiY the array of feature values
      */
-    public void getFiFor(Tree tree, double[] fiY) {
-        double[] fi = getFeatureValue((String) tree.getLabel());
+    public void getFiFor(Tree<Integer> tree, double[] fiY) {
+        double[] fi = getFeatureValue(tree.getLabel());
 
         // for every feature calculate the value for the root of the tree
         // and add it to the result
@@ -195,7 +193,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             fiY[i] += fi[i];
         }
 
-        List<Tree> children = (List<Tree>) tree.getChildren();
+        List<Tree<Integer>> children = tree.getChildren();
 
         // add the values of every child to the result
         for (Tree child : children) {
@@ -207,7 +205,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * Pre-compute f_i(r) for every known rule
      */
     public void precomputeFeatureValues() {
-        f = new HashMap<String, double[]>();
+        f = new HashMap<Integer, double[]>();
         Set<Rule<String>> ruleSet = (Set<Rule<String>>) automaton.getRuleSet();
         int numOfFeatures = getNumFeatures();
 

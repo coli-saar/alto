@@ -14,7 +14,7 @@ import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.up.ling.irtg.*;
 import de.up.ling.irtg.hom.*;
-import static de.up.ling.irtg.util.TestingTools.pt;
+import static de.up.ling.irtg.util.TestingTools.*;
 
 /**
  *
@@ -42,7 +42,7 @@ class SetAlgebraTest {
     @Test
     public void testEvaluate() {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
-        Set<List<String>> result = a.evaluate(pt("rabbit"))
+        Set<List<String>> result = a.evaluate(pti("rabbit", a.getSignature()))
         Set<List<String>> gold = sl([["r1"], ["r2"]])
         assertEquals(gold, result)
     }
@@ -50,7 +50,7 @@ class SetAlgebraTest {
     @Test
     public void testEvaluate2() {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
-        Set<List<String>> result = a.evaluate(pt("intersect_1(rabbit, white)"))
+        Set<List<String>> result = a.evaluate(pti("intersect_1(rabbit, white)", a.getSignature()))
         Set<List<String>> gold = sl([["r1"]])
         assertEquals(gold, result)
     }
@@ -58,7 +58,7 @@ class SetAlgebraTest {
     @Test
     public void testEvaluate3() {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
-        Set<List<String>> result = a.evaluate(pt("project_1(intersect_1(in, rabbit))"))
+        Set<List<String>> result = a.evaluate(pti("project_1(intersect_1(in, rabbit))", a.getSignature()))
         Set<List<String>> gold = sl([["r1"]])
         assertEquals(gold, result)
     }
@@ -66,7 +66,7 @@ class SetAlgebraTest {
     @Test
     public void testEvaluate4() {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
-        Set<List<String>> result = a.evaluate(pt("uniq_r1(project_1(intersect_1(in, rabbit)))"))
+        Set<List<String>> result = a.evaluate(pti("uniq_r1(project_1(intersect_1(in, rabbit)))", a.getSignature()))
         Set<List<String>> gold = sl([["r1"]])
         assertEquals(gold, result)
     }
@@ -74,7 +74,7 @@ class SetAlgebraTest {
     @Test
     public void testEvaluate5() {
         SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
-        Set<List<String>> result = a.evaluate(pt("uniq_r1(rabbit)"))
+        Set<List<String>> result = a.evaluate(pti("uniq_r1(rabbit)", a.getSignature()))
         Set<List<String>> gold = sl([])
         assertEquals(gold, result)
     }

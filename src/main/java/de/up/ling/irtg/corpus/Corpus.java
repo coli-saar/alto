@@ -184,7 +184,7 @@ public class Corpus implements Iterable<Instance> {
                     }
 
                     Tree<String> derivationTree = TreeParser.parse(annoLine);
-                    inst.setDerivationTree(derivationTree);
+                    inst.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(derivationTree));
                 }
 
                 ret.instances.add(inst);

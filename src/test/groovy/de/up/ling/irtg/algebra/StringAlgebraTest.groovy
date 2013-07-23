@@ -12,6 +12,7 @@ import de.up.ling.irtg.automata.*
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
+import static de.up.ling.irtg.util.TestingTools.*;
 
 
 /**
@@ -22,18 +23,19 @@ class StringAlgebraTest {
     @Test
     public void testDecompose() {
         String string = "john watches the woman with the telescope";
-        Algebra algebra = new StringAlgebra();
+        StringAlgebra algebra = new StringAlgebra();
+        int concat = algebra.getConcatSymbolId();
 
         List words = algebra.parseString(string);
         TreeAutomaton auto = algebra.decompose(words);
 
         assertEquals(new HashSet([s(0,7)]), auto.getFinalStates());
-        assertEquals(new HashSet([r(s(2,4), StringAlgebra.CONCAT, [s(2,3), s(3,4)])]), auto.getRulesBottomUp(StringAlgebra.CONCAT, [s(2,3), s(3,4)]));
-        assertEquals(new HashSet(), auto.getRulesBottomUp(StringAlgebra.CONCAT, [s(2,3), s(4,5)]));
+        assertEquals(new HashSet([r(auto, s(2,4), concat, [s(2,3), s(3,4)])]), auto.getRulesBottomUp(concat, [s(2,3), s(3,4)]));
+        assertEquals(new HashSet(), auto.getRulesBottomUp(concat, [s(2,3), s(4,5)]));
     }
 
-    private static Rule r(parent, label, children) {
-        return new Rule(parent, label, children);
+    private static Rule r(TreeAutomaton auto, parent, label, children) {
+        return auto.createRule(parent, label, children);
     }
         
 
@@ -42,7 +44,7 @@ class StringAlgebraTest {
         String string = "john watches the woman with the telescope";
         Algebra algebra = new StringAlgebra();
         List words = algebra.parseString(string);
-        Tree term = TreeParser.parse("*(john,*(watches,*(the,*(woman,*(with,*(the,telescope))))))");
+        Tree term = pti("*(john,*(watches,*(the,*(woman,*(with,*(the,telescope))))))", algebra.getSignature());
 
         assertEquals(words, algebra.evaluate(term));
     }

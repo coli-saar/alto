@@ -15,6 +15,8 @@ import static org.junit.Assert.*
  * @author koller
  */
 class TreeAutomatonParserTest {
+    static TreeAutomaton automaton;
+    
     @Test
     public void testParserNotNull() {
         TreeAutomaton automaton = parse("q1 -> a\n q2! -> f(q1,q1)");
@@ -39,52 +41,52 @@ class TreeAutomatonParserTest {
     
     @Test
     public void testParser1() {
-        TreeAutomaton automaton = parse("q1 -> a \n q2 ! -> f(q1,q1)");
+        automaton = parse("q1 -> a \n q2 ! -> f(q1,q1)");        
 
-        assertEquals(new HashSet([r("q1", "a", [])]), automaton.getRulesBottomUp("a", []));
-        assertEquals(new HashSet([r("q2", "f", ["q1","q1"])]), automaton.getRulesBottomUp("f", ["q1", "q1"]));
+        assertRulesBottomUp(automaton, "a", [], [r("q1", "a", [])]);
+        assertRulesBottomUp(automaton, "f", ["q1", "q1"], [r("q2", "f", ["q1","q1"])]);
         assertEquals(new HashSet(["q2"]), automaton.getFinalStates());
     }
 
     @Test
     public void testParser2() {
-        TreeAutomaton automaton = parse("p1! -> f(p2,p3)\n p2 -> a\n p3 -> a");
-        assertEquals(new HashSet([r("p2", "a", []), r("p3", "a", [])]), automaton.getRulesBottomUp("a", []));
+        automaton = parse("p1! -> f(p2,p3)\n p2 -> a\n p3 -> a");
+        assertRulesBottomUp(automaton, "a", [], [r("p2", "a", []), r("p3", "a", [])]);
     }
 
     @Test
     public void testWeights() {
-        TreeAutomaton automaton = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
-        assertEquals(new HashSet([rw("q1", "a", [], 2)]), automaton.getRulesBottomUp("a", []));
-        assertEquals(new HashSet([rw("q", "f", ["q1", "q2"], 1.5)]), automaton.getRulesBottomUp("f", ["q1", "q2"]));
-    }
-    
-    private void assertRulesBottomUp(TreeAutomaton automaton, String label, List childStates, List<Rule> rules) {
-        assertEquals(new HashSet(rules), automaton.getRulesBottomUp(label, childStates));
+        automaton = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
+        assertRulesBottomUp(automaton, "a", [], [rw("q1", "a", [], 2)]);
+        assertRulesBottomUp(automaton, "f", ["q1", "q2"], [rw("q", "f", ["q1", "q2"], 1.5)]);
     }
     
     @Test
     public void testQuotedName() {
-        TreeAutomaton automaton = parse("Foo -> \'foo bar\'");
+        automaton = parse("Foo -> \'foo bar\'");
         assertRulesBottomUp(automaton, "foo bar", [], [r("Foo", "foo bar", [])]);        
     }
     
     @Test
     public void testQuotedName2() {
-        TreeAutomaton automaton = parse("Foo -> \'\"\'");
+        automaton = parse("Foo -> \'\"\'");
         assertRulesBottomUp(automaton, "\"", [], [r("Foo", "\"", [])]);
     }
     
     @Test
     public void testDoubleQuotedName() {
-        TreeAutomaton automaton = parse("Foo -> \"foo bar\"");
+        automaton = parse("Foo -> \"foo bar\"");
         assertRulesBottomUp(automaton, "foo bar", [], [r("Foo", "foo bar", [])]);
     }
     
     @Test
     public void testDoubleQuotedName2() {
-        TreeAutomaton automaton = parse("Foo -> \"\'\"");
+        automaton = parse("Foo -> \"\'\"");
         assertRulesBottomUp(automaton, "\'", [], [r("Foo", "\'", [])]);
+    }
+    
+    private void assertRulesBottomUp(TreeAutomaton automaton, String label, List childStates, List<Rule> rules) {
+        assertEquals(new HashSet(rules), automaton.getRulesBottomUp(s(label), childStates));
     }
 
     private static TreeAutomaton parse(String s) {
@@ -92,11 +94,15 @@ class TreeAutomatonParserTest {
     }
 
     private static Rule r(parent, label, children) {
-        return new Rule(parent, label, children);
+        return new Rule(parent, automaton.getSignature().getIdForSymbol(label), children, 1);
     }
 
     private static Rule rw(parent, label, children, weight) {
-        return new Rule(parent, label, children, weight);
+        return new Rule(parent, automaton.getSignature().getIdForSymbol(label), children, weight);
+    }
+    
+    private static int s(String symbol) {
+        return automaton.getSignature().getIdForSymbol(symbol);
     }
 }
 

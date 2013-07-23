@@ -18,6 +18,7 @@ import de.up.ling.irtg.maxent.ChildOfFeature;
 import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.maxent.RuleNameFeature;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
@@ -46,10 +47,10 @@ public class PTBConverter {
     public static final boolean PARENT_ANNOTATION = true;
     private static final boolean EXTRACT_LEX = true;
 
-    private Map<String, String> ruleMap;             // mapping of string representation and name of a rule, i.e. "S/NP/VP" -> "r1"
+    private Map<String, Integer> ruleMap;             // mapping of string representation and name of a rule, i.e. "S/NP/VP" -> "r1"; rule name is encoded according to RTG signature
     private Map<String, FeatureFunction> featureMap; // mapping of names to feature functions
     private List<Tree<String>> ptbTrees;             // list of PTB-trees
-    private List<Tree<String>> irtgTrees;            // list of IRTG-trees
+//    private List<Tree<String>> irtgTrees;            // list of IRTG-trees
     private Corpus corpus;                           // annotated corpus
     private MaximumEntropyIrtg maxEntIrtg;           // the automaton storing the grammar
     private Homomorphism hStr;                       // homomorphism for StringAlgebra
@@ -174,8 +175,8 @@ public class PTBConverter {
         // init members
         corpus = new Corpus();
         ptbTrees = new ArrayList<Tree<String>>();
-        irtgTrees = new ArrayList<Tree<String>>();
-        ruleMap = new HashMap<String, String>();
+//        irtgTrees = new ArrayList<Tree<String>>();
+        ruleMap = new HashMap<String, Integer>();
         featureMap = new HashMap<String, FeatureFunction>();
 
         log.setLevel(Level.ALL);
@@ -274,8 +275,8 @@ public class PTBConverter {
             c.addFinalState(ptbTree.getLabel());
 
             // convert the PTB-Tree to an IRTG-tree
-            Tree<String> irtgTree = ptb2Irtg(ptbTree);
-            irtgTrees.add(irtgTree);
+//            Tree<String> irtgTree = ptb2Irtg(ptbTree);
+//            irtgTrees.add(irtgTree);
 
             //create a corpus instance
             List<String> sentence = ptbTree.getLeafLabels();
@@ -322,14 +323,15 @@ public class PTBConverter {
                     String label;
 
                     // create rule name (rXXX)
-                    String ruleName = "r" + String.valueOf(ruleMap.size() + 1);
+                    int ruleName = hStr.getSourceSignature().addSymbol("r" + String.valueOf(ruleMap.size() + 1), childrenValues.size());
                     // remember that we have the rule already
                     ruleMap.put(ruleString, ruleName);
 
                     if (childrenValues.get(0)) { // the node's child is a leaf node --> terminal symbol
                         label = nodeChildren.get(0).getLabel(); // terminal symbol
-                        hStr.add(ruleName, Tree.create(HomomorphismSymbol.createConstant(label)));
-                        ptbChildren.add(Tree.create(HomomorphismSymbol.createConstant(label)));
+                        Tree<HomomorphismSymbol> th = Tree.create(HomomorphismSymbol.createConstant(label, hStr.getTargetSignature(), 0));
+                        hStr.add(ruleName, th);
+                        ptbChildren.add(th);
                     } else {
                         // collect the child states and create the PTB interpretation
                         // the PTB interpretation is not nested but straight forward
@@ -337,19 +339,19 @@ public class PTBConverter {
                             label = nodeChildren.get(i).getLabel();
                             childStates.add(label);
                             String ptbLabel = "?" + String.valueOf(i + 1);
-                            ptbChildren.add(Tree.create(HomomorphismSymbol.createConstant(ptbLabel)));
+                            ptbChildren.add(Tree.create(HomomorphismSymbol.createVariable(ptbLabel))); // XXX this was createConstant -- but shouldn't it be createVariable? AK 23.7.13
                         }
 
                         // create the nested intepretation for the StringAlgebra
-                        Tree<HomomorphismSymbol> strInterp = computeInterpretation(1, childrenValues.size());
+                        Tree<HomomorphismSymbol> strInterp = computeInterpretation(1, childrenValues.size(), hStr.getTargetSignature());
                         hStr.add(ruleName, strInterp);
                     }
 
                     // add interpretations the the homomorphisms
-                    hPtb.add(ruleName, Tree.create(HomomorphismSymbol.createConstant(node.getLabel()), ptbChildren));
+                    hPtb.add(ruleName, Tree.create(HomomorphismSymbol.createConstant(node.getLabel(), hPtb.getTargetSignature(), 0), ptbChildren));
 
                     // add the rule to the automaton
-                    c.addRule(ruleName, childStates, node.getLabel());
+                    c.addRule(c.createRule(node.getLabel(), ruleName, childStates));
                 }
 
                 return false;
@@ -432,7 +434,7 @@ public class PTBConverter {
      * @param max the number of elements of the interpretation
      * @return String the interpretation
      */
-    private Tree<HomomorphismSymbol> computeInterpretation(final int start, final int max) {
+    private Tree<HomomorphismSymbol> computeInterpretation(final int start, final int max, Signature signature) {
         // if there is only one element create the tree and return it
         if (max == 1) {
             return Tree.create(HomomorphismSymbol.createVariable("?1"));
@@ -458,31 +460,32 @@ public class PTBConverter {
             strChildren.add(Tree.create(HomomorphismSymbol.createVariable(maxLabel)));
         } else { // more than one remaining element
             // recursive step
-            strChildren.add(computeInterpretation(start + 1, max));
+            strChildren.add(computeInterpretation(start + 1, max, signature));
         }
 
-        return Tree.create(HomomorphismSymbol.createConstant("*"), strChildren);
+        return Tree.create(HomomorphismSymbol.createConstant("*", signature, strChildren.size()), strChildren);
     }
 
-    /**
+    /**  ** unused **
      * Converts a PTB-tree to an IRTG-tree
      *
      * @param tree the PTB-tree
      * @return Tree<String> the converted IRTG-tree
      */
+    /*
     public Tree<String> ptb2Irtg(final Tree<String> tree) {
         if (tree == null) {
             return null;
         }
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
-            /**
+          
              * Returns the IRTG-(sub)tree corresponding to <tt>node</tt>
              *
              * @param node the PTB-(sub)tree
              * @param childrenValues the already converted child nodes of
              * <tt>node</tt>
              * @return Tree<String> the IRTG-(sub)tree
-             */
+
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
                 if ((node == null) || node.getChildren().isEmpty()) {
@@ -510,6 +513,7 @@ public class PTBConverter {
             }
         });
     }
+    */
 
     /**
      * Reads the grammar from a reader, e.g., string or file
@@ -655,9 +659,9 @@ public class PTBConverter {
     public void addFeatures4AllRules() {
         int num = featureMap.size();
         String featureName;
-        Collection<String> rules = ruleMap.values();
+        Collection<Integer> rules = ruleMap.values();
 
-        for (String r : rules) {
+        for (Integer r : rules) {
             featureName = "f" + String.valueOf(++num);
             featureMap.put(featureName, new RuleNameFeature(r));
         }
@@ -719,17 +723,17 @@ public class PTBConverter {
      * @param stateRules the collection of sets; every set contains
      * the rules corresponding to one state
      */
-    private void addFeaturesToMap(final Collection<Set<String>> stateRules) {
+    private void addFeaturesToMap(final Collection<Set<Integer>> stateRules) {
         int num = featureMap.size();
         String featureName;
 
-        for (Set<String> rulesSet : stateRules) {
+        for (Set<Integer> rulesSet : stateRules) {
 
             // check if the set contains more than one item
             if (rulesSet.size() > 1) {
 
                 // add a feature function for every rule in the set
-                for (String r : rulesSet) {
+                for (Integer r : rulesSet) {
                     featureName = "f" + String.valueOf(++num);
                     featureMap.put(featureName, new RuleNameFeature(r));
                 }
@@ -742,20 +746,20 @@ public class PTBConverter {
      * symbol appears in more than one rule
      */
     public void addParentRelatedFeatures() {
-        Map<String, Set<String>> stateRules = new HashMap<String, Set<String>>();
+        Map<String, Set<Integer>> stateRules = new HashMap<String, Set<Integer>>();
         Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
 
         for (Rule<String> r : ruleSet) {
-            String ruleName = r.getLabel();
+            int ruleName = r.getLabel();
             String state = r.getParent();
 
 
             // get already gathered rules for state
-            Set<String> rules = stateRules.get(state);
+            Set<Integer> rules = stateRules.get(state);
 
             // create new set if none present
             if (rules == null) {
-                rules = new HashSet<String>();
+                rules = new HashSet<Integer>();
                 stateRules.put(state, rules);
             }
 
@@ -771,22 +775,22 @@ public class PTBConverter {
      * which appears in more than one rule
      */
     public void addTerminalRelatedFeatures() {
-        Map<String, Set<String>> interpRules = new HashMap<String, Set<String>>();
+        Map<String, Set<Integer>> interpRules = new HashMap<String, Set<Integer>>();
         Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
 
         for (Rule<String> r : ruleSet) {
-            String ruleName = r.getLabel();
+            int ruleName = r.getLabel();
             Object[] children = r.getChildren();
 
             if (children.length == 0) {
                 String interp = hStr.get(ruleName).toString();
 
                 // get already gathered rules for terminal symbol
-                Set<String> rules = interpRules.get(interp);
+                Set<Integer> rules = interpRules.get(interp);
 
                 // create new set if none present
                 if (rules == null) {
-                    rules = new HashSet<String>();
+                    rules = new HashSet<Integer>();
                     interpRules.put(interp, rules);
                 }
 

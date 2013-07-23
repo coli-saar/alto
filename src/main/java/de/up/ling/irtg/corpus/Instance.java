@@ -14,8 +14,8 @@ import java.util.Map;
  */
 public class Instance {
     private Map<String, Object> inputObjects;
-    private Tree<String> derivationTree;        // may be null if corpus was unannotated
-    private TreeAutomaton chart;                // may be null if corpus was unparsed
+    private Tree<Integer> derivationTree;        // may be null if corpus was unannotated
+    private TreeAutomaton chart;                 // may be null if corpus was unparsed
 
     public Instance() {
     }
@@ -28,11 +28,11 @@ public class Instance {
         this.inputObjects = inputObjects;
     }
 
-    public Tree<String> getDerivationTree() {
+    public Tree<Integer> getDerivationTree() {
         return derivationTree;
     }
 
-    public void setDerivationTree(Tree<String> derivationTree) {
+    public void setDerivationTree(Tree<Integer> derivationTree) {
         this.derivationTree = derivationTree;
     }
 

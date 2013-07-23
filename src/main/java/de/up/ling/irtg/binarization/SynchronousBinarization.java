@@ -14,10 +14,23 @@ import java.util.*;
 
 /**
  *
- * @author koller
+ * @author Sarah Hemmen
  */
 public class SynchronousBinarization<E, F> {
-    public static final String VARIABLE_MARKER = "?";
+    
+
+    public SynchronousBinarization(HomomorphismSymbol constantL, HomomorphismSymbol constantR) {
+//        this.constantL = constantL;
+//        this.constantR = constantR;
+    }
+    
+    public void binarize(Rule grammarRule, TreeAutomaton<E> leftAuto, TreeAutomaton<F> rightAuto, ConcreteTreeAutomaton<String> outputAutomaton, Homomorphism leftHomOut, Homomorphism rightHomOut) {
+        
+    }
+
+    /*
+     * 
+     * public static final String VARIABLE_MARKER = "?";
     private int nextGensym;
     private Map<Item,Set<Item>> itemCombinations;
     private Set<CItem> cChart;
@@ -34,12 +47,6 @@ public class SynchronousBinarization<E, F> {
     private ConcreteTreeAutomaton<String> outputAutomaton;
     private Homomorphism leftHomOut;
     private Homomorphism rightHomOut;
-
-    public SynchronousBinarization(HomomorphismSymbol constantL, HomomorphismSymbol constantR) {
-        this.constantL = constantL;
-        this.constantR = constantR;
-    }
-
     public void binarize(Rule grammarRule, TreeAutomaton<E> leftAuto, TreeAutomaton<F> rightAuto, ConcreteTreeAutomaton<String> outputAutomaton, Homomorphism leftHomOut, Homomorphism rightHomOut) {
         cChart = new HashSet<CItem>();
         leftChart = new HashSet<LItem>();
@@ -565,4 +572,5 @@ public class SynchronousBinarization<E, F> {
             return hash;
         }
     }
+    */
 }
