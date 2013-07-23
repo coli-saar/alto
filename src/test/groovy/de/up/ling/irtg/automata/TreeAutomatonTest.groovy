@@ -17,7 +17,6 @@ import de.up.ling.irtg.signature.*
 import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
 import static de.up.ling.irtg.util.TestingTools.*;
-//import spock.lang.*
 
 /**
  *
@@ -37,6 +36,9 @@ class TreeAutomatonTest{
         TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
         TreeAutomaton intersect = auto1.intersect(auto2);
+        
+        System.err.println("intersect a: " + rbu("a", [], intersect));
+        System.err.println("intersect f: " + rbu("f", [p("q1","p2"), p("q1","p3")], intersect));
 
         assertEquals(new HashSet([rs(p("q1","p2"), "a", [], intersect), rs(p("q1", "p3"), "a", [], intersect)]), 
             rbu("a", [], intersect));

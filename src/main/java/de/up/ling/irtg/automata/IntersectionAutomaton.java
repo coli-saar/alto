@@ -344,7 +344,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
             isExplicit = true;
 
-            System.err.println("intersection auto: " + this);
+//            System.err.println("intersection auto: " + this);
 
 
             if (DEBUG) {
@@ -392,9 +392,16 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
     @Override
     public Set<Rule<Pair<LeftState, RightState>>> getRulesBottomUp(int label, List<Pair<LeftState, RightState>> childStates) {
+        makeAllRulesExplicit();
+        
+        System.err.println("grbu " + getSignature().resolveSymbolId(label) + ", children=" + childStates);
+        
         if (useCachedRuleBottomUp(label, childStates)) {
+            System.err.println("-> cached, " + getRulesBottomUpFromExplicit(label, childStates));
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
+            System.err.println("-> compute fresh");
+            
             List<LeftState> leftChildStates = new ArrayList<LeftState>();
             List<RightState> rightChildStates = new ArrayList<RightState>();
             for (Pair<LeftState, RightState> childState : childStates) {
@@ -421,6 +428,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
     @Override
     public Set<Rule<Pair<LeftState, RightState>>> getRulesTopDown(int label, Pair<LeftState, RightState> parentState) {
+        makeAllRulesExplicit();
+        
         if (!useCachedRuleTopDown(label, parentState)) {
             Set<Rule<LeftState>> leftRules = left.getRulesTopDown(label, parentState.left);
             Set<Rule<RightState>> rightRules = right.getRulesTopDown(label, parentState.right);
