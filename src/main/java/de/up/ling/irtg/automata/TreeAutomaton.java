@@ -42,11 +42,21 @@ import java.util.Set;
 
 /**
  *
+ * TODO:
+ * - Map<Integer,X> durch Int2ObjectMap ersetzen
+ * - IntTree implementieren und Tree<String> durch intTree ersetzen, wo angemessen
+ * - getRulesBU/TD sollten mit ints aufgerufen werden
+ * - ConcreteAuto#addRule sichert die Regel jetzt nur noch; muss sie vorher mit createRule erzeugen, wenn
+ *   Label in Signatur sein soll.
+ * - Allgemein sollten alle Versionen von ConcreteAuto#addRule raus. Dafuer storeRule public machen
+ *   und ueberall jeweils einzeln createRule erzeugen. State-Normalisierung aus storeRule sollte
+ *   auch weg (das sollte createRule mit stateInterner machen).
+ * 
  * @author koller
  */
 public abstract class TreeAutomaton<State> implements Serializable {
-    protected Map<String, StateListToStateMap> explicitRules; // one for each label
-    protected Map<String, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
+    protected Map<Integer, StateListToStateMap> explicitRules; // one for each label
+    protected Map<Integer, SetMultimap<State, Rule<State>>> explicitRulesTopDown;
     protected Set<State> finalStates;
     protected Map<State, State> allStates;
     protected boolean isExplicit;
@@ -61,8 +71,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     
 
     public TreeAutomaton(Signature signature) {
-        explicitRules = new HashMap<String, StateListToStateMap>();
-        explicitRulesTopDown = new IdentityHashMap<String, SetMultimap<State, Rule<State>>>();
+        explicitRules = new HashMap<Integer, StateListToStateMap>();
+        explicitRulesTopDown = new HashMap<Integer, SetMultimap<State, Rule<State>>>();
         finalStates = new HashSet<State>();
         allStates = new HashMap<State, State>();
         isExplicit = false;
@@ -76,7 +86,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Signature getSignature() {
         return signature;
     }
-
+    
     /**
      * Finds automaton rules bottom-up for a given list of child states and a
      * given parent label. The method returns a collection of rules that can be
@@ -438,7 +448,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             childTrees.add(extractTreeFromViterbi(child, map));
         }
 
-        return Tree.create(backpointer.getLabel(), childTrees);
+        return Tree.create(backpointer.getLabel(this), childTrees);
     }
 
     /**
@@ -558,7 +568,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             for (List<State> children : rules.get(f).keySet()) {
                 for (Rule<State> rule : rules.get(f).get(children)) {
                     if (isRulePrinting(rule)) {
-                        buf.append(rule.toString(getFinalStates().contains(rule.getParent())) + "\n");
+                        buf.append(rule.toString(this, getFinalStates().contains(rule.getParent())) + "\n");
                     } else {
                         countSuppressed++;
                     }
@@ -1392,7 +1402,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
-    private StateListToStateMap getOrCreateStateMap(String label) {
+    private StateListToStateMap getOrCreateStateMap(int label) {
         StateListToStateMap ret = explicitRules.get(label);
 
         if (ret == null) {
@@ -1407,9 +1417,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
         private Map<State, StateListToStateMap> nextStep;
         private Set<Rule<State>> rulesHere;
         private int arity;
-        private String label;
+        private int label;
 
-        public StateListToStateMap(String label) {
+        public StateListToStateMap(int label) {
             rulesHere = new HashSet<Rule<State>>();
             nextStep = new IdentityHashMap<State, StateListToStateMap>();
             arity = -1;
@@ -1814,6 +1824,22 @@ public abstract class TreeAutomaton<State> implements Serializable {
         for (Integer arity : counts.elementSet()) {
             System.err.println(String.format("%3d %d", arity, counts.count(arity)));
         }
+    }
+    
+    public Rule<State> createRule(State parent, String label, State[] children, double weight) {
+        return new Rule(parent, signature.addSymbol(label, children.length), children, weight);        
+    }
+
+    public Rule<State> createRule(State parent, String label, List<State> children, double weight) {
+        return createRule(parent, label, (State[]) children.toArray(), weight);
+    }
+    
+    public Rule<State> createRule(State parent, String label, State[] children) {
+        return createRule(parent, label, children, 1);
+    }
+
+    public Rule<State> createRule(State parent, String label, List<State> children) {
+        return createRule(parent, label, children, 1);
     }
 }
 

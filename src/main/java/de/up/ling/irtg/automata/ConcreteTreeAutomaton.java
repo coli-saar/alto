@@ -19,14 +19,15 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
         isExplicit = true;
     }
     
+    // TODO - this does not add the symbol to the signature
     public Rule<State> addRule(Rule<State> rule) {
         storeRule(rule);
-        signature.addSymbol(rule.getLabel(), rule.getChildren().length);
+//        signature.addSymbol(rule.getLabel(), rule.getChildren().length);
         return rule;
     }
 
     public Rule<State> addRule(String label, List<State> childStates, State parentState, double weight) {
-        return addRule(new Rule<State>(parentState, label, childStates));
+        return addRule(createRule(parentState, label, childStates, weight));
     }
 
     public Rule<State> addRule(String label, List<State> childStates, State parentState) {

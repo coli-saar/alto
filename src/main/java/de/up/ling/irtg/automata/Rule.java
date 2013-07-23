@@ -24,17 +24,18 @@ public class Rule<State> implements Serializable {
     private State[] children;
     private double weight;
 
-    public Rule(State parent, int label, State[] children, double weight) {
+    Rule(State parent, int label, State[] children, double weight) {
         this.parent = parent;
         this.label = label;
         this.children = children;
         this.weight = weight;
     }
 
-    public Rule(State parent, int label, List<State> children, double weight) {
+    Rule(State parent, int label, List<State> children, double weight) {
         this(parent, label, (State[]) children.toArray(), weight);
     }
 
+    /*
     public Rule(State parent, int label, State[] children) {
         this(parent, label, children, 1);
     }
@@ -46,6 +47,7 @@ public class Rule<State> implements Serializable {
     public static <State> Rule<State> c(State parent, int label, State... children) {
         return new Rule(parent, label, children);
     }
+    */
 
     public State[] getChildren() {
         return children;
@@ -55,7 +57,7 @@ public class Rule<State> implements Serializable {
         return label;
     }
     
-    public String getLabel(TreeAutomaton auto) {
+    String getLabel(TreeAutomaton auto) {
         return auto.getSignature().resolveSymbolId(label);
     }
 
