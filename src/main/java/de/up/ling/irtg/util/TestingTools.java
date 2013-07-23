@@ -36,6 +36,7 @@ public class TestingTools {
         return x.toTreeWithVariables();
     }
     
+    // sig = target signature of homomorphism
     public static Tree<HomomorphismSymbol> pth(String s, Signature sig) {
         return HomomorphismSymbol.treeFromNames(pt(s), sig);
     }

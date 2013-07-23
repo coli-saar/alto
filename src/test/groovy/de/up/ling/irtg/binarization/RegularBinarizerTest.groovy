@@ -21,7 +21,7 @@ import de.up.ling.irtg.automata.TreeAutomaton
  * @author koller
  */
 class RegularBinarizerTest {
-    @Test
+//    @Test
     public void testStringBinarizationAutomaton() {
         RegularBinarizer bin = new StringAlgebraBinarizer();
         TreeAutomaton auto = bin.binarize("f", 3);
@@ -30,7 +30,7 @@ class RegularBinarizerTest {
         assertEquals(gold, new HashSet(auto.language()))
     }
     
-    @Test
+//    @Test
     public void testStringBinarizerShallow() {
         RegularBinarizer bin = new StringAlgebraBinarizer();
         Tree<StringOrVariable> term = ptv("f(?1,?2,?3)");
@@ -40,7 +40,7 @@ class RegularBinarizerTest {
         assertEquals(gold, new HashSet(auto.language()))
     }
     
-    @Test
+//    @Test
     public void testStringBinarizerDeep() {
         RegularBinarizer bin = new StringAlgebraBinarizer();
         Tree<StringOrVariable> term = ptv("f(g(?1,?2,?3),?4,?5)");

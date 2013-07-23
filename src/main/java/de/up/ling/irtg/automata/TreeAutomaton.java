@@ -277,7 +277,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     protected Set<Rule<State>> getRulesBottomUpFromExplicit(int labelId, List<State> childStates) {
         StateListToStateMap smap = explicitRules.get(labelId);
-
+        
         if (smap == null) {
             return new HashSet<Rule<State>>();
         } else {
@@ -757,10 +757,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param tree
      * @return
      */
-    public boolean accepts(final Tree tree) {
+    public boolean accepts(final Tree<Integer> tree) {
         Set<State> resultStates = run(tree);
         resultStates.retainAll(getFinalStates());
         return !resultStates.isEmpty();
+    }
+    
+    public boolean acceptsLabeled(Tree<String> tree) {
+        return accepts(getSignature().addAllSymbols(tree));
+    }
+    
+    public Set<State> runLabeled(Tree<String> tree) {
+        return run(getSignature().addAllSymbols(tree));
     }
 
     /**
@@ -1443,7 +1451,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         public StateListToStateMap(int label) {
             rulesHere = new HashSet<Rule<State>>();
-            nextStep = new IdentityHashMap<State, StateListToStateMap>();
+            nextStep = new HashMap<State, StateListToStateMap>();  // this needs to not be IdentityHM, e.g. for testIntersection; fix normalization
             arity = -1;
             this.label = label;
         }

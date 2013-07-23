@@ -21,9 +21,9 @@ class UniversalAutomatonTest {
     public void testAcceptance() {
         UniversalAutomaton auto = new UniversalAutomaton(sig(["f":1, "g":2, "a":0]));
         
-        assert auto.accepts(pt("a"))
-        assert auto.accepts(pt("f(a)"))
-        assert auto.accepts(pt("g(a, f(a))"))
+        assert auto.acceptsLabeled(pt("a"))
+        assert auto.acceptsLabeled(pt("f(a)"))
+        assert auto.acceptsLabeled(pt("g(a, f(a))"))
     }
 	
 }

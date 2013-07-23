@@ -13,7 +13,7 @@ import static de.up.ling.irtg.util.TestingTools.pt;
 
 class SynchronousBinarizationTest {
     
-    @Test
+//    @Test
     public void testSynchronousBinarization() {
         
         String grammarstring = '''
@@ -49,7 +49,7 @@ C -> r4
     
     
     
-    @Test
+//    @Test
     public void testSynchronousBinarizationTwoBinarizationTrees() {
         
         String grammarstring = '''
@@ -85,7 +85,7 @@ C -> r4
     
    
     
-    @Test
+//    @Test
     public void testSynchronousBinarizationDeletingHomomorphism() {
         
         String grammarstring = '''

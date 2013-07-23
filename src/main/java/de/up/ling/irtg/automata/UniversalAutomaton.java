@@ -27,7 +27,7 @@ public class UniversalAutomaton extends TreeAutomaton<String> {
     @Override
     public Set<Rule<String>> getRulesBottomUp(int label, List<String> childStates) {
         Set<Rule<String>> ret = new HashSet<Rule<String>>();
-        ret.add(createRule(STATE, label, (String[]) childStates.toArray(), 1));
+        ret.add(createRule(STATE, label, childStates, 1));
         return ret;
     }
 

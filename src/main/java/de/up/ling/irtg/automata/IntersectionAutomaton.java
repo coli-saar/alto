@@ -21,7 +21,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
 //    private Set<String> allLabels;
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
 
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
@@ -286,7 +286,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 }
             }
 
-            System.err.println("after preterminals, agenda: " + agenda);
+//            System.err.println("after preterminals, agenda: " + agenda);
 
 //            System.err.println("after init: " + explicitRules.size());
 //            System.err.println(explicitRules);
@@ -298,11 +298,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 Pair<LeftState, RightState> state = agenda.remove();
                 List<Rule<LeftState>> possibleRules = rulesByChildState.get(state.left);
 
-                System.err.println("pop: " + state);
-                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
+//                System.err.println("pop: " + state);
+//                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
 
                 for (Rule<LeftState> leftRule : possibleRules) {
-                    System.err.println("consider leftrule: " + leftRule.toString(left));
+//                    System.err.println("consider leftrule: " + leftRule.toString(left));
 
                     List<Set<RightState>> partnerStates = new ArrayList<Set<RightState>>();
                     for (LeftState leftState : leftRule.getChildren()) {
@@ -315,10 +315,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                         iterations++;
 
                         List<RightState> partnersHere = it.next();
-                        System.err.println("right partners: " + partnersHere);
+//                        System.err.println("right partners: " + partnersHere);
 
                         Set<Rule<RightState>> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
-                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
+//                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
 
 
                         if (rightRules.isEmpty()) {
@@ -327,7 +327,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
                         for (Rule<RightState> rightRule : rightRules) {
                             Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
-                            System.err.println("** add combined rule: " + rule.toString(this));
+//                            System.err.println("** add combined rule: " + rule.toString(this));
                             storeRule(rule);
 
                             if (seenStates.add(rule.getParent())) {
@@ -394,13 +394,13 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     public Set<Rule<Pair<LeftState, RightState>>> getRulesBottomUp(int label, List<Pair<LeftState, RightState>> childStates) {
         makeAllRulesExplicit();
         
-        System.err.println("grbu " + getSignature().resolveSymbolId(label) + ", children=" + childStates);
+//        System.err.println("grbu " + getSignature().resolveSymbolId(label) + ", children=" + childStates);
         
         if (useCachedRuleBottomUp(label, childStates)) {
-            System.err.println("-> cached, " + getRulesBottomUpFromExplicit(label, childStates));
+//            System.err.println("-> cached, " + getRulesBottomUpFromExplicit(label, childStates));
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
-            System.err.println("-> compute fresh");
+//            System.err.println("-> compute fresh");
             
             List<LeftState> leftChildStates = new ArrayList<LeftState>();
             List<RightState> rightChildStates = new ArrayList<RightState>();

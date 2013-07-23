@@ -72,6 +72,10 @@ public class Homomorphism {
         });
     }
     
+    public Tree<String> applyLabeled(Tree<String> tree) {
+        return getTargetSignature().resolve(apply(getSourceSignature().addAllSymbols(tree)));
+    }
+    
     
     
     /**

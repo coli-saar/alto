@@ -37,9 +37,6 @@ class TreeAutomatonTest{
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
         TreeAutomaton intersect = auto1.intersect(auto2);
         
-        System.err.println("intersect a: " + rbu("a", [], intersect));
-        System.err.println("intersect f: " + rbu("f", [p("q1","p2"), p("q1","p3")], intersect));
-
         assertEquals(new HashSet([rs(p("q1","p2"), "a", [], intersect), rs(p("q1", "p3"), "a", [], intersect)]), 
             rbu("a", [], intersect));
 
@@ -109,13 +106,26 @@ class TreeAutomatonTest{
                 "q14 -> r2(q13,q34) \n q12 -> r3  \n q23 -> r4  \n q34 -> r5 ");
 
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
+        
+//        auto = pre;
+//        sig = auto.getSignature();
+        
+//        Tree t = ptii("r1(")
+        
+        
+//        assert pre.accepts(t) : "not accepted: " + t
+        
+        
 
         // removed temporarily (haha) because new implementation doesn't support top-down yet
 //        pre.makeAllRulesExplicit();
 //        assertEquals(gold, pre);
 
+//        System.err.println("**** " + pre.language().collect { pre.getSignature().resolve(it) });
+
         for( Tree t : gold.language() ) {
-            assert pre.accepts(t) : "not accepted: " + t
+            Tree rt = gold.getSignature().resolve(t)
+            assert pre.acceptsLabeled(rt) : "not accepted: " + rt
         }
     }
     
@@ -126,7 +136,7 @@ class TreeAutomatonTest{
         
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         // don't do anything here that would trigger computation of top-down rules
-        assert pre.accepts(pt("G(A,A)"));
+        assert pre.acceptsLabeled(pt("G(A,A)"));
     }
     
     //@Test  -- temporarily disabled because topdown not available TODO XXX
@@ -150,7 +160,7 @@ class TreeAutomatonTest{
         TreeAutomaton left = parse("p2! -> G(p1,p1) \n p1 -> A"); // accepts { G(A,A) }
         TreeAutomaton result = left.intersect(pre)
         
-        assert result.accepts(pt("G(A,A)"));
+        assert result.acceptsLabeled(pt("G(A,A)"));
     }
     
     @Test
@@ -172,7 +182,7 @@ class TreeAutomatonTest{
         
         TreeAutomaton result = base.homomorphism(h)
         
-        assertEquals(gold, result)
+        assertEquals(new HashSet(["A"]), new HashSet(result.language().collect { result.getSignature().resolve(it) }));
     }
 
     @Test
@@ -283,7 +293,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a [0.4]\n p3 -> a [0.6]");
         TreeAutomaton intersect = auto1.intersect(auto2);
         
-        Set rulesForA = intersect.getRulesBottomUp("a", [])
+        Set rulesForA = rbu("a", [], intersect);
         
         for( Rule r : rulesForA ) {
             double w = r.getWeight();
@@ -300,7 +310,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         TreeAutomaton intersect = auto1.intersect(auto2);
         
         intersect.makeAllRulesExplicit();        
-        Set rulesForA = intersect.getRulesBottomUp("a", [])
+        Set rulesForA = rbu("a", [], intersect);
         
         for( Rule r : rulesForA ) {
             double w = r.getWeight();
