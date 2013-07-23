@@ -34,6 +34,10 @@ public class Signature implements Serializable {
         return arities.get(interner.resolveObject(symbol));
     }
     
+    public String resolveSymbolId(int id) {
+        return interner.resolveId(id);
+    }
+    
     public boolean contains(String symbol) {
         return interner.isKnownObject(symbol);
     }

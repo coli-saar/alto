@@ -21,6 +21,7 @@ import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
+import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
@@ -56,6 +57,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     private List<Rule<State>> unprocessedUpdatesForRulesForRhsState;
     private List<Rule<State>> unprocessedUpdatesForTopDown;
     protected boolean explicitIsBottomUpDeterministic = true;
+    private Interner<State> stateInterner;
     
 
     public TreeAutomaton(Signature signature) {

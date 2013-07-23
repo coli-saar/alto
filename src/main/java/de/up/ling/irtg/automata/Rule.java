@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.saar.basic.StringTools;
 import de.up.ling.tree.Tree;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -20,32 +19,31 @@ import java.util.List;
  * @author koller
  */
 public class Rule<State> implements Serializable {
-
     private State parent;
-    private String label;
+    private int label;
     private State[] children;
     private double weight;
 
-    public Rule(State parent, String label, State[] children, double weight) {
+    public Rule(State parent, int label, State[] children, double weight) {
         this.parent = parent;
         this.label = label;
         this.children = children;
         this.weight = weight;
     }
 
-    public Rule(State parent, String label, List<State> children, double weight) {
+    public Rule(State parent, int label, List<State> children, double weight) {
         this(parent, label, (State[]) children.toArray(), weight);
     }
 
-    public Rule(State parent, String label, State[] children) {
+    public Rule(State parent, int label, State[] children) {
         this(parent, label, children, 1);
     }
 
-    public Rule(State parent, String label, List<State> children) {
+    public Rule(State parent, int label, List<State> children) {
         this(parent, label, children, 1);
     }
 
-    public static <State> Rule<State> c(State parent, String label, State... children) {
+    public static <State> Rule<State> c(State parent, int label, State... children) {
         return new Rule(parent, label, children);
     }
 
@@ -53,8 +51,12 @@ public class Rule<State> implements Serializable {
         return children;
     }
 
-    public String getLabel() {
+    public int getLabel() {
         return label;
+    }
+    
+    public String getLabel(TreeAutomaton auto) {
+        return auto.getSignature().resolveSymbolId(label);
     }
 
     public State getParent() {
@@ -79,14 +81,13 @@ public class Rule<State> implements Serializable {
         return children.length;
     }
 
-    @Override
-    public String toString() {
-        return toString(false);
+    public String toString(TreeAutomaton auto) {
+        return toString(auto, false);
     }
 
-    public String toString(boolean parentIsFinal) {
+    public String toString(TreeAutomaton auto, boolean parentIsFinal) {
         boolean first = true;
-        StringBuilder ret = new StringBuilder(Tree.encodeLabel(parent.toString()) + (parentIsFinal ? "!" : "") + " -> " + Tree.encodeLabel(getLabel()));
+        StringBuilder ret = new StringBuilder(Tree.encodeLabel(parent.toString()) + (parentIsFinal ? "!" : "") + " -> " + Tree.encodeLabel(getLabel(auto)));
 
         if (children.length > 0) {
             ret.append("(");
@@ -109,6 +110,15 @@ public class Rule<State> implements Serializable {
     }
 
     @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 59 * hash + (this.parent != null ? this.parent.hashCode() : 0);
+        hash = 59 * hash + this.label;
+        hash = 59 * hash + Arrays.deepHashCode(this.children);
+        return hash;
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == null) {
             return false;
@@ -120,26 +130,13 @@ public class Rule<State> implements Serializable {
         if (this.parent != other.parent && (this.parent == null || !this.parent.equals(other.parent))) {
             return false;
         }
-        if ((this.label == null) ? (other.label != null) : !this.label.equals(other.label)) {
+        if (this.label != other.label) {
             return false;
         }
         if (!Arrays.deepEquals(this.children, other.children)) {
             return false;
         }
-//        if (Double.doubleToLongBits(this.weight) != Double.doubleToLongBits(other.weight)) {
-//            return false;
-//        }
         return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int hash = 3;
-        hash = 23 * hash + (this.parent != null ? this.parent.hashCode() : 0);
-        hash = 23 * hash + (this.label != null ? this.label.hashCode() : 0);
-        hash = 23 * hash + Arrays.deepHashCode(this.children);
-//        hash = 23 * hash + (int) (Double.doubleToLongBits(this.weight) ^ (Double.doubleToLongBits(this.weight) >>> 32));
-        return hash;
     }
 
     public static <State> Collection<State> extractParentStates(Collection<Rule<State>> rules) {
