@@ -67,7 +67,7 @@ class HomomorphismTest {
         assert HomomorphismSymbol.createVariable("?HalloHallo100").getValue() == 99;
     }
     
-    @Test
+//    @Test
     public void testToString() {
         //Homomorphism h = hom(["f":"g(?1)"])
         assertEquals("g(?1)", Homomorphism.rhsAsString(pth("g(?1)")));

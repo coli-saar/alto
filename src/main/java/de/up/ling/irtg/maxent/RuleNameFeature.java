@@ -14,19 +14,19 @@ import de.up.ling.irtg.automata.Rule;
  * @author koller
  */
 public class RuleNameFeature extends FeatureFunction<String> {
-    private int x;
+    private String x;
 
-    public RuleNameFeature(int x) {
+    public RuleNameFeature(String x) {
         this.x = x;
     }
 
-    public int getX() {
+    public String getX() {
         return x;
     }
 
     @Override
-    public double evaluate(Rule<String> object) {
-        if( object.getLabel() == x ) { 
+    public double evaluate(Rule<String> object, MaximumEntropyIrtg irtg) {
+        if( x.equals(object.getLabel(irtg.getAutomaton())) ) {
             return 1.0;
         } else {
             return 0.0;

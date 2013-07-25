@@ -453,6 +453,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
     @Override
     public Set<Pair<LeftState, RightState>> getAllStates() {
+        
+        /*
         if (allStates == null) {
             Set<Pair<LeftState, RightState>> set = new HashSet<Pair<LeftState, RightState>>();
             collectStatePairs(left.getAllStates(), right.getAllStates(), set);
@@ -460,7 +462,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 addState(pq);
             }
         }
-
+        */
+        makeAllRulesExplicit();
         return super.getAllStates();
     }
 }

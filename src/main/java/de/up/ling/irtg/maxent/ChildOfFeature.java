@@ -24,12 +24,13 @@ public class ChildOfFeature extends FeatureFunction<String> {
     }
 
     @Override
-    public double evaluate(Rule rule){
+    public double evaluate(Rule rule, MaximumEntropyIrtg irtg){
         String pLabel = this.getLabelFor(rule.getParent());
-        if (pLabel == parentLabel) {
+        
+        if (pLabel.equals(parentLabel)) {
             for (Object child : rule.getChildren()) {
                 String cLabel = this.getLabelFor(child);
-                if (cLabel == childLabel) {
+                if (cLabel.equals(childLabel)) {
                     return 1.0;
                 }
             }

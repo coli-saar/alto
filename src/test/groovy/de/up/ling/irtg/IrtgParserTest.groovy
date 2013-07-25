@@ -99,14 +99,19 @@ P -> r12
 
 //                System.err.println("\n\nreduced:\n" + chart.reduceBottomUp());
 
-        assert chart.accepts(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
-        assert chart.accepts(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
+        assert chart.accepts(pti("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))", chart.getSignature()));
+        assert chart.accepts(pti("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))", chart.getSignature()));
 
         assertEquals(2, chart.countTrees());
 
-        assertEquals( irtg.getAutomaton().getRulesTopDown("r4", "VP").iterator().next().getWeight(), 0.6, 0.001);
-        assertEquals( irtg.getAutomaton().getRulesTopDown("r5", "VP").iterator().next().getWeight(), 0.4, 0.001);
-        assertEquals( irtg.getAutomaton().getRulesTopDown("r1", "S").iterator().next().getWeight(), 1.0, 0.001);
+        assertEquals( gfrtd("r4", "VP", irtg).getWeight(), 0.6, 0.001);
+        assertEquals( gfrtd("r5", "VP", irtg).getWeight(), 0.4, 0.001);
+        assertEquals( gfrtd("r1", "S", irtg).getWeight(), 1.0, 0.001);
+    }
+    
+    private Rule gfrtd(String label, String parentState, InterpretedTreeAutomaton irtg) {
+        TreeAutomaton auto = irtg.getAutomaton();
+        return auto.getRulesTopDown(auto.getSignature().getIdForSymbol(label), parentState).iterator().next();
     }
     
     @Test

@@ -145,12 +145,12 @@ S -> r2
         compareWeight("r2", "NP", 2/3.0, auto);
     }
     
-    private Rule<String> fr(String label, String parentState, TreeAutomaton rtg) {
+    private Rule<String> fr(int label, String parentState, TreeAutomaton rtg) {
         return rtg.getRulesTopDown(label, parentState).iterator().next();
     }
     
     private void compareWeight(String label, String parentState, double expectedWeight, TreeAutomaton auto) {
-        double actualWeight = fr(label, parentState, auto).getWeight();
+        double actualWeight = fr(auto.getSignature().getIdForSymbol(label), parentState, auto).getWeight();
         double diff = Math.abs(actualWeight - actualWeight);
        
         assert diff < 0.0001 : "weight of " + label + " is " + actualWeight;

@@ -39,7 +39,7 @@ public class Interner<E> implements Serializable {
     }
     
     public int resolveObject(E object) {
-        return objectToInt.get(object);
+        return objectToInt.getInt(object);
     }
     
     public E resolveId(int index) {

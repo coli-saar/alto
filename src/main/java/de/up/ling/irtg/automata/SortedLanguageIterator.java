@@ -40,7 +40,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
 
     public SortedLanguageIterator(TreeAutomaton<State> auto) {
         streamForState = new HashMap<State, StreamForState>();
-
+        
         // if necessary, this call to getAllStates could be replaced
         // by slightly more careful coding in this constructor and in
         // evaluatedUnevaluatedItems
@@ -49,7 +49,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }
 
         for (Rule<State> rule : auto.getRuleSet()) {
-            StreamForState stream = streamForState.get(rule.getParent());
+            StreamForState stream = streamForState.get(rule.getParent());            
             stream.addEntryForRule(rule);
         }
         

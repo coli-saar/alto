@@ -45,21 +45,25 @@ public class IrtgParser {
 
 
     public static InterpretedTreeAutomaton parse(Reader reader) throws ParseException {
-        parser = new IrtgParser(new ByteArrayInputStream(new byte[]{}));
-        parser.ReInit(reader);
+        try {
+            parser = new IrtgParser(new ByteArrayInputStream(new byte[]{}));
+            parser.ReInit(reader);
 
-	parser.grammar();
+            parser.grammar();
 
-        InterpretedTreeAutomaton ret = null;
+            InterpretedTreeAutomaton ret = null;
 
-        if( parser.features.isEmpty() ) {
-            ret = new InterpretedTreeAutomaton(parser.automaton);
-        } else {
-            ret = new MaximumEntropyIrtg(parser.automaton, parser.features);
+            if( parser.features.isEmpty() ) {
+                ret = new InterpretedTreeAutomaton(parser.automaton);
+            } else {
+                ret = new MaximumEntropyIrtg(parser.automaton, parser.features);
+            }
+
+            ret.addAllInterpretations(parser.interpretations);
+            return ret;
+        } catch(Exception e) {
+            throw new ParseException("Unexpected parsing error: " + e.toString());
         }
-
-        ret.addAllInterpretations(parser.interpretations);
-        return ret;
     }
 
     private static Constructor<FeatureFunction> findFeatureConstructor(String className, int n) throws ClassNotFoundException, NoSuchMethodException {

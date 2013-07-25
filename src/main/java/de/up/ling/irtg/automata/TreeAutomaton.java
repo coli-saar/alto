@@ -424,7 +424,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     @CallableFromShell
-    public Tree viterbi() {
+    public Tree<Integer> viterbi() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
         Map<State, Pair<Double, Rule<State>>> map =
                 evaluateInSemiring(new ViterbiWithBackpointerSemiring<State>(), new RuleEvaluator<State, Pair<Double, Rule<State>>>() {
@@ -447,15 +447,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return extractTreeFromViterbi(bestFinalState, map);
     }
 
-    private Tree<String> extractTreeFromViterbi(State state, Map<State, Pair<Double, Rule<State>>> map) {
+    private Tree<Integer> extractTreeFromViterbi(State state, Map<State, Pair<Double, Rule<State>>> map) {
         Rule<State> backpointer = map.get(state).right;
-        List<Tree<String>> childTrees = new ArrayList<Tree<String>>();
+        List<Tree<Integer>> childTrees = new ArrayList<Tree<Integer>>();
 
         for (State child : backpointer.getChildren()) {
             childTrees.add(extractTreeFromViterbi(child, map));
         }
 
-        return Tree.create(backpointer.getLabel(this), childTrees);
+        return Tree.create(backpointer.getLabel(), childTrees);
     }
 
     /**

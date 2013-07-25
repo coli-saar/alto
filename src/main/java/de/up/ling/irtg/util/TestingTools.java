@@ -55,6 +55,10 @@ public class TestingTools {
         return ret;
     }
     
+    public static Homomorphism hom(Map<String,String> mappings) {
+        return hom(mappings, new Signature());
+    }
+    
     public static Signature sig(Map<String,Integer> symbols) {
         Signature ret = new Signature();
         

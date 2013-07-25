@@ -12,7 +12,7 @@ import de.saar.basic.Pair;
  * @author koller
  */
 public abstract class FeatureFunction<State> {
-    public abstract double evaluate(Rule<State> object);
+    public abstract double evaluate(Rule<State> object, MaximumEntropyIrtg irtg);
 
     @Override
     public String toString() {

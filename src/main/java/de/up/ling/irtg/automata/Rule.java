@@ -57,7 +57,7 @@ public class Rule<State> implements Serializable {
         return label;
     }
     
-    String getLabel(TreeAutomaton auto) {
+    public String getLabel(TreeAutomaton auto) {
         return auto.getSignature().resolveSymbolId(label);
     }
 

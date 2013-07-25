@@ -46,6 +46,15 @@ class TreeAutomatonTest{
         assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
     }
     
+    @Test
+    public void testIntersectionLanguage() {
+        TreeAutomaton auto1 = parse("q1! -> f(q2, q3)\n q2 -> a\n q3 -> a\n q3 -> b");
+        TreeAutomaton auto2 = parse("p1! -> f(p2,p2)\n p2 -> a");
+        TreeAutomaton intersect = auto1.intersect(auto2);
+        
+        assertEquals(intersect.language(), new HashSet([pti("f(a,a)", intersect.getSignature())]));
+    }
+    
     private Set<Rule> rbu(String label, List children, TreeAutomaton auto) {
         return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), children);
     }
