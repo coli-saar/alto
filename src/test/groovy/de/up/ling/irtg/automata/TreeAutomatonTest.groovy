@@ -108,7 +108,7 @@ class TreeAutomatonTest{
         TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
                 "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
         Homomorphism h = hom(["r1":"c(?1,?2)", "r2":"c(?1,?2)", "r3":"a", "r4":"b", "r5":"d"], 
-                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]) );
+                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature());
 
         TreeAutomaton gold = parse("q13 -> r1(q12,q23) \n q24 -> r1(q23,q34) \n q14! -> r1(q12,q24) \n" +
                 "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
@@ -116,53 +116,35 @@ class TreeAutomatonTest{
 
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         
-//        auto = pre;
-//        sig = auto.getSignature();
-        
-//        Tree t = ptii("r1(")
-        
-        
-//        assert pre.accepts(t) : "not accepted: " + t
-        
-        
-
-        // removed temporarily (haha) because new implementation doesn't support top-down yet
-//        pre.makeAllRulesExplicit();
-//        assertEquals(gold, pre);
-
-//        System.err.println("**** " + pre.language().collect { pre.getSignature().resolve(it) });
-
-        for( Tree t : gold.language() ) {
-            Tree rt = gold.getSignature().resolve(t)
-            assert pre.acceptsLabeled(rt) : "not accepted: " + rt
-        }
+        pre.makeAllRulesExplicit();
+        assertEquals(gold, pre);
     }
     
     @Test
     public void testInvHomNonlinearBottomUp() {
         TreeAutomaton rhs = parse("q2! -> f(q1) \n q1 -> a "); // accepts { f(a) }
-        Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]))
+        Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]), rhs.getSignature())
         
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         // don't do anything here that would trigger computation of top-down rules
         assert pre.acceptsLabeled(pt("G(A,A)"));
     }
     
-    //@Test  -- temporarily disabled because topdown not available TODO XXX
+    @Test
     public void testInvHomNonlinearTopDown() {
         TreeAutomaton rhs = parse("q2! -> f(q1) \n q1 -> a "); // accepts { f(a) }
-        Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]))
+        Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]), rhs.getSignature())
         
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         pre.makeAllRulesExplicit(); // this triggers computing all top-down rules
         
-        assert pre.accepts(pt("G(A,A)"));
+        assert pre.acceptsLabeled(pt("G(A,A)"));
     }
     
     @Test
     public void testInvHomNonlinearByIntersection() {
         TreeAutomaton rhs = parse("q2! -> f(q1) \n q1 -> a "); // accepts { f(a) }
-        Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]))
+        Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]), rhs.getSignature());
         
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         
@@ -173,32 +155,47 @@ class TreeAutomatonTest{
     }
     
     @Test
+    public void testInvHomNondeleting() {
+        TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
+                "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
+        Homomorphism h = hom(["r1":"c(?1,?2)", "r2":"c(?1,?2)", "r3":"a", "r4":"b", "r5":"d"], 
+                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature() );
+
+        TreeAutomaton gold = parse("q13 -> r1(q12,q23) \n q24 -> r1(q23,q34) \n q14! -> r1(q12,q24) \n" +
+                "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
+                "q14 -> r2(q13,q34) \n q12 -> r3  \n q23 -> r4  \n q34 -> r5 ");
+
+        TreeAutomaton pre = rhs.inverseHomomorphism(h);
+    }
+    
+    @Test
     public void testHom() {
         TreeAutomaton base = parse("q! -> f(q1, q2)\n q -> g(q1, q2)\n q -> h(q1,q2)\n q1 -> a \n q2 -> b ");
-        Homomorphism h = hom(["f":"H(F(?1,?2))", "g":"H(F(?1,?2))", "h":"G(?2,?1)", "a":"A", "b":"B"], base.getSignature());
-        
+        Signature s = new Signature()
+        Homomorphism h = hom(["f":"H(F(?1,?2))", "g":"H(F(?1,?2))", "h":"G(?2,?1)", "a":"A", "b":"B"], base.getSignature(), s);
         Set gold = new HashSet([pt("H(F(A,B))"), pt("G(B,A)")])
+        
         TreeAutomaton result = base.homomorphism(h)
                 
-        assertEquals(gold, result.language())
+        assertEquals(gold, new HashSet(result.language().collect { s.resolve(it)}))
     }
     
     @Test
     public void testHomOneVariable() {
         TreeAutomaton base = parse("q1! -> f(q2) \n q2 -> a");
         TreeAutomaton gold = parse("q1! -> A \n q2 -> A ");
-        Homomorphism h = hom(["f": "?1", "a": "A"], base.getSignature())
+        Homomorphism h = hom(["f": "?1", "a": "A"], base.getSignature(), gold.getSignature())
         
         TreeAutomaton result = base.homomorphism(h)
         
-        assertEquals(new HashSet(["A"]), new HashSet(result.language().collect { result.getSignature().resolve(it) }));
+        assertEquals(new HashSet([pti("A", result.getSignature())]), result.language());
     }
 
     @Test
     public void testViterbi() {
         TreeAutomaton auto = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1) [1]\n q! -> f(q1,q2) [1.5]");
         Tree best = auto.viterbi();
-        assertEquals(best.toString(), pt("f(a,a)").toString());
+        assertEquals(auto.getSignature().resolve(best).toString(), pt("f(a,a)").toString());
     }
 
     @Test

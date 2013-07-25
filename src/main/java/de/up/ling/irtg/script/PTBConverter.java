@@ -663,7 +663,7 @@ public class PTBConverter {
 
         for (Integer r : rules) {
             featureName = "f" + String.valueOf(++num);
-            featureMap.put(featureName, new RuleNameFeature(r));
+            featureMap.put(featureName, new RuleNameFeature(maxEntIrtg.getAutomaton().getSignature().resolveSymbolId(r)));
         }
     }
 
@@ -735,7 +735,7 @@ public class PTBConverter {
                 // add a feature function for every rule in the set
                 for (Integer r : rulesSet) {
                     featureName = "f" + String.valueOf(++num);
-                    featureMap.put(featureName, new RuleNameFeature(r));
+                    featureMap.put(featureName, new RuleNameFeature(maxEntIrtg.getAutomaton().getSignature().resolveSymbolId(r)));
                 }
             }
         }

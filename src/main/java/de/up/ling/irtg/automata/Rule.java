@@ -101,7 +101,7 @@ public class Rule<State> implements Serializable {
                     ret.append(", ");
                 }
 
-                ret.append(Tree.encodeLabel(child.toString()));
+                ret.append((child == null) ? "null" : Tree.encodeLabel(child.toString()));
             }
 
             ret.append(")");

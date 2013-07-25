@@ -46,7 +46,11 @@ public class TestingTools {
     }
     
     public static Homomorphism hom(Map<String,String> mappings, Signature sourceSignature) {
-        Homomorphism ret = new Homomorphism(sourceSignature, new Signature());
+        return hom(mappings, sourceSignature, new Signature());
+    }
+    
+    public static Homomorphism hom(Map<String,String> mappings, Signature sourceSignature, Signature targetSignature) {
+        Homomorphism ret = new Homomorphism(sourceSignature, targetSignature);
         
         for( String sym : mappings.keySet() ) {
             ret.add(sourceSignature.getIdForSymbol(sym), pth(mappings.get(sym), ret.getTargetSignature()));

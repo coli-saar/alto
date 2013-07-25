@@ -115,7 +115,7 @@ public class HomomorphismSymbol {
 
     @Override
     public String toString() {
-        return Integer.toString(value);
+        return (isVariable()?"?":"") + value;
     }
     
     private static class HomSymbolToInt implements Function<HomomorphismSymbol,Integer> {
