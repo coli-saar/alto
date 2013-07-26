@@ -558,24 +558,44 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         Map<Integer, Map<List<State>, Set<Rule<State>>>> rules = getAllRules();
         Map<Integer, Map<List<State>, Set<Rule<State>>>> otherRules = ((TreeAutomaton) o).getAllRules();
+        int[] remap = getSignature().remap(((TreeAutomaton) o).getSignature());
 
-        if (!rules.keySet().equals(otherRules.keySet())) {
+        if (rules.size() != otherRules.size()) {
             return false;
         }
 
         for (int f : rules.keySet()) {
-            if (!rules.get(f).keySet().equals(otherRules.get(f).keySet())) {
+            if( remap[f] == 0 ) {
+                return false;
+            }
+            
+            if (!rules.get(f).keySet().equals(otherRules.get(remap[f]).keySet())) {
                 return false;
             }
 
             for (List<State> states : rules.get(f).keySet()) {
-                if (!new HashSet<Rule<State>>(rules.get(f).get(states)).equals(new HashSet<Rule<State>>(otherRules.get(f).get(states)))) {
+                if( ! ruleSetsEqual(rules.get(f).get(states), otherRules.get(remap[f]).get(states), remap) ) {
                     return false;
                 }
             }
         }
 
         return true;
+    }
+    
+    private boolean ruleSetsEqual(Set<Rule<State>> r1, Set<Rule<State>> r2, int[] labelRemap) {
+        if( r1.size() != r2.size() ) {
+            return false;
+        }
+        
+        Set<Rule> tmp = new HashSet<Rule>();
+        tmp.addAll(r2);
+        
+        for( Rule r : r1 ) {
+            tmp.remove(new Rule(r.getParent(), labelRemap[r.getLabel()], r.getChildren(), 1));
+        }
+        
+        return tmp.isEmpty();
     }
 
     @Override

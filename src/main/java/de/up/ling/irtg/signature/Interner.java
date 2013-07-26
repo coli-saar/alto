@@ -62,4 +62,21 @@ public class Interner<E> implements Serializable {
     public Map<E,Integer> getSymbolTable() {
         return objectToInt;
     }
+    
+    /*
+     * Returns an arrary x such that the symbol
+     * i in this interner is the same as the symbol
+     * x[i] in the other interner. If the symbol
+     * does not exist in the other interner, x[i]
+     * will be 0.
+     */
+    public int[] remap(Interner<E> other) {
+        int[] ret = new int[nextIndex];
+        
+        for( int i = 1; i < nextIndex; i++ ) {
+            ret[i] = other.resolveObject(resolveId(i));
+        }
+        
+        return ret;
+    }
 }

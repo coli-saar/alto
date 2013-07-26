@@ -67,6 +67,40 @@ class HomomorphismTest {
         assert HomomorphismSymbol.createVariable("?HalloHallo100").getValue() == 99;
     }
     
+    
+    
+    @Test
+    public void testEquals() {
+        Homomorphism h1 = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
+        Homomorphism h2 = hom(["a":"k(b)", "f":"g(?2,h(?1))", "c":"l(e)"], sig(["a":0, "c":0, "f":2]));
+        
+        assert h1.equals(h2);
+    }
+    
+    @Test
+    public void testNotEquals1() {
+        Homomorphism h1 = hom(["f":"x(?2,h(?1))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
+        Homomorphism h2 = hom(["a":"k(b)", "f":"g(?2,h(?1))", "c":"l(e)"], sig(["a":0, "c":0, "f":2]));
+        
+        assert ! h1.equals(h2);
+    }
+    
+    @Test
+    public void testNotEquals2() {
+        Homomorphism h1 = hom(["g":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"], sig(["g":2, "a":0, "c":0]));
+        Homomorphism h2 = hom(["a":"k(b)", "f":"g(?2,h(?1))", "c":"l(e)"], sig(["a":0, "c":0, "f":2]));
+        
+        assert ! h1.equals(h2);
+    }
+    
+    @Test
+    public void testNotEquals3() {
+        Homomorphism h1 = hom(["f":"g(?1,h(?2))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
+        Homomorphism h2 = hom(["a":"k(b)", "f":"g(?2,h(?1))", "c":"l(e)"], sig(["a":0, "c":0, "f":2]));
+        
+        assert ! h1.equals(h2);
+    }
+    
 //    @Test
     public void testToString() {
         //Homomorphism h = hom(["f":"g(?1)"])

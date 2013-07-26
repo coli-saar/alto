@@ -38,9 +38,11 @@ public class Homomorphism {
     public void add(int label, Tree<HomomorphismSymbol> mapping) {
         mappings.put(label, mapping);
 
+        /*
         if (tgtSignature.isWritable()) {
             tgtSignature.addAllConstants(mapping);
         }
+        */
     }
 
     public Tree<HomomorphismSymbol> get(int label) {
@@ -166,11 +168,66 @@ public class Homomorphism {
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Homomorphism) {
-            return mappings.equals(((Homomorphism) obj).mappings);
+            Homomorphism other = (Homomorphism) obj;
+            
+            int[] sourceRemap = srcSignature.remap(other.srcSignature);
+            int[] targetRemap = tgtSignature.remap(other.tgtSignature);
+            
+            if( mappings.size() != other.mappings.size() ) {
+                return false;
+            }
+            
+            for( int srcSym : mappings.keySet() ) {
+                if( sourceRemap[srcSym] == 0 ) {
+                    return false;
+                }
+                
+                Tree<HomomorphismSymbol> thisRhs = mappings.get(srcSym);
+                Tree<HomomorphismSymbol> otherRhs = other.mappings.get(sourceRemap[srcSym]);
+                
+                if( ! equalRhsTrees(thisRhs, otherRhs, targetRemap)) {
+                    return false;
+                }
+            }
+            
+            return true;
         }
 
         return false;
     }
+    
+    private boolean equalRhsTrees(Tree<HomomorphismSymbol> thisRhs, Tree<HomomorphismSymbol> otherRhs, int[] targetRemap) {
+        if( thisRhs.getLabel().getType() != otherRhs.getLabel().getType() ) {
+            return false;
+        }
+        
+        switch(thisRhs.getLabel().getType()) {
+            case CONSTANT:
+                if( targetRemap[thisRhs.getLabel().getValue()] != otherRhs.getLabel().getValue() ) {
+                    return false;
+                }
+                break;
+                
+            case VARIABLE:
+                if( thisRhs.getLabel().getValue() != otherRhs.getLabel().getValue() ) {
+                    return false;
+                }
+        }
+        
+        if( thisRhs.getChildren().size() != otherRhs.getChildren().size() ) {
+            return false;
+        }
+        
+        for( int i = 0; i < thisRhs.getChildren().size(); i++ ) {
+            if( ! equalRhsTrees(thisRhs.getChildren().get(i), otherRhs.getChildren().get(i), targetRemap)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    
 
     public void setDebug(boolean debug) {
         this.debug = debug;

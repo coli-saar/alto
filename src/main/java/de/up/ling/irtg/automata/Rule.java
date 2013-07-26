@@ -148,6 +148,21 @@ public class Rule<State> implements Serializable {
         }
         return true;
     }
+    
+    /*
+    public boolean equals(Rule<State> other, int[] labelRemap) {
+        if (this.parent != other.parent && (this.parent == null || !this.parent.equals(other.parent))) {
+            return false;
+        }
+        if (labelRemap[this.label] != other.label) {
+            return false;
+        }
+        if (!Arrays.deepEquals(this.children, other.children)) {
+            return false;
+        }
+        return true;
+    }
+    */
 
     public static <State> Collection<State> extractParentStates(Collection<Rule<State>> rules) {
         List<State> ret = new ArrayList<State>();

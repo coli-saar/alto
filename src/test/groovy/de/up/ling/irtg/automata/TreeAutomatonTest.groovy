@@ -32,6 +32,32 @@ class TreeAutomatonTest{
     }
     
     @Test
+    public void testEqualsWithSignatures() {
+        TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
+        TreeAutomaton auto2 = parse("q2 ! -> f(q1,q1)\n q1 -> a ");
+        
+        assert auto1.equals(auto2);
+    }
+    
+    
+    @Test
+    public void testNotEqualsWithSignatures() {
+        TreeAutomaton auto1 = parse("q1 -> b\n q2 ! -> f(q1,q1) ");
+        TreeAutomaton auto2 = parse("q2 ! -> f(q1,q1)\n q1 -> a ");
+        
+        assert ! auto1.equals(auto2);
+    }
+
+
+    @Test
+    public void testNotEquals2WithSignatures() {
+        TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
+        TreeAutomaton auto2 = parse("q2 ! -> f(q,q)\n q -> a ");
+        
+        assert ! auto1.equals(auto2);
+    }
+    
+    @Test
     public void testIntersection() {
         TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");

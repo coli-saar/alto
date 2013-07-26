@@ -128,5 +128,7 @@ public class Signature implements Serializable {
         return "[" + StringTools.join(syms, ", ") + "]";
     }
     
-    
+    public int[] remap(Signature other) {
+        return interner.remap(other.interner);
+    }    
 }

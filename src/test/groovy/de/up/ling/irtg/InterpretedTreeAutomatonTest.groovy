@@ -163,9 +163,6 @@ S -> r2
         String str = irtg.toString();
         InterpretedTreeAutomaton parsed = iparse(str);
         
-                System.err.println("str: " + str);
-                System.err.println("parsed str: " + parsed.toString());
-        
         assert irtg.equals(parsed) : parsed;
     }
 

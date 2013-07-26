@@ -694,10 +694,12 @@ public class InterpretedTreeAutomaton {
         final InterpretedTreeAutomaton other = (InterpretedTreeAutomaton) obj;
         if (this.automaton != other.automaton && (this.automaton == null || !this.automaton.equals(other.automaton))) {
             return false;
-        }
+        }        
+        
         if (this.interpretations != other.interpretations && (this.interpretations == null || !this.interpretations.equals(other.interpretations))) {
             return false;
         }
+        
         return true;
     }
 }
