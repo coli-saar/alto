@@ -670,6 +670,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     
     public ConcreteTreeAutomaton<State> asConcreteTreeAutomaton() {
         ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
+        ret.signature = signature;
         
         makeAllRulesExplicit();
         
