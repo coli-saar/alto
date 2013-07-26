@@ -442,35 +442,7 @@ public class InterpretedTreeAutomaton {
         String filename = StringTools.slurp(reader);
         corpus.attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
     }
-
-    /**
-     * BUG: This no longer works with the current version of ChartCorpus.
-     *
-     * @param corpus
-     */
-    /*
-     public void normalizeStates(ChartCorpus corpus) {
-     for( TreeAutomaton chart : corpus ) {
-     Set<Rule> rules = chart.getRuleSet();
-     for( Rule rule : rules ) {
-     normalizeState(rule.getParent());
-     for( Object child : rule.getChildren() ) {
-     normalizeState(child);
-     }
-     }
-     }
-     }
     
-     private void normalizeState(Object state) {
-     if( state instanceof Pair ) {
-     Pair pairState = (Pair) state;
-     if( ! (pairState.left instanceof Pair) ) {
-     pairState.left = automaton.normalizeState(pairState.left.toString());
-     }
-     }
-     }
-
-     */
     public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
         List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
         if (orderedInterpretationList.size() != 2) {

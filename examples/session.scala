@@ -41,8 +41,8 @@ preimage.language
 val irtg = loadIrtg("examples/scfg.irtg")
 val chart = irtg.parse("german" >> "hans betrachtet die frau mit dem fernrohr")
 
+chart.viterbi
 chart.language
-
 
 irtg.decode("english", "german" >> "hans betrachtet die frau mit dem fernrohr")
 
@@ -55,29 +55,20 @@ alg.decompose(alg.parseString("a b c"))
 
 
 
+// ML training 
+
+val irtg = loadIrtg("examples/cfg.irtg")
+val corpus = irtg.readCorpus(file("examples/pcfg-annotated-training.txt"))
+irtg.trainML(corpus)
 
 
-val irtg = IrtgParser.parse(file("examples/scfg.irtg"))
-val chart = irtg.parse("german" -> "hans betrachtet die frau mit dem fernrohr")
-chart.viterbi()
-chart.language()
+// EM training
 
-irtg.decode("english", "german" -> "hans betrachtet die frau mit dem fernrohr")
+val irtg = loadIrtg("examples/cfg.irtg")
+val corpus = irtg.readCorpus(file("examples/pcfg-training.txt"))
 
-val irtg = IrtgParser.parse(file("examples/cfg.irtg"))
-val pco = irtg.parseCorpus(file("examples/pcfg-training.txt"))
+Charts.computeCharts(corpus, irtg, fostream("charts.zip"))
+corpus.attachCharts(new Charts(new FileInputStreamSupplier(new File("charts.zip"))))
 
-time(irtg.trainEM(pco))
-
-pco.write("/tmp/foo")
-val pco2 = ParsedCorpus.read(fistream("/tmp/foo"))
-time(irtg.trainEM(pco2))
-
-
-val ger = irtg.getInterpretation("german")
-val alg = ger.getAlgebra().asInstanceOf[Algebra[List[String]]]
-irtg.getAutomaton().intersect(alg.decompose(alg.parseString("hans betrachtet die frau mit dem fernrohr")).inverseHomomorphism(ger.getHomomorphism()))
-
-
-irtg.parse("german" -> "hans betrachtet die frau mit dem fernrohr", "english" -> "john watches the woman with the telescope")
+irtg.trainEM(corpus)
 
