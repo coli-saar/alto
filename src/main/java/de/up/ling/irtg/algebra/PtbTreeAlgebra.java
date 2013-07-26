@@ -94,12 +94,12 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * @return Tree<String> the evaluated tree
      */
     @Override
-    public Tree<String> evaluate(final Tree<Integer> tree) {
-        return tree.dfs(new TreeVisitor<Integer, Void, Tree<String>>() {
+    public Tree<String> evaluate(final Tree<String> tree) {
+        return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
-            public Tree<String> combine(Tree<Integer> node, List<Tree<String>> childrenValues) {
+            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
                 List<Tree<String>> newChildValues = new ArrayList<Tree<String>>();
-                String labelAsString = signature.resolveSymbolId(node.getLabel());
+                String labelAsString = node.getLabel();
                 
                 // remove the effects of the binarization
                 // i.e. replace artificial nodes with their children

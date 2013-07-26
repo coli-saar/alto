@@ -32,7 +32,6 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     private static final int MAX_TUPLE_LENGTH = 3;
     private final Map<String, Set<List<String>>> atomicInterpretations;
     private final Set<String> allIndividuals;
-//    private final Set<String> allLabels;
     private final Set<List<String>> allIndividualsAsTuples;
     private final Signature signature;
 
@@ -73,18 +72,16 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     }
 
     @Override
-    public Set<List<String>> evaluate(final Tree<Integer> t) {
-        return (Set<List<String>>) t.dfs(new TreeVisitor<Integer, Void, Set<List<String>>>() {
+    public Set<List<String>> evaluate(final Tree<String> t) {
+        return (Set<List<String>>) t.dfs(new TreeVisitor<String, Void, Set<List<String>>>() {
             @Override
-            public Set<List<String>> combine(Tree<Integer> node, List<Set<List<String>>> childrenValues) {
+            public Set<List<String>> combine(Tree<String> node, List<Set<List<String>>> childrenValues) {
                 return evaluate(node.getLabel(), childrenValues);
             }
         });
     }
 
-    private Set<List<String>> evaluate(int labelId, List<Set<List<String>>> childrenValues) {
-        String label = signature.resolveSymbolId(labelId);
-        
+    private Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) {
         if (label.startsWith(PROJECT)) {
             return project(childrenValues.get(0), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(INTERSECT)) {
@@ -195,7 +192,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
                 Set<Rule<Set<List<String>>>> ret = new HashSet<Rule<Set<List<String>>>>();
-                Set<List<String>> parents = evaluate(label, childStates);
+                Set<List<String>> parents = evaluate(getSignature().resolveSymbolId(label), childStates);
                 
                 // require that set in parent state must be non-empty; otherwise there is simply no rule
                 if (parents != null && !parents.isEmpty()) {

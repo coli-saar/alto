@@ -24,8 +24,8 @@ public class Interpretation<E> {
         this.hom = hom;
     }
 
-    public E interpret(Tree<Integer> t) {
-        return algebra.evaluate(hom.applyRaw(t));
+    public E interpret(Tree<String> t) {
+        return algebra.evaluate(hom.apply(t));
     }
 
     public Algebra<E> getAlgebra() {

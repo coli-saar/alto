@@ -24,8 +24,8 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
     protected final Signature signature = new Signature();
 
     @Override
-    public Tree<String> evaluate(Tree<Integer> t) {
-        return signature.resolve(t);
+    public Tree<String> evaluate(Tree<String> t) {
+        return t;
     }
 
     @Override

@@ -24,11 +24,21 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
     private TreeAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
     private Map<String, State> rhsState;
+    private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
+    private Function<HomomorphismSymbol,Integer> remappingHomSymbolToIntFunction;
 
     public NondeletingInverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
         this.rhsAutomaton = rhsAutomaton;
         this.hom = hom;
+        
+        labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
+        
+        remappingHomSymbolToIntFunction = new Function<HomomorphismSymbol, Integer>() {
+            public Integer apply(HomomorphismSymbol f) {
+                return labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().apply(f)];
+            }
+        };
 
         assert hom.isNonDeleting();
 
@@ -52,11 +62,11 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
         } else {
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
 
-            Set<State> resultStates = rhsAutomaton.run(hom.get(label), HomomorphismSymbol.getHomSymbolToIntFunction(), new Function<Tree<HomomorphismSymbol>, State>() {
+            Set<State> resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new Function<Tree<HomomorphismSymbol>, State>() {
                 @Override
                 public State apply(Tree<HomomorphismSymbol> f) {
                     if (f.getLabel().isVariable()) {
-                        String child = childStates.get(f.getLabel().getIndex());
+                        String child = childStates.get(f.getLabel().getValue());
                         return rhsState.get(child);
                     } else {
                         return null;
@@ -82,11 +92,9 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
             Tree<HomomorphismSymbol> rhs = hom.get(label);
             Set<Rule<String>> ret = new HashSet<Rule<String>>();
 
-//            System.err.println("parent=" + parentState + ", rhs=" + rhs + ", ar=" + getRhsArity(rhs));
             for (List<String> substitutionTuple : grtdDfs(rhs, rhsState.get(parentState), getRhsArity(rhs))) {
                 if (isCompleteSubstitutionTuple(substitutionTuple)) {
                     Rule<String> rule = createRule(parentState, label, substitutionTuple);
-//                    System.err.println(" -> " + rule.toString(this));
                     storeRule(rule);
                     ret.add(rule);
                 }
@@ -121,12 +129,9 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
     private Set<List<String>> grtdDfs(Tree<HomomorphismSymbol> rhs, State state, int rhsArity) {
         Set<List<String>> ret = new HashSet<List<String>>();
 
-//        System.err.println("dfs: " + state + "/" + rhs);
-
         switch (rhs.getLabel().getType()) {
             case CONSTANT:
-                for (Rule<State> rhsRule : rhsAutomaton.getRulesTopDown(rhs.getLabel().getValue(), state)) {
-//                    System.err.println("rule: " + rhsRule.toString(rhsAutomaton));
+                for (Rule<State> rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap[rhs.getLabel().getValue()], state)) {
                     List<Set<List<String>>> childrenSubstitutions = new ArrayList<Set<List<String>>>(); // len = #children
 
                     for (int i = 0; i < rhsRule.getArity(); i++) {

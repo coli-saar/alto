@@ -39,7 +39,7 @@ public class UniversalAutomaton extends TreeAutomaton<String> {
             childStates.add(STATE);
         }
         
-        ret.add(createRule(STATE, label, (String[]) childStates.toArray(), 1));
+        ret.add(createRule(STATE, label, childStates, 1));
         
         return ret;
     }

@@ -197,6 +197,60 @@ class TreeAutomatonTest{
                 "q14 -> r2(q13,q34) \n q12 -> r3  \n q23 -> r4  \n q34 -> r5 ");
 
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
+        
+        assertEquals( gold.language(), pre.language() );
+    }
+    
+    @Test
+    public void testInvHomNdDifferentSignature() {
+        TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
+                "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
+        Homomorphism h = hom(["r3":"a", "r4":"b", "r5":"d", "r1":"c(?1,?2)", "r2":"c(?1,?2)"], 
+                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0])); // fresh target signature
+        
+        TreeAutomaton gold = parse("q13 -> r1(q12,q23) \n q24 -> r1(q23,q34) \n q14! -> r1(q12,q24) \n" +
+                "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
+                "q14 -> r2(q13,q34) \n q12 -> r3  \n q23 -> r4  \n q34 -> r5 ");
+
+        TreeAutomaton pre = rhs.inverseHomomorphism(h);
+        
+        assertEquals( gold.language(), pre.language() );
+    }
+    
+    @Test
+    public void testInvHomNdDifferentSignatureBottomUp() {
+        TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
+                "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
+        Homomorphism h = hom(["r3":"a", "r4":"b", "r5":"d", "r1":"c(?1,?2)", "r2":"c(?1,?2)"], 
+                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0])); // fresh target signature
+        
+        TreeAutomaton gold = parse("q13 -> r1(q12,q23) \n q24 -> r1(q23,q34) \n q14! -> r1(q12,q24) \n" +
+                "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
+                "q14 -> r2(q13,q34) \n q12 -> r3  \n q23 -> r4  \n q34 -> r5 ");
+
+        TreeAutomaton pre =  new UniversalAutomaton(h.getSourceSignature()).intersect(rhs.inverseHomomorphism(h));
+        
+        assertEquals( gold.language(), pre.language() );
+    }
+    
+    @Test
+    public void testInvHomDeletingDifferentSignatureTopDown() {
+        TreeAutomaton rhs = parse("q2! -> f(q1) \n q1 -> a "); // accepts { f(a) }
+        Homomorphism h = hom(["A":"a", "G":"f(?1)"], sig(["G":2, "A":0])); // fresh target signature
+        
+        TreeAutomaton pre = rhs.inverseHomomorphism(h);
+        pre.toString(); // triggers computation of top-down rules
+        assert pre.accepts(pt("G(A,A)"));
+    }
+    
+    @Test
+    public void testInvHomDeletingDifferentSignatureBottomUp() {
+        TreeAutomaton rhs = parse("q2! -> f(q1) \n q1 -> a "); // accepts { f(a) }
+        Homomorphism h = hom(["A":"a", "G":"f(?1)"], sig(["G":2, "A":0])); // fresh target signature
+        
+        TreeAutomaton pre = rhs.inverseHomomorphism(h);
+        // don't do anything here that would trigger computation of top-down rules
+        assert pre.accepts(pt("G(A,A)"));
     }
     
     @Test

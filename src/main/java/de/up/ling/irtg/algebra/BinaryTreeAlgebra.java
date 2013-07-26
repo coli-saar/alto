@@ -26,33 +26,32 @@ import java.util.List;
  */
 public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
     public static final String APPEND = "@";
-    private int appendSymbol;
     private Algebra<Tree<String>> underlyingAlgebra;
     private Signature signature;
 
     public BinaryTreeAlgebra(Algebra<Tree<String>> underlyingAlgebra) {
         this.underlyingAlgebra = underlyingAlgebra;
-        signature = new Signature();
         
-        appendSymbol = signature.addSymbol(APPEND, 2);
+        signature = new Signature();        
+        signature.addSymbol(APPEND, 2);
     }
     
     @Override
-    public Tree<String> evaluate(Tree<Integer> t) {
-        List<Tree<String>> underlyingTree = t.dfs(new TreeVisitor<Integer, Void, List<Tree<String>>>() {
+    public Tree<String> evaluate(Tree<String> t) {
+        List<Tree<String>> underlyingTree = t.dfs(new TreeVisitor<String, Void, List<Tree<String>>>() {
             @Override
-            public List<Tree<String>> combine(Tree<Integer> node, List<List<Tree<String>>> childrenValues) {
-                if( node.getLabel() == appendSymbol ) {
+            public List<Tree<String>> combine(Tree<String> node, List<List<Tree<String>>> childrenValues) {
+                if( node.getLabel().equals(APPEND) ) {
                     List<Tree<String>> ret = childrenValues.get(0);
                     ret.addAll(childrenValues.get(1));
                     return ret;
                 } else if( childrenValues.isEmpty() ) {
-                    Tree<String> tree = Tree.create(signature.resolveSymbolId(node.getLabel()));
+                    Tree<String> tree = Tree.create(node.getLabel());
                     List<Tree<String>> ret = new ArrayList<Tree<String>>();
                     ret.add(tree);
                     return ret;
                 } else {
-                    Tree<String> tree = Tree.create(signature.resolveSymbolId(node.getLabel()), childrenValues.get(0));
+                    Tree<String> tree = Tree.create(node.getLabel(), childrenValues.get(0));
                     List<Tree<String>> ret = new ArrayList<Tree<String>>();
                     ret.add(tree);
                     return ret;
@@ -60,7 +59,7 @@ public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
             }            
         });
         
-        return underlyingAlgebra.evaluate(underlyingAlgebra.getSignature().addAllSymbols(underlyingTree.get(0)));
+        return underlyingAlgebra.evaluate(underlyingTree.get(0));
     }
 
     @Override

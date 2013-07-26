@@ -23,12 +23,22 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
     private Homomorphism hom;
     private Set<Integer> computedLabels;
     private Map<String, State> rhsState;
+    private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
+    private Function<HomomorphismSymbol,Integer> remappingHomSymbolToIntFunction;
 
     public InverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
 
         this.rhsAutomaton = rhsAutomaton;
         this.hom = hom;
+        
+        labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
+        remappingHomSymbolToIntFunction = new Function<HomomorphismSymbol, Integer>() {
+            public Integer apply(HomomorphismSymbol f) {
+                return labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().apply(f)];
+            }
+        };
+        
         computedLabels = new HashSet<Integer>();
         rhsState = new HashMap<String, State>();
 
@@ -55,7 +65,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
 //            System.err.println("\nrun on hom(" + label + "), children " + childStates);
 
             // run RHS automaton on given child states
-            Set<State> resultStates = rhsAutomaton.run(hom.get(label), HomomorphismSymbol.getHomSymbolToIntFunction(), new Function<Tree<HomomorphismSymbol>, State>() {
+            Set<State> resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new Function<Tree<HomomorphismSymbol>, State>() {
                 @Override
                 public State apply(Tree<HomomorphismSymbol> f) {
 //                    System.err.println("    - " + f.getLabel() + " var:" + f.getLabel().isVariable());
@@ -168,7 +178,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
                                 childSubsts.add(item.substitution);
                             }
 
-                            Set<Rule<State>> rules = rhsAutomaton.getRulesBottomUp(node.getLabel().getValue(), childStates);
+                            Set<Rule<State>> rules = rhsAutomaton.getRulesBottomUp(labelsRemap[node.getLabel().getValue()], childStates);
 
                             if (!rules.isEmpty()) {
                                 Map<HomomorphismSymbol, State> subst = mergeSubstitutions(childSubsts);

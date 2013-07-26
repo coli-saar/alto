@@ -24,7 +24,7 @@ class StringAlgebraTest {
     public void testDecompose() {
         String string = "john watches the woman with the telescope";
         StringAlgebra algebra = new StringAlgebra();
-        int concat = algebra.getConcatSymbolId();
+        int concat = algebra.getSignature().getIdForSymbol(StringAlgebra.CONCAT);
 
         List words = algebra.parseString(string);
         TreeAutomaton auto = algebra.decompose(words);
@@ -44,7 +44,7 @@ class StringAlgebraTest {
         String string = "john watches the woman with the telescope";
         Algebra algebra = new StringAlgebra();
         List words = algebra.parseString(string);
-        Tree term = pti("*(john,*(watches,*(the,*(woman,*(with,*(the,telescope))))))", algebra.getSignature());
+        Tree term = pt("*(john,*(watches,*(the,*(woman,*(with,*(the,telescope))))))");
 
         assertEquals(words, algebra.evaluate(term));
     }

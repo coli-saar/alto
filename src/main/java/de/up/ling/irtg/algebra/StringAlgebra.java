@@ -38,20 +38,16 @@ public class StringAlgebra implements Algebra<List<String>> {
         concatSet = new HashSet<Integer>();
         concatSet.add(concatSymbolId);
     }
-    
-    public int getConcatSymbolId() {
-        return concatSymbolId;
-    }
 
     @Override
-    public List<String> evaluate(Tree<Integer> t) {
+    public List<String> evaluate(Tree<String> t) {
         final List<String> ret = new ArrayList<String>();
 
-        t.dfs(new TreeVisitor<Integer, Void, Void>() {
+        t.dfs(new TreeVisitor<String, Void, Void>() {
             @Override
-            public Void combine(Tree<Integer> node, List<Void> childrenValues) {
+            public Void combine(Tree<String> node, List<Void> childrenValues) {
                 if (childrenValues.isEmpty()) {
-                    ret.add(signature.resolveSymbolId(node.getLabel()));
+                    ret.add(node.getLabel());
                 }
 
                 return null;
