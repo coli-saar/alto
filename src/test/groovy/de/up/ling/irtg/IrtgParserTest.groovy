@@ -99,8 +99,8 @@ P -> r12
 
 //                System.err.println("\n\nreduced:\n" + chart.reduceBottomUp());
 
-        assert chart.accepts(pti("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))", chart.getSignature()));
-        assert chart.accepts(pti("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))", chart.getSignature()));
+        assert chart.accepts(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
+        assert chart.accepts(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
 
         assertEquals(2, chart.countTrees());
 

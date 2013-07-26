@@ -83,7 +83,7 @@ class TreeAutomatonTest{
         TreeAutomaton auto2 = parse("p1! -> f(p2,p2)\n p2 -> a");
         TreeAutomaton intersect = auto1.intersect(auto2);
         
-        assertEquals(intersect.language(), new HashSet([pti("f(a,a)", intersect.getSignature())]));
+        assertEquals(intersect.language(), new HashSet([pt("f(a,a)")]));
     }
     
     private Set<Rule> rbu(String label, List children, TreeAutomaton auto) {
@@ -158,7 +158,7 @@ class TreeAutomatonTest{
         
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         // don't do anything here that would trigger computation of top-down rules
-        assert pre.acceptsLabeled(pt("G(A,A)"));
+        assert pre.accepts(pt("G(A,A)"));
     }
     
     @Test
@@ -169,7 +169,7 @@ class TreeAutomatonTest{
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         pre.makeAllRulesExplicit(); // this triggers computing all top-down rules
         
-        assert pre.acceptsLabeled(pt("G(A,A)"));
+        assert pre.accepts(pt("G(A,A)"));
     }
     
     @Test
@@ -182,7 +182,7 @@ class TreeAutomatonTest{
         TreeAutomaton left = parse("p2! -> G(p1,p1) \n p1 -> A"); // accepts { G(A,A) }
         TreeAutomaton result = left.intersect(pre)
         
-        assert result.acceptsLabeled(pt("G(A,A)"));
+        assert result.accepts(pt("G(A,A)"));
     }
     
     @Test
@@ -208,7 +208,7 @@ class TreeAutomatonTest{
         
         TreeAutomaton result = base.homomorphism(h)
                 
-        assertEquals(gold, new HashSet(result.language().collect { s.resolve(it)}))
+        assertEquals(gold, new HashSet(result.language()));
     }
     
     @Test
@@ -219,7 +219,7 @@ class TreeAutomatonTest{
         
         TreeAutomaton result = base.homomorphism(h)
         
-        assertEquals(new HashSet([pti("A", result.getSignature())]), result.language());
+        assertEquals(new HashSet([pt("A")]), result.language());
     }
 
     @Test
@@ -250,7 +250,7 @@ class TreeAutomatonTest{
     public void testLanguage() {
         setAutomaton("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
         Set lang = new HashSet(auto.language()*.toString());
-        Set gold = new HashSet([ptii("f(a,a)"), ptii("f(a,b)")]*.toString());
+        Set gold = new HashSet([pt("f(a,a)"), pt("f(a,b)")]*.toString());
         assertEquals(gold, lang);
     }
     
@@ -258,7 +258,7 @@ class TreeAutomatonTest{
     public void testLanguage2() {
         setAutomaton("q1 -> a\n q1 -> b\n q2 -> c\n q2 -> d\n q! -> f(q1,q2)\n q! -> g(q1,q2)");
         Set lang = new HashSet(auto.language()*.toString());
-        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {ptii(it).toString()});
+        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
         assertEquals(gold, lang)
     }
     
@@ -266,7 +266,7 @@ class TreeAutomatonTest{
     public void testLanguageIterator() {
         setAutomaton("q1 -> a\n q1 -> b\n q2 -> c\n q2 -> d\n q! -> f(q1,q2)\n q! -> g(q1,q2)");
         Set lang = new HashSet();
-        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {ptii(it).toString()});
+        Set gold = new HashSet(["f(a,c)", "f(a,d)", "f(b,c)", "f(b,d)", "g(a,c)", "g(a,d)", "g(b,c)", "g(b,d)"].collect {pt(it).toString()});
         
         for( Tree t : auto.languageIterable() ) {
             lang.add(t.toString())
@@ -387,7 +387,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     private void _testRun(String auto, String tree, List gold) {
         TreeAutomaton a = pa(auto);
         
-        assert a.run(pti(tree,a.getSignature())).equals(new HashSet(gold));
+        assert a.run(pt(tree)).equals(new HashSet(gold));
     }
     
     

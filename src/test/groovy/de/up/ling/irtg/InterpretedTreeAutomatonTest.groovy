@@ -55,7 +55,7 @@ class InterpretedTreeAutomatonTest {
         
         assertEquals(new HashSet([pt("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"),
                     pt("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))")]),
-            chart.languageLabeled());
+            chart.language());
     }
 
     @Test
@@ -80,7 +80,7 @@ S -> r2
         chart.reduceBottomUp();
         
         assertEquals(new HashSet([pt("r1(r2,r1(r2,r2))"), pt("r1(r1(r2,r2),r2)")]),
-            chart.languageLabeled());
+            chart.language());
     }
     
     /*

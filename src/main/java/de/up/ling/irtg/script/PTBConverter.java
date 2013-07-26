@@ -351,7 +351,7 @@ public class PTBConverter {
                     hPtb.add(ruleName, Tree.create(HomomorphismSymbol.createConstant(node.getLabel(), hPtb.getTargetSignature(), 0), ptbChildren));
 
                     // add the rule to the automaton
-                    c.addRule(c.createRule(node.getLabel(), ruleName, childStates));
+                    c.addRule(c.createRule(node.getLabel(), hStr.getSourceSignature().resolveSymbolId(ruleName), childStates));
                 }
 
                 return false;

@@ -141,7 +141,7 @@ public class InterpretedTreeAutomaton {
 
     private Set<Object> decode(TreeAutomaton chart, Interpretation interp) {
         TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
-        Collection<Tree<Integer>> outputLanguage = outputChart.language();
+        Collection<Tree<Integer>> outputLanguage = outputChart.languageRaw();
 
         Set<Object> ret = new HashSet<Object>();
         for (Tree<Integer> term : outputLanguage) {
@@ -165,7 +165,7 @@ public class InterpretedTreeAutomaton {
 
     private Set<Tree<Integer>> decodeToTerms(TreeAutomaton chart, Interpretation interp) {
         TreeAutomaton<String> outputChart = chart.homomorphism(interp.getHomomorphism());
-        Collection<Tree<Integer>> outputLanguage = outputChart.language();
+        Collection<Tree<Integer>> outputLanguage = outputChart.languageRaw();
 
         Set<Tree<Integer>> ret = new HashSet<Tree<Integer>>();
         for (Tree<Integer> term : outputLanguage) {
