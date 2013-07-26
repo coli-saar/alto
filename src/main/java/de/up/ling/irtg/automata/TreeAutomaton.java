@@ -425,7 +425,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     @CallableFromShell
-    public Tree<Integer> viterbi() {
+    public Tree<String> viterbi() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
         Map<State, Pair<Double, Rule<State>>> map =
                 evaluateInSemiring(new ViterbiWithBackpointerSemiring<State>(), new RuleEvaluator<State, Pair<Double, Rule<State>>>() {
@@ -448,15 +448,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return extractTreeFromViterbi(bestFinalState, map);
     }
 
-    private Tree<Integer> extractTreeFromViterbi(State state, Map<State, Pair<Double, Rule<State>>> map) {
+    private Tree<String> extractTreeFromViterbi(State state, Map<State, Pair<Double, Rule<State>>> map) {
         Rule<State> backpointer = map.get(state).right;
-        List<Tree<Integer>> childTrees = new ArrayList<Tree<Integer>>();
+        List<Tree<String>> childTrees = new ArrayList<Tree<String>>();
 
         for (State child : backpointer.getChildren()) {
             childTrees.add(extractTreeFromViterbi(child, map));
         }
 
-        return Tree.create(backpointer.getLabel(), childTrees);
+        return Tree.create(getSignature().resolveSymbolId(backpointer.getLabel()), childTrees);
     }
 
     /**
@@ -1201,23 +1201,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
     */
-
-    /**
-     * Computes the weight that this (weighted) tree automaton assigns to the
-     * given tree. The weight is the sum of the weights of all derivations. If
-     * the automaton doesn't accept the tree, then this method returns zero.
-     *
-     * @param <TreeLabels>
-     * @param tree
-     * @return
-     */
-    public double getWeight(final Tree<Integer> tree) {
+    
+    public double getWeightRaw(final Tree<Integer> tree) {
         final List<State> children = new ArrayList<State>();
 
         Set<Pair<State, Double>> weights = (Set<Pair<State, Double>>) tree.dfs(new TreeVisitor<Integer, Void, Set<Pair<State, Double>>>() {
             @Override
             public Set<Pair<State, Double>> combine(Tree<Integer> node, List<Set<Pair<State, Double>>> childrenValues) {
-                Integer f = node.getLabel();
+                int f = node.getLabel();
                 Set<Pair<State, Double>> ret = new HashSet<Pair<State, Double>>();
 
                 if (childrenValues.isEmpty()) {
@@ -1255,6 +1246,19 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         return ret;
+    }
+
+    /**
+     * Computes the weight that this (weighted) tree automaton assigns to the
+     * given tree. The weight is the sum of the weights of all derivations. If
+     * the automaton doesn't accept the tree, then this method returns zero.
+     *
+     * @param <TreeLabels>
+     * @param tree
+     * @return
+     */
+    public double getWeight(final Tree<String> tree) {
+        return getWeightRaw(getSignature().addAllSymbols(tree));
     }
 
     /**

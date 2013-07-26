@@ -104,7 +104,7 @@ class TreeAutomatonTest{
     @Test
     public void testRunWeights() {
         setAutomaton("p1! -> f(p2,p3)\n p2 -> a [0.4]\n p3 -> a [0.6]");
-        Tree t = ptii("f(a,a)");
+        Tree t = pt("f(a,a)");
         
         assert Math.abs(0.24 - auto.getWeight(t)) < 0.001;
     }    
@@ -112,7 +112,7 @@ class TreeAutomatonTest{
     @Test
     public void testRunWeightsSumAtRoot() {
         setAutomaton("p1! -> f(p2,p3) \n p1! -> f(p2,p2) \n p2 -> a  [0.4]\n p3 -> a [0.6]");
-        Tree t = ptii("f(a,a)");
+        Tree t = pt("f(a,a)");
         
         assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
     }
@@ -120,7 +120,7 @@ class TreeAutomatonTest{
     @Test
     public void testRunWeightsSumInMiddle() {
         setAutomaton("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a  [0.6]");
-        Tree t = ptii("g(f(a,a))");
+        Tree t = pt("g(f(a,a))");
         
         assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
     }
@@ -128,7 +128,7 @@ class TreeAutomatonTest{
     @Test
     public void testRunWeightsNotInLanguage() {
         setAutomaton("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a [0.6]");
-        Tree t = ptii("f(a,a)");
+        Tree t = pt("f(a,a)");
         
         assert Math.abs(auto.getWeight(t)) < 0.001;
     }
@@ -280,7 +280,7 @@ class TreeAutomatonTest{
     public void testViterbi() {
         TreeAutomaton auto = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1) [1]\n q! -> f(q1,q2) [1.5]");
         Tree best = auto.viterbi();
-        assertEquals(auto.getSignature().resolve(best).toString(), pt("f(a,a)").toString());
+        assertEquals(best, pt("f(a,a)"));
     }
 
     @Test

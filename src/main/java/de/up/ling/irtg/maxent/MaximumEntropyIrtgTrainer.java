@@ -211,7 +211,7 @@ public class MaximumEntropyIrtgTrainer {
 
                     // compute parts of the log-likelihood
                     // L(Lambda) = sum1/n - sum2/n
-                    sum1 += Math.log(chart.getWeight(instance.getDerivationTree()));
+                    sum1 += Math.log(chart.getWeightRaw(instance.getDerivationTree()));
                     sum2 += Math.log(insideS);
 
                     // compute parts of the gradient
