@@ -509,7 +509,7 @@ public class InterpretedTreeAutomaton {
     }
 
     private HomomorphismSymbol getConstantFromAlgebra(Homomorphism hom) {
-        for (int label : hom.getDomain()) {
+        for (int label = 1; label <= hom.getSourceSignature().getMaxSymbolId(); label++ ) {
             HomomorphismSymbol constant = hom.get(label).dfs(new TreeVisitor<HomomorphismSymbol, Void, HomomorphismSymbol>() {
                 @Override
                 public HomomorphismSymbol combine(Tree<HomomorphismSymbol> node, List<HomomorphismSymbol> childrenValues) {

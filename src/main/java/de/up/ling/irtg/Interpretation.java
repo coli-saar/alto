@@ -25,7 +25,7 @@ public class Interpretation<E> {
     }
 
     public E interpret(Tree<Integer> t) {
-        return algebra.evaluate(hom.apply(t));
+        return algebra.evaluate(hom.applyRaw(t));
     }
 
     public Algebra<E> getAlgebra() {

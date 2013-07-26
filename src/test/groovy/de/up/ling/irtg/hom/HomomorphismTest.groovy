@@ -26,7 +26,7 @@ class HomomorphismTest {
         Tree t = pt("f(a)");
         Tree gold = pt("g(k(b),h(k(b)))");
 
-        assertEquals(gold, h.applyLabeled(t));
+        assertEquals(gold, h.apply(t));
     }
 
     @Test
@@ -34,7 +34,7 @@ class HomomorphismTest {
         Homomorphism h = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
         Tree t = pt("f(a,c)");
         Tree gold = pt("g(l(e),h(k(b)))");
-        Tree rhs = h.applyLabeled(t);
+        Tree rhs = h.apply(t);
 
         assertEquals(gold, rhs);
     }
@@ -44,7 +44,7 @@ class HomomorphismTest {
         Homomorphism h = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
         Tree t = pt("f(a,c)");
         Tree gold = pt("g(l(e),h(k(b)))");
-        Tree rhs = h.applyLabeled(t); // this needs to be here
+        Tree rhs = h.apply(t); // this needs to be here
 
         assertEquals(pth("g(?2,h(?1))", h.getTargetSignature()), h.get(h.getSourceSignature().getIdForSymbol("f")));
     }
@@ -101,12 +101,13 @@ class HomomorphismTest {
         assert ! h1.equals(h2);
     }
     
-//    @Test
+    @Test
     public void testToString() {
-        //Homomorphism h = hom(["f":"g(?1)"])
-        assertEquals("g(?1)", Homomorphism.rhsAsString(pth("g(?1)")));
-        assertEquals("*(?1,?2)", Homomorphism.rhsAsString(pth("*(?1,?2)")));
-        assertEquals("'`'", Homomorphism.rhsAsString(Tree.create("`")));
+        Homomorphism h = hom(["f":"g(?1)"], sig(["f":1]))
+        
+        assertEquals("g(?1)", h.rhsAsString(pth("g(?1)", h.getTargetSignature())));
+        assertEquals("*(?1,?2)", h.rhsAsString(pth("*(?1,?2)", h.getTargetSignature())));
+        assertEquals("'`'", h.rhsAsString(pth("\"`\"", h.getTargetSignature())));
     }
 
     

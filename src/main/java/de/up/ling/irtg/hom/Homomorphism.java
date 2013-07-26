@@ -30,23 +30,62 @@ public class Homomorphism {
         srcSignature = src;
         tgtSignature = tgt;
     }
-
-    public final Map<Integer, Tree<HomomorphismSymbol>> getMappings() {
-        return mappings;
+    
+    /**
+     * Adds a mapping to the homomorphism. The label is expected to exist
+     * in the homomorphism's source signature. Its "mapping" (= the tree
+     * h(label)) will be resolved according to the homomorphism's target
+     * signature. If the symbols in "mapping" do not exist in the target
+     * signature yet, they will be added, with the numbers of children in the
+     * "mapping" tree as their arities.
+     * 
+     * @param label
+     * @param mapping 
+     */
+    public void add(String label, Tree<String> mapping) {
+        mappings.put(srcSignature.getIdForSymbol(label), HomomorphismSymbol.treeFromNames(mapping, tgtSignature));
     }
 
+    /**
+     * Adds a mapping to the homomorphism, using symbol IDs. The symbol
+     * ID of "label" is relative to the homomorphism's source signature;
+     * the symbol IDs of the constants in the "mapping" tree are relative
+     * to the homomomorphism's target signature.
+     * 
+     * @param label
+     * @param mapping 
+     */
     public void add(int label, Tree<HomomorphismSymbol> mapping) {
+        // symbols for target signature should already have been added
+        // in constructing the "mapping" tree
         mappings.put(label, mapping);
-
-        /*
-        if (tgtSignature.isWritable()) {
-            tgtSignature.addAllConstants(mapping);
-        }
-        */
     }
 
+    /**
+     * Returns the value h(label), using symbol IDs.
+     * 
+     * @param label
+     * @return 
+     */
     public Tree<HomomorphismSymbol> get(int label) {
         return mappings.get(label);
+    }
+    
+    
+    /**
+     * Returns the value h(label). The label is resolved
+     * according to the homomorphism's source signature, and
+     * is expected to be known there. The labels in the returned
+     * tree are elements of the homomorphism's target signature.
+     * If necessary, the returned tree can be converted back to
+     * a tree of HomomorphismSymbols using HomomorphismSymbo.treeFromNames
+     * and the homomorphism's target signature.
+     * 
+     * @param label
+     * @return 
+     */
+    public Tree<String> get(String label) {
+        return HomomorphismSymbol.toStringTree(get(srcSignature.getIdForSymbol(label)), tgtSignature);
     }
 
     /*
@@ -54,13 +93,13 @@ public class Homomorphism {
      * of the tree under this homomorphism.
      * 
      */
-    public Tree<Integer> apply(Tree<Integer> tree) {
+    public Tree<Integer> applyRaw(Tree<Integer> tree) {
 //        final Map<String, String> knownGensyms = new HashMap<String, String>();
 
         return tree.dfs(new TreeVisitor<Integer, Void, Tree<Integer>>() {
             @Override
             public Tree<Integer> combine(Tree<Integer> node, List<Tree<Integer>> childrenValues) {
-                Tree<Integer> ret = construct(mappings.get(node.getLabel()), childrenValues);
+                Tree<Integer> ret = constructRaw(mappings.get(node.getLabel()), childrenValues);
                 if (debug) {
                     System.err.println("\n" + node + ":");
                     System.err.println("  " + rhsAsString(mappings.get(node.getLabel())));
@@ -74,8 +113,8 @@ public class Homomorphism {
         });
     }
     
-    public Tree<String> applyLabeled(Tree<String> tree) {
-        return getTargetSignature().resolve(apply(getSourceSignature().addAllSymbols(tree)));
+    public Tree<String> apply(Tree<String> tree) {
+        return getTargetSignature().resolve(applyRaw(getSourceSignature().addAllSymbols(tree)));
     }
     
     
@@ -89,7 +128,7 @@ public class Homomorphism {
      * @param knownGensyms
      * @return 
      */
-    public Tree<Integer> construct(final Tree<HomomorphismSymbol> tree, final List<Tree<Integer>> subtrees) {
+    private Tree<Integer> constructRaw(final Tree<HomomorphismSymbol> tree, final List<Tree<Integer>> subtrees) {
         final Tree<Integer> ret = tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<Integer>>() {
             @Override
             public Tree<Integer> combine(Tree<HomomorphismSymbol> node, List<Tree<Integer>> childrenValues) {
@@ -108,6 +147,8 @@ public class Homomorphism {
 
         return ret;
     }
+    
+//    public Tree<String> construct(Tree<String> tree, List<Tree<)
 
     /*
     private String gensym(String gensymString, Map<String, String> knownGensyms) {
@@ -123,36 +164,37 @@ public class Homomorphism {
     }
     */
 
-    public Set<Integer> getDomain() {
-        return mappings.keySet();
-    }
 
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
         
         for (Integer key : mappings.keySet()) {
-            buf.append(srcSignature.resolveSymbolId(key) + " -> " + rhsAsString(mappings.get(key)) + "\n");
+            buf.append(srcSignature.resolveSymbolId(key) + " -> " + 
+                    rhsAsString(mappings.get(key)) + "\n");
         }
 
         return buf.toString();
     }
 
     public String rhsAsString(Tree<HomomorphismSymbol> t) {
-        Tree<String> resolvedTree = t.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<String>>() {
-            @Override
-            public Tree<String> combine(Tree<HomomorphismSymbol> node, List<Tree<String>> childrenValues) {
-                switch(node.getLabel().getType()) {
-                    case CONSTANT:
-                        return Tree.create(tgtSignature.resolveSymbolId(node.getLabel().getValue()), childrenValues);
-                    case VARIABLE:
-                        return Tree.create("?" + (node.getLabel().getValue()+1));
-                    default:
-                        return Tree.create("***");
-                }
-            }
-        });
-        
+        Tree<String> resolvedTree = HomomorphismSymbol.toStringTree(t, tgtSignature);
+//        
+//        
+//         resolvedTree = t.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<String>>() {
+//            @Override
+//            public Tree<String> combine(Tree<HomomorphismSymbol> node, List<Tree<String>> childrenValues) {
+//                switch(node.getLabel().getType()) {
+//                    case CONSTANT:
+//                        return Tree.create(tgtSignature.resolveSymbolId(node.getLabel().getValue()), childrenValues);
+//                    case VARIABLE:
+//                        return Tree.create("?" + (node.getLabel().getValue()+1));
+//                    default:
+//                        return Tree.create("***");
+//                }
+//            }
+//        });
+//        
         resolvedTree.setCachingPolicy(false);
         return resolvedTree.toString(HOM_NON_QUOTING_PATTERN);
     }

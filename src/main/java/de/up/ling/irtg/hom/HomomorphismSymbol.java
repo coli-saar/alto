@@ -57,12 +57,48 @@ public class HomomorphismSymbol {
         }
     }
 
-    // used in TestingTools
+    /**
+     * Converts a tree of string labels into a tree of HomomorphismSymbols.
+     * Nodes with the labels ?1, ?2, ... will be converted into variables.
+     * Constants will be resolved to symbol IDs using the given signature.
+     * Constants that are not known in the signature will be added to the
+     * signature, with the number of children in the tree as the arity.
+     * 
+     * @param tree
+     * @param signature
+     * @return 
+     */
     public static Tree<HomomorphismSymbol> treeFromNames(Tree<String> tree, final Signature signature) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<HomomorphismSymbol>>() {
             @Override
             public Tree<HomomorphismSymbol> combine(Tree<String> node, List<Tree<HomomorphismSymbol>> childrenValues) {
                 return Tree.create(createFromName(node.getLabel(), signature, childrenValues.size()), childrenValues);
+            }
+        });
+    }
+    
+    /**
+     * Converts a tree of HomomorphismSymbols into a tree of string labels.
+     * Symbol IDs in constant labels are resolved according to the given signature.
+     * The tree returned by this method can be converted back into a tree of
+     * HomomorphismSymbols using treeFromNames.
+     * 
+     * @param tree
+     * @param signature
+     * @return 
+     */
+    public static Tree<String> toStringTree(Tree<HomomorphismSymbol> tree, final Signature signature) {
+        return tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<String>>() {
+            @Override
+            public Tree<String> combine(Tree<HomomorphismSymbol> node, List<Tree<String>> childrenValues) {
+                switch(node.getLabel().getType()) {
+                    case VARIABLE:
+                        return Tree.create("?" + (node.getLabel().getValue()+1));
+                    case CONSTANT:
+                        return Tree.create(signature.resolveSymbolId(node.getLabel().getValue()), childrenValues);
+                }
+                
+                return null;
             }
         });
     }
