@@ -1261,6 +1261,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public TreeAutomaton<State> reduceBottomUp() {
         Set<State> productiveStates = getProductiveStates();
         ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
+        
+        ret.signature = this.signature;
 
         // copy all rules that only contain productive states
         for (Rule<State> rule : getRuleSet()) {
@@ -1273,6 +1275,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
 
             if (allProductive) {
+                // caution advised: this will only work correctly if both the signature
+                // and the state interner of ret and this are the same
                 ret.addRule(rule);
             }
         }

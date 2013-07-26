@@ -4,14 +4,18 @@
  */
 package de.up.ling.irtg.signature;
 
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -64,6 +68,18 @@ public class Signature implements Serializable {
         return interner.getNextIndex()-1;
     }
     
+    public Map<String,Integer> getSymbolsWithArities() {
+        Map<String,Integer> ret = new HashMap<String, Integer>();
+        Map<String,Integer> symbolTable = interner.getSymbolTable();
+        
+        for( String sym : symbolTable.keySet() ) {
+            ret.put(sym, arities.get(symbolTable.get(sym)));
+        }
+        
+        
+        return ret;
+    }
+    
     public Tree<String> resolve(Tree<Integer> tree) {
         return tree.dfs(new TreeVisitor<Integer, Void, Tree<String>>() {
             @Override
@@ -104,14 +120,12 @@ public class Signature implements Serializable {
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer("[");
-        
-        for( int i = 1; i < getMaxSymbolId(); i++ ) {
-            buf.append("" + i + ":" + resolveSymbolId(i) + "/" + getArity(i) + " ");
+        List<String> syms = new ArrayList<String>();
+        for( int i = 1; i <= getMaxSymbolId(); i++ ) {
+            syms.add("" + i + ":" + resolveSymbolId(i) + "/" + getArity(i));
         }
-        buf.append("]");
         
-        return buf.toString();
+        return "[" + StringTools.join(syms, ", ") + "]";
     }
     
     

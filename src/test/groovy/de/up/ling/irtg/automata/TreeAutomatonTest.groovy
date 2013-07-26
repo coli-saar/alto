@@ -39,6 +39,9 @@ class TreeAutomatonTest{
         
         assert intersect.getSignature() == auto1.getSignature();
         
+        assertEquals(intersect.getSignature().getSymbolsWithArities(), ["f":2, "a":0]);
+//        System.err.println("sig:" + intersect.getSignature());
+        
         assertEquals(new HashSet([rs(p("q1","p2"), "a", [], intersect), rs(p("q1", "p3"), "a", [], intersect)]), 
             rbu("a", [], intersect));
 

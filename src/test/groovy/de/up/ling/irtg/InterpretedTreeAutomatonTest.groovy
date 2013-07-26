@@ -43,22 +43,15 @@ class InterpretedTreeAutomatonTest {
                 "with":"with", "telescope":"telescope",
                 "s":concat, "np":concat, "n":concat, "vp":concat, "pp":concat
             ], rtg.getSignature(), algebra.getSignature());
-
+        
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(rtg);
         irtg.addInterpretation("string", new Interpretation(algebra, h));
 
         List words = irtg.parseString("string", string);
+        
+        
         TreeAutomaton chart = irtg.parseInputObjects(["string": words]);
         chart.makeAllRulesExplicit();
-        
-        System.err.println("sig: " + chart.getSignature());
-        
-        // !!!! Sig von Intersection-Auto ist allgemein zu klein (auch in TA-Test#intersect) !!!!
-        
-        System.err.println(chart.language());
-        System.err.println(chart.languageLabeled());
-        
-//        System.err.println("chart: " + chart);
         
         assertEquals(new HashSet([pt("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"),
                     pt("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))")]),
@@ -87,7 +80,7 @@ S -> r2
         chart.reduceBottomUp();
         
         assertEquals(new HashSet([pt("r1(r2,r1(r2,r2))"), pt("r1(r1(r2,r2),r2)")]),
-            chart.language());
+            chart.languageLabeled());
     }
     
     /*
@@ -136,7 +129,7 @@ S -> r2
         Iterator<Instance> it = pco.iterator();
         it.next();
         Instance secondInstance = it.next();
-        assertEquals(pt("r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))"), secondInstance.getDerivationTree());
+        assertEquals(pti("r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))", irtg.getAutomaton().getSignature()), secondInstance.getDerivationTree());
         assertEquals(["john", "watches", "the", "telescope", "with", "the", "telescope"], secondInstance.getInputObjects().get("i"));
     }
     
@@ -170,7 +163,8 @@ S -> r2
         String str = irtg.toString();
         InterpretedTreeAutomaton parsed = iparse(str);
         
-        //        System.err.println(str)
+                System.err.println("str: " + str);
+                System.err.println("parsed str: " + parsed.toString());
         
         assert irtg.equals(parsed) : parsed;
     }

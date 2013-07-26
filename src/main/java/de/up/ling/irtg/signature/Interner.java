@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  *
@@ -56,5 +57,9 @@ public class Interner<E> implements Serializable {
     
     public int getNextIndex() {
         return nextIndex;
+    }
+    
+    public Map<E,Integer> getSymbolTable() {
+        return objectToInt;
     }
 }
