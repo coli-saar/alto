@@ -494,6 +494,19 @@ public abstract class TreeAutomaton<State> implements Serializable {
          return ret;
          */
     }
+    
+    @CallableFromShell(joinList = "\n")
+    public Set<Tree<String>> languageLabeled() {
+        Set<Tree<String>> ret = new HashSet<Tree<String>>();
+        Iterator<Tree<Integer>> it = languageIterator();
+
+        while (it.hasNext()) {
+            ret.add(getSignature().resolve(it.next()));
+        }
+
+        return ret;
+    }
+    
 
     public void setRulePrintingFilter(Predicate<Rule<State>> filter) {
         this.filter = filter;

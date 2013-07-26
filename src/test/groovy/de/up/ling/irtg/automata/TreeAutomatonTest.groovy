@@ -37,6 +37,8 @@ class TreeAutomatonTest{
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
         TreeAutomaton intersect = auto1.intersect(auto2);
         
+        assert intersect.getSignature() == auto1.getSignature();
+        
         assertEquals(new HashSet([rs(p("q1","p2"), "a", [], intersect), rs(p("q1", "p3"), "a", [], intersect)]), 
             rbu("a", [], intersect));
 

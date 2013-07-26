@@ -35,13 +35,14 @@ class InterpretedTreeAutomatonTest {
         );
 
         String concat = "*(?1,?2)";
+        Algebra algebra = new StringAlgebra();
+
+
         Homomorphism h = hom([
                 "john":"john", "watches":"watches", "the":"the", "woman":"woman",
                 "with":"with", "telescope":"telescope",
                 "s":concat, "np":concat, "n":concat, "vp":concat, "pp":concat
-            ], rtg.getSignature());
-
-        Algebra algebra = new StringAlgebra();
+            ], rtg.getSignature(), algebra.getSignature());
 
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(rtg);
         irtg.addInterpretation("string", new Interpretation(algebra, h));
@@ -50,9 +51,18 @@ class InterpretedTreeAutomatonTest {
         TreeAutomaton chart = irtg.parseInputObjects(["string": words]);
         chart.makeAllRulesExplicit();
         
+        System.err.println("sig: " + chart.getSignature());
+        
+        // !!!! Sig von Intersection-Auto ist allgemein zu klein (auch in TA-Test#intersect) !!!!
+        
+        System.err.println(chart.language());
+        System.err.println(chart.languageLabeled());
+        
+//        System.err.println("chart: " + chart);
+        
         assertEquals(new HashSet([pt("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"),
                     pt("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))")]),
-            chart.language());
+            chart.languageLabeled());
     }
 
     @Test

@@ -68,7 +68,13 @@ public class Signature implements Serializable {
         return tree.dfs(new TreeVisitor<Integer, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<Integer> node, List<Tree<String>> childrenValues) {
-                return Tree.create(resolveSymbolId(node.getLabel()), childrenValues);
+                String label = resolveSymbolId(node.getLabel());
+                
+                if( label == null ) {
+                    label = "null";
+                }
+                
+                return Tree.create(label, childrenValues);
             }           
         });
     }
@@ -95,4 +101,18 @@ public class Signature implements Serializable {
             }
         });
     }
+
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer("[");
+        
+        for( int i = 1; i < getMaxSymbolId(); i++ ) {
+            buf.append("" + i + ":" + resolveSymbolId(i) + "/" + getArity(i) + " ");
+        }
+        buf.append("]");
+        
+        return buf.toString();
+    }
+    
+    
 }
