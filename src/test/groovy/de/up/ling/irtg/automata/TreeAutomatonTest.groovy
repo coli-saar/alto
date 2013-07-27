@@ -90,6 +90,17 @@ class TreeAutomatonTest{
         return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), children);
     }
 
+    
+    @Test
+    public void testIntersectionLanguageEarley() {
+        TreeAutomaton auto1 = parse("q1! -> f(q2, q3)\n q2 -> a\n q3 -> a\n q3 -> b");
+        TreeAutomaton auto2 = parse("p1! -> f(p2,p2)\n p2 -> a");
+        TreeAutomaton intersect = auto1.intersectEarley(auto2);
+        
+        assertEquals(intersect.language(), new HashSet([pt("f(a,a)")]));
+    }
+    
+    
 //    @Test
 //    public void testRun() {
 //        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a");
@@ -362,7 +373,7 @@ VP.1-4 -> r4(V.1-2, NP.2-4) [1.0]
 VP.1-7  -> r4(V.1-2, NP.2-7) [1.0]
 VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         
-        Set productiveStates = auto.getProductiveStates();
+        Set productiveStates = auto.getReachableStates();
         Set gold = new HashSet(["NP.0-1", "V.1-2", "Det.2-3", "N.3-4", "P.4-5", "Det.5-6", "N.6-7", "PP.4-7", "S.0-7", "NP.5-7", "NP.2-4", "NP.2-7", "N.3-7", "VP.1-4", "VP.1-7"]);
         assertEquals(gold, productiveStates);        
     }
