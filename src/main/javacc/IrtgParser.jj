@@ -38,7 +38,7 @@ public class IrtgParser {
     private Map<String,Homomorphism> homomorphisms = new HashMap<String,Homomorphism>();
     private Map<String,Interpretation> interpretations = new HashMap<String,Interpretation>();
     private int lastSeenTerminal = 0;
-    private Rule<String> lastSeenRule = null;
+    private Rule lastSeenRule = null;
     private Map<String, FeatureFunction> features = new HashMap<String, FeatureFunction>();
 
     private static IrtgParser parser = new IrtgParser(new ByteArrayInputStream(new byte[]{}));
@@ -153,7 +153,8 @@ void AutomatonRule() :
 {
     parentState=State() "->" label=name() ("(" childStates=StateList() ")")? {
         if( childStates == null ) childStates = new ArrayList<String>();
-        lastSeenRule = automaton.addRule(automaton.createRule(parentState, label, childStates));
+        lastSeenRule = automaton.createRule(parentState, label, childStates);
+        automaton.addRule(lastSeenRule);
         lastSeenTerminal = automaton.getSignature().getIdForSymbol(label);
     }
 
@@ -176,10 +177,10 @@ String State() :
 {
   state = name() (fin_mark = <FIN_MARK>.image)* {
     if( fin_mark != null ) {
-      automaton.addFinalState(state.intern());
+      automaton.addFinalState(automaton.addState(state));
     }
 
-    return state.intern();
+    return state;
   }
 }
 
@@ -269,7 +270,7 @@ String name() :
     Token tok;
 }
 {
-    tok = <NAME> { return tok.image.intern(); }
-    | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1).intern(); }
-    | tok = <DOUBLE_QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1).intern(); }
+    tok = <NAME> { return tok.image; }
+    | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
+    | tok = <DOUBLE_QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
 }

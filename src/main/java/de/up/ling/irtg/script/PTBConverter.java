@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.PtbTreeAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -673,14 +674,16 @@ public class PTBConverter {
      */
     public void addChildRelatedFeatures() {
         Map<String, Set<String>> states = new HashMap<String, Set<String>>();
-        Set<Rule> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        TreeAutomaton auto = maxEntIrtg.getAutomaton();
+        Set<Rule> ruleSet = auto.getRuleSet();
 
         for (Rule r : ruleSet) {
             int parentState = r.getParent();
+            String parentAsString = auto.getStateForId(parentState).toString();
             int[] children = r.getChildren();
 
             for (int child : children) {
-                String state = (String) child;
+                String state = auto.getStateForId(child).toString();
 
                 // get already gathered parent states for state
                 Set<String> parentStates = states.get(state);
@@ -692,10 +695,11 @@ public class PTBConverter {
                 }
                 
                 // add parent state
-                parentStates.add(parentState);
+                parentStates.add(parentAsString);
 
             }
         }
+        
         int num = featureMap.size();
         String featureName;
         Set<String> childStates = states.keySet();
@@ -747,11 +751,13 @@ public class PTBConverter {
      */
     public void addParentRelatedFeatures() {
         Map<String, Set<Integer>> stateRules = new HashMap<String, Set<Integer>>();
-        Set<Rule> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        TreeAutomaton auto = maxEntIrtg.getAutomaton();
+        Set<Rule> ruleSet = auto.getRuleSet();
+        
 
         for (Rule r : ruleSet) {
             int ruleName = r.getLabel();
-            String state = r.getParent();
+            String state = auto.getStateForId(r.getParent()).toString();
 
 
             // get already gathered rules for state
@@ -780,7 +786,7 @@ public class PTBConverter {
 
         for (Rule r : ruleSet) {
             int ruleName = r.getLabel();
-            Object[] children = r.getChildren();
+            int[] children = r.getChildren();
 
             if (children.length == 0) {
                 String interp = hStr.get(ruleName).toString();

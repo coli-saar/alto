@@ -25,7 +25,7 @@ import java.io.*;
 public class TreeAutomatonParser {
     private static ConcreteTreeAutomaton<String> automaton;
     private static TreeAutomatonParser parser = new TreeAutomatonParser(new ByteArrayInputStream(new byte[]{}));
-    private static Rule<String> lastSeenRule = null;
+    private static Rule lastSeenRule = null;
 
 	public static TreeAutomaton<String> parse(Reader reader) throws ParseException{
 		parser.ReInit(reader);
@@ -74,7 +74,8 @@ void automatonRule() :
 {
     parentState=State() "->" label=name() ("(" childStates=StateList() ")")? {
         if( childStates == null ) childStates = new ArrayList<String>();
-        lastSeenRule = automaton.addRule(automaton.createRule(parentState, label, childStates));
+        lastSeenRule = automaton.createRule(parentState, label, childStates);
+        automaton.addRule(lastSeenRule);
     }
 }
 
@@ -89,17 +90,16 @@ List<String> StateList() :
 
 String State() :
 {
-  String state, internedState;
+  String state;
   String fin_mark = null;
 }
 {
   state = name() (fin_mark = <FIN_MARK>.image)* {
-    internedState = state.intern();
     if( fin_mark != null ) {
-      automaton.addFinalState(internedState);
+      automaton.addFinalState(automaton.addState(state));
     }
 
-    return internedState;
+    return state;
   }
 }
 
