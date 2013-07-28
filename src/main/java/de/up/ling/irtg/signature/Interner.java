@@ -98,6 +98,11 @@ public class Interner<E> implements Serializable, Cloneable {
         
         return ret;
     }
+
+    @Override
+    public String toString() {
+        return intToObject.toString();
+    }
     
     
 }

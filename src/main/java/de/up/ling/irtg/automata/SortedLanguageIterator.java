@@ -47,7 +47,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         for (int q : auto.getAllStates()) {
             streamForState.put(q, new StreamForState(q));
         }
-
+        
         for (Rule rule : auto.getRuleSet()) {
             StreamForState stream = streamForState.get(rule.getParent());            
             stream.addEntryForRule(rule);

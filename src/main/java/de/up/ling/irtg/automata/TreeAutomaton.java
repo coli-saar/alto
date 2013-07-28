@@ -15,6 +15,7 @@ import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
@@ -89,27 +90,30 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns the numeric ID for the given state.
-     * If the automaton does not have a state of the given name,
-     * the method returns 0.
-     * 
+     * Returns the numeric ID for the given state. If the automaton does not
+     * have a state of the given name, the method returns 0.
+     *
      * @param state
-     * @return 
+     * @return
      */
     public int getIdForState(State state) {
         return stateInterner.resolveObject(state);
     }
 
     /**
-     * Returns the state for the given numeric state ID.
-     * If the automaton does not have a state with this ID,
-     * the method returns null.
-     * 
+     * Returns the state for the given numeric state ID. If the automaton does
+     * not have a state with this ID, the method returns null.
+     *
      * @param stateId
-     * @return 
+     * @return
      */
     public State getStateForId(int stateId) {
         return stateInterner.resolveId(stateId);
+    }
+
+    // for debugging
+    Interner<State> getInterner() {
+        return stateInterner;
     }
 
     private int[] getIdsForStates(State[] states) {
@@ -120,6 +124,20 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         return ret;
+    }
+
+    private int[] addStates(State[] states) {
+        int[] ret = new int[states.length];
+
+        for (int i = 0; i < states.length; i++) {
+            ret[i] = addState(states[i]);
+        }
+
+        return ret;
+    }
+
+    protected int addState(State state) {
+        return stateInterner.addObject(state);
     }
 
     /**
@@ -251,10 +269,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //    public Set<State> getAllStates() {
 //        return allStates.keySet();
 //    }
-    protected int addState(State state) {
-        return getIdForState(state);
-    }
-
     // TODO - addFinalState no longer adds state by itself
     protected void addFinalState(int state) {
         finalStates.add(state);
@@ -931,7 +945,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return run(tree, INTEGER_IDENTITY, new Function<Tree<Integer>, Integer>() {
             @Override
             public Integer apply(Tree<Integer> f) {
-                return null;
+                return 0;
             }
         });
     }
@@ -1714,7 +1728,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Rule createRule(State parent, String label, State[] children, double weight) {
-        return createRule(getIdForState(parent), signature.addSymbol(label, children.length), getIdsForStates(children), weight);
+//        System.err.println("createrule: " + parent + "/" + label + "/" + StringTools.join(children, ","));
+        Rule ret = createRule(addState(parent), signature.addSymbol(label, children.length), addStates(children), weight);
+//        System.err.println("  -> " + ret);
+
+        return ret;
     }
 
     /**

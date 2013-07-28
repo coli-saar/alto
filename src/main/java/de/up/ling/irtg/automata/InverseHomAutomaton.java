@@ -84,12 +84,12 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
                             // on the hom image should fail as well. We do this in a slightly hacky
                             // way by simply leaving the variable in place and hoping that things like
                             // "?x1" are not terminal symbols of the automaton.
-                            return null;
+                            return 0;
                         } else {
                             return child;
                         }
                     } else {
-                        return null;
+                        return 0;
                     }
                 }
             });

@@ -29,9 +29,9 @@ class StringAlgebraTest {
         List words = algebra.parseString(string);
         TreeAutomaton auto = algebra.decompose(words);
 
-        assertEquals(new HashSet([s(0,7)]), auto.getFinalStates());
-        assertEquals(new HashSet([r(auto, s(2,4), concat, [s(2,3), s(3,4)])]), auto.getRulesBottomUp(concat, [s(2,3), s(3,4)]));
-        assertEquals(new HashSet(), auto.getRulesBottomUp(concat, [s(2,3), s(4,5)]));
+        assertEquals(new HashSet([auto.getIdForState(s(0,7))]), auto.getFinalStates());
+        assertEquals(new HashSet([r(auto, s(2,4), StringAlgebra.CONCAT, [s(2,3), s(3,4)])]), auto.getRulesBottomUp(concat, [s(2,3), s(3,4)].collect { auto.addState(it)}));
+        assertEquals(new HashSet(), auto.getRulesBottomUp(concat, [s(2,3), s(4,5)].collect { auto.addState(it)}));
     }
 
     private static Rule r(TreeAutomaton auto, parent, label, children) {

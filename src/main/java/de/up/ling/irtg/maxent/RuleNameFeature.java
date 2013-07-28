@@ -5,6 +5,7 @@
 package de.up.ling.irtg.maxent;
 
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.TreeAutomaton;
 
 /**
  * A feature that returns 1 iff the rule name matches
@@ -25,8 +26,8 @@ public class RuleNameFeature extends FeatureFunction<String> {
     }
 
     @Override
-    public double evaluate(Rule object, MaximumEntropyIrtg irtg) {
-        if( x.equals(object.getLabel(irtg.getAutomaton())) ) {
+    public double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg) {
+        if( x.equals(rule.getLabel(irtg.getAutomaton())) ) {
             return 1.0;
         } else {
             return 0.0;

@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.saar.basic.StringTools;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -82,6 +83,11 @@ public class Rule implements Serializable {
 
     public int getArity() {
         return children.length;
+    }
+    
+    @Override
+    public String toString() {
+        return parent + " -> " + label + "/" + Arrays.toString(children);
     }
 
     public String toString(TreeAutomaton auto) {

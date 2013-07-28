@@ -85,7 +85,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
                         return child;                                     // = rhsAuto state ID
 //                        return rhsState.get(child);
                     } else {
-                        return null;
+                        return 0;
                     }
                 }
             });

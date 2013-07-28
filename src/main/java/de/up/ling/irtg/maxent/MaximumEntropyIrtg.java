@@ -215,7 +215,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             // compute all feature values for rule r
             for (int i = 0; i < numOfFeatures; i++) {
                 FeatureFunction ff = features[i];
-                fi[i] = ff.evaluate(r, this);
+                fi[i] = ff.evaluate(r, automaton, this);
             }
 
             // map the values with the rule's name
@@ -271,7 +271,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     // get the feature value if unknown
                     if (!cachedFI) {
                         FeatureFunction ff = features[i];
-                        fi[i] = ff.evaluate(rule, this);
+                        fi[i] = ff.evaluate(rule, chart, this);
                     }
                     // and use it as part of the weight
                     weight += fi[i] * weights[i];
