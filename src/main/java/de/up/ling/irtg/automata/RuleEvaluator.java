@@ -9,6 +9,6 @@ package de.up.ling.irtg.automata;
  *
  * @author koller
  */
-public interface RuleEvaluator<State,E> {
-    E evaluateRule(Rule<State> rule);
+public interface RuleEvaluator<E> {
+    E evaluateRule(Rule rule);
 }

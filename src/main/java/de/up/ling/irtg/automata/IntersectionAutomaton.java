@@ -11,6 +11,10 @@ import com.google.common.collect.SetMultimap;
 import de.saar.basic.Agenda;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.*;
 
 /**
@@ -22,6 +26,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private TreeAutomaton<RightState> right;
     private static final boolean DEBUG = false;
     private int[] labelRemap;
+    private Int2IntMap stateToLeftState;
+    private Int2IntMap stateToRightState;
 
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
@@ -30,9 +36,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
         this.left = left;
         this.right = right;
+        
+        stateToLeftState = new Int2IntOpenHashMap();
+        stateToRightState = new Int2IntOpenHashMap();
 
         finalStates = null;
-        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
+//        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
     }
 
     /**
@@ -56,24 +65,25 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     @Override
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
-            ListMultimap<LeftState, Rule<LeftState>> rulesByChildState = left.getRuleByChildStateMap();
-            Queue<Pair<LeftState, RightState>> agenda = new LinkedList<Pair<LeftState, RightState>>();
-            Set<Pair<LeftState, RightState>> seenStates = new HashSet<Pair<LeftState, RightState>>();
-            SetMultimap<LeftState, RightState> partners = HashMultimap.create();
+            ListMultimap<Integer, Rule> rulesByChildState = left.getRuleByChildStateMap();  // int = left state ID
+            Queue<Integer> agenda = new LinkedList<Integer>();
+            Set<Integer> seenStates = new HashSet<Integer>();
+            SetMultimap<Integer, Integer> partners = HashMultimap.create(); // left state ID -> right state IDs
 
             // initialize agenda with all pairs of rules of the form A -> f
-            Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new HashMap<String, Set<Rule<RightState>>>();
-            List<RightState> noRightChildren = new ArrayList<RightState>();
+//            Map<String, Set<Rule<RightState>>> preTerminalStatesRight = new HashMap<String, Set<Rule<RightState>>>();
+//            List<RightState> noRightChildren = new ArrayList<RightState>();
+            int[] noRightChildren = new int[0];
 
-            for (Rule<LeftState> leftRule : left.getRuleSet()) {
+            for (Rule leftRule : left.getRuleSet()) {
                 if (leftRule.getArity() == 0) {
-                    Set<Rule<RightState>> preterminalRulesForLabel = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), noRightChildren);
+                    Set<Rule> preterminalRulesForLabel = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), noRightChildren);
 
 //                    System.err.println("left rule: " + leftRule);
 //                    System.err.println("right partners: " + preterminalRulesForLabel);
 
-                    for (Rule<RightState> rightRule : preterminalRulesForLabel) {
-                        Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
+                    for (Rule rightRule : preterminalRulesForLabel) {
+                        Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
                         agenda.offer(rule.getParent());
                         seenStates.add(rule.getParent());
@@ -91,29 +101,29 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             long unsuccessful = 0;
             long iterations = 0;
             while (!agenda.isEmpty()) {
-                Pair<LeftState, RightState> state = agenda.remove();
-                List<Rule<LeftState>> possibleRules = rulesByChildState.get(state.left);
+                int state = agenda.remove();
+                List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
 
 //                System.err.println("pop: " + state);
 //                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
 
-                for (Rule<LeftState> leftRule : possibleRules) {
+                for (Rule leftRule : possibleRules) {
 //                    System.err.println("consider leftrule: " + leftRule.toString(left));
 
-                    List<Set<RightState>> partnerStates = new ArrayList<Set<RightState>>();
-                    for (LeftState leftState : leftRule.getChildren()) {
+                    List<Set<Integer>> partnerStates = new ArrayList<Set<Integer>>();
+                    for (int leftState : leftRule.getChildren()) {
                         partnerStates.add(partners.get(leftState));
                     }
 
-                    CartesianIterator<RightState> it = new CartesianIterator<RightState>(partnerStates);
-                    List<Pair<LeftState, RightState>> newStates = new ArrayList<Pair<LeftState, RightState>>();
+                    CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
+                    List<Integer> newStates = new ArrayList<Integer>();
                     while (it.hasNext()) {
                         iterations++;
 
-                        List<RightState> partnersHere = it.next();
+                        List<Integer> partnersHere = it.next();
 //                        System.err.println("right partners: " + partnersHere);
 
-                        Set<Rule<RightState>> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
+                        Set<Rule> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
 //                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
 
 
@@ -121,8 +131,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                             unsuccessful++;
                         }
 
-                        for (Rule<RightState> rightRule : rightRules) {
-                            Rule<Pair<LeftState, RightState>> rule = combineRules(leftRule, rightRule);
+                        for (Rule rightRule : rightRules) {
+                            Rule rule = combineRules(leftRule, rightRule);
 //                            System.err.println("** add combined rule: " + rule.toString(this));
                             storeRule(rule);
 
@@ -131,9 +141,9 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                             }
                         }
                     }
-                    for (Pair<LeftState, RightState> newState : newStates) {
+                    for (int newState : newStates) {
                         agenda.offer(newState);
-                        partners.put(newState.left, newState.right);
+                        partners.put(stateToLeftState.get(newState), stateToRightState.get(newState));
                     }
                 }
             }
@@ -153,28 +163,40 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
         }
     }
+    
+    private int addStatePair(int leftState, int rightState) {
+        int ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
+        
+        stateToLeftState.put(ret, leftState);
+        stateToRightState.put(ret, rightState);
+        
+        return ret;
+    }
 
-    private Rule<Pair<LeftState, RightState>> combineRules(Rule<LeftState> leftRule, Rule<RightState> rightRule) {
-        List<Pair<LeftState, RightState>> childStates = new ArrayList<Pair<LeftState, RightState>>();
+    private Rule combineRules(Rule leftRule, Rule rightRule) {
+        int[] childStates = new int[leftRule.getArity()];
+        
         for (int i = 0; i < leftRule.getArity(); i++) {
-            childStates.add(new Pair<LeftState, RightState>(leftRule.getChildren()[i], rightRule.getChildren()[i]));
+            childStates[i] = addStatePair(leftRule.getChildren()[i], rightRule.getChildren()[i]);
         }
-
-        return new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), leftRule.getLabel(), childStates, leftRule.getWeight() * rightRule.getWeight());
+        
+        int parentState = addStatePair(leftRule.getParent(), rightRule.getParent());
+        
+        return createRule(parentState, leftRule.getLabel(), childStates, leftRule.getWeight() * rightRule.getWeight());
     }
 
     @Override
-    public Set<Pair<LeftState, RightState>> getFinalStates() {
+    public Set<Integer> getFinalStates() {
         if (finalStates == null) {
             getAllStates(); // initialize data structure for addState
-            finalStates = new HashSet<Pair<LeftState, RightState>>();
+            finalStates = new IntOpenHashSet();
             collectStatePairs(left.getFinalStates(), right.getFinalStates(), finalStates);
         }
 
         return finalStates;
     }
 
-    private void collectStatePairs(Collection<LeftState> leftStates, Collection<RightState> rightStates, Collection<Pair<LeftState, RightState>> pairStates) {
+    private void collectStatePairs(Collection<Integer> leftStates, Collection<Integer> rightStates, Collection<Integer> pairStates) {
         List<Collection> stateSets = new ArrayList<Collection>();
         stateSets.add(leftStates);
         stateSets.add(rightStates);
@@ -187,78 +209,76 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     @Override
-    public Set<Rule<Pair<LeftState, RightState>>> getRulesBottomUp(int label, List<Pair<LeftState, RightState>> childStates) {
+    public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
         makeAllRulesExplicit();
-
-//        System.err.println("grbu " + getSignature().resolveSymbolId(label) + ", children=" + childStates);
-
-        if (useCachedRuleBottomUp(label, childStates)) {
-//            System.err.println("-> cached, " + getRulesBottomUpFromExplicit(label, childStates));
-            return getRulesBottomUpFromExplicit(label, childStates);
-        } else {
-//            System.err.println("-> compute fresh");
-
-            List<LeftState> leftChildStates = new ArrayList<LeftState>();
-            List<RightState> rightChildStates = new ArrayList<RightState>();
-            for (Pair<LeftState, RightState> childState : childStates) {
-                leftChildStates.add(childState.left);
-                rightChildStates.add(childState.right);
-            }
-
-            Set<Rule<LeftState>> leftRules = left.getRulesBottomUp(label, leftChildStates);
-            Set<Rule<RightState>> rightRules = right.getRulesBottomUp(label, rightChildStates);
-            Set<Pair<LeftState, RightState>> parentPairs = new HashSet<Pair<LeftState, RightState>>();
-
-            Set<Rule<Pair<LeftState, RightState>>> ret = new HashSet<Rule<Pair<LeftState, RightState>>>();
-            for (Rule<LeftState> leftRule : leftRules) {
-                for (Rule<RightState> rightRule : rightRules) {
-                    Rule<Pair<LeftState, RightState>> rule = new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), label, childStates, leftRule.getWeight() * rightRule.getWeight());
-                    storeRule(rule);
-                    ret.add(rule);
-                }
-            }
-
-            return ret;
-        }
+        
+        assert useCachedRuleBottomUp(label, childStates);
+        
+        return getRulesBottomUpFromExplicit(label, childStates);
+        
+//        
+//
+////        System.err.println("grbu " + getSignature().resolveSymbolId(label) + ", children=" + childStates);
+//
+//        if (useCachedRuleBottomUp(label, childStates)) {
+////            System.err.println("-> cached, " + getRulesBottomUpFromExplicit(label, childStates));
+//            return getRulesBottomUpFromExplicit(label, childStates);
+//        } else {
+////            System.err.println("-> compute fresh");
+//
+//            List<Integer> leftChildStates = new ArrayList<LeftState>();
+//            List<Integer> rightChildStates = new ArrayList<RightState>();
+//            for (Pair<LeftState, RightState> childState : childStates) {
+//                leftChildStates.add(childState.left);
+//                rightChildStates.add(childState.right);
+//            }
+//
+//            Set<Rule<LeftState>> leftRules = left.getRulesBottomUp(label, leftChildStates);
+//            Set<Rule<RightState>> rightRules = right.getRulesBottomUp(label, rightChildStates);
+//            Set<Pair<LeftState, RightState>> parentPairs = new HashSet<Pair<LeftState, RightState>>();
+//
+//            Set<Rule<Pair<LeftState, RightState>>> ret = new HashSet<Rule<Pair<LeftState, RightState>>>();
+//            for (Rule<LeftState> leftRule : leftRules) {
+//                for (Rule<RightState> rightRule : rightRules) {
+//                    Rule<Pair<LeftState, RightState>> rule = new Rule<Pair<LeftState, RightState>>(new Pair<LeftState, RightState>(leftRule.getParent(), rightRule.getParent()), label, childStates, leftRule.getWeight() * rightRule.getWeight());
+//                    storeRule(rule);
+//                    ret.add(rule);
+//                }
+//            }
+//
+//            return ret;
+//        }
     }
 
     @Override
-    public Set<Rule<Pair<LeftState, RightState>>> getRulesTopDown(int label, Pair<LeftState, RightState> parentState) {
+    public Set<Rule> getRulesTopDown(int label, int parentState) {
         makeAllRulesExplicit();
+        
+        assert useCachedRuleTopDown(label, parentState);
 
-        if (!useCachedRuleTopDown(label, parentState)) {
-            Set<Rule<LeftState>> leftRules = left.getRulesTopDown(label, parentState.left);
-            Set<Rule<RightState>> rightRules = right.getRulesTopDown(label, parentState.right);
-
-            for (Rule<LeftState> leftRule : leftRules) {
-                for (Rule<RightState> rightRule : rightRules) {
-                    List<Pair<LeftState, RightState>> combinedChildren = new ArrayList<Pair<LeftState, RightState>>();
-
-                    for (int i = 0; i < leftRule.getArity(); i++) {
-                        combinedChildren.add(new Pair<LeftState, RightState>(leftRule.getChildren()[i], rightRule.getChildren()[i]));
-                    }
-
-                    Rule<Pair<LeftState, RightState>> rule = new Rule<Pair<LeftState, RightState>>(parentState, label, combinedChildren, leftRule.getWeight() * rightRule.getWeight());
-                    storeRule(rule);
-                }
-            }
-        }
+//        if (!useCachedRuleTopDown(label, parentState)) {
+//            Set<Rule<LeftState>> leftRules = left.getRulesTopDown(label, parentState.left);
+//            Set<Rule<RightState>> rightRules = right.getRulesTopDown(label, parentState.right);
+//
+//            for (Rule<LeftState> leftRule : leftRules) {
+//                for (Rule<RightState> rightRule : rightRules) {
+//                    List<Pair<LeftState, RightState>> combinedChildren = new ArrayList<Pair<LeftState, RightState>>();
+//
+//                    for (int i = 0; i < leftRule.getArity(); i++) {
+//                        combinedChildren.add(new Pair<LeftState, RightState>(leftRule.getChildren()[i], rightRule.getChildren()[i]));
+//                    }
+//
+//                    Rule<Pair<LeftState, RightState>> rule = new Rule<Pair<LeftState, RightState>>(parentState, label, combinedChildren, leftRule.getWeight() * rightRule.getWeight());
+//                    storeRule(rule);
+//                }
+//            }
+//        }
 
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
     @Override
-    public Set<Pair<LeftState, RightState>> getAllStates() {
-
-        /*
-         if (allStates == null) {
-         Set<Pair<LeftState, RightState>> set = new HashSet<Pair<LeftState, RightState>>();
-         collectStatePairs(left.getAllStates(), right.getAllStates(), set);
-         for (Pair<LeftState, RightState> pq : set) {
-         addState(pq);
-         }
-         }
-         */
+    public Set<Integer> getAllStates() {
         makeAllRulesExplicit();
         return super.getAllStates();
     }
@@ -269,13 +289,13 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     public void makeAllRulesExplicitEarley() {
         if (!isExplicit) {
             Queue<IncompleteEarleyItem> agenda = new Agenda<IncompleteEarleyItem>();
-            ListMultimap<LeftState, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create();
-            ListMultimap<LeftState, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();
+            ListMultimap<Integer, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create(); // left state ID -> ...
+            ListMultimap<Integer, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();   // left state ID -> ...
 
             int countAgendaItems = 0;
 
             // Init
-            for (LeftState state : left.getFinalStates()) {
+            for (int state : left.getFinalStates()) {
                 predict(state, agenda);
             }
 
@@ -291,10 +311,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
                 if (item.matchedStates == item.leftRule.getArity()) {
                     // Finish
-                    for (Rule<RightState> rightRule : right.getRulesBottomUp(item.leftRule.getLabel(), item.getRightChildren())) {
+                    for (Rule rightRule : right.getRulesBottomUp(item.leftRule.getLabel(), item.getRightChildren())) {
                         CompleteEarleyItem completedItem = new CompleteEarleyItem(item.leftRule, rightRule);
                         completedItemsForLeftState.put(item.leftRule.getParent(), completedItem);
-                        Rule<Pair<LeftState, RightState>> combinedRule = combineRules(item.leftRule, rightRule);
+                        Rule combinedRule = combineRules(item.leftRule, rightRule);
                         storeRule(combinedRule);
 
                         if (DEBUG) {
@@ -339,11 +359,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         }
     }
 
-    private void predict(LeftState state, Queue<IncompleteEarleyItem> agenda) {
-        for (Integer label : left.getLabelsTopDown(state)) {
-            if (right.hasRuleWithPrefix(remapLabel(label), new ArrayList<RightState>())) {
-                for (Rule<LeftState> rule : left.getRulesTopDown(label, state)) {
-                    final IncompleteEarleyItem incompleteEarleyItem = new IncompleteEarleyItem(rule, null, null);
+    private void predict(int leftState, Queue<IncompleteEarleyItem> agenda) {
+        for (Integer label : left.getLabelsTopDown(leftState)) {
+            if (right.hasRuleWithPrefix(remapLabel(label), new ArrayList<Integer>())) {
+                for (Rule rule : left.getRulesTopDown(label, leftState)) {
+                    final IncompleteEarleyItem incompleteEarleyItem = new IncompleteEarleyItem(rule, 0, null);
                     agenda.offer(incompleteEarleyItem);
 
                     if (DEBUG) {
@@ -355,77 +375,77 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     private class CompleteEarleyItem {
-        Rule<LeftState> leftRule;
-        Rule<RightState> rightRule;
+        Rule leftRule;
+        Rule rightRule;
 
-        public CompleteEarleyItem(Rule<LeftState> leftRule, Rule<RightState> rightRule) {
+        public CompleteEarleyItem(Rule leftRule, Rule rightRule) {
             this.leftRule = leftRule;
             this.rightRule = rightRule;
         }
 
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final CompleteEarleyItem other = (CompleteEarleyItem) obj;
-            if (this.leftRule != other.leftRule && (this.leftRule == null || !this.leftRule.equals(other.leftRule))) {
-                return false;
-            }
-            if (this.rightRule != other.rightRule && (this.rightRule == null || !this.rightRule.equals(other.rightRule))) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            int hash = 3;
-            hash = 59 * hash + (this.leftRule != null ? this.leftRule.hashCode() : 0);
-            hash = 59 * hash + (this.rightRule != null ? this.rightRule.hashCode() : 0);
-            return hash;
-        }
+//        @Override
+//        public boolean equals(Object obj) {
+//            if (obj == null) {
+//                return false;
+//            }
+//            if (getClass() != obj.getClass()) {
+//                return false;
+//            }
+//            final CompleteEarleyItem other = (CompleteEarleyItem) obj;
+//            if (this.leftRule != other.leftRule && (this.leftRule == null || !this.leftRule.equals(other.leftRule))) {
+//                return false;
+//            }
+//            if (this.rightRule != other.rightRule && (this.rightRule == null || !this.rightRule.equals(other.rightRule))) {
+//                return false;
+//            }
+//            return true;
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            int hash = 3;
+//            hash = 59 * hash + (this.leftRule != null ? this.leftRule.hashCode() : 0);
+//            hash = 59 * hash + (this.rightRule != null ? this.rightRule.hashCode() : 0);
+//            return hash;
+//        }
     }
 
     private class IncompleteEarleyItem {
-        Rule<LeftState> leftRule;
-        RightState rightChildState;
+        Rule leftRule;
+        int rightChildState;
         IncompleteEarleyItem itemWithEarlierRightChildStates;
         int matchedStates;
         private int hashCode = -1;
 
-        public IncompleteEarleyItem(Rule<LeftState> leftRule, RightState rightChildState, IncompleteEarleyItem itemWithEarlierRightChildStates) {
+        public IncompleteEarleyItem(Rule leftRule, int rightChildState, IncompleteEarleyItem itemWithEarlierRightChildStates) {
             this.leftRule = leftRule;
             this.rightChildState = rightChildState;
             this.itemWithEarlierRightChildStates = itemWithEarlierRightChildStates;
 
-            if (rightChildState == null) {
+            if (rightChildState == 0) {
                 matchedStates = 0;
             } else {
                 matchedStates = itemWithEarlierRightChildStates.matchedStates + 1;
             }
         }
 
-        public LeftState getNextLeftState() {
+        public int getNextLeftState() {
             if (matchedStates < leftRule.getArity()) {
                 return leftRule.getChildren()[matchedStates];
             } else {
-                return null;
+                return 0;
             }
         }
 
-        public List<RightState> getRightChildren() {
-            List<RightState> children = new ArrayList<RightState>();
+        public List<Integer> getRightChildren() {
+            List<Integer> children = new ArrayList<Integer>();
             collect(children);
             Collections.reverse(children);
             return children;
         }
 
-        private void collect(List<RightState> children) {
-            if (rightChildState != null) {
+        private void collect(List<Integer> children) {
+            if (rightChildState != 0) {
                 children.add(rightChildState);
                 if (itemWithEarlierRightChildStates != null) {
                     itemWithEarlierRightChildStates.collect(children);
@@ -435,36 +455,36 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
         @Override
         public String toString() {
-            return leftRule.toString() + getRightChildren();
+            return leftRule.toString(IntersectionAutomaton.this) + getRightChildren();
         }
 
-        // TODO - equals and hashCode should be more efficient
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final IncompleteEarleyItem other = (IncompleteEarleyItem) obj;
-            if (this.leftRule != other.leftRule && (this.leftRule == null || !this.leftRule.equals(other.leftRule))) {
-                return false;
-            }
-            if (!this.getRightChildren().equals(other.getRightChildren())) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            if (hashCode < 0) {
-                hashCode = 5;
-                hashCode = 29 * hashCode + (this.leftRule != null ? this.leftRule.hashCode() : 0);
-                hashCode = 29 * hashCode + this.getRightChildren().hashCode();
-            }
-            return hashCode;
-        }
+//        // TODO - equals and hashCode should be more efficient
+//        @Override
+//        public boolean equals(Object obj) {
+//            if (obj == null) {
+//                return false;
+//            }
+//            if (getClass() != obj.getClass()) {
+//                return false;
+//            }
+//            final IncompleteEarleyItem other = (IncompleteEarleyItem) obj;
+//            if (this.leftRule != other.leftRule && (this.leftRule == null || !this.leftRule.equals(other.leftRule))) {
+//                return false;
+//            }
+//            if (!this.getRightChildren().equals(other.getRightChildren())) {
+//                return false;
+//            }
+//            return true;
+//        }
+//
+//        @Override
+//        public int hashCode() {
+//            if (hashCode < 0) {
+//                hashCode = 5;
+//                hashCode = 29 * hashCode + (this.leftRule != null ? this.leftRule.hashCode() : 0);
+//                hashCode = 29 * hashCode + this.getRightChildren().hashCode();
+//            }
+//            return hashCode;
+//        }
     }
 }

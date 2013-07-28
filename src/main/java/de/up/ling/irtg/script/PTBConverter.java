@@ -272,7 +272,7 @@ public class PTBConverter {
             extractRules(ptbTree);
 
             // add the root label to the final states
-            c.addFinalState(ptbTree.getLabel());
+            c.addFinalState(c.addState(ptbTree.getLabel()));
 
             // convert the PTB-Tree to an IRTG-tree
 //            Tree<String> irtgTree = ptb2Irtg(ptbTree);
@@ -540,15 +540,15 @@ public class PTBConverter {
         
         maxEntIrtg.setFeatures(null);
 
-        Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
-        for (Rule<String> rule : ruleSet) {
+        Set<Rule> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        for (Rule rule : ruleSet) {
             StringBuilder ruleStringBuilder = new StringBuilder();
 
             // the representation starts with the left side of the rule
             ruleStringBuilder.append(rule.getParent());
 
             // and adds all elements of the right side delimited by '/'
-            Object[] children = rule.getChildren();
+            int[] children = rule.getChildren();
             if (children.length > 0) {
                 for (Object child : children) {
                     ruleStringBuilder.append("/");
@@ -673,13 +673,13 @@ public class PTBConverter {
      */
     public void addChildRelatedFeatures() {
         Map<String, Set<String>> states = new HashMap<String, Set<String>>();
-        Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        Set<Rule> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
 
-        for (Rule<String> r : ruleSet) {
-            String parentState = r.getParent();
-            Object[] children = r.getChildren();
+        for (Rule r : ruleSet) {
+            int parentState = r.getParent();
+            int[] children = r.getChildren();
 
-            for (Object child : children) {
+            for (int child : children) {
                 String state = (String) child;
 
                 // get already gathered parent states for state
@@ -747,9 +747,9 @@ public class PTBConverter {
      */
     public void addParentRelatedFeatures() {
         Map<String, Set<Integer>> stateRules = new HashMap<String, Set<Integer>>();
-        Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        Set<Rule> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
 
-        for (Rule<String> r : ruleSet) {
+        for (Rule r : ruleSet) {
             int ruleName = r.getLabel();
             String state = r.getParent();
 
@@ -776,9 +776,9 @@ public class PTBConverter {
      */
     public void addTerminalRelatedFeatures() {
         Map<String, Set<Integer>> interpRules = new HashMap<String, Set<Integer>>();
-        Set<Rule<String>> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
+        Set<Rule> ruleSet = maxEntIrtg.getAutomaton().getRuleSet();
 
-        for (Rule<String> r : ruleSet) {
+        for (Rule r : ruleSet) {
             int ruleName = r.getLabel();
             Object[] children = r.getChildren();
 

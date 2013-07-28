@@ -41,7 +41,7 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
     private class TreeDecomposingAutomaton extends TreeAutomaton<String> {
         private Tree<Integer> tree;
         private final Set<Integer> labels;
-        private ListMultimap<Integer, String> leafLabelsToStates;
+        private ListMultimap<Integer, Integer> leafLabelsToStateIds;
 
         public TreeDecomposingAutomaton(Tree<String> derivedTree) {
             super(TreeAlgebra.this.getSignature());
@@ -49,34 +49,35 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
             this.tree = TreeAlgebra.this.getSignature().addAllSymbols(derivedTree);
 
             labels = new HashSet<Integer>();
-            leafLabelsToStates = ArrayListMultimap.create();
+            leafLabelsToStateIds = ArrayListMultimap.create();
 
             collectStatesAndLabels(tree, "q");
-            finalStates.add("q");
+            finalStates.add(addState("q"));
         }
 
         @Override
-        public Set<Rule<String>> getRulesBottomUp(int label, List<String> childStates) {
-            Set<Rule<String>> ret = new HashSet<Rule<String>>();
+        public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
+            Set<Rule> ret = new HashSet<Rule>();
 
-            if (childStates.isEmpty()) {
-                for (String state : leafLabelsToStates.get(label)) {
-                    Rule<String> rule = createRule(state, label, childStates);
+            if (childStates.length == 0) {
+                for (int state : leafLabelsToStateIds.get(label)) {
+                    Rule rule = createRule(state, label, childStates, 1);
                     storeRule(rule);
                     ret.add(rule);
                 }
             } else {
-                String potentialParent = childStates.get(0).substring(0, childStates.get(0).length() - 1);
+                String firstChildState = getStateForId(childStates[0]);
+                String potentialParent = firstChildState.substring(0, firstChildState.length() - 1);
                 boolean correctChildren = true;
 
-                for (int i = 0; i < childStates.size(); i++) {
-                    if (!childStates.get(i).equals(potentialParent + i)) {
+                for (int i = 0; i < childStates.length; i++) {
+                    if (! getStateForId(childStates[i]).equals(potentialParent + i)) {
                         correctChildren = false;
                     }
                 }
 
                 if (correctChildren && tree.select(potentialParent, 1).getLabel().equals(label)) {
-                    Rule<String> rule = createRule(potentialParent, label, childStates);
+                    Rule rule = createRule(addState(potentialParent), label, childStates, 1);
                     storeRule(rule);
                     ret.add(rule);
                 }
@@ -86,17 +87,18 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
         }
 
         @Override
-        public Set<Rule<String>> getRulesTopDown(int label, String parentState) {
-            Set<Rule<String>> ret = new HashSet<Rule<String>>();
-            Tree<Integer> t = tree.select(parentState, 1);
+        public Set<Rule> getRulesTopDown(int label, int parentState) {
+            Set<Rule> ret = new HashSet<Rule>();
+            String parentPath = getStateForId(parentState);
+            Tree<Integer> t = tree.select(parentPath, 1);
 
             if (t.getLabel().equals(label)) {
-                List<String> children = new ArrayList<String>();
+                int[] children = new int[t.getChildren().size()];
                 for (int i = 0; i < t.getChildren().size(); i++) {
-                    children.add(parentState + i);
+                    children[i] = addState(parentPath + i);
                 }
 
-                Rule<String> rule = createRule(parentState, label, children);
+                Rule rule = createRule(parentState, label, children, 1);
                 ret.add(rule);
                 storeRule(rule);
             }
@@ -106,11 +108,11 @@ public class TreeAlgebra implements Algebra<Tree<String>> {
         }
 
         private void collectStatesAndLabels(Tree<Integer> node, String state) {
-            state = addState(state);
+            int stateId = addState(state);
             labels.add(node.getLabel());
 
             if (node.getChildren().isEmpty()) {
-                leafLabelsToStates.put(node.getLabel(), state);
+                leafLabelsToStateIds.put(node.getLabel(), stateId);
             }
 
             for (int i = 0; i < node.getChildren().size(); i++) {

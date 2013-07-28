@@ -206,7 +206,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      */
     public void precomputeFeatureValues() {
         f = new HashMap<Integer, double[]>();
-        Set<Rule<String>> ruleSet = (Set<Rule<String>>) automaton.getRuleSet();
+        Set<Rule> ruleSet = (Set<Rule>) automaton.getRuleSet();
         int numOfFeatures = getNumFeatures();
 
         for (Rule r : ruleSet) {

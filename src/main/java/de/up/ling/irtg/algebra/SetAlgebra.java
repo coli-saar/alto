@@ -162,8 +162,9 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
     private class SetDecompositionAutomaton extends TreeAutomaton<Set<List<String>>> {
         public SetDecompositionAutomaton(Set<List<String>> finalElement) {
             super(SetAlgebra.this.getSignature());
-            finalStates = new HashSet<Set<List<String>>>();
-            finalStates.add(finalElement);
+            
+//            finalStates = new HashSet<Set<List<String>>>();
+            finalStates.add(addState(finalElement));
             
             // this is theoretically correct, but WAY too slow,
             // and anyway the Guava powerset function only allows
@@ -187,16 +188,22 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         }
 
         @Override
-        public Set<Rule<Set<List<String>>>> getRulesBottomUp(int label, List<Set<List<String>>> childStates) {
+        public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
             if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
-                Set<Rule<Set<List<String>>>> ret = new HashSet<Rule<Set<List<String>>>>();
-                Set<List<String>> parents = evaluate(getSignature().resolveSymbolId(label), childStates);
+                Set<Rule> ret = new HashSet<Rule>();
+                
+                List<Set<List<String>>> childValues = new ArrayList<Set<List<String>>>();
+                for( int childState : childStates ) {
+                    childValues.add(getStateForId(childState));
+                }                
+                
+                Set<List<String>> parents = evaluate(getSignature().resolveSymbolId(label), childValues);
                 
                 // require that set in parent state must be non-empty; otherwise there is simply no rule
                 if (parents != null && !parents.isEmpty()) {
-                    Rule<Set<List<String>>> rule = createRule(parents, label, childStates);
+                    Rule rule = createRule(addState(parents), label, childStates, 1);
                     ret.add(rule);
                     storeRule(rule);
                 }
@@ -206,7 +213,7 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
         }
 
         @Override
-        public Set<Rule<Set<List<String>>>> getRulesTopDown(int label, Set<List<String>> parentState) {
+        public Set<Rule> getRulesTopDown(int label, int parentState) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
@@ -223,18 +230,6 @@ public class SetAlgebra implements Algebra<Set<List<String>>> {
 //            }
 //        }
 
-
-        @Override
-        public Set<Set<List<String>>> getFinalStates() {
-            return finalStates;
-        }
-
-        @Override
-        // ultimately, only needed for EM training -- and can we get rid of it there?
-        // (and for correct computation of 
-        public Set<Set<List<String>>> getAllStates() {
-            return new HashSet<Set<List<String>>>();
-        }
 
         @Override
         public boolean isBottomUpDeterministic() {

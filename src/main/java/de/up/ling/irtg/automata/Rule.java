@@ -5,6 +5,8 @@
 package de.up.ling.irtg.automata;
 
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,22 +20,22 @@ import java.util.List;
  *
  * @author koller
  */
-public class Rule<State> implements Serializable {
-    private State parent;
+public class Rule implements Serializable {
+    private int parent;
     private int label;
-    private State[] children;
+    private int[] children;
     private double weight;
 
-    Rule(State parent, int label, State[] children, double weight) {
+    Rule(int parent, int label, int[] children, double weight) {
         this.parent = parent;
         this.label = label;
         this.children = children;
         this.weight = weight;
     }
 
-    Rule(State parent, int label, List<State> children, double weight) {
-        this(parent, label, (State[]) children.toArray(), weight);
-    }
+//    Rule(State parent, int label, List<State> children, double weight) {
+//        this(parent, label, (State[]) children.toArray(), weight);
+//    }
 
     /*
     public Rule(State parent, int label, State[] children) {
@@ -49,7 +51,7 @@ public class Rule<State> implements Serializable {
     }
     */
 
-    public State[] getChildren() {
+    public int[] getChildren() {
         return children;
     }
 
@@ -61,15 +63,14 @@ public class Rule<State> implements Serializable {
         return auto.getSignature().resolveSymbolId(label);
     }
 
-    public State getParent() {
+    public int getParent() {
         return parent;
     }
 
-    public void setParent(State parent) {
+    // TODO - is this needed?
+    public void setParent(int parent) {
         this.parent = parent;
     }
-    
-    
 
     public double getWeight() {
         return weight;
@@ -89,19 +90,19 @@ public class Rule<State> implements Serializable {
 
     public String toString(TreeAutomaton auto, boolean parentIsFinal) {
         boolean first = true;
-        StringBuilder ret = new StringBuilder(Tree.encodeLabel(parent.toString()) + (parentIsFinal ? "!" : "") + " -> " + Tree.encodeLabel(getLabel(auto)));
+        StringBuilder ret = new StringBuilder(Tree.encodeLabel(auto.getStateForId(parent).toString()) + (parentIsFinal ? "!" : "") + " -> " + Tree.encodeLabel(getLabel(auto)));
 
         if (children.length > 0) {
             ret.append("(");
 
-            for (State child : children) {
+            for (int child : children) {
                 if (first) {
                     first = false;
                 } else {
                     ret.append(", ");
                 }
 
-                ret.append((child == null) ? "null" : Tree.encodeLabel(child.toString()));
+                ret.append((child == 0) ? "null" : Tree.encodeLabel(auto.getStateForId(child).toString()));
             }
 
             ret.append(")");
@@ -111,7 +112,7 @@ public class Rule<State> implements Serializable {
         return ret.toString();
     }
     
-    public static <E>  List<String> rulesToStrings(Collection<Rule<E>> rules, TreeAutomaton<E> auto) {
+    public static List<String> rulesToStrings(Collection<Rule> rules, TreeAutomaton auto) {
         List<String> ret = new ArrayList<String>();
         for( Rule rule : rules ) {
             ret.add(rule.toString(auto));
@@ -121,13 +122,23 @@ public class Rule<State> implements Serializable {
 
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 59 * hash + (this.parent != null ? this.parent.hashCode() : 0);
-        hash = 59 * hash + this.label;
-        hash = 59 * hash + Arrays.deepHashCode(this.children);
+        int hash = 7;
+        hash = 73 * hash + this.parent;
+        hash = 73 * hash + this.label;
+        hash = 73 * hash + Arrays.hashCode(this.children);
         return hash;
     }
 
+    /**
+     * Compares two rules for equality. Rule weights are ignored
+     * in the comparison. Notice that this implementation of equals
+     * is only meaningful if the two rules belong to the same
+     * automaton, as otherwise states might be encoded by different
+     * interners.
+     * 
+     * @param obj
+     * @return 
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -136,39 +147,28 @@ public class Rule<State> implements Serializable {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final Rule<State> other = (Rule<State>) obj;
-        if (this.parent != other.parent && (this.parent == null || !this.parent.equals(other.parent))) {
+        final Rule other = (Rule) obj;
+        if (this.parent != other.parent) {
             return false;
         }
         if (this.label != other.label) {
             return false;
         }
-        if (!Arrays.deepEquals(this.children, other.children)) {
+        if (!Arrays.equals(this.children, other.children)) {
             return false;
         }
         return true;
     }
     
-    /*
-    public boolean equals(Rule<State> other, int[] labelRemap) {
-        if (this.parent != other.parent && (this.parent == null || !this.parent.equals(other.parent))) {
-            return false;
-        }
-        if (labelRemap[this.label] != other.label) {
-            return false;
-        }
-        if (!Arrays.deepEquals(this.children, other.children)) {
-            return false;
-        }
-        return true;
-    }
-    */
+    
 
-    public static <State> Collection<State> extractParentStates(Collection<Rule<State>> rules) {
-        List<State> ret = new ArrayList<State>();
-        for (Rule<State> rule : rules) {
+    public static Collection<Integer> extractParentStates(Collection<Rule> rules) {
+        IntList ret = new IntArrayList();
+        
+        for (Rule rule : rules) {
             ret.add(rule.getParent());
         }
+        
         return ret;
     }
 }

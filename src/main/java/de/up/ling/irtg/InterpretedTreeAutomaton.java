@@ -177,12 +177,12 @@ public class InterpretedTreeAutomaton {
 
     @CallableFromShell(name = "mltrain")
     public void trainML(Corpus trainingData) throws UnsupportedOperationException {
-        final Map<Integer, Rule<String>> ruleForTerminal = new HashMap<Integer, Rule<String>>(); // label -> rules
+        final Map<Integer, Rule> ruleForTerminal = new HashMap<Integer, Rule>(); // label -> rules
         final Map<Integer, Long> ruleCounts = new HashMap<Integer, Long>();
-        final Map<String, Long> stateCounts = new HashMap<String, Long>();
+        final Map<Integer, Long> stateCounts = new HashMap<Integer, Long>();
 
         // initialize data
-        for (Rule<String> rule : automaton.getRuleSet()) {
+        for (Rule rule : automaton.getRuleSet()) {
             if (ruleForTerminal.containsKey(rule.getLabel())) {
                 throw new UnsupportedOperationException("ML training only supported if no two rules use the same terminal symbol.");
             }
@@ -197,7 +197,7 @@ public class InterpretedTreeAutomaton {
             instance.getDerivationTree().dfs(new TreeVisitor<Integer, Void, Void>() {
                 @Override
                 public Void visit(Tree<Integer> node, Void data) {
-                    Rule<String> rule = ruleForTerminal.get(node.getLabel());
+                    Rule rule = ruleForTerminal.get(node.getLabel());
 
                     ruleCounts.put(node.getLabel(), ruleCounts.get(node.getLabel()) + 1);
                     stateCounts.put(rule.getParent(), stateCounts.get(rule.getParent()) + 1);
@@ -209,7 +209,7 @@ public class InterpretedTreeAutomaton {
 
         // set all rule weights according to counts
         for (int label : ruleForTerminal.keySet()) {
-            Rule<String> rule = ruleForTerminal.get(label);
+            Rule rule = ruleForTerminal.get(label);
             long stateCount = stateCounts.get(rule.getParent());
 
             if (stateCount == 0) {
@@ -241,20 +241,20 @@ public class InterpretedTreeAutomaton {
 
 
         for (int iteration = 0; iteration < 10; iteration++) {
-            Map<Rule<String>, Double> globalRuleCount = estep(parses, intersectedRuleToOriginalRule);
+            Map<Rule, Double> globalRuleCount = estep(parses, intersectedRuleToOriginalRule);
 
             // sum over rules with same parent state to obtain state counts
-            Map<String, Double> globalStateCount = new HashMap<String, Double>();
-            for (String state : automaton.getAllStates()) {
+            Map<Integer, Double> globalStateCount = new HashMap<Integer, Double>();
+            for (int state : automaton.getAllStates()) {
                 globalStateCount.put(state, 0.0);
             }
-            for (Rule<String> rule : automaton.getRuleSet()) {
-                String state = rule.getParent();
+            for (Rule rule : automaton.getRuleSet()) {
+                int state = rule.getParent();
                 globalStateCount.put(state, globalStateCount.get(state) + globalRuleCount.get(rule));
             }
 
             // M-step
-            for (Rule<String> rule : automaton.getRuleSet()) {
+            for (Rule rule : automaton.getRuleSet()) {
                 double newWeight = globalRuleCount.get(rule) / globalStateCount.get(rule.getParent());
 
                 rule.setWeight(newWeight);
@@ -290,7 +290,7 @@ public class InterpretedTreeAutomaton {
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, null);
 
         // initialize hyperparameters
-        List<Rule<String>> automatonRules = new ArrayList<Rule<String>>(getAutomaton().getRuleSet()); // bring rules in defined order
+        List<Rule> automatonRules = new ArrayList<Rule>(getAutomaton().getRuleSet()); // bring rules in defined order
         int numRules = automatonRules.size();
         double[] alpha = new double[numRules];
         Arrays.fill(alpha, 1.0); // might want to initialize them differently
@@ -298,9 +298,9 @@ public class InterpretedTreeAutomaton {
         // iterate
         for (int iteration = 0; iteration < 10; iteration++) {
             // for each state, compute sum of alphas for outgoing rules
-            Map<String, Double> sumAlphaForSameParent = new HashMap<String, Double>();
+            Map<Integer, Double> sumAlphaForSameParent = new HashMap<Integer, Double>();
             for (int i = 0; i < numRules; i++) {
-                String parent = automatonRules.get(i).getParent();
+                int parent = automatonRules.get(i).getParent();
                 if (sumAlphaForSameParent.containsKey(parent)) {
                     sumAlphaForSameParent.put(parent, sumAlphaForSameParent.get(parent) + alpha[i]);
                 } else {
@@ -310,12 +310,12 @@ public class InterpretedTreeAutomaton {
 
             // re-estimate rule weights
             for (int i = 0; i < numRules; i++) {
-                Rule<String> rule = automatonRules.get(i);
+                Rule rule = automatonRules.get(i);
                 rule.setWeight(Math.exp(Gamma.digamma(alpha[i]) - Gamma.digamma(sumAlphaForSameParent.get(rule.getParent()))));
             }
 
             // re-estimate hyperparameters
-            Map<Rule<String>, Double> ruleCounts = estep(parses, intersectedRuleToOriginalRule);
+            Map<Rule, Double> ruleCounts = estep(parses, intersectedRuleToOriginalRule);
             for (int i = 0; i < numRules; i++) {
                 alpha[i] += ruleCounts.get(automatonRules.get(i));
             }
@@ -330,9 +330,9 @@ public class InterpretedTreeAutomaton {
      * @param intersectedRuleToOriginalRule
      * @return
      */
-    protected Map<Rule<String>, Double> estep(List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule) {
-        Map<Rule<String>, Double> globalRuleCount = new HashMap<Rule<String>, Double>();
-        for (Rule<String> rule : automaton.getRuleSet()) {
+    protected Map<Rule, Double> estep(List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule) {
+        Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
+        for (Rule rule : automaton.getRuleSet()) {
             globalRuleCount.put(rule, 0.0);
         }
 
@@ -344,7 +344,7 @@ public class InterpretedTreeAutomaton {
 
             for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
                 Object intersectedParent = intersectedRule.getParent();
-                Rule<String> originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
+                Rule originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
 
                 double oldRuleCount = globalRuleCount.get(originalRule);
                 double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight();
@@ -386,7 +386,7 @@ public class InterpretedTreeAutomaton {
             Set<Rule> rules = instance.getChart().getRuleSet();
             Map<Rule, Rule> irtorHere = new HashMap<Rule, Rule>();
             for (Rule intersectedRule : rules) {
-                Rule<String> originalRule = getRuleInGrammar(intersectedRule);
+                Rule originalRule = getRuleInGrammar(intersectedRule, instance.getChart());
 
                 irtorHere.put(intersectedRule, originalRule);
 
@@ -400,16 +400,20 @@ public class InterpretedTreeAutomaton {
     }
 
     // safe but inefficient
-    Rule<String> getRuleInGrammar(Rule intersectedRule) {
-        List<String> firstChildStates = new ArrayList<String>();
-        String firstParentState = (String) getFirstEntry(intersectedRule.getParent());
-        for (Object pairState : intersectedRule.getChildren()) {
-            String firstState = (String) getFirstEntry(pairState);
-            firstChildStates.add(firstState);
+    // relationship between rules of chart and deriv-tree automaton,
+    // or at least mapping between states, should be precomputed only once.
+    Rule getRuleInGrammar(Rule intersectedRule, TreeAutomaton chart) {
+        int firstParentState = getAutomaton().getIdForState(getFirstEntry(chart.getStateForId(intersectedRule.getParent())).toString());
+
+        int[] firstChildStates = new int[intersectedRule.getArity()];
+        for (int i = 0; i < intersectedRule.getArity(); i++) {
+            int pairState = intersectedRule.getChildren()[i];
+            int firstState = getAutomaton().getIdForState(getFirstEntry(chart.getStateForId(pairState)).toString());
+            firstChildStates[i] = firstState;
         }
 
-        for (Rule<String> candidate : automaton.getRulesBottomUp(intersectedRule.getLabel(), firstChildStates)) {
-            if (firstParentState.equals(candidate.getParent())) {
+        for (Rule candidate : automaton.getRulesBottomUp(intersectedRule.getLabel(), firstChildStates)) {
+            if (firstParentState == candidate.getParent()) {
                 return candidate;
             }
         }
@@ -417,7 +421,7 @@ public class InterpretedTreeAutomaton {
         return null;
     }
 
-    private static Object getFirstEntry(Object pairState) {
+    private Object getFirstEntry(Object pairState) {
         if (pairState instanceof Pair) {
             return getFirstEntry(((Pair) pairState).left);
         } else {
@@ -442,7 +446,7 @@ public class InterpretedTreeAutomaton {
         String filename = StringTools.slurp(reader);
         corpus.attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
     }
-    
+
     public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
         List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
         if (orderedInterpretationList.size() != 2) {
@@ -470,7 +474,7 @@ public class InterpretedTreeAutomaton {
             TreeAutomaton rightAutomaton = bin2.binarizeWithVariables(interp2.getHomomorphism().get(rule.getLabel()));
             sb.binarize(rule, leftAutomaton, rightAutomaton, newAuto, newLeftHom, newRightHom);
         }
-        for (String state : automaton.getFinalStates()) {
+        for (int state : automaton.getFinalStates()) {
             newAuto.addFinalState(state);
         }
         InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAuto);
@@ -481,7 +485,7 @@ public class InterpretedTreeAutomaton {
     }
 
     private HomomorphismSymbol getConstantFromAlgebra(Homomorphism hom) {
-        for (int label = 1; label <= hom.getSourceSignature().getMaxSymbolId(); label++ ) {
+        for (int label = 1; label <= hom.getSourceSignature().getMaxSymbolId(); label++) {
             HomomorphismSymbol constant = hom.get(label).dfs(new TreeVisitor<HomomorphismSymbol, Void, HomomorphismSymbol>() {
                 @Override
                 public HomomorphismSymbol combine(Tree<HomomorphismSymbol> node, List<HomomorphismSymbol> childrenValues) {
@@ -515,7 +519,6 @@ public class InterpretedTreeAutomaton {
         return newAuto;
     }
 
-    
     @CallableFromShell
     public InterpretedTreeAutomaton binarize() {
         /*
@@ -526,7 +529,7 @@ public class InterpretedTreeAutomaton {
          */
 
         if (interpretations.keySet().isEmpty()) {
-            throw new UnsupportedOperationException("Trying to binarize IRTG without interpretation.");
+            throw new UnsupportedOperationException("Trying to binarize IRTG without interpretations.");
         }
 
         // pick the alphabetically first interpretation for the binarization
@@ -537,22 +540,27 @@ public class InterpretedTreeAutomaton {
         Interpretation interpretation = interpretations.get(interpretationName);
         Homomorphism homomorphism = interpretation.getHomomorphism();
 
+        // binarized automaton contains all states of the original automaton
+        // (plus fresh ones for the binarization)
         ConcreteTreeAutomaton newAutomaton = new ConcreteTreeAutomaton();
+        for (int stateId : getAutomaton().getAllStates()) {
+            newAutomaton.addState(getAutomaton().getStateForId(stateId).toString());
+        }
+
         Homomorphism newHomomorphism = new Homomorphism(newAutomaton.getSignature(), homomorphism.getTargetSignature());
-        Set<Rule<String>> rules = automaton.getRuleSet();
+        Set<Rule> rules = automaton.getRuleSet();
 
-
-        for (Rule<String> rule : rules) {
+        for (Rule rule : rules) {
             int ruleLabel = rule.getLabel();
 
             if (rule.getArity() > 2) {
                 Tree<HomomorphismSymbol> hRule = homomorphism.get(ruleLabel);
-                String parent = rule.getParent();
-                String label = makeBinaryLabel(ruleLabel + "-b", 0, true);
+                int parent = rule.getParent();
+                String label = makeBinaryLabel(ruleLabel + "-b", 0);
 
-//                Set<Rule<String>> newRules = new HashSet<Rule<String>>();
+//                Set<Rule> newRules = new HashSet<Rule>();
                 binarizeRule(newHomomorphism, newAutomaton, hRule, parent, label, rule);
-//                for (Rule<String> r : newRules) {
+//                for (Rule r : newRules) {
 //                    newAutomaton.addRule(r);
 //                }
             } else { // rules of arity <= 2
@@ -561,9 +569,10 @@ public class InterpretedTreeAutomaton {
             }
         }
 
-        for (String state : automaton.getFinalStates()) {
+        for (int state : automaton.getFinalStates()) {
             newAutomaton.addFinalState(state);
         }
+
         InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAutomaton);
         Interpretation interpr = new Interpretation(interpretation.getAlgebra(), newHomomorphism);
         ret.addInterpretation(interpretationName, interpr);
@@ -571,8 +580,8 @@ public class InterpretedTreeAutomaton {
         return ret;
     }
 
-    private void binarizeRule(Homomorphism newHomomorphism, ConcreteTreeAutomaton newAutomaton, Tree<HomomorphismSymbol> oldHomomorphismSubtree, String parentNT, String label, Rule rule) {
-        List<String> childStatesInNewRule = new ArrayList<String>();
+    private void binarizeRule(Homomorphism newHomomorphism, ConcreteTreeAutomaton newAutomaton, Tree<HomomorphismSymbol> oldHomomorphismSubtree, int parentNT, String label, Rule rule) {
+        List<Integer> childStatesInNewRule = new ArrayList<Integer>();
         int varCounter = 0;
         List<Tree<HomomorphismSymbol>> childrenInOldHom = oldHomomorphismSubtree.getChildren();
         List<Tree<HomomorphismSymbol>> childrenInNewHom = new ArrayList<Tree<HomomorphismSymbol>>();
@@ -583,7 +592,7 @@ public class InterpretedTreeAutomaton {
 
             if (argLabel.isVariable()) {
                 int index = argLabel.getValue();
-                String nonterminal = (String) rule.getChildren()[index];
+                int nonterminal = rule.getChildren()[index];
                 childStatesInNewRule.add(nonterminal);
 
                 varCounter++;
@@ -592,8 +601,8 @@ public class InterpretedTreeAutomaton {
             } else if (arg.getChildren().isEmpty()) {           // leaf
                 childrenInNewHom.add(Tree.create(argLabel));
             } else {                                            // root of subtree is an operation
-                String newTerminal = makeBinaryLabel(label, pos + 1, true);
-                String newNonterminal = makeBinaryLabel(label, pos + 1, false);
+                String newTerminal = makeBinaryLabel(label, pos + 1);
+                int newNonterminal = newAutomaton.addState(makeBinaryStateName(label, pos + 1));
                 childStatesInNewRule.add(newNonterminal);
 
                 varCounter++;
@@ -606,23 +615,29 @@ public class InterpretedTreeAutomaton {
 
 
         Tree<HomomorphismSymbol> hForRule = Tree.create(oldHomomorphismSubtree.getLabel(), childrenInNewHom);
-        Rule<String> binRule = newAutomaton.createRule(parentNT, label, childStatesInNewRule);
+        Rule binRule = newAutomaton.createRule(parentNT, label, childStatesInNewRule);
         newAutomaton.addRule(binRule);
         newHomomorphism.add(newHomomorphism.getSourceSignature().getIdForSymbol(label), hForRule);
     }
 
-    private String makeBinaryLabel(String prefix, int argNum, boolean terminal) {
+    private String makeBinaryLabel(String prefix, int argNum) {
         String newSymbol = prefix + argNum;
-        if (terminal) {
-            while (automaton.getSignature().contains(newSymbol)) {
-                newSymbol = newSymbol + "b";
-            }
-        } else {
-            newSymbol = newSymbol.toUpperCase();
-            while (automaton.getAllStates().contains(newSymbol)) {
-                newSymbol = newSymbol + "B";
-            }
+        
+        while (automaton.getSignature().contains(newSymbol)) {
+            newSymbol = newSymbol + "b";
         }
+        
+        return newSymbol;
+    }
+
+    private String makeBinaryStateName(String prefix, int argNum) {
+        String newSymbol = prefix + argNum;
+        newSymbol = newSymbol.toUpperCase();
+
+        while (automaton.getIdForState(newSymbol) != 0) {
+            newSymbol = newSymbol + "B";
+        }
+
         return newSymbol;
     }
 
@@ -638,7 +653,7 @@ public class InterpretedTreeAutomaton {
 
         pw.println();
 
-        for (Rule<String> rule : automaton.getRuleSet()) {
+        for (Rule rule : automaton.getRuleSet()) {
 //            String isFinal = automaton.getFinalStates().contains(rule.getParent()) ? "!" : "";
 //            String children = (rule.getArity() == 0 ? "" : "(" + StringTools.join(rule.getChildren(), ", ") + ")");
             pw.println(rule.toString(automaton, automaton.getFinalStates().contains(rule.getParent())));
@@ -666,12 +681,12 @@ public class InterpretedTreeAutomaton {
         final InterpretedTreeAutomaton other = (InterpretedTreeAutomaton) obj;
         if (this.automaton != other.automaton && (this.automaton == null || !this.automaton.equals(other.automaton))) {
             return false;
-        }        
-        
+        }
+
         if (this.interpretations != other.interpretations && (this.interpretations == null || !this.interpretations.equals(other.interpretations))) {
             return false;
         }
-        
+
         return true;
     }
 }

@@ -17,13 +17,20 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * A tree automaton that describes the homomorphic
+ * pre-image of the language of another tree automaton.
+ * This class only functions correctly if the homomorphism
+ * is non-deleting.
+ * 
+ * This automaton has the same states as the base automaton,
+ * converted into strings.
+ * 
  * @author koller
  */
 public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String> {
     private TreeAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
-    private Map<String, State> rhsState;
+//    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
     private Function<HomomorphismSymbol,Integer> remappingHomSymbolToIntFunction;
 
@@ -39,43 +46,53 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
                 return labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().apply(f)];
             }
         };
+        
+        for( int i = 1; i < rhsAutomaton.stateInterner.getNextIndex(); i++ ) {
+            stateInterner.addObject(rhsAutomaton.stateInterner.resolveId(i).toString());
+        }
 
         assert hom.isNonDeleting();
 
-        rhsState = new HashMap<String, State>();
+//        rhsState = new HashMap<String, State>();
 
-        for (State fin : rhsAutomaton.getFinalStates()) {
-            finalStates.add(fin.toString());
-        }
+        finalStates.addAll(rhsAutomaton.getFinalStates());
+        
+//        for (State fin : rhsAutomaton.getFinalStates()) {
+//            finalStates.add(fin.toString());
+//        }
 
         // _must_ do this here to cache mapping from strings to rhs states
-        for (State s : rhsAutomaton.getAllStates()) {
-            String normalized = addState(s.toString());
-            rhsState.put(normalized, s);
-        }
+        // (I think no longer necessary)
+        
+//        for (State s : rhsAutomaton.getAllStates()) {
+//            String normalized = addState(s.toString());
+//            rhsState.put(normalized, s);
+//        }
     }
 
     @Override
-    public Set<Rule<String>> getRulesBottomUp(int label, final List<String> childStates) {
+    public Set<Rule> getRulesBottomUp(int label, final int[] childStates) {
         if (useCachedRuleBottomUp(label, childStates)) {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
-            Set<Rule<String>> ret = new HashSet<Rule<String>>();
+            Set<Rule> ret = new HashSet<Rule>();
 
-            Set<State> resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new Function<Tree<HomomorphismSymbol>, State>() {
+            Set<Integer> resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new Function<Tree<HomomorphismSymbol>, Integer>() {
                 @Override
-                public State apply(Tree<HomomorphismSymbol> f) {
-                    if (f.getLabel().isVariable()) {
-                        String child = childStates.get(f.getLabel().getValue());
-                        return rhsState.get(child);
+                public Integer apply(Tree<HomomorphismSymbol> f) {
+                    if (f.getLabel().isVariable()) {                      // variable ?i
+                        int child = childStates[f.getLabel().getValue()]; // -> i-th child state (= this state ID)
+                        return child;                                     // = rhsAuto state ID
+//                        return rhsState.get(child);
                     } else {
                         return null;
                     }
                 }
             });
 
-            for (State r : resultStates) {
-                Rule<String> rule = createRule(r.toString(), label, childStates);
+            for (int r : resultStates) {
+                // TODO: weight
+                Rule rule = createRule(r, label, childStates, 1);
                 storeRule(rule);
                 ret.add(rule);
             }
@@ -85,16 +102,17 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
     }
 
     @Override
-    public Set<Rule<String>> getRulesTopDown(int label, String parentState) {
+    public Set<Rule> getRulesTopDown(int label, int parentState) {
         if (useCachedRuleTopDown(label, parentState)) {
             return getRulesTopDownFromExplicit(label, parentState);
         } else {
             Tree<HomomorphismSymbol> rhs = hom.get(label);
-            Set<Rule<String>> ret = new HashSet<Rule<String>>();
+            Set<Rule> ret = new HashSet<Rule>();
 
-            for (List<String> substitutionTuple : grtdDfs(rhs, rhsState.get(parentState), getRhsArity(rhs))) {
+            for (List<Integer> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs))) {
                 if (isCompleteSubstitutionTuple(substitutionTuple)) {
-                    Rule<String> rule = createRule(parentState, label, substitutionTuple);
+                    // TODO: weights
+                    Rule rule = createRule(parentState, label, substitutionTuple, 1);
                     storeRule(rule);
                     ret.add(rule);
                 }
@@ -104,8 +122,8 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
         }
     }
 
-    private boolean isCompleteSubstitutionTuple(List<String> tuple) {
-        for (String s : tuple) {
+    private boolean isCompleteSubstitutionTuple(List<Integer> tuple) {
+        for (Integer s : tuple) {
             if (s == null) {
                 return false;
             }
@@ -126,22 +144,22 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
         return max + 1;
     }
 
-    private Set<List<String>> grtdDfs(Tree<HomomorphismSymbol> rhs, State state, int rhsArity) {
-        Set<List<String>> ret = new HashSet<List<String>>();
+    private Set<List<Integer>> grtdDfs(Tree<HomomorphismSymbol> rhs, int state, int rhsArity) {
+        Set<List<Integer>> ret = new HashSet<List<Integer>>();
 
         switch (rhs.getLabel().getType()) {
             case CONSTANT:
-                for (Rule<State> rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap[rhs.getLabel().getValue()], state)) {
-                    List<Set<List<String>>> childrenSubstitutions = new ArrayList<Set<List<String>>>(); // len = #children
+                for (Rule rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap[rhs.getLabel().getValue()], state)) {
+                    List<Set<List<Integer>>> childrenSubstitutions = new ArrayList<Set<List<Integer>>>(); // len = #children
 
                     for (int i = 0; i < rhsRule.getArity(); i++) {
                         childrenSubstitutions.add(grtdDfs(rhs.getChildren().get(i), rhsRule.getChildren()[i], rhsArity));
                     }
 
-                    CartesianIterator<List<String>> it = new CartesianIterator<List<String>>(childrenSubstitutions);
+                    CartesianIterator<List<Integer>> it = new CartesianIterator<List<Integer>>(childrenSubstitutions);
                     while (it.hasNext()) {
-                        List<List<String>> tuples = it.next();  // len = # children x # variables
-                        List<String> merged = mergeSubstitutions(tuples, rhsArity);
+                        List<List<Integer>> tuples = it.next();  // len = # children x # variables
+                        List<Integer> merged = mergeSubstitutions(tuples, rhsArity);
                         if (merged != null) {
                             ret.add(merged);
                         }
@@ -150,12 +168,12 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
                 break;
 
             case VARIABLE:
-                List<String> rret = new ArrayList<String>(rhsArity);
+                List<Integer> rret = new ArrayList<Integer>(rhsArity);
                 int varnum = rhs.getLabel().getValue();
 
                 for (int i = 0; i < rhsArity; i++) {
                     if (i == varnum) {
-                        rret.add(state.toString());
+                        rret.add(state);
                     } else {
                         rret.add(null);
                     }
@@ -171,8 +189,8 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
     // tuples is an n-list of m-lists of output states, where
     // n is number of children, and m is number of variables in homomorphism
     // If n = 0, the method returns [null, ..., null]
-    private List<String> mergeSubstitutions(List<List<String>> tuples, int rhsArity) {
-        List<String> merged = new ArrayList<String>();  // one entry per variable
+    private List<Integer> mergeSubstitutions(List<List<Integer>> tuples, int rhsArity) {
+        List<Integer> merged = new ArrayList<Integer>();  // one entry per variable
 
 //        System.err.println("    merge: " + tuples);
 
@@ -182,7 +200,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
 
         for (int i = 0; i < tuples.size(); i++) {
             for (int j = 0; j < rhsArity; j++) {
-                String state = tuples.get(i).get(j);
+                Integer state = tuples.get(i).get(j);
                 if (state != null) {
                     if (merged.get(j) != null && !merged.get(j).equals(state)) {
                         return null;

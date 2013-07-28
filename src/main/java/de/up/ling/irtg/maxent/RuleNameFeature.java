@@ -25,7 +25,7 @@ public class RuleNameFeature extends FeatureFunction<String> {
     }
 
     @Override
-    public double evaluate(Rule<String> object, MaximumEntropyIrtg irtg) {
+    public double evaluate(Rule object, MaximumEntropyIrtg irtg) {
         if( x.equals(object.getLabel(irtg.getAutomaton())) ) {
             return 1.0;
         } else {

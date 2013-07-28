@@ -7,7 +7,6 @@ package de.up.ling.irtg.binarization;
 import de.saar.basic.StringOrVariable;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
@@ -18,7 +17,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * TODO - the entire binarization framework is currently totally broken,
+ * and needs to be fixed badly.
+ * 
  * @author koller
  */
 public abstract class RegularBinarizer<E> {
@@ -49,7 +50,7 @@ public abstract class RegularBinarizer<E> {
     private TreeAutomaton<String> binarizeGeneral(Tree term) {
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
         String finalState = gensym();
-        ret.addFinalState(finalState);
+        ret.addFinalState(ret.addState(finalState));
         binarizeInto(term, finalState, ret);
         return ret;
     }
@@ -68,7 +69,7 @@ public abstract class RegularBinarizer<E> {
      */
     private void binarizeInto(Tree term, String renameFinalStatesTo, ConcreteTreeAutomaton<String> intoAutomaton) {
         if (isVariable(term.getLabel()) ) {
-            intoAutomaton.addRule(term.getLabel().toString(), new ArrayList<String>(), renameFinalStatesTo);
+            intoAutomaton.addRule(intoAutomaton.createRule(renameFinalStatesTo, term.getLabel().toString(), new ArrayList<String>()));
         } else {
             TreeAutomaton<E> auto = binarize(term.getLabel().toString(), term.getChildren().size());
             List<String> variableStates = copyWithRenaming(auto, auto.getFinalStates(), renameFinalStatesTo, intoAutomaton);
@@ -83,13 +84,13 @@ public abstract class RegularBinarizer<E> {
         return (o instanceof StringOrVariable) && ((StringOrVariable) o).isVariable();
     }
 
-    private List<String> copyWithRenaming(TreeAutomaton<E> automaton, Set<E> statesToRename, String newStateName, ConcreteTreeAutomaton<String> intoAutomaton) {
+    private List<String> copyWithRenaming(TreeAutomaton<E> automaton, Set<Integer> statesToRename, String newStateName, ConcreteTreeAutomaton<String> intoAutomaton) {
         Map<E, String> stateNameMap = new HashMap<E, String>();
         Map<String, E> variableToState = new HashMap<String, E>();
 
         // initialize state map with given renaming instructions
-        for (E stateToRename : statesToRename) {
-            stateNameMap.put(stateToRename, newStateName);
+        for (int stateToRename : statesToRename) {
+            stateNameMap.put(automaton.getStateForId(stateToRename), newStateName);
         }
 
         /*** commented out in signature revision ***
