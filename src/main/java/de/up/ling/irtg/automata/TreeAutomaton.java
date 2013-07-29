@@ -620,7 +620,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         TreeAutomaton other = (TreeAutomaton) o;
         int[] stateRemap = stateInterner.remap(other.stateInterner);
         int[] labelRemap = getSignature().remap(other.getSignature());
-        
+
         Map<Integer, Map<int[], Set<Rule>>> allRules = getAllRules();
         Map<Integer, Map<int[], Set<Rule>>> otherAllRules = other.getAllRules();
 
@@ -642,7 +642,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
                 Set<Rule> rules = getRulesBottomUp(f, children);
                 Set<Rule> otherRules = other.getRulesBottomUp(labelRemap[f], childrenOther);
-                
+
                 if (!ruleSetsEqual(rules, otherRules, labelRemap, stateRemap)) {
                     return false;
                 }
@@ -1260,14 +1260,16 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Reduces the automaton. This means that all states and rules that are not
-     * reachable bottom-up are removed. The method returns a new automaton with
-     * the same signature as this one.
+     * Reduces the automaton, top-down. This means that all states
+     * and rules that are not reachable by recursively expanding a final
+     * state, top-down, are removed. The method returns a new automaton with
+     * the same signature as this one. The method only works if the 
+     * automaton is acyclic.
      *
      * @return
      */
-    public TreeAutomaton<State> reduceBottomUp() {
-        Set<Integer> productiveStates = getReachableStates();
+    public TreeAutomaton<State> reduceTopDown() {
+        Set<Integer> reachableStates = getReachableStates();
         ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
 
         ret.signature = this.signature;
@@ -1275,15 +1277,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         // copy all rules that only contain productive states
         for (Rule rule : getRuleSet()) {
-            boolean allProductive = productiveStates.contains(rule.getParent());
+            boolean allReachable = reachableStates.contains(rule.getParent());
 
             for (int child : rule.getChildren()) {
-                if (!productiveStates.contains(child)) {
-                    allProductive = false;
+                if (!reachableStates.contains(child)) {
+                    allReachable = false;
                 }
             }
 
-            if (allProductive) {
+            if (allReachable) {
                 // caution advised: this will only work correctly if both the signature
                 // and the state interner of ret and this are the same
                 ret.addRule(rule);
@@ -1292,7 +1294,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         // copy all final states that are actually states in the reduced automaton
         ret.finalStates = new IntOpenHashSet(getFinalStates());
-        ret.finalStates.retainAll(ret.getAllStates());
+        ret.finalStates.retainAll(reachableStates);
+        
+        ret.stateInterner.retainAll(reachableStates);
 
         return ret;
     }
@@ -1382,9 +1386,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         for (int s : statesInOrder) {
             E accu = semiring.zero();
-            Set<Rule> rules = rulesForRhsState.get(s);
 
-            if (rules != null) {
+            if (rulesForRhsState.containsKey(s)) {
+                Set<Rule> rules = rulesForRhsState.get(s);
                 for (Rule rule : rules) {
                     E parentValue = ret.get(rule.getParent());
 

@@ -6,9 +6,12 @@ package de.up.ling.irtg.signature;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
@@ -61,6 +64,17 @@ public class Interner<E> implements Serializable, Cloneable {
     
     public Map<E,Integer> getSymbolTable() {
         return objectToInt;
+    }
+    
+    public void retainAll(Collection<Integer> objectsToRetain) {
+        IntSet retainThese = new IntOpenHashSet(objectsToRetain);
+        
+        for( int index : intToObject.keySet() ) {
+            if( ! retainThese.contains(index)) {
+                E removed = intToObject.remove(index);
+                objectToInt.remove(removed);
+            }
+        }
     }
     
     /*

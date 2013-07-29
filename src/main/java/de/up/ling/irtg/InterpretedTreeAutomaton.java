@@ -125,7 +125,7 @@ public class InterpretedTreeAutomaton {
             ret = ret.intersect(interp.parse(input));
         }
 
-        return ret.reduceBottomUp();
+        return ret.reduceTopDown();
     }
 
     @CallableFromShell(name = "decode", joinList = "\n")

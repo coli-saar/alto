@@ -375,20 +375,21 @@ VP.1-4 -> r4(V.1-2, NP.2-4) [1.0]
 VP.1-7  -> r4(V.1-2, NP.2-7) [1.0]
 VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         
-        Set productiveStates = auto.getReachableStates();
+        Set productiveStates = new HashSet(auto.getReachableStates().collect { auto.getStateForId(it)});
         Set gold = new HashSet(["NP.0-1", "V.1-2", "Det.2-3", "N.3-4", "P.4-5", "Det.5-6", "N.6-7", "PP.4-7", "S.0-7", "NP.5-7", "NP.2-4", "NP.2-7", "N.3-7", "VP.1-4", "VP.1-7"]);
         assertEquals(gold, productiveStates);        
     }
     
     @Test
     public void testReduceUnreachableFinalStates() {
-        TreeAutomaton auto = parse("""q! -> a""");
+        TreeAutomaton auto = parse("""q! -> a\n qqq -> b""");
         auto.addFinalState(auto.addState("qx"));
         
-        TreeAutomaton red = auto.reduceBottomUp();
+        TreeAutomaton red = auto.reduceTopDown();
         
         assert red.getFinalStates().contains(auto.addState("q"));
-        assert ! red.getFinalStates().contains(auto.addState("qx"));
+        assert red.getFinalStates().contains(auto.addState("qx"));
+        assert ! red.getAllStates().contains(auto.getIdForState("qqq"));
     }
     
     @Test
@@ -453,8 +454,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     
     private void _testRun(String auto, String tree, List gold) {
         TreeAutomaton a = pa(auto);
-        
-        assert a.run(pt(tree)).equals(new HashSet(gold));
+        assert new HashSet(a.run(pt(tree))).equals(new HashSet(gold));
     }
     
     
