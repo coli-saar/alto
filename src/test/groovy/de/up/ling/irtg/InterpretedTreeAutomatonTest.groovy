@@ -77,7 +77,7 @@ S -> r2
         TreeAutomaton chart = irtg.parseInputObjects(["i": words]);
         chart.makeAllRulesExplicit();
 
-        chart.reduceBottomUp();
+        chart.reduceTopDown();
         
         assertEquals(new HashSet([pt("r1(r2,r1(r2,r2))"), pt("r1(r1(r2,r2),r2)")]),
             chart.language());
