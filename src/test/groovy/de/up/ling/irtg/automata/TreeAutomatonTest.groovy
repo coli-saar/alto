@@ -13,6 +13,7 @@ import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.up.ling.tree.*
 import de.up.ling.irtg.hom.*
+import de.up.ling.irtg.algebra.*
 import de.up.ling.irtg.signature.*
 import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
@@ -66,7 +67,6 @@ class TreeAutomatonTest{
         assert intersect.getSignature() == auto1.getSignature();
         
         assertEquals(intersect.getSignature().getSymbolsWithArities(), ["f":2, "a":0]);
-//        System.err.println("sig:" + intersect.getSignature());
         
         assertEquals(new HashSet([rs(p("q1","p2"), "a", [], intersect), rs(p("q1", "p3"), "a", [], intersect)]), 
             rbu("a", [], intersect));
@@ -76,6 +76,8 @@ class TreeAutomatonTest{
         
         assertEquals(new HashSet([p("q2","p1")]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it)}));
     }
+    
+    
     
     @Test
     public void testIntersectionLanguage() {
@@ -101,17 +103,29 @@ class TreeAutomatonTest{
         assertEquals(intersect.language(), new HashSet([pt("f(a,a)")]));
     }
     
+    @Test
+    public void testAsConcrete() {
+        TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
+                "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
+        Homomorphism h = hom(["r1":"c(?1,?2)", "r2":"c(?1,?2)", "r3":"a", "r4":"b", "r5":"d"], 
+                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature());
+                            
+        TreeAutomaton pre = rhs.inverseHomomorphism(h);        
+        
+        assertEquals(pre, pre.asConcreteTreeAutomaton());
+    }
     
-//    @Test
-//    public void testRun() {
-//        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a");
-//        
-//        Tree t = pt("f(a,a)");
-//        assertEquals(new HashSet(["p1"]), auto2.run(t));
-//
-//        Tree ta = pt("a");
-//        assertEquals(new HashSet(["p2","p3"]), auto2.run(ta));
-//    }
+    
+    @Test
+    public void testRun() {
+        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a");
+        
+        Tree t = pt("f(a,a)");
+        assertEquals(new HashSet(["p1"]), new HashSet(auto2.run(t)));
+
+        Tree ta = pt("a");
+        assertEquals(new HashSet(["p2","p3"]), new HashSet(auto2.run(ta)));
+    }
     
     @Test
     public void testRunWeights() {
@@ -265,6 +279,19 @@ class TreeAutomatonTest{
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
         // don't do anything here that would trigger computation of top-down rules
         assert pre.accepts(pt("G(A,A)"));
+    }
+    
+    @Test
+    public void testInvHomMarco() {
+        Signature s = sig(["a":0, "F":3]);
+        Homomorphism h = hom(["a":"a", "F":"*(*(?1,?2),?3)"], s);
+        
+        StringAlgebra alg = new StringAlgebra();
+        TreeAutomaton decomp = alg.decompose(alg.parseString("a a a"));
+        
+        TreeAutomaton pre = decomp.inverseHomomorphism(h);
+        
+        assertEquals(new HashSet([pt("F(a,a,a)")]), new HashSet(pre.language()));
     }
     
     @Test

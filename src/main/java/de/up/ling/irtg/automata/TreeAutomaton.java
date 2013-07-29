@@ -45,23 +45,35 @@ import java.util.Queue;
 import java.util.Set;
 
 /**
- *
- * TODO: - Map<Integer,X> durch Int2ObjectMap ersetzen - IntTree implementieren
- * und Tree<String> durch intTree ersetzen, wo angemessen - getRulesBU/TD
- * sollten mit ints aufgerufen werden - ConcreteAuto#addRule sichert die Regel
- * jetzt nur noch; muss sie vorher mit createRule erzeugen, wenn Label in
- * Signatur sein soll. - Allgemein sollten alle Versionen von
- * ConcreteAuto#addRule raus. Dafuer storeRule public machen und ueberall
- * jeweils einzeln createRule erzeugen. State-Normalisierung aus storeRule
- * sollte auch weg (das sollte createRule mit stateInterner machen). -
- * (efficiency) replace iteration over signature#keyset by iteration over map in
- * interner (apparently faster in fastutil)
+ * A finite tree automaton. Objects of this class can be simultaneously seen
+ * as a bottom-up or a top-down tree automaton, by querying them for rules
+ * using the methods {@link #getRulesBottomUp(int, int[])} or
+ * {@link #getRulesTopDown(int, int)}. The method {@link #getFinalStates()}
+ * returns the set of states that must be assigned to the root of an
+ * accepted tree; that is, the final states of a bottom-up automaton
+ * or the initial states of a top-down automaton.<p>
+ * 
+ * States and labels in the automaton are internally represented as int
+ * numbers, starting at 1. You can translate between numeric state IDs
+ * and the actual state objects (of the class State which is given
+ * as a type parameter to the class) using {@link #getStateForId(int)}
+ * and {@link #getIdForState(java.lang.Object)}. You can translate between
+ * numeric label IDs and the actual labels (of class String) using
+ * the automaton's signature, obtained by calling {@link #getSignature()}.<p>
+ * 
+ * You can implement subclasses of TreeAutomaton to represent specific
+ * types of tree automata. These implementations may be <i>lazy</i>, which
+ * means that they do not initially represent all rules of the automaton explicitly.
+ * Such implementations override {@link #getRulesBottomUp(int, int[]) }
+ * and {@link #getRulesTopDown(int, int) } and compute the correct rules
+ * on the fly. Certain methods enforce the explicit computation of all rules
+ * in the automaton; this is expensive, and is noted in the method descriptions.
  *
  * @author koller
  */
 public abstract class TreeAutomaton<State> implements Serializable {
-    protected Map<Integer, StateListToStateMap> explicitRulesBottomUp;        // label -> smap
-    protected Map<Integer, SetMultimap<Integer, Rule>> explicitRulesTopDown;  // label -> state -> set(rule)
+    protected Int2ObjectMap<StateListToStateMap> explicitRulesBottomUp;        // label -> smap
+    protected Int2ObjectMap<SetMultimap<Integer, Rule>> explicitRulesTopDown;  // label -> state -> set(rule)
     protected IntSet finalStates;                                             // final states, subset of allStates
     protected IntSet allStates;                                                 // subset of stateInterner.keySet() that actually occurs in this automaton; allows for sharing interners across automata to preserve state IDs
     protected boolean isExplicit;
@@ -74,14 +86,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected Interner<State> stateInterner;
 
     public TreeAutomaton(Signature signature) {
-        explicitRulesBottomUp = new HashMap<Integer, StateListToStateMap>();
-        explicitRulesTopDown = new HashMap<Integer, SetMultimap<Integer, Rule>>();
+        explicitRulesBottomUp = new Int2ObjectOpenHashMap<StateListToStateMap>();
+        explicitRulesTopDown = new Int2ObjectOpenHashMap<SetMultimap<Integer, Rule>>();
         finalStates = new IntOpenHashSet();
         allStates = new IntOpenHashSet();
         
         isExplicit = false;
         rulesForRhsState = HashMultimap.create();
-//                new IdentitySetMultimap<State, Rule<State>>();
         this.signature = signature;
         stateInterner = new Interner<State>();
 
@@ -109,21 +120,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public State getStateForId(int stateId) {
         return stateInterner.resolveId(stateId);
-    }
-
-    // for debugging
-    Interner<State> getInterner() {
-        return stateInterner;
-    }
-
-    private int[] getIdsForStates(State[] states) {
-        int[] ret = new int[states.length];
-
-        for (int i = 0; i < states.length; i++) {
-            ret[i] = getIdForState(states[i]);
-        }
-
-        return ret;
     }
 
     private int[] addStates(State[] states) {
@@ -164,6 +160,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     abstract public Set<Rule> getRulesBottomUp(int labelId, int[] childStates);
 
+    /**
+     * Finds automaton rules bottom-up. This is like {@link #getRulesBottomUp(int, int[]) },
+     * but with a List rather than an array of child states.
+     * 
+     * @param labelId
+     * @param childStates
+     * @return 
+     */
     public Set<Rule> getRulesBottomUp(int labelId, List<Integer> childStates) {
         return getRulesBottomUp(labelId, intListToArray(childStates));
     }
@@ -313,19 +317,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    /*
-     private static class IdentitySetMultimap<K, V> extends AkSetMultimap<K, V> {
-     @Override
-     protected Map<K, Set<V>> createMap() {
-     return new IdentityHashMap<K, Set<V>>();
-     }
-
-     @Override
-     protected Set<V> createSet() {
-     return new IdentityHashSet<V>();
-     }
-     }
-     */
     /**
      * Like getRulesBottomUp, but only looks for rules in the cache of
      * previously discovered rules.
@@ -521,7 +512,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Computes the tree language accepted by this automaton. Notice that if the
+     * Computes the tree language accepted by this automaton. 
+     * The nodes in these trees are labeled with numeric symbol IDs.
+     * Notice that if the
      * language is infinite, this method will not terminate. Get a
      * languageIterator() in this case, in order to enumerate as many trees as
      * you want.
@@ -539,6 +532,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
+    /**
+     * Computes the tree language accepted by this automaton.
+     * Notice that if the
+     * language is infinite, this method will not terminate. Get a
+     * languageIterator() in this case, in order to enumerate as many trees as
+     * you want.
+     * 
+     * @return 
+     */
     @CallableFromShell(joinList = "\n")
     public Set<Tree<String>> language() {
         Set<Tree<String>> ret = new HashSet<Tree<String>>();
@@ -551,10 +553,26 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
+    /**
+     * Sets a filter for printing the automaton's rules.
+     * This filter is being used in the {@link #toString()} method
+     * to decide which rules are included in the string representation
+     * for the automaton. You can use this to suppress the
+     * presentation of rules you don't care about.
+     * 
+     * @param filter 
+     */
     public void setRulePrintingFilter(Predicate<Rule> filter) {
         this.filter = filter;
     }
 
+    /**
+     * Enables the skip-fail filter for printing the
+     * automaton's rules. This suppresses all rules involving
+     * the state q_FAIL_ (from {@link InverseHomAutomaton})
+     * when {@link #toString() } is computed for this automaton.
+     * 
+     */
     @CallableFromShell
     public void setSkipFail() {
         filter = new SkipFailRulesFilter(this);
@@ -568,31 +586,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    /*
-     private static class LanguageCollectingSemiring implements Semiring<List<Tree<String>>> {
-     // +: concatenate the two languages
-     public List<Tree<String>> add(List<Tree<String>> x, List<Tree<String>> y) {
-     x.addAll(y);
-     return x;
-     }
-
-     // *: add each tree in newSubtrees as daughters to the root of
-     // each tree in partialTrees
-     public List<Tree<String>> multiply(List<Tree<String>> partialTrees, List<Tree<String>> newSubtrees) {
-     List<Tree<String>> ret = new ArrayList<Tree<String>>();
-     for (Tree<String> partialTree : partialTrees) {
-     for (Tree<String> newSubtree : newSubtrees) {
-     ret.add(partialTree.addSubtree(newSubtree));
-     }
-     }
-
-     return ret;
-     }
-
-     public List<Tree<String>> zero() {
-     return new ArrayList<Tree<String>>();
-     }
-     }
+    /**
+     * Compares two automata for equality. Two automata are equal
+     * if they have the same rules and the same final states.
+     * All label and state IDs are resolved to the actual labels
+     * and states for this comparison.
+     * 
+     * @param o
+     * @return 
      */
     @Override
     public boolean equals(Object o) {
@@ -666,6 +667,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return tmp.isEmpty();
     }
 
+    /**
+     * Computes a string representation of this automaton. This method
+     * elaborates the rules of the automaton in a top-down fashion,
+     * starting with the final states and working from parents to
+     * children.
+     * 
+     * @return 
+     */
     @Override
     public String toString() {
         StringBuilder buf = new StringBuilder();
@@ -691,6 +700,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return buf.toString();
     }
 
+    /**
+     * Computes a string representation of this automaton, bottom-up.
+     * This method elaborates the rules of the automaton in a bottom-up
+     * fashion, starting from the rules for the zero-place terminal symbols
+     * and working from children to parents. It may be useful as an
+     * alternative to {@link #toString()} when debugging lazy automata.
+     * 
+     * @return 
+     */
     public String toStringBottomUp() {
         return new UniversalAutomaton(getSignature()).intersect(this).toString();
     }
@@ -735,6 +753,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
+    /**
+     * Computes a concrete representation of this automaton.
+     * The method returns a {@link ConcreteTreeAutomaton} that is
+     * equals to the given automaton.
+     * 
+     * @return 
+     */
     public ConcreteTreeAutomaton<State> asConcreteTreeAutomaton() {
         ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
         ret.signature = signature;
@@ -904,10 +929,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Collection<State> run(Tree<String> tree) {
-        return remapCollection(runRaw(getSignature().addAllSymbols(tree)));
+        return getStatesFromIds(runRaw(getSignature().addAllSymbols(tree)));
     }
 
-    private Collection<State> remapCollection(Collection<Integer> states) {
+    private Collection<State> getStatesFromIds(Collection<Integer> states) {
         List<State> ret = new ArrayList<State>();
 
         for (int state : states) {
