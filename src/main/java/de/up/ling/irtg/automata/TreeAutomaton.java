@@ -1,3 +1,4 @@
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -15,7 +16,6 @@ import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
@@ -880,7 +880,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     @CallableFromShell
-    public TreeAutomaton<String> homomorphism(Homomorphism hom) {
+    public TreeAutomaton homomorphism(Homomorphism hom) {
         return new HomAutomaton(this, hom);
     }
 

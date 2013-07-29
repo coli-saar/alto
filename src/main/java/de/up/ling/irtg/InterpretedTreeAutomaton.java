@@ -681,10 +681,15 @@ public class InterpretedTreeAutomaton {
         }
         final InterpretedTreeAutomaton other = (InterpretedTreeAutomaton) obj;
         if (this.automaton != other.automaton && (this.automaton == null || !this.automaton.equals(other.automaton))) {
+            System.err.println("*** auto !=");
+            
+            System.err.println("this auto: " + this.automaton);
+            System.err.println("\n\nother auto:" + other.automaton);
             return false;
         }
 
         if (this.interpretations != other.interpretations && (this.interpretations == null || !this.interpretations.equals(other.interpretations))) {
+            System.err.println("*** intp !-");
             return false;
         }
 
