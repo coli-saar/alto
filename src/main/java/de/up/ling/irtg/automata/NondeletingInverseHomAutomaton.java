@@ -8,12 +8,12 @@ import com.google.common.base.Function;
 import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,7 +27,7 @@ import java.util.Set;
  * 
  * @author koller
  */
-public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String> {
+public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object> {
     private TreeAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
 //    private Map<String, State> rhsState;
@@ -47,9 +47,14 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
             }
         };
         
-        for( int i = 1; i < rhsAutomaton.stateInterner.getNextIndex(); i++ ) {
-            stateInterner.addObject(rhsAutomaton.stateInterner.resolveId(i).toString());
-        }
+        this.stateInterner = (Interner) rhsAutomaton.stateInterner;
+        allStates = new IntOpenHashSet(rhsAutomaton.getAllStates());
+        
+        // copying interner of rhsAutomaton is pointless at this point,
+        // because rhsAutomaton may be lazy        
+//        for( int i = 1; i < rhsAutomaton.stateInterner.getNextIndex(); i++ ) {
+//            stateInterner.addObject(rhsAutomaton.stateInterner.resolveId(i).toString());
+//        }
 
         assert hom.isNonDeleting();
 
@@ -121,6 +126,24 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<String>
             return ret;
         }
     }
+    
+    /*
+    // note that this breaks the invariant that the state IDs in the interner
+    // are a contiguous interval
+    protected Rule createRuleI(int parentState, int label, List<Integer> childStates, double weight) {
+        return createRuleI(parentState, label, intListToArray(childStates), weight);
+    }
+    
+    protected Rule createRuleI(int parentState, int label, int[] childStates, double weight) {
+        stateInterner.addObjectWithIndex(parentState, rhsAutomaton.getStateForId(parentState).toString());
+        
+        for( int child : childStates ) {
+            stateInterner.addObjectWithIndex(child, rhsAutomaton.getStateForId(child).toString());
+        }
+        
+        return super.createRule(parentState, label, childStates, weight);
+    }
+    */
 
     private boolean isCompleteSubstitutionTuple(List<Integer> tuple) {
         for (Integer s : tuple) {

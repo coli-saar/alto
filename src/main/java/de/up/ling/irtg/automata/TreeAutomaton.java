@@ -63,8 +63,8 @@ import java.util.Set;
 public abstract class TreeAutomaton<State> implements Serializable {
     protected Map<Integer, StateListToStateMap> explicitRulesBottomUp;        // label -> smap
     protected Map<Integer, SetMultimap<Integer, Rule>> explicitRulesTopDown;  // label -> state -> set(rule)
-    protected IntSet finalStates;
-//    protected   Map<State, State> allStates;
+    protected IntSet finalStates;                                             // final states, subset of allStates
+    protected IntSet allStates;                                                 // subset of stateInterner.keySet() that actually occurs in this automaton; allows for sharing interners across automata to preserve state IDs
     protected boolean isExplicit;
     protected SetMultimap<Integer, Rule> rulesForRhsState;
     protected Signature signature;
@@ -78,7 +78,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         explicitRulesBottomUp = new HashMap<Integer, StateListToStateMap>();
         explicitRulesTopDown = new HashMap<Integer, SetMultimap<Integer, Rule>>();
         finalStates = new IntOpenHashSet();
-//        allStates = new HashMap<State, State>();
+        allStates = new IntOpenHashSet();
+        
         isExplicit = false;
         rulesForRhsState = HashMultimap.create();
 //                new IdentitySetMultimap<State, Rule<State>>();
@@ -138,6 +139,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     protected int addState(State state) {
         int ret = stateInterner.addObject(state);
+        allStates.add(ret);
         return ret;
     }
 
@@ -167,7 +169,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return getRulesBottomUp(labelId, intListToArray(childStates));
     }
 
-    private static int[] intListToArray(List<Integer> ints) {
+    protected static int[] intListToArray(List<Integer> ints) {
         int[] ret = new int[ints.size()];
         for (int i = 0; i < ints.size(); i++) {
             ret[i] = ints.get(i);
@@ -253,18 +255,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        return finalStates;
 //    }
     /**
-     * Returns the IDs of all states in this automaton.
+     * Returns the IDs of all states in this automaton that
+     * have been made explicit so far. If the automaton is lazy,
+     * you can force it to make all states explicit by calling
+     * {@link #makeAllRulesExplicit()}.
      *
      * TODO - change into Raw
      */
     public Set<Integer> getAllStates() {
-        Set<Integer> ret = new HashSet<Integer>();
-
-        for (int i = 1; i <= stateInterner.getNextIndex() - 1; i++) {
-            ret.add(i);
-        }
-
-        return ret;
+        return allStates;
     }
 
 //    public Set<State> getAllStates() {
@@ -865,7 +864,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param hom the homomorphism.
      * @return an automaton representing the homomorphic pre-image.
      */
-    public TreeAutomaton<String> inverseHomomorphism(Homomorphism hom) {
+    public TreeAutomaton inverseHomomorphism(Homomorphism hom) {
         if (hom.isNonDeleting()) {
             return new NondeletingInverseHomAutomaton<State>(this, hom);
         } else {
@@ -1273,7 +1272,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
 
         ret.signature = this.signature;
-        ret.stateInterner = this.stateInterner;
+        ret.stateInterner = stateInterner;
 
         // copy all rules that only contain productive states
         for (Rule rule : getRuleSet()) {
@@ -1296,7 +1295,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ret.finalStates = new IntOpenHashSet(getFinalStates());
         ret.finalStates.retainAll(reachableStates);
         
-        ret.stateInterner.retainAll(reachableStates);
+        // copy set of reachable states
+        ret.allStates = new IntOpenHashSet(reachableStates);
 
         return ret;
     }
@@ -1637,6 +1637,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Iterator<Tree<Integer>> languageIteratorRaw() {
+        makeAllRulesExplicit();
         return new LanguageIterator(new SortedLanguageIterator<State>(this));
     }
 

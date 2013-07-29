@@ -8,8 +8,10 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -27,7 +29,7 @@ import java.util.Set;
  * 
  * @author koller
  */
-class HomAutomaton extends TreeAutomaton<String> {
+class HomAutomaton extends TreeAutomaton<Object> {
     private TreeAutomaton base;
     private Homomorphism hom;
     private int gensymNext = 1;
@@ -38,9 +40,8 @@ class HomAutomaton extends TreeAutomaton<String> {
         this.base = base;
         this.hom = hom;
         
-        for( int i = 1; i < base.stateInterner.getNextIndex(); i++ ) {
-            stateInterner.addObject(base.stateInterner.resolveId(i).toString());
-        }
+        this.stateInterner = (Interner) base.stateInterner;
+        this.allStates = new IntOpenHashSet(base.getAllStates());
         
         finalStates.addAll(base.getFinalStates());
     }
@@ -75,7 +76,7 @@ class HomAutomaton extends TreeAutomaton<String> {
                                 double weight = 0;
 
                                 if (node == homImage) {
-                                    parentState = rule.getParent();
+                                    parentState = copyState(rule.getParent());
                                     weight = rule.getWeight();
                                 } else {
                                     parentState = gensymState();
@@ -108,6 +109,30 @@ class HomAutomaton extends TreeAutomaton<String> {
             isExplicit = true;
         }
     }
+    
+    // note that this breaks the invariant that the state IDs in the interner
+    // are a contiguous interval
+    private int copyState(int state) {
+        stateInterner.addObjectWithIndex(state, base.getStateForId(state).toString());
+        return state;
+    }
+    
+    
+    /*
+    protected Rule createRuleI(int parentState, int label, List<Integer> childStates, double weight) {
+        return createRuleI(parentState, label, intListToArray(childStates), weight);
+    }
+    
+    protected Rule createRuleI(int parentState, int label, int[] childStates, double weight) {
+        stateInterner.addObjectWithIndex(parentState, base.getStateForId(parentState).toString());
+        
+        for( int child : childStates ) {
+            stateInterner.addObjectWithIndex(child, base.getStateForId(child).toString());
+        }
+        
+        return super.createRule(parentState, label, childStates, weight);
+    }
+    */
 
     private int gensymState() {
         return addState("qh" + (gensymNext++));

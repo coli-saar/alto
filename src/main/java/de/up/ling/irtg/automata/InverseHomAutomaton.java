@@ -4,8 +4,10 @@ import com.google.common.base.Function;
 import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,7 +19,7 @@ import java.util.Set;
  *
  * @author koller
  */
-class InverseHomAutomaton<State> extends TreeAutomaton<String> {
+class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
     public static String FAIL_STATE = "q_FAIL_";
     private int failStateId;
     private TreeAutomaton<State> rhsAutomaton;
@@ -44,9 +46,12 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
 //        rhsState = new HashMap<String, State>();
         
         
-        for( int i = 1; i < rhsAutomaton.stateInterner.getNextIndex(); i++ ) {
-            stateInterner.addObject(rhsAutomaton.stateInterner.resolveId(i).toString());
-        }
+        this.stateInterner = (Interner) rhsAutomaton.stateInterner;
+        this.allStates = new IntOpenHashSet(rhsAutomaton.getAllStates());
+        
+//        for( int i = 1; i < rhsAutomaton.stateInterner.getNextIndex(); i++ ) {
+//            stateInterner.addObject(rhsAutomaton.stateInterner.resolveId(i).toString());
+//        }
         
         finalStates.addAll(rhsAutomaton.getFinalStates());
 
@@ -244,7 +249,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<String> {
 
         @Override
         public String toString() {
-            return InverseHomAutomaton.this.getStateForId(state) + substitution;
+            return InverseHomAutomaton.this.getStateForId(state).toString() + substitution;
         }
     }
 

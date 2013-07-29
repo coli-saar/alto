@@ -122,9 +122,10 @@ public class InterpretedTreeAutomaton {
         for (String interpName : inputs.keySet()) {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
-            ret = ret.intersect(interp.parse(input));
+            TreeAutomaton interpParse = interp.parse(input);
+            ret = ret.intersect(interpParse);
         }
-
+        
         return ret.reduceTopDown();
     }
 

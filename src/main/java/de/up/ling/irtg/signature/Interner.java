@@ -42,6 +42,17 @@ public class Interner<E> implements Serializable, Cloneable {
         return ret;
     }
     
+    public int addObjectWithIndex(int index, E object) {
+        objectToInt.put(object, index);
+        intToObject.put(index, object);
+        
+        if( index >= nextIndex ) {
+            nextIndex = index + 1;
+        }
+        
+        return index;
+    }
+    
     public int resolveObject(E object) {
         return objectToInt.getInt(object);
     }
@@ -66,6 +77,7 @@ public class Interner<E> implements Serializable, Cloneable {
         return objectToInt;
     }
     
+    /*
     public void retainAll(Collection<Integer> objectsToRetain) {
         IntSet retainThese = new IntOpenHashSet(objectsToRetain);
         
@@ -76,6 +88,7 @@ public class Interner<E> implements Serializable, Cloneable {
             }
         }
     }
+    */
     
     /*
      * Returns an arrary x such that the symbol
@@ -103,7 +116,7 @@ public class Interner<E> implements Serializable, Cloneable {
     }
 
     @Override
-    protected Object clone() throws CloneNotSupportedException {
+    public Object clone() {
         Interner<E> ret = new Interner<E>();
         
         ret.intToObject.putAll(intToObject);

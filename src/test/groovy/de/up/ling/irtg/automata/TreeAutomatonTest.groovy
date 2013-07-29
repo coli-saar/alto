@@ -157,9 +157,9 @@ class TreeAutomatonTest{
                 "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
                 "q14 -> r2(q13,q34) \n q12 -> r3  \n q23 -> r4  \n q34 -> r5 ");
 
-        TreeAutomaton pre = rhs.inverseHomomorphism(h);
-        
+        TreeAutomaton pre = rhs.inverseHomomorphism(h);        
         pre.makeAllRulesExplicit();
+        
         assertEquals(gold, pre);
     }
     
@@ -209,6 +209,7 @@ class TreeAutomatonTest{
                 "q14 -> r2(q13,q34) \n q12 -> r3  \n q23 -> r4  \n q34 -> r5 ");
 
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
+        pre.makeAllRulesExplicit();
         
         assertEquals( gold.language(), pre.language() );
     }
@@ -225,6 +226,7 @@ class TreeAutomatonTest{
                 "q14 -> r2(q13,q34) \n q12 -> r3  \n q23 -> r4  \n q34 -> r5 ");
 
         TreeAutomaton pre = rhs.inverseHomomorphism(h);
+        pre.makeAllRulesExplicit();
         
         assertEquals( gold.language(), pre.language() );
     }

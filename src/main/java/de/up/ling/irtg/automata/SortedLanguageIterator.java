@@ -44,6 +44,9 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         // if necessary, this call to getAllStates could be replaced
         // by slightly more careful coding in this constructor and in
         // evaluatedUnevaluatedItems
+        
+        // this loop will cause problems if the states of the
+        // (lazy) automaton have not been made explicit yet
         for (int q : auto.getAllStates()) {
             streamForState.put(q, new StreamForState(q));
         }
