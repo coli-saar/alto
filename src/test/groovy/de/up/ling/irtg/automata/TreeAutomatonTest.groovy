@@ -73,8 +73,8 @@ class TreeAutomatonTest{
 
         assertEquals(new HashSet([rs(p("q2", "p1"), "f", [p("q1","p2"), p("q1","p3")], intersect)]), 
             rbu("f", [p("q1","p2"), p("q1","p3")], intersect));
-
-        assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
+        
+        assertEquals(new HashSet([p("q2","p1")]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it)}));
     }
     
     @Test

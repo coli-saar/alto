@@ -137,7 +137,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     protected int addState(State state) {
-        return stateInterner.addObject(state);
+        int ret = stateInterner.addObject(state);
+        return ret;
     }
 
     /**
@@ -619,7 +620,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         TreeAutomaton other = (TreeAutomaton) o;
         int[] stateRemap = stateInterner.remap(other.stateInterner);
         int[] labelRemap = getSignature().remap(other.getSignature());
-
+        
         Map<Integer, Map<int[], Set<Rule>>> allRules = getAllRules();
         Map<Integer, Map<int[], Set<Rule>>> otherAllRules = other.getAllRules();
 
@@ -640,8 +641,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 int[] childrenOther = Interner.remapArray(children, stateRemap);
 
                 Set<Rule> rules = getRulesBottomUp(f, children);
-                Set<Rule> otherRules = getRulesBottomUp(labelRemap[f], childrenOther);
-
+                Set<Rule> otherRules = other.getRulesBottomUp(labelRemap[f], childrenOther);
+                
                 if (!ruleSetsEqual(rules, otherRules, labelRemap, stateRemap)) {
                     return false;
                 }
@@ -651,6 +652,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return true;
     }
 
+    // this is slow
     private boolean ruleSetsEqual(Set<Rule> r1, Set<Rule> r2, int[] labelRemap, int[] stateRemap) {
         if (r1.size() != r2.size()) {
             return false;
