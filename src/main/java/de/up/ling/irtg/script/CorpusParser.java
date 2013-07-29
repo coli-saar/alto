@@ -18,9 +18,9 @@ import java.io.OutputStream;
 
 /**
  * This reads an (annotated or unannotated) corpus, parses all inputs,
- * and saves the parse charts into a separate file.
+ * and saves the parse charts into a separate file.<p>
  * 
- * Usage: java CorpusParser <IRTG> <corpus> <chart file>
+ * Usage: java CorpusParser &lt;IRTG&gt; &lt;corpus&gt; &lt;chart file&gt;
  * 
  * @author koller
  */

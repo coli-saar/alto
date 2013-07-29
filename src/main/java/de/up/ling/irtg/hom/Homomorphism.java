@@ -196,7 +196,12 @@ public class Homomorphism {
 //        });
 //        
         resolvedTree.setCachingPolicy(false);
+        
+        try {
         return resolvedTree.toString(HOM_NON_QUOTING_PATTERN);
+        } catch(Exception e) {
+            return null;
+        }
     }
 
     public Signature getSourceSignature() {

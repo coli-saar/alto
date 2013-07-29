@@ -13,6 +13,7 @@ import de.saar.basic.ZipIterator;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -72,17 +73,41 @@ public class Corpus implements Iterable<Instance> {
         }
     }
     
+    public void addInstance(Instance instance) {
+        instances.add(instance);
+        
+        if( instance.getDerivationTree() != null ) {
+            isAnnotated = true;
+        }
+    }
+    
     public static String makeHeader(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, boolean annotated) {
         StringBuffer buf = new StringBuffer();
         
-        buf.append("# IRTG " + (annotated?"un":"") + "annotated corpus file, v" + CORPUS_VERSION + "\n");
+        buf.append("# IRTG " + (annotated?"":"un") + "annotated corpus file, v" + CORPUS_VERSION + "\n");
         buf.append("# \n");
         
         for( String interp : interpretationsInOrder ) {
-            buf.append("# interpretation " + interp + ": " + irtg.getInterpretations().get(interp).getAlgebra() + "\n");
+            buf.append("# interpretation " + interp + ": " + irtg.getInterpretations().get(interp).getAlgebra().getClass() + "\n");
         }
         
         return buf.toString();
+    }
+    
+    public void writeCorpus(Writer writer, InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder) throws IOException {
+        writer.write(makeHeader(irtg, interpretationsInOrder, isAnnotated) + "\n");
+        
+        for( Instance inst : instances ) {
+            for( String interp : interpretationsInOrder ) {
+                writer.write(inst.getInputObjects().get(interp).toString() + "\n");
+            }
+            
+            if( isAnnotated ) {
+                writer.write(irtg.getAutomaton().getSignature().resolve(inst.getDerivationTree()) + "\n");
+            }
+            
+            writer.write("\n");
+        }
     }
 
     public static Corpus readCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {

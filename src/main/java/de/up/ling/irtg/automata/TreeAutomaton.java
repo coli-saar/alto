@@ -966,7 +966,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
     private static final IntegerIdentity INTEGER_IDENTITY = new IntegerIdentity();
-    private final List<Integer> EMPTY_STATE_LIST = new ArrayList<Integer>();
 
     /**
      * Runs the automaton bottom-up on the given tree, using functions that
