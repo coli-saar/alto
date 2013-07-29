@@ -6,13 +6,15 @@ package de.up.ling.irtg.maxent;
 
 import de.up.ling.irtg.automata.Rule;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.automata.TreeAutomaton;
 
 /**
  *
  * @author koller
  */
 public abstract class FeatureFunction<State> {
-    public abstract double evaluate(Rule<State> object, MaximumEntropyIrtg irtg);
+    // "automaton" is the tree automaton to which the "rule" belongs
+    public abstract double evaluate(Rule rule, TreeAutomaton<State> automaton, MaximumEntropyIrtg irtg);
 
     @Override
     public String toString() {

@@ -6,17 +6,20 @@ package de.up.ling.irtg.signature;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author koller
  */
-public class Interner<E> implements Serializable {
+public class Interner<E> implements Serializable, Cloneable {
     private Object2IntMap<E> objectToInt;
     private Int2ObjectMap<E> intToObject;
     int nextIndex;
@@ -51,7 +54,7 @@ public class Interner<E> implements Serializable {
         return objectToInt.containsKey(object);
     }
     
-    public Collection<E> getKnownObjects() {
+    public Set<E> getKnownObjects() {
         return objectToInt.keySet();
     }
     
@@ -61,6 +64,17 @@ public class Interner<E> implements Serializable {
     
     public Map<E,Integer> getSymbolTable() {
         return objectToInt;
+    }
+    
+    public void retainAll(Collection<Integer> objectsToRetain) {
+        IntSet retainThese = new IntOpenHashSet(objectsToRetain);
+        
+        for( int index : intToObject.keySet() ) {
+            if( ! retainThese.contains(index)) {
+                E removed = intToObject.remove(index);
+                objectToInt.remove(removed);
+            }
+        }
     }
     
     /*
@@ -79,4 +93,30 @@ public class Interner<E> implements Serializable {
         
         return ret;
     }
+    
+    public static int[] remapArray(int[] ids, int[] remap) {
+        int[] ret = new int[ids.length];
+        for( int i = 0; i < ids.length; i++ ) {
+            ret[i] = remap[ids[i]];
+        }
+        return ret;
+    }
+
+    @Override
+    protected Object clone() throws CloneNotSupportedException {
+        Interner<E> ret = new Interner<E>();
+        
+        ret.intToObject.putAll(intToObject);
+        ret.objectToInt.putAll(objectToInt);
+        ret.nextIndex = nextIndex;
+        
+        return ret;
+    }
+
+    @Override
+    public String toString() {
+        return intToObject.toString();
+    }
+    
+    
 }

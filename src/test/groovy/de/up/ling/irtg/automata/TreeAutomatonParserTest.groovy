@@ -45,7 +45,7 @@ class TreeAutomatonParserTest {
 
         assertRulesBottomUp(automaton, "a", [], [r("q1", "a", [])]);
         assertRulesBottomUp(automaton, "f", ["q1", "q1"], [r("q2", "f", ["q1","q1"])]);
-        assertEquals(new HashSet(["q2"]), automaton.getFinalStates());
+        assertEquals(new HashSet([automaton.getIdForState("q2")]), automaton.getFinalStates());
     }
 
     @Test
@@ -86,7 +86,7 @@ class TreeAutomatonParserTest {
     }
     
     private void assertRulesBottomUp(TreeAutomaton automaton, String label, List childStates, List<Rule> rules) {
-        assertEquals(new HashSet(rules), automaton.getRulesBottomUp(s(label), childStates));
+        assertEquals(new HashSet(rules), automaton.getRulesBottomUp(s(label), childStates.collect { automaton.getIdForState(it) }));
     }
 
     private static TreeAutomaton parse(String s) {
@@ -94,11 +94,11 @@ class TreeAutomatonParserTest {
     }
 
     private static Rule r(parent, label, children) {
-        return new Rule(parent, automaton.getSignature().getIdForSymbol(label), children, 1);
+        return automaton.createRule(parent, label, children, 1);
     }
 
     private static Rule rw(parent, label, children, weight) {
-        return new Rule(parent, automaton.getSignature().getIdForSymbol(label), children, weight);
+        return automaton.createRule(parent, label, children, weight);
     }
     
     private static int s(String symbol) {

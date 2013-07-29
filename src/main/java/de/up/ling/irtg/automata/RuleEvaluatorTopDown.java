@@ -8,7 +8,7 @@ package de.up.ling.irtg.automata;
  *
  * @author koller
  */
-public interface RuleEvaluatorTopDown<State, E> {
+public interface RuleEvaluatorTopDown<E> {
     public E initialValue();
-    public E evaluateRule(Rule<State> rule, int i);
+    public E evaluateRule(Rule rule, int i);
 }

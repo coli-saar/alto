@@ -34,7 +34,7 @@ public class StringAlgebra implements Algebra<List<String>> {
 
     public StringAlgebra() {
         concatSymbolId = signature.addSymbol(CONCAT, 2);
-        
+
         concatSet = new HashSet<Integer>();
         concatSet.add(concatSymbolId);
     }
@@ -65,8 +65,8 @@ public class StringAlgebra implements Algebra<List<String>> {
     @Override
     public List<String> parseString(String representation) {
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
-        
-        for( String word : symbols ) {
+
+        for (String word : symbols) {
             signature.addSymbol(word, 0);
         }
 
@@ -85,13 +85,13 @@ public class StringAlgebra implements Algebra<List<String>> {
 
         public CkyAutomaton(List<String> words) {
             super(StringAlgebra.this.getSignature());
-            
+
             this.words = new int[words.size()];
-            for( int i = 0; i < words.size(); i++ ) {
+            for (int i = 0; i < words.size(); i++) {
                 this.words[i] = StringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
             }
 
-            finalStates.add(new Span(0, words.size()));
+            finalStates.add(addState(new Span(0, words.size())));
 
             allLabels = new HashSet<String>();
             allLabels.add(CONCAT);
@@ -103,12 +103,12 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
 
         @Override
-        public Set<Span> getAllStates() {
-            Set<Span> ret = new HashSet<Span>();
+        public Set<Integer> getAllStates() {
+            Set<Integer> ret = new HashSet<Integer>();
 
             for (int i = 0; i < words.length; i++) {
                 for (int k = i + 1; k <= words.length; k++) {
-                    ret.add(new Span(i, k));
+                    ret.add(addState(new Span(i, k)));
                 }
             }
 
@@ -116,23 +116,24 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
 
         @Override
-        public Set<Rule<Span>> getRulesBottomUp(int label, List<Span> childStates) {
+        public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
             if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
-                Set<Rule<Span>> ret = new HashSet<Rule<Span>>();
+                Set<Rule> ret = new HashSet<Rule>();
 
                 if (label == concatSymbolId) {
-                    if (childStates.size() != 2) {
-                        return new HashSet<Rule<Span>>();
+                    if (childStates.length != 2) {
+                        return new HashSet<Rule>();
                     }
 
-                    if (childStates.get(0).end != childStates.get(1).start) {
-                        return new HashSet<Rule<Span>>();
+                    if (getStateForId(childStates[0]).end != getStateForId(childStates[1]).start) {
+                        return new HashSet<Rule>();
                     }
 
-                    Span span = new Span(childStates.get(0).start, childStates.get(1).end);
-                    Rule<Span> rule = createRule(span, label, childStates);
+                    Span span = new Span(getStateForId(childStates[0]).start, getStateForId(childStates[1]).end);
+                    int spanState = addState(span);
+                    Rule rule = createRule(spanState, label, childStates, 1);
                     ret.add(rule);
                     storeRule(rule);
 
@@ -140,7 +141,7 @@ public class StringAlgebra implements Algebra<List<String>> {
                 } else {
                     for (int i = 0; i < words.length; i++) {
                         if (words[i] == label) {
-                            ret.add(createRule(new Span(i, i + 1), label, new Span[]{}, 1));
+                            ret.add(createRule(addState(new Span(i, i + 1)), label, new int[0], 1));
                         }
                     }
 
@@ -150,18 +151,20 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
 
         @Override
-        public Set<Rule<Span>> getRulesTopDown(int label, Span parentState) {
+        public Set<Rule> getRulesTopDown(int label, int parentState) {
             if (!useCachedRuleTopDown(label, parentState)) {
+                Span parentSpan = getStateForId(parentState);
+
                 if (label == concatSymbolId) {
-                    for (int i = parentState.start + 1; i < parentState.end; i++) {
-                        List<Span> childStates = new ArrayList<Span>();
-                        childStates.add(new Span(parentState.start, i));
-                        childStates.add(new Span(i, parentState.end));
-                        Rule<Span> rule = createRule(parentState, label, childStates);
+                    for (int i = parentSpan.start + 1; i < parentSpan.end; i++) {
+                        int[] childStates = new int[2];
+                        childStates[0] = addState(new Span(parentSpan.start, i));
+                        childStates[1] = addState(new Span(i, parentSpan.end));
+                        Rule rule = createRule(parentState, label, childStates, 1);
                         storeRule(rule);
                     }
-                } else if ((parentState.length() == 1) && label == words[parentState.start]) {
-                    Rule<Span> rule = createRule(parentState, label, new ArrayList<Span>());
+                } else if ((parentSpan.length() == 1) && label == words[parentSpan.start]) {
+                    Rule rule = createRule(parentState, label, new int[0], 1);
                     storeRule(rule);
                 }
             }
@@ -170,10 +173,12 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
 
         @Override
-        public Set<Integer> getLabelsTopDown(Span parentState) {
-            if (parentState.end == parentState.start + 1) {
+        public Set<Integer> getLabelsTopDown(int parentState) {
+            Span parentSpan = getStateForId(parentState);
+            
+            if (parentSpan.end == parentSpan.start + 1) {
                 Set<Integer> ret = new HashSet<Integer>();
-                ret.add(words[parentState.start]);
+                ret.add(words[parentSpan.start]);
                 return ret;
             } else {
                 return concatSet;
@@ -181,7 +186,7 @@ public class StringAlgebra implements Algebra<List<String>> {
         }
 
         @Override
-        public boolean hasRuleWithPrefix(int label, List<Span> prefixOfChildren) {
+        public boolean hasRuleWithPrefix(int label, List<Integer> prefixOfChildren) {
             if (label == concatSymbolId) {
                 switch (prefixOfChildren.size()) {
                     case 0:
@@ -189,26 +194,26 @@ public class StringAlgebra implements Algebra<List<String>> {
                         return true;
 
                     case 2:
-                        return prefixOfChildren.get(0).end == prefixOfChildren.get(1).start;
+                        return getStateForId(prefixOfChildren.get(0)).end == getStateForId(prefixOfChildren.get(1)).start;
 
                     default:
                         throw new RuntimeException("checking rule prefix for CONCAT with arity > 2");
                 }
             } else {
-                for( int i = 0; i < words.length; i++ ) {
-                    if( words[i] == label ) {
+                for (int i = 0; i < words.length; i++) {
+                    if (words[i] == label) {
                         return true;
                     }
                 }
-                
+
                 return false;
             }
         }
 
-        @Override
-        public Set<Span> getFinalStates() {
-            return finalStates;
-        }
+//        @Override
+//        public Set<Integer> getFinalStates() {
+//            return finalStates;
+//        }
 
         @Override
         public boolean isBottomUpDeterministic() {

@@ -16,30 +16,32 @@ import java.util.Set;
  */
 public class UniversalAutomaton extends TreeAutomaton<String> {
     public static final String STATE = "q";
+    private int stateId;
     
     public UniversalAutomaton(Signature signature) {
         super(signature);
         
-        finalStates.add(STATE);
-        addState(STATE);
+        stateId = addState(STATE);
+        finalStates.add(stateId);        
     }
 
     @Override
-    public Set<Rule<String>> getRulesBottomUp(int label, List<String> childStates) {
-        Set<Rule<String>> ret = new HashSet<Rule<String>>();
-        ret.add(createRule(STATE, label, childStates, 1));
+    public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
+        Set<Rule> ret = new HashSet<Rule>();
+        ret.add(createRule(stateId, label, childStates, 1));
         return ret;
     }
 
     @Override
-    public Set<Rule<String>> getRulesTopDown(int label, String parentState) {
-        Set<Rule<String>> ret = new HashSet<Rule<String>>();
-        List<String> childStates = new ArrayList<String>();
+    public Set<Rule> getRulesTopDown(int label, int parentState) {
+        Set<Rule> ret = new HashSet<Rule>();
+        int[] childStates = new int[signature.getArity(label)];
+        
         for( int i = 0; i < signature.getArity(label); i++ ) {
-            childStates.add(STATE);
+            childStates[i] = stateId;
         }
         
-        ret.add(createRule(STATE, label, childStates, 1));
+        ret.add(createRule(stateId, label, childStates, 1));
         
         return ret;
     }

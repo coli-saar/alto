@@ -26,14 +26,17 @@ public class StringAlgebraBinarizer extends RegularBinarizer<Span> {
         ConcreteTreeAutomaton<Span> ret = new ConcreteTreeAutomaton<Span>();
 
         if (arity == 0) {
-            Span finalState = new Span(1, 2);
+            Span finalSpan = new Span(1, 2);
+            
+            int finalState = ret.addState(finalSpan);
             ret.addFinalState(finalState);
-            ret.addRule(symbol, new ArrayList<Span>(), finalState);
+            
+            ret.addRule(ret.createRule(finalSpan, symbol, new ArrayList<Span>()));
             return ret;
         } else {
             // terminal productions
             for (int i = 1; i <= arity; i++) {
-                ret.addRule(RegularBinarizer.VARIABLE_MARKER + i, new ArrayList<Span>(), new Span(i, i + 1));
+                ret.addRule(ret.createRule(new Span(i, i + 1), RegularBinarizer.VARIABLE_MARKER + i, new ArrayList<Span>()));
             }
 
             // binary productions
@@ -43,12 +46,12 @@ public class StringAlgebraBinarizer extends RegularBinarizer<Span> {
                         List<Span> children = new ArrayList<Span>(2);
                         children.add(new Span(start, split));
                         children.add(new Span(split, end));
-                        ret.addRule(StringAlgebra.CONCAT, children, new Span(start, end));
+                        ret.addRule(ret.createRule(new Span(start, end), StringAlgebra.CONCAT, children));
                     }
                 }
             }
 
-            ret.addFinalState(new Span(1, arity + 1));
+            ret.addFinalState(ret.addState(new Span(1, arity + 1)));
 
             return ret;
         }

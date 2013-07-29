@@ -73,8 +73,8 @@ class TreeAutomatonTest{
 
         assertEquals(new HashSet([rs(p("q2", "p1"), "f", [p("q1","p2"), p("q1","p3")], intersect)]), 
             rbu("f", [p("q1","p2"), p("q1","p3")], intersect));
-
-        assertEquals(new HashSet([p("q2","p1")]), intersect.getFinalStates());
+        
+        assertEquals(new HashSet([p("q2","p1")]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it)}));
     }
     
     @Test
@@ -87,9 +87,21 @@ class TreeAutomatonTest{
     }
     
     private Set<Rule> rbu(String label, List children, TreeAutomaton auto) {
-        return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), children);
+        return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), children.collect { auto.getIdForState(it)});
     }
 
+    
+//    @Test
+    // TODO - put this back in
+    public void testIntersectionLanguageEarley() {
+        TreeAutomaton auto1 = parse("q1! -> f(q2, q3)\n q2 -> a\n q3 -> a\n q3 -> b");
+        TreeAutomaton auto2 = parse("p1! -> f(p2,p2)\n p2 -> a");
+        TreeAutomaton intersect = auto1.intersectEarley(auto2);
+        
+        assertEquals(intersect.language(), new HashSet([pt("f(a,a)")]));
+    }
+    
+    
 //    @Test
 //    public void testRun() {
 //        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a");
@@ -287,8 +299,8 @@ class TreeAutomatonTest{
     public void testInside() {
         TreeAutomaton auto = parse("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
         Map inside = auto.inside();
-        assertEquals(7.0, inside.get("q"), 0.001);
-        assertEquals(2.0, inside.get("q1"), 0.001);
+        assertEquals(7.0, inside.get(auto.getIdForState("q")), 0.001);
+        assertEquals(2.0, inside.get(auto.getIdForState("q1")), 0.001);
     }
 
     @Test
@@ -296,13 +308,14 @@ class TreeAutomatonTest{
         TreeAutomaton auto = parse("q1 -> a  [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
         Map inside = auto.inside();
         Map outside = auto.outside(inside);
-        assertEquals(1.0, outside.get("q"), 0.001);
-        assertEquals(5.5, outside.get("q1"), 0.001);
+        assertEquals(1.0, outside.get(auto.getIdForState("q")), 0.001);
+        assertEquals(5.5, outside.get(auto.getIdForState("q1")), 0.001);
     }
     
     @Test
     public void testLanguage() {
         setAutomaton("q1 -> a [2]\n q2 -> b [1]\n q! -> f(q1,q1)  [1]\n q! -> f(q1,q2) [1.5]");
+        
         Set lang = new HashSet(auto.language()*.toString());
         Set gold = new HashSet([pt("f(a,a)"), pt("f(a,b)")]*.toString());
         assertEquals(gold, lang);
@@ -362,20 +375,21 @@ VP.1-4 -> r4(V.1-2, NP.2-4) [1.0]
 VP.1-7  -> r4(V.1-2, NP.2-7) [1.0]
 VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         
-        Set productiveStates = auto.getProductiveStates();
+        Set productiveStates = new HashSet(auto.getReachableStates().collect { auto.getStateForId(it)});
         Set gold = new HashSet(["NP.0-1", "V.1-2", "Det.2-3", "N.3-4", "P.4-5", "Det.5-6", "N.6-7", "PP.4-7", "S.0-7", "NP.5-7", "NP.2-4", "NP.2-7", "N.3-7", "VP.1-4", "VP.1-7"]);
         assertEquals(gold, productiveStates);        
     }
     
     @Test
     public void testReduceUnreachableFinalStates() {
-        TreeAutomaton auto = parse("""q! -> a""");
-        auto.addFinalState("qx");
+        TreeAutomaton auto = parse("""q! -> a\n qqq -> b""");
+        auto.addFinalState(auto.addState("qx"));
         
-        TreeAutomaton red = auto.reduceBottomUp();
+        TreeAutomaton red = auto.reduceTopDown();
         
-        assert red.getFinalStates().contains("q");
-        assert ! red.getFinalStates().contains("qx");
+        assert red.getFinalStates().contains(auto.addState("q"));
+        assert red.getFinalStates().contains(auto.addState("qx"));
+        assert ! red.getAllStates().contains(auto.getIdForState("qqq"));
     }
     
     @Test
@@ -440,8 +454,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     
     private void _testRun(String auto, String tree, List gold) {
         TreeAutomaton a = pa(auto);
-        
-        assert a.run(pt(tree)).equals(new HashSet(gold));
+        assert new HashSet(a.run(pt(tree))).equals(new HashSet(gold));
     }
     
     
@@ -479,12 +492,12 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         return TreeAutomatonParser.parse(new StringReader(s));
     }
 
-    private static Rule r(parent, label, children) {
-        return new Rule(parent, label, children);
-    }
+//    private static Rule r(parent, label, children) {
+//        return new Rule(parent, label, children);
+//    }
     
     private static Rule rs(parent, String label, children, TreeAutomaton automaton) {
-        return new Rule(parent, automaton.getSignature().getIdForSymbol(label), children, 1);
+        return automaton.createRule(parent, label, children, 1);
     }
     
     private static Tree<Integer> ptii(String s) {
