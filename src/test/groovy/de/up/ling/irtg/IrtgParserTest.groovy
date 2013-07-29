@@ -111,7 +111,7 @@ P -> r12
     
     private Rule gfrtd(String label, String parentState, InterpretedTreeAutomaton irtg) {
         TreeAutomaton auto = irtg.getAutomaton();
-        return auto.getRulesTopDown(auto.getSignature().getIdForSymbol(label), parentState).iterator().next();
+        return auto.getRulesTopDown(auto.getSignature().getIdForSymbol(label), auto.addState(parentState)).iterator().next();
     }
     
     @Test
