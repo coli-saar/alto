@@ -617,8 +617,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         TreeAutomaton other = (TreeAutomaton) o;
-        int[] stateRemap = stateInterner.remap(other.stateInterner);
-        int[] labelRemap = getSignature().remap(other.getSignature());
+        int[] stateRemap = stateInterner.remap(other.stateInterner);                         // stateId and stateRemap[stateId] are the same state
+        int[] labelRemap = getSignature().remap(other.getSignature());                       // labelId and labelRemap[labelId] are the same label
 
         Map<Integer, Map<int[], Set<Rule>>> allRules = getAllRules();
         Map<Integer, Map<int[], Set<Rule>>> otherAllRules = other.getAllRules();
@@ -642,7 +642,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 Set<Rule> rules = getRulesBottomUp(f, children);
                 Set<Rule> otherRules = other.getRulesBottomUp(labelRemap[f], childrenOther);
 
-                if (!ruleSetsEqual(rules, otherRules, labelRemap, stateRemap)) {
+                if (!ruleSetsEqual(rules, otherRules, labelRemap, stateRemap, other)) {
                     return false;
                 }
             }
@@ -652,7 +652,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     // this is slow
-    private boolean ruleSetsEqual(Set<Rule> r1, Set<Rule> r2, int[] labelRemap, int[] stateRemap) {
+    private boolean ruleSetsEqual(Set<Rule> r1, Set<Rule> r2, int[] labelRemap, int[] stateRemap, TreeAutomaton other) {
         if (r1.size() != r2.size()) {
             return false;
         }
@@ -664,7 +664,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             Rule found = null;
 
             for (Rule rr : tmp) {
-                if (r.getParent() == stateRemap[rr.getParent()] && r.getLabel() == labelRemap[rr.getLabel()]) {
+                if (stateRemap[r.getParent()] == rr.getParent() && labelRemap[r.getLabel()] == rr.getLabel()) {
                     // children are necessarily the same because both rule sets were found
                     // using getRulesBottomUp with remapped child states
                     found = rr;
