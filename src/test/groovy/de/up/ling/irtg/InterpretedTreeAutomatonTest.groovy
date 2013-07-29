@@ -57,6 +57,15 @@ class InterpretedTreeAutomatonTest {
                     pt("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))")]),
             chart.language());
     }
+    
+    @Test
+    public void testDecode() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(SCFG_STR));
+        Map inputs = ["german":new StringReader("hans betrachtet die frau mit dem fernrohr")]
+        Set decoded = irtg.decodeFromReaders(new StringReader("english"), inputs);
+        
+        assertEquals(decoded, new HashSet([["john", "watches", "the", "woman", "with", "the", "telescope"]]))
+    }
 
     @Test
     public void testMarco() {
@@ -251,5 +260,69 @@ r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r11))))
 john watches the telescope with the woman
 r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r10))))
     """;
+    
+    private static final String SCFG_STR = """
+    
+interpretation english: de.up.ling.irtg.algebra.StringAlgebra
+interpretation german: de.up.ling.irtg.algebra.StringAlgebra
+
+
+S! -> r1(NP,VP)
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+
+NP -> r2(Det,N)
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+N -> r3(N,PP)
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+VP -> r4(V,NP)
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+VP -> r5(VP,PP)
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+PP -> r6(P,NP)
+  [english] *(?1,?2)
+  [german] *(?1,?2)
+
+NP -> r7
+  [english] john
+  [german] hans
+
+V -> r8
+  [english] watches
+  [german] betrachtet
+
+Det -> r9
+  [english] the
+  [german] die
+
+Det -> r9b
+  [english] the
+  [german] dem
+
+N -> r10
+  [english] woman
+  [german] frau
+
+N -> r11
+  [english] telescope
+  [german] fernrohr
+
+P -> r12
+  [english] with
+  [german] mit
+
+
+
+""";
+    
 }
 

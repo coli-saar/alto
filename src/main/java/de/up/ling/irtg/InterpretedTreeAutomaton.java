@@ -145,7 +145,7 @@ public class InterpretedTreeAutomaton {
 
         Set<Object> ret = new HashSet<Object>();
         for (Tree<Integer> term : outputLanguage) {
-            ret.add(interp.getAlgebra().evaluate(term));
+            ret.add(interp.getAlgebra().evaluate(outputChart.getSignature().resolve(term)));
         }
 
         return ret;
