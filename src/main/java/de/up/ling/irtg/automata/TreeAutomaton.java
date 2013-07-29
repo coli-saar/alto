@@ -59,7 +59,6 @@ import java.util.Set;
  *
  * @author koller
  */
-// TODO - rulesForRhsState -> int keys
 public abstract class TreeAutomaton<State> implements Serializable {
     protected Map<Integer, StateListToStateMap> explicitRulesBottomUp;        // label -> smap
     protected Map<Integer, SetMultimap<Integer, Rule>> explicitRulesTopDown;  // label -> state -> set(rule)
@@ -239,37 +238,22 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Returns the IDs of the final states of the automaton.
-     *
-     * TODO - change into Raw
      */
     public Set<Integer> getFinalStates() {
         return finalStates;
     }
 
     /**
-     * Returns the final states of the automaton.
-     *
-     * @return
-     */
-//    public Set<State> getFinalStates() {
-//        return finalStates;
-//    }
-    /**
-     * Returns the IDs of all states in this automaton that
-     * have been made explicit so far. If the automaton is lazy,
-     * you can force it to make all states explicit by calling
-     * {@link #makeAllRulesExplicit()}.
-     *
-     * TODO - change into Raw
+     * Returns the IDs of all states in this automaton. If the automaton
+     * is a lazy implementation, it is required to make all rules
+     * explicit before returning, to the extent that it is necessary
+     * to list all states. This may be slow.
+     * 
      */
     public Set<Integer> getAllStates() {
         return allStates;
     }
 
-//    public Set<State> getAllStates() {
-//        return allStates.keySet();
-//    }
-    // TODO - addFinalState no longer adds state by itself
     protected void addFinalState(int state) {
         finalStates.add(state);
     }
@@ -972,15 +956,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * signature.<p>
      *
      * The "subst" argument maps nodes of the tree to states. It is called for
-     * each node of the tree, bottom-up. If the subst function returns null, the
+     * each node of the tree, bottom-up. If the subst function returns 0, the
      * state for the node is computed from the automaton's rules and the label
-     * and child states of the node in the usual way. If subst returns non-null
+     * and child states of the node in the usual way. If subst returns non-zero
      * for a certain node, the return value is directly assigned as the state of
      * that node. This mechanism can be used, for instance, to assign states to
      * variable nodes.
-     *
-     * TODO: "subst" now needs to return 0 instead of null to declare itself
-     * irrelevant.
      *
      * @param node
      * @param subst
@@ -1496,7 +1477,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         public StateListToStateMap(int label) {
             rulesHere = new HashSet<Rule>();
-            // TODO - nextStep used to have to be not identity HM -- is this still a problem?
             nextStep = new Int2ObjectOpenHashMap<StateListToStateMap>();
             arity = -1;
             this.label = label;
