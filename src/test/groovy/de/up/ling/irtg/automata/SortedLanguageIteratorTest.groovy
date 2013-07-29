@@ -44,7 +44,7 @@ public class SortedLanguageIteratorTest {
     
     @Test
     public void testMultiRulesNonRecursiveAutomaton() {
-//        System.err.println("\n\n*** testMultiRulesNonRecursiveAutomaton ***");
+        System.err.println("\n\n*** testMultiRulesNonRecursiveAutomaton ***");
         
         TreeAutomaton a = pa("qb -> b [0.5]\n qa! -> f(qb) [0.7]\n qa! -> g(qb) [0.3]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();

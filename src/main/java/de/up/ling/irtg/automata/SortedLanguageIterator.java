@@ -36,32 +36,47 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     private Map<Integer, StreamForState> streamForState;
     private Set<Integer> visitedStates;
     private static final boolean DEBUG = false;
+    private TreeAutomaton<State> auto;
     private Stream<WeightedTree> globalStream;
 
     public SortedLanguageIterator(TreeAutomaton<State> auto) {
+        this.auto = auto;
         streamForState = new HashMap<Integer, StreamForState>();
         
         // if necessary, this call to getAllStates could be replaced
         // by slightly more careful coding in this constructor and in
         // evaluatedUnevaluatedItems
         
-        // this loop will cause problems if the states of the
-        // (lazy) automaton have not been made explicit yet
-        for (int q : auto.getAllStates()) {
-            streamForState.put(q, new StreamForState(q));
-        }
-        
-        for (Rule rule : auto.getRuleSet()) {
-            StreamForState stream = streamForState.get(rule.getParent());            
-            stream.addEntryForRule(rule);
-        }
-        
         // combine streams for the different start symbols
         visitedStates = new HashSet<Integer>();
         globalStream = new SortedMergedStream<WeightedTree>(WeightedTreeComparator.INSTANCE);
         for( int q : auto.getFinalStates() ) {
-            StreamForState sq = streamForState.get(q);
+            StreamForState sq = getStreamForState(q);
             ((SortedMergedStream<WeightedTree>) globalStream).addStream(sq);
+        }
+    }
+    
+    // retrieve the stream for the state, or create it by need
+    private StreamForState getStreamForState(int q) {
+        if( streamForState.containsKey(q)) {
+            return streamForState.get(q);
+        } else {
+            StreamForState ret = new StreamForState(q);
+            
+//            System.err.println("create stream for " + auto.getStateForId(q));
+            
+            int count = 0;
+            for( int label : auto.getLabelsTopDown(q)) {
+                for( Rule rule : auto.getRulesTopDown(label, q) ) {
+                    ret.addEntryForRule(rule);
+                    count++;
+                }
+            }
+            
+//            System.err.println("done, stream for " + auto.getStateForId(q) + ", " + count + " rules");
+            
+            streamForState.put(q, ret);
+            return ret;
         }
     }
 
@@ -290,7 +305,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                 // for each child, attempt to obtain the k-best tree, where k
                 // is the index specified for this child in the unevaluated item
                 for (int i = 0; i < rule.getArity(); i++) {
-                    StreamForState stateStream = streamForState.get(rule.getChildren()[i]);
+                    StreamForState stateStream = getStreamForState(rule.getChildren()[i]);
                     WeightedTree weightedTree = stateStream.getTree(item.positionsInChildLists.get(i));
 
                     if (weightedTree == null) {

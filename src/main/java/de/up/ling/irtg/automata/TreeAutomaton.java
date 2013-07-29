@@ -1641,7 +1641,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Iterator<Tree<Integer>> languageIteratorRaw() {
-        makeAllRulesExplicit();
+//        makeAllRulesExplicit();
         return new LanguageIterator(new SortedLanguageIterator<State>(this));
     }
 

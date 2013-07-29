@@ -42,6 +42,9 @@ public class Charts implements Iterable<TreeAutomaton> {
         
         for (Instance inst : corpus) {
             TreeAutomaton chart = irtg.parseInputObjects(inst.getInputObjects());
+            
+            System.err.println("chart: " + chart);
+            
             ConcreteTreeAutomaton x = chart.asConcreteTreeAutomaton();
             zec.add(x);
         }
