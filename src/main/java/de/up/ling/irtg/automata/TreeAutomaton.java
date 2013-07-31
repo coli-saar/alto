@@ -23,7 +23,6 @@ import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -415,7 +414,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
-    @CallableFromShell
     public long countTrees() {
         Map<Integer, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<Long>() {
             public Long evaluateRule(Rule rule) {
@@ -475,7 +473,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
-    @CallableFromShell
     public Tree<String> viterbi() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
         Map<Integer, Pair<Double, Rule>> map =
@@ -541,7 +538,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * 
      * @return 
      */
-    @CallableFromShell(joinList = "\n")
     public Set<Tree<String>> language() {
         Set<Tree<String>> ret = new HashSet<Tree<String>>();
         Iterator<Tree<Integer>> it = languageIteratorRaw();
@@ -573,7 +569,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * when {@link #toString() } is computed for this automaton.
      * 
      */
-    @CallableFromShell
     public void setSkipFail() {
         filter = new SkipFailRulesFilter(this);
     }
@@ -888,7 +883,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param hom
      * @return
      */
-    @CallableFromShell
     public TreeAutomaton homomorphism(Homomorphism hom) {
         return new HomAutomaton(this, hom);
     }
@@ -915,7 +909,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param tree
      * @return
      */
-    @CallableFromShell
     public boolean accepts(Tree<String> tree) {
         return acceptsRaw(getSignature().addAllSymbols(tree));
     }

@@ -8,7 +8,6 @@ package de.up.ling.irtg;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
-import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 
 /**
@@ -32,7 +31,6 @@ public class Interpretation<E> {
         return algebra;
     }
 
-    @CallableFromShell(name="homomorphism")
     public Homomorphism getHomomorphism() {
         return hom;
     }

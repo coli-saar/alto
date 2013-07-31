@@ -14,7 +14,6 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.binarization.RegularBinarizer;
-import de.up.ling.irtg.binarization.StringAlgebraBinarizer;
 import de.up.ling.irtg.binarization.SynchronousBinarization;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
@@ -23,13 +22,11 @@ import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.shell.CallableFromShell;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -315,7 +312,6 @@ public class InterpretedTreeAutomaton {
      * 
      * @param trainingData 
      */
-    @CallableFromShell(name = "emtrain")
     public void trainEM(Corpus trainingData) {
         if (!trainingData.hasCharts()) {
             System.err.println("EM training can only be performed on a corpus with attached charts.");
@@ -379,7 +375,6 @@ public class InterpretedTreeAutomaton {
      *
      * @param trainingData a corpus of parse charts
      */
-    @CallableFromShell(name = "vbtrain")
     public void trainVB(Corpus trainingData) {
         if (!trainingData.hasCharts()) {
             System.err.println("VB training can only be performed on a corpus with attached charts.");

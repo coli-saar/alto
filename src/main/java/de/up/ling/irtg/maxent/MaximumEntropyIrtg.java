@@ -297,7 +297,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param reader the reader to read the data from
      * @throws IOException if the reader cannot read the data properly
      */
-    @CallableFromShell(name = "weights")
     public void readWeights(Reader reader) throws IOException {
         Properties props = new Properties();
 
