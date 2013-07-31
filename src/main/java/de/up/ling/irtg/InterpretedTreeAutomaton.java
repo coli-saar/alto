@@ -38,49 +38,79 @@ import java.util.Set;
 import org.apache.commons.math3.special.Gamma;
 
 /**
- *
+ * An interpreted regular tree grammar (IRTG). An IRTG consists of a finite tree automaton M,
+ * which generates a language of <i>derivation trees</i>, plus an arbitrary number of <i>interpretations</i>,
+ * each of which maps derivation trees to objects over some algebra. In this way, the IRTG
+ * describes an n-place relation over these algebras.<p>
+ * 
+ * In this implementation of IRTGs, M is given as an object of class {@link TreeAutomaton}, which is
+ * passed to the constructor as an argument. Each interpretation is added by name, and is represented 
+ * as an object of class {@link Interpretation}. IRTGs are typically read from readers (e.g. from files) using
+ * {@link IrtgParser#parse(java.io.Reader)}, rather than being constructed programmatically.
+ * 
+ * 
  * @author koller
  */
 public class InterpretedTreeAutomaton {
-    public static void main(String[] args) throws ParseException, FileNotFoundException, ParserException, IOException {
-        String filename = args[0];
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(filename));
-        irtg.getAutomaton().analyze();
-
-        Map<String, Reader> inputs = new HashMap<String, Reader>();
-        inputs.put("i", new StringReader("Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 ."));
-
-        long start = System.currentTimeMillis();
-        irtg.parseFromReaders(inputs);
-        long end = System.currentTimeMillis();
-        System.err.println("parsing took " + (end - start) + " ms");
-    }
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;
 
+    /**
+     * Constructs a new IRTG with the given derivation tree automaton.
+     * 
+     * @param automaton 
+     */
     public InterpretedTreeAutomaton(TreeAutomaton<String> automaton) {
         this.automaton = automaton;
         interpretations = new HashMap<String, Interpretation>();
     }
 
+    /**
+     * Adds an interpretation with a given name.
+     * 
+     * @param name
+     * @param interp 
+     */
     public void addInterpretation(String name, Interpretation interp) {
         interpretations.put(name, interp);
     }
 
+    /**
+     * Adds all interpretations in the map, with their respective names.
+     * 
+     * @param interps 
+     */
     public void addAllInterpretations(Map<String, Interpretation> interps) {
         interpretations.putAll(interps);
     }
 
+    /**
+     * Returns the derivation tree automaton.
+     * 
+     * @return 
+     */
     @CallableFromShell(name = "automaton")
     public TreeAutomaton<String> getAutomaton() {
         return automaton;
     }
 
+    /**
+     * Returns a map from which the interpretations can be
+     * retrieved using their names.
+     * 
+     * @return 
+     */
     public Map<String, Interpretation> getInterpretations() {
         return interpretations;
     }
 
+    /**
+     * Gets the 
+     * @param reader
+     * @return
+     * @throws IOException 
+     */
     @CallableFromShell(name = "interpretation")
     public Interpretation getInterpretation(Reader reader) throws IOException {
         String interp = StringTools.slurp(reader);
