@@ -61,8 +61,8 @@ class InterpretedTreeAutomatonTest {
     @Test
     public void testDecode() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(SCFG_STR));
-        Map inputs = ["german":new StringReader("hans betrachtet die frau mit dem fernrohr")]
-        Set decoded = irtg.decodeFromReaders(new StringReader("english"), inputs);
+        Map inputs = ["german":"hans betrachtet die frau mit dem fernrohr"]
+        Set decoded = irtg.decode("english", inputs);
         
         assertEquals(decoded, new HashSet([["john", "watches", "the", "woman", "with", "the", "telescope"]]))
     }

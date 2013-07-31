@@ -29,26 +29,26 @@ object ScalaShell {
   }
 
   case class PairBuilder(left: String) {
-    def >>(right: Reader) = (left, right)
+    def >>(right: String) = (left, right)
   }
 
   implicit def string2PairBuilder(left: String) = PairBuilder(left)
 
   implicit def pairs2Map(entries: Product) = {
-    val ret: java.util.Map[String, Reader] = new java.util.HashMap[String, Reader]()
+    val ret: java.util.Map[String, String] = new java.util.HashMap[String, String]()
     entries.productIterator.foreach {
-      case (key: String, value: Reader) => ret.put(key, value)
+      case (key: String, value: String) => ret.put(key, value)
     }
     ret
   }
 
-  implicit def pair2Map(entry: (String, Reader)) = {
-    val ret: java.util.Map[String, Reader] = new java.util.HashMap[String, Reader]()
+  implicit def pair2Map(entry: (String, String)) = {
+    val ret: java.util.Map[String, String] = new java.util.HashMap[String, String]()
     ret.put(entry._1, entry._2)
     ret
   }
 
-  implicit def string2Reader(x: String) = new StringReader(x)
+//  implicit def string2Reader(x: String) = new StringReader(x)
 
   // convert Scala function to Google Collections function
   def gfn[T,U](code: T => U) = new com.google.common.base.Function[T,U] { def apply(x:T) = code(x) }

@@ -63,7 +63,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         } else {
             StreamForState ret = new StreamForState(q);
             
-            System.err.println("create stream for " + auto.getStateForId(q));
+//            System.err.println("create stream for " + auto.getStateForId(q));
             
             int count = 0;
             for( int label : auto.getLabelsTopDown(q)) {
@@ -73,7 +73,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                 }
             }
             
-            System.err.println("done, stream for " + auto.getStateForId(q) + ", " + count + " rules");
+//            System.err.println("done, stream for " + auto.getStateForId(q) + ", " + count + " rules");
             
             streamForState.put(q, ret);
             return ret;

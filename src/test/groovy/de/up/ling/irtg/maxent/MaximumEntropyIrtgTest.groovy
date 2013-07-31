@@ -33,7 +33,7 @@ class MaximumEntropyIrtgTest {
         assertEquals( new ArrayList(["f1","f2"]), irtg.getFeatureNames());
 
         irtg.readWeights(new StringReader(WEIGHTS_STR));
-        TreeAutomaton chart = irtg.parseFromReaders(i:new StringReader(SENTENCE_STR));
+        TreeAutomaton chart = irtg.parse(i:SENTENCE_STR);
         Set<Rule> rules = chart.getRuleSet();
         Iterator<Rule> ruleIter = rules.iterator();
         while (ruleIter.hasNext()) {
