@@ -28,3 +28,4 @@ import ScalaShell._
 
 implicit def intmap2integermap(map:scala.collection.immutable.Map[String,Int]) = map.asJava.asInstanceOf[java.util.Map[String,java.lang.Integer]]
 implicit def stringmap2java(map:scala.collection.immutable.Map[String,String]) = map.asJava
+implicit def string2tree(s:String) = pt(s)

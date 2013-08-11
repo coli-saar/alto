@@ -1486,7 +1486,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
-    protected static class StateListToStateMap implements Serializable {
+    protected  class StateListToStateMap implements Serializable {
         private Int2ObjectMap<StateListToStateMap> nextStep;
         private Set<Rule> rulesHere;
         private int arity;
@@ -1504,7 +1504,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
             if (arity != -1) {
                 if (arity != rule.getChildren().length) {
-                    throw new UnsupportedOperationException("Storing state lists of different length: " + rule + ", should be " + arity);
+                    throw new UnsupportedOperationException("Storing state lists of different length: " + rule.toString(TreeAutomaton.this) + ", should be " + arity);
                 }
             } else {
                 arity = rule.getChildren().length;
