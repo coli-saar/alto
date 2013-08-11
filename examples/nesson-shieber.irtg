@@ -1,0 +1,18 @@
+interpretation syntax: de.up.ling.irtg.algebra.TagTreeAlgebra
+interpretation semantics: de.up.ling.irtg.algebra.TagTreeAlgebra
+
+S! -> a1(NP, NP, VPa)
+[syntax]    s(?1, @(?3, vp(v(likes, ?2))))
+[semantics] @(?3, t(e_t(likes, ?2), ?1))
+
+NP -> a2
+[syntax]    np(john)
+[semantics] e(john)
+
+NP -> a3
+[syntax]    np(mary)
+[semantics] e(mary)
+
+VPa -> b4
+[syntax]    vp(adv(apparently), *)
+[semantics] t(t_t(apparently), *)
