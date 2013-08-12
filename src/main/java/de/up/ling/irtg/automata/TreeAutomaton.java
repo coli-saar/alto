@@ -178,6 +178,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
         return ret;
     }
+    
+    protected static List<Integer> intArrayToList(int[] ints) {
+        List<Integer> ret = new ArrayList<Integer>();
+        for( int i : ints ) {
+            ret.add(i);
+        }
+        return ret;
+    }
 
     /**
      * Finds automaton rules top-down for a given parent state and label. The
@@ -701,6 +709,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public String toStringBottomUp() {
         return new UniversalAutomaton(getSignature()).intersect(this).toString();
     }
+    
+    protected String explicitRulesToString() {
+        StringBuffer buf = new StringBuffer();
+        
+        for( int label : explicitRulesBottomUp.keySet() ) {
+            buf.append("\n*** label " + getSignature().resolveSymbolId(label) + " ***\n");
+            buf.append(explicitRulesBottomUp.get(label).toString());
+        }
+        
+        return buf.toString();
+    }
 
     /**
      * Computes all rules in this automaton and stores them in the cache. This
@@ -918,7 +937,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return getStatesFromIds(runRaw(getSignature().addAllSymbols(tree)));
     }
 
-    private Collection<State> getStatesFromIds(Collection<Integer> states) {
+    protected Collection<State> getStatesFromIds(Collection<Integer> states) {
         List<State> ret = new ArrayList<State>();
 
         for (int state : states) {
@@ -1075,7 +1094,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
         }
     }
-
+    
+    @SuppressWarnings("empty-statement")
     private <TreeLabels> List<Integer> runDirectly(final Tree<TreeLabels> node, final Function<TreeLabels, Integer> labelIdSource, final Function<Tree<TreeLabels>, Integer> subst) {
         TreeLabels f = node.getLabel();
         List<Integer> states = new ArrayList<Integer>();
@@ -1597,7 +1617,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         @Override
         public String toString() {
-            return getAllRules().toString();
+            StringBuffer buf = new StringBuffer();
+            
+            for( Map.Entry<int[], Set<Rule>> entry : getAllRules().entrySet() ) {
+                buf.append("\nRules for " + getStatesFromIds(intArrayToList(entry.getKey())) + ":\n");
+                
+                for( Rule r : entry.getValue() ) {
+                    buf.append("   " + r.toString(TreeAutomaton.this) + "\n");
+                }
+            }
+            
+            return buf.toString();
         }
     }
 

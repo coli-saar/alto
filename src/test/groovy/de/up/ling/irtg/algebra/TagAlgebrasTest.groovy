@@ -15,6 +15,18 @@ import de.up.ling.tree.Tree
 import de.saar.basic.Pair
 
 class TagAlgebrasTest {
+    
+    @Test
+    public void testTinyTagAdjective() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
+        
+        TreeAutomaton chart = irtg.parse(["string": "the small businessman sleep"]);
+        
+        assert chart.accepts(pt("inx0V-sleep(iNXN-businessman(aAn-small(*NOP*,*NOP*),aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)"))
+        
+        assertEquals(new HashSet([pt("inx0V-sleep(iNXN-businessman(aAn-small(*NOP*,*NOP*),aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")]), chart.language());
+    }
+    
     @Test
     public void testTinyTagPre() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
@@ -30,7 +42,7 @@ class TagAlgebrasTest {
     @Test
     public void testTinyTag() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));        
-        TreeAutomaton chart = irtg.parse(["string": "the businessman sleep"]);        
+        TreeAutomaton chart = irtg.parse(["string": "the businessman sleep"]);
         assertEquals(new HashSet([pt("inx0V-sleep(iNXN-businessman(*NOP*,aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")]), chart.language());
     }
     
@@ -40,6 +52,25 @@ class TagAlgebrasTest {
         TreeAutomaton chart = irtg.parse(["tree": "S2(NP2(D0(the),NP1(N0(businessman))),VP1(V0(sleep)))"]);        
         assertEquals(new HashSet([pt("inx0V-sleep(iNXN-businessman(*NOP*,aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")]), chart.language());
     }
+    
+    @Test
+    public void testTinyTagAdjectivePre() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
+        Interpretation si = irtg.getInterpretations().get("string");
+        Tree dt = pt("inx0V-sleep(iNXN-businessman(aAn-small(*NOP*,*NOP*),aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")        
+        Tree ht = si.getHomomorphism().apply(dt);
+        assertEquals(si.getAlgebra().parseString("the small businessman sleep"), si.getAlgebra().evaluate(ht));
+    }
+
+    @Test
+    public void testTinyTagAdjectiveDecomp() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
+        Interpretation si = irtg.getInterpretations().get("string");
+        Tree dt = pt("inx0V-sleep(iNXN-businessman(aAn-small(*NOP*,*NOP*),aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")        
+        Tree ht = si.getHomomorphism().apply(dt);
+        assert si.getAlgebra().decompose(si.getAlgebra().parseString("the small businessman sleep")).accepts(ht);
+    }
+    
     
     @Test
     public void testNessonShieberPrePos() {
@@ -165,6 +196,9 @@ D_A -> *NOP* [1.0]
   [tree] *
   [string] *EE*
 
+A_A -> *NOP* [1.0]
+  [tree] *
+  [string] *EE*
 
     """;
 

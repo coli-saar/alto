@@ -64,6 +64,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     @Override
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
+            isExplicit = true;
+            
             ListMultimap<Integer, Rule> rulesByChildState = left.getRuleByChildStateMap();  // int = left state ID
             Queue<Integer> agenda = new LinkedList<Integer>();
             Set<Integer> seenStates = new HashSet<Integer>();
@@ -91,10 +93,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 }
             }
 
-//            System.err.println("after preterminals, agenda: " + agenda);
+//            System.err.println("after preterminals, agenda: " + getStatesFromIds(agenda));
 
 //            System.err.println("after init: " + explicitRules.size());
-//            System.err.println(explicitRules);
+//            System.err.println(explicitRulesToString());
 
             // compute rules and states bottom-up 
             long unsuccessful = 0;

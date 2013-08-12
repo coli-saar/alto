@@ -487,6 +487,13 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     }
     
     
+    @Test
+    public void testConcreteDeterministic() {
+        TreeAutomaton auto1 = parse("q1 -> a \n q2 -> a");
+        assert auto1 instanceof ConcreteTreeAutomaton;
+        assert ! auto1.isBottomUpDeterministic();
+    }
+    
     /*
     def "testing whether automaton is bottom-up deterministic"() {
         expect:
