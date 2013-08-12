@@ -453,7 +453,6 @@ public class TagStringAlgebra implements Algebra<Pair<List<String>, List<String>
 
     public class TagDecompositionAutomaton extends TreeAutomaton<Pair<Span, Span>> {
         private int[] words;
-        private boolean isBottomUpDeterministic;
 
         public TagDecompositionAutomaton(List<String> words) {
             super(TagStringAlgebra.this.getSignature());
@@ -484,10 +483,6 @@ public class TagStringAlgebra implements Algebra<Pair<List<String>, List<String>
                     }
                 }
             }
-
-            // automaton becomes nondeterministic if the same word
-            // occurs twice in the string
-            isBottomUpDeterministic = new HashSet<String>(words).size() == words.size();
         }
 
         @Override
@@ -542,7 +537,9 @@ public class TagStringAlgebra implements Algebra<Pair<List<String>, List<String>
 
         @Override
         public boolean isBottomUpDeterministic() {
-            return isBottomUpDeterministic;
+            // TAG decomposition automata are always nondeterministic,
+            // because *EE* can be inserted at any point
+            return false;
         }
     }
 

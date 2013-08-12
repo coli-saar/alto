@@ -14,31 +14,81 @@ import static de.up.ling.irtg.util.TestingTools.*
 import de.up.ling.tree.Tree
 import de.saar.basic.Pair
 
-class TagAlgebrasTest {    
+class TagAlgebrasTest {
     @Test
-    public void testTagKlein() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tagKlein));        
+    public void testTinyTagPre() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
+        Interpretation i = irtg.getInterpretations().get("string")
+        Algebra a = i.getAlgebra()
+        
+        Tree dt = pt("inx0V-sleep(iNXN-businessman(*NOP*,aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")
+        TreeAutomaton decomp = a.decompose(a.parseString("the businessman sleep"))
+        
+        assert decomp.accepts(i.getHomomorphism().apply(dt))
+    }
+    
+    @Test
+    public void testTinyTag() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));        
         TreeAutomaton chart = irtg.parse(["string": "the businessman sleep"]);        
         assertEquals(new HashSet([pt("inx0V-sleep(iNXN-businessman(*NOP*,aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")]), chart.language());
     }
     
     @Test
-    public void testTagKleinTree() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tagKlein));        
+    public void testTinyTagTree() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));        
         TreeAutomaton chart = irtg.parse(["tree": "S2(NP2(D0(the),NP1(N0(businessman))),VP1(V0(sleep)))"]);        
         assertEquals(new HashSet([pt("inx0V-sleep(iNXN-businessman(*NOP*,aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")]), chart.language());
     }
     
     @Test
-    public void testNessonShieber() {
+    public void testNessonShieberPrePos() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(nessonShieber));
-        TreeAutomaton chart = irtg.parse(["syntax": "s(np(john), vp(adv(apparently), vp(v(likes), np(mary))))"]);        
-        assertEquals(new HashSet([pt("a1(a2,a3,b4)")]), chart.language());
+        
+        Interpretation i = irtg.getInterpretations().get("syntax")
+        Algebra a = i.getAlgebra()
+        
+        Tree dt = pt("a1(a2,a3,b4)")        
+        assertEquals(pt("s(np(john), vp(adv(apparently), vp(v(likes), np(mary))))"), a.evaluate(i.getHomomorphism().apply(dt)))
+        
+        TreeAutomaton decomp = a.decompose(a.parseString("s(np(john), vp(adv(apparently), vp(v(likes), np(mary))))"))        
+        assert decomp.accepts(i.getHomomorphism().apply(dt))
+    }
+
+    @Test
+    public void testNessonShieberPreNeg() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(nessonShieber));
+        
+        Interpretation i = irtg.getInterpretations().get("syntax")
+        Algebra a = i.getAlgebra()
+        
+        Tree dt = pt("a1(a2,a2,b4)")
+        assertEquals(pt("s(np(john), vp(adv(apparently), vp(v(likes), np(john))))"), a.evaluate(i.getHomomorphism().apply(dt)))
+        
+        TreeAutomaton decomp = a.decompose(a.parseString("s(np(john), vp(adv(apparently), vp(v(likes), np(mary))))"))        
+        assert ! decomp.accepts(i.getHomomorphism().apply(dt))
     }
     
     @Test
-    public void testTagKleinBottomUp() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tagKlein));        
+    public void testNessonShieber() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(nessonShieber));
+        TreeAutomaton chart = irtg.parse(["syntax": "s(np(john), vp(adv(apparently), vp(v(likes), np(mary))))"]);
+        assertEquals(new HashSet([pt("a1(a2,a3,b4)")]), chart.language());
+    }
+
+
+    @Test
+    public void testNessonShieberGen() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(nessonShieber));
+        TreeAutomaton chart = irtg.parse(["semantics": "t(t_t(apparently),t(e_t(likes,e(mary)),e(john)))"]);        
+        assertEquals(new HashSet([pt("a1(a2,a3,b4)")]), chart.language());
+    }
+    
+    
+    
+    @Test
+    public void testTinyTagBottomUp() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));        
         Algebra alg = irtg.getInterpretations().get("tree").getAlgebra();
         
         Tree tree = alg.parseString("S2(NP2(D0(the),NP1(N0(businessman))),VP1(V0(sleep)))");
@@ -48,8 +98,8 @@ class TagAlgebrasTest {
     }
     
     @Test
-    public void testTagKleinTopDown() {
-        InterpretedTreeAutomaton g2 = IrtgParser.parse(new StringReader(tagKlein));
+    public void testTinyTagTopDown() {
+        InterpretedTreeAutomaton g2 = IrtgParser.parse(new StringReader(tinyTag));
         Algebra alg = g2.getInterpretations().get("tree").getAlgebra();
         TreeAutomaton univ = new UniversalAutomaton(alg.getSignature());
         
@@ -71,7 +121,7 @@ class TagAlgebrasTest {
     
     
     
-    private static final String tagKlein = """
+    private static final String tinyTag = """
 interpretation tree: de.up.ling.irtg.algebra.TagTreeAlgebra
 interpretation string: de.up.ling.irtg.algebra.TagStringAlgebra
 
@@ -117,14 +167,13 @@ D_A -> *NOP* [1.0]
 
 
     """;
-    
-    
+
     private static final String nessonShieber = """
     interpretation syntax: de.up.ling.irtg.algebra.TagTreeAlgebra
 interpretation semantics: de.up.ling.irtg.algebra.TagTreeAlgebra
 
 S! -> a1(NP, NP, VPa)
-[syntax]    s(?1, @(?3, vp(v(likes, ?2))))
+[syntax]    s(?1, @(?3, vp(v(likes), ?2)))
 [semantics] @(?3, t(e_t(likes, ?2), ?1))
 
 NP -> a2
@@ -139,4 +188,7 @@ VPa -> b4
 [syntax]    vp(adv(apparently), *)
 [semantics] t(t_t(apparently), *)
 """;
+    
 }
+
+

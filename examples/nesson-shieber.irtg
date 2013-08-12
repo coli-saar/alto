@@ -2,7 +2,7 @@ interpretation syntax: de.up.ling.irtg.algebra.TagTreeAlgebra
 interpretation semantics: de.up.ling.irtg.algebra.TagTreeAlgebra
 
 S! -> a1(NP, NP, VPa)
-[syntax]    s(?1, @(?3, vp(v(likes, ?2))))
+[syntax]    s(?1, @(?3, vp(v(likes), ?2)))
 [semantics] @(?3, t(e_t(likes, ?2), ?1))
 
 NP -> a2
