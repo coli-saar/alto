@@ -1,10 +1,9 @@
-/**
- * Created by IntelliJ IDEA.
- * User: koller
- * Date: 05.02.12
- * Time: 15:02
- * To change this template use File | Settings | File Templates.
- */
+// Start the IRTG tool as follows:
+//
+// scala -cp irtg-1.0.jar -Yrepl-sync -i init.scala 
+//
+// If you are using Scala 2.9 or lower, delete the indicated line
+// below first.
 
 import de.up.ling.irtg._
 import de.up.ling.irtg.algebra._

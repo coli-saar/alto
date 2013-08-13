@@ -18,8 +18,20 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * TODO: Currently labels are being resolved back to strings in order to evaluate.
- * This can probably be done more efficiently.
+ * An algebra of sets. The elements of this algebra are
+ * relations (of arity 1, 2, or 3) over some given universe.
+ * The algebra interprets the following operations:
+ * 
+ * <ul>
+ * <li>project_i(R) projects its argument R (a k-place relation with
+ * k >= i) to the set of i-th elements of this relation.</li>
+ * <li>intersect_i(R,F) returns the set of all tuples of R (a k-place
+ * relation with k >= i) whose i-th element is a member of F
+ * (a subset of the universe).</li>
+ * <li>uniq_i(A,a) returns the set A (a subset of the universe)
+ * itself if A = {a}; otherwise it returns the empty set.</li>
+ * <li>T returns the universe.</li>
+ * </ul>
  * 
  * @author koller
  */

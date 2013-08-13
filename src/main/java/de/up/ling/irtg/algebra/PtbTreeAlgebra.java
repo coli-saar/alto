@@ -2,7 +2,6 @@
 package de.up.ling.irtg.algebra;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.script.PTBConverter;
 import de.up.ling.tree.TreeVisitor;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
@@ -17,7 +16,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
+ * A tree algebra for trees in the format of the Penn Treebank.
+ * The domain of this algebra is the set of all unranked trees,
+ * i.e. different nodes with the same label may have different
+ * numbers of children. 
+ * 
  * @author koller
  * @author Danilo Baumgarten
  */
@@ -32,21 +35,6 @@ public class PtbTreeAlgebra extends TreeAlgebra {
 
     private int numWords;
     private boolean useParentAnnotation;
-
-    /**
-     * Parses a preset string containing a PTB-tree and binarize and relabel it
-     * Logs the parsed-only tree and the result of binarization and relabeling for comparison
-     * 
-     * @param args an array of possible arguments - makes currently no use of it
-     * @throws ParserException if the parsing process encounters an error
-     */
-    public static void main(final String[] args) throws ParserException {
-        PtbTreeAlgebra pta = new PtbTreeAlgebra(true);
-        Tree<String> tree = pta.parseString("( (`` ``) (INTJ (UH Yes) (. .) ))");
-        log.log(Level.INFO, tree.toString());
-        tree = pta.binarizeAndRelabel(tree);
-        log.log(Level.INFO, tree.toString());
-    }
     
     /**
      * Constructor
@@ -54,9 +42,9 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * @param useParentAnnotation if true non-terminal symbols
      * get their parent symbol appended
      */
-    public PtbTreeAlgebra() {
-        this.useParentAnnotation = PTBConverter.PARENT_ANNOTATION;
-    }
+//    public PtbTreeAlgebra() {
+//        this.useParentAnnotation = PTBConverter.PARENT_ANNOTATION;
+//    }
     
     /**
      * Constructor
@@ -73,7 +61,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * 
      * @return String the label prefix
      */
-    public static final String getArtificialLabelPrefix() {
+    public static String getArtificialLabelPrefix() {
         return LABEL_PREFIX;
     }
 

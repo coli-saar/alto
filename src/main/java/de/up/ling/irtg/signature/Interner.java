@@ -75,19 +75,6 @@ public class Interner<E> implements Serializable, Cloneable {
     }
     
     /*
-    public void retainAll(Collection<Integer> objectsToRetain) {
-        IntSet retainThese = new IntOpenHashSet(objectsToRetain);
-        
-        for( int index : intToObject.keySet() ) {
-            if( ! retainThese.contains(index)) {
-                E removed = intToObject.remove(index);
-                objectToInt.remove(removed);
-            }
-        }
-    }
-    */
-    
-    /*
      * Returns an arrary x such that the symbol
      * i in this interner is the same as the symbol
      * x[i] in the other interner. If the symbol

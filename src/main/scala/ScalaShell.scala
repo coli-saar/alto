@@ -58,3 +58,4 @@ object ScalaShell {
 //  implicit def intmap2integermap(map:scala.collection.immutable.Map[String,Int]) = map.asJava.asInstanceOf[java.util.Map[String,java.lang.Integer]]
 
 }
+

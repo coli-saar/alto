@@ -108,6 +108,7 @@
                 </executions>
             </plugin>
 
+<!--
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-assembly-plugin</artifactId>
@@ -122,6 +123,7 @@
                     </archive>
                 </configuration>
             </plugin>
+-->
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -162,14 +164,11 @@
                                 </filter>
 				<!-- add include filters here if necessary -->
                             </filters>
-			    <!-- uncomment this if we ever need the
-			    main class back			    
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>de.up.ling.irtg.shell.Main</mainClass>
+                                    <mainClass>ScalaShell</mainClass>
                                 </transformer>
                             </transformers>
-			    -->
                         </configuration>
                     </execution>
                 </executions>

@@ -25,7 +25,20 @@ import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
 /**
- *
+ * This reads a file of the Penn Treebank and converts
+ * it into a corpus that is suitable for working with the
+ * IRTG tool, along with an IRTG grammar read off from the
+ * treebank.<p>
+ * 
+ * Usage: java PTBConverter &lt;wsjxxx.mrg&gt; [&lt;sortByInterpretation&gt;]<p>
+ * 
+ * The resulting IRTG will have two interpretations, "i" and "ptb".
+ * "i" is a string interpretation, see {@link StringAlgebra}; "ptb"
+ * is an interpretation for the original parse trees, using a {@link PtbTreeAlgebra}.
+ * You may optionally specify that the IRTG corpus is sorted in ascending
+ * order by the size of the input objects of one of these interpretations,
+ * by passing the interpretation as the second argument on the command line.
+ * 
  * @author Danilo Baumgarten
  */
 public class PTBConverter {

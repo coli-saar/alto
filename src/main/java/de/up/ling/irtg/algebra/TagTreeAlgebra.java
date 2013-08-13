@@ -18,7 +18,17 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * An algebra for TAG derived trees. The elements of this algebra
+ * are ranked trees; care must be taken that if two nodes have the
+ * same label, then they must have the same number of children.<p>
+ * 
+ * This algebra defines the tree-combining operations described in Koller and Kuhlmann 2012,
+ * "Decomposing TAG Algorithms Using Simple Algebraizations", TAG+ Workshop, which implement
+ * the Engelfriet YIELD operation for higher-order tree substitution.
+ * The symbols "@" and "*" from the paper are represented by the
+ * binary operation "@" and the nullary operation "*" here. All other strings
+ * represent the ordinary tree-combining operations, as in {@link TreeAlgebra}.
+ * 
  * @author koller
  */
 public class TagTreeAlgebra implements Algebra<Tree<String>> {

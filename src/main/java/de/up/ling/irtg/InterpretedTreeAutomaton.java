@@ -7,18 +7,13 @@ package de.up.ling.irtg;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.binarization.RegularBinarizer;
-import de.up.ling.irtg.binarization.SynchronousBinarization;
-import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
-import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
@@ -106,7 +101,7 @@ public class InterpretedTreeAutomaton {
     /**
      * Returns the interpretation with the given name.
      * 
-     * @param reader
+     * @param interp
      * @return
      * @throws IOException 
      */
@@ -549,19 +544,6 @@ public class InterpretedTreeAutomaton {
     }
 
     /**
-     * Attaches charts to a corpus.
-     * 
-     * @param corpus
-     * @param reader
-     * @throws IOException 
-     * @see Corpus#attachCharts(de.up.ling.irtg.corpus.Charts) 
-     */
-    public void attachCharts(Corpus corpus, Reader reader) throws IOException {
-        String filename = StringTools.slurp(reader);
-        corpus.attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
-    }
-
-    /**
      * Binarizes the given IRTG and returns the binarized IRTG.
      * This implementation is currently broken.
      * It will eventually be replaced by a clean implementation of
@@ -570,42 +552,42 @@ public class InterpretedTreeAutomaton {
      * @param binarizers
      * @return 
      */
-    public InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
-        List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
-        if (orderedInterpretationList.size() != 2) {
-            throw new UnsupportedOperationException("trying to binarize " + orderedInterpretationList.size() + " interpretations");
-        }
-
-        String interpName1 = orderedInterpretationList.get(0);
-        String interpName2 = orderedInterpretationList.get(1);
-        Interpretation interp1 = interpretations.get(interpName1);
-        Interpretation interp2 = interpretations.get(interpName2);
-        RegularBinarizer bin1 = binarizers.get(interpName1);
-        RegularBinarizer bin2 = binarizers.get(interpName2);
-
-        // select a constant as dummy symbol from both algebras 
-        HomomorphismSymbol constantL = getConstantFromAlgebra(interp1.getHomomorphism());
-        HomomorphismSymbol constantR = getConstantFromAlgebra(interp2.getHomomorphism());
-
-        SynchronousBinarization sb = new SynchronousBinarization(constantL, constantR);
-        ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
-        Homomorphism newLeftHom = new Homomorphism(newAuto.getSignature(), interp1.getHomomorphism().getTargetSignature());
-        Homomorphism newRightHom = new Homomorphism(newAuto.getSignature(), interp2.getHomomorphism().getTargetSignature());
-
-        for (Rule rule : automaton.getRuleSet()) {
-            TreeAutomaton leftAutomaton = bin1.binarizeWithVariables(interp1.getHomomorphism().get(rule.getLabel()));
-            TreeAutomaton rightAutomaton = bin2.binarizeWithVariables(interp2.getHomomorphism().get(rule.getLabel()));
-            sb.binarize(rule, leftAutomaton, rightAutomaton, newAuto, newLeftHom, newRightHom);
-        }
-        for (int state : automaton.getFinalStates()) {
-            newAuto.addFinalState(state);
-        }
-        InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAuto);
-        ret.addInterpretation(interpName1, new Interpretation(bin1.getOutputAlgebra(), newLeftHom));
-        ret.addInterpretation(interpName2, new Interpretation(bin2.getOutputAlgebra(), newRightHom));
-
-        return ret;
-    }
+//    private InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
+//        List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
+//        if (orderedInterpretationList.size() != 2) {
+//            throw new UnsupportedOperationException("trying to binarize " + orderedInterpretationList.size() + " interpretations");
+//        }
+//
+//        String interpName1 = orderedInterpretationList.get(0);
+//        String interpName2 = orderedInterpretationList.get(1);
+//        Interpretation interp1 = interpretations.get(interpName1);
+//        Interpretation interp2 = interpretations.get(interpName2);
+//        RegularBinarizer bin1 = binarizers.get(interpName1);
+//        RegularBinarizer bin2 = binarizers.get(interpName2);
+//
+//        // select a constant as dummy symbol from both algebras 
+//        HomomorphismSymbol constantL = getConstantFromAlgebra(interp1.getHomomorphism());
+//        HomomorphismSymbol constantR = getConstantFromAlgebra(interp2.getHomomorphism());
+//
+//        SynchronousBinarization sb = new SynchronousBinarization(constantL, constantR);
+//        ConcreteTreeAutomaton newAuto = new ConcreteTreeAutomaton();
+//        Homomorphism newLeftHom = new Homomorphism(newAuto.getSignature(), interp1.getHomomorphism().getTargetSignature());
+//        Homomorphism newRightHom = new Homomorphism(newAuto.getSignature(), interp2.getHomomorphism().getTargetSignature());
+//
+//        for (Rule rule : automaton.getRuleSet()) {
+//            TreeAutomaton leftAutomaton = bin1.binarizeWithVariables(interp1.getHomomorphism().get(rule.getLabel()));
+//            TreeAutomaton rightAutomaton = bin2.binarizeWithVariables(interp2.getHomomorphism().get(rule.getLabel()));
+//            sb.binarize(rule, leftAutomaton, rightAutomaton, newAuto, newLeftHom, newRightHom);
+//        }
+//        for (int state : automaton.getFinalStates()) {
+//            newAuto.addFinalState(state);
+//        }
+//        InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(newAuto);
+//        ret.addInterpretation(interpName1, new Interpretation(bin1.getOutputAlgebra(), newLeftHom));
+//        ret.addInterpretation(interpName2, new Interpretation(bin2.getOutputAlgebra(), newRightHom));
+//
+//        return ret;
+//    }
 
     private HomomorphismSymbol getConstantFromAlgebra(Homomorphism hom) {
         for (int label = 1; label <= hom.getSourceSignature().getMaxSymbolId(); label++) {
@@ -630,17 +612,6 @@ public class InterpretedTreeAutomaton {
         }
         throw new UnsupportedOperationException("Cannot find any symbols with arity 0 for this algebra.");
     }
-//
-//    @CallableFromShell
-//    public InterpretedTreeAutomaton testBinarize() {
-//        RegularBinarizer bin1 = new StringAlgebraBinarizer();
-//        RegularBinarizer bin2 = new StringAlgebraBinarizer();
-//        Map<String, RegularBinarizer> binarizers = new HashMap<String, RegularBinarizer>();
-//        binarizers.put("i1", bin1);
-//        binarizers.put("i2", bin2);
-//        InterpretedTreeAutomaton newAuto = binarize(binarizers);
-//        return newAuto;
-//    }
 
     /**
      * Binarizes the given IRTG and returns the binarized IRTG.
@@ -651,7 +622,7 @@ public class InterpretedTreeAutomaton {
      * @param binarizers
      * @return 
      */
-    public InterpretedTreeAutomaton binarize() {
+    private InterpretedTreeAutomaton binarize() {
         /*
          if (interpretations.keySet().size() > 1) {
          throw new UnsupportedOperationException("Can only binarize IRTGs with a single interpretation.");
@@ -790,8 +761,6 @@ public class InterpretedTreeAutomaton {
         pw.println();
 
         for (Rule rule : automaton.getRuleSet()) {
-//            String isFinal = automaton.getFinalStates().contains(rule.getParent()) ? "!" : "";
-//            String children = (rule.getArity() == 0 ? "" : "(" + StringTools.join(rule.getChildren(), ", ") + ")");
             pw.println(rule.toString(automaton, automaton.getFinalStates().contains(rule.getParent())));
 
             for (String interp : interpretationOrder) {

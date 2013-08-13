@@ -35,7 +35,7 @@ import de.up.ling.irtg.*
 class PtbTreeAlgebraTest {
     @Test
     public void testPtbTreeAlgebra() {
-        PtbTreeAlgebra pta = new PtbTreeAlgebra();
+        PtbTreeAlgebra pta = new PtbTreeAlgebra(true);
         Tree<String> tree = pta.parseString("( (`` ``) (INTJ (UH Yes) (. .) ))");
         assertEquals("INTJ('``'('``'),UH(yes),'.'('.'))", tree.toString());
 

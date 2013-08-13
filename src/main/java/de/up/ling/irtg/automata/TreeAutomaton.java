@@ -1671,7 +1671,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     /**
      * Returns an iterator over the language of this automaton. This also works
      * if the language is infinite. If the automaton is weighted, the trees are
-     * iterated in descending order of weights.
+     * iterated in descending order of weights. Therefore, to compute the k-best
+     * trees, you can simply enumerate the first k elements of this iterator.
      *
      * @return
      */

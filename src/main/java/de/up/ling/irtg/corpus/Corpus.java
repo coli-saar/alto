@@ -11,6 +11,7 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import de.saar.basic.ZipIterator;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -23,7 +24,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
+ * An (annotated or unannotated) corpus of input objects.
+ * You may attach a collection of parse charts for these
+ * input objects to the chart using the {@link Charts} class.
+ * See the examples to see the exact file format for corpora.
+ * 
  * @author koller
  */
 public class Corpus implements Iterable<Instance> {
@@ -54,6 +59,16 @@ public class Corpus implements Iterable<Instance> {
 
     public void attachCharts(Charts charts) {
         this.charts = charts;
+    }
+    
+    /**
+     * Reads charts from a file and attaches them to this corpus.
+     * 
+     * @param filename
+     * @throws IOException 
+     */
+    public void attachCharts(String filename) throws IOException {
+        attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
     }
 
     public int getNumberOfInstances() {

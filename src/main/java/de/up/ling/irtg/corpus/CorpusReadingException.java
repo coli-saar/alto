@@ -5,7 +5,9 @@
 package de.up.ling.irtg.corpus;
 
 /**
- *
+ * An exception that indicates that something went wrong
+ * when reading a corpus from a reader.
+ * 
  * @author koller
  */
 public class CorpusReadingException extends Exception {

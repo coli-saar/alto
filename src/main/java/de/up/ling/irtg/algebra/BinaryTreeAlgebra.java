@@ -12,17 +12,28 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
- * TODO: #evaluate maps the tree back and forth between symbols and IDs a number
- * of times. Similarly with the decomposition automata in #decompose. This
- * should be done more efficiently by mapping between the signatures of this
- * algebra and the underlying tree algebra (at least, the IDs are shifted by one
- * because of
- *
- * @)
+ * An algebra for trees that supports binarization.
+ * The domain of this algebra is the set of all ranked
+ * trees over some given signature Sigma. All symbols in Sigma
+ * are also symbols of the binarized algebra, but their
+ * arities are different: all symbols a that have arity 0
+ * in Sigma have arity 0 in this algebra, and all symbols f
+ * of arity one or more have arity 1 in Sigma. In addition,
+ * there is a single new "append" symbol, @, of arity 2 in
+ * the algebra.<p>
+ * 
+ * Evaluation of a term t over this algebra is defined in terms
+ * of lists of trees. A constant a evaluates to the singleton
+ * list [a]. The append symbol concatenates lists, i.e.
+ * @([t1,...,tn], [t'1,...,t'm]) = [t1,...,tn,t'1,...,t'm].
+ * The unary symbols f make the trees in the list the children
+ * of a new tree with root symbol f, i.e. f([t1,...,tn])
+ * = [f(t1,...,tn)]. The evaluation method assumes that
+ * the entire tree evaluates to a singleton list [t'] in this
+ * way; the value of the term is then the tree t'.
  *
  * @author koller
  */
@@ -101,13 +112,13 @@ public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
         return ret;
     }
 
-    private List<String> makeStrings(List children) {
-        List<String> ret = new ArrayList<String>(children.size());
-        for (Object x : children) {
-            ret.add(x.toString());
-        }
-        return ret;
-    }
+//    private List<String> makeStrings(List children) {
+//        List<String> ret = new ArrayList<String>(children.size());
+//        for (Object x : children) {
+//            ret.add(x.toString());
+//        }
+//        return ret;
+//    }
 
     private void addBinarizationRules(List<String> childrenStates, String ruleName, ConcreteTreeAutomaton<String> auto) {
         for (int start = 0; start <= childrenStates.size() - 2; start++) {

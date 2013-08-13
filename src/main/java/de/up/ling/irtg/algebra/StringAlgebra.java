@@ -17,12 +17,16 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
- * The signature of the string algebra consists of a binary concatenation
- * operation. It also contains a nullary constant for each word that has ever
- * been read using the parseString method of this particular StringAlgebra
- * object. Notice that the contents of the Signature object may change if
- * further strings are parsed with the same algebra object.
+ * The binary string algebra. The elements of this algebra are lists
+ * of strings, which can be thought of as the words in a sentence.
+ * The algebra has a single binary operation symbol, *, which evaluates
+ * to string concatenation. All other strings are nullary symbols of this
+ * algebra; the string w evaluates to the list [w].<p>
+ * 
+ * Notice that the algebra's signature is made aware of these nullary
+ * symbols only when {@link StringAlgebra#parseString(java.lang.String) }
+ * sees these symbols. This means that the contents of the signature
+ * may change as more string representations are parsed.
  *
  * @author koller
  */

@@ -16,7 +16,30 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.*;
 
 /**
- *
+ * A string algebra for TAG. The elements of this algebra are strings and string
+ * pairs, represented as pairs of lists of strings. If the second element is null,
+ * the first element represents a string of tokens as in the {@link StringAlgebra}.
+ * If the second element is non-null, then the pair represents a non-contiguous
+ * pair of substrings.
+ * <p>
+ * 
+ * This algebra defines the string-combining operations described in Koller and Kuhlmann 2012,
+ * "Decomposing TAG Algorithms Using Simple Algebraizations", TAG+ Workshop. In particular:
+ * <ul>
+ * <li>*CONC11*(v,w) concatenates two strings into the string vw.</li>
+ * <li>*CONC12*(v,(w1,w2)) concatenates a string and a string pair into the
+ * string pair (vw1, w2).</li>
+ * <li>*CONC21*((v1,v2),w) concatenates a string pair and a string into the
+ * string pair (v1, v2w).</li>
+ * <li>*WRAP21*((v1,v2),w) wraps a string pair around a string, yielding the
+ * string v1wv2.</li>
+ * <li>*WRAP22*((v1,v2), (w1,w2)) wraps one string pair around another, yielding
+ * the string pair (v1w1, w2v2).</li>
+ * <li>*E* evaluates to the empty string.</li>
+ * <li>*EE* evaluates to the string pair (e,e), where e is the empty string.</li>
+ * <li>All other strings evaluate to themselves, as strings.</li>
+ * </ul>
+ * 
  * @author koller
  */
 public class TagStringAlgebra implements Algebra<Pair<List<String>, List<String>>> {

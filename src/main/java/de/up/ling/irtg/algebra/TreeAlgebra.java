@@ -15,7 +15,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- *
+ * The tree algebra. The elements of this algebra are the ranked
+ * trees over a given signature. Any string f can be used as a tree-combining
+ * operation of an arbitrary arity; the term f(t1,...,tn) evaluates
+ * to the tree f(t1,...,tn). Care must be taken that only ranked
+ * trees can be described; the parseString method will infer the arity
+ * of each symbol f that you use, and will throw an exception if you
+ * try to use f with two different arities.
+ * 
  * @author koller
  */
 public class TreeAlgebra implements Algebra<Tree<String>> {

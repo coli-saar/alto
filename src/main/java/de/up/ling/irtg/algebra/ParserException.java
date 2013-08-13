@@ -5,7 +5,10 @@
 package de.up.ling.irtg.algebra;
 
 /**
- *
+ * An exception that indicates that a string representation
+ * could not successfully be resolved into an object of the
+ * algebra.
+ * 
  * @author koller
  */
 public class ParserException extends Exception {

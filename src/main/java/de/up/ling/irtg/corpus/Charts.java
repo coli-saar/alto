@@ -18,7 +18,12 @@ import de.up.ling.zip.ZipEntriesCreator;
 import de.up.ling.zip.ZipEntryIterator;
 
 /**
- *
+ * A collection of parse charts for the input objects in a corpus.
+ * Use the method {@link Charts#computeCharts(de.up.ling.irtg.corpus.Corpus, de.up.ling.irtg.InterpretedTreeAutomaton, java.io.OutputStream) }
+ * to compute these parse charts for a given corpus and store
+ * them in a file. You can then attach the charts in the file
+ * to a corpus using {@link Corpus#attachCharts(java.lang.String) }.
+ * 
  * @author koller
  */
 public class Charts implements Iterable<TreeAutomaton> {
