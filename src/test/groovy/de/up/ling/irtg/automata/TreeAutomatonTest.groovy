@@ -27,6 +27,23 @@ class TreeAutomatonTest{
     static TreeAutomaton auto;
     static Signature sig;
     
+    
+    @Test
+    public void testViterbi2() {
+        TreeAutomaton auto = parse("""'DT1^NP2,0-1' -> r108 [1.0]
+'S3,0-4'! -> r2414('NP2^S3,0-2', 'ART-VP1-.1^S3,2-4') [1.0]
+'ART-.1^S3,3-4' -> r27('.1^S3,3-4') [1.0]
+'NP2^S3,0-2' -> r521('DT1^NP2,0-1', 'NN1^NP2,1-2') [1.0]
+'.1^S3,3-4' -> r26 [1.0]
+'VP1^S3,2-3' -> r347('VBD1^VP1,2-3') [1.0]
+'ART-VP1-.1^S3,2-4' -> r348('VP1^S3,2-3', 'ART-.1^S3,3-4') [1.0]
+'VBD1^VP1,2-3' -> r3544 [1.0]
+'NN1^NP2,1-2' -> r3501 [1.0]""");
+        
+        Tree best = auto.viterbi();
+        assertEquals(pt("r2414(r521(r108,r3501),r348(r347(r3544),r27(r26)))"), best);
+    }
+    
     private static setAutomaton(String s) {
         auto = parse(s);
         sig = auto.getSignature();
@@ -101,6 +118,17 @@ class TreeAutomatonTest{
         TreeAutomaton intersect = auto1.intersectEarley(auto2);
         
         assertEquals(intersect.language(), new HashSet([pt("f(a,a)")]));
+    }
+    
+    @Test
+    public void testIntersectionFinalStates() {
+        TreeAutomaton auto1 = parse("q1! -> f(q2, q3)\n q2 -> a\n q3 -> a\n q3 -> b\n qqqq! -> xxxx");
+        TreeAutomaton auto2 = parse("p1! -> f(p2,p2)\n p2 -> a");
+        TreeAutomaton intersect = auto1.intersect(auto2);
+        
+        assertEquals(new HashSet(["q1,p1"]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it).toString() }));
+        
+//        assert intersect.getFinalStates().size() == 1;
     }
     
     @Test
@@ -323,6 +351,7 @@ class TreeAutomatonTest{
         Tree best = auto.viterbi();
         assertEquals(best, pt("f(a,a)"));
     }
+    
 
     @Test
     public void testInside() {

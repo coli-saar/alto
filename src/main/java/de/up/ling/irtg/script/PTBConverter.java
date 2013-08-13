@@ -164,7 +164,6 @@ public class PTBConverter {
         irtg.addInterpretation("ptb", new Interpretation(ptbAlgebra, hPtb));
     }
 
-
     /**
      * Reads the list of PTB-trees given by <tt>reader</tt>
      *
@@ -306,12 +305,15 @@ public class PTBConverter {
                     c.addRule(c.createRule(node.getLabel(), hStr.getSourceSignature().resolveSymbolId(ruleNameId), childStates));
                 }
 
+                // if we're at the root, add parent as final state
+                if( node == tree ) {
+                    c.addFinalState(c.getIdForState(node.getLabel()));
+                }
+
                 return Tree.create(ruleNameId, derivTreeChildren);
             }
         });
     }
-
-    
 
     /**
      * Creates a string representation for the rule at the PTB-node
@@ -373,7 +375,6 @@ public class PTBConverter {
 
         return Tree.create(HomomorphismSymbol.createConstant(StringAlgebra.CONCAT, signature, strChildren.size()), strChildren);
     }
-
 
     /**
      * Writes the grammar rules to a writer, e.g., string or file

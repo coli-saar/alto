@@ -178,10 +178,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
         return ret;
     }
-    
+
     protected static List<Integer> intArrayToList(int[] ints) {
         List<Integer> ret = new ArrayList<Integer>();
-        for( int i : ints ) {
+        for (int i : ints) {
             ret.add(i);
         }
         return ret;
@@ -495,9 +495,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
         double weightBestFinalState = Double.POSITIVE_INFINITY;
 
         for (int s : getFinalStates()) {
-            if (map.get(s).left < weightBestFinalState) {
-                bestFinalState = s;
-                weightBestFinalState = map.get(s).left;
+            Pair<Double, Rule> result = map.get(s);
+
+            // ignore final states that (for some crazy reason) can't
+            // be expanded
+            if (result.right != null) {
+                if (map.get(s).left < weightBestFinalState) {
+                    bestFinalState = s;
+                    weightBestFinalState = map.get(s).left;
+                }
             }
         }
 
@@ -709,15 +715,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public String toStringBottomUp() {
         return new UniversalAutomaton(getSignature()).intersect(this).toString();
     }
-    
+
     protected String explicitRulesToString() {
         StringBuffer buf = new StringBuffer();
-        
-        for( int label : explicitRulesBottomUp.keySet() ) {
+
+        for (int label : explicitRulesBottomUp.keySet()) {
             buf.append("\n*** label " + getSignature().resolveSymbolId(label) + " ***\n");
             buf.append(explicitRulesBottomUp.get(label).toString());
         }
-        
+
         return buf.toString();
     }
 
@@ -1094,7 +1100,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
         }
     }
-    
+
     @SuppressWarnings("empty-statement")
     private <TreeLabels> List<Integer> runDirectly(final Tree<TreeLabels> node, final Function<TreeLabels, Integer> labelIdSource, final Function<Tree<TreeLabels>, Integer> subst) {
         TreeLabels f = node.getLabel();
@@ -1618,15 +1624,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
         @Override
         public String toString() {
             StringBuffer buf = new StringBuffer();
-            
-            for( Map.Entry<int[], Set<Rule>> entry : getAllRules().entrySet() ) {
+
+            for (Map.Entry<int[], Set<Rule>> entry : getAllRules().entrySet()) {
                 buf.append("\nRules for " + getStatesFromIds(intArrayToList(entry.getKey())) + ":\n");
-                
-                for( Rule r : entry.getValue() ) {
+
+                for (Rule r : entry.getValue()) {
                     buf.append("   " + r.toString(TreeAutomaton.this) + "\n");
                 }
             }
-            
+
             return buf.toString();
         }
     }

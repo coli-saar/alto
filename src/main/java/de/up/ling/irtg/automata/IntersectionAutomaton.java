@@ -205,7 +205,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         CartesianIterator<Integer> it = new CartesianIterator(stateSets);
         while (it.hasNext()) {
             List<Integer> states = it.next();
-            pairStates.add(addState(new Pair(left.getStateForId(states.get(0)), right.getStateForId(states.get(1)))));
+            
+            int state = stateInterner.resolveObject(new Pair(left.getStateForId(states.get(0)), right.getStateForId(states.get(1))));
+            if( state != 0 ) {
+                pairStates.add(state);
+            }
         }
     }
 
