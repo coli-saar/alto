@@ -10,7 +10,13 @@ object ScalaShell {
   def fostream(filename: String) = new FileOutputStream(new File(filename))
 
   def loadAutomaton(filename: String) = TreeAutomatonParser.parse(file(filename))
+
   def loadIrtg(filename: String) = IrtgParser.parse(file(filename))
+  def saveIrtg(irtg: InterpretedTreeAutomaton, filename:String) = {
+    val w = new PrintWriter(new FileWriter(new File(filename)))
+    w.println(irtg.toString)
+    w.close
+  }
 
  def time[T](code: => T) = {
     val t0 = System.nanoTime: Double

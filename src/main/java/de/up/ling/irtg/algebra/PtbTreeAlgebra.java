@@ -42,9 +42,9 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * @param useParentAnnotation if true non-terminal symbols
      * get their parent symbol appended
      */
-//    public PtbTreeAlgebra() {
-//        this.useParentAnnotation = PTBConverter.PARENT_ANNOTATION;
-//    }
+    public PtbTreeAlgebra() {
+        this(true);
+    }
     
     /**
      * Constructor
