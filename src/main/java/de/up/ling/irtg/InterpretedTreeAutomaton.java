@@ -32,17 +32,20 @@ import java.util.Set;
 import org.apache.commons.math3.special.Gamma;
 
 /**
- * An interpreted regular tree grammar (IRTG). An IRTG consists of a finite tree automaton M,
- * which generates a language of <i>derivation trees</i>, plus an arbitrary number of <i>interpretations</i>,
- * each of which maps derivation trees to objects over some algebra. In this way, the IRTG
- * describes an n-place relation over these algebras.<p>
- * 
- * In this implementation of IRTGs, M is given as an object of class {@link TreeAutomaton}, which is
- * passed to the constructor as an argument. Each interpretation is added by name, and is represented 
- * as an object of class {@link Interpretation}. IRTGs are typically read from readers (e.g. from files) using
- * {@link IrtgParser#parse(java.io.Reader)}, rather than being constructed programmatically.
- * 
- * 
+ * An interpreted regular tree grammar (IRTG). An IRTG consists of a finite tree
+ * automaton M, which generates a language of <i>derivation trees</i>, plus an
+ * arbitrary number of <i>interpretations</i>, each of which maps derivation
+ * trees to objects over some algebra. In this way, the IRTG describes an
+ * n-place relation over these algebras.<p>
+ *
+ * In this implementation of IRTGs, M is given as an object of class
+ * {@link TreeAutomaton}, which is passed to the constructor as an argument.
+ * Each interpretation is added by name, and is represented as an object of
+ * class {@link Interpretation}. IRTGs are typically read from readers (e.g.
+ * from files) using {@link IrtgParser#parse(java.io.Reader)}, rather than being
+ * constructed programmatically.
+ *
+ *
  * @author koller
  */
 public class InterpretedTreeAutomaton {
@@ -52,8 +55,8 @@ public class InterpretedTreeAutomaton {
 
     /**
      * Constructs a new IRTG with the given derivation tree automaton.
-     * 
-     * @param automaton 
+     *
+     * @param automaton
      */
     public InterpretedTreeAutomaton(TreeAutomaton<String> automaton) {
         this.automaton = automaton;
@@ -62,9 +65,9 @@ public class InterpretedTreeAutomaton {
 
     /**
      * Adds an interpretation with a given name.
-     * 
+     *
      * @param name
-     * @param interp 
+     * @param interp
      */
     public void addInterpretation(String name, Interpretation interp) {
         interpretations.put(name, interp);
@@ -72,8 +75,8 @@ public class InterpretedTreeAutomaton {
 
     /**
      * Adds all interpretations in the map, with their respective names.
-     * 
-     * @param interps 
+     *
+     * @param interps
      */
     public void addAllInterpretations(Map<String, Interpretation> interps) {
         interpretations.putAll(interps);
@@ -81,18 +84,18 @@ public class InterpretedTreeAutomaton {
 
     /**
      * Returns the derivation tree automaton.
-     * 
-     * @return 
+     *
+     * @return
      */
     public TreeAutomaton<String> getAutomaton() {
         return automaton;
     }
 
     /**
-     * Returns a map from which the interpretations can be
-     * retrieved using their names.
-     * 
-     * @return 
+     * Returns a map from which the interpretations can be retrieved using their
+     * names.
+     *
+     * @return
      */
     public Map<String, Interpretation> getInterpretations() {
         return interpretations;
@@ -100,36 +103,52 @@ public class InterpretedTreeAutomaton {
 
     /**
      * Returns the interpretation with the given name.
-     * 
+     *
      * @param interp
      * @return
-     * @throws IOException 
+     * @throws IOException
      */
     public Interpretation getInterpretation(String interp) throws IOException {
         return interpretations.get(interp);
     }
+    
+    /**
+     * Maps a given derivation tree to terms over all interpretations
+     * and evaluates them. The method returns a mapping of interpretation
+     * names to objects in the respective algebras.
+     * 
+     * @param derivationTree
+     * @return 
+     */
+    public Map<String,Object> interpret(Tree<String> derivationTree) {
+        Map<String,Object> ret = new HashMap<String, Object>();
+        
+        for( String interpretationName : interpretations.keySet() ) {
+            Interpretation interp = interpretations.get(interpretationName);
+            ret.put(interpretationName, interp.getAlgebra().evaluate(interp.getHomomorphism().apply(derivationTree)));
+        }
+        
+        return ret;
+    }
 
-    
-    
-    
-    
-    /*************************************************************************
-     * 
+    /**
+     * ***********************************************************************
+     *
      * PARSING AND DECODING
-     * 
-     ************************************************************************/
-    
-    
+     *
+     ***********************************************************************
+     */
     /**
      * Resolves the string representation to an object of the given algebra.
      * This is a helper function that retrieves the algebra for the given
-     * interpretation, and then calls {@link Algebra#parseString(java.lang.String) }
+     * interpretation, and then calls {@link Algebra#parseString(java.lang.String)
+     * }
      * on that algebra.
-     * 
+     *
      * @param interpretation
      * @param representation
      * @return
-     * @throws ParserException 
+     * @throws ParserException
      */
     public Object parseString(String interpretation, String representation) throws ParserException {
         Object ret = getInterpretations().get(interpretation).getAlgebra().parseString(representation);
@@ -137,43 +156,40 @@ public class InterpretedTreeAutomaton {
     }
 
     /**
-     * Parses a map of input representations to a parse chart.
-     * "Representations" is a map that maps interpretation names
-     * to string representations of input objects. Each input object
-     * is resolved to object in the respective algebra, and its
-     * decomposition automaton computed. Then the pre-images of
-     * all decomposition automata under the homomorphism of the
-     * respective interpretation are computed, and all are intersected
-     * with the derivation tree automaton of the IRTG. The result
-     * is returned as a tree automaton; the language of that automaton
-     * is the set of all grammatically correct derivation trees
-     * that map to the given input objects.<p>
-     * 
-     * The interpretations for which inputs are specified in
-     * "representations" may be any subset of the interpretations
-     * that this IRTG understands.
-     * 
+     * Parses a map of input representations to a parse chart. "Representations"
+     * is a map that maps interpretation names to string representations of
+     * input objects. Each input object is resolved to object in the respective
+     * algebra, and its decomposition automaton computed. Then the pre-images of
+     * all decomposition automata under the homomorphism of the respective
+     * interpretation are computed, and all are intersected with the derivation
+     * tree automaton of the IRTG. The result is returned as a tree automaton;
+     * the language of that automaton is the set of all grammatically correct
+     * derivation trees that map to the given input objects.<p>
+     *
+     * The interpretations for which inputs are specified in "representations"
+     * may be any subset of the interpretations that this IRTG understands.
+     *
      * @param representations
      * @return
-     * @throws ParserException 
+     * @throws ParserException
      */
     public TreeAutomaton parse(Map<String, String> representations) throws ParserException {
         Map<String, Object> inputs = new HashMap<String, Object>();
         for (String interp : representations.keySet()) {
             inputs.put(interp, parseString(interp, representations.get(interp)));
         }
-        
+
         return parseInputObjects(inputs);
     }
-    
+
     /**
-     * Parses a map of input objects to a parse chart.
-     * The process is as in {@link #parse(java.util.Map)}, except
-     * that the "inputs" map is a map of interpretation names
-     * to pre-constructed objects of the respective algebras.
-     * 
+     * Parses a map of input objects to a parse chart. The process is as in
+     * {@link #parse(java.util.Map)}, except that the "inputs" map is a map of
+     * interpretation names to pre-constructed objects of the respective
+     * algebras.
+     *
      * @param inputs
-     * @return 
+     * @return
      */
     public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
         TreeAutomaton ret = automaton;
@@ -184,72 +200,67 @@ public class InterpretedTreeAutomaton {
             TreeAutomaton interpParse = interp.parse(input);
             ret = ret.intersect(interpParse);
         }
-        
+
         return ret.reduceTopDown();
     }
-    
-    
+
     /**
-     * Decodes a parse chart to a term chart over some output algebra.
-     * The term chart describes a language of the terms over the specified
-     * output algebra. This language is the homomorphic image of the
-     * parse chart under the homomorphism of the given output interpretation.
-     * 
+     * Decodes a parse chart to a term chart over some output algebra. The term
+     * chart describes a language of the terms over the specified output
+     * algebra. This language is the homomorphic image of the parse chart under
+     * the homomorphism of the given output interpretation.
+     *
      * @param outputInterpretation
      * @param parseChart
-     * @return 
+     * @return
      */
     public TreeAutomaton decodeToAutomaton(String outputInterpretation, TreeAutomaton parseChart) {
         return parseChart.homomorphism(interpretations.get(outputInterpretation).getHomomorphism());
     }
-    
+
     /**
-     * Decodes a map of input representations to a set of objects
-     * of the specified output algebra. This first computes a parse
-     * chart for the input representations, as per {@link #parse(java.util.Map) }.
-     * It then decodes the parse chart into an output term chart (see {@link #decodeToAutomaton(java.lang.String, de.up.ling.irtg.automata.TreeAutomaton) }
-     * and evaluates each term in the language of the term chart to an object
-     * in the output algebra. The method returns the set of all of these objects.
-     * 
+     * Decodes a map of input representations to a set of objects of the
+     * specified output algebra. This first computes a parse chart for the input
+     * representations, as per {@link #parse(java.util.Map) }. It then decodes
+     * the parse chart into an output term chart (see {@link #decodeToAutomaton(java.lang.String, de.up.ling.irtg.automata.TreeAutomaton)
+     * }
+     * and evaluates each term in the language of the term chart to an object in
+     * the output algebra. The method returns the set of all of these objects.
+     *
      * @param outputInterpretation
      * @param representations
      * @return
-     * @throws ParserException 
+     * @throws ParserException
      */
-    public Set<Object> decode(String outputInterpretation, Map<String,String> representations) throws ParserException {
+    public Set<Object> decode(String outputInterpretation, Map<String, String> representations) throws ParserException {
         Algebra out = interpretations.get(outputInterpretation).getAlgebra();
         TreeAutomaton chart = parse(representations);
         TreeAutomaton outputChart = decodeToAutomaton(outputInterpretation, chart);
-        
+
         Set<Object> ret = new HashSet<Object>();
         Iterator<Tree<String>> it = outputChart.languageIterator();
-        
-        while( it.hasNext() ) {
+
+        while (it.hasNext()) {
             ret.add(out.evaluate(it.next()));
         }
-        
+
         return ret;
     }
-    
 
-    
-    
-    
-    
-    /*************************************************************************
-     * 
-     * TRAINING
-     * 
-     ************************************************************************/
-    
     /**
-     * Performs maximum likelihood training of this (weighted) IRTG
-     * using the given annotated corpus. In the context of an IRTG,
-     * "annotated corpus" means that the derivation tree is annotated
-     * for each training instance.
-     * 
+     * ***********************************************************************
+     *
+     * TRAINING
+     *
+     ***********************************************************************
+     */
+    /**
+     * Performs maximum likelihood training of this (weighted) IRTG using the
+     * given annotated corpus. In the context of an IRTG, "annotated corpus"
+     * means that the derivation tree is annotated for each training instance.
+     *
      * @param trainingData
-     * @throws UnsupportedOperationException 
+     * @throws UnsupportedOperationException
      */
     public void trainML(Corpus trainingData) throws UnsupportedOperationException {
         final Map<Integer, Rule> ruleForTerminal = new HashMap<Integer, Rule>(); // label -> rules
@@ -296,18 +307,22 @@ public class InterpretedTreeAutomaton {
     }
 
     /**
-     * Performs expectation maximization (EM) training of this (weighted)
-     * IRTG using the given corpus. The corpus may be unannotated; if it
-     * contains annotated derivation trees, these are ignored by the algorithm.
-     * However, it must contain a parse chart for each instance (see {@link Corpus} 
-     * for details).<p>
-     * 
-     * Currently the training algorithm performs a fixed number of ten EM iterations.
-     * This should be made more flexible in the future.
-     * 
-     * @param trainingData 
+     * Performs expectation maximization (EM) training of this (weighted) IRTG
+     * using the given corpus. The corpus may be unannotated; if it contains
+     * annotated derivation trees, these are ignored by the algorithm. However,
+     * it must contain a parse chart for each instance (see {@link Corpus} for
+     * details).<p>
+     *
+     * Currently the training algorithm performs a fixed number of ten EM
+     * iterations. This should be made more flexible in the future.
+     *
+     * @param trainingData
      */
     public void trainEM(Corpus trainingData) {
+        trainEM(trainingData, 10, false);
+    }
+
+    public void trainEM(Corpus trainingData, int numIterations, boolean printIntermediate) {
         if (!trainingData.hasCharts()) {
             System.err.println("EM training can only be performed on a corpus with attached charts.");
             return;
@@ -326,7 +341,7 @@ public class InterpretedTreeAutomaton {
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
 
 
-        for (int iteration = 0; iteration < 10; iteration++) {
+        for (int iteration = 0; iteration < numIterations; iteration++) {
             Map<Rule, Double> globalRuleCount = estep(parses, intersectedRuleToOriginalRule);
 
             // sum over rules with same parent state to obtain state counts
@@ -349,24 +364,24 @@ public class InterpretedTreeAutomaton {
                 }
             }
 
-            if (debug) {
-                System.out.println("\n\nAfter iteration " + (iteration + 1) + ":\n" + automaton);
+            if (printIntermediate) {
+                System.out.println("\n\n***** After iteration " + (iteration + 1) + " *****\n\n" + automaton);
             }
         }
     }
 
     /**
-     * Performs Variational Bayes (VB) training of this (weighted)
-     * IRTG using the given corpus. The corpus may be unannotated; if it
-     * contains annotated derivation trees, these are ignored by the algorithm.
-     * However, it must contain a parse chart for each instance (see {@link Corpus} 
-     * for details).<p>
-     * 
-     * Currently the training algorithm performs a fixed number of ten iterations.
-     * This should be made more flexible in the future.<p>
-     * 
-     * This method implements the algorithm from Jones et al., "Semantic
-     * Parsing with Bayesian Tree Transducers", ACL 2012.
+     * Performs Variational Bayes (VB) training of this (weighted) IRTG using
+     * the given corpus. The corpus may be unannotated; if it contains annotated
+     * derivation trees, these are ignored by the algorithm. However, it must
+     * contain a parse chart for each instance (see {@link Corpus} for
+     * details).<p>
+     *
+     * Currently the training algorithm performs a fixed number of ten
+     * iterations. This should be made more flexible in the future.<p>
+     *
+     * This method implements the algorithm from Jones et al., "Semantic Parsing
+     * with Bayesian Tree Transducers", ACL 2012.
      *
      * @param trainingData a corpus of parse charts
      */
@@ -524,8 +539,8 @@ public class InterpretedTreeAutomaton {
 
     /**
      * Switches debugging output on or off.
-     * 
-     * @param debug 
+     *
+     * @param debug
      */
     public void setDebug(boolean debug) {
         this.debug = debug;
@@ -533,24 +548,23 @@ public class InterpretedTreeAutomaton {
 
     /**
      * Loads a corpus for this IRTG from a reader.
-     * 
+     *
      * @param reader
      * @return
      * @throws IOException
-     * @throws CorpusReadingException 
+     * @throws CorpusReadingException
      */
     public Corpus readCorpus(Reader reader) throws IOException, CorpusReadingException {
         return Corpus.readCorpus(reader, this);
     }
 
     /**
-     * Binarizes the given IRTG and returns the binarized IRTG.
-     * This implementation is currently broken.
-     * It will eventually be replaced by a clean implementation of
-     * the algorithm of  B&uuml;chse et al., ACL 2013.
-     * 
+     * Binarizes the given IRTG and returns the binarized IRTG. This
+     * implementation is currently broken. It will eventually be replaced by a
+     * clean implementation of the algorithm of B&uuml;chse et al., ACL 2013.
+     *
      * @param binarizers
-     * @return 
+     * @return
      */
 //    private InterpretedTreeAutomaton binarize(Map<String, RegularBinarizer> binarizers) {
 //        List<String> orderedInterpretationList = new ArrayList<String>(interpretations.keySet());
@@ -588,7 +602,6 @@ public class InterpretedTreeAutomaton {
 //
 //        return ret;
 //    }
-
     private HomomorphismSymbol getConstantFromAlgebra(Homomorphism hom) {
         for (int label = 1; label <= hom.getSourceSignature().getMaxSymbolId(); label++) {
             HomomorphismSymbol constant = hom.get(label).dfs(new TreeVisitor<HomomorphismSymbol, Void, HomomorphismSymbol>() {
@@ -614,13 +627,12 @@ public class InterpretedTreeAutomaton {
     }
 
     /**
-     * Binarizes the given IRTG and returns the binarized IRTG.
-     * This implementation is currently broken.
-     * It will eventually be replaced by a clean implementation of
-     * the algorithm of  B&uuml;chse et al., ACL 2013.
-     * 
+     * Binarizes the given IRTG and returns the binarized IRTG. This
+     * implementation is currently broken. It will eventually be replaced by a
+     * clean implementation of the algorithm of B&uuml;chse et al., ACL 2013.
+     *
      * @param binarizers
-     * @return 
+     * @return
      */
     private InterpretedTreeAutomaton binarize() {
         /*
@@ -724,11 +736,11 @@ public class InterpretedTreeAutomaton {
 
     private String makeBinaryLabel(String prefix, int argNum) {
         String newSymbol = prefix + argNum;
-        
+
         while (automaton.getSignature().contains(newSymbol)) {
             newSymbol = newSymbol + "b";
         }
-        
+
         return newSymbol;
     }
 
@@ -745,8 +757,8 @@ public class InterpretedTreeAutomaton {
 
     /**
      * Returns a string representation of the IRTG.
-     * 
-     * @return 
+     *
+     * @return
      */
     @Override
     public String toString() {
@@ -776,15 +788,14 @@ public class InterpretedTreeAutomaton {
     }
 
     /**
-     * Compares the IRTG to another IRTG for equality.
-     * Two IRTGs are considered equal if (1) their derivation tree automata
-     * are equal; (2) they define the same interpretation names;
-     * (3) for each interpretation name, the homomorphisms are equal;
-     * (4) for each interpretation name, the intepretations use
-     * the same algebra class.
-     * 
+     * Compares the IRTG to another IRTG for equality. Two IRTGs are considered
+     * equal if (1) their derivation tree automata are equal; (2) they define
+     * the same interpretation names; (3) for each interpretation name, the
+     * homomorphisms are equal; (4) for each interpretation name, the
+     * intepretations use the same algebra class.
+     *
      * @param obj
-     * @return 
+     * @return
      */
     @Override
     public boolean equals(Object obj) {
@@ -797,7 +808,7 @@ public class InterpretedTreeAutomaton {
         final InterpretedTreeAutomaton other = (InterpretedTreeAutomaton) obj;
         if (this.automaton != other.automaton && (this.automaton == null || !this.automaton.equals(other.automaton))) {
             System.err.println("*** auto !=");
-            
+
             System.err.println("this auto: " + this.automaton);
             System.err.println("\n\nother auto:" + other.automaton);
             return false;
