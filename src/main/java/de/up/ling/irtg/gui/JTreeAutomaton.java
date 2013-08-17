@@ -13,6 +13,7 @@ import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -67,7 +68,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                     + (rule.getArity() > 0 ? "(" : "")
                     + StringTools.join(resolvedRhsStates, ", ")
                     + (rule.getArity() > 0 ? ")" : ""));
-            
+
             row.add("[" + Double.toString(rule.getWeight()) + "]");
 
             if (annotator != null) {
@@ -82,22 +83,21 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         TableColumnAdjuster tca = new TableColumnAdjuster(jTable1);
 //        tca.setOnlyAdjustLarger(false);
         tca.adjustColumns();
-        
+
         final Color alternateRowColor = new Color(204, 229, 255);
-        jTable1.setDefaultRenderer(Object.class, new TableCellRenderer(){
-            private DefaultTableCellRenderer DEFAULT_RENDERER =  new DefaultTableCellRenderer();
+        jTable1.setDefaultRenderer(Object.class, new TableCellRenderer() {
+            private DefaultTableCellRenderer DEFAULT_RENDERER = new DefaultTableCellRenderer();
+
             @Override
             public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 Component c = DEFAULT_RENDERER.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (row%2 == 0){
+                if (row % 2 == 0) {
                     c.setBackground(Color.WHITE);
-                }
-                else {
+                } else {
                     c.setBackground(alternateRowColor);
-                }                        
+                }
                 return c;
             }
-
         });
     }
 
@@ -260,28 +260,32 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     private void miParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miParseActionPerformed
         if (irtg != null) {
-            Map<String, String> inputs = JInputForm.getValues(annotationsInOrder, this);
+            final Map<String, String> inputs = JInputForm.getValues(annotationsInOrder, this);
 
             if (inputs != null) {
-                TreeAutomaton chart = null;
+                new Thread() {
+                    @Override
+                    public void run() {
+                        TreeAutomaton chart = null;
 
-                try {
-                    long start = System.nanoTime();
-                    chart = irtg.parse(inputs);
-                    log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
-                } catch (ParserException ex) {
-                    GuiMain.showError(this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
-                }
-                
-                if( chart != null ) {
-                    JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                    jta.setIrtg(irtg);
-                    jta.setTitle("Parse chart: " + inputs);                    
-                    jta.pack();
-                    jta.setVisible(true);
-                }
+                        try {
+                            long start = System.nanoTime();
+                            chart = irtg.parse(inputs);
+                            log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
+                        } catch (ParserException ex) {
+                            GuiMain.showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
+                        }
+
+                        if (chart != null) {
+                            JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+                            jta.setIrtg(irtg);
+                            jta.setTitle("Parse chart: " + inputs);
+                            jta.pack();
+                            jta.setVisible(true);
+                        }
+                    }
+                }.start();
             }
-
         }
     }//GEN-LAST:event_miParseActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
