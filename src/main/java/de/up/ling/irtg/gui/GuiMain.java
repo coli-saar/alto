@@ -16,9 +16,9 @@ import java.io.PrintWriter;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.text.Document;
 import org.simplericity.macify.eawt.Application;
 import org.simplericity.macify.eawt.ApplicationEvent;
 import org.simplericity.macify.eawt.ApplicationListener;
@@ -30,6 +30,7 @@ import org.simplericity.macify.eawt.DefaultApplication;
  */
 public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private static File previousDirectory;
+    private static GuiMain app;
 
     static {
         previousDirectory = new File(".");
@@ -51,6 +52,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        spLog = new javax.swing.JScrollPane();
+        log = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -60,6 +63,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("IRTG GUI");
+
+        log.setEditable(false);
+        log.setColumns(20);
+        log.setRows(5);
+        spLog.setViewportView(log);
 
         jMenu1.setText("File");
 
@@ -99,11 +107,17 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 400, Short.MAX_VALUE)
+            .add(layout.createSequentialGroup()
+                .addContainerGap()
+                .add(spLog, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE)
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(0, 278, Short.MAX_VALUE)
+            .add(layout.createSequentialGroup()
+                .addContainerGap()
+                .add(spLog, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
@@ -182,7 +196,9 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         try {
             if (file != null) {
+                long start = System.nanoTime();
                 irtg = IrtgParser.parse(new FileReader(file));
+                log("Loaded IRTG from " + file.getName() + ", " + formatTimeSince(start));
             }
         } catch (Exception e) {
             showError(parent, "An error occurred while attempting to parse " + file.getName() + ": " + e.getMessage());
@@ -205,13 +221,25 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    public static String formatTimeSince(long start) {
+        long end = System.nanoTime();
+        if (end - start < 10000) {
+            // less than 10 us
+            return String.format("%8.3f us", (end - start) / 1000.0);
+        } else {
+            return String.format("%8.3f ms", (end - start) / 1000000.0);
+        }
+    }
+
     public static boolean loadAutomaton(Component parent) {
         File file = chooseFile(new FileNameExtensionFilter("Tree automata", "auto"), parent);
         TreeAutomaton auto = null;
 
         try {
             if (file != null) {
+                long start = System.nanoTime();
                 auto = TreeAutomatonParser.parse(new FileReader(file));
+                log("Loaded automaton from " + file.getName() + ", " + formatTimeSince(start));
             }
         } catch (Exception e) {
             showError(parent, "An error occurred while attempting to parse " + file.getName() + ": " + e.getMessage());
@@ -228,6 +256,20 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         return false;
     }
 
+    public static void log(final String log) {
+        final GuiMain x = app;
+
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                synchronized (x) {
+                    x.log.setText(x.log.getText() + "\n" + log);
+                    Document d = x.log.getDocument();
+                    x.log.select(d.getLength(), d.getLength());
+                }
+            }
+        });
+    }
+
     /**
      * @param args the command line arguments
      */
@@ -237,6 +279,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
         final GuiMain guiMain = new GuiMain();
+        GuiMain.app = guiMain;
 
         Application application = new DefaultApplication();
         application.addApplicationListener(guiMain);
@@ -256,6 +299,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JTextArea log;
+    private javax.swing.JScrollPane spLog;
     // End of variables declaration//GEN-END:variables
 
     /**

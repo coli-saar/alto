@@ -7,6 +7,8 @@ package de.up.ling.irtg.gui;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
+import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
+import static de.up.ling.irtg.gui.GuiMain.log;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -61,8 +63,13 @@ public class JLanguageViewer extends javax.swing.JFrame {
             treeNumber = 0;
         }
 
-        while (cachedTrees.size() <= treeNumber) {
-            cachedTrees.add(languageIterator.next());
+        long treesToCompute = treeNumber - cachedTrees.size() + 1;
+        if (treesToCompute > 0) {
+            long start = System.nanoTime();
+            while (cachedTrees.size() <= treeNumber) {
+                cachedTrees.add(languageIterator.next());
+            }
+            log("Enumerated " + treesToCompute + " trees, " + formatTimeSince(start));
         }
 
         WeightedTree wt = cachedTrees.get(treeNumber);
@@ -121,17 +128,11 @@ public class JLanguageViewer extends javax.swing.JFrame {
         treeViewer.setLayout(treeViewerLayout);
         treeViewerLayout.setHorizontalGroup(
             treeViewerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(treeViewerLayout.createSequentialGroup()
-                .addContainerGap()
-                .add(derivationViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addContainerGap())
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, derivationViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 539, Short.MAX_VALUE)
         );
         treeViewerLayout.setVerticalGroup(
             treeViewerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(treeViewerLayout.createSequentialGroup()
-                .addContainerGap()
-                .add(derivationViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 512, Short.MAX_VALUE)
-                .addContainerGap(27, Short.MAX_VALUE))
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, derivationViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
         );
 
         jLabel1.setText("Derivation #");
@@ -203,8 +204,8 @@ public class JLanguageViewer extends javax.swing.JFrame {
             .add(layout.createSequentialGroup()
                 .addContainerGap()
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(treeViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(controls, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .add(controls, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(treeViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -231,8 +232,6 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private void treeIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_treeIndexActionPerformed
         goToTree(getTreeIndex());
     }//GEN-LAST:event_treeIndexActionPerformed
-
-    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private de.up.ling.irtg.gui.JDerivationViewer derivationViewer;

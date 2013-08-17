@@ -7,6 +7,8 @@ package de.up.ling.irtg.gui;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
+import javax.swing.JComponent;
+import javax.swing.JScrollPane;
 
 /**
  *
@@ -20,10 +22,12 @@ public class JInterpretation extends javax.swing.JPanel {
         initComponents();
         
         Tree<String> term = interp.getHomomorphism().apply(derivationTree);
-        termPanel.add(new TreePanel(term));
-        valuePanel.add(interp.getAlgebra().visualize(interp.getAlgebra().evaluate(term)));
-        revalidate();
-        repaint();
+        termPanel.add(sp(new TreePanel(term)));
+        valuePanel.add(sp(interp.getAlgebra().visualize(interp.getAlgebra().evaluate(term))));
+    }
+    
+    private JComponent sp(JComponent comp) {
+        return new JScrollPane(comp, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
     }
 
     /**

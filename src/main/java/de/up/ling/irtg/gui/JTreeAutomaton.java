@@ -9,12 +9,12 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
+import static de.up.ling.irtg.gui.GuiMain.log;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -244,9 +244,11 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 TreeAutomaton chart = null;
 
                 try {
+                    long start = System.nanoTime();
                     chart = irtg.parse(inputs);
+                    log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
                 } catch (ParserException ex) {
-                    GuiMain.showError(this, "An error occurred while parsing the input objects: " + inputs);
+                    GuiMain.showError(this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
                 }
                 
                 if( chart != null ) {
