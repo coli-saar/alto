@@ -16,15 +16,25 @@ import javax.swing.JScrollPane;
  * @author koller
  */
 public class JInterpretation extends javax.swing.JPanel {
+    private Interpretation interp;
+    
     /**
      * Creates new form JInterpretation
      */
-    public JInterpretation(Tree<String> derivationTree, Interpretation interp) {
-        initComponents();
+    public JInterpretation(Interpretation interp) {
+        this.interp = interp;
         
+        initComponents();        
+    }
+    
+    public void setDerivationTree(Tree<String> derivationTree) {
         Tree<String> term = interp.getHomomorphism().apply(derivationTree);
+        
+        termPanel.removeAll();
         termPanel.add(sp(new TreePanel(term)));
-        valuePanel.add(sp(interp.getAlgebra().visualize(interp.getAlgebra().evaluate(term))));
+        
+        valuePanel.removeAll();
+        valuePanel.add(sp(interp.getAlgebra().visualize(interp.getAlgebra().evaluate(term))));        
     }
     
     private JComponent sp(JComponent comp) {

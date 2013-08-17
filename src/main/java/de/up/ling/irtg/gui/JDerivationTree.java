@@ -17,13 +17,15 @@ public class JDerivationTree extends javax.swing.JPanel {
     /**
      * Creates new form JDerivationTre
      */
-    public JDerivationTree(Tree<String> derivationTree) {
+    public JDerivationTree() {
         initComponents();
+    }
+    
+    public void setDerivationTree(Tree<String> derivationTree) {
+        removeAll();
         JScrollPane jsp = new JScrollPane(new TreePanel(derivationTree), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         jsp.setBackground(Color.white);
-        add(jsp);
-//        revalidate();
-//        repaint();
+        add(jsp);        
     }
 
     /**

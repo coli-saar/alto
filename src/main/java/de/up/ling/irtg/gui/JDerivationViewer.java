@@ -15,9 +15,8 @@ import javax.swing.JComponent;
  * @author koller
  */
 public class JDerivationViewer extends javax.swing.JPanel {
-    private InterpretedTreeAutomaton irtg;
     private Interpretation[] interpretationForSelection;
-    private JComponent[] cachedComponents;
+    private JComponent[] components;
     private Tree<String> derivationTree;
     private static final String INTERPRETATION_PREFIX = "interpretation: ";
     private static final String DERIVATION_TREE = "derivation tree";
@@ -30,7 +29,6 @@ public class JDerivationViewer extends javax.swing.JPanel {
     }
 
     public void setInterpretedTreeAutomaton(InterpretedTreeAutomaton irtg) {
-        this.irtg = irtg;
         int N = 1;
 
         if (irtg != null) {
@@ -39,15 +37,17 @@ public class JDerivationViewer extends javax.swing.JPanel {
 
         String[] possibleViews = new String[N];
         interpretationForSelection = new Interpretation[N - 1];
-        cachedComponents = new JComponent[N];
+        components = new JComponent[N];
 
         possibleViews[0] = DERIVATION_TREE;
+        components[0] = new JDerivationTree();
 
         if (irtg != null) {
             int i = 0;
             for (String name : irtg.getInterpretations().keySet()) {
                 interpretationForSelection[i] = irtg.getInterpretations().get(name);
                 possibleViews[i + 1] = INTERPRETATION_PREFIX + name;
+                components[i + 1] = new JInterpretation(interpretationForSelection[i]);
                 i++;
             }
         }
@@ -58,11 +58,6 @@ public class JDerivationViewer extends javax.swing.JPanel {
 
     public void displayDerivation(Tree<String> derivationTree) {
         this.derivationTree = derivationTree;
-
-        for (int i = 0; i < cachedComponents.length; i++) {
-            cachedComponents[i] = null;
-        }
-
         redraw();
     }
 
@@ -72,15 +67,16 @@ public class JDerivationViewer extends javax.swing.JPanel {
 
             content.removeAll();
 
-            if (cachedComponents[index] == null) {
-                if (index == 0) {
-                    cachedComponents[index] = new JDerivationTree(derivationTree);
-                } else {
-                    cachedComponents[index] = new JInterpretation(derivationTree, interpretationForSelection[index - 1]);
-                }
+            if (index == 0) {
+                JDerivationTree jdt = (JDerivationTree) components[0];
+                jdt.setDerivationTree(derivationTree);
+                content.add(jdt);
+            } else {
+                JInterpretation ji = (JInterpretation) components[index];
+                ji.setDerivationTree(derivationTree);
+                content.add(ji);
             }
 
-            content.add(cachedComponents[index]);
             revalidate();
             repaint();
         }
