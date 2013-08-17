@@ -7,7 +7,6 @@ package de.up.ling.irtg.gui;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
-import javax.swing.JLabel;
 
 /**
  *
@@ -22,7 +21,7 @@ public class JInterpretation extends javax.swing.JPanel {
         
         Tree<String> term = interp.getHomomorphism().apply(derivationTree);
         termPanel.add(new TreePanel(term));
-        valuePanel.add(new JLabel(interp.getAlgebra().evaluate(term).toString()));
+        valuePanel.add(interp.getAlgebra().visualize(interp.getAlgebra().evaluate(term)));
         revalidate();
         repaint();
     }

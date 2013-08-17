@@ -31,7 +31,7 @@ import java.util.Set;
  * 
  * @author koller
  */
-public class TagTreeAlgebra implements Algebra<Tree<String>> {
+public class TagTreeAlgebra extends Algebra<Tree<String>> {
     public static final String C = "@";
     public static final String P1 = "*";
     

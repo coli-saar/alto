@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author koller
  */
-public class BinaryTreeAlgebra implements Algebra<Tree<String>> {
+public class BinaryTreeAlgebra extends Algebra<Tree<String>> {
     public static final String APPEND = "@";
     private Algebra<Tree<String>> underlyingAlgebra;
     private Signature signature;

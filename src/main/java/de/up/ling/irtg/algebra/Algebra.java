@@ -8,6 +8,8 @@ package de.up.ling.irtg.algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 /**
  * An algebra over some domain E of values. An algebra can
@@ -29,7 +31,7 @@ import de.up.ling.tree.Tree;
  * 
  * @author koller
  */
-public interface Algebra<E> {
+public abstract class Algebra<E> {
     /**
      * Evaluates a term over the algebra's signature
      * into an algebra object.
@@ -37,7 +39,7 @@ public interface Algebra<E> {
      * @param t a term (= tree whose nodes are labeled with algebra operation symbols)
      * @return 
      */
-    public E evaluate(Tree<String> t);
+    abstract public E evaluate(Tree<String> t);
     
     /**
      * Computes a decomposition automaton for the given
@@ -48,7 +50,7 @@ public interface Algebra<E> {
      * @param value
      * @return 
      */
-    public TreeAutomaton decompose(E value);
+    abstract public TreeAutomaton decompose(E value);
     
     /**
      * Resolves the string representation of some
@@ -63,12 +65,17 @@ public interface Algebra<E> {
      * @return
      * @throws ParserException 
      */
-    public E parseString(String representation) throws ParserException;
+    abstract public E parseString(String representation) throws ParserException;
     
     /**
      * Returns the signature of this algebra.
      * 
      * @return 
      */
-    public Signature getSignature();
+    abstract public Signature getSignature();
+    
+    
+    public JComponent visualize(E object) {
+        return new JLabel(object.toString());
+    }
 }

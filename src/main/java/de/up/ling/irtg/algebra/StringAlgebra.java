@@ -30,7 +30,7 @@ import java.util.Set;
  *
  * @author koller
  */
-public class StringAlgebra implements Algebra<List<String>> {
+public class StringAlgebra extends Algebra<List<String>> {
     public static final String CONCAT = "*";
     private int concatSymbolId;
     private Set<Integer> concatSet;

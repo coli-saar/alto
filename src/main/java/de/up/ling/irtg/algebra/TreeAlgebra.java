@@ -25,7 +25,7 @@ import java.util.Set;
  * 
  * @author koller
  */
-public class TreeAlgebra implements Algebra<Tree<String>> {
+public class TreeAlgebra extends Algebra<Tree<String>> {
     protected final Signature signature = new Signature();
 
     @Override

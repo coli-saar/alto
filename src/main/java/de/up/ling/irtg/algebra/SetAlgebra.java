@@ -35,7 +35,7 @@ import java.util.Set;
  * 
  * @author koller
  */
-public class SetAlgebra implements Algebra<Set<List<String>>> {
+public class SetAlgebra extends Algebra<Set<List<String>>> {
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";
     private static final String UNIQ = "uniq_";

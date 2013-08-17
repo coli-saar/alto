@@ -42,7 +42,7 @@ import java.util.*;
  * 
  * @author koller
  */
-public class TagStringAlgebra implements Algebra<Pair<List<String>, List<String>>> {
+public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> {
     private Signature signature;
     private Int2ObjectMap<Operation> namesToOperations = new Int2ObjectOpenHashMap<Operation>();
 
