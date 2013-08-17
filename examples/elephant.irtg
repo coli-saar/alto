@@ -1,0 +1,53 @@
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+S! -> r1(NP,VP) 
+  [i] *(?1,?2)
+
+NP -> r2
+  [i] john
+
+NP -> r3
+  [i] *(an, elephant)
+
+NP -> r4
+  [i] *(his, pyjamas)
+
+NP -> r5(NP,PP)
+  [i] *(?1, ?2)
+
+VP -> r6(V,NP)
+  [i] *(?1, ?2)
+
+VP -> r7(VP,PP)
+  [i] *(?1, ?2)
+
+V -> r8
+  [i] shot
+
+PP -> r9(P,NP)
+  [i] *(?1,?2)
+
+P -> r10
+  [i] in
+
+NP -> r11
+  [i] mary
+
+V -> r12
+  [i] watched
+
+NP -> r13
+  [i] *(a, man)
+
+P -> r14
+  [i] with
+
+NP -> r15
+  [i] *(a, telescope)
+
+NP -> r16
+  [i] sue
+
+NP -> r17
+  [i] *(a, hat)
+

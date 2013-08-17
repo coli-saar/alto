@@ -1,0 +1,32 @@
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+S! -> r1(NP,VP)         [1.0]
+  [i] *(?1,?2)
+
+NP -> r2                [0.3]
+  [i] john
+
+NP -> r3                [0.2]
+  [i] *(an, elephant)
+
+NP -> r4                [0.2]
+  [i] *(his, pyjamas)
+
+NP -> r5(NP,PP)         [0.3]
+  [i] *(?1, ?2)
+
+VP -> r6(V,NP)          [0.5]
+  [i] *(?1, ?2)
+
+VP -> r7(VP,PP)         [0.5]
+  [i] *(?1, ?2)
+
+V -> r8                 [1.0]
+  [i] shot
+
+PP -> r9(P,NP)          [1.0]
+  [i] *(?1,?2)
+
+P -> r10                [1.0]
+  [i] in
+

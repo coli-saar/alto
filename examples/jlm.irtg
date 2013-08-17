@@ -1,0 +1,19 @@
+
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+
+S! -> r1(NP,VP) 
+  [i] *(?1,?2)
+
+VP -> r2(V,NP) 
+  [i] *(?1,?2)
+
+NP -> r3
+  [i] john
+
+V -> r4
+  [i] loves
+
+NP -> r5
+  [i] mary
+
