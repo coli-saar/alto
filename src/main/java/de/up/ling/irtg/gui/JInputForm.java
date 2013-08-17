@@ -5,7 +5,6 @@
 package de.up.ling.irtg.gui;
 
 import java.awt.Frame;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,15 +15,6 @@ import java.util.Map;
  */
 public class JInputForm extends javax.swing.JDialog {
     Map<String,String> ret = null;
-    
-    public static void main(String[] args) {
-        List<String> interps = new ArrayList<String>();
-        interps.add("sytnax");
-        interps.add("semantics");
-        
-        System.out.println(JInputForm.getValues(interps, null));
-        System.exit(0);
-    }
     
     /**
      * Creates new form JInputForm
@@ -132,8 +122,6 @@ public class JInputForm extends javax.swing.JDialog {
                 ret.put(interp, value);
             }
         }
-        
-        System.err.println("1");
         
         setVisible(false);
     }//GEN-LAST:event_okButtonActionPerformed

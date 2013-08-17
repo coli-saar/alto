@@ -9,21 +9,26 @@ import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomatonParser;
 import java.awt.Component;
-import java.awt.Frame;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import org.simplericity.macify.eawt.Application;
+import org.simplericity.macify.eawt.ApplicationEvent;
+import org.simplericity.macify.eawt.ApplicationListener;
+import org.simplericity.macify.eawt.DefaultApplication;
 
 /**
  *
  * @author koller
  */
-public class GuiMain extends javax.swing.JFrame {
+public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private static File previousDirectory;
 
     static {
@@ -105,11 +110,15 @@ public class GuiMain extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        loadIrtg(this);
+        if (loadIrtg(this)) {
+//            setVisible(false);
+        }
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        loadAutomaton(this);
+        if (loadAutomaton(this)) {
+//            setVisible(false);
+        }
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
@@ -135,7 +144,7 @@ public class GuiMain extends javax.swing.JFrame {
         }
     }
 
-    public static void saveAutomaton(TreeAutomaton auto, Component parent) {
+    public static boolean saveAutomaton(TreeAutomaton auto, Component parent) {
         File file = chooseFileForSaving(new FileNameExtensionFilter("Tree automata", "auto"), parent);
 
         try {
@@ -143,10 +152,13 @@ public class GuiMain extends javax.swing.JFrame {
                 PrintWriter w = new PrintWriter(new FileWriter(file));
                 w.println(auto.toString());
                 w.close();
+                return true;
             }
         } catch (Exception e) {
             showError(parent, "An error occurred while attempting to save automaton as" + file.getName() + ": " + e.getMessage());
         }
+
+        return false;
     }
 
     private static File chooseFile(FileFilter filter, Component parent) {
@@ -164,7 +176,7 @@ public class GuiMain extends javax.swing.JFrame {
         }
     }
 
-    public static void loadIrtg(Component parent) {
+    public static boolean loadIrtg(Component parent) {
         File file = chooseFile(new FileNameExtensionFilter("IRTG grammars", "irtg"), parent);
         InterpretedTreeAutomaton irtg = null;
 
@@ -183,15 +195,17 @@ public class GuiMain extends javax.swing.JFrame {
             jta.setParsingEnabled(true);
             jta.pack();
             jta.setVisible(true);
+            return true;
         }
 
+        return false;
     }
-    
+
     static void showError(Component parent, String error) {
         JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    public static void loadAutomaton(Component parent) {
+    public static boolean loadAutomaton(Component parent) {
         File file = chooseFile(new FileNameExtensionFilter("Tree automata", "auto"), parent);
         TreeAutomaton auto = null;
 
@@ -208,40 +222,30 @@ public class GuiMain extends javax.swing.JFrame {
             jta.setTitle("Tree automaton: " + file.getName());
             jta.pack();
             jta.setVisible(true);
+            return true;
         }
+
+        return false;
     }
 
     /**
      * @param args the command line arguments
      */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(GuiMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(GuiMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(GuiMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(GuiMain.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
+    public static void main(String args[]) throws Exception {
+        System.setProperty("apple.laf.useScreenMenuBar", "true");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
+        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
-        /* Create and display the form */
+        final GuiMain guiMain = new GuiMain();
+
+        Application application = new DefaultApplication();
+        application.addApplicationListener(guiMain);
+        application.addPreferencesMenuItem();
+        application.setEnabledPreferencesMenu(false);
+
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new GuiMain().setVisible(true);
+                guiMain.setVisible(true);
             }
         });
     }
@@ -253,4 +257,29 @@ public class GuiMain extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     // End of variables declaration//GEN-END:variables
+
+    /**
+     * ** callback methods for macify ***
+     */
+    public void handleAbout(ApplicationEvent ae) {
+    }
+
+    public void handleOpenApplication(ApplicationEvent ae) {
+    }
+
+    public void handleOpenFile(ApplicationEvent ae) {
+    }
+
+    public void handlePreferences(ApplicationEvent ae) {
+    }
+
+    public void handlePrintFile(ApplicationEvent ae) {
+    }
+
+    public void handleQuit(ApplicationEvent ae) {
+        System.exit(0);
+    }
+
+    public void handleReOpenApplication(ApplicationEvent ae) {
+    }
 }

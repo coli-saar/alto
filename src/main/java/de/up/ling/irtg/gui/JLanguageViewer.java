@@ -68,6 +68,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         WeightedTree wt = cachedTrees.get(treeNumber);
         derivationViewer.displayDerivation(automaton.getSignature().resolve(wt.getTree()));
         weightLabel.setText("w = " + formatWeight(wt.getWeight()));
+        weightLabel.setToolTipText("w = " + wt.getWeight());
         treeIndex.setText(Integer.toString(treeNumber + 1));
     }
 
@@ -80,7 +81,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
     }
 
     private String formatWeight(double weight) {
-        return Double.toString(weight);
+        return String.format("%5.2g", weight);
     }
 
     /**
@@ -159,6 +160,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
         languageSizeLabel.setText("of INFINITY");
 
+        weightLabel.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
         weightLabel.setText("weight");
 
         org.jdesktop.layout.GroupLayout controlsLayout = new org.jdesktop.layout.GroupLayout(controls);
@@ -230,48 +232,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         goToTree(getTreeIndex());
     }//GEN-LAST:event_treeIndexActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-
-
-
-
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(JLanguageViewer.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(JLanguageViewer.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(JLanguageViewer.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(JLanguageViewer.class
-                    .getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new JLanguageViewer().setVisible(true);
-            }
-        });
-    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private de.up.ling.irtg.gui.JDerivationViewer derivationViewer;

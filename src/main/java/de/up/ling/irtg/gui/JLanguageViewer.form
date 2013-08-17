@@ -169,6 +169,7 @@
         </Component>
         <Component class="javax.swing.JLabel" name="weightLabel">
           <Properties>
+            <Property name="horizontalAlignment" type="int" value="4"/>
             <Property name="text" type="java.lang.String" value="weight"/>
           </Properties>
         </Component>

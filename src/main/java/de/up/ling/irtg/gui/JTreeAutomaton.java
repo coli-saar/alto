@@ -37,6 +37,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         columnIdentifiers.add("");
         columnIdentifiers.add("");
         columnIdentifiers.add("");
+        columnIdentifiers.add("weight");
 
         annotationsInOrder = new ArrayList<String>();
         if (annotator != null) {
@@ -61,6 +62,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                     + (rule.getArity() > 0 ? "(" : "")
                     + StringTools.join(resolvedRhsStates, ", ")
                     + (rule.getArity() > 0 ? ")" : ""));
+            
+            row.add("[" + Double.toString(rule.getWeight()) + "]");
 
             if (annotator != null) {
                 for (String anno : annotationsInOrder) {
@@ -228,6 +231,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miShowLanguageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miShowLanguageActionPerformed
         JLanguageViewer lv = new JLanguageViewer();
         lv.setAutomaton(automaton, irtg);
+        lv.setTitle("Language of " + getTitle());
         lv.pack();
         lv.setVisible(true);
     }//GEN-LAST:event_miShowLanguageActionPerformed
@@ -246,10 +250,11 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 }
                 
                 if( chart != null ) {
-                    JLanguageViewer jlv = new JLanguageViewer();
-                    jlv.setAutomaton(chart, irtg);
-                    jlv.pack();
-                    jlv.setVisible(true);
+                    JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+                    jta.setIrtg(irtg);
+                    jta.setTitle("Parse chart: " + inputs);                    
+                    jta.pack();
+                    jta.setVisible(true);
                 }
             }
 

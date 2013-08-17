@@ -6,15 +6,9 @@ package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.IrtgParser;
-import de.up.ling.irtg.ParseException;
-import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.tree.Tree;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComponent;
-import javax.swing.JFrame;
 
 /**
  *
@@ -27,36 +21,6 @@ public class JDerivationViewer extends javax.swing.JPanel {
     private Tree<String> derivationTree;
     private static final String INTERPRETATION_PREFIX = "interpretation: ";
     private static final String DERIVATION_TREE = "derivation tree";
-
-    public static void main(String[] args) throws ParseException, FileNotFoundException, ParserException {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/nesson-shieber.irtg"));
-
-        JFrame f = new JFrame("test");
-//        f.add(new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg)));
-//        f.pack();
-//        f.setVisible(true);
-
-//
-//         JDerivationViewer dv = new JDerivationViewer();
-//         dv.setInterpretedTreeAutomaton(irtg);
-//         f.add(dv);
-//
-//         Map<String, String> input = new HashMap<String, String>();
-//         input.put("string", "john apparently likes mary");
-//         TreeAutomaton chart = irtg.parse(input);
-//         Tree<String> dt = chart.viterbi();
-//
-//         f.pack();
-//         f.setVisible(true);
-//
-//         dv.displayDerivation(dt);
-
-
-        JLanguageViewer lv = new JLanguageViewer();
-        lv.setAutomaton(irtg.getAutomaton(), irtg);
-        lv.pack();
-        lv.setVisible(true);
-    }
 
     /**
      * Creates new form JDerivationViewer
