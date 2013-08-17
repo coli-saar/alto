@@ -35,10 +35,14 @@ public class JDerivationViewer extends javax.swing.JPanel {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/nesson-shieber.irtg"));
 
         JFrame f = new JFrame("test");
+        f.add(new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg)));
+        f.pack();
+        f.setVisible(true);
+        
+        
+/*        
         JDerivationViewer dv = new JDerivationViewer(irtg);
         f.add(dv);
-//        f.pack();
-//        f.setVisible(true);
 
         Map<String, String> input = new HashMap<String, String>();
         input.put("string", "john apparently likes mary");
@@ -50,6 +54,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
         f.setVisible(true);
 
         dv.displayDerivation(dt);
+        * */
     }
 
     /**

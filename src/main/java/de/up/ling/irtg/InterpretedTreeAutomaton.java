@@ -108,7 +108,7 @@ public class InterpretedTreeAutomaton {
      * @return
      * @throws IOException
      */
-    public Interpretation getInterpretation(String interp) throws IOException {
+    public Interpretation getInterpretation(String interp) {
         return interpretations.get(interp);
     }
     
