@@ -9,12 +9,9 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.ParseException;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.util.HashMap;
-import java.util.Map;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -53,8 +50,8 @@ public class JDerivationViewer extends javax.swing.JPanel {
 //         f.setVisible(true);
 //
 //         dv.displayDerivation(dt);
-        
-        
+
+
         JLanguageViewer lv = new JLanguageViewer();
         lv.setAutomaton(irtg.getAutomaton(), irtg);
         lv.pack();
@@ -70,22 +67,29 @@ public class JDerivationViewer extends javax.swing.JPanel {
 
     public void setInterpretedTreeAutomaton(InterpretedTreeAutomaton irtg) {
         this.irtg = irtg;
-        int N = irtg.getInterpretations().size() + 1;
+        int N = 1;
+
+        if (irtg != null) {
+            N = irtg.getInterpretations().size() + 1;
+        }
+
         String[] possibleViews = new String[N];
         interpretationForSelection = new Interpretation[N - 1];
         cachedComponents = new JComponent[N];
 
         possibleViews[0] = DERIVATION_TREE;
-        int i = 0;
-        for (String name : irtg.getInterpretations().keySet()) {
-            interpretationForSelection[i] = irtg.getInterpretations().get(name);
-            possibleViews[i + 1] = INTERPRETATION_PREFIX + name;
-            i++;
+
+        if (irtg != null) {
+            int i = 0;
+            for (String name : irtg.getInterpretations().keySet()) {
+                interpretationForSelection[i] = irtg.getInterpretations().get(name);
+                possibleViews[i + 1] = INTERPRETATION_PREFIX + name;
+                i++;
+            }
         }
 
         componentSelector.setModel(new DefaultComboBoxModel(possibleViews));
         derivationTree = null;
-
     }
 
     public void displayDerivation(Tree<String> derivationTree) {

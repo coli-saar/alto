@@ -114,7 +114,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
             .add(0, 100, Short.MAX_VALUE)
         );
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         org.jdesktop.layout.GroupLayout treeViewerLayout = new org.jdesktop.layout.GroupLayout(treeViewer);
         treeViewer.setLayout(treeViewerLayout);
