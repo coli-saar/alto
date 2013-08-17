@@ -53,6 +53,11 @@ public class JInterpretation extends javax.swing.JPanel {
         jSplitPane1.setBottomComponent(termPanel);
 
         valuePanel.setBorder(javax.swing.BorderFactory.createTitledBorder("Value"));
+        valuePanel.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                handleValuePanelResized(evt);
+            }
+        });
         valuePanel.setLayout(new java.awt.BorderLayout());
         jSplitPane1.setLeftComponent(valuePanel);
 
@@ -67,6 +72,12 @@ public class JInterpretation extends javax.swing.JPanel {
             .add(jSplitPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void handleValuePanelResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_handleValuePanelResized
+        valuePanel.setPreferredSize(valuePanel.getSize());
+//        valuePanel.setm
+    }//GEN-LAST:event_handleValuePanelResized
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JPanel termPanel;

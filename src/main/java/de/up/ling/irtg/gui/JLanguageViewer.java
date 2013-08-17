@@ -123,6 +123,11 @@ public class JLanguageViewer extends javax.swing.JFrame {
         );
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentResized(java.awt.event.ComponentEvent evt) {
+                handleResize(evt);
+            }
+        });
 
         org.jdesktop.layout.GroupLayout treeViewerLayout = new org.jdesktop.layout.GroupLayout(treeViewer);
         treeViewer.setLayout(treeViewerLayout);
@@ -232,6 +237,12 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private void treeIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_treeIndexActionPerformed
         goToTree(getTreeIndex());
     }//GEN-LAST:event_treeIndexActionPerformed
+
+    private void handleResize(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_handleResize
+        setPreferredSize(getSize());
+        setMaximumSize(getSize());
+    }//GEN-LAST:event_handleResize
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private de.up.ling.irtg.gui.JDerivationViewer derivationViewer;
