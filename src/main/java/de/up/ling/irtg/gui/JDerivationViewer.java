@@ -35,34 +35,40 @@ public class JDerivationViewer extends javax.swing.JPanel {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/nesson-shieber.irtg"));
 
         JFrame f = new JFrame("test");
-        f.add(new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg)));
-        f.pack();
-        f.setVisible(true);
+//        f.add(new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg)));
+//        f.pack();
+//        f.setVisible(true);
+
+//
+//         JDerivationViewer dv = new JDerivationViewer();
+//         dv.setInterpretedTreeAutomaton(irtg);
+//         f.add(dv);
+//
+//         Map<String, String> input = new HashMap<String, String>();
+//         input.put("string", "john apparently likes mary");
+//         TreeAutomaton chart = irtg.parse(input);
+//         Tree<String> dt = chart.viterbi();
+//
+//         f.pack();
+//         f.setVisible(true);
+//
+//         dv.displayDerivation(dt);
         
         
-/*        
-        JDerivationViewer dv = new JDerivationViewer(irtg);
-        f.add(dv);
-
-        Map<String, String> input = new HashMap<String, String>();
-        input.put("string", "john apparently likes mary");
-        TreeAutomaton chart = irtg.parse(input);
-        Tree<String> dt = chart.viterbi();
-
-
-        f.pack();
-        f.setVisible(true);
-
-        dv.displayDerivation(dt);
-        * */
+        JLanguageViewer lv = new JLanguageViewer();
+        lv.setAutomaton(irtg.getAutomaton(), irtg);
+        lv.pack();
+        lv.setVisible(true);
     }
 
     /**
      * Creates new form JDerivationViewer
      */
-    public JDerivationViewer(InterpretedTreeAutomaton irtg) {
+    public JDerivationViewer() {
         initComponents();
+    }
 
+    public void setInterpretedTreeAutomaton(InterpretedTreeAutomaton irtg) {
         this.irtg = irtg;
         int N = irtg.getInterpretations().size() + 1;
         String[] possibleViews = new String[N];
@@ -79,6 +85,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
 
         componentSelector.setModel(new DefaultComboBoxModel(possibleViews));
         derivationTree = null;
+
     }
 
     public void displayDerivation(Tree<String> derivationTree) {
@@ -126,7 +133,6 @@ public class JDerivationViewer extends javax.swing.JPanel {
 
         jLabel1.setText("View:");
 
-        componentSelector.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
         componentSelector.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 componentSelectorActionPerformed(evt);
@@ -157,8 +163,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
                     .add(jLabel1)
                     .add(componentSelector, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(content, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 454, Short.MAX_VALUE)
-                .addContainerGap())
+                .add(content, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 460, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 

@@ -523,6 +523,18 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assert ! auto1.isBottomUpDeterministic();
     }
     
+    @Test
+    public void testCyclic() {
+        TreeAutomaton a = parse("q1! -> f(q2,q3)\n q2 -> g(q3)\n q3 -> g(q1)");
+        assert a.isCyclic();
+    }
+    
+    @Test
+    public void testAcyclic() {
+        TreeAutomaton a = parse("q1! -> f(q2,q3)\n q2 -> g(q3)\n q3 -> a");
+        assert ! a.isCyclic();
+    }
+    
     /*
     def "testing whether automaton is bottom-up deterministic"() {
         expect:

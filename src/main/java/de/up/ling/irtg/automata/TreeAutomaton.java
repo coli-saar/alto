@@ -413,6 +413,38 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return new HashMap<int[], Set<Rule>>();
         }
     }
+    
+    public boolean isCyclic() {
+        boolean[] discovered = new boolean[stateInterner.getNextIndex()];
+        
+        for( int f : getFinalStates() ) {
+            if( exploreForCyclicity(f, discovered) ) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private boolean exploreForCyclicity(int state, boolean[] discovered) {
+        if( discovered[state]) {
+            return true;
+        } else {
+            discovered[state] = true;
+            for( int label : getLabelsTopDown(state)) {
+                for( Rule rule : getRulesTopDown(label, state)) {
+                    for( int child : rule.getChildren() ) {
+                        if( exploreForCyclicity(child, discovered)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            discovered[state] = false;
+            
+            return false;
+        }
+    }
 
     /**
      * Returns the number of trees in the language of this automaton. Note that
