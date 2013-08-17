@@ -6,6 +6,7 @@ package de.up.ling.irtg.gui;
 
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
+import java.awt.Color;
 import javax.swing.JScrollPane;
 
 /**
@@ -18,7 +19,9 @@ public class JDerivationTree extends javax.swing.JPanel {
      */
     public JDerivationTree(Tree<String> derivationTree) {
         initComponents();
-        add(new JScrollPane(new TreePanel(derivationTree), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED));
+        JScrollPane jsp = new JScrollPane(new TreePanel(derivationTree), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        jsp.setBackground(Color.white);
+        add(jsp);
 //        revalidate();
 //        repaint();
     }

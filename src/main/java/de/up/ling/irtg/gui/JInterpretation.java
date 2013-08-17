@@ -7,6 +7,7 @@ package de.up.ling.irtg.gui;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
+import java.awt.Color;
 import javax.swing.JComponent;
 import javax.swing.JScrollPane;
 
@@ -27,7 +28,9 @@ public class JInterpretation extends javax.swing.JPanel {
     }
     
     private JComponent sp(JComponent comp) {
-        return new JScrollPane(comp, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        JScrollPane ret = new JScrollPane(comp, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        ret.setBackground(Color.white);
+        return ret;
     }
 
     /**
