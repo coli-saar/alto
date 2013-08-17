@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.algebra;
 
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;
@@ -15,6 +16,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 /**
  * The binary string algebra. The elements of this algebra are lists
@@ -81,6 +84,13 @@ public class StringAlgebra extends Algebra<List<String>> {
     public Signature getSignature() {
         return signature;
     }
+
+    @Override
+    public JComponent visualize(List<String> object) {
+        return new JLabel(StringTools.join(object, " "));
+    }
+    
+    
 
     private class CkyAutomaton extends TreeAutomaton<Span> {
         private int[] words;

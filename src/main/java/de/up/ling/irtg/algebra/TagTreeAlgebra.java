@@ -9,6 +9,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreePanel;
 import de.up.ling.tree.TreeParser;
 import de.up.ling.tree.TreeVisitor;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.swing.JComponent;
 
 /**
  * An algebra for TAG derived trees. The elements of this algebra
@@ -77,8 +79,14 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
         return ret;
     }
 
+    @Override
     public Signature getSignature() {
         return signature;
+    }
+
+    @Override
+    public JComponent visualize(Tree<String> object) {
+        return new TreePanel(object);
     }
 
     private class YieldDecompositionAutomaton extends TreeAutomaton<Context> {

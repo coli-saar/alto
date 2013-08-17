@@ -10,9 +10,11 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreePanel;
 import de.up.ling.tree.TreeParser;
 import java.util.HashSet;
 import java.util.Set;
+import javax.swing.JComponent;
 
 /**
  * The tree algebra. The elements of this algebra are the ranked
@@ -42,6 +44,13 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
     public Signature getSignature() {
         return signature;
     }
+
+    @Override
+    public JComponent visualize(Tree<String> object) {
+        return new TreePanel(object);
+    }
+    
+    
 
     private class TreeDecomposingAutomaton extends TreeAutomaton<String> {
         private Tree<Integer> tree;

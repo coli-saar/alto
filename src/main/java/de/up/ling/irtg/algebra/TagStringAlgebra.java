@@ -5,6 +5,7 @@
 package de.up.ling.irtg.algebra;
 
 import de.saar.basic.Pair;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -14,6 +15,8 @@ import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.*;
+import javax.swing.JComponent;
+import javax.swing.JLabel;
 
 /**
  * A string algebra for TAG. The elements of this algebra are strings and string
@@ -460,6 +463,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         return new TagDecompositionAutomaton(value.left);
     }
 
+    @Override
     public Pair<List<String>, List<String>> parseString(String representation) throws ParserException {
         List<String> words = Arrays.asList(representation.split("\\s+"));
 
@@ -469,6 +473,17 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
         return new Pair<List<String>, List<String>>(words, null);
     }
+
+    @Override
+    public JComponent visualize(Pair<List<String>, List<String>> object) {
+        if( object.right == null ) {
+            return new JLabel(StringTools.join(object.left, " "));
+        } else {
+            return new JLabel("[" + StringTools.join(object.left, " ") + " / " + StringTools.join(object.right, " ") + "]");
+        }
+    }
+    
+    
 
     public static <E, F> int _arity(Pair<E, F> pair) {
         return pair.right == null ? 1 : 2;
