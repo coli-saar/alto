@@ -11,10 +11,15 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
+import java.awt.Color;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import javax.swing.JTable;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableCellRenderer;
 
 /**
  *
@@ -77,6 +82,23 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         TableColumnAdjuster tca = new TableColumnAdjuster(jTable1);
 //        tca.setOnlyAdjustLarger(false);
         tca.adjustColumns();
+        
+        final Color alternateRowColor = new Color(204, 229, 255);
+        jTable1.setDefaultRenderer(Object.class, new TableCellRenderer(){
+            private DefaultTableCellRenderer DEFAULT_RENDERER =  new DefaultTableCellRenderer();
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = DEFAULT_RENDERER.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (row%2 == 0){
+                    c.setBackground(Color.WHITE);
+                }
+                else {
+                    c.setBackground(alternateRowColor);
+                }                        
+                return c;
+            }
+
+        });
     }
 
     public void setIrtg(InterpretedTreeAutomaton irtg) {
