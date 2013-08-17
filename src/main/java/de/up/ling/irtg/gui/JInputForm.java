@@ -5,43 +5,80 @@
 package de.up.ling.irtg.gui;
 
 import java.awt.Frame;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.swing.JLabel;
+import javax.swing.JTextField;
 
 /**
  *
  * @author koller
  */
 public class JInputForm extends javax.swing.JDialog {
-    Map<String,String> ret = null;
+    Map<String, String> ret = null;
+    Map<String, JTextField> fields;
     
     /**
-     * Creates new form JInputForm
+     * Creates new form JInputFormNew
      */
-    public JInputForm() {
+    public JInputForm(java.awt.Frame parent, boolean modal) {
+        super(parent, modal);
         initComponents();
-
-        values.setColumnIdentifiers(new Object[]{"interpretation", "value"});
-    }
-    
-    public JInputForm(Frame owner, boolean modal) {
-        super(owner, modal);
-        initComponents();
-
-        values.setColumnIdentifiers(new Object[]{"interpretation", "value"});
+        getRootPane().setDefaultButton(okButton);
+        setTitle("Enter inputs");
     }
 
     public static Map<String, String> getValues(List<String> interpretations, Frame parent) {
         JInputForm jif = new JInputForm(parent, true);
 
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.NONE;
+        c.anchor = GridBagConstraints.WEST;
+
+        GridBagLayout gridbag = new GridBagLayout();
+        jif.inputPanel.setLayout(gridbag);
+
+        jif.fields = new HashMap<String, JTextField>();
+
+        int nextY = 0;
+
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
+
         for (String intp : interpretations) {
-            jif.values.addRow(new Object[]{intp, ""});
+            c.gridy = nextY;
+
+            c.fill = GridBagConstraints.NONE;
+            c.gridx = 0;
+            c.weightx = 0;
+            c.insets = new Insets(0, 0, 0, 0);
+            JLabel jl = new JLabel("Input on interpretation " + intp + ":");
+            gridbag.setConstraints(jl, c);
+            jif.inputPanel.add(jl);
+
+            nextY++;
+            c.gridy = nextY;
+
+            c.fill = GridBagConstraints.HORIZONTAL;
+            c.gridx = 0;
+            c.weightx = 1;
+            c.insets = new Insets(0, 0, 10, 0);
+
+            JTextField comp = new JTextField(40);
+            gridbag.setConstraints(comp, c);
+            jif.inputPanel.add(comp);
+            jif.fields.put(intp, comp);
+
+            nextY++;
         }
 
+        jif.inputPanel.revalidate();
         jif.pack();
         jif.setVisible(true);
-        
+
         return jif.ret;
     }
 
@@ -54,31 +91,26 @@ public class JInputForm extends javax.swing.JDialog {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        values = new javax.swing.table.DefaultTableModel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
-        okButton = new javax.swing.JButton();
+        inputPanel = new javax.swing.JPanel();
         cancelButton = new javax.swing.JButton();
-
-        values.setColumnCount(2);
+        okButton = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        setTitle("Enter inputs");
+        setResizable(false);
 
-        jTable1.setModel(values);
-        jScrollPane1.setViewportView(jTable1);
-
-        okButton.setText("OK");
-        okButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                okButtonActionPerformed(evt);
-            }
-        });
+        inputPanel.setLayout(new java.awt.GridBagLayout());
 
         cancelButton.setText("Cancel");
         cancelButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelButtonActionPerformed(evt);
+            }
+        });
+
+        okButton.setText("OK");
+        okButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                okButtonActionPerformed(evt);
             }
         });
 
@@ -88,24 +120,25 @@ public class JInputForm extends javax.swing.JDialog {
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(inputPanel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .add(layout.createSequentialGroup()
+                        .add(okButton)
+                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                        .add(cancelButton)
+                        .add(0, 185, Short.MAX_VALUE)))
                 .addContainerGap())
-            .add(layout.createSequentialGroup()
-                .add(okButton)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
-                .add(cancelButton)
-                .add(0, 227, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
-                .addContainerGap()
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 255, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap(7, Short.MAX_VALUE)
+                .add(inputPanel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.UNRELATED)
                 .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.BASELINE)
                     .add(okButton)
                     .add(cancelButton))
-                .addContainerGap())
+                .addContainerGap(7, Short.MAX_VALUE))
         );
 
         pack();
@@ -113,16 +146,13 @@ public class JInputForm extends javax.swing.JDialog {
 
     private void okButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_okButtonActionPerformed
         ret = new HashMap<String, String>();
-        
-        for( int i = 0; i < values.getRowCount(); i++ ) {
-            String interp = (String) values.getValueAt(i, 0);
-            String value = (String) values.getValueAt(i, 1);
-            
-            if( ! "".equals(value)) {
-                ret.put(interp, value);
+
+        for (String intp : fields.keySet()) {
+            if (!"".equals(fields.get(intp).getText())) {
+                ret.put(intp, fields.get(intp).getText());
             }
         }
-        
+
         setVisible(false);
     }//GEN-LAST:event_okButtonActionPerformed
 
@@ -130,13 +160,9 @@ public class JInputForm extends javax.swing.JDialog {
         ret = null;
         setVisible(false);
     }//GEN-LAST:event_cancelButtonActionPerformed
-
-    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JPanel inputPanel;
     private javax.swing.JButton okButton;
-    private javax.swing.table.DefaultTableModel values;
     // End of variables declaration//GEN-END:variables
 }
