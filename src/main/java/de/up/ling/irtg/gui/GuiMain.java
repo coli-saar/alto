@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
+import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -41,6 +42,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
      */
     public GuiMain() {
         initComponents();
+        jMenuBar1.add(new WindowMenu(this));
+    }
+    
+    public static GuiMain getApplication() {
+        return app;
     }
 
     /**

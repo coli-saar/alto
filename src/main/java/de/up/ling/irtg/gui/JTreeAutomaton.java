@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
+import com.bric.window.WindowMenu;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
@@ -13,7 +14,6 @@ import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,13 +29,15 @@ import javax.swing.table.TableCellRenderer;
 public class JTreeAutomaton extends javax.swing.JFrame {
     private TreeAutomaton automaton;
     private InterpretedTreeAutomaton irtg;
-    List<String> annotationsInOrder;
+    private List<String> annotationsInOrder;
 
     /**
      * Creates new form JInterpretedTreeAutomaton
      */
     public JTreeAutomaton(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
         initComponents();
+        
+        jMenuBar2.add(new WindowMenu(this));
 
         this.automaton = automaton;
 
@@ -120,9 +122,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void initComponents() {
 
         entries = new javax.swing.table.DefaultTableModel();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
-        jMenu2 = new javax.swing.JMenu();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jMenuBar2 = new javax.swing.JMenuBar();
@@ -136,12 +135,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu4 = new javax.swing.JMenu();
         miShowLanguage = new javax.swing.JMenuItem();
         miParse = new javax.swing.JMenuItem();
-
-        jMenu1.setText("File");
-        jMenuBar1.add(jMenu1);
-
-        jMenu2.setText("Edit");
-        jMenuBar1.add(jMenu2);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -290,11 +283,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }//GEN-LAST:event_miParseActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenu jMenu4;
-    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuBar jMenuBar2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;

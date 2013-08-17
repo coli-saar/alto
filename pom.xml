@@ -45,6 +45,12 @@
             <artifactId>macify</artifactId>
             <version>1.4</version>
         </dependency>
+        
+        <dependency>
+            <groupId>com.bric.window</groupId>
+            <artifactId>windowmenu</artifactId>
+            <version>1.0</version>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>

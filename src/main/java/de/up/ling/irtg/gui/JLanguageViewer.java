@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
+import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
@@ -28,6 +29,8 @@ public class JLanguageViewer extends javax.swing.JFrame {
      */
     public JLanguageViewer() {
         initComponents();
+        
+        jMenuBar1.add(new WindowMenu(this));
     }
 
     public void setAutomaton(TreeAutomaton automaton, InterpretedTreeAutomaton irtg) {
@@ -110,6 +113,12 @@ public class JLanguageViewer extends javax.swing.JFrame {
         rightButton = new javax.swing.JButton();
         languageSizeLabel = new javax.swing.JLabel();
         weightLabel = new javax.swing.JLabel();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        jMenu1 = new javax.swing.JMenu();
+        miOpenIrtg1 = new javax.swing.JMenuItem();
+        miOpenAutomaton = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        miQuit = new javax.swing.JMenuItem();
 
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -137,7 +146,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         );
         treeViewerLayout.setVerticalGroup(
             treeViewerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, derivationViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 408, Short.MAX_VALUE)
+            .add(org.jdesktop.layout.GroupLayout.TRAILING, derivationViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
         );
 
         jLabel1.setText("Derivation #");
@@ -202,6 +211,40 @@ public class JLanguageViewer extends javax.swing.JFrame {
                 .add(7, 7, 7))
         );
 
+        jMenu1.setText("File");
+
+        miOpenIrtg1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
+        miOpenIrtg1.setText("Open IRTG ...");
+        miOpenIrtg1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miOpenIrtg1ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(miOpenIrtg1);
+
+        miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
+        miOpenAutomaton.setText("Open tree automaton ...");
+        miOpenAutomaton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miOpenAutomatonActionPerformed(evt);
+            }
+        });
+        jMenu1.add(miOpenAutomaton);
+        jMenu1.add(jSeparator1);
+
+        miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
+        miQuit.setText("Quit");
+        miQuit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miQuitActionPerformed(evt);
+            }
+        });
+        jMenu1.add(miQuit);
+
+        jMenuBar1.add(jMenu1);
+
+        setJMenuBar(jMenuBar1);
+
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -243,13 +286,33 @@ public class JLanguageViewer extends javax.swing.JFrame {
         setMaximumSize(getSize());
     }//GEN-LAST:event_handleResize
 
+    private void miOpenIrtg1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenIrtg1ActionPerformed
+        GuiMain.loadIrtg(this);
+    }//GEN-LAST:event_miOpenIrtg1ActionPerformed
+
+    private void miOpenAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenAutomatonActionPerformed
+        GuiMain.loadAutomaton(this);
+    }//GEN-LAST:event_miOpenAutomatonActionPerformed
+
+    private void miQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miQuitActionPerformed
+        GuiMain.quit();
+    }//GEN-LAST:event_miQuitActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private de.up.ling.irtg.gui.JDerivationViewer derivationViewer;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel languageSizeLabel;
     private javax.swing.JButton leftButton;
+    private javax.swing.JMenuItem miOpenAutomaton;
+    private javax.swing.JMenuItem miOpenIrtg;
+    private javax.swing.JMenuItem miOpenIrtg1;
+    private javax.swing.JMenuItem miQuit;
     private javax.swing.JButton rightButton;
     private javax.swing.JTextField treeIndex;
     private javax.swing.JPanel treeViewer;
