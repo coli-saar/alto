@@ -65,6 +65,14 @@ public class JLanguageViewer extends javax.swing.JFrame {
         if (treeNumber < 0) {
             treeNumber = 0;
         }
+        
+        leftButton.setEnabled(treeNumber > 0);
+        
+        if( numTrees < 0 || treeNumber < numTrees-1 ) {
+            rightButton.setEnabled(true);
+        } else {
+            rightButton.setEnabled(false);
+        }
 
         long treesToCompute = treeNumber - cachedTrees.size() + 1;
         if (treesToCompute > 0) {

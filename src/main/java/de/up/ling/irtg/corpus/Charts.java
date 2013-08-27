@@ -16,6 +16,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import de.up.ling.zip.ZipEntriesCreator;
 import de.up.ling.zip.ZipEntryIterator;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A collection of parse charts for the input objects in a corpus.
@@ -27,7 +29,7 @@ import de.up.ling.zip.ZipEntryIterator;
  * @author koller
  */
 public class Charts implements Iterable<TreeAutomaton> {
-    Supplier<InputStream> supplier;
+    private Supplier<InputStream> supplier;
     
     public Charts(Supplier<InputStream> supplier) {
         this.supplier = supplier;
@@ -43,15 +45,23 @@ public class Charts implements Iterable<TreeAutomaton> {
     }
 
     public static void computeCharts(Corpus corpus, InterpretedTreeAutomaton irtg, OutputStream ostream) throws IOException  {
+        computeCharts(corpus, irtg, ostream, null);
+    }
+    
+    public static void computeCharts(Corpus corpus, InterpretedTreeAutomaton irtg, OutputStream ostream, ChartComputationListener listener) throws IOException  {
         ZipEntriesCreator zec = new ZipEntriesCreator(ostream);
+        int i = 0;
         
         for (Instance inst : corpus) {
             TreeAutomaton chart = irtg.parseInputObjects(inst.getInputObjects());
-            
-//            System.err.println("chart: " + chart);
-            
             ConcreteTreeAutomaton x = chart.asConcreteTreeAutomaton();
             zec.add(x);
+            
+            if( listener != null ) {
+                listener.update(i, inst, chart);
+            }
+            
+            i++;
         }
         
         zec.close();

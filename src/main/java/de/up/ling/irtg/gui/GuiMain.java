@@ -9,12 +9,24 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomatonParser;
+import de.up.ling.irtg.corpus.Charts;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import java.awt.Component;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
@@ -32,6 +44,7 @@ import org.simplericity.macify.eawt.DefaultApplication;
 public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private static File previousDirectory;
     private static GuiMain app;
+    private static ExecutorService executorService = Executors.newFixedThreadPool(1);
 
     static {
         previousDirectory = new File(".");
@@ -44,7 +57,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         initComponents();
         jMenuBar1.add(new WindowMenu(this));
     }
-    
+
     public static GuiMain getApplication() {
         return app;
     }
@@ -179,6 +192,78 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         }
 
         return false;
+    }
+
+    public static Corpus loadAnnotatedCorpus(InterpretedTreeAutomaton irtg, Component parent) {
+        File file = chooseFile(new FileNameExtensionFilter("Annotated corpus", "txt"), parent);
+
+        try {
+            if (file != null) {
+                long start = System.nanoTime();
+                Corpus corpus = irtg.readCorpus(new FileReader(file));
+                log("Read annotated corpus from " + file.getName() + ", " + formatTimeSince(start));
+
+                if (!corpus.isAnnotated()) {
+                    showError(parent, "The file " + file.getName() + " is not an annotated corpus.");
+                    return null;
+                }
+
+                return corpus;
+            }
+        } catch (Exception e) {
+            showError(parent, "An error occurred while reading the corpus " + file.getName() + ": " + e.getMessage());
+        }
+
+        return null;
+    }
+
+    public static Corpus loadUnannotatedCorpus(final InterpretedTreeAutomaton irtg, final JFrame parent) {
+        final File file = chooseFile(new FileNameExtensionFilter("Unannotated corpus", "txt"), parent);
+        ChartComputationProgressBar pb = null;
+        FileOutputStream fos = null;
+
+        try {
+            if (file != null) {
+                long start = System.nanoTime();
+                final Corpus corpus = irtg.readCorpus(new FileReader(file));
+                log("Read unannotated corpus from " + file.getName() + ", " + formatTimeSince(start));
+
+                File chartsFile = chooseFile(new FileNameExtensionFilter("Parse charts", "zip"), parent);
+
+                // if user didn't select precomputed charts, compute them now
+                if (chartsFile == null) {
+                    chartsFile = new File(file.getName() + "-charts.zip");
+                    fos = new FileOutputStream(chartsFile);
+
+                    pb = new ChartComputationProgressBar(parent, false, corpus.getNumberOfInstances());
+                    pb.setVisible(true);
+                    start = System.nanoTime();
+                    Charts.computeCharts(corpus, irtg, fos, pb);
+                    log("Wrote parse charts to " + chartsFile + ", " + formatTimeSince(start));
+                    pb.setVisible(false);
+                }
+
+                Charts charts = new Charts(new FileInputStreamSupplier(chartsFile));
+                corpus.attachCharts(charts);
+
+                return corpus;
+            }
+        } catch (Exception e) {
+            if (pb != null) {
+                pb.setVisible(false);
+            }
+
+            showError(parent, "An error occurred while reading the corpus " + file.getName() + ": " + e.getMessage());
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException ex) {
+                }
+            }
+        }
+
+        return null;
     }
 
     private static File chooseFile(FileFilter filter, Component parent) {

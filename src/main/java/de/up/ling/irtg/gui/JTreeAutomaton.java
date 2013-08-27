@@ -10,6 +10,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.corpus.Corpus;
 import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
 import java.awt.Color;
@@ -30,13 +31,14 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private TreeAutomaton automaton;
     private InterpretedTreeAutomaton irtg;
     private List<String> annotationsInOrder;
+    private List<Rule> rulesInOrder;
 
     /**
      * Creates new form JInterpretedTreeAutomaton
      */
     public JTreeAutomaton(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
         initComponents();
-        
+
         jMenuBar2.add(new WindowMenu(this));
 
         this.automaton = automaton;
@@ -55,7 +57,33 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
         entries.setColumnIdentifiers(columnIdentifiers);
 
-        for (Rule rule : automaton.getRuleSet()) {
+        fillEntries(automaton, annotator);
+
+        TableColumnAdjuster tca = new TableColumnAdjuster(jTable1);
+//        tca.setOnlyAdjustLarger(false);
+        tca.adjustColumns();
+
+        final Color alternateRowColor = new Color(204, 229, 255);
+        jTable1.setDefaultRenderer(Object.class, new TableCellRenderer() {
+            private DefaultTableCellRenderer DEFAULT_RENDERER = new DefaultTableCellRenderer();
+
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                Component c = DEFAULT_RENDERER.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                if (row % 2 == 0) {
+                    c.setBackground(Color.WHITE);
+                } else {
+                    c.setBackground(alternateRowColor);
+                }
+                return c;
+            }
+        });
+    }
+
+    private void fillEntries(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
+        rulesInOrder = new ArrayList<Rule>(automaton.getRuleSet());
+
+        for (Rule rule : rulesInOrder) {
             Vector<String> row = new Vector<String>();
             row.add(automaton.getStateForId(rule.getParent()).toString() + (automaton.getFinalStates().contains(rule.getParent()) ? "!" : ""));
             row.add("->");
@@ -81,26 +109,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
             entries.addRow(row);
         }
-
-        TableColumnAdjuster tca = new TableColumnAdjuster(jTable1);
-//        tca.setOnlyAdjustLarger(false);
-        tca.adjustColumns();
-
-        final Color alternateRowColor = new Color(204, 229, 255);
-        jTable1.setDefaultRenderer(Object.class, new TableCellRenderer() {
-            private DefaultTableCellRenderer DEFAULT_RENDERER = new DefaultTableCellRenderer();
-
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = DEFAULT_RENDERER.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                if (row % 2 == 0) {
-                    c.setBackground(Color.WHITE);
-                } else {
-                    c.setBackground(alternateRowColor);
-                }
-                return c;
-            }
-        });
     }
 
     public void setIrtg(InterpretedTreeAutomaton irtg) {
@@ -110,6 +118,10 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     public void setParsingEnabled(boolean enabled) {
         miParse.setEnabled(enabled);
+
+        miTrainEM.setEnabled(enabled);
+        miTrainML.setEnabled(enabled);
+        miTrainVB.setEnabled(enabled);
     }
 
     /**
@@ -135,6 +147,10 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu4 = new javax.swing.JMenu();
         miShowLanguage = new javax.swing.JMenuItem();
         miParse = new javax.swing.JMenuItem();
+        jSeparator3 = new javax.swing.JPopupMenu.Separator();
+        miTrainML = new javax.swing.JMenuItem();
+        miTrainEM = new javax.swing.JMenuItem();
+        miTrainVB = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
@@ -204,6 +220,34 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         });
         jMenu4.add(miParse);
+        jMenu4.add(jSeparator3);
+
+        miTrainML.setText("Maximum likelihood training ...");
+        miTrainML.setEnabled(false);
+        miTrainML.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miTrainMLActionPerformed(evt);
+            }
+        });
+        jMenu4.add(miTrainML);
+
+        miTrainEM.setText("EM training ...");
+        miTrainEM.setEnabled(false);
+        miTrainEM.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miTrainEMActionPerformed(evt);
+            }
+        });
+        jMenu4.add(miTrainEM);
+
+        miTrainVB.setText("Variational Bayes training ...");
+        miTrainVB.setEnabled(false);
+        miTrainVB.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miTrainVBActionPerformed(evt);
+            }
+        });
+        jMenu4.add(miTrainVB);
 
         jMenuBar2.add(jMenu4);
 
@@ -281,6 +325,56 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_miParseActionPerformed
+
+    private void updateWeights() {
+        for (int i = 0; i < rulesInOrder.size(); i++) {
+            entries.setValueAt("[" + rulesInOrder.get(i).getWeight() + "]", i, 3);
+        }
+    }
+
+    private void miTrainMLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainMLActionPerformed
+        Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, this);
+
+        if (corpus != null) {
+            long start = System.nanoTime();
+            irtg.trainML(corpus);
+            GuiMain.log("Performed ML training, " + GuiMain.formatTimeSince(start));
+            updateWeights();
+        }
+    }//GEN-LAST:event_miTrainMLActionPerformed
+
+    private void miTrainEMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainEMActionPerformed
+        new Thread() {
+            @Override
+            public void run() {
+                Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
+
+                if (corpus != null) {
+                    long start = System.nanoTime();
+                    irtg.trainEM(corpus);
+                    GuiMain.log("Performed EM training, " + GuiMain.formatTimeSince(start));
+                    updateWeights();
+                }
+            }
+        }.start();
+    }//GEN-LAST:event_miTrainEMActionPerformed
+
+    private void miTrainVBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainVBActionPerformed
+        new Thread() {
+            @Override
+            public void run() {
+                Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
+
+                if (corpus != null) {
+                    long start = System.nanoTime();
+                    irtg.trainVB(corpus);
+                    GuiMain.log("Performed VB training, " + GuiMain.formatTimeSince(start));
+                    updateWeights();
+                }
+            }
+        }.start();
+
+    }//GEN-LAST:event_miTrainVBActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
@@ -289,6 +383,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JTable jTable1;
     private javax.swing.JMenuItem miOpenAutomaton;
     private javax.swing.JMenuItem miOpenIrtg;
@@ -296,5 +391,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JMenuItem miQuit;
     private javax.swing.JMenuItem miSaveAutomaton;
     private javax.swing.JMenuItem miShowLanguage;
+    private javax.swing.JMenuItem miTrainEM;
+    private javax.swing.JMenuItem miTrainML;
+    private javax.swing.JMenuItem miTrainVB;
     // End of variables declaration//GEN-END:variables
 }
