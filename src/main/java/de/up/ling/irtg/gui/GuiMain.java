@@ -19,12 +19,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -195,7 +193,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static Corpus loadAnnotatedCorpus(InterpretedTreeAutomaton irtg, Component parent) {
-        File file = chooseFile(new FileNameExtensionFilter("Annotated corpus", "txt"), parent);
+        File file = chooseFile("Open annotated corpus", new FileNameExtensionFilter("Annotated corpora (*.txt)", "txt"), parent);
 
         try {
             if (file != null) {
@@ -216,9 +214,20 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         return null;
     }
+    
+    private static String stripExtension(String filename) {
+        Pattern p = Pattern.compile("(.*)\\.[^.]*");
+        Matcher m = p.matcher(filename);
+        
+        if( m.matches()) {
+            return m.group(1);
+        } else {
+            return filename;
+        }
+    }
 
     public static Corpus loadUnannotatedCorpus(final InterpretedTreeAutomaton irtg, final JFrame parent) {
-        final File file = chooseFile(new FileNameExtensionFilter("Unannotated corpus", "txt"), parent);
+        final File file = chooseFile("Open unannotated corpus", new FileNameExtensionFilter("Unannotated corpora (*.txt)", "txt"), parent);
         ChartComputationProgressBar pb = null;
         FileOutputStream fos = null;
 
@@ -228,11 +237,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 final Corpus corpus = irtg.readCorpus(new FileReader(file));
                 log("Read unannotated corpus from " + file.getName() + ", " + formatTimeSince(start));
 
-                File chartsFile = chooseFile(new FileNameExtensionFilter("Parse charts", "zip"), parent);
+                File chartsFile = chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);
 
                 // if user didn't select precomputed charts, compute them now
                 if (chartsFile == null) {
-                    chartsFile = new File(file.getName() + "-charts.zip");
+                    chartsFile = new File(file.getParent(), stripExtension(file.getName()) + "-charts.zip");
                     fos = new FileOutputStream(chartsFile);
 
                     pb = new ChartComputationProgressBar(parent, false, corpus.getNumberOfInstances());
@@ -266,8 +275,9 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         return null;
     }
 
-    private static File chooseFile(FileFilter filter, Component parent) {
+    private static File chooseFile(String title, FileFilter filter, Component parent) {
         JFileChooser fc = new JFileChooser(previousDirectory);
+        fc.setDialogTitle(title);
         fc.setFileFilter(filter);
 
         int returnVal = fc.showOpenDialog(parent);
@@ -282,7 +292,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static boolean loadIrtg(Component parent) {
-        File file = chooseFile(new FileNameExtensionFilter("IRTG grammars", "irtg"), parent);
+        File file = chooseFile("Open IRTG", new FileNameExtensionFilter("IRTG grammars (*.irtg)", "irtg"), parent);
         InterpretedTreeAutomaton irtg = null;
 
         try {
@@ -323,7 +333,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static boolean loadAutomaton(Component parent) {
-        File file = chooseFile(new FileNameExtensionFilter("Tree automata", "auto"), parent);
+        File file = chooseFile("Open tree automaton", new FileNameExtensionFilter("Tree automata (*.auto)", "auto"), parent);
         TreeAutomaton auto = null;
 
         try {
