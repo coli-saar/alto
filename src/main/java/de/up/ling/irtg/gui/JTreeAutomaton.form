@@ -176,6 +176,7 @@
               <Connection component="entries" type="bean"/>
             </Property>
             <Property name="autoCreateRowSorter" type="boolean" value="true"/>
+            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
         </Component>
       </SubComponents>

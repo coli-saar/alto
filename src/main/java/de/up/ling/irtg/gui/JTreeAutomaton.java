@@ -156,6 +156,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
         jTable1.setModel(entries);
         jTable1.setAutoCreateRowSorter(true);
+        jTable1.setEnabled(false);
         jScrollPane1.setViewportView(jTable1);
 
         jMenu3.setText("File");
