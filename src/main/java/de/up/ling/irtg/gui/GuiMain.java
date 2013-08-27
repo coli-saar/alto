@@ -324,11 +324,24 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
     public static String formatTimeSince(long start) {
         long end = System.nanoTime();
-        if (end - start < 10000) {
-            // less than 10 us
-            return String.format("%8.3f us", (end - start) / 1000.0);
+        if (end - start < 1000) {
+            return (end-start) + " ns";
+        } else if( end-start < 1000000 ) {
+            return (end-start)/1000 + " \u03bcs";
+        } else if( end-start < 1000000000 ) {
+            return (end-start)/1000000 + " ms";
         } else {
-            return String.format("%8.3f ms", (end - start) / 1000000.0);
+            StringBuffer buf = new StringBuffer();
+            long diff = end-start;
+            
+            if( diff > 60000000000L ) {
+                buf.append(diff/60000000000L + "m ");
+            }
+            
+            diff %= 60000000000L;
+            
+            buf.append(String.format("%d.%03ds", diff/1000000000, (diff%1000000000)/1000000));
+            return buf.toString();
         }
     }
 

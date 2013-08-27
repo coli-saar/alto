@@ -319,10 +319,14 @@ public class InterpretedTreeAutomaton {
      * @param trainingData
      */
     public void trainEM(Corpus trainingData) {
-        trainEM(trainingData, 10, false);
+        trainEM(trainingData, null);
+    }
+    
+    public void trainEM(Corpus trainingData, TrainingIterationListener listener) {
+        trainEM(trainingData, 10, false, listener);
     }
 
-    public void trainEM(Corpus trainingData, int numIterations, boolean printIntermediate) {
+    public void trainEM(Corpus trainingData, int numIterations, boolean printIntermediate, TrainingIterationListener listener) {
         if (!trainingData.hasCharts()) {
             System.err.println("EM training can only be performed on a corpus with attached charts.");
             return;
@@ -342,7 +346,7 @@ public class InterpretedTreeAutomaton {
 
 
         for (int iteration = 0; iteration < numIterations; iteration++) {
-            Map<Rule, Double> globalRuleCount = estep(parses, intersectedRuleToOriginalRule);
+            Map<Rule, Double> globalRuleCount = estep(parses, intersectedRuleToOriginalRule, listener, iteration);
 
             // sum over rules with same parent state to obtain state counts
             Map<Integer, Double> globalStateCount = new HashMap<Integer, Double>();
@@ -369,6 +373,10 @@ public class InterpretedTreeAutomaton {
             }
         }
     }
+    
+    public void trainVB(Corpus trainingData) {
+        trainVB(trainingData, null);
+    }
 
     /**
      * Performs Variational Bayes (VB) training of this (weighted) IRTG using
@@ -385,7 +393,7 @@ public class InterpretedTreeAutomaton {
      *
      * @param trainingData a corpus of parse charts
      */
-    public void trainVB(Corpus trainingData) {
+    public void trainVB(Corpus trainingData, TrainingIterationListener listener) {
         if (!trainingData.hasCharts()) {
             System.err.println("VB training can only be performed on a corpus with attached charts.");
             return;
@@ -423,7 +431,7 @@ public class InterpretedTreeAutomaton {
             }
 
             // re-estimate hyperparameters
-            Map<Rule, Double> ruleCounts = estep(parses, intersectedRuleToOriginalRule);
+            Map<Rule, Double> ruleCounts = estep(parses, intersectedRuleToOriginalRule, listener, iteration);
             for (int i = 0; i < numRules; i++) {
                 alpha[i] += ruleCounts.get(automatonRules.get(i));
             }
@@ -438,7 +446,7 @@ public class InterpretedTreeAutomaton {
      * @param intersectedRuleToOriginalRule
      * @return
      */
-    protected Map<Rule, Double> estep(List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule) {
+    protected Map<Rule, Double> estep(List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, TrainingIterationListener listener, int iteration) {
         Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
         for (Rule rule : automaton.getRuleSet()) {
             globalRuleCount.put(rule, 0.0);
@@ -463,6 +471,8 @@ public class InterpretedTreeAutomaton {
 
                 globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
             }
+            
+            listener.update(iteration, i);
         }
 
         return globalRuleCount;

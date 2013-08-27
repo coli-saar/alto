@@ -7,6 +7,7 @@ package de.up.ling.irtg.gui;
 import com.bric.window.WindowMenu;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.TrainingIterationListener;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -351,8 +352,21 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
 
                 if (corpus != null) {
+                    final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
+                    pb.setLabelText("Performing EM training ...");
+                    pb.setVisible(true);
+
                     long start = System.nanoTime();
-                    irtg.trainEM(corpus);
+                    try {
+                        irtg.trainEM(corpus, new TrainingIterationListener() {
+                            public void update(int iterationNumber, int instanceNumber) {
+                                pb.update(instanceNumber, null, null);
+                            }
+                        });
+                    } finally {
+                        pb.setVisible(false);
+                    }
+
                     GuiMain.log("Performed EM training, " + GuiMain.formatTimeSince(start));
                     updateWeights();
                 }
@@ -367,8 +381,21 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
 
                 if (corpus != null) {
+                    final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
+                    pb.setLabelText("Performing VB training ...");
+                    pb.setVisible(true);
+
                     long start = System.nanoTime();
-                    irtg.trainVB(corpus);
+                    try {
+                        irtg.trainVB(corpus, new TrainingIterationListener() {
+                            public void update(int iterationNumber, int instanceNumber) {
+                                pb.update(instanceNumber, null, null);
+                            }
+                        });
+                    } finally {
+                        pb.setVisible(false);
+                    }
+                    
                     GuiMain.log("Performed VB training, " + GuiMain.formatTimeSince(start));
                     updateWeights();
                 }
