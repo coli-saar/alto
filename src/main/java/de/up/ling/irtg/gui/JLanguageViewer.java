@@ -78,11 +78,14 @@ public class JLanguageViewer extends javax.swing.JFrame {
         }
         
         leftButton.setEnabled(treeNumber > 0);
+        miPreviousTree.setEnabled(treeNumber > 0);
         
         if( numTrees < 0 || treeNumber < numTrees-1 ) {
             rightButton.setEnabled(true);
+            miNextTree.setEnabled(true);
         } else {
             rightButton.setEnabled(false);
+            miNextTree.setEnabled(false);
         }
 
         long treesToCompute = treeNumber - cachedTrees.size() + 1;
@@ -145,6 +148,9 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
+        miNextTree = new javax.swing.JMenuItem();
+        miPreviousTree = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
         miAddView = new javax.swing.JMenuItem();
         miRemoveView = new javax.swing.JMenuItem();
 
@@ -264,6 +270,25 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
         jMenu2.setText("View");
 
+        miNextTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.META_MASK));
+        miNextTree.setText("Go to next derivation");
+        miNextTree.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miNextTreeActionPerformed(evt);
+            }
+        });
+        jMenu2.add(miNextTree);
+
+        miPreviousTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.META_MASK));
+        miPreviousTree.setText("Go to previous derivation");
+        miPreviousTree.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miPreviousTreeActionPerformed(evt);
+            }
+        });
+        jMenu2.add(miPreviousTree);
+        jMenu2.add(jSeparator2);
+
         miAddView.setText("Add view");
         miAddView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -362,6 +387,14 @@ public class JLanguageViewer extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_miRemoveViewActionPerformed
 
+    private void miPreviousTreeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miPreviousTreeActionPerformed
+        leftButtonActionPerformed(evt);
+    }//GEN-LAST:event_miPreviousTreeActionPerformed
+
+    private void miNextTreeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miNextTreeActionPerformed
+        rightButtonActionPerformed(evt);
+    }//GEN-LAST:event_miNextTreeActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private javax.swing.JPanel derivationViewers;
@@ -371,11 +404,14 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JLabel languageSizeLabel;
     private javax.swing.JButton leftButton;
     private javax.swing.JMenuItem miAddView;
+    private javax.swing.JMenuItem miNextTree;
     private javax.swing.JMenuItem miOpenAutomaton;
     private javax.swing.JMenuItem miOpenIrtg1;
+    private javax.swing.JMenuItem miPreviousTree;
     private javax.swing.JMenuItem miQuit;
     private javax.swing.JMenuItem miRemoveView;
     private javax.swing.JButton rightButton;
