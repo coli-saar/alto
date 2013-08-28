@@ -10,6 +10,8 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
 import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
+import de.up.ling.tree.Tree;
+import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -23,6 +25,8 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private Iterator<WeightedTree> languageIterator;
     private long numTrees;
     private List<WeightedTree> cachedTrees;
+    private InterpretedTreeAutomaton currentIrtg;
+    private Tree<String> currentTree;
 
     /**
      * Creates new form JLanguageViewer
@@ -31,12 +35,19 @@ public class JLanguageViewer extends javax.swing.JFrame {
         initComponents();
         
         jMenuBar1.add(new WindowMenu(this));
+        
+        derivationViewers.add(new JDerivationViewer());
+        miRemoveView.setEnabled(false);
     }
 
     public void setAutomaton(TreeAutomaton automaton, InterpretedTreeAutomaton irtg) {
         this.automaton = automaton;
 
-        derivationViewer.setInterpretedTreeAutomaton(irtg);
+        currentIrtg = irtg;
+        for( Component dv : derivationViewers.getComponents() ) {
+            ((JDerivationViewer) dv).setInterpretedTreeAutomaton(irtg);
+        }
+        
         languageIterator = automaton.sortedLanguageIterator();
         cachedTrees = new ArrayList<WeightedTree>();
 
@@ -84,7 +95,14 @@ public class JLanguageViewer extends javax.swing.JFrame {
         }
 
         WeightedTree wt = cachedTrees.get(treeNumber);
-        derivationViewer.displayDerivation(automaton.getSignature().resolve(wt.getTree()));
+        Tree<String> tree = automaton.getSignature().resolve(wt.getTree());
+        
+        currentTree = tree;
+        for( Component dv : derivationViewers.getComponents() ) {
+            ((JDerivationViewer) dv).displayDerivation(tree);
+        }
+        
+        
         weightLabel.setText("w = " + formatWeight(wt.getWeight()));
         weightLabel.setToolTipText("w = " + wt.getWeight());
         treeIndex.setText(Integer.toString(treeNumber + 1));
@@ -112,8 +130,6 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel2 = new javax.swing.JPanel();
-        treeViewer = new javax.swing.JPanel();
-        derivationViewer = new de.up.ling.irtg.gui.JDerivationViewer();
         controls = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         leftButton = new javax.swing.JButton();
@@ -121,12 +137,16 @@ public class JLanguageViewer extends javax.swing.JFrame {
         rightButton = new javax.swing.JButton();
         languageSizeLabel = new javax.swing.JLabel();
         weightLabel = new javax.swing.JLabel();
+        derivationViewers = new javax.swing.JPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         miOpenIrtg1 = new javax.swing.JMenuItem();
         miOpenAutomaton = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
+        miAddView = new javax.swing.JMenuItem();
+        miRemoveView = new javax.swing.JMenuItem();
 
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -145,17 +165,6 @@ public class JLanguageViewer extends javax.swing.JFrame {
                 handleResize(evt);
             }
         });
-
-        org.jdesktop.layout.GroupLayout treeViewerLayout = new org.jdesktop.layout.GroupLayout(treeViewer);
-        treeViewer.setLayout(treeViewerLayout);
-        treeViewerLayout.setHorizontalGroup(
-            treeViewerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, derivationViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 539, Short.MAX_VALUE)
-        );
-        treeViewerLayout.setVerticalGroup(
-            treeViewerLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, derivationViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
-        );
 
         jLabel1.setText("Derivation #");
 
@@ -201,7 +210,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
                 .add(rightButton, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 40, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(languageSizeLabel)
-                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED, 131, Short.MAX_VALUE)
                 .add(weightLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 105, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -218,6 +227,8 @@ public class JLanguageViewer extends javax.swing.JFrame {
                     .add(weightLabel))
                 .add(7, 7, 7))
         );
+
+        derivationViewers.setLayout(new javax.swing.BoxLayout(derivationViewers, javax.swing.BoxLayout.LINE_AXIS));
 
         jMenu1.setText("File");
 
@@ -251,24 +262,43 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu1);
 
+        jMenu2.setText("View");
+
+        miAddView.setText("Add view");
+        miAddView.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miAddViewActionPerformed(evt);
+            }
+        });
+        jMenu2.add(miAddView);
+
+        miRemoveView.setText("Remove view");
+        miRemoveView.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miRemoveViewActionPerformed(evt);
+            }
+        });
+        jMenu2.add(miRemoveView);
+
+        jMenuBar1.add(jMenu2);
+
         setJMenuBar(jMenuBar1);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(derivationViewers, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-                    .add(controls, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .add(treeViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .add(controls, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(treeViewer, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .add(derivationViewers, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 386, Short.MAX_VALUE)
                 .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
                 .add(controls, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 42, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
@@ -306,24 +336,50 @@ public class JLanguageViewer extends javax.swing.JFrame {
         GuiMain.quit();
     }//GEN-LAST:event_miQuitActionPerformed
 
+    private void miAddViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAddViewActionPerformed
+        JDerivationViewer dv = new JDerivationViewer();
+        
+        if( currentIrtg != null ) {
+            dv.setInterpretedTreeAutomaton(currentIrtg);
+        }
+        
+        if( currentTree != null ) {
+            dv.displayDerivation(currentTree);
+        }
+        
+        derivationViewers.add(dv);
+        validate();
+        
+        miRemoveView.setEnabled(true);
+    }//GEN-LAST:event_miAddViewActionPerformed
+
+    private void miRemoveViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miRemoveViewActionPerformed
+        derivationViewers.remove(derivationViewers.getComponents().length-1);
+        validate();
+        
+        if( derivationViewers.getComponents().length == 1 ) {
+            miRemoveView.setEnabled(false);
+        }
+    }//GEN-LAST:event_miRemoveViewActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
-    private de.up.ling.irtg.gui.JDerivationViewer derivationViewer;
+    private javax.swing.JPanel derivationViewers;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JLabel languageSizeLabel;
     private javax.swing.JButton leftButton;
+    private javax.swing.JMenuItem miAddView;
     private javax.swing.JMenuItem miOpenAutomaton;
-    private javax.swing.JMenuItem miOpenIrtg;
     private javax.swing.JMenuItem miOpenIrtg1;
     private javax.swing.JMenuItem miQuit;
+    private javax.swing.JMenuItem miRemoveView;
     private javax.swing.JButton rightButton;
     private javax.swing.JTextField treeIndex;
-    private javax.swing.JPanel treeViewer;
     private javax.swing.JLabel weightLabel;
     // End of variables declaration//GEN-END:variables
 }
