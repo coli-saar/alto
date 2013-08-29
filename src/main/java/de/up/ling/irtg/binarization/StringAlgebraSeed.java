@@ -18,51 +18,55 @@ import java.util.Set;
  *
  * @author koller
  */
-public class StringAlgebraSeed extends RegularSeed<Span> {
-    private Signature sourceSignature;
-    private Signature targetSignature;
-//    private String binaryConcatenation; // \in targetSignature
+public class StringAlgebraSeed extends RegularSeed {
+    private Signature signature;
     private int binaryConcatenationId;  // in targetSignature
 
-    public StringAlgebraSeed(Signature sourceSignature, Signature targetSignature, String binaryConcatenation) {
-        this.sourceSignature = sourceSignature;
-        this.targetSignature = targetSignature;
-//        this.binaryConcatenation = binaryConcatenation;
-        this.binaryConcatenationId = targetSignature.getIdForSymbol(binaryConcatenation);
+    public StringAlgebraSeed(Signature signature, String binaryConcatenation) {
+        this.signature = signature;
+        this.binaryConcatenationId = signature.getIdForSymbol(binaryConcatenation);
     }
 
     @Override
     public TreeAutomaton binarize(String symbol) {
-        if (sourceSignature.getArityForLabel(symbol) <= 2) {
+        // ensure that signature contains the symbols ?1, ..., ?n where n = arity(symbol)
+        // this is slightly hacky (these symbols have no interpretation in the algebra),
+        // but necessary so the automata can accept langauges with these variable symbols
+        for( int i = 0; i < signature.getArityForLabel(symbol); i++ ) {
+            signature.addSymbol("?" + (i+1), 0);
+        }
+        
+        if (signature.getArityForLabel(symbol) <= 2) {
             return new SingletonAutomaton(symbol);
         } else {
-            return new BinarizationAutomaton(symbol);
+            
+            return new BinarizationAutomaton(symbol, signature);
         }
     }
 
     private class SingletonAutomaton extends ConcreteTreeAutomaton<String> {
         public SingletonAutomaton(String symbol) {
-            int arity = sourceSignature.getArityForLabel(symbol);
+            signature = StringAlgebraSeed.this.signature;
+            int arity = signature.getArityForLabel(symbol);
             List<String> childStates = new ArrayList<String>();
             List<String> empty = new ArrayList<String>();
 
             for (int i = 0; i < arity; i++) {
                 String childState = "q" + i;
 
-                createRule(childState, "?" + i, empty);
-//                addRule("?"+i, empty, childState);
+                addRule(createRule(childState, "?" + i, empty));
                 childStates.add(childState);
             }
 
-            createRule("q", symbol, childStates);
+            addRule(createRule("q", symbol, childStates));
             addFinalState(getIdForState("q"));
         }
     }
 
     private class BinarizationAutomaton extends TreeAutomaton<Span> {
-        public BinarizationAutomaton(String symbol) {
-            super(targetSignature);
-            addFinalState(addState(new Span(0, sourceSignature.getArityForLabel(symbol))));
+        public BinarizationAutomaton(String symbol, Signature signature) {
+            super(signature);
+            addFinalState(addState(new Span(0, signature.getArityForLabel(symbol))));
         }
 
         @Override
@@ -77,7 +81,7 @@ public class StringAlgebraSeed extends RegularSeed<Span> {
 
             if (label.startsWith("?")) {
                 if (childStateIds.length == 0) {
-                    int var = Integer.parseInt(label.substring(1));
+                    int var = Integer.parseInt(label.substring(1)) - 1;
 
                     ret.add(createRule(new Span(var, var + 1), label, childStates));
                 }
@@ -97,7 +101,7 @@ public class StringAlgebraSeed extends RegularSeed<Span> {
             Span parentState = getStateForId(parentStateId);
 
             if (label.startsWith("?")) {
-                int var = Integer.parseInt(label.substring(1));
+                int var = Integer.parseInt(label.substring(1))-1;
 
                 if (parentState.start == var && parentState.end == var + 1) {
                     ret.add(createRule(parentState, label, new Span[]{}));
@@ -105,7 +109,7 @@ public class StringAlgebraSeed extends RegularSeed<Span> {
             } else if (labelId == binaryConcatenationId) {
                 int width = parentState.end - parentState.start;
 
-                for (int i = 1; i < width - 1; i++) {
+                for (int i = 1; i < width; i++) {
                     ret.add(createRule(parentState, label,
                             new Span[]{ new Span(parentState.start, parentState.start + i),
                                         new Span(parentState.start + i, parentState.end)}));

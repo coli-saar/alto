@@ -33,6 +33,7 @@ public class BkvBinarizer {
         ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<String>();
         Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
         List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
+        TreeAutomaton rtg = irtg.getAutomaton();
 
         // initialize output homs
         for (String interp : interpretationNames) {
@@ -53,7 +54,17 @@ public class BkvBinarizer {
                     copyRule(rule, binarizedRtg, binarizedHom, irtg);
                 } else {
                     // else, add binarized rule to result
-                    addRulesToAutomaton(binarizedRtg, rb.xi, rule);
+                    String[] childStates = new String[rule.getArity()];
+                    for( int i = 0; i < rule.getArity(); i++ ) {
+                        childStates[i] = rtg.getStateForId(rule.getChildren()[i]).toString();
+                    }
+                    
+                    Object parent = rtg.getStateForId(rule.getParent());
+                    addRulesToAutomaton(binarizedRtg, rb.xi, parent.toString(), childStates);
+                    
+                    if( rtg.getFinalStates().contains(parent) ) {
+                        binarizedRtg.addFinalState(binarizedRtg.getIdForState(parent.toString()));
+                    }
 
                     for (String interp : interpretationNames) {
                         addEntriesToHomomorphism(binarizedHom.get(interp), rb.xi, rb.binarizationTerms.get(interp));
@@ -80,46 +91,43 @@ public class BkvBinarizer {
 
     // inserts rules with fresh states into the binarized RTG
     // for generating q -> xi(q1,...,qk)
-    private void addRulesToAutomaton(final ConcreteTreeAutomaton binarizedRtg, final Tree<HomomorphismSymbol> xi, final Rule rule) {
-        xi.dfs(new TreeVisitor<HomomorphismSymbol, Void, String>() {
+    private void addRulesToAutomaton(final ConcreteTreeAutomaton binarizedRtg, final Tree<String> xi, final String oldRuleParent, final String[] oldRuleChildren) {
+        xi.dfs(new TreeVisitor<String, Void, String>() {
             @Override
-            public String combine(Tree<HomomorphismSymbol> node, List<String> childrenValues) {
-                if (node.getLabel().isVariable()) {
-                    assert childrenValues.isEmpty();
-                    int var = node.getLabel().getValue();
-// TODO - the lines marked with //!! have been commented out
-// because changing them to the new state/label format with
-// internal state numbers requires a little bit of thought.
-                    
-//!!                    binarizedRtg.addRule(node.getLabel().toString(), new ArrayList<String>(), rule.getChildren()[var]);
-//!!                    return rule.getChildren()[var];
-                    
+            public String combine(Tree<String> node, List<String> childrenValues) {
+                if( node.getLabel().startsWith("?") ) {
+                    assert childrenValues.isEmpty();                    
+                    int var = Integer.parseInt(node.getLabel().substring(1))-1;
+                    return oldRuleChildren[var];
                 } else {
                     String parent;
-
-                    if (node == xi) {
-//!!                        parent = rule.getParent();
+                    
+                    if( node == xi ) {
+                        parent = oldRuleParent;
                     } else {
                         parent = gensym("q");
                     }
-
-//!!                    binarizedRtg.addRule(node.getLabel().toString(), childrenValues, parent);
-//!!                    return parent;
+                    
+                    binarizedRtg.addRule(binarizedRtg.createRule(parent, node.getLabel(), childrenValues));
+                    return parent;
                 }
-                
-                return null;
             }
         });
     }
 
     private RuleBinarization binarizeRule(Rule rule, Map<String, RegularSeed> regularSeeds, InterpretedTreeAutomaton irtg) {
         TreeAutomaton commonVariableTrees = null;
+        Map<String,TreeAutomaton> binarizationTermsPerInterpretation = new HashMap<String, TreeAutomaton>();
+        RuleBinarization ret = new RuleBinarization();
         
         for( String interpretation : irtg.getInterpretations().keySet() ) {
             String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());
             Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);
-            TreeAutomaton binarizationTerms = regularSeeds.get(interpretation).binarize(rhs);
-            TreeAutomaton variableTrees = vartreesForAutomaton(binarizationTerms);
+            TreeAutomaton binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);
+            
+            binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);            
+            
+            TreeAutomaton variableTrees = vartreesForAutomaton(binarizationTermsHere);
             
             if( commonVariableTrees == null ) {
                 commonVariableTrees = variableTrees;
@@ -132,19 +140,28 @@ public class BkvBinarizer {
             }
         }
         
-//        return com
+        Tree<String> commonVariableTree = commonVariableTrees.viterbi();
+        ret.xi = commonVariableTree;
+        assert commonVariableTree != null;
         
+        for( String interpretation: irtg.getInterpretations().keySet() ) {
+            TreeAutomaton binarizationsForThisVartree = binarizationsForVartree(binarizationTermsPerInterpretation.get(interpretation), commonVariableTree);
+            Tree<String> binarization = binarizationsForThisVartree.viterbi();
+            ret.binarizationTerms.put(interpretation, binarization);
+        }
         
-        
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ret;
     }
     
     private TreeAutomaton vartreesForAutomaton(TreeAutomaton automaton) {
         return null;
     }
 
-    private void addEntriesToHomomorphism(Homomorphism hom, Tree<HomomorphismSymbol> xi, Tree<HomomorphismSymbol> binarizationTerm) {
-        Tree<Tree<HomomorphismSymbol>> decompositionTree = makeMaximalDecomposition(binarizationTerm);
+    private void addEntriesToHomomorphism(Homomorphism hom, Tree<String> xi, Tree<String> binarizationTerm) {
+        hom.getTargetSignature().addAllSymbols(binarizationTerm);
+        
+        Tree<HomomorphismSymbol> binarizationTermHS = HomomorphismSymbol.treeFromNames(binarizationTerm, hom.getTargetSignature());
+        Tree<Tree<HomomorphismSymbol>> decompositionTree = makeMaximalDecomposition(binarizationTermHS);
         Tree<Tree<HomomorphismSymbol>> recombinedTree = merge(decompositionTree);
 
         Tree<Set<HomomorphismSymbol>> vartree = vartree(recombinedTree, new Function<Tree<HomomorphismSymbol>, HomomorphismSymbol>() {
@@ -153,13 +170,16 @@ public class BkvBinarizer {
             }
         });
 
-        Tree<Set<HomomorphismSymbol>> xiVartree = vartree(xi, new Function<HomomorphismSymbol, HomomorphismSymbol>() {
-            public HomomorphismSymbol apply(HomomorphismSymbol f) {
-                return f;
-            }
-        });
+        
+        // this is probably wrong: why should xi be mapped into HomSymbols?? 29.08.13
+        
+//        Tree<Set<HomomorphismSymbol>> xiVartree = vartree(xi, new Function<HomomorphismSymbol, HomomorphismSymbol>() {
+//            public HomomorphismSymbol apply(HomomorphismSymbol f) {
+//                return f;
+//            }
+//        });
 
-        constructHomomorphism(xi, xiVartree, recombinedTree, vartree, hom);
+//        constructHomomorphism(xi, xiVartree, recombinedTree, vartree, hom);
     }
 
     private Tree<Tree<HomomorphismSymbol>> makeMaximalDecomposition(Tree<HomomorphismSymbol> binarizationTerm) {
@@ -313,9 +333,17 @@ public class BkvBinarizer {
         }
     }
 
+    private TreeAutomaton binarizationsForVartree(TreeAutomaton get, Tree<String> commonVariableTree) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     private static class RuleBinarization {
-        Tree<HomomorphismSymbol> xi;
-        Map<String, Tree<HomomorphismSymbol>> binarizationTerms;
+        Tree<String> xi;
+        Map<String, Tree<String>> binarizationTerms;
+
+        public RuleBinarization() {
+            binarizationTerms = new HashMap<String, Tree<String>>();
+        }
     }
 
     private String gensym(String prefix) {

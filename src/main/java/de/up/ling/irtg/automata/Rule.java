@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.saar.basic.StringTools;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
