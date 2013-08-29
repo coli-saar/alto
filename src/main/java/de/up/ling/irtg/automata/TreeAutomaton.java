@@ -1699,6 +1699,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        makeAllRulesExplicit();
         return new LanguageIterator(new SortedLanguageIterator<State>(this));
     }
+    
+    /**
+     * Determines whether the language accepted by this automaton is empty.
+     * 
+     * @return 
+     */
+    public boolean isEmpty() {
+        return ! sortedLanguageIterator().hasNext();
+    }
 
     /**
      * Returns an iterator over the language of this automaton. This also works

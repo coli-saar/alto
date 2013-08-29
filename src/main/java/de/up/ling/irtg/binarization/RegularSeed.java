@@ -5,6 +5,7 @@
 package de.up.ling.irtg.binarization;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.tree.Tree;
 
 /**
  *
@@ -13,4 +14,10 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 public abstract class RegularSeed<State> {
     // returns a tree automaton for StringOrVar trees using variables x1,...,xk, where k = arity(symbol)
     public abstract TreeAutomaton<State> binarize(String symbol);
+    
+    public TreeAutomaton<State> binarize(Tree<String> term) {
+        
+        
+        return null;
+    }
 }

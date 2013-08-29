@@ -9,6 +9,7 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
@@ -40,12 +41,12 @@ public class BkvBinarizer {
         }
 
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
-            if (rule.getChildren().length <= 2) {
+            if (rule.getArity() <= 2) {
                 // rules of low arity => simply copy these to result
                 copyRule(rule, binarizedRtg, binarizedHom, irtg);
             } else {
                 // rules of higher arity => binarize
-                RuleBinarization rb = binarizeRule(rule, regularSeeds);
+                RuleBinarization rb = binarizeRule(rule, regularSeeds, irtg);
 
                 if (rb == null) {
                     // unbinarizable => copy to result
@@ -111,8 +112,35 @@ public class BkvBinarizer {
         });
     }
 
-    private RuleBinarization binarizeRule(Rule rule, Map<String, RegularSeed> regularSeeds) {
+    private RuleBinarization binarizeRule(Rule rule, Map<String, RegularSeed> regularSeeds, InterpretedTreeAutomaton irtg) {
+        TreeAutomaton commonVariableTrees = null;
+        
+        for( String interpretation : irtg.getInterpretations().keySet() ) {
+            String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());
+            Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);
+            TreeAutomaton binarizationTerms = regularSeeds.get(interpretation).binarize(rhs);
+            TreeAutomaton variableTrees = vartreesForAutomaton(binarizationTerms);
+            
+            if( commonVariableTrees == null ) {
+                commonVariableTrees = variableTrees;
+            } else {
+                commonVariableTrees = commonVariableTrees.intersect(variableTrees);
+            }
+            
+            if( commonVariableTrees.isEmpty() ) {
+                return null;
+            }
+        }
+        
+//        return com
+        
+        
+        
         throw new UnsupportedOperationException("Not yet implemented");
+    }
+    
+    private TreeAutomaton vartreesForAutomaton(TreeAutomaton automaton) {
+        return null;
     }
 
     private void addEntriesToHomomorphism(Homomorphism hom, Tree<HomomorphismSymbol> xi, Tree<HomomorphismSymbol> binarizationTerm) {
