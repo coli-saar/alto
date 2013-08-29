@@ -38,6 +38,14 @@ public class JLanguageViewer extends javax.swing.JFrame {
         
         derivationViewers.add(new JDerivationViewer());
         miRemoveView.setEnabled(false);
+        
+        if( ! GuiMain.isMac() ) {
+            miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+            miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+            miNextTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.CTRL_MASK));
+            miPreviousTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.CTRL_MASK));
+        }
     }
 
     public void setAutomaton(TreeAutomaton automaton, InterpretedTreeAutomaton irtg) {
@@ -143,7 +151,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         derivationViewers = new javax.swing.JPanel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        miOpenIrtg1 = new javax.swing.JMenuItem();
+        miOpenIrtg = new javax.swing.JMenuItem();
         miOpenAutomaton = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
@@ -238,14 +246,14 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
         jMenu1.setText("File");
 
-        miOpenIrtg1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
-        miOpenIrtg1.setText("Open IRTG ...");
-        miOpenIrtg1.addActionListener(new java.awt.event.ActionListener() {
+        miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
+        miOpenIrtg.setText("Open IRTG ...");
+        miOpenIrtg.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miOpenIrtg1ActionPerformed(evt);
+                miOpenIrtgActionPerformed(evt);
             }
         });
-        jMenu1.add(miOpenIrtg1);
+        jMenu1.add(miOpenIrtg);
 
         miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miOpenAutomaton.setText("Open tree automaton ...");
@@ -349,9 +357,9 @@ public class JLanguageViewer extends javax.swing.JFrame {
         setMaximumSize(getSize());
     }//GEN-LAST:event_handleResize
 
-    private void miOpenIrtg1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenIrtg1ActionPerformed
+    private void miOpenIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenIrtgActionPerformed
         GuiMain.loadIrtg(this);
-    }//GEN-LAST:event_miOpenIrtg1ActionPerformed
+    }//GEN-LAST:event_miOpenIrtgActionPerformed
 
     private void miOpenAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenAutomatonActionPerformed
         GuiMain.loadAutomaton(this);
@@ -410,7 +418,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JMenuItem miAddView;
     private javax.swing.JMenuItem miNextTree;
     private javax.swing.JMenuItem miOpenAutomaton;
-    private javax.swing.JMenuItem miOpenIrtg1;
+    private javax.swing.JMenuItem miOpenIrtg;
     private javax.swing.JMenuItem miPreviousTree;
     private javax.swing.JMenuItem miQuit;
     private javax.swing.JMenuItem miRemoveView;

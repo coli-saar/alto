@@ -59,6 +59,10 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public static GuiMain getApplication() {
         return app;
     }
+    
+    public static boolean isMac() {
+        return new DefaultApplication().isMac();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
