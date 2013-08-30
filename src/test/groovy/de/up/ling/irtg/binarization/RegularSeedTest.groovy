@@ -35,7 +35,7 @@ public class RegularSeedTest {
         assertEquals(new HashSet([pt("*(*(?1,?2),?3)"), pt("*(?1,*(?2,?3))")]), binAuto.language());
     }
     
-//    @Test
+    @Test
     public void testStringSeed() {
         Algebra alg = new StringAlgebra();
         RegularSeed rs = new StringAlgebraSeed(alg.getSignature(), StringAlgebra.CONCAT);
@@ -50,11 +50,9 @@ public class RegularSeedTest {
         Algebra alg = new StringAlgebra();
         RegularSeed rs = new StringAlgebraSeed(alg.getSignature(), StringAlgebra.CONCAT);
 
-        alg.getSignature().addAllSymbols(pt("f(g(a,b),f(c,d,e),h)"));
+        alg.getSignature().addAllSymbols(pt("f(*(a,b),f(c,d,e),h)"));
         
-        System.err.println("alg sig " + alg.getSignature());
-        
-        TreeAutomaton binAuto = rs.binarize(pt("f(g(a,b),f(c,d,e),h)"));
+        TreeAutomaton binAuto = rs.binarize(pt("f(*(a,b),f(c,d,e),h)"));
         assertEquals(new HashSet([pt("*(*(a,b), *( *(c,*(d,e)), h))"), pt("*(*(a,b), *( *(*(c,d),e), h))"),
                                   pt("*(*( *(a,b), *(c,*(d,e)) ), h)"), pt("*(*( *(a,b), *(*(c,d),e)), h)")]),
                           binAuto.language()); 

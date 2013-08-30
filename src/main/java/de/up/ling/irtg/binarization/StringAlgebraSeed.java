@@ -51,7 +51,7 @@ public class StringAlgebraSeed extends RegularSeed {
             List<String> childStates = new ArrayList<String>();
             List<String> empty = new ArrayList<String>();
 
-            for (int i = 0; i < arity; i++) {
+            for (int i = 1; i <= arity; i++) {
                 String childState = "q" + i;
 
                 addRule(createRule(childState, "?" + i, empty));
