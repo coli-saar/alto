@@ -802,6 +802,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     /**
      * Computes a concrete representation of this automaton. The method returns
      * a {@link ConcreteTreeAutomaton} that is equals to the given automaton.
+     * The method enumerates the rules of the automaton top-down, so it will
+     * only work if {@link #getRulesTopDown(int, int) } is implemented.
      *
      * @return
      */
@@ -822,6 +824,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
+    
+    /**
+     * Computes a concrete representation of this automaton. The method returns
+     * a {@link ConcreteTreeAutomaton} that is equals to the given automaton.
+     * The method enumerates the rules of the automaton bottom-up.
+     * 
+     * @return 
+     */
+    public ConcreteTreeAutomaton asConcreteTreeAutomatonBottomUp() {
+        return new UniversalAutomaton(getSignature()).intersect(this).asConcreteTreeAutomaton();
+    }
+    
 
     /**
      * Checks whether the cache contains a bottom-up rule for the given parent

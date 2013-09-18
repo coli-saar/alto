@@ -35,6 +35,7 @@ import java.util.Set;
  * @author koller
  */
 public class SetAlgebra extends Algebra<Set<List<String>>> {
+
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";
     private static final String UNIQ = "uniq_";
@@ -48,9 +49,32 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
 
     public SetAlgebra() {
         this.atomicInterpretations = null;
+
         signature = new Signature();
+        
+        // It is not necessary to initialize the signature here.
+        // - #evaluate does not look at the signature anyway, it only operates on the label strings
+        // - #decompose returns a lazy automaton with the same signature as the
+        //   set algebra itself. When #accepts is called on the decomp automaton,
+        //   this automatically adds all the symbols in the term to the signature
+        // - inv hom of the decomp automaton works too, because this means that a
+        //   homomorphism got constructed beforehand, and the target signature of
+        //   the homomorphism (= the signature of this algebra) was filled with all
+        //   symbols that occur on the homomorphism's RHS.
+
+        //        for (int i = 1; i <= MAX_TUPLE_LENGTH; i++) {
+//            signature.addSymbol(PROJECT + i, 1);
+//            signature.addSymbol(INTERSECT + i, 2);
+//        }
+//        
+//        for (String individual : allIndividuals) {
+//            signature.addSymbol(UNIQ + individual, 1);
+//        }
+
         allIndividuals = new HashSet<String>();
         allIndividualsAsTuples = new HashSet<List<String>>();
+
+
     }
 
     public SetAlgebra(Map<String, Set<List<String>>> atomicInterpretations) {
@@ -61,10 +85,10 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
 
     public final void setAtomicInterpretations(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
-        signature.clear();
 
-        allIndividuals = new HashSet<String>();
-        allIndividualsAsTuples = new HashSet<List<String>>();
+        allIndividuals.clear();
+        allIndividualsAsTuples.clear();
+
         for (Set<List<String>> sls : atomicInterpretations.values()) {
             for (List<String> ls : sls) {
                 allIndividuals.addAll(ls);
@@ -75,19 +99,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
                     allIndividualsAsTuples.add(tuple);
                 }
             }
-        }
-
-//        allLabels = new HashSet<String>();
-        for (String a : atomicInterpretations.keySet()) {
-            signature.addSymbol(a, 0);
-        }
-
-        for (int i = 1; i <= MAX_TUPLE_LENGTH; i++) {
-            signature.addSymbol(PROJECT + i, 1);
-            signature.addSymbol(INTERSECT + i, 2);
-        }
-        for (String individual : allIndividuals) {
-            signature.addSymbol(UNIQ + individual, 1);
         }
     }
 
@@ -102,25 +113,34 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     }
 
     private Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) {
+        Set<List<String>> ret = null;
+
         if (label.startsWith(PROJECT)) {
-            return project(childrenValues.get(0), Integer.parseInt(arg(label)) - 1);
+            ret = project(childrenValues.get(0), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(INTERSECT)) {
-            return intersect(childrenValues.get(0), childrenValues.get(1), Integer.parseInt(arg(label)) - 1);
+            ret = intersect(childrenValues.get(0), childrenValues.get(1), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(UNIQ)) {
-            return uniq(childrenValues.get(0), arg(label));
+            ret = uniq(childrenValues.get(0), arg(label));
         } else if (label.equals(TOP)) {
-            return allIndividualsAsTuples;
+            ret = allIndividualsAsTuples;
         } else {
-            return atomicInterpretations.get(label);
+            ret = atomicInterpretations.get(label);
         }
+
+//        System.err.println("evaluate: " + label + childrenValues + " = " + ret);
+        return ret;
     }
 
     private Set<List<String>> project(Set<List<String>> tupleSet, int pos) {
         Set<List<String>> ret = new HashSet<List<String>>();
+
         for (List<String> tuple : tupleSet) {
             List<String> l = new ArrayList<String>();
-            l.add(tuple.get(pos));
-            ret.add(l);
+
+            if (pos < tuple.size()) {
+                l.add(tuple.get(pos));
+                ret.add(l);
+            }
         }
 
         return ret;
@@ -135,8 +155,10 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         }
 
         for (List<String> tuple : tupleSet) {
-            if (filter.contains(tuple.get(pos))) {
-                ret.add(tuple);
+            if (pos < tuple.size()) {
+                if (filter.contains(tuple.get(pos))) {
+                    ret.add(tuple);
+                }
             }
         }
 
@@ -179,6 +201,7 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     }
 
     private class SetDecompositionAutomaton extends TreeAutomaton<Set<List<String>>> {
+
         public SetDecompositionAutomaton(Set<List<String>> finalElement) {
             super(SetAlgebra.this.getSignature());
 
@@ -207,28 +230,34 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         }
 
         @Override
-        public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
-            if (useCachedRuleBottomUp(label, childStates)) {
-                return getRulesBottomUpFromExplicit(label, childStates);
+        public Set<Rule> getRulesBottomUp(int labelId, int[] childStates) {
+            if (useCachedRuleBottomUp(labelId, childStates)) {
+                return getRulesBottomUpFromExplicit(labelId, childStates);
             } else {
                 Set<Rule> ret = new HashSet<Rule>();
 
-                if (signature.getArity(label) == childStates.length) {
+                if (signature.getArity(labelId) == childStates.length) {
 
                     List<Set<List<String>>> childValues = new ArrayList<Set<List<String>>>();
                     for (int childState : childStates) {
                         childValues.add(getStateForId(childState));
                     }
 
-                    Set<List<String>> parents = evaluate(getSignature().resolveSymbolId(label), childValues);
+                    String label = getSignature().resolveSymbolId(labelId);
+                    
+                    if( label == null ) {
+                        throw new RuntimeException("Cannot resolve label ID: " + labelId);
+                    }
+                    
+                    Set<List<String>> parents = evaluate(label, childValues);
 
                     // require that set in parent state must be non-empty; otherwise there is simply no rule
                     if (parents != null && !parents.isEmpty()) {
-                        Rule rule = createRule(addState(parents), label, childStates, 1);
+                        Rule rule = createRule(addState(parents), labelId, childStates, 1);
                         ret.add(rule);
                         storeRule(rule);
 
-                        System.err.println("add rule: " + rule.toString(this));
+//                        System.err.println("set decomp rule: " + rule.toString(this));
                     }
                 }
 
@@ -240,19 +269,7 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         public Set<Rule> getRulesTopDown(int label, int parentState) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
-
-//        @Override
-//        public int getArity(String label) {
-//            if (label.startsWith(UNIQ)) {
-//                return 1;
-//            } else if (label.startsWith(INTERSECT)) {
-//                return 2;
-//            } else if (label.startsWith(PROJECT)) {
-//                return 1;
-//            } else {
-//                return 0;
-//            }
-//        }
+        
         @Override
         public boolean isBottomUpDeterministic() {
             return true;

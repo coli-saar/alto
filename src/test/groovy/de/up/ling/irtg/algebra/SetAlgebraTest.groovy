@@ -22,7 +22,7 @@ import static de.up.ling.irtg.util.TestingTools.*;
  */
 class SetAlgebraTest {
     
-//    @Test
+    @Test
     public void testGenerateRE() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader('''
 interpretation i: de.up.ling.irtg.algebra.SetAlgebra
@@ -36,11 +36,10 @@ Adj_N -> b_white
 Adj_N -> b_nop
   [i] T
         '''));
-
-        irtg.getInterpretation("i").getAlgebra().setAtomicInterpretations(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])]);
-        TreeAutomaton chart = irtg.parse(["i":"{r1}"])        
         
-        System.err.println(chart);
+        SetAlgebra alg = (SetAlgebra) irtg.getInterpretation("i").getAlgebra();
+        alg.setAtomicInterpretations(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])]);
+        TreeAutomaton chart = irtg.parse(["i":"{r1}"]);
         
         Set result = chart.language();
         Set gold = new HashSet([pt("a_rabbit(b_white)")])
@@ -48,7 +47,77 @@ Adj_N -> b_nop
         assertEquals(gold, result)
     }
     
+    @Test
+    public void testGenerateSent() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader('''
+interpretation i: de.up.ling.irtg.algebra.SetAlgebra
+
+    N -> a_rabbit(Adj_N)
+    [i] intersect_1(rabbit, ?1)
+
+    Adj_N -> b_white
+    [i] white
+
+    Adj_N -> b_nop
+    [i] T
+
+    S! -> a_sleeps_r1(N)
+    [i] project_1(intersect_2(sleep, uniq_r1(?1)))
+        '''));
+        
+        SetAlgebra alg = (SetAlgebra) irtg.getInterpretation("i").getAlgebra();
+        alg.setAtomicInterpretations(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])]);
+        TreeAutomaton chart = irtg.parse(["i":"{e}"]);
+        
+        Set result = chart.language();
+        Set gold = new HashSet([pt("a_sleeps_r1(a_rabbit(b_white))")])
+        
+        assertEquals(gold, result)
+    }
     
+    // uniqueness requirement in semantics of "sleeps" is deliberately missing => two possible REs
+    @Test
+    public void testGenerateSent2() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader('''
+interpretation i: de.up.ling.irtg.algebra.SetAlgebra
+
+    N -> a_rabbit(Adj_N)
+    [i] intersect_1(rabbit, ?1)
+
+    Adj_N -> b_white
+    [i] white
+
+    Adj_N -> b_nop
+    [i] T
+
+    S! -> a_sleeps_r1(N)
+    [i] project_1(intersect_2(sleep, ?1))
+        '''));
+        
+        SetAlgebra alg = (SetAlgebra) irtg.getInterpretation("i").getAlgebra();
+        alg.setAtomicInterpretations(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])]);
+        TreeAutomaton chart = irtg.parse(["i":"{e}"]);
+        
+        Set result = chart.language();
+        Set gold = new HashSet([pt("a_sleeps_r1(a_rabbit(b_white))"), pt("a_sleeps_r1(a_rabbit(b_nop))")])
+        
+        assertEquals(gold, result)
+    }
+    
+    @Test
+    public void testDecompose() {        
+        SetAlgebra alg = new SetAlgebra();
+        alg.setAtomicInterpretations(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])]);
+        
+        TreeAutomaton auto = alg.decompose(alg.parseString("{r1}"));
+        
+        assert auto.accepts(pt("intersect_1(rabbit, white)"));
+        assert auto.accepts(pt("project_1(intersect_1(in,rabbit))"));
+        assert auto.accepts(pt("project_1(intersect_1(intersect_1(in,project_1(in)),rabbit))"));
+        assert auto.accepts(pt("project_1(intersect_1(in,project_1(rabbit)))"));
+        assert auto.accepts(pt("project_1(intersect_1(intersect_1(in,project_1(in)),project_1(rabbit)))"));
+        assert auto.accepts(pt("project_1(intersect_1(in,project_1(project_1(rabbit))))"));
+    }
     
     @Test
     public void testParse() {
@@ -114,103 +183,103 @@ Adj_N -> b_nop
     /*
     @Test
     public void testGenerateRE() {
-        SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
-        Set referent = a.parseString("{r1}");
-        TreeAutomaton decomp = a.decompose(referent);
+    SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
+    Set referent = a.parseString("{r1}");
+    TreeAutomaton decomp = a.decompose(referent);
         
-        String grammarstring = '''
-interpretation i: de.up.ling.irtg.algebra.SetAlgebra
+    String grammarstring = '''
+    interpretation i: de.up.ling.irtg.algebra.SetAlgebra
 
-a_rabbit(Adj_N) -> N!
-  [i] intersect_1(rabbit, ?1)
+    a_rabbit(Adj_N) -> N!
+    [i] intersect_1(rabbit, ?1)
 
-b_white -> Adj_N
-  [i] white
+    b_white -> Adj_N
+    [i] white
 
-b_nop -> Adj_N
-  [i] T
-        ''';
-         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-         Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
+    b_nop -> Adj_N
+    [i] T
+    ''';
+    InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+    Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
          
-        TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
-        chart.makeAllRulesExplicit();
+    TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+    chart.makeAllRulesExplicit();
         
-        Set result = chart.language();
-        Set gold = new HashSet([pt("a_rabbit(b_white)")])
+    Set result = chart.language();
+    Set gold = new HashSet([pt("a_rabbit(b_white)")])
         
-        assertEquals(gold, result)
+    assertEquals(gold, result)
     }
     
     @Test
     public void testGenerateSent() {
-        SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
-        Set referent = a.parseString("{e}");
-        TreeAutomaton decomp = a.decompose(referent);
+    SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
+    Set referent = a.parseString("{e}");
+    TreeAutomaton decomp = a.decompose(referent);
         
-        String grammarstring = '''
-interpretation i: de.up.ling.irtg.algebra.SetAlgebra
+    String grammarstring = '''
+    interpretation i: de.up.ling.irtg.algebra.SetAlgebra
 
-a_rabbit(Adj_N) -> N
-  [i] intersect_1(rabbit, ?1)
+    a_rabbit(Adj_N) -> N
+    [i] intersect_1(rabbit, ?1)
 
-b_white -> Adj_N
-  [i] white
+    b_white -> Adj_N
+    [i] white
 
-b_nop -> Adj_N
-  [i] T
+    b_nop -> Adj_N
+    [i] T
 
-a_sleeps_r1(N) -> S!
-  [i] project_1(intersect_2(sleep, uniq_r1(?1)))
-        ''';
+    a_sleeps_r1(N) -> S!
+    [i] project_1(intersect_2(sleep, uniq_r1(?1)))
+    ''';
         
-         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-         Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
+    InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+    Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
          
-        TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
-        chart.makeAllRulesExplicit();
+    TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+    chart.makeAllRulesExplicit();
         
-        Set result = chart.language();
-        Set gold = new HashSet([pt("a_sleeps_r1(a_rabbit(b_white))")])
+    Set result = chart.language();
+    Set gold = new HashSet([pt("a_sleeps_r1(a_rabbit(b_white))")])
         
-        assertEquals(gold, result)
+    assertEquals(gold, result)
     }
     
     // uniqueness requirement in semantics of "sleeps" is deliberately missing
     @Test
     public void testGenerateSent2() {
-        SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
-        Set referent = a.parseString("{e}");
-        TreeAutomaton decomp = a.decompose(referent);
+    SetAlgebra a = new SetAlgebra(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "sleep":sl([["e", "r1"], ["f", "h"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])])
+    Set referent = a.parseString("{e}");
+    TreeAutomaton decomp = a.decompose(referent);
         
-        String grammarstring = '''
-interpretation i: de.up.ling.irtg.algebra.SetAlgebra
+    String grammarstring = '''
+    interpretation i: de.up.ling.irtg.algebra.SetAlgebra
 
-a_rabbit(Adj_N) -> N
-  [i] intersect_1(rabbit, ?1)
+    a_rabbit(Adj_N) -> N
+    [i] intersect_1(rabbit, ?1)
 
-b_white -> Adj_N
-  [i] white
+    b_white -> Adj_N
+    [i] white
 
-b_nop -> Adj_N
-  [i] T
+    b_nop -> Adj_N
+    [i] T
 
-a_sleeps_r1(N) -> S!
-  [i] project_1(intersect_2(sleep, ?1))
-        ''';
+    a_sleeps_r1(N) -> S!
+    [i] project_1(intersect_2(sleep, ?1))
+    ''';
         
-         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-         Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
+    InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+    Homomorphism hom = irtg.getInterpretations().get("i").getHomomorphism();
          
-        TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
-        chart.makeAllRulesExplicit();
+    TreeAutomaton chart = irtg.getAutomaton().intersect(decomp.inverseHomomorphism(hom));
+    chart.makeAllRulesExplicit();
         
-        Set result = new HashSet(chart.language())
-        Set gold = new HashSet([pt("a_sleeps_r1(a_rabbit(b_white))"), pt("a_sleeps_r1(a_rabbit(b_nop))")])
+    Set result = new HashSet(chart.language())
+    Set gold = new HashSet([pt("a_sleeps_r1(a_rabbit(b_white))"), pt("a_sleeps_r1(a_rabbit(b_nop))")])
         
-        assertEquals(gold, result)
+    assertEquals(gold, result)
     }
-    */
+     */
 
     private Set<List<String>> sl(List<List<String>> ll) {
         return new HashSet<List<String>>(ll);

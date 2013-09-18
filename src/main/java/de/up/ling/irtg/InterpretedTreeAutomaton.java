@@ -203,6 +203,8 @@ public class InterpretedTreeAutomaton {
             
             ret = ret.intersect(interpParse);
         }
+        
+//        System.err.println("chart before reduction:\n" + ret);
 
         return ret.reduceTopDown();
     }
