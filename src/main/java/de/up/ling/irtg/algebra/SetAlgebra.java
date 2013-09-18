@@ -11,28 +11,27 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.StringReader;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * An algebra of sets. The elements of this algebra are
- * relations (of arity 1, 2, or 3) over some given universe.
- * The algebra interprets the following operations:
- * 
+ * An algebra of sets. The elements of this algebra are relations (of arity 1,
+ * 2, or 3) over some given universe. The algebra interprets the following
+ * operations:
+ *
  * <ul>
- * <li>project_i(R) projects its argument R (a k-place relation with
- * k >= i) to the set of i-th elements of this relation.</li>
- * <li>intersect_i(R,F) returns the set of all tuples of R (a k-place
- * relation with k >= i) whose i-th element is a member of F
- * (a subset of the universe).</li>
- * <li>uniq_i(A,a) returns the set A (a subset of the universe)
- * itself if A = {a}; otherwise it returns the empty set.</li>
+ * <li>project_i(R) projects its argument R (a k-place relation with k >= i) to
+ * the set of i-th elements of this relation.</li>
+ * <li>intersect_i(R,F) returns the set of all tuples of R (a k-place relation
+ * with k >= i) whose i-th element is a member of F (a subset of the
+ * universe).</li>
+ * <li>uniq_a(A) returns the set A (a subset of the universe) itself if A = {a};
+ * otherwise it returns the empty set.</li>
  * <li>T returns the universe.</li>
  * </ul>
- * 
+ *
  * @author koller
  */
 public class SetAlgebra extends Algebra<Set<List<String>>> {
@@ -42,18 +41,27 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     private static final String TOP = "T";
     private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ};
     private static final int MAX_TUPLE_LENGTH = 3;
-    private final Map<String, Set<List<String>>> atomicInterpretations;
-    private final Set<String> allIndividuals;
-    private final Set<List<String>> allIndividualsAsTuples;
-    private final Signature signature;
+    private Map<String, Set<List<String>>> atomicInterpretations;
+    private Set<String> allIndividuals;
+    private Set<List<String>> allIndividualsAsTuples;
+    private Signature signature;
 
     public SetAlgebra() {
-        this(new HashMap<String, Set<List<String>>>());
+        this.atomicInterpretations = null;
+        signature = new Signature();
+        allIndividuals = new HashSet<String>();
+        allIndividualsAsTuples = new HashSet<List<String>>();
     }
 
     public SetAlgebra(Map<String, Set<List<String>>> atomicInterpretations) {
+        this();
+
+        setAtomicInterpretations(atomicInterpretations);
+    }
+
+    public final void setAtomicInterpretations(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
-        signature = new Signature();
+        signature.clear();
 
         allIndividuals = new HashSet<String>();
         allIndividualsAsTuples = new HashSet<List<String>>();
@@ -70,10 +78,10 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         }
 
 //        allLabels = new HashSet<String>();
-        for( String a : atomicInterpretations.keySet() ) {
+        for (String a : atomicInterpretations.keySet()) {
             signature.addSymbol(a, 0);
         }
-        
+
         for (int i = 1; i <= MAX_TUPLE_LENGTH; i++) {
             signature.addSymbol(PROJECT + i, 1);
             signature.addSymbol(INTERSECT + i, 2);
@@ -160,7 +168,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
 //    private String getLabel(Tree t, String node) {
 //        return t.getLabel(node).toString();
 //    }
-
     @Override
     public TreeAutomaton decompose(Set<List<String>> value) {
         return new SetDecompositionAutomaton(value);
@@ -174,14 +181,14 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
     private class SetDecompositionAutomaton extends TreeAutomaton<Set<List<String>>> {
         public SetDecompositionAutomaton(Set<List<String>> finalElement) {
             super(SetAlgebra.this.getSignature());
-            
+
 //            finalStates = new HashSet<Set<List<String>>>();
             finalStates.add(addState(finalElement));
-            
+
             // this is theoretically correct, but WAY too slow,
             // and anyway the Guava powerset function only allows
             // up to 30 elements in the base set
-            
+
 //            for( int arity = 1; arity <= MAX_TUPLE_LENGTH; arity++ ) {
 //                List<Set<String>> tupleLists = new ArrayList<Set<String>>();
 //                for( int i = 0; i < arity; i++ ) {
@@ -205,19 +212,24 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
                 Set<Rule> ret = new HashSet<Rule>();
-                
-                List<Set<List<String>>> childValues = new ArrayList<Set<List<String>>>();
-                for( int childState : childStates ) {
-                    childValues.add(getStateForId(childState));
-                }                
-                
-                Set<List<String>> parents = evaluate(getSignature().resolveSymbolId(label), childValues);
-                
-                // require that set in parent state must be non-empty; otherwise there is simply no rule
-                if (parents != null && !parents.isEmpty()) {
-                    Rule rule = createRule(addState(parents), label, childStates, 1);
-                    ret.add(rule);
-                    storeRule(rule);
+
+                if (signature.getArity(label) == childStates.length) {
+
+                    List<Set<List<String>>> childValues = new ArrayList<Set<List<String>>>();
+                    for (int childState : childStates) {
+                        childValues.add(getStateForId(childState));
+                    }
+
+                    Set<List<String>> parents = evaluate(getSignature().resolveSymbolId(label), childValues);
+
+                    // require that set in parent state must be non-empty; otherwise there is simply no rule
+                    if (parents != null && !parents.isEmpty()) {
+                        Rule rule = createRule(addState(parents), label, childStates, 1);
+                        ret.add(rule);
+                        storeRule(rule);
+
+                        System.err.println("add rule: " + rule.toString(this));
+                    }
                 }
 
                 return ret;
@@ -241,8 +253,6 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
 //                return 0;
 //            }
 //        }
-
-
         @Override
         public boolean isBottomUpDeterministic() {
             return true;
@@ -256,7 +266,7 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         } catch (ParseException ex) {
             throw new ParserException(ex);
         }
-        
+
     }
 
     private static List<String> l(String x) {

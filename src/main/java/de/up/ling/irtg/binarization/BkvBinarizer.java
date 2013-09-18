@@ -14,6 +14,9 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -117,17 +120,17 @@ public class BkvBinarizer {
 
     private RuleBinarization binarizeRule(Rule rule, Map<String, RegularSeed> regularSeeds, InterpretedTreeAutomaton irtg) {
         TreeAutomaton commonVariableTrees = null;
-        Map<String,TreeAutomaton> binarizationTermsPerInterpretation = new HashMap<String, TreeAutomaton>();
+        Map<String,TreeAutomaton<String>> binarizationTermsPerInterpretation = new HashMap<String, TreeAutomaton<String>>();
         RuleBinarization ret = new RuleBinarization();
         
         for( String interpretation : irtg.getInterpretations().keySet() ) {
             String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());
             Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);
-            TreeAutomaton binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);
+            TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);
             
-            binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);            
+            binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
             
-            TreeAutomaton variableTrees = vartreesForAutomaton(binarizationTermsHere);
+            TreeAutomaton<String> variableTrees = vartreesForAutomaton(binarizationTermsHere);
             
             if( commonVariableTrees == null ) {
                 commonVariableTrees = variableTrees;
@@ -153,8 +156,18 @@ public class BkvBinarizer {
         return ret;
     }
     
-    private TreeAutomaton vartreesForAutomaton(TreeAutomaton automaton) {
+    private TreeAutomaton vartreesForAutomaton(TreeAutomaton<String> automaton) {
         return null;
+    }
+    
+    private Int2ObjectMap<IntSet> mapStatesToVarlists(TreeAutomaton<String> automaton) {
+        Int2ObjectMap<IntSet> ret = new Int2ObjectOpenHashMap<IntSet>();
+        
+        for( int state : automaton.getStatesInBottomUpOrder() ) {
+            
+        }
+        
+        return ret;
     }
 
     private void addEntriesToHomomorphism(Homomorphism hom, Tree<String> xi, Tree<String> binarizationTerm) {

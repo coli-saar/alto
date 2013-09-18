@@ -21,6 +21,35 @@ import static de.up.ling.irtg.util.TestingTools.*;
  * @author koller
  */
 class SetAlgebraTest {
+    
+//    @Test
+    public void testGenerateRE() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader('''
+interpretation i: de.up.ling.irtg.algebra.SetAlgebra
+
+N! -> a_rabbit(Adj_N)
+  [i] intersect_1(rabbit, ?1)
+
+Adj_N -> b_white
+  [i] white
+
+Adj_N -> b_nop
+  [i] T
+        '''));
+
+        irtg.getInterpretation("i").getAlgebra().setAtomicInterpretations(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])]);
+        TreeAutomaton chart = irtg.parse(["i":"{r1}"])        
+        
+        System.err.println(chart);
+        
+        Set result = chart.language();
+        Set gold = new HashSet([pt("a_rabbit(b_white)")])
+        
+        assertEquals(gold, result)
+    }
+    
+    
+    
     @Test
     public void testParse() {
         SetAlgebra a = new SetAlgebra([:]);
@@ -78,6 +107,7 @@ class SetAlgebraTest {
         Set<List<String>> gold = sl([])
         assertEquals(gold, result)
     }
+    
     
     
     // commented out until we can deal with getAllStates in the SetAlgebra

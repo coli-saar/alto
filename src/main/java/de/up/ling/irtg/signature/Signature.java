@@ -30,6 +30,10 @@ public class Signature implements Serializable {
         arities = new Int2IntOpenHashMap();
     }
     
+    public void clear() {
+        interner.clear();
+    }
+    
     public Collection<String> getSymbols() {
         return interner.getKnownObjects();
     }

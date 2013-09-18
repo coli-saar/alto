@@ -12,6 +12,7 @@ import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

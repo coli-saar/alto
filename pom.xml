@@ -208,6 +208,15 @@
 	      </executions>
 	      <configuration>
 		<scalaVersion>2.10.2</scalaVersion>
+		<compileOrder>JavaThenScala</compileOrder>
+		<excludes>
+		  <exclude>**/*.java</exclude>
+		</excludes>
+		<recompileMode>incremental</recompileMode>
+		<javacArgs>
+		  <javacArg>-Xlint:unchecked</javacArg>
+		  <javacArg>-Xlint:deprecation</javacArg>
+		</javacArgs>
 	      </configuration>
 	    </plugin>
 

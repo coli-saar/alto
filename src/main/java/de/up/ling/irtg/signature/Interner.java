@@ -27,6 +27,12 @@ public class Interner<E> implements Serializable, Cloneable {
         nextIndex = 1;
     }
     
+    public void clear() {
+        objectToInt.clear();
+        intToObject.clear();
+        nextIndex = 1;
+    }
+    
     public int addObject(E object) {        
         int ret = objectToInt.getInt(object);
         
