@@ -28,6 +28,38 @@ public class SortedLanguageIteratorTest {
         assert result.getTree().equals(pti(gold, a.getSignature()));
     }
     
+    @Test
+    public void testSortedLanguageIteratorGontrumBug() {
+//        System.err.println("test SLIGB");
+        
+        TreeAutomaton a = pa("S! -> r1(A, B) [1.0]\n A -> r2 [1.0]\n A -> r3(A) [0.0]\n B -> r4(B,B) [0.7]\n B -> r5 [0.3]");
+        Iterator<WeightedTree> it = a.sortedLanguageIterator();
+        
+        WeightedTree w = it.next();
+        _assertTreeEquals(w, "r1(r2,r5)", a)
+        
+        w = it.next();
+        _assertTreeEquals(w, "r1(r2,r4(r5,r5))", a)
+    }
+    
+    @Test
+    public void testStrangeMerging() {
+        TreeAutomaton a = pa("S! -> f(A,B) [0.9]\n  S! -> g(B) [0.1]\n A -> h(A,B) [0]\n A -> a [0.7]\n  A -> b [0.3]\n    B -> c [1]")
+        
+        Iterator<WeightedTree> it = a.sortedLanguageIterator();
+        
+        WeightedTree w = it.next();
+        _assertTreeEquals(w, "f(a,c)", a);
+        assert w.getWeight() == 0.63
+        
+        w = it.next();
+        _assertTreeEquals(w, "f(b,c)", a);
+        assert w.getWeight() == 0.27
+        
+        w = it.next();
+        _assertTreeEquals(w, "g(c)", a);
+        assert w.getWeight() == 0.1
+    }
     
     @Test
     public void testOneRuleNonRecursiveAutomaton() {
