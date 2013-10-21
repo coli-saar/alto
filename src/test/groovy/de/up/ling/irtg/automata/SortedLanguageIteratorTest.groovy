@@ -30,8 +30,6 @@ public class SortedLanguageIteratorTest {
     
     @Test
     public void testSortedLanguageIteratorGontrumBug() {
-//        System.err.println("test SLIGB");
-        
         TreeAutomaton a = pa("S! -> r1(A, B) [1.0]\n A -> r2 [1.0]\n A -> r3(A) [0.0]\n B -> r4(B,B) [0.7]\n B -> r5 [0.3]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         

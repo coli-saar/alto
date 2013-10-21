@@ -349,9 +349,10 @@ public class InterpretedTreeAutomaton {
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
 
+        Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
 
         for (int iteration = 0; iteration < numIterations; iteration++) {
-            Map<Rule, Double> globalRuleCount = estep(parses, intersectedRuleToOriginalRule, listener, iteration);
+            double logLikelihood = estep(parses, globalRuleCount, intersectedRuleToOriginalRule, listener, iteration);
 
             // sum over rules with same parent state to obtain state counts
             Map<Integer, Double> globalStateCount = new HashMap<Integer, Double>();
@@ -415,6 +416,8 @@ public class InterpretedTreeAutomaton {
         int numRules = automatonRules.size();
         double[] alpha = new double[numRules];
         Arrays.fill(alpha, 1.0); // might want to initialize them differently
+        
+        Map<Rule, Double> ruleCounts = new HashMap<Rule, Double>();
 
         // iterate
         for (int iteration = 0; iteration < 10; iteration++) {
@@ -436,7 +439,7 @@ public class InterpretedTreeAutomaton {
             }
 
             // re-estimate hyperparameters
-            Map<Rule, Double> ruleCounts = estep(parses, intersectedRuleToOriginalRule, listener, iteration);
+            estep(parses, ruleCounts, intersectedRuleToOriginalRule, listener, iteration);
             for (int i = 0; i < numRules; i++) {
                 alpha[i] += ruleCounts.get(automatonRules.get(i));
             }
@@ -451,8 +454,9 @@ public class InterpretedTreeAutomaton {
      * @param intersectedRuleToOriginalRule
      * @return
      */
-    protected Map<Rule, Double> estep(List<TreeAutomaton> parses, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, TrainingIterationListener listener, int iteration) {
-        Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
+    protected double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, TrainingIterationListener listener, int iteration) {
+        globalRuleCount.clear();
+        
         for (Rule rule : automaton.getRuleSet()) {
             globalRuleCount.put(rule, 0.0);
         }
@@ -480,7 +484,7 @@ public class InterpretedTreeAutomaton {
             listener.update(iteration, i);
         }
 
-        return globalRuleCount;
+        return 0; // TODO - fix me!
     }
 
     /**

@@ -29,6 +29,7 @@ import javax.swing.table.TableCellRenderer;
  * @author koller
  */
 public class JTreeAutomaton extends javax.swing.JFrame {
+
     private TreeAutomaton automaton;
     private InterpretedTreeAutomaton irtg;
     private List<String> annotationsInOrder;
@@ -39,8 +40,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
      */
     public JTreeAutomaton(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
         initComponents();
-        
-        if( ! GuiMain.isMac() ) {
+
+        if (!GuiMain.isMac()) {
             miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
             miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
             miSaveAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
@@ -355,11 +356,11 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }//GEN-LAST:event_miTrainMLActionPerformed
 
     private void miTrainEMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainEMActionPerformed
+        final Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
+
         new Thread() {
             @Override
             public void run() {
-                Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
-
                 if (corpus != null) {
                     final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
                     pb.setLabelText("Performing EM training ...");
@@ -384,11 +385,11 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }//GEN-LAST:event_miTrainEMActionPerformed
 
     private void miTrainVBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainVBActionPerformed
+        final Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
+
         new Thread() {
             @Override
             public void run() {
-                Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
-
                 if (corpus != null) {
                     final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
                     pb.setLabelText("Performing VB training ...");
@@ -404,7 +405,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                     } finally {
                         pb.setVisible(false);
                     }
-                    
+
                     GuiMain.log("Performed VB training, " + GuiMain.formatTimeSince(start));
                     updateWeights();
                 }
