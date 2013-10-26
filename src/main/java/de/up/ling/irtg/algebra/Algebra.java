@@ -74,7 +74,40 @@ public abstract class Algebra<E> {
      */
     abstract public Signature getSignature();
     
+    /**
+     * Set the options of the algebra implementation. Most algebras
+     * do not have options; for these algebras, it is okay to reuse
+     * the default implementation of setOptions, which simply does
+     * nothing. However, if your algebra relies on external data
+     * to work properly, you may provide a string representation
+     * of this external data using this method. See {@link SetAlgebra}
+     * for an example.
+     * 
+     * @param optionString 
+     */
+    public void setOptions(String optionString) throws Exception {
+        
+    }
     
+    /**
+     * Returns true if the algebra implementation has options
+     * that would make sense to be set using {@link #setOptions(java.lang.String) }.
+     * 
+     * @return 
+     */
+    public boolean hasOptions() {
+        return false;
+    }
+    
+    /**
+     * Returns a Swing component that visualizes an object of this algebra.
+     * The default implementation simply returns a JLabel containing a string
+     * representation of the algebra object. Override this method to provide
+     * more human-readable graphical presentations.
+     * 
+     * @param object
+     * @return 
+     */
     public JComponent visualize(E object) {
         return new JLabel(object.toString());
     }

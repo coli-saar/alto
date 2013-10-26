@@ -177,6 +177,14 @@ interpretation i: de.up.ling.irtg.algebra.SetAlgebra
         assertEquals(gold, result)
     }
     
+    @Test
+    public void testOptions() {
+        SetAlgebra a = new SetAlgebra()
+        a.setOptions('{"rabbit": [["r1"], ["r2"]], "white": [["r1"], ["b"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }');
+        Set<List<String>> result = a.evaluate(pt("project_1(intersect_1(in, rabbit))"));
+        Set<List<String>> gold = sl([["r1"]])
+        assertEquals(gold, result)
+    }
     
     
     // commented out until we can deal with getAllStates in the SetAlgebra

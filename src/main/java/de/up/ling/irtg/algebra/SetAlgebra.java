@@ -4,10 +4,15 @@
  */
 package de.up.ling.irtg.algebra;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -58,6 +63,51 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
 
         setAtomicInterpretations(atomicInterpretations);
     }
+
+    @Override
+    public void setOptions(String optionString) throws Exception {
+        Map<String, Set<List<String>>> atomicInterpretations = new HashMap<String, Set<List<String>>>();
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode root = mapper.readValue(optionString, JsonNode.class);
+        
+        if( ! root.isObject() ) {
+            throw new Exception("Invalid universe description: should be a map");
+        } else {
+            Iterator<String> preds = root.fieldNames();
+            
+            while( preds.hasNext() ) {
+                String pred = preds.next();
+                Set<List<String>> tuples = new HashSet<List<String>>();
+                JsonNode child = root.get(pred);
+                
+                if( ! child.isArray() ) {
+                    throw new Exception("Invalid universe description: Entry '" + pred + "' should be a list.");
+                } else {
+                    int childIndex = 0;
+                    for( JsonNode tuple : child ) {
+                        List<String> tupleElements = new ArrayList<String>();
+                        childIndex++;
+                        
+                        if( ! tuple.isArray() ) {
+                            throw new Exception("Invalid universe description: tuple " + childIndex + " under '" + pred + "' should be a list.");
+                        } else {
+                            for( JsonNode tupleEl : tuple ) {
+                                tupleElements.add(tupleEl.textValue());
+                            }
+                        }
+                        
+                        tuples.add(tupleElements);
+                    }
+                }
+                
+                atomicInterpretations.put(pred, tuples);
+            }
+        }
+        
+        setAtomicInterpretations(atomicInterpretations);
+    }
+    
+    
 
     public final void setAtomicInterpretations(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
