@@ -18,8 +18,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * An algebra of sets. The elements of this algebra are relations (of arbitrary arity)
- * over some given universe. The algebra interprets the following
+ * An algebra of sets. The elements of this algebra are relations (of arbitrary
+ * arity) over some given universe. The algebra interprets the following
  * operations:
  *
  * <ul>
@@ -32,11 +32,11 @@ import java.util.Set;
  * otherwise it returns the empty set.</li>
  * <li>T returns the universe.</li>
  * </ul>
- * 
+ *
  * Importantly, the decomposition automata for this algebra only implement
- * {@link TreeAutomaton#getRulesBottomUp(int, int[])}, not {@link TreeAutomaton#getRulesTopDown(int, int)}.
- * This means that you need to take care to only ever call methods on them
- * that look at rules bottom-up.<p>
+ * {@link TreeAutomaton#getRulesBottomUp(int, int[])}, not
+ * {@link TreeAutomaton#getRulesTopDown(int, int)}. This means that you need to
+ * take care to only ever call methods on them that look at rules bottom-up.<p>
  *
  * @author koller
  */
@@ -46,7 +46,6 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     private static final String UNIQ = "uniq_";
     private static final String TOP = "T";
     private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ};
-
     private Map<String, Set<List<String>>> atomicInterpretations;
     private Set<String> allIndividuals;
     private Set<List<String>> allIndividualsAsTuples;
@@ -65,49 +64,56 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     }
 
     @Override
+    public boolean hasOptions() {
+        return true;
+    }
+
+    @Override
     public void setOptions(String optionString) throws Exception {
         Map<String, Set<List<String>>> atomicInterpretations = new HashMap<String, Set<List<String>>>();
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readValue(optionString, JsonNode.class);
-        
-        if( ! root.isObject() ) {
-            throw new Exception("Invalid universe description: should be a map");
-        } else {
-            Iterator<String> preds = root.fieldNames();
-            
-            while( preds.hasNext() ) {
-                String pred = preds.next();
-                Set<List<String>> tuples = new HashSet<List<String>>();
-                JsonNode child = root.get(pred);
-                
-                if( ! child.isArray() ) {
-                    throw new Exception("Invalid universe description: Entry '" + pred + "' should be a list.");
-                } else {
-                    int childIndex = 0;
-                    for( JsonNode tuple : child ) {
-                        List<String> tupleElements = new ArrayList<String>();
-                        childIndex++;
-                        
-                        if( ! tuple.isArray() ) {
-                            throw new Exception("Invalid universe description: tuple " + childIndex + " under '" + pred + "' should be a list.");
-                        } else {
-                            for( JsonNode tupleEl : tuple ) {
-                                tupleElements.add(tupleEl.textValue());
+
+        if (!optionString.trim().equals("")) {
+
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readValue(optionString, JsonNode.class);
+
+            if (!root.isObject()) {
+                throw new Exception("Invalid universe description: should be a map");
+            } else {
+                Iterator<String> preds = root.fieldNames();
+
+                while (preds.hasNext()) {
+                    String pred = preds.next();
+                    Set<List<String>> tuples = new HashSet<List<String>>();
+                    JsonNode child = root.get(pred);
+
+                    if (!child.isArray()) {
+                        throw new Exception("Invalid universe description: Entry '" + pred + "' should be a list.");
+                    } else {
+                        int childIndex = 0;
+                        for (JsonNode tuple : child) {
+                            List<String> tupleElements = new ArrayList<String>();
+                            childIndex++;
+
+                            if (!tuple.isArray()) {
+                                throw new Exception("Invalid universe description: tuple " + childIndex + " under '" + pred + "' should be a list.");
+                            } else {
+                                for (JsonNode tupleEl : tuple) {
+                                    tupleElements.add(tupleEl.textValue());
+                                }
                             }
+
+                            tuples.add(tupleElements);
                         }
-                        
-                        tuples.add(tupleElements);
                     }
+
+                    atomicInterpretations.put(pred, tuples);
                 }
-                
-                atomicInterpretations.put(pred, tuples);
             }
         }
-        
+
         setAtomicInterpretations(atomicInterpretations);
     }
-    
-    
 
     public final void setAtomicInterpretations(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
@@ -205,7 +211,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
 
     @Override
     protected boolean isValidValue(Set<List<String>> value) {
-        return ! value.isEmpty();
+        return !value.isEmpty();
     }
 
     @Override

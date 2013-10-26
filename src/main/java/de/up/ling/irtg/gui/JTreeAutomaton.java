@@ -29,7 +29,6 @@ import javax.swing.table.TableCellRenderer;
  * @author koller
  */
 public class JTreeAutomaton extends javax.swing.JFrame {
-
     private TreeAutomaton automaton;
     private InterpretedTreeAutomaton irtg;
     private List<String> annotationsInOrder;
@@ -309,7 +308,16 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     private void miParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miParseActionPerformed
         if (irtg != null) {
-            final Map<String, String> inputs = JInputForm.getValues(annotationsInOrder, this);
+            List<Boolean> hasOptions = new ArrayList<Boolean>(annotationsInOrder.size());
+            for (String intp : annotationsInOrder) {
+                hasOptions.add(irtg.getInterpretation(intp).getAlgebra().hasOptions());
+            }
+
+            JInputForm jif = JInputForm.showForm(this, annotationsInOrder, hasOptions);
+            jif.setVisible(true);
+
+            final Map<String, String> inputs = jif.getInputValues();
+            final Map<String, String> options = jif.getOptions();
 
             if (inputs != null) {
                 new Thread() {
@@ -318,11 +326,17 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                         TreeAutomaton chart = null;
 
                         try {
+                            for (String intp : options.keySet()) {
+                                irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
+                            }
+
                             long start = System.nanoTime();
                             chart = irtg.parse(inputs);
                             log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
                         } catch (ParserException ex) {
                             GuiMain.showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
+                        } catch (Exception ex) {
+                            GuiMain.showError(JTreeAutomaton.this, ex.getMessage());
                         }
 
                         if (chart != null) {
