@@ -92,6 +92,9 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="miAddView">
               <Properties>
+                <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
+                  <KeyStroke key="Meta+2"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Add view"/>
               </Properties>
               <Events>
@@ -100,6 +103,9 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="miRemoveView">
               <Properties>
+                <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
+                  <KeyStroke key="Meta+1"/>
+                </Property>
                 <Property name="text" type="java.lang.String" value="Remove view"/>
               </Properties>
               <Events>

@@ -7,8 +7,11 @@ package de.up.ling.irtg.gui;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.tree.Tree;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JComponent;
 
 /**
  *
@@ -16,10 +19,11 @@ import javax.swing.JComponent;
  */
 public class JDerivationViewer extends javax.swing.JPanel {
     private Interpretation[] interpretationForSelection;
-    private JComponent[] components;
     private Tree<String> derivationTree;
     private static final String INTERPRETATION_PREFIX = "interpretation: ";
     private static final String DERIVATION_TREE = "derivation tree";
+    private Map<String, JDerivationDisplayable> displayables;
+    private List<String> viewsInOrder;
 
     /**
      * Creates new form JDerivationViewer
@@ -35,19 +39,23 @@ public class JDerivationViewer extends javax.swing.JPanel {
             N = irtg.getInterpretations().size() + 1;
         }
 
+        displayables = new HashMap<String, JDerivationDisplayable>();
+        viewsInOrder = new ArrayList<String>();
         String[] possibleViews = new String[N];
         interpretationForSelection = new Interpretation[N - 1];
-        components = new JComponent[N];
 
         possibleViews[0] = DERIVATION_TREE;
-        components[0] = new JDerivationTree();
+        possibleViews[0] = DERIVATION_TREE;
+        displayables.put("** derivation tree **", new JDerivationTree());
+        viewsInOrder.add("** derivation tree **");
 
         if (irtg != null) {
             int i = 0;
             for (String name : irtg.getInterpretations().keySet()) {
                 interpretationForSelection[i] = irtg.getInterpretations().get(name);
                 possibleViews[i + 1] = INTERPRETATION_PREFIX + name;
-                components[i + 1] = new JInterpretation(interpretationForSelection[i]);
+                displayables.put(name, new JInterpretation(interpretationForSelection[i]));
+                viewsInOrder.add(name);
                 i++;
             }
         }
@@ -61,25 +69,34 @@ public class JDerivationViewer extends javax.swing.JPanel {
         redraw();
     }
 
-    private void redraw() {
-        if (derivationTree != null) {
-            int index = componentSelector.getSelectedIndex();
+    public String getCurrentView() {
+        return viewsInOrder.get(componentSelector.getSelectedIndex());
+    }
+    
+    public List<String> getPossibleViews() {
+        return viewsInOrder;
+    }
 
+    public void setView(String viewName) {
+        componentSelector.setSelectedIndex(viewsInOrder.indexOf(viewName));
+        changeView(viewName);
+    }
+    
+    private void changeView(String viewName) {
+        if (derivationTree != null) {
             content.removeAll();
 
-            if (index == 0) {
-                JDerivationTree jdt = (JDerivationTree) components[0];
-                jdt.setDerivationTree(derivationTree);
-                content.add(jdt);
-            } else {
-                JInterpretation ji = (JInterpretation) components[index];
-                ji.setDerivationTree(derivationTree);
-                content.add(ji);
-            }
+            JDerivationDisplayable dis = displayables.get(viewName);
+            dis.setDerivationTree(derivationTree);
+            content.add(dis);
 
             revalidate();
             repaint();
         }
+    }
+
+    private void redraw() {
+        setView(getCurrentView());
     }
 
     /**

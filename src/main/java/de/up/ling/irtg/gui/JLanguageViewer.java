@@ -15,6 +15,7 @@ import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import javax.swing.JComponent;
 
 /**
  *
@@ -297,6 +298,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jMenu2.add(miPreviousTree);
         jMenu2.add(jSeparator2);
 
+        miAddView.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_2, java.awt.event.InputEvent.META_MASK));
         miAddView.setText("Add view");
         miAddView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -305,6 +307,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         });
         jMenu2.add(miAddView);
 
+        miRemoveView.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_1, java.awt.event.InputEvent.META_MASK));
         miRemoveView.setText("Remove view");
         miRemoveView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -374,6 +377,26 @@ public class JLanguageViewer extends javax.swing.JFrame {
         
         if( currentIrtg != null ) {
             dv.setInterpretedTreeAutomaton(currentIrtg);
+            
+            // set view to the first view that is not already being displayed;
+            // if none are available, stick with derivation tree view
+            for( String view : dv.getPossibleViews() ) {
+                boolean taken = false;
+                
+                for( Component other : derivationViewers.getComponents() ) {
+                  if( other instanceof JDerivationViewer ) {
+                      String otherView = ((JDerivationViewer) other).getCurrentView();
+                      if( view.equals(otherView) ) {
+                          taken = true;
+                      }
+                  }
+                }
+                
+                if( ! taken ) {
+                    dv.setView(view);
+                    break;
+                }
+            }
         }
         
         if( currentTree != null ) {

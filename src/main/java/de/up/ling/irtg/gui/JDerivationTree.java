@@ -13,7 +13,7 @@ import javax.swing.JScrollPane;
  *
  * @author koller
  */
-public class JDerivationTree extends javax.swing.JPanel {
+public class JDerivationTree extends JDerivationDisplayable {
     /**
      * Creates new form JDerivationTre
      */
@@ -21,6 +21,7 @@ public class JDerivationTree extends javax.swing.JPanel {
         initComponents();
     }
     
+    @Override
     public void setDerivationTree(Tree<String> derivationTree) {
         removeAll();
         JScrollPane jsp = new JScrollPane(new TreePanel(derivationTree), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);

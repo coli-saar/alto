@@ -15,7 +15,7 @@ import javax.swing.JScrollPane;
  *
  * @author koller
  */
-public class JInterpretation extends javax.swing.JPanel {
+public class JInterpretation extends JDerivationDisplayable {
     private Interpretation interp;
     
     /**
@@ -27,6 +27,7 @@ public class JInterpretation extends javax.swing.JPanel {
         initComponents();        
     }
     
+    @Override
     public void setDerivationTree(Tree<String> derivationTree) {
         Tree<String> term = interp.getHomomorphism().apply(derivationTree);
         
