@@ -13,6 +13,7 @@ import java.util.Arrays;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.ToolTipManager;
 
 /**
  *
@@ -31,9 +32,12 @@ public class JInterpretation extends JDerivationDisplayable {
     }
     
     private JComponent makeErrorComponent(Exception e) {
-        JLabel ret = new JLabel("<Can't evaluate: " + e.getMessage() + ">");
+        JLabel ret = new JLabel("<Can't evaluate: " + e.toString() + ">");
         
-        ret.setToolTipText(StringTools.join(Arrays.asList(e.getStackTrace()), "\n"));
+        String tooltipText = "<html>" + e + "<br>" + StringTools.join(Arrays.asList(e.getStackTrace()), "<br>\n") + "</html>";
+        
+        ret.setToolTipText(tooltipText);
+        ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
         
         return ret;
     }

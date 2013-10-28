@@ -1,0 +1,51 @@
+/*
+Demo grammar for RE generation using the set algebra.
+
+The set algebra only works if you specify a model over which it should interpret
+the atomic predicate symbols. You can do this by passing a JSON representation
+of the model as an option. Try translating {e} and {r1} into strings using the
+following model representation:
+
+{"sleep": [["e", "r1"]], "takefrom": [["e2", "r1", "h"]], "rabbit": [["r1"], ["r2"]], "white": [["r1"], ["b"]], "brown": [["r2"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }
+
+*/
+
+interpretation sem: de.up.ling.irtg.algebra.SetAlgebra
+interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+
+S_e! -> a_sleeps_e_r1(N_r1)
+[sem] project_1(intersect_2(sleep, uniq_r1(?1)))
+[string] *(?1, sleeps)
+
+N_r1! -> a_rabbit(Adj_N_r1)
+[sem] intersect_1(rabbit, ?1)
+[string] *(the, *(?1, rabbit))
+
+Adj_N_r1 -> b_white  [0.3]
+[sem] white
+[string] white
+
+Adj_N_r1 -> b_nop    [0.7]
+[sem] T
+[string] ''
+
+S_e2! -> takefrom_e2_r1_h(N_r1, N_h)
+[string] *(*(take, ?1), *(from, ?2))
+[sem]    project_1(intersect_3(intersect_2(takefrom, uniq_r1(intersect_1(?1, project_1(intersect_2(in, ?2))))), uniq_h(intersect_1(?2, project_2(intersect_1(in, ?1))))))
+
+/*
+// ref of "the rabbit": uniq_r1(intersect_1(?1, project_1(intersect_2(in, ?2))))
+// ref of "the hat":    uniq_h(intersect_1(?2, project_2(intersect_1(in, ?1))))
+*/
+
+N_h -> a_hat
+[sem]    hat
+[string] *(the, hat)
+
+N_h -> thing
+[sem]  T
+[string] *(the, thing)
+
+N_r1 -> thing
+[sem]  T
+[string] *(the, thing)
