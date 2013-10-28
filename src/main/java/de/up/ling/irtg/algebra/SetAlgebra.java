@@ -133,8 +133,12 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         }
     }
 
-    protected Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) {
+    protected Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) throws NoModelException {
         Set<List<String>> ret = null;
+        
+        if( atomicInterpretations == null ) {
+            throw new NoModelException("SetAlgebra has no atomic interpretations yet.");
+        }
 
         if (label.startsWith(PROJECT)) {
             ret = project(childrenValues.get(0), Integer.parseInt(arg(label)) - 1);
@@ -147,8 +151,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         } else {
             ret = atomicInterpretations.get(label);
         }
-
-//        System.err.println("evaluate: " + label + childrenValues + " = " + ret);
+        
         return ret;
     }
 
@@ -221,5 +224,33 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
             throw new ParserException(ex);
         }
 
+    }
+    
+    
+    
+    public static class NoModelException extends RuntimeException {
+        public NoModelException() {
+        }
+
+        public NoModelException(String message) {
+            super(message);
+        }
+
+        public NoModelException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public NoModelException(Throwable cause) {
+            super(cause);
+        }
+
+        public NoModelException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+            super(message, cause, enableSuppression, writableStackTrace);
+        }
+
+        @Override
+        public String toString() {
+            return "NoModelException: " + getMessage();
+        }
     }
 }
