@@ -4,11 +4,14 @@
  */
 package de.up.ling.irtg.gui;
 
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
+import java.util.Arrays;
 import javax.swing.JComponent;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 
 /**
@@ -27,6 +30,14 @@ public class JInterpretation extends JDerivationDisplayable {
         initComponents();        
     }
     
+    private JComponent makeErrorComponent(Exception e) {
+        JLabel ret = new JLabel("<Can't evaluate: " + e.getMessage() + ">");
+        
+        ret.setToolTipText(StringTools.join(Arrays.asList(e.getStackTrace()), "\n"));
+        
+        return ret;
+    }
+    
     @Override
     public void setDerivationTree(Tree<String> derivationTree) {
         Tree<String> term = interp.getHomomorphism().apply(derivationTree);
@@ -35,7 +46,16 @@ public class JInterpretation extends JDerivationDisplayable {
         termPanel.add(sp(new TreePanel(term)));
         
         valuePanel.removeAll();
-        valuePanel.add(sp(interp.getAlgebra().visualize(interp.getAlgebra().evaluate(term))));        
+        
+        JComponent valueComponent = null;
+        
+        try {
+            valueComponent = interp.getAlgebra().visualize(interp.getAlgebra().evaluate(term));
+        } catch(Exception e) {
+            valueComponent = makeErrorComponent(e);
+        }
+        
+        valuePanel.add(sp(valueComponent));        
     }
     
     private JComponent sp(JComponent comp) {

@@ -92,36 +92,22 @@ S -> r2
             chart.language());
     }
     
-    /*
-    private ChartCorpus writeThenReadCorpus(InterpretedTreeAutomaton irtg, Reader corpus) {
-        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-        irtg.readCorpus(corpus, ostream);        
-        return irtg.readChartCorpus(new ByteArrayInputStreamSupplier(ostream.toByteArray()));
-    }
     
-    
-    @Test
-    public void testParseCorpus() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        ChartCorpus pco = writeThenReadCorpus(irtg, new StringReader(PCFG_EMTRAIN_STR));
-        assertEquals(3, pco.getInstancesAsList().size());
-        
-//        System.err.println("read corpus: " + pco.getInstancesAsList());
-        
-    }
-*/
-    
-    /* crashes with NPE in e-step 
     @Test
     public void testEM() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
-        ChartCorpus pco = writeThenReadCorpus(irtg, new StringReader(PCFG_EMTRAIN_STR));
-        irtg.trainEM(pco);
+        Corpus corpus = irtg.readCorpus(new StringReader(PCFG_EMTRAIN_STR));
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        
+        Charts.computeCharts(corpus, irtg, bos);
+        bos.close();
+        
+        corpus.attachCharts(new Charts(new ByteArrayInputStreamSupplier(bos.toByteArray())));
+        
+        irtg.trainEM(corpus);
         
         assert true;
     }
-    */
-    
     
     
     @Test

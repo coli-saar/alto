@@ -455,6 +455,8 @@ public class InterpretedTreeAutomaton {
      * @return
      */
     protected double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, TrainingIterationListener listener, int iteration) {
+        double logLikelihood = 0;
+        
         globalRuleCount.clear();
         
         for (Rule rule : automaton.getRuleSet()) {
@@ -481,10 +483,19 @@ public class InterpretedTreeAutomaton {
                 globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
             }
             
-            listener.update(iteration, i);
+            double likelihoodHere = 0;
+            for( Object finalState : parse.getFinalStates() ) {
+                likelihoodHere += inside.get(finalState);
+            }
+            
+            logLikelihood += Math.log(likelihoodHere);
+
+            if( listener != null ) {
+                listener.update(iteration, i);
+            }
         }
 
-        return 0; // TODO - fix me!
+        return logLikelihood;
     }
 
     /**

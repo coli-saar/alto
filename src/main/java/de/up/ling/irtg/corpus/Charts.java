@@ -16,8 +16,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import de.up.ling.zip.ZipEntriesCreator;
 import de.up.ling.zip.ZipEntryIterator;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A collection of parse charts for the input objects in a corpus.

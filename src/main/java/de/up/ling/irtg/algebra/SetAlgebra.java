@@ -7,7 +7,6 @@ package de.up.ling.irtg.algebra;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
