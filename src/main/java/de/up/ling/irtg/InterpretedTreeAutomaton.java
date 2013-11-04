@@ -341,7 +341,6 @@ public class InterpretedTreeAutomaton {
             return;
         }
 
-
         if (debug) {
             System.out.println("\n\nInitial model:\n" + automaton);
         }
@@ -352,12 +351,16 @@ public class InterpretedTreeAutomaton {
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
-        
-        normalizeRuleWeights(originalRuleToIntersectedRules.keySet());
+                
+        // assert: originalRuleToIntersectedRules.get(r1) and originalRuleToIntersectedRules.get(r2) disjoint for all r1 != r2
+        // dito fuer intersectedRuleToOriginalRule
 
         Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
 
         for (int iteration = 0; iteration < numIterations; iteration++) {
+            // assert: for all r, r': r' \in originalRuleToIntersectedRules.get(r) => weight(r) = weight(r')
+            // dito fuer intersectedRuleToOriginalRule
+            
             double logLikelihood = estep(parses, globalRuleCount, intersectedRuleToOriginalRule, listener, iteration);
 
             // sum over rules with same parent state to obtain state counts
@@ -365,6 +368,7 @@ public class InterpretedTreeAutomaton {
             for (int state : automaton.getAllStates()) {
                 globalStateCount.put(state, 0.0);
             }
+            
             for (Rule rule : automaton.getRuleSet()) {
                 int state = rule.getParent();
                 globalStateCount.put(state, globalStateCount.get(state) + globalRuleCount.get(rule));
@@ -386,18 +390,12 @@ public class InterpretedTreeAutomaton {
         }
     }
     
-    // normalizes the weights of the given rule such that the weights of all rules with
-    // the same parent state sum to one
-    private void normalizeRuleWeights(Collection<Rule> rules) {
-        Int2DoubleMap lhsWeightSum = new Int2DoubleOpenHashMap();
-        
-        for( Rule rule : rules ) {
-            lhsWeightSum.put(rule.getParent(), lhsWeightSum.get(rule.getParent()) + rule.getWeight());
-        }
-        
-        for( Rule rule : rules ) {
-            rule.setWeight(rule.getWeight() / lhsWeightSum.get(rule.getParent()));
-        }
+    /**
+     * Modifies the rule weights of the derivation tree automaton such that
+     * the weights for all rules with the same parent state sum to one.
+     */
+    public void normalizeRuleWeights() {
+        automaton.normalizeRuleWeights();
     }
     
     public void trainVB(Corpus trainingData) {
@@ -488,6 +486,8 @@ public class InterpretedTreeAutomaton {
 
             Map<Object, Double> inside = parse.inside();
             Map<Object, Double> outside = parse.outside(inside);
+            
+            // check: inside, outside haben korrekte Werte
 
             for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
                 Object intersectedParent = intersectedRule.getParent();

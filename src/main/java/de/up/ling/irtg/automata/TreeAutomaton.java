@@ -25,6 +25,8 @@ import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
+import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -1872,6 +1874,25 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public Rule createRule(State parent, String label, List<State> children) {
         return createRule(parent, label, children, 1);
+    }
+    
+    
+    /**
+     * Modifies the weights of the rules in this automaton such that the weights
+     * of all rules with the same parent state sum to one. Note that this requires
+     * computing all the rules, which may be expensive for lazy automata.
+     */
+    public void normalizeRuleWeights() {
+        Collection<Rule> rules = getRuleSet();
+        Int2DoubleMap lhsWeightSum = new Int2DoubleOpenHashMap();
+        
+        for( Rule rule : rules ) {
+            lhsWeightSum.put(rule.getParent(), lhsWeightSum.get(rule.getParent()) + rule.getWeight());
+        }
+        
+        for( Rule rule : rules ) {
+            rule.setWeight(rule.getWeight() / lhsWeightSum.get(rule.getParent()));
+        }
     }
 }
 /**
