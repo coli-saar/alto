@@ -19,9 +19,13 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
+import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -348,6 +352,8 @@ public class InterpretedTreeAutomaton {
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
+        
+        normalizeRuleWeights(originalRuleToIntersectedRules.keySet());
 
         Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
 
@@ -377,6 +383,20 @@ public class InterpretedTreeAutomaton {
             if (printIntermediate) {
                 System.out.println("\n\n***** After iteration " + (iteration + 1) + " *****\n\n" + automaton);
             }
+        }
+    }
+    
+    // normalizes the weights of the given rule such that the weights of all rules with
+    // the same parent state sum to one
+    private void normalizeRuleWeights(Collection<Rule> rules) {
+        Int2DoubleMap lhsWeightSum = new Int2DoubleOpenHashMap();
+        
+        for( Rule rule : rules ) {
+            lhsWeightSum.put(rule.getParent(), lhsWeightSum.get(rule.getParent()) + rule.getWeight());
+        }
+        
+        for( Rule rule : rules ) {
+            rule.setWeight(rule.getWeight() / lhsWeightSum.get(rule.getParent()));
         }
     }
     
