@@ -19,13 +19,9 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
-import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
-import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -115,23 +111,23 @@ public class InterpretedTreeAutomaton {
     public Interpretation getInterpretation(String interp) {
         return interpretations.get(interp);
     }
-    
+
     /**
-     * Maps a given derivation tree to terms over all interpretations
-     * and evaluates them. The method returns a mapping of interpretation
-     * names to objects in the respective algebras.
-     * 
+     * Maps a given derivation tree to terms over all interpretations and
+     * evaluates them. The method returns a mapping of interpretation names to
+     * objects in the respective algebras.
+     *
      * @param derivationTree
-     * @return 
+     * @return
      */
-    public Map<String,Object> interpret(Tree<String> derivationTree) {
-        Map<String,Object> ret = new HashMap<String, Object>();
-        
-        for( String interpretationName : interpretations.keySet() ) {
+    public Map<String, Object> interpret(Tree<String> derivationTree) {
+        Map<String, Object> ret = new HashMap<String, Object>();
+
+        for (String interpretationName : interpretations.keySet()) {
             Interpretation interp = interpretations.get(interpretationName);
             ret.put(interpretationName, interp.getAlgebra().evaluate(interp.getHomomorphism().apply(derivationTree)));
         }
-        
+
         return ret;
     }
 
@@ -202,12 +198,12 @@ public class InterpretedTreeAutomaton {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
             TreeAutomaton interpParse = interp.parse(input);
-            
+
 //            System.err.println("invhom(decomp(" + input  + "):\n" + interpParse.toStringBottomUp());
-            
+
             ret = ret.intersect(interpParse);
         }
-        
+
 //        System.err.println("chart before reduction:\n" + ret);
 
         return ret.reduceTopDown();
@@ -330,7 +326,7 @@ public class InterpretedTreeAutomaton {
     public void trainEM(Corpus trainingData) {
         trainEM(trainingData, null);
     }
-    
+
     public void trainEM(Corpus trainingData, TrainingIterationListener listener) {
         trainEM(trainingData, 10, false, listener);
     }
@@ -351,24 +347,40 @@ public class InterpretedTreeAutomaton {
         List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
-                
+
         // assert: originalRuleToIntersectedRules.get(r1) and originalRuleToIntersectedRules.get(r2) disjoint for all r1 != r2
         // dito fuer intersectedRuleToOriginalRule
 
         Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
+        double oldLogLikelihood = Double.NEGATIVE_INFINITY;
 
         for (int iteration = 0; iteration < numIterations; iteration++) {
             // assert: for all r, r': r' \in originalRuleToIntersectedRules.get(r) => weight(r) = weight(r')
             // dito fuer intersectedRuleToOriginalRule
-            
+            if (debug) {
+                for (Rule r : originalRuleToIntersectedRules.keySet()) {
+                    System.err.println("Iteration:  " + iteration);
+                    System.err.println("Rule:       " + r.toString(automaton));
+                    System.err.println("Rule (raw): " + r);
+                    System.err.println("Weight:     " + r.getWeight());
+                    System.err.print("\n");
+                }
+            }
+
+
             double logLikelihood = estep(parses, globalRuleCount, intersectedRuleToOriginalRule, listener, iteration);
+
+            if (debug) {
+                System.err.println("Current LL: " + logLikelihood + "\n");
+            }
+            oldLogLikelihood = logLikelihood;
 
             // sum over rules with same parent state to obtain state counts
             Map<Integer, Double> globalStateCount = new HashMap<Integer, Double>();
             for (int state : automaton.getAllStates()) {
                 globalStateCount.put(state, 0.0);
             }
-            
+
             for (Rule rule : automaton.getRuleSet()) {
                 int state = rule.getParent();
                 globalStateCount.put(state, globalStateCount.get(state) + globalRuleCount.get(rule));
@@ -389,15 +401,15 @@ public class InterpretedTreeAutomaton {
             }
         }
     }
-    
+
     /**
-     * Modifies the rule weights of the derivation tree automaton such that
-     * the weights for all rules with the same parent state sum to one.
+     * Modifies the rule weights of the derivation tree automaton such that the
+     * weights for all rules with the same parent state sum to one.
      */
     public void normalizeRuleWeights() {
         automaton.normalizeRuleWeights();
     }
-    
+
     public void trainVB(Corpus trainingData) {
         trainVB(trainingData, null);
     }
@@ -434,7 +446,7 @@ public class InterpretedTreeAutomaton {
         int numRules = automatonRules.size();
         double[] alpha = new double[numRules];
         Arrays.fill(alpha, 1.0); // might want to initialize them differently
-        
+
         Map<Rule, Double> ruleCounts = new HashMap<Rule, Double>();
 
         // iterate
@@ -474,9 +486,9 @@ public class InterpretedTreeAutomaton {
      */
     protected double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, TrainingIterationListener listener, int iteration) {
         double logLikelihood = 0;
-        
+
         globalRuleCount.clear();
-        
+
         for (Rule rule : automaton.getRuleSet()) {
             globalRuleCount.put(rule, 0.0);
         }
@@ -484,17 +496,37 @@ public class InterpretedTreeAutomaton {
         for (int i = 0; i < parses.size(); i++) {
             TreeAutomaton parse = parses.get(i);
 
-            Map<Object, Double> inside = parse.inside();
-            Map<Object, Double> outside = parse.outside(inside);
-            
+            Map<Integer, Double> inside = parse.inside();
+            Map<Integer, Double> outside = parse.outside(inside);
+
             // check: inside, outside haben korrekte Werte
+            
+            if (debug) {
+                System.out.println("Inside and outside probabilities for chart #" + i);
+
+                for (Integer r : inside.keySet()) {
+                    System.out.println("Inside: " + parse.getStateForId(r) + " | " + inside.get(r));
+                }
+                System.out.println("-");
+
+                for (Integer r : outside.keySet()) {
+                    System.out.println("Outside: " + parse.getStateForId(r) + " | " + outside.get(r));
+                }
+                System.out.println("");
+            }
+            
+            
+            double likelihoodHere = 0;
+            for (Object finalState : parse.getFinalStates()) {
+                likelihoodHere += inside.get(finalState);
+            }
 
             for (Rule intersectedRule : intersectedRuleToOriginalRule.get(i).keySet()) {
-                Object intersectedParent = intersectedRule.getParent();
+                Integer intersectedParent = intersectedRule.getParent();
                 Rule originalRule = intersectedRuleToOriginalRule.get(i).get(intersectedRule);
 
                 double oldRuleCount = globalRuleCount.get(originalRule);
-                double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight();
+                double thisRuleCount = outside.get(intersectedParent) * intersectedRule.getWeight() / likelihoodHere;
 
                 for (int j = 0; j < intersectedRule.getArity(); j++) {
                     thisRuleCount *= inside.get(intersectedRule.getChildren()[j]);
@@ -502,15 +534,12 @@ public class InterpretedTreeAutomaton {
 
                 globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
             }
+
             
-            double likelihoodHere = 0;
-            for( Object finalState : parse.getFinalStates() ) {
-                likelihoodHere += inside.get(finalState);
-            }
-            
+
             logLikelihood += Math.log(likelihoodHere);
 
-            if( listener != null ) {
+            if (listener != null) {
                 listener.update(iteration, i);
             }
         }
