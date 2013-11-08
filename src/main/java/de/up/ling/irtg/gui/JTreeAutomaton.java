@@ -14,13 +14,18 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
 import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
+import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import java.awt.Color;
 import java.awt.Component;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.JTable;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
@@ -123,7 +128,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     public void setIrtg(InterpretedTreeAutomaton irtg) {
         this.irtg = irtg;
-
+        miMaxent.setEnabled(irtg instanceof MaximumEntropyIrtg);
     }
 
     public void setParsingEnabled(boolean enabled) {
@@ -152,6 +157,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miOpenAutomaton = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miSaveAutomaton = new javax.swing.JMenuItem();
+        jSeparator4 = new javax.swing.JPopupMenu.Separator();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
         jMenu4 = new javax.swing.JMenu();
@@ -161,11 +167,16 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miTrainML = new javax.swing.JMenuItem();
         miTrainEM = new javax.swing.JMenuItem();
         miTrainVB = new javax.swing.JMenuItem();
+        miMaxent = new javax.swing.JMenu();
+        miLoadMaxentWeights = new javax.swing.JMenuItem();
+        miSaveMaxentWeights = new javax.swing.JMenuItem();
+        miShowMaxentWeights = new javax.swing.JMenuItem();
+        miTrainMaxent = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        jTable1.setModel(entries);
         jTable1.setAutoCreateRowSorter(true);
+        jTable1.setModel(entries);
         jTable1.setEnabled(false);
         jScrollPane1.setViewportView(jTable1);
 
@@ -198,6 +209,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         });
         jMenu3.add(miSaveAutomaton);
+        jMenu3.add(jSeparator4);
         jMenu3.add(jSeparator2);
 
         miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
@@ -259,6 +271,45 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         });
         jMenu4.add(miTrainVB);
+
+        miMaxent.setText("Maximum Entropy");
+        miMaxent.setEnabled(false);
+
+        miLoadMaxentWeights.setText("Load weights ...");
+        miLoadMaxentWeights.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miLoadMaxentWeightsActionPerformed(evt);
+            }
+        });
+        miMaxent.add(miLoadMaxentWeights);
+
+        miSaveMaxentWeights.setText("Save weights ...");
+        miSaveMaxentWeights.setEnabled(false);
+        miSaveMaxentWeights.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miSaveMaxentWeightsActionPerformed(evt);
+            }
+        });
+        miMaxent.add(miSaveMaxentWeights);
+
+        miShowMaxentWeights.setText("Show weights ...");
+        miShowMaxentWeights.setEnabled(false);
+        miShowMaxentWeights.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miShowMaxentWeightsActionPerformed(evt);
+            }
+        });
+        miMaxent.add(miShowMaxentWeights);
+
+        miTrainMaxent.setText("Train ...");
+        miTrainMaxent.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miTrainMaxentActionPerformed(evt);
+            }
+        });
+        miMaxent.add(miTrainMaxent);
+
+        jMenu4.add(miMaxent);
 
         jMenuBar2.add(jMenu4);
 
@@ -427,6 +478,72 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         }.start();
 
     }//GEN-LAST:event_miTrainVBActionPerformed
+
+    private void miLoadMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadMaxentWeightsActionPerformed
+        if (irtg instanceof MaximumEntropyIrtg) {
+            long start = System.nanoTime();
+            GuiMain.loadMaxentWeights((MaximumEntropyIrtg) irtg, this);
+            GuiMain.log("Loaded maxent weights, " + GuiMain.formatTimeSince(start));
+
+            miSaveMaxentWeights.setEnabled(true);
+            miShowMaxentWeights.setEnabled(true);
+        }
+    }//GEN-LAST:event_miLoadMaxentWeightsActionPerformed
+
+    private void miTrainMaxentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainMaxentActionPerformed
+        if (irtg instanceof MaximumEntropyIrtg) {
+            Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, miMaxent);
+
+            if (corpus != null) {
+                long start = System.nanoTime();
+
+                ((MaximumEntropyIrtg) irtg).trainMaxent(corpus);
+                GuiMain.log("Trained maxent model, " + GuiMain.formatTimeSince(start));
+
+                miSaveMaxentWeights.setEnabled(true);
+                miShowMaxentWeights.setEnabled(true);
+            }
+        }
+    }//GEN-LAST:event_miTrainMaxentActionPerformed
+
+    private void miSaveMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miSaveMaxentWeightsActionPerformed
+        File file = GuiMain.chooseFileForSaving(new FileNameExtensionFilter("Tree automata", "auto"), this);
+
+        if (file != null) {
+            long start = System.nanoTime();
+
+            try {
+                ((MaximumEntropyIrtg) irtg).writeWeights(new FileWriter(file));
+                GuiMain.log("Saved maxent weights, " + GuiMain.formatTimeSince(start));
+            } catch (IOException e) {
+                GuiMain.showError(this, "An error occurred while saving the maxent weights to " + file.getName() + ": " + e.getMessage());
+            }
+        }
+    }//GEN-LAST:event_miSaveMaxentWeightsActionPerformed
+
+    private static class FtWeight {
+        public String feature;
+        public String weight;
+    }
+    
+    private void miShowMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miShowMaxentWeightsActionPerformed
+        if( irtg instanceof MaximumEntropyIrtg ) {
+            MaximumEntropyIrtg mirtg = (MaximumEntropyIrtg) irtg;
+            List<FtWeight> fts = new ArrayList<FtWeight>();
+            List<String> ftNames = mirtg.getFeatureNames();
+            
+            for( int i = 0; i < mirtg.getNumFeatures(); i++ ) {
+                FtWeight x = new FtWeight();
+                x.feature = ftNames.get(i);
+                x.weight = Double.toString(mirtg.getFeatureWeight(i));
+                fts.add(x);
+            }
+            
+            JTableDialog<FtWeight> dialog = new JTableDialog<FtWeight>("Maxent weights for " + getTitle(), fts);
+            dialog.setVisible(true);
+        }
+    }//GEN-LAST:event_miShowMaxentWeightsActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
@@ -436,15 +553,21 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JPopupMenu.Separator jSeparator3;
+    private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JTable jTable1;
+    private javax.swing.JMenuItem miLoadMaxentWeights;
+    private javax.swing.JMenu miMaxent;
     private javax.swing.JMenuItem miOpenAutomaton;
     private javax.swing.JMenuItem miOpenIrtg;
     private javax.swing.JMenuItem miParse;
     private javax.swing.JMenuItem miQuit;
     private javax.swing.JMenuItem miSaveAutomaton;
+    private javax.swing.JMenuItem miSaveMaxentWeights;
     private javax.swing.JMenuItem miShowLanguage;
+    private javax.swing.JMenuItem miShowMaxentWeights;
     private javax.swing.JMenuItem miTrainEM;
     private javax.swing.JMenuItem miTrainML;
+    private javax.swing.JMenuItem miTrainMaxent;
     private javax.swing.JMenuItem miTrainVB;
     // End of variables declaration//GEN-END:variables
 }

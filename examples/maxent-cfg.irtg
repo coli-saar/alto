@@ -1,0 +1,42 @@
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+feature f1: de.up.ling.irtg.maxent.ChildOfFeature('VP','PP')
+feature f2: de.up.ling.irtg.maxent.ChildOfFeature('N','PP')
+
+S! -> r1(NP,VP)
+  [i] *(?1,?2)
+
+VP -> r4(V,NP)
+  [i] *(?1,?2)
+
+VP -> r5(VP,PP)
+  [i] *(?1,?2)
+
+PP -> r6(P,NP)
+  [i] *(?1,?2)
+
+NP -> r7
+  [i] john
+
+NP -> r2(Det,N)
+  [i] *(?1,?2)
+
+V -> r8
+  [i] watches
+
+Det -> r9
+  [i] the
+
+N -> r10
+  [i] woman
+
+N -> r11
+  [i] telescope
+
+N -> r3(N,PP)
+  [i] *(?1,?2)
+
+P -> r12
+  [i] with
+
+  

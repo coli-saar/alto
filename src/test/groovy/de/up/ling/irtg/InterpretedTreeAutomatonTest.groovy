@@ -128,10 +128,6 @@ S -> r2
     return rbu(label, childStates, automaton).iterator().next().getWeight()
    }
    
-   private void assertAlmostEquals(double x, double y) {
-       assert Math.abs(x-y) < 0.0001 : ("expected " + x + ", got " + y);
-   }
-    
 
    private Set<Rule> rbu(String label, List children, TreeAutomaton auto) {
        return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), children.collect { auto.getIdForState(it)});

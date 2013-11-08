@@ -25,31 +25,15 @@ public class Rule implements Serializable {
     private int label;
     private int[] children;
     private double weight;
+    private Object extra;
 
     Rule(int parent, int label, int[] children, double weight) {
         this.parent = parent;
         this.label = label;
         this.children = children;
         this.weight = weight;
+        this.extra = null;
     }
-
-//    Rule(State parent, int label, List<State> children, double weight) {
-//        this(parent, label, (State[]) children.toArray(), weight);
-//    }
-
-    /*
-    public Rule(State parent, int label, State[] children) {
-        this(parent, label, children, 1);
-    }
-
-    public Rule(State parent, int label, List<State> children) {
-        this(parent, label, children, 1);
-    }
-
-    public static <State> Rule<State> c(State parent, int label, State... children) {
-        return new Rule(parent, label, children);
-    }
-    */
 
     public int[] getChildren() {
         return children;
@@ -78,6 +62,26 @@ public class Rule implements Serializable {
 
     public void setWeight(double weight) {
         this.weight = weight;
+    }
+
+    /**
+     * Retrieves the auxiliary information from this rule.
+     * 
+     * @see #setExtra(java.lang.Object) 
+     * @return 
+     */
+    public Object getExtra() {
+        return extra;
+    }
+
+    /**
+     * Stores auxiliary information within this rule. Do not use this
+     * unless you know what you're doing.
+     * 
+     * @param extra 
+     */
+    public void setExtra(Object extra) {
+        this.extra = extra;
     }
 
     public int getArity() {

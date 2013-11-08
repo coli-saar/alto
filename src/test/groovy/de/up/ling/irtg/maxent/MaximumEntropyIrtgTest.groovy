@@ -6,7 +6,7 @@
 package de.up.ling.irtg.maxent
 
 
-import org.junit.Test
+import org.junit.*
 import java.util.*
 import java.io.*
 import de.up.ling.irtg.automata.*
@@ -18,6 +18,8 @@ import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
 import de.up.ling.irtg.*
 import de.up.ling.irtg.corpus.*
+import java.util.logging.Level
+
 
 /**
  *
@@ -25,6 +27,11 @@ import de.up.ling.irtg.corpus.*
  * @author Danilo Baumgarten
  */
 class MaximumEntropyIrtgTest {
+    @BeforeClass
+    public static void setup() {
+        MaximumEntropyIrtg.setLoggingLevel(Level.OFF);
+    }
+    
     @Test
     public void testMaxentIrtgParsing() {
         InterpretedTreeAutomaton irtg = iparse(CFG_STR);
@@ -34,12 +41,21 @@ class MaximumEntropyIrtgTest {
 
         irtg.readWeights(new StringReader(WEIGHTS_STR));
         TreeAutomaton chart = irtg.parse(i:SENTENCE_STR);
+        
         Set<Rule> rules = chart.getRuleSet();
-        Iterator<Rule> ruleIter = rules.iterator();
-        while (ruleIter.hasNext()) {
-            Rule<String> rule = ruleIter.next();
+        for( Rule<String> rule : rules ) {
             assert rule.getWeight() > 0.0, "Rule weight must be greater than 0.0";
         }
+        
+        Iterator<WeightedTree> lit = chart.sortedLanguageIterator();
+        
+        WeightedTree wt = lit.next();
+        assertEquals(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"), chart.getSignature().resolve(wt.getTree()));
+        assertAlmostEquals(Math.exp(0.8), wt.getWeight());
+        
+        wt = lit.next();
+        assertEquals(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"), chart.getSignature().resolve(wt.getTree()));
+        assertAlmostEquals(Math.exp(0.2), wt.getWeight());
     }
     
     @Test
@@ -51,52 +67,62 @@ class MaximumEntropyIrtgTest {
         assertEquals("two", irtg.getFeatureFunction("f2").getX());
     }
     
-//    @Test
-    public void testFeatures() {
-        FeatureFunction featureFunction = new ChildOfFeature("N", "PP");
-        de.saar.basic.Pair parent1 = new de.saar.basic.Pair<String,String>("N","0-4");
-        de.saar.basic.Pair[] children = new de.saar.basic.Pair<String,String>[2];
-        children[0] = new de.saar.basic.Pair<String,String>("N","0-2");
-        children[1] = new de.saar.basic.Pair<String,String>("PP","2-4");
-        
-        Rule r1 = new Rule<de.saar.basic.Pair<String,String>>(parent1, "r1", children, 0.0);
-        assert featureFunction.evaluate(r1) == 1.0, "feature weight shall be 1.0";
+    @Test
+    public void testMaxEntTraining() {
+        InterpretedTreeAutomaton irtg = iparse(CFG_STR);
+        assert irtg instanceof MaximumEntropyIrtg;
+//        MaximumEntropyIrtg trainer = new MaximumEntropyIrtg(irtg);
 
-        de.saar.basic.Pair parent2 = new de.saar.basic.Pair<String,String>("VP","0-4");
-        Rule r2= new Rule<de.saar.basic.Pair<String,String>>(parent2, "r2", children, 0.0);
-        assert featureFunction.evaluate(r2) == 0.0, "feature weight shall be 0.0";
+        Corpus anCo = Corpus.readCorpus(new StringReader(TRAIN1_STR), irtg);
+        irtg.trainMaxent(anCo);
+        double[] fWeights = irtg.getFeatureWeights();
+        assert (fWeights[0] > fWeights[1]), "weights are not optimized";
 
-        children[1] = new de.saar.basic.Pair<String,String>("XX","0-0");
-        Rule r3= new Rule<de.saar.basic.Pair<String,String>>(parent1, "r2", children, 0.0);
-        assert featureFunction.evaluate(r3) == 0.0, "feature weight shall be 0.0";
+        anCo = Corpus.readCorpus(new StringReader(TRAIN2_STR), irtg);
+        trainer.train(anCo);
+        fWeights = irtg.getFeatureWeights();
+        assert (fWeights[0] < fWeights[1]), "weights are not optimized";
     }
     
     private static final String CFG_STR = """
 interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
 feature f1: de.up.ling.irtg.maxent.ChildOfFeature('VP','PP')
 feature f2: de.up.ling.irtg.maxent.ChildOfFeature('N','PP')
+
 S! -> r1(NP,VP)
   [i] *(?1,?2)
+
 VP -> r4(V,NP)
   [i] *(?1,?2)
+
 VP -> r5(VP,PP)
   [i] *(?1,?2)
+
 PP -> r6(P,NP)
   [i] *(?1,?2)
+
 NP -> r7
   [i] john
+
 NP -> r2(Det,N)
   [i] *(?1,?2)
+
 V -> r8
   [i] watches
+
 Det -> r9
   [i] the
+
 N -> r10
   [i] woman
+
 N -> r11
   [i] telescope
+
 N -> r3(N,PP)
   [i] *(?1,?2)
+
 P -> r12
   [i] with""";
 
@@ -105,8 +131,11 @@ f1 = 0.2
 f2 = 0.8""";
     private static final String SENTENCE_STR = "john watches the woman with the telescope";
 	
-    private static final String TRAIN1_STR = """
-i
+     private static final String TRAIN1_STR = """
+# IRTG annotated corpus file, v1.0
+#
+# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
 john watches the woman with the telescope
 r1(r7,r5( r4(r8, r2(r9,r10)), r6(r12, r2(r9,r11))))
 john watches the telescope with the telescope
@@ -116,7 +145,10 @@ r1(r7,r5( r4(r8, r2(r9,r11)), r6(r12, r2(r9,r10))))
     """;
 
     private static final String TRAIN2_STR = """
-i
+# IRTG annotated corpus file, v1.0
+#
+# interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
 john watches the woman with the telescope
 r1(r7,r4( r8, r2(r9,r3(r10, r6(r12, r2(r9,r11))))))
 john watches the telescope with the telescope

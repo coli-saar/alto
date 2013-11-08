@@ -72,4 +72,10 @@ public class TestingTools {
         
         return ret;
     }
+    
+    public static void assertAlmostEquals(double x, double y) {
+       assert Math.abs(x-y) < 0.0001 : ("expected " + x + ", got " + y);
+   }
+    
+
 }

@@ -1,9 +1,13 @@
 package de.up.ling.irtg.maxent;
 
+import cc.mallet.optimize.LimitedMemoryBFGS;
+import cc.mallet.optimize.Optimizable;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.TrainingIterationListener;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.shell.CallableFromShell;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.tree.Tree;
 import java.io.*;
 import java.util.HashMap;
@@ -12,6 +16,8 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -19,6 +25,7 @@ import java.util.Properties;
  * @author Danilo Baumgarten
  */
 public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
+    private static final Logger log = Logger.getLogger(MaximumEntropyIrtg.class.getName());
     private static final double INITIAL_WEIGHT = 0.5; // initial value for a feature's weight 
     private double[] weights;                       // weights for feature functions
     private FeatureFunction[] features;             // list of feature functions
@@ -97,6 +104,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @return double[] containing the values of all feature functions for this
      * rule
      */
+    @Deprecated
     public double[] getFeatureValue(int ruleLabel) {
         if (f == null) {
             throw new UnsupportedOperationException("No feature values calculated. Call precomputeFeatures() or compute a chart first.");
@@ -183,6 +191,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param tree the tree to compute the values for
      * @param fiY the array of feature values
      */
+    @Deprecated
     public void getFiFor(Tree<Integer> tree, double[] fiY) {
         double[] fi = getFeatureValue(tree.getLabel());
 
@@ -204,6 +213,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     /**
      * Pre-compute f_i(r) for every known rule
      */
+    @Deprecated
     public void precomputeFeatureValues() {
         f = new HashMap<Integer, double[]>();
         Set<Rule> ruleSet = (Set<Rule>) automaton.getRuleSet();
@@ -232,10 +242,40 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param inputs mapping of representations and their names
      * @return TreeAutomaton the computed chart
      */
-    public TreeAutomaton parseMaxent(Map<String, Object> inputs) {
+    @Override
+    public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
         TreeAutomaton ret = super.parseInputObjects(inputs);
         setWeightsOnChart(ret);
         return ret;
+    }
+    
+    public void computeFeatureValues(Rule rule, TreeAutomaton auto) {
+        double[] values = new double[getNumFeatures()];
+        
+        for( int i = 0; i < getNumFeatures(); i++ ) {
+            values[i] = features[i].evaluate(rule, auto, this);
+        }
+        
+        rule.setExtra(values);
+    }
+    
+    public double[] getOrComputeFeatureValues(Rule rule, TreeAutomaton auto) {
+        if( rule.getExtra() == null ) {
+            computeFeatureValues(rule, auto);
+        }
+        
+        return (double[]) rule.getExtra();
+    }
+    
+    public double getRuleScore(Rule rule, TreeAutomaton auto) {
+        double sum = 0.0;
+        double[] featureValues = getOrComputeFeatureValues(rule, auto);
+        
+        for( int i = 0; i < getNumFeatures(); i++ ) {
+            sum += featureValues[i] * weights[i];
+        }
+        
+        return sum;
     }
 
     /**
@@ -245,47 +285,46 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param chart the automaton to set the rule weights for
      */
     private void setWeightsOnChart(TreeAutomaton chart) {
-//        if (!precomputeFI) {
-        // without pre-computation a new map must be created
-//            f = new HashMap<String, double[]>();
-//        }
-
         Set<Rule> ruleSet = (Set<Rule>) chart.getRuleSet();
-        int numOfFeatures = getNumFeatures();
 
         if (features != null) {
-
             for (Rule rule : ruleSet) {
-                double weight = 0.0;
-                double[] fi = f.get(rule.getLabel());
-
-                // check if the feature values are already calculated
-                boolean cachedFI = (fi != null);
-
-                if (!cachedFI) {
-                    // create the array for a new set of feature values
-                    fi = new double[numOfFeatures];
-                }
-
-                for (int i = 0; i < numOfFeatures; i++) {
-                    // get the feature value if unknown
-                    if (!cachedFI) {
-                        FeatureFunction ff = features[i];
-                        fi[i] = ff.evaluate(rule, chart, this);
-                    }
-                    // and use it as part of the weight
-                    weight += fi[i] * weights[i];
-                }
-
-                // add the array of feature values to the map if just computed
-                if (!cachedFI) {
-                    f.put(rule.getLabel(), fi);
-                }
-
-                // set the computed weight to the rule
-                rule.setWeight(Math.exp(weight));
+                rule.setWeight(Math.exp(getRuleScore(rule, chart)));
             }
         }
+    }
+    
+    public boolean trainMaxent(final Corpus corpus) {
+        return trainMaxent(corpus, null);
+    }
+    
+    /**
+     * Trains the weights for the rules according to the training data.
+     *
+     * @param corpus the training data containing sentences and their parse tree
+     * @return true iff L-BFGS optimization was successful
+     */
+    public boolean trainMaxent(final Corpus corpus, TrainingIterationListener listener) {
+        // create the optimzer with own optimizable class
+        LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, listener));
+
+        // start optimization
+        try {
+            bfgs.optimize();
+        } catch (cc.mallet.optimize.OptimizationException e) {
+            // getting here doesn't neccessarily mean there was something from
+            // so we just log the exception and go on
+            log.log(Level.WARNING, e.toString());
+        }
+
+        // check if the optimization was successful
+        if (bfgs.isConverged()) {
+            log.info("Optimization was successful.");
+        } else {
+            log.info("Optimization was unsuccessful.");
+        }
+        
+        return bfgs.isConverged();
     }
 
     /**
@@ -363,229 +402,226 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
 
         return ret.toString();
     }
+    
+    
+    /**
+     * Internal class for training the feature function weights. We use the
+     * mallet framework for training so this class implements a mallet interface
+     */
+    private class MaxEntIrtgOptimizable implements Optimizable.ByGradientValue {
+        private boolean cachedStale = true;
+        private double cachedValue;
+        private double[] cachedGradient;
+        private Corpus trainingData;
+        private int iteration = 0;
+        private TrainingIterationListener listener;
+
+        /**
+         * Constructor
+         *
+         * @param corpus the annotated training data
+         * @param interp the training data may contain multiple interpretations.
+         * This parameter tells us which one to use
+         */
+        public MaxEntIrtgOptimizable(final Corpus corpus, final TrainingIterationListener listener) {
+            cachedStale = true;
+            trainingData = corpus;
+            cachedGradient = new double[getNumFeatures()];
+            this.listener = listener;
+        }
+
+        /**
+         * Primarily this function returns the computed log-likelihood for the
+         * optimization. Beyond that it computes the also needed gradient.
+         */
+        @Override
+        public double getValue() {
+            /**
+             * log-likelihood: L(Lambda) =
+             * sum_x,y(p~(x,y)*sum_i(lambda_i*f_i(x,y)) -
+             * sum_x(p~(x)*log(sum_y(e^(sum_i(lambda_i*f_i(x,y)))))) sum_x,y :
+             * sum over every instance of training data p~(x,y) : 1/N
+             * sum_i(lambda_i*f_i(x,y)) : log(chart.getWeights(y))
+             *
+             * sum_x : sum over every instance of training data p~(x) : 1/N
+             * sum_y(e^(sum_i(lambda_i*f_i(x,y)))) : inside(S)
+             *
+             * gradient (<f~i> - <fi>): g_i = sum_x,y(p~(x,y)*f_i(x,y)) -
+             * sum_x,y(p~(x)*p_lambda(y|x)*f_i(x,y)) sum_x,y : in both cases sum
+             * over every instance of training data f_i(x,y) : sum over all
+             * f_i(r) with Rule r used in a node of the tree
+             * p_lambda(y|x)*f_i(x,y) : E(f_i|S) (Chiang, 04) E(f_i|S) =
+             * sum_r(f_i(r)*E(r)) sum_r : sum over all rules of the parse chart
+             * E(r) = outside(A)*p(r)*inside(B)*inside(C) / inside(S) | for r(A
+             * -> B C) p(r) : r.getWeight()
+             */
+            if (cachedStale) {
+                // recompute
+//                log.info("(Re)compute log-likelihood and gradient...");
+                int n = trainingData.getNumberOfInstances();
+                double sum1 = 0.0; // sum_x,y(sum_i(lambda_i*f_i(x,y))
+                double sum2 = 0.0; // sum_x(log(sum_y(e^(sum_i(lambda_i*f_i(x,y))))))
+                double[] fiY = new double[cachedGradient.length]; // sum_x,y(f_i(x,y))
+                double[] expectation = new double[cachedGradient.length]; // sum_x,y(E(f_i|S))
+                int faultyCharts = 0;
+                int instanceNum = 0;
+
+                for (Instance instance : trainingData ) {
+                    TreeAutomaton chart = parseInputObjects(instance.getInputObjects());
+                    // TODO - once chart caching works again, use cached chart here
+                    
+                    // if the chart could not be computed track it and continue with the next instance
+                    if (chart == null) {
+                        faultyCharts++;
+                        continue;
+                    }
+
+                    // compute inside & outside for the states of the parse chart
+                    Map<Object, Double> inside = chart.inside();
+                    Map<Object, Double> outside = chart.outside(inside);
+                    double insideS = 0.0;
+                    
+                    // compute inside(S) : the inside value of the starting states
+                    Set finalStates = chart.getFinalStates();
+                    for (Object start : finalStates) {
+                        insideS += inside.get(start);
+                    }
+
+                    // compute parts of the log-likelihood
+                    // L(Lambda) = sum1/n - sum2/n
+                    sum1 += Math.log(chart.getWeightRaw(instance.getDerivationTree()));
+                    sum2 += Math.log(insideS);
+
+                    // compute parts of the gradient
+                    Set<Rule> ruleSet = (Set<Rule>) chart.getRuleSet();
+                    for (Rule r : ruleSet) {
+                        double expect_r; // E(r)
+                        Double outVal = outside.get(r.getParent());
+                        if (outVal != null) {
+                            double insideOutside = outVal * r.getWeight(); // outside(A)*p(r)
+
+                            for (Object state : r.getChildren()) {
+                                Double inVal = inside.get(state);
+                                if (inVal != null) {
+                                    insideOutside *= inVal; // (...)*inside(B)*inside(C)
+                                } else {
+                                    insideOutside = 0.0;
+                                }
+                            }
+
+                            expect_r = insideOutside / insideS; // (...) / inside(S)
+                        } else {
+                            expect_r = 0.0;
+                        }
+                        
+                        double[] fi = getFeatureValue(r.getLabel());
+                        for (int i = 0; i < fi.length; i++) {
+                            expectation[i] += fi[i] * expect_r; // (...)*f_i(r)
+                        }
+                    }
+
+                    // compute f_i(x,y)
+                   getFiFor(instance.getDerivationTree(), fiY);
+
+                    if( listener != null ) {
+                        listener.update(iteration, instanceNum++);
+                    }
+                }
+
+                // L(Lambda) = sum1/n - sum2/n
+                cachedValue = (sum1 - sum2) / n;
+
+                for (int i = 0; i < cachedGradient.length; i++) {
+                    // g_i = sum_x,y(f_i(x,y))/n - sum_x,y(E(f_i|S))/n
+                    cachedGradient[i] = (fiY[i] - expectation[i]) / n;
+                }
+
+                cachedStale = false;
+
+                if (faultyCharts > 0) {
+                    log.log(Level.WARNING, "Skipped {0} instances. No suitable chart found.", faultyCharts);
+                }
+            }
+
+            iteration++;
+            return cachedValue;
+        }
+
+        /*
+         * Getter for cachedGradient
+         * 
+         * @param gradient an array of doubles where the gradient will be stored in
+         */
+        @Override
+        public void getValueGradient(double[] gradient) {
+            // we compute the gradient together with the value
+            if (cachedStale) {
+                getValue();
+            }
+            
+            assert (gradient != null && gradient.length == cachedGradient.length);
+            
+            System.arraycopy(cachedGradient, 0, gradient, 0, cachedGradient.length);
+        }
+
+        /*
+         * Returns the number of parameters.
+         * 
+         * @return int the number of feature weights
+         */
+        @Override
+        public int getNumParameters() {
+            double[] parameters = getFeatureWeights();
+            return parameters.length;
+        }
+
+        /*
+         * Getter for the feature weights
+         * 
+         * @param doubles an array of doubles where the feature weights will be stored in
+         */
+        @Override
+        public void getParameters(double[] doubles) {
+            System.arraycopy(getFeatureWeights(), 0, doubles, 0, getNumParameters());
+        }
+
+        /*
+         * Getter for a specific feature weights
+         * 
+         * @param i the index of the feature weight
+         * @return double the feature weight at <tt>i</tt>
+         */
+        @Override
+        public double getParameter(final int i) {
+            return getFeatureWeight(i);
+        }
+
+        /*
+         * Setter for the feature weights
+         * 
+         * @param doubles an array of doubles containing the feature weights
+         */
+        @Override
+        public void setParameters(double[] doubles) {
+            setFeatureWeights(doubles);
+            cachedStale = true;
+        }
+
+        /*
+         * Setter for a specific feature weights
+         * 
+         * @param i the index where to store the feature weight
+         * @param d the new feature weight
+         */
+        @Override
+        public void setParameter(final int i, final double d) {
+            setFeatureWeight(i, d);
+            cachedStale = true;
+        }
+    }
+
+    
+    public static void setLoggingLevel(Level level) {
+        log.setLevel(level);
+    }
 }
-/**
- * Reads a grammar and a corpus, computes charts for the corpus entries and
- * writes them to a file
- *
- * @param args an array of string containing the optional arguments from the
- * call
- * @throws IOException if an error occurs on accessing the files
- * @throws ParseException if parsing the grammar fails
- */
-/*
- public static void main(String[] args) throws ParseException, IOException {
- String prefix = (args.length > 0) ? args[0] : "ptb-test";
- log.log(Level.INFO, "Starting saving charts of MaximumEntropyIrtg...");
- log.info("Reading grammar...");
- MaximumEntropyIrtg i = (MaximumEntropyIrtg) IrtgParser.parse(new FileReader(prefix + "-grammar.irtg"));
- try {
- i.prepare(false, false);
- } catch (MaximumEntropyIrtg.NoRepresentationException ex) {
- log.log(Level.SEVERE, null, ex);
- return;
- } catch (MaximumEntropyIrtg.NoFeaturesException ex) {
- log.log(Level.SEVERE, null, ex);
- return;
- }
-        
- log.info("Reading corpus...");
- AnnotatedCorpus anCo = i.readAnnotatedCorpus(new FileReader(prefix + "-corpus-training.txt"));
- Iterable<AnnotatedCorpus.Instance> instances = anCo.getInstances();
-
- // compute and cache charts for every instance
- for (AnnotatedCorpus.Instance instance : instances) {
- i.parse(instance.getInputObjects(), true);
- }
-
- log.info("Writing charts...");
- i.writeCharts(new FileOutputStream(prefix + "-testing.charts"));
- }
- */
-/**
- * Setter for representationInterpName If newer set, the appropriate
- * interpretation will be tried to auto-detect
- *
- * @param interpName name of the interpretation subsequently used to set up a
- * chart public final void setRepresentationInterpName(String interpName) {
- * representationInterpName = interpName; }
- *
- * Setter for treeInterpName If newer set, the appropriate interpretation will
- * be tried to auto-detect
- *
- * @param interpName name of the interpretation subsequently used to validate
- * the best tree public final void setTreeInterpName(String interpName) {
- * treeInterpName = interpName; }
- */
-/**
- * Returns the most probable tree for a chart If the MaximumEntropyIrtg contains
- * an interpretation for TreeAlgebra the homomorphism automaton will be computed
- * and its most probable tree evaluated Without a suitable Algebra the most
- * probable tree of the chart itself will be returned
- *
- * @param chart the weighted chart
- * @return Tree the most probable tree for <tt>chart</tt>
- *
- * public Tree getBestTree(TreeAutomaton chart) { // is there a suitable algebra
- * if (!treeInterpName.isEmpty()) { Interpretation treeInterp =
- * getInterpretations().get(treeInterpName);
- *
- * // get the algebra only if it isn't set already and there is a
- * interpretation if ((treeAlgebra == null) && (treeInterp != null)) { try {
- * treeAlgebra = (TreeAlgebra) treeInterp.getAlgebra().getClass().newInstance();
- * } catch (Exception ex) { log.log(Level.SEVERE, null, ex); } }
- *
- * // having an algebra compute the homomorphism and evaluate the most probable
- * tree if (treeAlgebra != null) { TreeAutomaton<String> outputChart =
- * chart.homomorphism(treeInterp.getHomomorphism()); return
- * treeAlgebra.evaluate(outputChart.viterbi()); } }
- *
- * // there is no suitable algebra --> return the most probable tree for the
- * chart return chart.viterbi(); }
- */
-//    @Deprecated
-//    private boolean useIrtgParser;
-//    @Deprecated
-//    private boolean precomputeFI;
-//    @Deprecated
-//    private String representationInterpName = "";
-//    @Deprecated
-//    private String treeInterpName = "";
-/**
- * Returns the number of cached charts
- *
- * @return number of cached charts
- */
-/*
- public int getNumCachedCharts() {
- return cachedCharts.size();
- }
-
- */
-/**
- * Returns a specific cached chart
- *
- * @param index the index of the chart
- * @param setWeights flag whether to calculate the weights on the chart or not
- * @return TreeAutomaton the cached chart
- */
-/*
- public TreeAutomaton getCachedChart(int index, boolean setWeights) {
- TreeAutomaton chart = cachedCharts.get(index);
-
- if (setWeights && (chart != null)) {
- setWeightsOnChart(chart);
- }
-
- return chart;
- }
- */
-/**
- * Tries to auto-detect the interpretation names for the representation (use to
- * create the chart) and the tree (used the evaluate the result) only if their
- * values aren't already set
- *
- * private void autoDetectInterpretations() throws NoRepresentationException {
- *
- * // try the detection only if one of the name is not already set if
- * (representationInterpName.isEmpty() || treeInterpName.isEmpty()) {
- * Set<Entry<String, Interpretation>> entrySet =
- * this.getInterpretations().entrySet();
- *
- * // check every entry of the set of interpretations for (Entry<String,
- * Interpretation> i : entrySet) {
- *
- * // for now only StringAlgebra is used for input strings to compute charts if
- * (representationInterpName.isEmpty() && (i.getValue().getAlgebra() instanceof
- * StringAlgebra)) { representationInterpName = i.getKey(); } else if
- * (treeInterpName.isEmpty()) { TreeAlgebra testAlgebra = null;
- *
- * // try to find a TreeAlgebra try { testAlgebra = (TreeAlgebra)
- * i.getValue().getAlgebra(); } catch (Exception e) { // pass }
- *
- * if (testAlgebra != null) { treeInterpName = i.getKey(); } } } }
- *
- * // representationInterpName not set means there is no suitable //
- * interpretation to use for parsable input if
- * (representationInterpName.isEmpty()) { throw new
- * NoRepresentationException("No interpretation for StringAlgebra found..."); }
- * }
- */
-/**
- * Prepares the MaximumEntropyIrtg for further things to do i.e. the values for
- * the features will be computed (if pre-computing is enabled) and the
- * interpretations will be auto-detected
- *
- * @param useIrtgParser Flag whether to use the parsing of
- * InterpretedTreeAutomaton or not
- * @param precomputeFI Flag whether to pre-compute the values for every feature
- * or not
- * @throws NoRepresentationException if the MaximumEntropyIrtg doesn't contain a
- * suitable interpretation to produce training charts
- * @throws NoFeaturesException if the MaximumEntropyIrtg doesn't contain
- * features
- *
- * public void prepare(boolean useIrtgParser, boolean precomputeFI) throws
- * NoRepresentationException, NoFeaturesException { this.useIrtgParser =
- * useIrtgParser; this.precomputeFI = precomputeFI;
- *
- * if (featureNames == null) { throw new NoFeaturesException("No features
- * functions set yet."); }
- *
- * // if set compute all feature values for every rule if (precomputeFI) {
- * precomputeFeatures(); }
- *
- * // guess the interpretations usable for parsing (obligatory) and evaluating
- * (optional) autoDetectInterpretations(); }
- *
- */
-/* FIXME: using the complete map consisting of
- * {"ptb":"...<tree-as-string-here>..."; "i":"<the-text-here>"}
- * results in an empty chart even though we take special care of the
- * ptb-representation.
- * For now we create a new map with the string representation only.
- */
-
-/*
- TreeAutomaton ret = null;
-        
- if (useIrtgParser) {
- // use parser of super class
- List<String> input = (List<String>) inputs.get(representationInterpName);
- Map<String, Object> inputObjects = new HashMap<String, Object>();
- inputObjects.put(representationInterpName, input);
-
- //            log.log(Level.INFO, "Compute chart for \"{0}\"", StringTools.join(input, " "));
- ret = parseInputObjects(inputObjects);
- setWeightsOnChart(ret);
- } else {
- // use own parser
- ret = parseInput(inputs);
- }
-
- return ret;
- */
-/**
- * Parses an input of representations and their name and computes a chart for
- * this input
- *
- * @param inputs mapping of representations and their names
- * @return TreeAutomaton the computed chart
- *
- * private TreeAutomaton parseInput(Map<String, Object> inputs) { Interpretation
- * interp = interpretations.get(representationInterpName); List<String> input =
- * (List<String>) inputs.get(representationInterpName);
- *
- * // log.log(Level.INFO, "Compute chart for \"{0}\"", StringTools.join(input,
- * " ")); ChartBuilder chartBuilder = ChartBuilder.getInstance(); if
- * (!chartBuilder.isInitialized()) { chartBuilder.init(interp.getHomomorphism(),
- * automaton); }
- *
- * // compute the chart TreeAutomaton ret = chartBuilder.build(input);
- *
- * // if computation was successful reduce the automaton // and set weights on
- * its rules if (ret != null) { ret = ret.reduceBottomUp();
- * setWeightsOnChart(ret); }
- *
- * return ret; }
- */

@@ -12,6 +12,7 @@ import de.up.ling.irtg.automata.TreeAutomatonParser;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
+import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import java.awt.Component;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -164,7 +165,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         System.exit(0);
     }
 
-    private static File chooseFileForSaving(FileFilter filter, Component parent) {
+    public static File chooseFileForSaving(FileFilter filter, Component parent) {
         JFileChooser fc = new JFileChooser(previousDirectory);
         fc.setFileFilter(filter);
 
@@ -227,6 +228,21 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             return m.group(1);
         } else {
             return filename;
+        }
+    }
+    
+    public static void loadMaxentWeights(final MaximumEntropyIrtg irtg, final JFrame parent) {
+        final File file = chooseFile("Open maxent weights", new FileNameExtensionFilter("Maxent weights (*.txt)", "txt"), parent);
+        
+        try {
+            if( file != null ) {
+                long start = System.nanoTime();
+                irtg.readWeights(new FileReader(file));
+                
+                log("Read maximum entropy weights from " + file.getName() + ", " + formatTimeSince(start));
+            }
+        } catch(Exception e) {
+            showError(parent, "An error occurred while reading the maxent weights file " + file.getName() + ": " + e.getMessage());
         }
     }
 
@@ -322,7 +338,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         return false;
     }
 
-    static void showError(Component parent, String error) {
+    static public void showError(Component parent, String error) {
         JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
