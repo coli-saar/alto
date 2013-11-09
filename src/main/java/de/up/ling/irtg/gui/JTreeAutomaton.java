@@ -433,11 +433,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
                     long start = System.nanoTime();
                     try {
-                        irtg.trainEM(corpus, new TrainingIterationListener() {
-                            public void update(int iterationNumber, int instanceNumber) {
-                                pb.update(instanceNumber, null, null);
-                            }
-                        });
+                        irtg.trainEM(corpus, new ProgressBarTrainingIterationListener(pb));
                     } finally {
                         pb.setVisible(false);
                     }
@@ -462,11 +458,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
                     long start = System.nanoTime();
                     try {
-                        irtg.trainVB(corpus, new TrainingIterationListener() {
-                            public void update(int iterationNumber, int instanceNumber) {
-                                pb.update(instanceNumber, null, null);
-                            }
-                        });
+                        irtg.trainVB(corpus, new ProgressBarTrainingIterationListener(pb));
                     } finally {
                         pb.setVisible(false);
                     }
@@ -478,6 +470,18 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         }.start();
 
     }//GEN-LAST:event_miTrainVBActionPerformed
+
+    private static class ProgressBarTrainingIterationListener implements TrainingIterationListener {
+        private ChartComputationProgressBar pb;
+
+        public ProgressBarTrainingIterationListener(ChartComputationProgressBar pb) {
+            this.pb = pb;
+        }
+
+        public void update(int iterationNumber, int instanceNumber) {
+            pb.update(instanceNumber, null, null);
+        }
+    }
 
     private void miLoadMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadMaxentWeightsActionPerformed
         if (irtg instanceof MaximumEntropyIrtg) {
@@ -495,9 +499,18 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, miMaxent);
 
             if (corpus != null) {
+                final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
+                pb.setLabelText("Performing Maximum Entropy training ...");
+                pb.setVisible(true);
+
                 long start = System.nanoTime();
 
-                ((MaximumEntropyIrtg) irtg).trainMaxent(corpus);
+                try {
+                    ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, new ProgressBarTrainingIterationListener(pb));
+                } finally {
+                    pb.setVisible(false);
+                }
+
                 GuiMain.log("Trained maxent model, " + GuiMain.formatTimeSince(start));
 
                 miSaveMaxentWeights.setEnabled(true);
@@ -525,25 +538,24 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         public String feature;
         public String weight;
     }
-    
+
     private void miShowMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miShowMaxentWeightsActionPerformed
-        if( irtg instanceof MaximumEntropyIrtg ) {
+        if (irtg instanceof MaximumEntropyIrtg) {
             MaximumEntropyIrtg mirtg = (MaximumEntropyIrtg) irtg;
             List<FtWeight> fts = new ArrayList<FtWeight>();
             List<String> ftNames = mirtg.getFeatureNames();
-            
-            for( int i = 0; i < mirtg.getNumFeatures(); i++ ) {
+
+            for (int i = 0; i < mirtg.getNumFeatures(); i++) {
                 FtWeight x = new FtWeight();
                 x.feature = ftNames.get(i);
                 x.weight = Double.toString(mirtg.getFeatureWeight(i));
                 fts.add(x);
             }
-            
+
             JTableDialog<FtWeight> dialog = new JTableDialog<FtWeight>("Maxent weights for " + getTitle(), fts);
             dialog.setVisible(true);
         }
     }//GEN-LAST:event_miShowMaxentWeightsActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;

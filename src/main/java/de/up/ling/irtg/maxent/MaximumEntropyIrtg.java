@@ -97,21 +97,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         weights[index] = weight;
     }
 
-    /**
-     * Returns the array of feature values for a rule with the given label.
-     *
-     * @param ruleLabel the rule label
-     * @return double[] containing the values of all feature functions for this
-     * rule
-     */
-    @Deprecated
-    public double[] getFeatureValue(int ruleLabel) {
-        if (f == null) {
-            throw new UnsupportedOperationException("No feature values calculated. Call precomputeFeatures() or compute a chart first.");
-        }
-
-        return f.get(ruleLabel);
-    }
 
     /**
      * Returns the weight of a specific feature function referenced by
@@ -204,29 +189,6 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         // add the values of every child to the result
         for (Tree<Rule> child : tree.getChildren() ) {
             getFiFor(child, chart, fiY);
-        }
-    }
-
-    /**
-     * Pre-compute f_i(r) for every known rule
-     */
-    @Deprecated
-    public void precomputeFeatureValues() {
-        f = new HashMap<Integer, double[]>();
-        Set<Rule> ruleSet = (Set<Rule>) automaton.getRuleSet();
-        int numOfFeatures = getNumFeatures();
-
-        for (Rule r : ruleSet) {
-            double[] fi = new double[numOfFeatures];
-
-            // compute all feature values for rule r
-            for (int i = 0; i < numOfFeatures; i++) {
-                FeatureFunction ff = features[i];
-                fi[i] = ff.evaluate(r, automaton, this);
-            }
-
-            // map the values with the rule's name
-            f.put(r.getLabel(), fi);
         }
     }
 
