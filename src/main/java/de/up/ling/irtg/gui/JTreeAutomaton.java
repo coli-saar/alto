@@ -496,26 +496,31 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     private void miTrainMaxentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainMaxentActionPerformed
         if (irtg instanceof MaximumEntropyIrtg) {
-            Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, miMaxent);
+            final Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, miMaxent);
 
-            if (corpus != null) {
-                final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
-                pb.setLabelText("Performing Maximum Entropy training ...");
-                pb.setVisible(true);
+            new Thread() {
+                @Override
+                public void run() {
+                    if (corpus != null) {
+                        final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
+                        pb.setLabelText("Performing Maximum Entropy training ...");
+                        pb.setVisible(true);
 
-                long start = System.nanoTime();
+                        long start = System.nanoTime();
 
-                try {
-                    ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, new ProgressBarTrainingIterationListener(pb));
-                } finally {
-                    pb.setVisible(false);
+                        try {
+                            ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, new ProgressBarTrainingIterationListener(pb));
+                        } finally {
+                            pb.setVisible(false);
+                        }
+
+                        GuiMain.log("Trained maxent model, " + GuiMain.formatTimeSince(start));
+
+                        miSaveMaxentWeights.setEnabled(true);
+                        miShowMaxentWeights.setEnabled(true);
+                    }
                 }
-
-                GuiMain.log("Trained maxent model, " + GuiMain.formatTimeSince(start));
-
-                miSaveMaxentWeights.setEnabled(true);
-                miShowMaxentWeights.setEnabled(true);
-            }
+            }.start();
         }
     }//GEN-LAST:event_miTrainMaxentActionPerformed
 
