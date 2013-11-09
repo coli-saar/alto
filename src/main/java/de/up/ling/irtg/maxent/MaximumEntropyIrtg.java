@@ -191,9 +191,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param tree the tree to compute the values for
      * @param fiY the array of feature values
      */
-    @Deprecated
-    public void getFiFor(Tree<Integer> tree, double[] fiY) {
-        double[] fi = getFeatureValue(tree.getLabel());
+    private void getFiFor(Tree<Rule> tree, TreeAutomaton chart, double[] fiY) {
+        double[] fi = getOrComputeFeatureValues(tree.getLabel(), chart);
 
         // for every feature calculate the value for the root of the tree
         // and add it to the result
@@ -202,11 +201,9 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
             fiY[i] += fi[i];
         }
 
-        List<Tree<Integer>> children = tree.getChildren();
-
         // add the values of every child to the result
-        for (Tree child : children) {
-            getFiFor(child, fiY);
+        for (Tree<Rule> child : tree.getChildren() ) {
+            getFiFor(child, chart, fiY);
         }
     }
 
@@ -477,13 +474,13 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     }
 
                     // compute inside & outside for the states of the parse chart
-                    Map<Object, Double> inside = chart.inside();
-                    Map<Object, Double> outside = chart.outside(inside);
+                    Map<Integer, Double> inside = chart.inside();
+                    Map<Integer, Double> outside = chart.outside(inside);
                     double insideS = 0.0;
                     
                     // compute inside(S) : the inside value of the starting states
-                    Set finalStates = chart.getFinalStates();
-                    for (Object start : finalStates) {
+                    Set<Integer> finalStates = chart.getFinalStates();
+                    for (Integer start : finalStates) {
                         insideS += inside.get(start);
                     }
 
@@ -500,7 +497,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                         if (outVal != null) {
                             double insideOutside = outVal * r.getWeight(); // outside(A)*p(r)
 
-                            for (Object state : r.getChildren()) {
+                            for (Integer state : r.getChildren()) {
                                 Double inVal = inside.get(state);
                                 if (inVal != null) {
                                     insideOutside *= inVal; // (...)*inside(B)*inside(C)
@@ -514,14 +511,18 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                             expect_r = 0.0;
                         }
                         
-                        double[] fi = getFeatureValue(r.getLabel());
+                        double[] fi = getOrComputeFeatureValues(r, chart);
                         for (int i = 0; i < fi.length; i++) {
                             expectation[i] += fi[i] * expect_r; // (...)*f_i(r)
                         }
                     }
-
-                    // compute f_i(x,y)
-                   getFiFor(instance.getDerivationTree(), fiY);
+                    
+                    try {
+                        // compute f_i(x,y)
+                       getFiFor(chart.getRuleTree(instance.getDerivationTree()), chart, fiY);
+                    } catch (Exception ex) {
+                        Logger.getLogger(MaximumEntropyIrtg.class.getName()).log(Level.SEVERE, null, "Could not reconstruct rule tree: " + ex);
+                    }
 
                     if( listener != null ) {
                         listener.update(iteration, instanceNum++);

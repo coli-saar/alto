@@ -79,7 +79,7 @@ class MaximumEntropyIrtgTest {
         assert (fWeights[0] > fWeights[1]), "weights are not optimized";
 
         anCo = Corpus.readCorpus(new StringReader(TRAIN2_STR), irtg);
-        trainer.train(anCo);
+        irtg.trainMaxent(anCo);
         fWeights = irtg.getFeatureWeights();
         assert (fWeights[0] < fWeights[1]), "weights are not optimized";
     }

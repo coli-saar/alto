@@ -978,6 +978,70 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public boolean accepts(Tree<String> tree) {
         return acceptsRaw(getSignature().addAllSymbols(tree));
     }
+    
+    /**
+     * Returns a tree of automaton rules that generates the given
+     * tree. This method assumes that the automaton can only accept
+     * the tree in a single way; this is true, for instance, if the
+     * automaton is a parse chart and the tree is a derivation tree.
+     * If this is not the case, the method throws an exception with
+     * some debugging information. If the automaton does not accept
+     * the tree at all, the method returns null.
+     * 
+     * @param derivationTree
+     * @return
+     * @throws Exception 
+     */
+    public Tree<Rule> getRuleTree(Tree<Integer> derivationTree) throws Exception {
+        Tree<Rule> ret = null;
+        
+        for( int state : getFinalStates() ) {
+            Tree<Rule> retHere = getRuleTree(derivationTree, state);
+            
+            if( retHere != null ) {
+                if( ret == null ) {
+                    ret = retHere;
+                } else {
+                    throw new Exception("Two rule trees available for " + getSignature().resolve(derivationTree) + "; second final state is " + stateInterner.resolveId(state));
+                } 
+            }
+        }
+        
+        return ret;
+    }
+    
+    private Tree<Rule> getRuleTree(Tree<Integer> derivationTree, int state) throws Exception {
+        Collection<Rule> rules = getRulesTopDown(derivationTree.getLabel(), state);
+        Tree<Rule> ret = null;
+        
+//        System.err.println("grt " + getSignature().resolve(derivationTree) + " @" + stateInterner.resolveId(state));
+        
+        ruleLoop:
+        for( Rule rule : rules ) {
+            List<Tree<Rule>> childResults = new ArrayList<Tree<Rule>>();
+            
+            for( int i = 0; i < rule.getArity(); i++ ) {
+                Tree<Rule> resultHere = getRuleTree(derivationTree.getChildren().get(i), rule.getChildren()[i]);
+                
+                if( resultHere == null ) {
+                    continue ruleLoop;
+                } else {
+                    childResults.add(resultHere);
+                }
+            }
+            
+            if( ret == null ) {
+//                System.err.println(" -> found childResults: " + childResults);
+                
+                ret = Tree.create(rule, childResults);
+            } else {
+                throw new Exception("Subtree with two rule trees: " + getSignature().resolve(derivationTree) + " in state " + stateInterner.resolveId(state));
+            }
+        }
+
+//        System.err.println("/grt " + getSignature().resolve(derivationTree) + " @" + stateInterner.resolveId(state) + " -> " + ret);
+        return ret;
+    }
 
     /**
      * Runs the automaton bottom-up on the given tree and returns the set of

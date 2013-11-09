@@ -540,6 +540,20 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         TreeAutomaton a = parse("q1! -> f(q2,q3)\n q2 -> g(q1)\n q1 -> a\n q3 -> b");
     }
     
+    @Test
+    public void testRuleTree() {
+        TreeAutomaton a = parse("s03! -> f(s01,s13)\n s03 -> f(s02,s23)\n s13 -> f(s12, s23)\n s02 -> f(s01, s12)\n s01 -> a\n s12 -> a\n s23 -> a");
+        Tree dt = a.getSignature().addAllSymbols(pt("f(f(a,a),a)"));
+        Tree result = a.getRuleTree(dt);
+        Tree gold = Tree.create(rs("s03", "f", ["s02","s23"], a),
+            [Tree.create(rs("s02", "f", ["s01", "s12"], a),
+                    [Tree.create(rs("s01", "a", [], a)), Tree.create(rs("s12", "a", [], a))]),
+             Tree.create(rs("s23", "a", [], a))]);
+     
+        assertEquals(gold, result)
+    }
+    
+    
     /*
     def "testing whether automaton is bottom-up deterministic"() {
         expect:
