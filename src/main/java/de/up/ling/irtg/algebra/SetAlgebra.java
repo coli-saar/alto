@@ -244,9 +244,9 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
             super(cause);
         }
 
-        public NoModelException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-            super(message, cause, enableSuppression, writableStackTrace);
-        }
+//        public NoModelException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+//            super(message, cause, enableSuppression, writableStackTrace);
+//        }
 
         @Override
         public String toString() {
