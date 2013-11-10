@@ -123,16 +123,20 @@ public class BkvBinarizer {
     private RuleBinarization binarizeRule(Rule rule, Map<String, RegularSeed> regularSeeds, InterpretedTreeAutomaton irtg) {
         TreeAutomaton commonVariableTrees = null;
         Map<String, TreeAutomaton<String>> binarizationTermsPerInterpretation = new HashMap<String, TreeAutomaton<String>>();
+        Map<String, Int2ObjectMap<IntSet>> varPerInterpretation = new HashMap<String, Int2ObjectMap<IntSet>>();
         RuleBinarization ret = new RuleBinarization();
 
         for (String interpretation : irtg.getInterpretations().keySet()) {
-            String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());
-            Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);
-            TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);
+            String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());            // this is alpha from the paper
+            Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
 
+            TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);  // this is G_i
             binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
+            
+            Int2ObjectMap<IntSet> varHere = computeVar(binarizationTermsHere);                             // this is var_i
+            varPerInterpretation.put(interpretation, varHere);
 
-            TreeAutomaton<String> variableTrees = vartreesForAutomaton(binarizationTermsHere);
+            TreeAutomaton<String> variableTrees = vartreesForAutomaton(binarizationTermsHere);             // this is G'_i  (accepts variable trees)
 
             if (commonVariableTrees == null) {
                 commonVariableTrees = variableTrees;
@@ -145,12 +149,14 @@ public class BkvBinarizer {
             }
         }
 
-        Tree<String> commonVariableTree = commonVariableTrees.viterbi();
+        assert commonVariableTrees != null;
+        
+        Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
         ret.xi = commonVariableTree;
         assert commonVariableTree != null;
 
         for (String interpretation : irtg.getInterpretations().keySet()) {
-            TreeAutomaton binarizationsForThisVartree = binarizationsForVartree(binarizationTermsPerInterpretation.get(interpretation), commonVariableTree);
+            TreeAutomaton binarizationsForThisVartree = binarizationsForVartree(binarizationTermsPerInterpretation.get(interpretation), commonVariableTree, varPerInterpretation.get(interpretation)); // this is G''_i
             Tree<String> binarization = binarizationsForThisVartree.viterbi();
             ret.binarizationTerms.put(interpretation, binarization);
         }
@@ -160,15 +166,6 @@ public class BkvBinarizer {
 
     private TreeAutomaton vartreesForAutomaton(TreeAutomaton<String> automaton) {
         return null;
-    }
-
-    private Int2ObjectMap<IntSet> mapStatesToVarlists(TreeAutomaton<String> automaton) {
-        Int2ObjectMap<IntSet> ret = new Int2ObjectOpenHashMap<IntSet>();
-
-        for (int state : automaton.getStatesInBottomUpOrder()) {
-        }
-
-        return ret;
     }
 
     private void addEntriesToHomomorphism(Homomorphism hom, Tree<String> xi, Tree<String> binarizationTerm) {
@@ -347,8 +344,13 @@ public class BkvBinarizer {
         }
     }
 
-    private TreeAutomaton binarizationsForVartree(TreeAutomaton get, Tree<String> commonVariableTree) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    // step (iv) of the algorithm: compute G''_i from G_i, var_i, and tau
+    private TreeAutomaton<String> binarizationsForVartree(TreeAutomaton<String> binarizations, Tree<String> commonVariableTree, Int2ObjectMap<IntSet> var) {
+        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
+        
+        // TODO: copy all rules from binarizations to ret if their var-entries are split like in a node of the commonVariableTree
+        
+        return ret;
     }
 
     private static class RuleBinarization {

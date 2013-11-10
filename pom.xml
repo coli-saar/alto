@@ -103,10 +103,16 @@
                 </executions>
                 <configuration>
                     <scalaVersion>2.10.3</scalaVersion>
-                    <compileOrder>mixed</compileOrder>
+                    <compileOrder>JavaThenScala</compileOrder>
 
                     <recompileMode>incremental</recompileMode>
                     <useZincServer>true</useZincServer>
+
+
+                     <excludes>
+                        <exclude>**/*.java</exclude>
+                    </excludes>
+
 
                     <javacArgs>
                         <javacArg>-Xlint:unchecked</javacArg>
@@ -329,8 +335,3 @@
     </distributionManagement>
 </project>
 
-
-<!-- <excludes>
-      <exclude>**/*.java</exclude>
-    </excludes>
--->
