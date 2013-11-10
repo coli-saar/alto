@@ -51,6 +51,23 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public boolean isBottomUpDeterministic() {
         return explicitIsBottomUpDeterministic;
     }
+
+    
+    //  strange -- the following optimization should work, but doesn't.
+    
+//    @Override
+//    public Collection<Integer> getLabelsTopDown(int parentState) {
+//        IntSet ret = new IntOpenHashSet();
+//        
+//        for( int label : explicitRulesTopDown.keySet() ) {
+//            if( explicitRulesTopDown.get(label).containsKey(parentState)) {
+//                ret.add(label);
+//            }
+//        }
+//        
+//        return ret;
+//    }
+    
     
     
 }

@@ -120,7 +120,7 @@ public class HomomorphismSymbol {
         }
     }
 
-    private static int getVariableIndex(String varname) {
+    public static int getVariableIndex(String varname) {
         int indexStartPos = 0;
         int ret = 0;
         boolean foundIndex = false;
