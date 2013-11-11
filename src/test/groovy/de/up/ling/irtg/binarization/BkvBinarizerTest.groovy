@@ -42,30 +42,42 @@ class BkvBinarizerTest {
     
     @Test
     public void testCollectForks() {
-        Tree<String> vt = pt("f(?1, g(?2, ?3))");
+        Tree<String> vt = pt("f('0', g('1', '2'))");
         Set<String> forks = BkvBinarizer.collectForks(vt);
         
         assertEquals(new HashSet(["0", "1", "2", "1+2", "0+1_2"]), forks)
     }
     
-    @Test
-    public void testCollectForks2() {
-        Tree<String> vt = pt("f(?3, g(?2, ?1), a)");
-        Set<String> forks = BkvBinarizer.collectForks(vt);
-        
-        assertEquals(new HashSet(["0", "1", "2", "", "0+1", "0_1+2"]), forks)
-    }
     
     @Test
     public void testStep4() {
 //        TreeAutomaton<String> binarizationsForVartree(TreeAutomaton<String> binarizations, Tree<String> commonVariableTree, Int2ObjectMap<IntSet> var) {
         TreeAutomaton binarizations = pa("q03! -> f(q01, q13)\n q03 -> f(q02, q23)\n q02 -> f(q01,q12)\n q13 -> f(q12, q23)\n q01 -> '?1'\n q12 -> '?2'\n q23 -> '?3'")
         Int2ObjectMap<IntSet> var = BkvBinarizer.computeVar(binarizations);
-        Tree<String> vt = pt("f(?1, g(?2, ?3))");
+        Tree<String> vt = pt("f('0', g('1', '2'))");
         
         TreeAutomaton selected = BkvBinarizer.binarizationsForVartree(binarizations, vt, var);
         
         assertEquals(new HashSet([pt("f(?1, f(?2,?3))")]), selected.language())
+    }
+    
+    @Test
+    public void testStep4b() {
+        TreeAutomaton binarizations = pa("""
+q1_q -> '?1' [1.0]
+q2_q -> '?2' [1.0]
+q3_q -> '?3' [1.0]
+q_1-3 -> *(q2_q, q3_q) [1.0]
+q_0-3! -> *(q_0-2, q3_q) [1.0]
+q_0-3! -> *(q1_q, q_1-3) [1.0]
+q_0-2 -> *(q1_q, q2_q) [1.0]     """)
+        
+        Int2ObjectMap<IntSet> var = BkvBinarizer.computeVar(binarizations);
+        Tree<String> vt = pt("'0_1_2'('0_1'('0','1'),'2')");
+        
+        TreeAutomaton selected = BkvBinarizer.binarizationsForVartree(binarizations, vt, var);
+        
+        assertEquals(new HashSet([pt("*(*(?1,?2), ?3)")]), selected.language())
     }
     
     @Test
@@ -90,18 +102,46 @@ class BkvBinarizerTest {
         assertEquals(new HashSet([pt("'0_1'('0','1'))")]), vartreeAuto.language())
     }
     
+    @Test
+    public void testMakeHomomorphism() {
+        Tree binarizationTerm = pt("*('?3',*(a,*('?1','?2')))")
+        Tree xi = pt(" _br1(_br0('0','1'),'2')")
+        Homomorphism hom = new Homomorphism(new Signature(), new Signature());
+        
+        hom.getSourceSignature().addSymbol("_br0", 2);
+        hom.getSourceSignature().addSymbol("_br1", 2);
+        
+        BkvBinarizer.addEntriesToHomomorphism(hom, xi, binarizationTerm)
+        
+        assertEquals(pt("*('?2','?1')"), hom.get("_br1"))
+        assertEquals(pt("*(a,*('?1','?2'))"), hom.get("_br0"))
+    }
+    
     private Signature sig(InterpretedTreeAutomaton irtg, String interp) {
         return irtg.getInterpretation(interp).getAlgebra().getSignature();
     }
     
-//    @Test
+    @Test
     public void testBinarize() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(BIN_IRTG));
         Map seeds = ["left": new StringAlgebraSeed(sig(irtg, "left"), "*"), "right": new StringAlgebraSeed(sig(irtg, "right"), "*")];
         BkvBinarizer bin = new BkvBinarizer(seeds)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg);
-        System.err.println(binarized)        
+        
+        
+        System.err.println(binarized)     
+        
+        
+        TreeAutomaton chart = binarized.parse(["left": "b c d"])
+        
+        System.err.println("chart: " + chart )
+        
+//        assert ! chart.language().isEmpty()
+        
+//        chart.language().each { assertEquals(["b","c","d"], irtg.getInterpretation("left").getAlgebra().evaluate(it)) }
+        
+           
     }
     
     // test grammar from ACL-13 paper
