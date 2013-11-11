@@ -42,10 +42,10 @@ N_h -> a_hat
 [sem]    hat
 [string] *(the, hat)
 
-N_h -> thing
+N_h -> thing_h
 [sem]  T
 [string] *(the, thing)
 
-N_r1 -> thing
+N_r1 -> thing_r1
 [sem]  T
 [string] *(the, thing)
