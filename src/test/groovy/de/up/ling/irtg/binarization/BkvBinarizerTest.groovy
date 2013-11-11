@@ -67,6 +67,29 @@ class BkvBinarizerTest {
         assertEquals(new HashSet([pt("f(?1, f(?2,?3))")]), selected.language())
     }
     
+    @Test
+    public void testStep2() {
+        // static TreeAutomaton<IntSet> vartreesForAutomaton(TreeAutomaton<String> automaton, Int2ObjectMap<IntSet> vars) {
+        TreeAutomaton binarizations = pa("q03! -> f(q01, q13)\n q03 -> f(q02, q23)\n q02 -> f(q01,q12)\n q13 -> f(q12, q23)\n q01 -> '?1'\n q12 -> '?2'\n q23 -> '?3'")
+        Int2ObjectMap<IntSet> vars = BkvBinarizer.computeVar(binarizations);
+        
+        TreeAutomaton vartreeAuto = BkvBinarizer.vartreesForAutomaton(binarizations, vars);
+        
+        assertEquals(new HashSet([pt("'0_1_2'('0_1'('0','1'),'2')"), pt("'0_1_2'('0','1_2'('1','2'))")]), vartreeAuto.language())
+    }
+
+    @Test
+    public void testStep2b() {
+        // static TreeAutomaton<IntSet> vartreesForAutomaton(TreeAutomaton<String> automaton, Int2ObjectMap<IntSet> vars) {
+        TreeAutomaton binarizations = pa("q03! -> f(q01, q13)\n q03 -> f(q23, q02)\n q02 -> f(q01,q12)\n q13 -> f(q12, q23)\n q01 -> '?1'\n q12 -> '?2'\n q23 -> a")
+        Int2ObjectMap<IntSet> vars = BkvBinarizer.computeVar(binarizations);
+        
+        TreeAutomaton vartreeAuto = BkvBinarizer.vartreesForAutomaton(binarizations, vars);
+        
+        assertEquals(new HashSet([pt("'0_1'('0','1'))")]), vartreeAuto.language())
+    }
+
+    
     private IntSet is(List ints) {
         IntSet ret = new IntOpenHashSet()
         

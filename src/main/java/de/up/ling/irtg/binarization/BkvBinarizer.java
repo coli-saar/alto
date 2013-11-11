@@ -179,7 +179,15 @@ public class BkvBinarizer {
      ***********************************************************************************
      */
     // step (ii) of the algorithm: construct G'_i from G_i and vars_i
-    private TreeAutomaton<IntSet> vartreesForAutomaton(TreeAutomaton<String> automaton, Int2ObjectMap<IntSet> vars) {
+    // The automata computed by this method look like this:
+    // '{2}' -> '2' [1.0]
+    // '{1, 0}' -> '0_1'('{0}', '{1}') [1.0]
+    // '{1}' -> '1' [1.0]
+    // '{1, 2, 0}'! -> '0_1_2'('{1, 0}', '{2}') [1.0]
+    // '{1, 2, 0}'! -> '0_1_2'('{0}', '{1, 2}') [1.0]
+    // '{0}' -> '0' [1.0]
+    // '{1, 2}' -> '1_2'('{1}', '{2}') [1.0]
+    static TreeAutomaton<IntSet> vartreesForAutomaton(TreeAutomaton<String> automaton, Int2ObjectMap<IntSet> vars) {
         ConcreteTreeAutomaton<IntSet> ret = new ConcreteTreeAutomaton<IntSet>();
 
         for (Rule rule : automaton.getRuleSet()) {
@@ -210,10 +218,14 @@ public class BkvBinarizer {
 
                 if (rhsVarsets.size() >= 2) {
                     Collections.sort(rhsVarsets, new IntSetComparator());
-                    
+
                     IntSet parentSet = vars.get(rule.getParent());
                     Rule newRule = ret.createRule(parentSet, representVarSet(parentSet), rhsVarsets);
                     ret.addRule(newRule);
+
+                    if (automaton.getFinalStates().contains(rule.getParent())) {
+                        ret.addFinalState(newRule.getParent());
+                    }
                 }
             }
         }
@@ -222,11 +234,12 @@ public class BkvBinarizer {
 
     // TODO - this could probably be faster
     private static class IntSetComparator implements Comparator<IntSet> {
+
         public int compare(IntSet o1, IntSet o2) {
             return representVarSet(o1).compareTo(representVarSet(o2));
         }
     }
-    
+
     private void addEntriesToHomomorphism(Homomorphism hom, Tree<String> xi, Tree<String> binarizationTerm) {
         hom.getTargetSignature().addAllSymbols(binarizationTerm);
 
