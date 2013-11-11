@@ -110,8 +110,7 @@ class TreeAutomatonTest{
     }
 
     
-//    @Test
-    // TODO - put this back in
+    @Test
     public void testIntersectionLanguageEarley() {
         TreeAutomaton auto1 = parse("q1! -> f(q2, q3)\n q2 -> a\n q3 -> a\n q3 -> b");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p2)\n p2 -> a");
