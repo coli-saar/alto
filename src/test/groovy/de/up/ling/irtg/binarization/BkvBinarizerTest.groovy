@@ -124,7 +124,10 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     @Test
     public void testBinarize() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(BIN_IRTG));
-        Map seeds = ["left": new StringAlgebraSeed(sig(irtg, "left"), "*"), "right": new StringAlgebraSeed(sig(irtg, "right"), "*")];
+        irtg.getInterpretation("left").getAlgebra().getSignature().addSymbol("conc2", 2);
+        irtg.getInterpretation("right").getAlgebra().getSignature().addSymbol("conc2", 2);
+        
+        Map seeds = ["left": new StringAlgebraSeed(sig(irtg, "left"), "conc2"), "right": new StringAlgebraSeed(sig(irtg, "right"), "conc2")];
         BkvBinarizer bin = new BkvBinarizer(seeds)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg);
@@ -137,10 +140,14 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         System.err.println("chart: " + chart )
         
-//        assert ! chart.language().isEmpty()
+        assert ! chart.language().isEmpty()
         
-//        chart.language().each { assertEquals(["b","c","d"], irtg.getInterpretation("left").getAlgebra().evaluate(it)) }
-        
+//        chart.language().each { 
+//            Map vals = irtg.interpret(it)
+//            assertEquals(["b","c","d"], vals.get("left"))
+//            assertEquals(["d", "a", "b", "c"], vals.get("right"))
+//        }
+//        
            
     }
     

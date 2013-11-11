@@ -80,7 +80,7 @@ public class BkvBinarizer {
 
                     if (rtg.getFinalStates().contains(rule.getParent())) {
                         binarizedRtg.addFinalState(binarizedRtg.getIdForState(newParent));
-                        System.err.println(" -> final state: " + newParent);
+//                        System.err.println(" -> final state: " + newParent);
                     }
 
                     for (String interp : interpretationNames) {
@@ -129,7 +129,7 @@ public class BkvBinarizer {
                     Rule newRule = binarizedRtg.createRule(parent, node.getLabel(), childrenValues);
                     binarizedRtg.addRule(newRule);
 
-                    System.err.println(" -> output rule: " + newRule.toString(binarizedRtg));
+//                    System.err.println(" -> output rule: " + newRule.toString(binarizedRtg));
 
                     return parent;
                 }
@@ -143,29 +143,29 @@ public class BkvBinarizer {
         Map<String, Int2ObjectMap<IntSet>> varPerInterpretation = new HashMap<String, Int2ObjectMap<IntSet>>();
         RuleBinarization ret = new RuleBinarization();
 
-        System.err.println("\nBinarizing rule: " + rule.toString(irtg.getAutomaton()));
+//        System.err.println("\nBinarizing rule: " + rule.toString(irtg.getAutomaton()));
 
         for (String interpretation : irtg.getInterpretations().keySet()) {
             String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());            // this is alpha from the paper
             Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
 
-            System.err.println("** interpretation " + interpretation + ": alpha=" + label + ", rhs=" + rhs);
+//            System.err.println("** interpretation " + interpretation + ": alpha=" + label + ", rhs=" + rhs);
 
             TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);  // this is G_i
             binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
 
-            System.err.println("\nG_i:\n" + binarizationTermsHere);
-            System.err.println("lang(Gi) = " + binarizationTermsHere.language());
+//            System.err.println("\nG_i:\n" + binarizationTermsHere);
+//            System.err.println("lang(Gi) = " + binarizationTermsHere.language());
 
             Int2ObjectMap<IntSet> varHere = computeVar(binarizationTermsHere);                             // this is var_i
             varPerInterpretation.put(interpretation, varHere);
 
-            System.err.println("\nvars_i:" + varHere);
+//            System.err.println("\nvars_i:" + varHere);
 
             TreeAutomaton<IntSet> variableTrees = vartreesForAutomaton(binarizationTermsHere, varHere);    // this is G'_i  (accepts variable trees)
 
-            System.err.println("\nG'_i:\n" + variableTrees);
-            System.err.println("lang(G'_i) = " + variableTrees.language());
+//            System.err.println("\nG'_i:\n" + variableTrees);
+//            System.err.println("lang(G'_i) = " + variableTrees.language());
 
             if (commonVariableTrees == null) {
                 commonVariableTrees = variableTrees;
@@ -178,29 +178,29 @@ public class BkvBinarizer {
             }
         }
 
-        System.err.println("\nGrammar for common variable trees:\n" + commonVariableTrees);
+//        System.err.println("\nGrammar for common variable trees:\n" + commonVariableTrees);
 
         Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
         ret.xi = xiFromVartree(commonVariableTree);
         assert commonVariableTree != null;
 
-        System.err.println("\n\nSelected vartree: " + commonVariableTree);
+//        System.err.println("\n\nSelected vartree: " + commonVariableTree);
 
         for (String interpretation : irtg.getInterpretations().keySet()) {
             // this is G''_i
             TreeAutomaton binarizationsForThisVartree = binarizationsForVartree(binarizationTermsPerInterpretation.get(interpretation), commonVariableTree, varPerInterpretation.get(interpretation));
 
-            System.err.println("\ninterpretation " + interpretation + ", G''_i:" + binarizationsForThisVartree);
-            System.err.println("lang(G''_i) = " + binarizationsForThisVartree.language());
+//            System.err.println("\ninterpretation " + interpretation + ", G''_i:" + binarizationsForThisVartree);
+//            System.err.println("lang(G''_i) = " + binarizationsForThisVartree.language());
 
             Tree<String> binarization = binarizationsForThisVartree.viterbi();
-            System.err.println("selected binarization: " + binarization);
+//            System.err.println("selected binarization: " + binarization);
 
             ret.binarizationTerms.put(interpretation, binarization);
         }
 
 
-        System.err.println("\n\n ---> " + ret + "\n\n");
+//        System.err.println("\n\n ---> " + ret + "\n\n");
         return ret;
     }
 
@@ -330,15 +330,15 @@ public class BkvBinarizer {
             }
         });
 
-        System.err.println("lff: " + labelForFork);
+//        System.err.println("lff: " + labelForFork);
 
 
-        System.err.println("binterm: " + binarizationTerm);
+//        System.err.println("binterm: " + binarizationTerm);
 
         Subtree subtreeForRoot = binarizationTerm.dfs(new TreeVisitor<String, Void, Subtree>() {
             @Override
             public Subtree combine(Tree<String> node, List<Subtree> childrenValues) {
-                System.err.println("recurse into " + node + "; children: " + childrenValues);
+//                System.err.println("recurse into " + node + "; children: " + childrenValues);
 
                 IntSet is = new IntOpenHashSet();
                 List<IntSet> childrenVarSets = new ArrayList<IntSet>();
@@ -387,7 +387,7 @@ public class BkvBinarizer {
 
                                 if (label != null) {
                                     hom.add(label, childrenTrees.get(i));
-                                    System.err.println("    -> " + label + " -> " + childrenTrees.get(i));
+//                                    System.err.println("    -> " + label + " -> " + childrenTrees.get(i));
                                 }
 
                                 int varNum = orderedChildrenVarSets.indexOf(childVarSetHere);
@@ -399,158 +399,16 @@ public class BkvBinarizer {
                     }
                 }
 
-                System.err.println(" - " + node + " -> " + ret);
+//                System.err.println(" - " + node + " -> " + ret);
                 return ret;
             }
         });
 
         hom.add(xi.getLabel(), subtreeForRoot.tree);
         
-        System.err.println(" - root: " + xi.getLabel() + " -> " + subtreeForRoot.tree);
-        System.err.println("  -> hom: " + hom);
+//        System.err.println(" - root: " + xi.getLabel() + " -> " + subtreeForRoot.tree);
+//        System.err.println("  -> hom: " + hom);
 
-
-//
-//        Tree<HomomorphismSymbol> binarizationTermHS = HomomorphismSymbol.treeFromNames(binarizationTerm, hom.getTargetSignature());
-//        Tree<Tree<HomomorphismSymbol>> decompositionTree = makeMaximalDecomposition(binarizationTermHS);
-//        Tree<Tree<HomomorphismSymbol>> recombinedTree = merge(decompositionTree);
-//
-//        Tree<Set<HomomorphismSymbol>> vartree = vartree(recombinedTree, new Function<Tree<HomomorphismSymbol>, HomomorphismSymbol>() {
-//            public HomomorphismSymbol apply(Tree<HomomorphismSymbol> f) {
-//                return f.getLabel();
-//            }
-//        });
-
-
-        // this is probably wrong: why should xi be mapped into HomSymbols?? 29.08.13
-
-//        Tree<Set<HomomorphismSymbol>> xiVartree = vartree(xi, new Function<HomomorphismSymbol, HomomorphismSymbol>() {
-//            public HomomorphismSymbol apply(HomomorphismSymbol f) {
-//                return f;
-//            }
-//        });
-
-//        constructHomomorphism(xi, xiVartree, recombinedTree, vartree, hom);
-    }
-
-    private Tree<Tree<HomomorphismSymbol>> makeMaximalDecomposition(Tree<HomomorphismSymbol> binarizationTerm) {
-        final List<Tree<HomomorphismSymbol>> treesForVariables = new ArrayList<Tree<HomomorphismSymbol>>();
-
-        return binarizationTerm.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<Tree<HomomorphismSymbol>>>() {
-            @Override
-            public Tree<Tree<HomomorphismSymbol>> combine(Tree<HomomorphismSymbol> node, List<Tree<Tree<HomomorphismSymbol>>> childrenValues) {
-                if (node.getLabel().isVariable()) {
-                    return Tree.create(node);
-                } else {
-                    Tree<HomomorphismSymbol>[] variables = new Tree[childrenValues.size()];
-
-                    ensureSize(treesForVariables, childrenValues.size());
-                    for (int i = 0; i < childrenValues.size(); i++) {
-                        variables[i] = treesForVariables.get(i);
-                    }
-
-                    Tree<HomomorphismSymbol> newLabel = Tree.create(node.getLabel(), variables);
-                    return Tree.create(newLabel, childrenValues);
-                }
-            }
-        });
-    }
-
-    private void ensureSize(List<Tree<HomomorphismSymbol>> treesForVariables, int capacity) {
-        for (int i = treesForVariables.size(); i < capacity; i++) {
-            treesForVariables.add(Tree.create(var(i)));
-        }
-    }
-
-    private Tree<Tree<HomomorphismSymbol>> merge(Tree<Tree<HomomorphismSymbol>> decompositionTree) {
-        return decompositionTree.dfs(new TreeVisitor<Tree<HomomorphismSymbol>, Void, Tree<Tree<HomomorphismSymbol>>>() {
-            @Override
-            public Tree<Tree<HomomorphismSymbol>> combine(Tree<Tree<HomomorphismSymbol>> node, List<Tree<Tree<HomomorphismSymbol>>> childrenValues) {
-                List<Tree<Tree<HomomorphismSymbol>>> remainingChildren = new ArrayList<Tree<Tree<HomomorphismSymbol>>>();
-                Tree<HomomorphismSymbol> label = node.getLabel();
-
-                // merge children with 0 or 1 variables into label
-                for (int i = 0; i < childrenValues.size(); i++) {
-                    Tree<Tree<HomomorphismSymbol>> child = childrenValues.get(i);
-
-                    switch (child.getChildren().size()) {
-                        case 0:
-                            label = substituteVariable(label, i, child.getLabel(), true);
-                            break;
-
-                        case 1:
-                            label = substituteVariable(label, i, child.getLabel(), false);
-                            remainingChildren.add(child.getChildren().get(0));
-                            break;
-
-                        default:
-                            remainingChildren.add(child);
-                    }
-                }
-
-                // TODO - consider case where label now only has one variable left, this
-                // requires merging too
-
-                // recombine
-                return Tree.create(label, remainingChildren);
-            }
-
-            private Tree<HomomorphismSymbol> substituteVariable(Tree<HomomorphismSymbol> label, final int varnumToReplace, Tree<HomomorphismSymbol> replacement, final boolean deleteVariable) {
-                final Tree<HomomorphismSymbol> renamedReplacement = renameVariable(replacement, var(0), var(varnumToReplace));
-
-                return label.substitute(new Function<Tree<HomomorphismSymbol>, Tree<HomomorphismSymbol>>() {
-                    public Tree<HomomorphismSymbol> apply(Tree<HomomorphismSymbol> t) {
-                        HomomorphismSymbol label = t.getLabel();
-
-                        if (label.isVariable()) {
-                            int varnum = label.getValue();
-
-                            if (varnum == varnumToReplace) {
-                                return renamedReplacement;
-                            } else if (deleteVariable && varnum > varnumToReplace) {
-                                return Tree.create(var(varnum - 1));
-                            }
-                        }
-
-                        return null;
-                    }
-                });
-            }
-
-            private Tree<HomomorphismSymbol> renameVariable(Tree<HomomorphismSymbol> tree, final HomomorphismSymbol oldVarname, final HomomorphismSymbol newVarname) {
-                return tree.substitute(new Function<Tree<HomomorphismSymbol>, Tree<HomomorphismSymbol>>() {
-                    public Tree<HomomorphismSymbol> apply(Tree<HomomorphismSymbol> f) {
-                        if (f.getLabel().equals(oldVarname)) {
-                            return Tree.create(newVarname);
-                        } else {
-                            return null;
-                        }
-                    }
-                });
-            }
-        });
-    }
-
-    private <E> Tree<Set<HomomorphismSymbol>> vartree(Tree<E> tree, final Function<E, HomomorphismSymbol> labelFunction) {
-        return tree.dfs(new TreeVisitor<E, Void, Tree<Set<HomomorphismSymbol>>>() {
-            @Override
-            public Tree<Set<HomomorphismSymbol>> combine(Tree<E> node, List<Tree<Set<HomomorphismSymbol>>> childrenValues) {
-                Set<HomomorphismSymbol> vars = new HashSet<HomomorphismSymbol>();
-                HomomorphismSymbol label = labelFunction.apply(node.getLabel());
-
-                if (label.isVariable()) {
-                    vars.add(label);
-                } else {
-                    for (Tree<Set<HomomorphismSymbol>> child : childrenValues) {
-                        Set<HomomorphismSymbol> childVars = child.getLabel();
-                        assert disjoint(childVars, vars);
-                        vars.addAll(childVars);
-                    }
-                }
-
-                return Tree.create(vars, childrenValues);
-            }
-        });
     }
 
     private static <E> boolean disjoint(Set<E> s1, Set<E> s2) {
@@ -783,3 +641,127 @@ public class BkvBinarizer {
         return ret;
     }
 }
+
+
+
+
+//
+//    private Tree<Tree<HomomorphismSymbol>> makeMaximalDecomposition(Tree<HomomorphismSymbol> binarizationTerm) {
+//        final List<Tree<HomomorphismSymbol>> treesForVariables = new ArrayList<Tree<HomomorphismSymbol>>();
+//
+//        return binarizationTerm.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<Tree<HomomorphismSymbol>>>() {
+//            @Override
+//            public Tree<Tree<HomomorphismSymbol>> combine(Tree<HomomorphismSymbol> node, List<Tree<Tree<HomomorphismSymbol>>> childrenValues) {
+//                if (node.getLabel().isVariable()) {
+//                    return Tree.create(node);
+//                } else {
+//                    Tree<HomomorphismSymbol>[] variables = new Tree[childrenValues.size()];
+//
+//                    ensureSize(treesForVariables, childrenValues.size());
+//                    for (int i = 0; i < childrenValues.size(); i++) {
+//                        variables[i] = treesForVariables.get(i);
+//                    }
+//
+//                    Tree<HomomorphismSymbol> newLabel = Tree.create(node.getLabel(), variables);
+//                    return Tree.create(newLabel, childrenValues);
+//                }
+//            }
+//        });
+//    }
+//
+//    private void ensureSize(List<Tree<HomomorphismSymbol>> treesForVariables, int capacity) {
+//        for (int i = treesForVariables.size(); i < capacity; i++) {
+//            treesForVariables.add(Tree.create(var(i)));
+//        }
+//    }
+//
+//    private Tree<Tree<HomomorphismSymbol>> merge(Tree<Tree<HomomorphismSymbol>> decompositionTree) {
+//        return decompositionTree.dfs(new TreeVisitor<Tree<HomomorphismSymbol>, Void, Tree<Tree<HomomorphismSymbol>>>() {
+//            @Override
+//            public Tree<Tree<HomomorphismSymbol>> combine(Tree<Tree<HomomorphismSymbol>> node, List<Tree<Tree<HomomorphismSymbol>>> childrenValues) {
+//                List<Tree<Tree<HomomorphismSymbol>>> remainingChildren = new ArrayList<Tree<Tree<HomomorphismSymbol>>>();
+//                Tree<HomomorphismSymbol> label = node.getLabel();
+//
+//                // merge children with 0 or 1 variables into label
+//                for (int i = 0; i < childrenValues.size(); i++) {
+//                    Tree<Tree<HomomorphismSymbol>> child = childrenValues.get(i);
+//
+//                    switch (child.getChildren().size()) {
+//                        case 0:
+//                            label = substituteVariable(label, i, child.getLabel(), true);
+//                            break;
+//
+//                        case 1:
+//                            label = substituteVariable(label, i, child.getLabel(), false);
+//                            remainingChildren.add(child.getChildren().get(0));
+//                            break;
+//
+//                        default:
+//                            remainingChildren.add(child);
+//                    }
+//                }
+//
+//                // TODO - consider case where label now only has one variable left, this
+//                // requires merging too
+//
+//                // recombine
+//                return Tree.create(label, remainingChildren);
+//            }
+//
+//            private Tree<HomomorphismSymbol> substituteVariable(Tree<HomomorphismSymbol> label, final int varnumToReplace, Tree<HomomorphismSymbol> replacement, final boolean deleteVariable) {
+//                final Tree<HomomorphismSymbol> renamedReplacement = renameVariable(replacement, var(0), var(varnumToReplace));
+//
+//                return label.substitute(new Function<Tree<HomomorphismSymbol>, Tree<HomomorphismSymbol>>() {
+//                    public Tree<HomomorphismSymbol> apply(Tree<HomomorphismSymbol> t) {
+//                        HomomorphismSymbol label = t.getLabel();
+//
+//                        if (label.isVariable()) {
+//                            int varnum = label.getValue();
+//
+//                            if (varnum == varnumToReplace) {
+//                                return renamedReplacement;
+//                            } else if (deleteVariable && varnum > varnumToReplace) {
+//                                return Tree.create(var(varnum - 1));
+//                            }
+//                        }
+//
+//                        return null;
+//                    }
+//                });
+//            }
+//
+//            private Tree<HomomorphismSymbol> renameVariable(Tree<HomomorphismSymbol> tree, final HomomorphismSymbol oldVarname, final HomomorphismSymbol newVarname) {
+//                return tree.substitute(new Function<Tree<HomomorphismSymbol>, Tree<HomomorphismSymbol>>() {
+//                    public Tree<HomomorphismSymbol> apply(Tree<HomomorphismSymbol> f) {
+//                        if (f.getLabel().equals(oldVarname)) {
+//                            return Tree.create(newVarname);
+//                        } else {
+//                            return null;
+//                        }
+//                    }
+//                });
+//            }
+//        });
+//    }
+//
+//    private <E> Tree<Set<HomomorphismSymbol>> vartree(Tree<E> tree, final Function<E, HomomorphismSymbol> labelFunction) {
+//        return tree.dfs(new TreeVisitor<E, Void, Tree<Set<HomomorphismSymbol>>>() {
+//            @Override
+//            public Tree<Set<HomomorphismSymbol>> combine(Tree<E> node, List<Tree<Set<HomomorphismSymbol>>> childrenValues) {
+//                Set<HomomorphismSymbol> vars = new HashSet<HomomorphismSymbol>();
+//                HomomorphismSymbol label = labelFunction.apply(node.getLabel());
+//
+//                if (label.isVariable()) {
+//                    vars.add(label);
+//                } else {
+//                    for (Tree<Set<HomomorphismSymbol>> child : childrenValues) {
+//                        Set<HomomorphismSymbol> childVars = child.getLabel();
+//                        assert disjoint(childVars, vars);
+//                        vars.addAll(childVars);
+//                    }
+//                }
+//
+//                return Tree.create(vars, childrenValues);
+//            }
+//        });
+//    }
