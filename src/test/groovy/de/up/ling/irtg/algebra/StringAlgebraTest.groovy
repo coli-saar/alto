@@ -52,6 +52,48 @@ class StringAlgebraTest {
     private StringAlgebra.Span s(int i, int k) {
         return new StringAlgebra.Span(i,k);
     }
+    
+    @Test
+    public void testEvaluateWide() {
+        String string = "john watches the woman with the telescope";
+        Algebra algebra = new WideStringAlgebra();
+        List words = algebra.parseString(string);
+        Tree term = pt("conc2(john,conc4(watches,the,woman,conc3(with,the,telescope)))")
+
+        assertEquals(words, algebra.evaluate(term));
+    }
+    
+    @Test
+    public void testDecomposeWideTopDown() {
+        String string = "a b c";
+        Algebra algebra = new WideStringAlgebra();
+        
+        List words = algebra.parseString(string);
+        algebra.getSignature().addSymbol("conc2",2)
+        algebra.getSignature().addSymbol("conc3",3)
+        algebra.getSignature().addSymbol("conc4",4)
+        
+        TreeAutomaton auto = algebra.decompose(words);
+        
+        assertEquals(new HashSet([pt("conc3(a,b,c)"), pt("conc2(conc2(a,b),c)"), pt("conc2(a,conc2(b,c))")]), auto.language())
+    }
+    
+    @Test
+    public void testDecomposeWideBottomUp() {
+        String string = "a b c";
+        Algebra algebra = new WideStringAlgebra();
+        
+        List words = algebra.parseString(string);
+        algebra.getSignature().addSymbol("conc2",2)
+        algebra.getSignature().addSymbol("conc3",3)
+        algebra.getSignature().addSymbol("conc4",4)
+        
+        TreeAutomaton auto = algebra.decompose(words);
+
+        assert( auto.accepts(pt("conc3(a,b,c)")) );
+        assert( auto.accepts(pt("conc2(conc2(a,b),c)")));
+        assert( auto.accepts(pt("conc2(a,conc2(b,c))")));
+    }
 	
 }
 

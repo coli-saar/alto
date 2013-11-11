@@ -35,7 +35,7 @@ import javax.swing.JLabel;
  */
 public class StringAlgebra extends Algebra<List<String>> {
     public static final String CONCAT = "*";
-    private int concatSymbolId;
+    protected int concatSymbolId;
     private Set<Integer> concatSet;
     private Signature signature = new Signature();
 

@@ -12,6 +12,7 @@ import java.io.*
 import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.up.ling.tree.*
+import de.up.ling.irtg.*
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.algebra.*
@@ -88,6 +89,42 @@ class BkvBinarizerTest {
         
         assertEquals(new HashSet([pt("'0_1'('0','1'))")]), vartreeAuto.language())
     }
+    
+    private Signature sig(InterpretedTreeAutomaton irtg, String interp) {
+        return irtg.getInterpretation(interp).getAlgebra().getSignature();
+    }
+    
+//    @Test
+    public void testBinarize() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(BIN_IRTG));
+        Map seeds = ["left": new StringAlgebraSeed(sig(irtg, "left"), "*"), "right": new StringAlgebraSeed(sig(irtg, "right"), "*")];
+        BkvBinarizer bin = new BkvBinarizer(seeds)
+        
+        InterpretedTreeAutomaton binarized = bin.binarize(irtg);
+        System.err.println(binarized)        
+    }
+    
+    // test grammar from ACL-13 paper
+   private static final String BIN_IRTG = """
+interpretation left: de.up.ling.irtg.algebra.WideStringAlgebra
+interpretation right: de.up.ling.irtg.algebra.WideStringAlgebra
+
+A! -> r1(B,C,D)
+[left]  conc3(?1, ?2, ?3)
+[right] conc4(?3, a, ?1, ?2)
+
+B -> r2
+[left] b
+[right] b
+
+C -> r3
+[left] c
+[right] c
+
+D -> r4
+[left] d
+[right] d
+   """;
 
     
     private IntSet is(List ints) {

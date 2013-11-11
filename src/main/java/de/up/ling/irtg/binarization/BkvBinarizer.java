@@ -38,10 +38,14 @@ import java.util.TreeSet;
  * @author koller
  */
 public class BkvBinarizer {
-
+    private Map<String, RegularSeed> regularSeeds;
     private int nextGensym = 0;
 
-    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String, RegularSeed> regularSeeds) {
+    public BkvBinarizer(Map<String, RegularSeed> regularSeeds) {
+        this.regularSeeds = regularSeeds;
+    }
+    
+    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg) {
         ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<String>();
         Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
         List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
@@ -59,7 +63,7 @@ public class BkvBinarizer {
                 copyRule(rule, binarizedRtg, binarizedHom, irtg);
             } else {
                 // rules of higher arity => binarize
-                RuleBinarization rb = binarizeRule(rule, regularSeeds, irtg);
+                RuleBinarization rb = binarizeRule(rule, irtg);
 
                 if (rb == null) {
                     // unbinarizable => copy to result
@@ -128,23 +132,35 @@ public class BkvBinarizer {
         });
     }
 
-    private RuleBinarization binarizeRule(Rule rule, Map<String, RegularSeed> regularSeeds, InterpretedTreeAutomaton irtg) {
+    RuleBinarization binarizeRule(Rule rule, InterpretedTreeAutomaton irtg) {
         TreeAutomaton commonVariableTrees = null;
         Map<String, TreeAutomaton<String>> binarizationTermsPerInterpretation = new HashMap<String, TreeAutomaton<String>>();
         Map<String, Int2ObjectMap<IntSet>> varPerInterpretation = new HashMap<String, Int2ObjectMap<IntSet>>();
         RuleBinarization ret = new RuleBinarization();
+        
+        System.err.println("\nBinarizing rule: " + rule.toString(irtg.getAutomaton()));
 
         for (String interpretation : irtg.getInterpretations().keySet()) {
             String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());            // this is alpha from the paper
             Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
+            
+            System.err.println("** interpretation " + interpretation + ": alpha=" + label + ", rhs=" + rhs);
 
             TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);  // this is G_i
             binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
+            
+            System.err.println("\nG_i:\n" + binarizationTermsHere);   
+            System.err.println("lang(Gi) = " + binarizationTermsHere.language());
 
             Int2ObjectMap<IntSet> varHere = computeVar(binarizationTermsHere);                             // this is var_i
             varPerInterpretation.put(interpretation, varHere);
+            
+            System.err.println("\nvars_i:" + varHere);
 
             TreeAutomaton<IntSet> variableTrees = vartreesForAutomaton(binarizationTermsHere, varHere);    // this is G'_i  (accepts variable trees)
+            
+            System.err.println("\nG'_i:\n" + variableTrees);
+            System.err.println("lang(G'_i) = " + variableTrees.language());
 
             if (commonVariableTrees == null) {
                 commonVariableTrees = variableTrees;
@@ -156,10 +172,14 @@ public class BkvBinarizer {
                 return null;
             }
         }
+        
+        System.err.println("\nGrammar for common variable trees:\n" + commonVariableTrees);
 
         Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
         ret.xi = commonVariableTree;
         assert commonVariableTree != null;
+        
+        System.err.println("\nSelected vartree: " + commonVariableTree);
 
         for (String interpretation : irtg.getInterpretations().keySet()) {
             TreeAutomaton binarizationsForThisVartree = binarizationsForVartree(binarizationTermsPerInterpretation.get(interpretation), commonVariableTree, varPerInterpretation.get(interpretation)); // this is G''_i
@@ -536,13 +556,45 @@ public class BkvBinarizer {
     }
 
     private static class RuleBinarization {
-
         Tree<String> xi;
         Map<String, Tree<String>> binarizationTerms;
 
         public RuleBinarization() {
             binarizationTerms = new HashMap<String, Tree<String>>();
         }
+
+        @Override
+        public int hashCode() {
+            int hash = 3;
+            hash = 11 * hash + (this.xi != null ? this.xi.hashCode() : 0);
+            hash = 11 * hash + (this.binarizationTerms != null ? this.binarizationTerms.hashCode() : 0);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final RuleBinarization other = (RuleBinarization) obj;
+            if (this.xi != other.xi && (this.xi == null || !this.xi.equals(other.xi))) {
+                return false;
+            }
+            if (this.binarizationTerms != other.binarizationTerms && (this.binarizationTerms == null || !this.binarizationTerms.equals(other.binarizationTerms))) {
+                return false;
+            }
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            return "<" + xi + " " + binarizationTerms + ">";
+        }
+        
+        
     }
 
     private String gensym(String prefix) {
