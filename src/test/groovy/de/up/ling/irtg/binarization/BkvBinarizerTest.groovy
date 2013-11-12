@@ -104,23 +104,40 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     
     @Test
     public void testMakeHomomorphism() {
-        Tree binarizationTerm = pt("*('?3',*(a,*('?1','?2')))")
-        Tree xi = pt(" _br1(_br0('0','1'),'2')")
-        Homomorphism hom = new Homomorphism(new Signature(), new Signature());
-        
-        hom.getSourceSignature().addSymbol("_br0", 2);
-        hom.getSourceSignature().addSymbol("_br1", 2);
-        
-        BkvBinarizer.addEntriesToHomomorphism(hom, xi, binarizationTerm)
+        Homomorphism hom = makeHom(pt("*('?3',*(a,*('?1','?2')))"), pt(" _br1(_br0('0','1'),'2')"))
         
         assertEquals(pt("*('?2','?1')"), hom.get("_br1"))
         assertEquals(pt("*(a,*('?1','?2'))"), hom.get("_br0"))
+    }
+    
+    private Homomorphism makeHom(Tree binarizationTerm, Tree xi) {
+        BkvBinarizer b = new BkvBinarizer(null)
+        Homomorphism hom = new Homomorphism(new Signature(), new Signature());
+        
+        hom.getSourceSignature().addAllSymbols(xi);
+        
+        b.addEntriesToHomomorphism(hom, xi, binarizationTerm)
+        
+        return hom
+    }
+    
+    @Test
+    public void testMakeHom2() {
+        Homomorphism hom = makeHom(pt("conc2(conc2('?3',a),conc2('?1','?2'))"), pt(" _br1(_br0('0','1'),'2')"))
+        
+        assertEquals(pt("conc2('?1','?2')"), hom.get("_br0"))
+        assertEquals(pt("conc2(conc2('?2',a),'?1')"), hom.get("_br1"))
     }
     
     private Signature sig(InterpretedTreeAutomaton irtg, String interp) {
         return irtg.getInterpretation(interp).getAlgebra().getSignature();
     }
     
+    // NB This test is a bit nondeterministic. Depending on how the hashing
+    // happens, different binarization terms can be selected for "right".
+    // Some of these are harder to synchronize with the homomorphism than others.
+    // Thus in case of bugs in the addRuleToHomomorphism, the test case might
+    // sometimes pass, sometimes fail. :)
     @Test
     public void testBinarize() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(BIN_IRTG));
@@ -132,23 +149,27 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg);
         
-        
-        System.err.println(binarized)     
-        
-        
+        // check decoding from left to right
         TreeAutomaton chart = binarized.parse(["left": "b c d"])
-        
-        System.err.println("chart: " + chart )
         
         assert ! chart.language().isEmpty()
         
-//        chart.language().each { 
-//            Map vals = irtg.interpret(it)
-//            assertEquals(["b","c","d"], vals.get("left"))
-//            assertEquals(["d", "a", "b", "c"], vals.get("right"))
-//        }
-//        
-           
+        chart.language().each { 
+            Map vals = binarized.interpret(it)
+            assertEquals(["b","c","d"], vals.get("left"))
+            assertEquals(["d", "a", "b", "c"], vals.get("right"))
+        }
+        
+        // check decoding from right to left
+        chart = binarized.parse(["right": "d a b c"])
+        
+        assert ! chart.language().isEmpty()
+        
+        chart.language().each { 
+            Map vals = binarized.interpret(it)
+            assertEquals(["b","c","d"], vals.get("left"))
+            assertEquals(["d", "a", "b", "c"], vals.get("right"))
+        }  
     }
     
     // test grammar from ACL-13 paper
