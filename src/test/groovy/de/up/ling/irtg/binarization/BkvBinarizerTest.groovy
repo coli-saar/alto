@@ -104,29 +104,35 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     
     @Test
     public void testMakeHomomorphism() {
-        Homomorphism hom = makeHom(pt("*('?3',*(a,*('?1','?2')))"), pt(" _br1(_br0('0','1'),'2')"))
-        
-        assertEquals(pt("*('?2','?1')"), hom.get("_br1"))
-        assertEquals(pt("*(a,*('?1','?2'))"), hom.get("_br0"))
-    }
-    
-    private Homomorphism makeHom(Tree binarizationTerm, Tree xi) {
-        BkvBinarizer b = new BkvBinarizer(null)
-        Homomorphism hom = new Homomorphism(new Signature(), new Signature());
-        
-        hom.getSourceSignature().addAllSymbols(xi);
-        
-        b.addEntriesToHomomorphism(hom, xi, binarizationTerm)
-        
-        return hom
+        testHom("*('?3',*(a,*('?1','?2')))", " _br1(_br0('0','1'),'2')", ["_br1": "*('?2','?1')", "_br0":"*(a,*('?1','?2'))"], false)
     }
     
     @Test
+    public void testMakeHomTag() {
+        testHom("'@'('?4',S2('?1','@'('?3',VP1('@'('?2',V0(sleep))))))", "inx0V-sleep_br2(inx0V-sleep_br1('0',inx0V-sleep_br0('1','2')),'3')",
+            ["inx0V-sleep_br0": "@('?2', VP1(@('?1',V0(sleep))))",
+             "inx0V-sleep_br1": "S2('?1','?2')",
+             "inx0V-sleep_br2": "@('?2','?1')"],
+        false)
+    }
+    
+    
+    @Test
     public void testMakeHom2() {
-        Homomorphism hom = makeHom(pt("conc2(conc2('?3',a),conc2('?1','?2'))"), pt(" _br1(_br0('0','1'),'2')"))
+        testHom("conc2(conc2('?3',a),conc2('?1','?2'))", " _br1(_br0('0','1'),'2')", ["_br0":"conc2('?1','?2')", "_br1":"conc2(conc2('?2',a),'?1')"], false)
+    }
+    
+    
+    private void testHom(String binarizationTerm, String xi, Map gold, boolean debug) {
+        BkvBinarizer b = new BkvBinarizer(null)
+        b.setDebug(debug)
         
-        assertEquals(pt("conc2('?1','?2')"), hom.get("_br0"))
-        assertEquals(pt("conc2(conc2('?2',a),'?1')"), hom.get("_br1"))
+        Homomorphism hom = new Homomorphism(new Signature(), new Signature());        
+        hom.getSourceSignature().addAllSymbols(pt(xi));
+        
+        b.addEntriesToHomomorphism(hom, pt(xi), pt(binarizationTerm))
+        
+        gold.each { k,v -> assertEquals(pt(v), hom.get(k))  }
     }
     
     private Signature sig(InterpretedTreeAutomaton irtg, String interp) {
@@ -172,6 +178,17 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
             assertEquals(["b","c","d"], vals.get("left"))
             assertEquals(["d", "a", "b", "c"], vals.get("right"))
         }  
+    }
+    
+    @Test
+    public void testBinarizeTag() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(de.up.ling.irtg.algebra.TagAlgebrasTest.tinyTag))
+        
+        RegularSeed tis = IdentitySeed.fromInterp(irtg, "tree")
+        RegularSeed sis = IdentitySeed.fromInterp(irtg, "string")
+        BkvBinarizer bin = new BkvBinarizer(["tree": tis, "string":sis])
+        
+        InterpretedTreeAutomaton b = bin.binarize(irtg)
     }
     
     // test grammar from ACL-13 paper

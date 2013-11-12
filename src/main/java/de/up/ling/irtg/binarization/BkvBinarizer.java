@@ -302,7 +302,13 @@ public class BkvBinarizer {
 
         @Override
         public String toString() {
-            return tree + "@" + vars + "=" + representVarSets(varsConstruction);
+            String v = "null";
+            
+            if( varsConstruction != null ) {
+                v = representVarSets(varsConstruction);
+            }
+            
+            return tree + "@" + vars + "=" + v;
         }
     }
 
@@ -342,7 +348,7 @@ public class BkvBinarizer {
                 IntSet is = new IntOpenHashSet();
                 List<IntSet> childrenVarSets = new ArrayList<IntSet>();
                 List<Tree<String>> childrenTrees = new ArrayList<Tree<String>>();
-                List<IntSet> nonemptyChildConstruction = null;
+                List<IntSet> nonemptyChildConstruction = new ArrayList<IntSet>();
                 int childrenWithNonemptyVarsets = 0;
                 Subtree ret;
 

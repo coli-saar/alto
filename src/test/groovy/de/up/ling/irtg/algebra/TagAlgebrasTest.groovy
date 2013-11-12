@@ -152,7 +152,7 @@ class TagAlgebrasTest {
     
     
     
-    private static final String tinyTag = """
+    public static final String tinyTag = """
 interpretation tree: de.up.ling.irtg.algebra.TagTreeAlgebra
 interpretation string: de.up.ling.irtg.algebra.TagStringAlgebra
 

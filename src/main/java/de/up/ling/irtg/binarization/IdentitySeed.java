@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.binarization;
 
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -42,5 +43,9 @@ public class IdentitySeed extends RegularSeed {
         ret.addFinalState(rule.getParent());
         
         return ret;
+    }
+    
+    public static IdentitySeed fromInterp(InterpretedTreeAutomaton irtg, String interpretation) {
+        return new IdentitySeed(irtg.getInterpretation(interpretation).getAlgebra());
     }
 }
