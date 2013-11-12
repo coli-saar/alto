@@ -155,7 +155,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg);
         
-//        System.err.println(binarized);
+        assertAlmostEquals(2.0, binarized.getAutomaton().getWeight(pt("r1_br1(r1_br0(r2,r3),r4)")))
         
         // check decoding from left to right
         TreeAutomaton chart = binarized.parse(["left": "b c d"])
@@ -196,7 +196,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
 interpretation left: de.up.ling.irtg.algebra.WideStringAlgebra
 interpretation right: de.up.ling.irtg.algebra.WideStringAlgebra
 
-A! -> r1(B,C,D)
+A! -> r1(B,C,D) [2]
 [left]  conc3(?1, ?2, ?3)
 [right] conc4(?3, a, ?1, ?2)
 

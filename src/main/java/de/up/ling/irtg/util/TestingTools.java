@@ -19,6 +19,7 @@ import de.up.ling.tree.TreeParser;
 import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -82,5 +83,15 @@ public class TestingTools {
 
     public static Rule rule(String parent, String label, List<String> children, TreeAutomaton automaton) {
         return automaton.createRule(parent, label, children, 1);
+    }
+    
+    public static Set<Rule> rbu(String label, List children, TreeAutomaton auto) {
+        int[] childStates = new int[children.size()];
+        
+        for( int i = 0; i < children.size(); i++ ) {
+            childStates[i] = auto.getIdForState(children.get(i));
+        }
+        
+        return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), childStates);
     }
 }

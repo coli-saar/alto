@@ -95,7 +95,7 @@ public class BkvBinarizer {
                     }
 
                     Object parent = rtg.getStateForId(rule.getParent());
-                    String newParent = addRulesToAutomaton(binarizedRtg, rb.xi, parent.toString(), childStates);
+                    String newParent = addRulesToAutomaton(binarizedRtg, rb.xi, parent.toString(), childStates, rule.getWeight());
 
                     if (rtg.getFinalStates().contains(rule.getParent())) {
                         binarizedRtg.addFinalState(binarizedRtg.getIdForState(newParent));
@@ -129,7 +129,7 @@ public class BkvBinarizer {
 
     // inserts rules with fresh states into the binarized RTG
     // for generating q -> xi(q1,...,qk)
-    private String addRulesToAutomaton(final ConcreteTreeAutomaton binarizedRtg, final Tree<String> vartree, final String oldRuleParent, final String[] oldRuleChildren) {
+    private String addRulesToAutomaton(final ConcreteTreeAutomaton binarizedRtg, final Tree<String> vartree, final String oldRuleParent, final String[] oldRuleChildren, final double oldRuleWeight) {
         return vartree.dfs(new TreeVisitor<String, Void, String>() {
             @Override
             public String combine(Tree<String> node, List<String> childrenValues) {
@@ -138,14 +138,17 @@ public class BkvBinarizer {
                     return oldRuleChildren[var];
                 } else {
                     String parent;
+                    double weight;
 
                     if (node == vartree) {
                         parent = oldRuleParent;
+                        weight = oldRuleWeight;
                     } else {
                         parent = gensym("q");
+                        weight = 1;
                     }
 
-                    Rule newRule = binarizedRtg.createRule(parent, node.getLabel(), childrenValues);
+                    Rule newRule = binarizedRtg.createRule(parent, node.getLabel(), childrenValues, weight);
                     binarizedRtg.addRule(newRule);
 
                     return parent;
@@ -478,7 +481,7 @@ public class BkvBinarizer {
             ruleRhs[i] = fromAutomaton.getStateForId(oldRule.getChildren()[i]);
         }
 
-        Rule ret = toAutomaton.createRule(fromAutomaton.getStateForId(oldRule.getParent()), fromAutomaton.getSignature().resolveSymbolId(oldRule.getLabel()), ruleRhs);
+        Rule ret = toAutomaton.createRule(fromAutomaton.getStateForId(oldRule.getParent()), fromAutomaton.getSignature().resolveSymbolId(oldRule.getLabel()), ruleRhs, oldRule.getWeight());
         return ret;
     }
 
