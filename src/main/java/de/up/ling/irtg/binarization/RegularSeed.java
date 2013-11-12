@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.binarization;
 
-import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -130,71 +129,3 @@ public abstract class RegularSeed {
     }
 }
 
-
-
-/**
- * 
- * totally unnecessary second attempt:
- * TreeAutomaton<String> substitute(Tree<String> term, final RegularSeed rs) {
-        final ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
-                
-        int finalState = term.dfs(new TreeVisitor<String, Void, Integer>() {
-            @Override
-            public Integer combine(Tree<String> node, List<Integer> childrenValues) {
-                return substitute(rs.binarize(node.getLabel()), childrenValues, ret);
-            }           
-        });
-        
-        ret.addFinalState(finalState);
-        return ret;
-    }
-    
-    // ASSPT - each automaton in the RS has exactly one final state
-    private int substitute(TreeAutomaton<String> auto, List<Integer> childFinalStates, ConcreteTreeAutomaton<String> ret) {
-        String prefix = gensym("q") + "_";
-        int finalState = -1;
-        
-        for( Rule rule : auto.getRuleSet() ) {
-            List<String> rhs = new ArrayList<String>(rule.getArity());
-            
-            for( int childState : rule.getChildren() ) {
-                String variableState = findVariableState(childState, auto);
-                
-                if( variableState == null ) {
-                    rhs.add(prefix + auto.getStateForId(childState));
-                } else {
-                    int childPos = HomomorphismSymbol.getVariableIndex(variableState);
-                    rhs.add(ret.getStateForId(childFinalStates.get(childPos)));
-                }
-            }
-            
-            Rule newRule = ret.createRule(prefix + auto.getStateForId(rule.getParent()), auto.getSignature().resolveSymbolId(rule.getLabel()), rhs);
-            ret.addRule(newRule);
-            
-            if( auto.getFinalStates().contains(rule.getParent())) {
-                assert finalState == -1;
-                finalState = newRule.getParent();
-            }
-        }
-        
-        assert finalState != -1;
-        return finalState;
-    }
-    
-    // ASSPT - if q has a rule "q -> ?1" in auto, then q has no other top-down rules
-    private String findVariableState(int state, TreeAutomaton<String> auto) {
-        Collection<Integer> labelsForState = auto.getLabelsTopDown(state);
-        
-        for( int label : labelsForState ) {
-            for( Rule rule : auto.getRulesTopDown(label, state) ) {
-                String labelString = auto.getSignature().resolveSymbolId(label);
-                
-                if( labelString.startsWith("?")) {
-                    return labelString;
-                }
-            }
-        }
-        
-        return null;
-    }
- */

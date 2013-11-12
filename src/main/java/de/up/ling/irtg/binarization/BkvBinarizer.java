@@ -33,7 +33,9 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 /**
- * Implements the binarization algorithm of Buechse/Koller/Vogler.
+ * Implements the binarization algorithm of Buechse/Koller/Vogler 2013.
+ * See the following paper for details:
+ * http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=binarization-13
  *
  * @author koller
  */
@@ -184,7 +186,7 @@ public class BkvBinarizer {
         assert commonVariableTrees != null;
 
         Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
-        ret.xi = xiFromVartree(commonVariableTree);
+        ret.xi = xiFromVartree(commonVariableTree, irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel()));
 
         for (String interpretation : irtg.getInterpretations().keySet()) {
             // this is G''_i
@@ -197,14 +199,14 @@ public class BkvBinarizer {
         return ret;
     }
 
-    private Tree<String> xiFromVartree(Tree<String> vartree) {
+    private Tree<String> xiFromVartree(Tree<String> vartree, final String originalLabel) {
         return vartree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
                 if (childrenValues.isEmpty()) {
                     return node;
                 } else {
-                    return Tree.create(gensym("_br"), childrenValues);
+                    return Tree.create(gensym(originalLabel + "_br"), childrenValues);
                 }
             }
         });

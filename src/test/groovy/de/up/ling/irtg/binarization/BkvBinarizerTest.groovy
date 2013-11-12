@@ -149,6 +149,8 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg);
         
+//        System.err.println(binarized);
+        
         // check decoding from left to right
         TreeAutomaton chart = binarized.parse(["left": "b c d"])
         

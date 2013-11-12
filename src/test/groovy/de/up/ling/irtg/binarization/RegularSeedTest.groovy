@@ -57,5 +57,22 @@ public class RegularSeedTest {
                                   pt("*(*( *(a,b), *(c,*(d,e)) ), h)"), pt("*(*( *(a,b), *(*(c,d),e)), h)")]),
                           binAuto.language()); 
     }
+    
+    @Test
+    public void testIdentitySeed() {
+        Algebra alg = new StringAlgebra();
+        RegularSeed rs = new IdentitySeed(alg);
+        
+        alg.getSignature().addAllSymbols(pt("*(*(a,b),c)"));
+        
+        TreeAutomaton binAuto = rs.binarize("*");
+        assertEquals(new HashSet([pt("*(?1,?2)")]), binAuto.language())
+        
+        binAuto = rs.binarize("a")
+        assertEquals(new HashSet([pt("a")]), binAuto.language())
+        
+        binAuto = rs.binarize(pt("*(a,b)"))
+        assertEquals(new HashSet([pt("*(a,b)")]), binAuto.language())
+    }
 }
 
