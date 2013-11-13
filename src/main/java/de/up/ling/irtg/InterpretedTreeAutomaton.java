@@ -9,9 +9,10 @@ import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.binarization.BkvBinarizer;
+import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
@@ -22,7 +23,6 @@ import de.up.ling.tree.TreeVisitor;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -637,6 +637,10 @@ public class InterpretedTreeAutomaton {
         return Corpus.readCorpus(reader, this);
     }
 
+    public InterpretedTreeAutomaton binarize(Map<String, RegularSeed> regularSeeds, Map<String, Algebra> newAlgebras) {
+        BkvBinarizer binarizer = new BkvBinarizer(regularSeeds);
+        return null;
+    }
 
     /**
      * Returns a string representation of the IRTG.

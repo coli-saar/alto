@@ -18,8 +18,10 @@ import java.util.Set;
  * @author koller
  */
 public class WideStringAlgebra extends StringAlgebra {
+    private static final String WIDE_BINARY_CONCATENATION = "conc2";
+    
     public WideStringAlgebra() {
-        
+        getSignature().addSymbol(WIDE_BINARY_CONCATENATION, 2);
     }
 
     @Override
@@ -170,5 +172,10 @@ public class WideStringAlgebra extends StringAlgebra {
         public boolean isBottomUpDeterministic() {
             return isBottomUpDeterministic;
         }
+    }
+
+    @Override
+    public String getBinaryConcatenation() {
+        return WIDE_BINARY_CONCATENATION;
     }
 }

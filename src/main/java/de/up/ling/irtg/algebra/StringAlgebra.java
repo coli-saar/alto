@@ -45,7 +45,7 @@ public class StringAlgebra extends Algebra<List<String>> {
         concatSet = new HashSet<Integer>();
         concatSet.add(concatSymbolId);
     }
-
+    
     @Override
     public List<String> evaluate(Tree<String> t) {
         final List<String> ret = new ArrayList<String>();
@@ -277,5 +277,9 @@ public class StringAlgebra extends Algebra<List<String>> {
             hash = 23 * hash + this.end;
             return hash;
         }
+    }
+    
+    public String getBinaryConcatenation() {
+        return CONCAT;
     }
 }

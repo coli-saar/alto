@@ -8,6 +8,7 @@ import com.google.common.base.Function;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -58,7 +59,7 @@ public class BkvBinarizer {
         }
     }
 
-    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg) {
+    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String,Algebra> newAlgebras) {
         ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<String>();
         Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
         List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
@@ -112,7 +113,7 @@ public class BkvBinarizer {
         // assemble output IRTG
         InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(binarizedRtg);
         for (String interp : interpretationNames) {
-            ret.addInterpretation(interp, new Interpretation(irtg.getInterpretations().get(interp).getAlgebra(), binarizedHom.get(interp)));
+            ret.addInterpretation(interp, new Interpretation(newAlgebras.get(interp), binarizedHom.get(interp)));
         }
 
         return ret;

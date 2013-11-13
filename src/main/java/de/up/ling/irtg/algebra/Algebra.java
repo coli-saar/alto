@@ -5,9 +5,13 @@
 
 package de.up.ling.irtg.algebra;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
@@ -110,5 +114,19 @@ public abstract class Algebra<E> {
      */
     public JComponent visualize(E object) {
         return new JLabel(object.toString());
+    }
+    
+    /**
+     * Returns an iterator over all subclasses of Algebra.
+     * 
+     * @return 
+     */
+    public static Iterator<Class> getAllAlgebraClasses() {
+        ServiceLoader<Algebra> algebraLoader = ServiceLoader.load(Algebra.class);
+        return Iterators.transform(algebraLoader.iterator(), new Function<Algebra, Class>() {
+            public Class apply(Algebra f) {
+                return f.getClass();
+            }
+        });
     }
 }

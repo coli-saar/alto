@@ -16,8 +16,16 @@ import de.up.ling.irtg.automata.TreeAutomaton;
  */
 public class IdentitySeed extends RegularSeed {
     private Algebra sourceAlgebra;
+    
+    /**
+     * This is only for technical reasons; don't use this constructor!
+     * Use {@link #IdentitySeed(de.up.ling.irtg.algebra.Algebra) } instead.
+     */
+    public IdentitySeed() {
+        this(null, null);
+    }
 
-    public IdentitySeed(Algebra sourceAlgebra) {
+    public IdentitySeed(Algebra sourceAlgebra, Algebra targetAlgebra) {
         this.sourceAlgebra = sourceAlgebra;
     }
     
@@ -46,6 +54,7 @@ public class IdentitySeed extends RegularSeed {
     }
     
     public static IdentitySeed fromInterp(InterpretedTreeAutomaton irtg, String interpretation) {
-        return new IdentitySeed(irtg.getInterpretation(interpretation).getAlgebra());
+        Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
+        return new IdentitySeed(alg, alg);
     }
 }

@@ -8,7 +8,7 @@
     <version>1.1-SNAPSHOT</version>
     <name>irtg</name>
     <url>http://maven.apache.org</url>
-
+  
     <dependencies>
         <dependency>
             <groupId>de.saar.coli</groupId>
@@ -33,7 +33,7 @@
             <artifactId>mallet</artifactId>
             <version>2.0.7</version>
         </dependency>
-
+        
         <dependency>
             <groupId>it.unimi.dsi</groupId>
             <artifactId>fastutil</artifactId>
@@ -45,7 +45,7 @@
             <artifactId>macify</artifactId>
             <version>1.4</version>
         </dependency>
-
+        
         <dependency>
             <groupId>com.bric.window</groupId>
             <artifactId>windowmenu</artifactId>
@@ -70,14 +70,13 @@
             <version>4.6</version>
             <scope>test</scope>
         </dependency>
-
+        
         <dependency>
             <artifactId>groovy-all</artifactId>
             <groupId>org.codehaus.groovy</groupId>
             <version>2.0.5</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.swinglabs</groupId>
             <artifactId>swing-layout</artifactId>
@@ -88,40 +87,6 @@
     <build>
 
         <plugins>
-
-            <plugin>
-                <groupId>net.alchim31.maven</groupId>
-                <artifactId>scala-maven-plugin</artifactId>
-                <version>3.1.6</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>compile</goal>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <scalaVersion>2.10.3</scalaVersion>
-                    <compileOrder>JavaThenScala</compileOrder>
-
-                    <recompileMode>incremental</recompileMode>
-                    <useZincServer>true</useZincServer>
-
-
-                     <excludes>
-                        <exclude>**/*.java</exclude>
-                    </excludes>
-
-
-                    <javacArgs>
-                        <javacArg>-Xlint:unchecked</javacArg>
-                        <javacArg>-Xlint:deprecation</javacArg>
-                    </javacArgs>
-                </configuration>
-            </plugin>
-
-
             <plugin>
                 <groupId>org.codehaus.gmaven</groupId>
                 <artifactId>gmaven-plugin</artifactId>
@@ -176,20 +141,20 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.4</version>
                 <configuration>
-                    <descriptors>
-                        <descriptor>zip.xml</descriptor>
-                    </descriptors>
-                    <appendAssemblyId>false</appendAssemblyId>
+		  <descriptors>
+		    <descriptor>zip.xml</descriptor>
+		  </descriptors>
+		  <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                        <phase>package</phase> <!-- append to the packaging phase. -->
-                        <goals>
-                            <goal>single</goal> <!-- goals == mojos -->
-                        </goals>
-                    </execution>
-                </executions>
+		<executions>
+		  <execution>
+		    <id>make-assembly</id> <!-- this is used for inheritance merges -->
+		    <phase>package</phase> <!-- append to the packaging phase. -->
+		    <goals>
+		      <goal>single</goal> <!-- goals == mojos -->
+		    </goals>
+		  </execution>
+		</executions>
             </plugin>
 
             <plugin>
@@ -229,7 +194,7 @@
                                         <exclude>META-INF/*.RSA</exclude>                                       
                                     </excludes>
                                 </filter>
-                                <!-- add include filters here if necessary -->
+				<!-- add include filters here if necessary -->
                             </filters>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -241,7 +206,31 @@
                 </executions>
             </plugin>
 
-
+	    <plugin>
+	      <groupId>net.alchim31.maven</groupId>
+	      <artifactId>scala-maven-plugin</artifactId>
+	      <version>3.1.5</version>
+	      <executions>
+		<execution>
+		  <goals>
+		    <goal>compile</goal>
+		    <goal>testCompile</goal>
+		  </goals>
+		</execution>
+	      </executions>
+	      <configuration>
+		<scalaVersion>2.10.2</scalaVersion>
+		<compileOrder>JavaThenScala</compileOrder>
+		<excludes>
+		  <exclude>**/*.java</exclude>
+		</excludes>
+		<recompileMode>incremental</recompileMode>
+		<javacArgs>
+		  <javacArg>-Xlint:unchecked</javacArg>
+		  <javacArg>-Xlint:deprecation</javacArg>
+		</javacArgs>
+	      </configuration>
+	    </plugin>
 
             <!-- plugin configuration for Jenkins -->
             <plugin>
@@ -254,6 +243,33 @@
                     <xmlOutput>true</xmlOutput>
                 </configuration>
             </plugin>
+
+
+            <!--
+                      <plugin>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>2.3.2</version>
+                        <dependencies>
+                          <dependency>
+                            <groupId>org.codehaus.groovy</groupId>
+                            <artifactId>groovy-eclipse-compiler</artifactId>
+                            <version>2.6.0-01</version>
+                          </dependency>
+                        </dependencies>
+                        <configuration>
+                          <compilerId>groovy-eclipse-compiler</compilerId>
+                           <source>1.6</source>
+                           <target>1.6</target>
+                        </configuration>
+                      </plugin>
+                      <plugin>
+                        <artifactId>groovy-eclipse-compiler</artifactId>
+                        <groupId>org.codehaus.groovy</groupId>
+                        <version>2.6.0-01</version>
+                        <extensions>true</extensions>
+                      </plugin>
+            -->
+
         </plugins>
 
         <extensions>
@@ -292,7 +308,7 @@
             </snapshots>
         </repository>
 
-
+    
         <repository>
             <id>external</id>
             <name>ECL external libraries</name>
@@ -330,8 +346,7 @@
             <name>Potsdam IRTG website</name>
             <url>scpexe://tcl@bramaputra.ling.uni-potsdam.de//home/tcl/tcl-web/irtg</url>
         </site>
-
+    
         <downloadUrl>http://www.ling.uni-potsdam.de/tcl/maven2/releases</downloadUrl>
     </distributionManagement>
 </project>
-

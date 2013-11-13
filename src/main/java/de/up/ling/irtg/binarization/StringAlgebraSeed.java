@@ -4,6 +4,8 @@
  */
 package de.up.ling.irtg.binarization;
 
+import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -19,12 +21,27 @@ import java.util.Set;
  * @author koller
  */
 public class StringAlgebraSeed extends RegularSeed {
-    private Signature signature;
+    private Signature sourceSignature;
+    private Signature targetSignature;
     private int binaryConcatenationId;  // in targetSignature
+    
+    /**
+     * This is only for technical reasons; don't use this constructor!
+     * Use {@link #StringAlgebraSeed(de.up.ling.irtg.signature.Signature, java.lang.String) } instead.
+     */
+    public StringAlgebraSeed() {
+        
+    }
 
-    public StringAlgebraSeed(Signature signature, String binaryConcatenation) {
-        this.signature = signature;
-        this.binaryConcatenationId = signature.getIdForSymbol(binaryConcatenation);
+    public StringAlgebraSeed(Algebra sourceAlgebra, Algebra targetAlgebra) {
+        this.targetSignature = targetAlgebra.getSignature();
+        this.sourceSignature = sourceAlgebra.getSignature();
+        
+        if( targetAlgebra instanceof StringAlgebra ) {
+            this.binaryConcatenationId = targetSignature.getIdForSymbol(((StringAlgebra) targetAlgebra).getBinaryConcatenation());
+        } else {
+            throw new IllegalArgumentException("Target algebra must be a StringAlgebra, but was a " + targetAlgebra.getClass());
+        }
     }
 
     @Override
@@ -32,22 +49,22 @@ public class StringAlgebraSeed extends RegularSeed {
         // ensure that signature contains the symbols ?1, ..., ?n where n = arity(symbol)
         // this is slightly hacky (these symbols have no interpretation in the algebra),
         // but necessary so the automata can accept langauges with these variable symbols
-        for( int i = 0; i < signature.getArityForLabel(symbol); i++ ) {
-            signature.addSymbol("?" + (i+1), 0);
+        for( int i = 0; i < sourceSignature.getArityForLabel(symbol); i++ ) {
+            targetSignature.addSymbol("?" + (i+1), 0);
         }
         
-        if (signature.getArityForLabel(symbol) <= 2) {
+        if (sourceSignature.getArityForLabel(symbol) <= 2) {
             return new SingletonAutomaton(symbol);
         } else {
             
-            return new BinarizationAutomaton(symbol, signature);
+            return new BinarizationAutomaton(symbol);
         }
     }
 
     private class SingletonAutomaton extends ConcreteTreeAutomaton<String> {
         public SingletonAutomaton(String symbol) {
-            signature = StringAlgebraSeed.this.signature;
-            int arity = signature.getArityForLabel(symbol);
+            signature = targetSignature;
+            int arity = sourceSignature.getArityForLabel(symbol);
             List<String> childStates = new ArrayList<String>();
             List<String> empty = new ArrayList<String>();
 
@@ -64,9 +81,9 @@ public class StringAlgebraSeed extends RegularSeed {
     }
 
     private class BinarizationAutomaton extends TreeAutomaton<Span> {
-        public BinarizationAutomaton(String symbol, Signature signature) {
-            super(signature);
-            addFinalState(addState(new Span(0, signature.getArityForLabel(symbol))));
+        public BinarizationAutomaton(String symbol) {
+            super(targetSignature);
+            addFinalState(addState(new Span(0, sourceSignature.getArityForLabel(symbol))));
         }
 
         @Override

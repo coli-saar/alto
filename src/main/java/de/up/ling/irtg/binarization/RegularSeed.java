@@ -4,6 +4,9 @@
  */
 package de.up.ling.irtg.binarization;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Iterators;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -11,6 +14,8 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import java.util.Set;
 
 /**
@@ -76,6 +81,7 @@ public abstract class RegularSeed {
         // compute binarization automaton for the current node and compute map
         // that maps q to i iff q -> ?i is a rule
         TreeAutomaton<?> autoHere = binarize(term.getLabel());
+        
         Int2IntMap variableStates = findVariableStates(autoHere, arity);
 
         // copy rules of this automaton into ret, renaming states
@@ -119,13 +125,29 @@ public abstract class RegularSeed {
         Signature sig = automaton.getSignature();
 
         for (int i = 1; i <= arity; i++) {
-            Set<Rule> rules = automaton.getRulesBottomUp(sig.getIdForSymbol("?" + i), emptyChildren);
-            assert rules.size() == 1; // by assumption, see above
+            String varsym = "?" + i;
+            int varid = sig.getIdForSymbol(varsym);
+            Set<Rule> rules = automaton.getRulesBottomUp(varid, emptyChildren);
+            assert rules.size() == 1 : "found " + rules.size() + " rules for " + varsym; // by assumption, see above
 
             ret.put(rules.iterator().next().getParent(), i-1);
         }
 
         return ret;
+    }
+    
+    /**
+     * Returns an iterator over all subclasses of RegularSeed.
+     * 
+     * @return 
+     */
+    public static Iterator<Class> getAllRegularSeedClasses() {
+        ServiceLoader<RegularSeed> rsLoader = ServiceLoader.load(RegularSeed.class);
+        return Iterators.transform(rsLoader.iterator(), new Function<RegularSeed, Class>() {
+            public Class apply(RegularSeed f) {
+                return f.getClass();
+            }
+        });
     }
 }
 

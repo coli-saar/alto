@@ -28,7 +28,7 @@ public class RegularSeedTest {
     @Test
     public void testStringAlgebraSeed() {
         Algebra alg = new StringAlgebra();
-        RegularSeed rs = new StringAlgebraSeed(alg.getSignature(), StringAlgebra.CONCAT);
+        RegularSeed rs = new StringAlgebraSeed(alg, alg);
         alg.getSignature().addAllSymbols(pt("f(a,b,c)"));
         
         TreeAutomaton binAuto = rs.binarize("f");
@@ -38,7 +38,7 @@ public class RegularSeedTest {
     @Test
     public void testStringSeed() {
         Algebra alg = new StringAlgebra();
-        RegularSeed rs = new StringAlgebraSeed(alg.getSignature(), StringAlgebra.CONCAT);
+        RegularSeed rs = new StringAlgebraSeed(alg, alg);
 
         alg.getSignature().addAllSymbols(pt("f(a,b,c)"));
         TreeAutomaton binAuto = rs.binarize(pt("f(a,b,c)"));
@@ -48,7 +48,7 @@ public class RegularSeedTest {
     @Test
     public void testComplexStringSeed() {
         Algebra alg = new StringAlgebra();
-        RegularSeed rs = new StringAlgebraSeed(alg.getSignature(), StringAlgebra.CONCAT);
+        RegularSeed rs = new StringAlgebraSeed(alg, alg);
 
         alg.getSignature().addAllSymbols(pt("f(*(a,b),f(c,d,e),h)"));
         
@@ -61,7 +61,7 @@ public class RegularSeedTest {
     @Test
     public void testIdentitySeed() {
         Algebra alg = new StringAlgebra();
-        RegularSeed rs = new IdentitySeed(alg);
+        RegularSeed rs = new IdentitySeed(alg, alg);
         
         alg.getSignature().addAllSymbols(pt("*(*(a,b),c)"));
         

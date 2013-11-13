@@ -147,13 +147,21 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     @Test
     public void testBinarize() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(BIN_IRTG));
-        irtg.getInterpretation("left").getAlgebra().getSignature().addSymbol("conc2", 2);
-        irtg.getInterpretation("right").getAlgebra().getSignature().addSymbol("conc2", 2);
         
-        Map seeds = ["left": new StringAlgebraSeed(sig(irtg, "left"), "conc2"), "right": new StringAlgebraSeed(sig(irtg, "right"), "conc2")];
+        Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
+        Algebra rightAlgebra = irtg.getInterpretation("right").getAlgebra()
+        
+        Algebra leftOutAlgebra = new StringAlgebra()
+        Algebra rightOutAlgebra = new StringAlgebra()
+        
+        Map newAlgebras = ["left": leftOutAlgebra, "right": rightOutAlgebra]
+        Map seeds = ["left": new StringAlgebraSeed(leftAlgebra, leftOutAlgebra), "right": new StringAlgebraSeed(rightAlgebra,rightOutAlgebra)];
+        
         BkvBinarizer bin = new BkvBinarizer(seeds)
         
-        InterpretedTreeAutomaton binarized = bin.binarize(irtg);
+        InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
+        
+//        System.err.println(binarized)
         
         assertAlmostEquals(2.0, binarized.getAutomaton().getWeight(pt("r1_br1(r1_br0(r2,r3),r4)")))
         
@@ -184,11 +192,14 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     public void testBinarizeTag() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(de.up.ling.irtg.algebra.TagAlgebrasTest.tinyTag))
         
+        Algebra ta = irtg.getInterpretation("tree").getAlgebra()
+        Algebra sa = irtg.getInterpretation("string").getAlgebra()
+        
         RegularSeed tis = IdentitySeed.fromInterp(irtg, "tree")
         RegularSeed sis = IdentitySeed.fromInterp(irtg, "string")
         BkvBinarizer bin = new BkvBinarizer(["tree": tis, "string":sis])
         
-        InterpretedTreeAutomaton b = bin.binarize(irtg)
+        InterpretedTreeAutomaton b = bin.binarize(irtg, ["string": sa, "tree":ta])
     }
     
     // test grammar from ACL-13 paper
