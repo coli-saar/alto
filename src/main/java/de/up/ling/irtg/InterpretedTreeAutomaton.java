@@ -327,11 +327,11 @@ public class InterpretedTreeAutomaton {
         trainEM(trainingData, null);
     }
 
-    public void trainEM(Corpus trainingData, TrainingIterationListener listener) {
+    public void trainEM(Corpus trainingData, ProgressListener listener) {
         trainEM(trainingData, 10, false, listener);
     }
 
-    public void trainEM(Corpus trainingData, int numIterations, boolean printIntermediate, TrainingIterationListener listener) {
+    public void trainEM(Corpus trainingData, int numIterations, boolean printIntermediate, ProgressListener listener) {
         if (!trainingData.hasCharts()) {
             System.err.println("EM training can only be performed on a corpus with attached charts.");
             return;
@@ -429,7 +429,7 @@ public class InterpretedTreeAutomaton {
      *
      * @param trainingData a corpus of parse charts
      */
-    public void trainVB(Corpus trainingData, TrainingIterationListener listener) {
+    public void trainVB(Corpus trainingData, ProgressListener listener) {
         if (!trainingData.hasCharts()) {
             System.err.println("VB training can only be performed on a corpus with attached charts.");
             return;
@@ -484,7 +484,7 @@ public class InterpretedTreeAutomaton {
      * @param intersectedRuleToOriginalRule
      * @return
      */
-    protected double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, TrainingIterationListener listener, int iteration) {
+    protected double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ProgressListener listener, int iteration) {
         double logLikelihood = 0;
 
         globalRuleCount.clear();

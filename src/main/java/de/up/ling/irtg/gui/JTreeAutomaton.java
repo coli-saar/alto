@@ -7,10 +7,11 @@ package de.up.ling.irtg.gui;
 import com.bric.window.WindowMenu;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.TrainingIterationListener;
+import de.up.ling.irtg.ProgressListener;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.corpus.Corpus;
 import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
+import javax.swing.JProgressBar;
 import javax.swing.JTable;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -34,6 +36,7 @@ import javax.swing.table.TableCellRenderer;
  * @author koller
  */
 public class JTreeAutomaton extends javax.swing.JFrame {
+
     private TreeAutomaton automaton;
     private InterpretedTreeAutomaton irtg;
     private List<String> annotationsInOrder;
@@ -128,6 +131,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     public void setIrtg(InterpretedTreeAutomaton irtg) {
         this.irtg = irtg;
+
+        miBinarize.setEnabled(true);
         miMaxent.setEnabled(irtg instanceof MaximumEntropyIrtg);
     }
 
@@ -163,6 +168,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu4 = new javax.swing.JMenu();
         miShowLanguage = new javax.swing.JMenuItem();
         miParse = new javax.swing.JMenuItem();
+        miBinarize = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         miTrainML = new javax.swing.JMenuItem();
         miTrainEM = new javax.swing.JMenuItem();
@@ -243,6 +249,15 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         });
         jMenu4.add(miParse);
+
+        miBinarize.setText("Binarize ...");
+        miBinarize.setEnabled(false);
+        miBinarize.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miBinarizeActionPerformed(evt);
+            }
+        });
+        jMenu4.add(miBinarize);
         jMenu4.add(jSeparator3);
 
         miTrainML.setText("Maximum likelihood training ...");
@@ -471,7 +486,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     }//GEN-LAST:event_miTrainVBActionPerformed
 
-    private static class ProgressBarTrainingIterationListener implements TrainingIterationListener {
+    private static class ProgressBarTrainingIterationListener implements ProgressListener {
+
         private ChartComputationProgressBar pb;
 
         public ProgressBarTrainingIterationListener(ChartComputationProgressBar pb) {
@@ -540,6 +556,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }//GEN-LAST:event_miSaveMaxentWeightsActionPerformed
 
     private static class FtWeight {
+
         public String feature;
         public String weight;
     }
@@ -561,6 +578,44 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             dialog.setVisible(true);
         }
     }//GEN-LAST:event_miShowMaxentWeightsActionPerformed
+
+    private void miBinarizeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miBinarizeActionPerformed
+        if (irtg != null) {
+            final RegularSeedChooser rsc = new RegularSeedChooser(irtg, this, true);
+            rsc.setVisible(true);
+
+            if (rsc.getSelectedAlgebras() != null) {
+                new Thread() {
+                    @Override
+                    public void run() {
+                        final ProgressBarDialog pb = new ProgressBarDialog("Binarizing IRTG", irtg.getAutomaton().getRuleSet().size(), JTreeAutomaton.this, false);
+                        pb.setVisible(true);
+                        
+                        ProgressListener listener = new ProgressListener() {
+                            public void update(int iterationNumber, int instanceNumber) {
+                                pb.update(iterationNumber);
+                            }
+                        };
+
+                        long startTime = System.nanoTime();
+                        BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
+                        InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
+                        GuiMain.log("Binarized IRTG, " + GuiMain.formatTimeSince(startTime));
+                        
+                        pb.setVisible(false);
+
+                        JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
+                        jta.setTitle("Binarization of " + getTitle());
+                        jta.setIrtg(binarized);
+                        jta.setParsingEnabled(true);
+                        jta.pack();
+                        jta.setVisible(true);
+                    }
+                }.start();
+            }
+        }
+                        
+    }//GEN-LAST:event_miBinarizeActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
@@ -572,6 +627,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JTable jTable1;
+    private javax.swing.JMenuItem miBinarize;
     private javax.swing.JMenuItem miLoadMaxentWeights;
     private javax.swing.JMenu miMaxent;
     private javax.swing.JMenuItem miOpenAutomaton;

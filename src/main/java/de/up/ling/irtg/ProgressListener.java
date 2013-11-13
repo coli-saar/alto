@@ -8,6 +8,6 @@ package de.up.ling.irtg;
  *
  * @author koller
  */
-public interface TrainingIterationListener {
+public interface ProgressListener {
     public void update(int iterationNumber, int instanceNumber);
 }

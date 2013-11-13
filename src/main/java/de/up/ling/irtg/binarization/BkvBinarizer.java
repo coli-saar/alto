@@ -8,6 +8,7 @@ import com.google.common.base.Function;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.ProgressListener;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -60,6 +61,10 @@ public class BkvBinarizer {
     }
 
     public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String,Algebra> newAlgebras) {
+        return binarize(irtg, newAlgebras, null);
+    }
+    
+    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String,Algebra> newAlgebras, ProgressListener listener) {
         ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<String>();
         Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
         List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
@@ -71,6 +76,7 @@ public class BkvBinarizer {
             binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), oldHom.getTargetSignature()));
         }
 
+        int ruleNumber = 1;
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
             log("\n\n\nbinarizing rule: " + rule.toString(irtg.getAutomaton()));
 
@@ -107,6 +113,10 @@ public class BkvBinarizer {
                         addEntriesToHomomorphism(binarizedHom.get(interp), rb.xi, rb.binarizationTerms.get(interp));
                     }
                 }
+            }
+            
+            if( listener != null ) {
+                listener.update(ruleNumber++, 0);
             }
         }
 

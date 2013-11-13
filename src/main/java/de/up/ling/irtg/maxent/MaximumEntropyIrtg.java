@@ -3,7 +3,7 @@ package de.up.ling.irtg.maxent;
 import cc.mallet.optimize.LimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.TrainingIterationListener;
+import de.up.ling.irtg.ProgressListener;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.corpus.Corpus;
@@ -263,7 +263,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param corpus the training data containing sentences and their parse tree
      * @return true iff L-BFGS optimization was successful
      */
-    public boolean trainMaxent(final Corpus corpus, TrainingIterationListener listener) {
+    public boolean trainMaxent(final Corpus corpus, ProgressListener listener) {
         // create the optimzer with own optimizable class
         LimitedMemoryBFGS bfgs = new LimitedMemoryBFGS(new MaxEntIrtgOptimizable(corpus, listener));
 
@@ -373,7 +373,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         private double[] cachedGradient;
         private Corpus trainingData;
         private int iteration = 0;
-        private TrainingIterationListener listener;
+        private ProgressListener listener;
 
         /**
          * Constructor
@@ -382,7 +382,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
          * @param interp the training data may contain multiple interpretations.
          * This parameter tells us which one to use
          */
-        public MaxEntIrtgOptimizable(final Corpus corpus, final TrainingIterationListener listener) {
+        public MaxEntIrtgOptimizable(final Corpus corpus, final ProgressListener listener) {
             cachedStale = true;
             trainingData = corpus;
             cachedGradient = new double[getNumFeatures()];

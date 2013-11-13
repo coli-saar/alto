@@ -11,7 +11,16 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 
 /**
- *
+ * A regular seed that implements the identity function.
+ * This seed "binarizes" each operation symbol f of arity n over the
+ * algebra to a tree automaton whose language is {f(?1,...,?n)}.
+ * It is really useful in case the signature of the algebra
+ * already consists of symbols of arity two or less; in these cases,
+ * one can use an IdentitySeed to indicate that no rewriting needs
+ * to be done on the algebra terms. The IdentitySeed is not meant
+ * to be used with an algebra that contains symbols of higher arity.
+ * In those cases, the binarization may not actually have rank two.
+ * 
  * @author koller
  */
 public class IdentitySeed extends RegularSeed {
