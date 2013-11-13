@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Vector;
 import javax.swing.JProgressBar;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -590,7 +591,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                     public void run() {
                         final ProgressBarDialog pb = new ProgressBarDialog("Binarizing IRTG", irtg.getAutomaton().getRuleSet().size(), JTreeAutomaton.this, false);
                         pb.setVisible(true);
-                        
+
                         ProgressListener listener = new ProgressListener() {
                             public void update(int iterationNumber, int instanceNumber) {
                                 pb.update(iterationNumber);
@@ -599,22 +600,26 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
                         long startTime = System.nanoTime();
                         BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
-                        InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
+                        final InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
                         GuiMain.log("Binarized IRTG, " + GuiMain.formatTimeSince(startTime));
-                        
-                        pb.setVisible(false);
 
-                        JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
-                        jta.setTitle("Binarization of " + getTitle());
-                        jta.setIrtg(binarized);
-                        jta.setParsingEnabled(true);
-                        jta.pack();
-                        jta.setVisible(true);
+                        SwingUtilities.invokeLater(new Runnable() {
+                            public void run() {
+                                pb.setVisible(false);
+
+                                JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
+                                jta.setTitle("Binarization of " + getTitle());
+                                jta.setIrtg(binarized);
+                                jta.setParsingEnabled(true);
+                                jta.pack();
+                                jta.setVisible(true);
+                            }
+                        });
                     }
                 }.start();
             }
         }
-                        
+
     }//GEN-LAST:event_miBinarizeActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
