@@ -1,0 +1,18 @@
+interpretation left: de.up.ling.irtg.algebra.WideStringAlgebra
+interpretation right: de.up.ling.irtg.algebra.WideStringAlgebra
+
+A! -> r1(B,C,D) [2]
+[left]  conc3(?1, ?2, ?3)
+[right] conc4(?3, a, ?1, ?2)
+
+B -> r2
+[left] b
+[right] b
+
+C -> r3
+[left] c
+[right] c
+
+D -> r4
+[left] d
+[right] d

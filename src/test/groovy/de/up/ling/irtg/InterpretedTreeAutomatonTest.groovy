@@ -115,8 +115,6 @@ S -> r2
 
    @Test
    public void testEmAbab() {
-       System.err.println("******");
-       
        InterpretedTreeAutomaton irtg = trainEM(AB_IRTG, AB_CORPUS);
 
        assertAlmostEquals(1.0/3, getRuleWeight("r1", ["S", "S"], irtg.getAutomaton()));
