@@ -1,0 +1,73 @@
+/**
+ * JavaCC file
+ */
+
+
+options {
+  JDK_VERSION = "1.5";
+  STATIC = false;
+  LOOKAHEAD=2; // speed up parser by removing this and fixing choice conflict in ctt() differently
+  FORCE_LA_CHECK=true;
+}
+PARSER_BEGIN(IsiAmrParser)
+package de.up.ling.irtg.algebra.graph;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.*;
+import java.io.*;
+import org.jgrapht.*;
+import org.jgrapht.graph.*;
+
+/**
+ * Parser for sets of strings and sets of tuples of strings,
+ * e.g. "{a, b, c}" or "{(a,b), (c,d)}".
+ * @author Alexander Koller
+ */
+public class IsiAmrParser {
+    // private static IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
+    private DirectedGraph<String,DefaultEdge> graph = null;
+
+	public static DirectedGraph<String,DefaultEdge> parse(Reader reader) throws ParseException{
+		IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
+                parser.ReInit(reader);
+                parser.graph = new ListenableDirectedGraph<String,DefaultEdge>(DefaultEdge.class);
+
+                parser.node();
+		return parser.graph;
+	}
+}
+PARSER_END(IsiAmrParser)
+
+SKIP : { " " | "\t" }
+
+TOKEN :
+{
+    <NAME: ( ~["(", " ", "\t", ":", "\"", "\'"] (~[" ", "\t", "\n"])* )> |
+    <EDGE: [":"] (~[" ", "\t", "\n"])*> |
+    <DOUBLE_QUOTED_TOKEN: "\"" (~["\""])* "\"">
+}
+
+String node() :
+{
+  String nodename;
+  String nodelabel;
+  String edgelabel;
+  String edgeTarget;  
+}
+{
+  "(" (nodename=token() "/" nodelabel=token()  { })
+      (edgelabel=<EDGE>.image  edgeTarget=node() {  })*
+  ")" { return nodename; }
+  | nodename=token() { return nodename; }
+}
+
+String token() :
+{
+    Token tok;
+}
+{
+    tok = <NAME> { return tok.image; }
+    | tok = <DOUBLE_QUOTED_TOKEN> { return tok.image.substring(1, tok.image.length()-1); }
+}
