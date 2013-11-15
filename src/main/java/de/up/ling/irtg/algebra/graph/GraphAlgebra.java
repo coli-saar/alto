@@ -12,20 +12,22 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import java.io.StringReader;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import org.jgraph.JGraph;
 import org.jgrapht.DirectedGraph;
-import org.jgrapht.EdgeFactory;
 import org.jgrapht.ext.JGraphModelAdapter;
 import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DirectedMultigraph;
 
 /**
  *
  * @author koller
  */
-public class GraphAlgebra extends Algebra<DirectedGraph<String, String>> {
+public class GraphAlgebra extends Algebra<DirectedGraph<GraphNode, GraphEdge>> {
 
     public static void main(String[] args) {
         DirectedGraph<GraphNode, GraphEdge> graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
@@ -76,33 +78,47 @@ public class GraphAlgebra extends Algebra<DirectedGraph<String, String>> {
         frame.setTitle("JGraphT Adapter to JGraph Demo");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
-//        frame.setSize(500, 500);
         frame.setVisible(true);
     }
 
     @Override
-    public DirectedGraph<String, String> evaluate(Tree<String> t) {
-        DirectedGraph<String, String> x = new DirectedMultigraph<String, String>(String.class);
-
-        x.addVertex("x");
-        x.addEdge(null, null, null);
-
-
+    public DirectedGraph<GraphNode, GraphEdge> evaluate(Tree<String> t) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public TreeAutomaton decompose(DirectedGraph<String, String> value) {
+    public TreeAutomaton decompose(DirectedGraph<GraphNode, GraphEdge> value) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public DirectedGraph<String, String> parseString(String representation) throws ParserException {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public DirectedGraph<GraphNode, GraphEdge> parseString(String representation) throws ParserException {
+        try {
+            return IsiAmrParser.parse(new StringReader(representation));
+        } catch (ParseException ex) {
+            throw new ParserException(ex);
+        }
     }
 
     @Override
     public Signature getSignature() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
+
+    @Override
+    public JComponent visualize(DirectedGraph<GraphNode, GraphEdge> graph) {
+        JGraphModelAdapter<GraphNode, GraphEdge> adapter = new JGraphModelAdapter<GraphNode, GraphEdge>(graph);
+        JGraph jgraph = new JGraph(adapter);
+
+        JGraphFacade facade = new JGraphFacade(jgraph);
+        JGraphLayout layout = new JGraphHierarchicalLayout();
+        layout.run(facade);
+
+        final Map nestedMap = facade.createNestedMap(true, true);
+        jgraph.getGraphLayoutCache().edit(nestedMap);
+        
+        return jgraph;
+    }
+    
+    
 }
