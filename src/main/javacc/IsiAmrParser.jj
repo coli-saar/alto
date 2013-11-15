@@ -6,7 +6,6 @@
 options {
   JDK_VERSION = "1.5";
   STATIC = false;
-  LOOKAHEAD=2; // speed up parser by removing this and fixing choice conflict in ctt() differently
   FORCE_LA_CHECK=true;
 }
 PARSER_BEGIN(IsiAmrParser)

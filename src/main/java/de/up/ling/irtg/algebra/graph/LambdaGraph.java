@@ -44,7 +44,7 @@ public class LambdaGraph {
     }
     
     public GraphNode addAnonymousNode(String label) {
-        GraphNode u = new GraphNode(gensym(), label);
+        GraphNode u = new GraphNode(gensym("_u"), label);
         graph.addVertex(u);
         return u;
     }
@@ -76,6 +76,22 @@ public class LambdaGraph {
     }
     
     
+    // g1 + apply(g2, [a,b,c]) = renameNodes().addAll(renameNodes(g2).bindVariables(List(a,b,c))) 
+    
+    public LambdaGraph renameNodes() {
+        return null;
+    }
+    
+    public LambdaGraph addAll(LambdaGraph other) {
+        return this;
+    }
+    
+    public LambdaGraph apply(List<GraphNode> nodes) {
+        return this;
+    }
+    
+    
+    
 
     @Override
     public String toString() {
@@ -88,8 +104,8 @@ public class LambdaGraph {
         return varpart + " -> " + graph;
     }
     
-    private String gensym() {
-        return "_u" + (nextGensym++);
+    private String gensym(String prefix) {
+        return prefix + (nextGensym++);
     }
     
     
