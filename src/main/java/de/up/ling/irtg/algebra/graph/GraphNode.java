@@ -17,6 +17,16 @@ class GraphNode {
         this.label = label;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getLabel() {
+        return label;
+    }
+    
+    
+
     @Override
     public String toString() {
         return label;

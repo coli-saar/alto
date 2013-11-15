@@ -26,26 +26,19 @@ import org.jgrapht.graph.*;
  * @author Alexander Koller
  */
 public class IsiAmrParser {
-    // private static IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
-    private DirectedGraph<GraphNode,GraphEdge> graph = null;
-    private Map<String,GraphNode> nodes = null;
-    private int nextGensym = 1;
+    private LambdaGraph graph = null;
 
-	public static DirectedGraph<GraphNode,GraphEdge> parse(Reader reader) throws ParseException{
+	public static LambdaGraph parse(Reader reader) throws ParseException {
 		IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
 
                 parser.ReInit(reader);
 
-                parser.graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
-                parser.nodes = new HashMap<String,GraphNode>();
+                parser.graph = new LambdaGraph();
 
-                parser.node();
+                parser.graph();
 		return parser.graph;
 	}
 
-        private String gensym() {
-            return "_n" + (nextGensym++);
-        }
 }
 PARSER_END(IsiAmrParser)
 
@@ -53,10 +46,26 @@ SKIP : { " " | "\t" | "\n" | "\r" }
 
 TOKEN :
 {
-    <NAME: ( ~["(", ")", " ", "\t", "\n", "\r", ":", "\"", "\'", "/"] (~[" ", "\t", "\n", "\r", ")"])* )> |
+    <NAME: ( ~["\\", ",", "(", ")", " ", "\t", "\n", "\r", ":", "\"", "\'", "/"] (~[" ", "\t", "\n", "\r", "(", ")", ","])* )> |
     <EDGE: [":"] (~[" ", "\t", "\n"])*> |
     <DOUBLE_QUOTED_TOKEN: "\"" (~["\""])* "\"">
 }
+
+void graph() :
+{
+    GraphNode g;
+    String name;
+    List<String> vars = new ArrayList<String>();
+}{
+    ("\\" name=token() { vars.add(name); }
+          ("," name=token() {vars.add(name);})*    )?
+    g = node() {
+      for( String v : vars ) {
+        graph.addVariable(graph.getNode(v));
+      }
+    }
+}
+
 
 GraphNode node() :
 {
@@ -68,22 +77,17 @@ GraphNode node() :
 }
 {
   "(" (nodename=token() "/" nodelabel=token()  {
-         u = new GraphNode(nodename, nodelabel);
-         nodes.put(nodename, u);
-         graph.addVertex(u);
+         u = graph.addNode(nodename, nodelabel);
        })
       (edgelabel=edge()  edgeTarget=node() {
-         GraphEdge e = graph.addEdge(u, edgeTarget);
-         e.setLabel(edgelabel);
+         graph.addEdge(u, edgeTarget, edgelabel);
        })*
   ")" { return u; }
   | nodename=token() { 
-       if( nodes.containsKey(nodename) ) {
-        return nodes.get(nodename);
+       if( graph.containsNode(nodename) ) {
+        return graph.getNode(nodename);
        } else {
-        u = new GraphNode(gensym(), nodename);
-        graph.addVertex(u);
-        return u;
+        return graph.addAnonymousNode(nodename);
        }
    }
 }

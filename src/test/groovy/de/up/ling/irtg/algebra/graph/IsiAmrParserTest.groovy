@@ -42,8 +42,8 @@ import org.jgrapht.graph.*;
 class IsiAmrParserTest {
     @Test
     public void testSimple() {
-        DirectedGraph<GraphNode,GraphEdge> graph = IsiAmrParser.parse(new StringReader(AMR1));
-        System.err.println(graph);
+        LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR1));
+//        System.err.println(graph);
 //        GraphAlgebra.drawGraph(graph);
         
 //        Thread.sleep(10000);
@@ -51,7 +51,7 @@ class IsiAmrParserTest {
     
     @Test
     public void testComplex() {
-        DirectedGraph<GraphNode,GraphEdge> graph = IsiAmrParser.parse(new StringReader(AMR2));
+        LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR2));
 //        System.err.println(graph);
 //        GraphAlgebra.drawGraph(graph);
         
@@ -60,19 +60,37 @@ class IsiAmrParserTest {
     
     @Test
     public void testNoChildren() {
-        DirectedGraph<GraphNode,GraphEdge> graph = IsiAmrParser.parse(new StringReader(AMR4));
+        LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR4));
 //        System.err.println(graph);
-        GraphAlgebra.drawGraph(graph);
+//        GraphAlgebra.drawGraph(graph);
         
-        Thread.sleep(10000);
+//        Thread.sleep(10000);
     }
     
     @Test
     public void testCyclic() {
-        DirectedGraph<GraphNode,GraphEdge> graph = IsiAmrParser.parse(new StringReader(AMR3));
+        LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR3));
 
-        assert new CycleDetector(graph).detectCycles();
+        assert new CycleDetector(graph.getGraph()).detectCycles();
     }
+    
+    @Test
+    public void testVars() {
+        LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR5));
+        
+        System.err.println(graph);
+        
+        assertEquals("w", graph.getVariables().get(0).getName())
+        assertEquals("b", graph.getVariables().get(1).getName())
+    }
+    
+    private static final String AMR5 = """
+   \\w, b
+   (w / want-01
+  :ARG0 (b / boy)
+  :ARG1 (g / go-01
+          :ARG0 b))
+""";
     
     private static final String AMR1 = """(w / want-01
   :ARG0 (b / boy)
