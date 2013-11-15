@@ -27,40 +27,65 @@ import org.jgrapht.graph.*;
  */
 public class IsiAmrParser {
     // private static IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
-    private DirectedGraph<String,DefaultEdge> graph = null;
+    private DirectedGraph<GraphNode,GraphEdge> graph = null;
+    private Map<String,GraphNode> nodes = null;
+    private int nextGensym = 1;
 
-	public static DirectedGraph<String,DefaultEdge> parse(Reader reader) throws ParseException{
+	public static DirectedGraph<GraphNode,GraphEdge> parse(Reader reader) throws ParseException{
 		IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
+
                 parser.ReInit(reader);
-                parser.graph = new ListenableDirectedGraph<String,DefaultEdge>(DefaultEdge.class);
+
+                parser.graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
+                parser.nodes = new HashMap<String,GraphNode>();
 
                 parser.node();
 		return parser.graph;
 	}
+
+        private String gensym() {
+            return "_n" + (nextGensym++);
+        }
 }
 PARSER_END(IsiAmrParser)
 
-SKIP : { " " | "\t" }
+SKIP : { " " | "\t" | "\n" | "\r" }
 
 TOKEN :
 {
-    <NAME: ( ~["(", " ", "\t", ":", "\"", "\'"] (~[" ", "\t", "\n"])* )> |
+    <NAME: ( ~["(", ")", " ", "\t", "\n", "\r", ":", "\"", "\'", "/"] (~[" ", "\t", "\n", "\r", ")"])* )> |
     <EDGE: [":"] (~[" ", "\t", "\n"])*> |
     <DOUBLE_QUOTED_TOKEN: "\"" (~["\""])* "\"">
 }
 
-String node() :
+GraphNode node() :
 {
+  GraphNode u;
   String nodename;
   String nodelabel;
   String edgelabel;
-  String edgeTarget;  
+  GraphNode edgeTarget;  
 }
 {
-  "(" (nodename=token() "/" nodelabel=token()  { })
-      (edgelabel=<EDGE>.image  edgeTarget=node() {  })*
-  ")" { return nodename; }
-  | nodename=token() { return nodename; }
+  "(" (nodename=token() "/" nodelabel=token()  {
+         u = new GraphNode(nodename, nodelabel);
+         nodes.put(nodename, u);
+         graph.addVertex(u);
+       })
+      (edgelabel=edge()  edgeTarget=node() {
+         GraphEdge e = graph.addEdge(u, edgeTarget);
+         e.setLabel(edgelabel);
+       })*
+  ")" { return u; }
+  | nodename=token() { 
+       if( nodes.containsKey(nodename) ) {
+        return nodes.get(nodename);
+       } else {
+        u = new GraphNode(gensym(), nodename);
+        graph.addVertex(u);
+        return u;
+       }
+   }
 }
 
 String token() :
@@ -70,4 +95,11 @@ String token() :
 {
     tok = <NAME> { return tok.image; }
     | tok = <DOUBLE_QUOTED_TOKEN> { return tok.image.substring(1, tok.image.length()-1); }
+}
+
+String edge() :
+{
+    Token tok;
+}{
+    tok = <EDGE> { return tok.image.substring(1); }
 }
