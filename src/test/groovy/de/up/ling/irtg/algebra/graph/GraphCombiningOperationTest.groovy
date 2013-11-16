@@ -96,7 +96,7 @@ class GraphCombiningOperationTest {
         assertIsomorphic(pg(OP2), result);
     }
     
-    private static final String OP1 = "(w / want-01  :ARG0 (b)  :ARG1 (g)) + apply(?1, b) + apply(?2, g, b)";
+    private static final String OP1 = "(w / want-01  :ARG0 (b)  :ARG1 (g)) + ?1(b) + ?2(g, b)";
     private static final String OP2 = "\\g, b (g / go-01  :ARG0 (b))"
 }
 

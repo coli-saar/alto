@@ -46,7 +46,7 @@ class GraphAlgebraTest {
 	@Test
         public void testEvaluate() {
             GraphAlgebra alg = new GraphAlgebra()
-            Tree<String> term = Tree.create("(w / want-01  :ARG0 (b)  :ARG1 (g)) + apply(?1, b) + apply(?2, g, b)",
+            Tree<String> term = Tree.create("(w / want-01  :ARG0 (b)  :ARG1 (g)) + ?1(b) + ?2(g, b)",
                                     [Tree.create("\\x (x / boy)"), Tree.create("\\g, b (g / go-01  :ARG0 (b))")]);
                                 
             LambdaGraph result = alg.evaluate(term);

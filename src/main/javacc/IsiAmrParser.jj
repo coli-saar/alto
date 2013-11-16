@@ -80,7 +80,7 @@ Tree<OpNode> applyList(Tree<OpNode> term) :
     String t;
     List<String> args = new ArrayList<String>();
 }{
-    (<APPLY> "(" varnum = var() ("," t = token() { args.add(t); })* ")"
+    ("+" varnum = var()  ("(" (t = token() { args.add(t); }  ("," t = token() { args.add(t); })*)? ")")?
       {
         term = Tree.create(opCombine(args), new Tree[] { term, Tree.create(opVar(varnum)) });
         args = new ArrayList<String>();
