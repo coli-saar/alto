@@ -18,6 +18,8 @@ import java.util.*;
 import java.io.*;
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
+import de.up.ling.tree.*;
+import static de.up.ling.irtg.algebra.graph.GraphCombiningOperation.*;
 
 /**
  * Parser for sets of strings and sets of tuples of strings,
@@ -38,6 +40,17 @@ public class IsiAmrParser {
 		return parser.graph;
 	}
 
+        public static GraphCombiningOperation parseOperation(Reader reader) throws ParseException {
+		IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
+
+                parser.ReInit(reader);
+
+                parser.graph = new LambdaGraph();
+
+                Tree<OpNode> ops = parser.operation();
+		return new GraphCombiningOperation(ops);
+	}
+
 }
 PARSER_END(IsiAmrParser)
 
@@ -45,9 +58,34 @@ SKIP : { " " | "\t" | "\n" | "\r" }
 
 TOKEN :
 {
-    <NAME: ( ~["\\", ",", "(", ")", " ", "\t", "\n", "\r", ":", "\"", "\'", "/"] (~[" ", "\t", "\n", "\r", "(", ")", ","])* )> |
+    <NAME: ((["a"-"z", "A"-"Z", "-", "0"-"9", "."])+ )> |
     <EDGE: [":"] (~[" ", "\t", "\n"])*> |
+    <VAR:  ["?"] ((["0"-"9"])+)> |
+    <APPLY: "+" ([" ", "\t", "\r", "\n"])* "apply"> |
     <DOUBLE_QUOTED_TOKEN: "\"" (~["\""])* "\"">
+}
+
+Tree<OpNode> operation() :
+{
+    Tree<OpNode> graphOp;
+    Tree<OpNode> ret;
+}{
+    graph() { graphOp = Tree.create(opGraph(graph)); }
+    ret = applyList(graphOp) { return ret; }
+}
+
+Tree<OpNode> applyList(Tree<OpNode> term) :
+{
+    int varnum;
+    String t;
+    List<String> args = new ArrayList<String>();
+}{
+    (<APPLY> "(" varnum = var() ("," t = token() { args.add(t); })* ")"
+      {
+        term = Tree.create(opCombine(args), new Tree[] { term, Tree.create(opVar(varnum)) });
+        args = new ArrayList<String>();
+      }
+    )* { return term; }
 }
 
 void graph() :
@@ -105,4 +143,11 @@ String edge() :
     Token tok;
 }{
     tok = <EDGE> { return tok.image.substring(1); }
+}
+
+int var() :
+{
+    Token tok;
+}{
+    tok = <VAR> { return Integer.parseInt(tok.image.substring(1)) - 1; }
 }

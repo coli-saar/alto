@@ -58,12 +58,23 @@ public class GraphCombiningOperation {
         });
     }
 
+    public Tree<OpNode> getOps() {
+        return ops;
+    }
+    
+    
+
     static enum Op {
         GRAPH, COMBINE, VAR
     };
 
     static class OpNode {
         Op operation;
+
+        @Override
+        public boolean equals(Object obj) {
+            return toString().equals(obj.toString());
+        }
     }
 
     static class GraphOpNode extends OpNode {

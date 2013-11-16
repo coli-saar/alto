@@ -44,28 +44,16 @@ class IsiAmrParserTest {
     @Test
     public void testSimple() {
         LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR1));
-        //        System.err.println(graph);
-        //        GraphAlgebra.drawGraph(graph);
-        
-        //        Thread.sleep(10000);
     }
     
     @Test
     public void testComplex() {
         LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR2));
-        //        System.err.println(graph);
-        //        GraphAlgebra.drawGraph(graph);
-        
-        //        Thread.sleep(10000);
     }
     
     @Test
     public void testNoChildren() {
         LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR4));
-        //        System.err.println(graph);
-        //        GraphAlgebra.drawGraph(graph);
-        
-        //        Thread.sleep(10000);
     }
     
     @Test
@@ -78,8 +66,6 @@ class IsiAmrParserTest {
     @Test
     public void testVars() {
         LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR5));
-        
-        //        System.err.println(graph);
         
         assertEquals("w", graph.getVariables().get(0).getName())
         assertEquals("b", graph.getVariables().get(1).getName())

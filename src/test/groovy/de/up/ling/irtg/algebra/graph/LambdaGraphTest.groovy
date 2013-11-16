@@ -116,24 +116,7 @@ class LambdaGraphTest {
         result.getGraph().vertexSet().each { assert ! it.getName().equals("b") }
     }
     
-    @Test
-    public void testEvaluate() {
-        LambdaGraph g1 = IsiAmrParser.parse(new StringReader("(w / want-01  :ARG0 (b)  :ARG1 (g))"));
-        LambdaGraph g2 = IsiAmrParser.parse(new StringReader("\\x (x / boy)"));
-        LambdaGraph g3 = IsiAmrParser.parse(new StringReader("\\x, y (x / go-01  :ARG0 (y))"));
-        
-        Tree term = Tree.create(GraphCombiningOperation.opCombine(["g", "b"]),
-                                Tree.create(GraphCombiningOperation.opCombine(["b"]),
-                                       Tree.create(GraphCombiningOperation.opGraph(g1)),
-                                       Tree.create(GraphCombiningOperation.opVar(0))),
-                                Tree.create(GraphCombiningOperation.opVar(1)));
-
-        GraphCombiningOperation gco = new GraphCombiningOperation(term)
-        
-        LambdaGraph result = gco.evaluate([g2, g3]);
-        
-        assertIsomorphic(pg(IsiAmrParserTest.AMR1), result);
-    }
+    
     
 }
 
