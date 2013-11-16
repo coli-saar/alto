@@ -53,5 +53,41 @@ class GraphAlgebraTest {
             
             assertIsomorphic(pg(IsiAmrParserTest.AMR1), result);
         }
+        
+        @Test
+        public void testDecompose() {
+            InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(HRG));
+            TreeAutomaton decomp = irtg.getInterpretation("graph").getAlgebra().decompose(pg(IsiAmrParserTest.AMR1));
+            
+            assert decomp.accepts(pt("'(w / want-01  :ARG0 (b)  :ARG1 (g)) + ?1(b) + ?2(g, b)'('\\x (x / boy)', '\\x, y (x / go-01  :ARG0 (y))')"))
+        }
+        
+        @Test
+        public void testParse() {
+            InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(HRG));
+            TreeAutomaton chart = irtg.parse(["graph": IsiAmrParserTest.AMR1]);
+            
+            assertEquals(new HashSet([pt("want(boy,go)")]), chart.language())
+        }
+        
+    
+    private static final String HRG = '''
+    interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+S! -> want(NP, VP)
+[string] *(?1, *(wants, *(to, ?2)))
+[graph]  "(w / want-01  :ARG0 (b)  :ARG1 (g)) + ?1(b) + ?2(g, b)" (?1, ?2)
+
+NP -> boy
+[string] *(the, boy)
+[graph]  "\\x (x / boy)"
+
+VP -> go
+[string] go
+[graph]  "\\x, y (x / go-01  :ARG0 (y))"
+
+
+''';
 }
 

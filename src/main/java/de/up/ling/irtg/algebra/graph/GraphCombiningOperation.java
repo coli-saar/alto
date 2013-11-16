@@ -41,8 +41,17 @@ public class GraphCombiningOperation {
                         break;
 
                     case COMBINE:
-                        LambdaGraph fun = childrenValues.get(0);
+                        if( childrenValues.size() != 2 || childrenValues.get(0) == null || childrenValues.get(1) == null ) {
+                            return null;
+                        }
+                        
+                        LambdaGraph fun = childrenValues.get(0);                        
                         List<String> args = ((CombineOpNode) op).args;
+                        
+                        if( args.size() != childrenValues.get(1).getVariables().size() ) {
+                            return null;
+                        }
+                        
                         List<String> renamedArgs = Lists.newArrayList(Iterables.transform(args, fun.renameNodeF()));
                         LambdaGraph arg = childrenValues.get(1).apply(renamedArgs);
                         ret = fun.merge(arg);

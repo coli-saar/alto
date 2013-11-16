@@ -14,6 +14,7 @@ import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
  * @author koller
  */
 class Util {
+    
     public static void assertIsomorphic(LambdaGraph gold, LambdaGraph result, Boolean expectedResult) {
         GraphIsomorphismInspector iso =
                 AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(

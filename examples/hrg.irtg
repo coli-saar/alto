@@ -1,3 +1,13 @@
+/* A synchronous grammar that translates between strings and
+   semantic representations, represented as graphs.
+
+   Try parsing this sentence: "the boy wants to go"
+
+   And parsing this graph: (w / want-01  :ARG0 (b / boy)  :ARG1 (g / go-01 :ARG0 b))
+*/
+
+
+
 interpretation string: de.up.ling.irtg.algebra.StringAlgebra
 interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 
@@ -10,7 +20,7 @@ NP -> boy
 [graph]  "\x (x / boy)"
 
 VP -> go
-[string] *(to, go)
+[string] go
 [graph]  "\x, y (x / go-01  :ARG0 (y))"
 
 

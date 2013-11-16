@@ -105,7 +105,8 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
 
         public EvaluatingDecompositionAutomaton(E finalElement) {
             super(EvaluatingAlgebra.this.getSignature());
-            finalStates.add(addState(finalElement));
+            int x = addState(finalElement);
+            finalStates.add(x);
         }
 
         @Override
@@ -132,11 +133,11 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
 
                     // require that set in parent state must be non-empty; otherwise there is simply no rule
                     if (parents != null && isValidValue(parents)) {
-                        Rule rule = createRule(addState(parents), labelId, childStates, 1);
+                        int parentStateId = addState(parents);
+                        
+                        Rule rule = createRule(parentStateId, labelId, childStates, 1);
                         ret.add(rule);
                         storeRule(rule);
-
-//                        System.err.println("set decomp rule: " + rule.toString(this));
                     }
                 }
 

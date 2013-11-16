@@ -116,7 +116,28 @@ class LambdaGraphTest {
         result.getGraph().vertexSet().each { assert ! it.getName().equals("b") }
     }
     
+    @Test
+    public void testEquals() {
+        LambdaGraph g = IsiAmrParser.parse(new StringReader("\\g, b (g / go-01  :ARG0 (b))"));
+        LambdaGraph g2 = g.renameNodes();
+        
+        assert g.equals(g2)
+        assert g2.equals(g)
+    }
     
+    @Test
+    public void testHashcode() {
+        LambdaGraph g = IsiAmrParser.parse(new StringReader("\\g, b (g / go-01  :ARG0 (b))"));
+        LambdaGraph g2 = g.renameNodes();
+        
+        Set<LambdaGraph> x = new HashSet();
+        x.add(g);
+        assert x.contains(g2);
+        
+        x.clear();
+        x.add(g2);
+        assert x.contains(g);
+    }
     
 }
 

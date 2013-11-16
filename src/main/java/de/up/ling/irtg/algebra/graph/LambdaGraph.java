@@ -17,6 +17,8 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import org.jgraph.JGraph;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
+import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
 import org.jgrapht.ext.JGraphModelAdapter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
@@ -30,6 +32,8 @@ public class LambdaGraph {
     private List<GraphNode> variables;
     private Map<String, String> oldToNewName;  // in renamed graph: nodename in original graph -> nodename in new graph
     private int nextGensym = 1;
+    private int cachedHashcode;
+    private boolean hasCachedHashcode = false;
 
     public LambdaGraph() {
         graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
@@ -42,23 +46,27 @@ public class LambdaGraph {
         GraphNode u = new GraphNode(name, label);
         graph.addVertex(u);
         nameToNode.put(name, u);
+        hasCachedHashcode = false;
         return u;
     }
 
     public GraphNode addAnonymousNode(String label) {
         GraphNode u = new GraphNode(gensym("_u"), label);
         graph.addVertex(u);
+        hasCachedHashcode = false;
         return u;
     }
 
     public GraphEdge addEdge(GraphNode src, GraphNode tgt, String label) {
         GraphEdge e = graph.addEdge(src, tgt);
         e.setLabel(label);
+        hasCachedHashcode = false;
         return e;
     }
 
     public void addVariable(GraphNode node) {
         variables.add(node);
+        hasCachedHashcode = false;
     }
 
     public GraphNode getNode(String name) {
@@ -149,10 +157,14 @@ public class LambdaGraph {
         for (GraphEdge edge : other.graph.edgeSet()) {
             addEdge(getNode(edge.getSource().getName()), getNode(edge.getTarget().getName()), edge.getLabel());
         }
+        
+        other.hasCachedHashcode = false;
+        hasCachedHashcode = false;
 
         return this;
     }
 
+    // leaves "this" untouched
     public LambdaGraph apply(List<String> nodeNames) {
         LambdaGraph ret = new LambdaGraph();
         Map<GraphNode, GraphNode> varnodeToNodeCopy = new HashMap<GraphNode, GraphNode>();
@@ -163,18 +175,14 @@ public class LambdaGraph {
             varnodeToNodeCopy.put(variables.get(i), copy);
         }
 
-//        System.err.println("copies: " + Iterables.transform(nodeCopies, GraphNode.reprF));
-
         for (GraphNode node : graph.vertexSet()) {
-//            System.err.println("consider " + node.repr());
             GraphNode copyForVarnode = varnodeToNodeCopy.get(node);
 
             if (copyForVarnode != null) {
                 // node is variable node
                 copyForVarnode.setLabel(node.getLabel());
             } else {
-                GraphNode newNode = ret.addNode(node.getName(), node.getLabel());
-//                System.err.println(" -> added " + newNode.repr());
+                ret.addNode(node.getName(), node.getLabel());
             }
         }
 
@@ -232,4 +240,48 @@ public class LambdaGraph {
         frame.setVisible(true);
     }
 
+    @Override
+    public int hashCode() {
+        if( hasCachedHashcode ) {
+            return cachedHashcode;
+        } else {
+            cachedHashcode = 0;
+            
+            for( GraphEdge edge : graph.edgeSet() ) {
+                cachedHashcode += (edge.getSource().getLabel() + "/" + edge.getLabel() + "/" + edge.getTarget().getLabel()).hashCode();
+            }
+            
+            hasCachedHashcode = true;
+            return cachedHashcode;
+        }
+    }
+    
+    public boolean isIsomorphic(LambdaGraph other) {
+        GraphIsomorphismInspector iso =
+                AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
+                getGraph(),
+                other.getGraph(),
+                new GraphNode.NodeLabelEquivalenceComparator(),
+                null);
+        
+        // TODO - check variables
+        
+        return iso.isIsomorphic();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        
+        final LambdaGraph other = (LambdaGraph) obj;
+        
+        return isIsomorphic(other);
+    }
+
+    
 }
