@@ -126,6 +126,15 @@ class LambdaGraphTest {
     }
     
     @Test
+    public void testNonequalsVariables() {
+        LambdaGraph g = IsiAmrParser.parse(new StringReader("\\g, b (g / go-01  :ARG0 (b))"));
+        LambdaGraph g2 = IsiAmrParser.parse(new StringReader("\\b (g / go-01  :ARG0 (b))"));
+        
+        assert ! g.equals(g2)
+        assert ! g2.equals(g)
+    }
+    
+    @Test
     public void testHashcode() {
         LambdaGraph g = IsiAmrParser.parse(new StringReader("\\g, b (g / go-01  :ARG0 (b))"));
         LambdaGraph g2 = g.renameNodes();

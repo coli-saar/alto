@@ -19,6 +19,7 @@ import org.jgraph.JGraph;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
 import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
+import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
 import org.jgrapht.ext.JGraphModelAdapter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
@@ -157,7 +158,7 @@ public class LambdaGraph {
         for (GraphEdge edge : other.graph.edgeSet()) {
             addEdge(getNode(edge.getSource().getName()), getNode(edge.getTarget().getName()), edge.getLabel());
         }
-        
+
         other.hasCachedHashcode = false;
         hasCachedHashcode = false;
 
@@ -242,20 +243,23 @@ public class LambdaGraph {
 
     @Override
     public int hashCode() {
-        if( hasCachedHashcode ) {
+        if (hasCachedHashcode) {
             return cachedHashcode;
         } else {
-            cachedHashcode = 0;
+            cachedHashcode = 17 * variables.size();
             
-            for( GraphEdge edge : graph.edgeSet() ) {
-                cachedHashcode += (edge.getSource().getLabel() + "/" + edge.getLabel() + "/" + edge.getTarget().getLabel()).hashCode();
+            for (GraphEdge edge : graph.edgeSet()) {
+                int x = edge.getSource().getLabel() == null ? 29 : 5*edge.getSource().getLabel().hashCode();
+                int y = edge.getLabel() == null ? 31 : 7*edge.getLabel().hashCode();
+                int z = edge.getTarget().getLabel() == null ? 41 : 11*edge.getTarget().getLabel().hashCode();
+                cachedHashcode += x + y + z;  // this needs to be equal for different orders in which the edges are enumerated
             }
-            
+
             hasCachedHashcode = true;
             return cachedHashcode;
         }
     }
-    
+
     public boolean isIsomorphic(LambdaGraph other) {
         GraphIsomorphismInspector iso =
                 AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
@@ -263,10 +267,27 @@ public class LambdaGraph {
                 other.getGraph(),
                 new GraphNode.NodeLabelEquivalenceComparator(),
                 null);
-        
-        // TODO - check variables
-        
-        return iso.isIsomorphic();
+
+        if (!iso.isIsomorphic()) {
+            return false;
+        } else {
+            while (iso.hasNext()) {
+                final IsomorphismRelation<GraphNode, GraphEdge> ir = (IsomorphismRelation<GraphNode, GraphEdge>) iso.next();
+                List<GraphNode> rewrittenVariables = new ArrayList<GraphNode>();
+
+                Iterables.addAll(rewrittenVariables, Iterables.transform(variables, new Function<GraphNode, GraphNode>() {
+                    public GraphNode apply(GraphNode f) {
+                        return ir.getVertexCorrespondence(f, true);
+                    }
+                }));
+
+                if (rewrittenVariables.equals(other.variables)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     @Override
@@ -277,11 +298,9 @@ public class LambdaGraph {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        
+
         final LambdaGraph other = (LambdaGraph) obj;
-        
+
         return isIsomorphic(other);
     }
-
-    
 }

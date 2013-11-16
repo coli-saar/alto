@@ -6,7 +6,6 @@ package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.signature.Signature;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
@@ -19,11 +18,9 @@ import javax.swing.JComponent;
  */
 public class GraphAlgebra extends EvaluatingAlgebra<LambdaGraph> {
     private Map<String, GraphCombiningOperation> operations;
-//    private Signature signature;
 
     public GraphAlgebra() {
         operations = new HashMap<String, GraphCombiningOperation>();
-//        signature = new Signature();
     }
 
     protected GraphCombiningOperation op(String opDescription, int arity) throws ParseException {
@@ -37,21 +34,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<LambdaGraph> {
 
         return ret;
     }
-//
-//    @Override
-//    public LambdaGraph evaluate(Tree<String> t) {
-//        return t.dfs(new TreeVisitor<String, Void, LambdaGraph>() {
-//            @Override
-//            public LambdaGraph combine(Tree<String> node, List<LambdaGraph> childrenValues) {
-//                try {
-//                    GraphCombiningOperation op = op(node.getLabel(), childrenValues.size());
-//                    return op.evaluate(childrenValues);
-//                } catch (ParseException ex) {
-//                    throw new IllegalArgumentException("Could not parse operation \"" + node.getLabel() + "\": " + ex.getMessage());
-//                }
-//            }
-//        });
-//    }
 
     @Override
     protected LambdaGraph evaluate(String label, List<LambdaGraph> childrenValues) {
@@ -76,11 +58,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<LambdaGraph> {
             throw new ParserException(ex);
         }
     }
-//
-//    @Override
-//    public Signature getSignature() {
-//        return signature;
-//    }
 
     @Override
     public JComponent visualize(LambdaGraph graph) {
