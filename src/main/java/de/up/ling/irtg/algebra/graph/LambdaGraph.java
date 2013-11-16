@@ -6,16 +6,34 @@ package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
+import com.jgraph.layout.JGraphFacade;
+import com.jgraph.layout.JGraphLayout;
+import com.jgraph.layout.hierarchical.JGraphHierarchicalLayout;
+import java.awt.Color;
+import java.awt.geom.Rectangle2D;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Pattern;
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import org.jgraph.JGraph;
+import org.jgraph.graph.AttributeMap;
+import org.jgraph.graph.DefaultEdge;
+import org.jgraph.graph.DefaultGraphCell;
+import org.jgraph.graph.GraphConstants;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.Graph;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
 import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
 import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
+import org.jgrapht.ext.JGraphModelAdapter;
+import org.jgrapht.ext.JGraphModelAdapter.CellFactory;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 /**
@@ -211,45 +229,85 @@ public class LambdaGraph {
     private String gensym(String prefix) {
         return prefix + "_" + (nextGensym++);
     }
-//
-//    private static class MyModelAdapter extends JGraphModelAdapter<GraphNode, GraphEdge> {
-//        public MyModelAdapter(Graph<GraphNode, GraphEdge> graph) {
-//            super(graph);
-//        }
-//
-//        @Override
-//        public AttributeMap getDefaultEdgeAttributes() {
-//            AttributeMap map = new AttributeMap();
-//
-//            GraphConstants.setLineEnd(map, GraphConstants.ARROW_TECHNICAL);
-//            GraphConstants.setEndFill(map, true);
-//            GraphConstants.setEndSize(map, 10);
-//
-//            GraphConstants.setForeground(map, Color.decode("#25507C"));
-//            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
-//            GraphConstants.setLineColor(map, Color.decode("#7AA1E6"));
-//
-//            return map;
-//        }
-//
-//        @Override
-//        public AttributeMap getDefaultVertexAttributes() {
-//            AttributeMap map = new AttributeMap();
-//
-//            GraphConstants.setBounds(map, new Rectangle2D.Double(50, 50, 90, 30));
-//            GraphConstants.setBorder(map, BorderFactory.createLineBorder(Color.black));
-//            GraphConstants.setForeground(map, Color.black);
-////            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
-//            GraphConstants.setOpaque(map, true);
-//            GraphConstants.setBackground(map, Color.white);
-//
-//            return map;
-//        }
-//    }
 
-    
+    private static class MyModelAdapter extends JGraphModelAdapter<GraphNode, GraphEdge> {
+        private CellFactory<GraphNode, GraphEdge> cf;
+
+        public MyModelAdapter(Graph<GraphNode, GraphEdge> graph) {
+            super(graph);
+
+            cf = new MappingCellFactory<GraphNode, GraphEdge, String, String>(GraphNode.labelF, GraphEdge.labelF);
+        }
+
+        @Override
+        public AttributeMap getDefaultEdgeAttributes() {
+            AttributeMap map = new AttributeMap();
+
+            GraphConstants.setLineEnd(map, GraphConstants.ARROW_TECHNICAL);
+            GraphConstants.setEndFill(map, true);
+            GraphConstants.setEndSize(map, 10);
+
+            GraphConstants.setForeground(map, Color.black);
+//            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
+            GraphConstants.setLineColor(map, Color.decode("#7AA1E6"));
+
+            return map;
+        }
+
+        @Override
+        public AttributeMap getDefaultVertexAttributes() {
+            AttributeMap map = new AttributeMap();
+
+            GraphConstants.setBounds(map, new Rectangle2D.Double(50, 50, 90, 30));
+            GraphConstants.setBorder(map, BorderFactory.createLineBorder(Color.black));
+            GraphConstants.setForeground(map, Color.black);
+//            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
+            GraphConstants.setOpaque(map, true);
+            GraphConstants.setBackground(map, Color.white);
+
+            return map;
+        }
+
+        @Override
+        public CellFactory<GraphNode, GraphEdge> getCellFactory() {
+            return cf;
+        }
+    }
+
+    public static class MappingCellFactory<VV, EE, VU, EU> implements CellFactory<VV, EE>, Serializable {
+        private static final long serialVersionUID = 3690194343461861173L;
+        private Function<VV, VU> nodeMapper;
+        private Function<EE, EU> edgeMapper;
+
+        public MappingCellFactory(Function<VV, VU> nodeMapper, Function<EE, EU> edgeMapper) {
+            this.nodeMapper = nodeMapper;
+            this.edgeMapper = edgeMapper;
+        }
+
+        public DefaultEdge createEdgeCell(EE jGraphTEdge) {
+            return new DefaultEdge(edgeMapper.apply(jGraphTEdge));
+        }
+
+        public DefaultGraphCell createVertexCell(VV jGraphTVertex) {
+            return new DefaultGraphCell(nodeMapper.apply(jGraphTVertex));
+        }
+    }
+
     public JComponent makeComponent() {
-        return JGraphXAdapter.makeComponent(graph, GraphNode.labelF, GraphEdge.labelF);
+        JGraphModelAdapter<GraphNode, GraphEdge> adapter = new MyModelAdapter(graph);
+
+        JGraph jgraph = new JGraph(adapter);
+
+        JGraphFacade facade = new JGraphFacade(jgraph);
+        JGraphLayout layout = new JGraphHierarchicalLayout();
+        layout.run(facade);
+
+        final Map nestedMap = facade.createNestedMap(true, true);
+        jgraph.getGraphLayoutCache().edit(nestedMap);
+
+        return jgraph;
+
+//        return JGraphXAdapter.makeComponent(graph, GraphNode.labelF, GraphEdge.labelF);
     }
 
     public void draw() {
@@ -323,5 +381,55 @@ public class LambdaGraph {
         final LambdaGraph other = (LambdaGraph) obj;
 
         return isIsomorphic(other);
+    }
+    private static final Pattern TOKEN_PATTERN = Pattern.compile("[-a-zA-z0-9]+");
+
+    private static String p(String s) {
+        if (TOKEN_PATTERN.matcher(s).matches()) {
+            return s;
+        } else {
+            return "\"" + s + "\"";
+        }
+    }
+
+    private void toAmrVisit(GraphNode u, Set<GraphNode> visitedNodes, StringBuilder ret) {
+        if (visitedNodes.contains(u)) {
+            ret.append(u.getName());
+        } else {
+            boolean nameShown = false;
+
+            visitedNodes.add(u);
+
+            if (!u.getName().startsWith("_")) { // suppress anonymous nodes
+                ret.append("(");
+                ret.append(p(u.getName()));
+                nameShown = true;
+            }
+
+            if (u.getLabel() != null) {
+                if (nameShown) {
+                    ret.append(" / ");
+                }
+                ret.append(p(u.getLabel()));
+            }
+
+            for (GraphEdge e : graph.outgoingEdgesOf(u)) {
+                ret.append("  :" + e.getLabel() + " ");
+                toAmrVisit(e.getTarget(), visitedNodes, ret);
+            }
+
+            if (nameShown) {
+                ret.append(")");
+            }
+        }
+    }
+
+    public String toIsiAmrString() {
+        final StringBuilder buf = new StringBuilder();
+        final Set<GraphNode> visitedNodes = new HashSet<GraphNode>();
+
+        toAmrVisit(graph.vertexSet().iterator().next(), visitedNodes, buf);
+
+        return buf.toString();
     }
 }

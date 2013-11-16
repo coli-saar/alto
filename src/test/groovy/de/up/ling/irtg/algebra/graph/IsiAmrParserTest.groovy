@@ -86,7 +86,7 @@ class IsiAmrParserTest {
           :ARG0 b))
 """;
     
-    private static final String AMR2 = """
+    public static final String AMR2 = """
 (s / say-01
   :ARG0 (g / organization
           :name (n / name
@@ -116,7 +116,7 @@ class IsiAmrParserTest {
                         :poss w)))
                         """;
     
-    private static final String AMR4 = """
+    public static final String AMR4 = """
     (s / sing-01
    :ARG0 (s2 / soldier)
    :beneficiary (g / girl)

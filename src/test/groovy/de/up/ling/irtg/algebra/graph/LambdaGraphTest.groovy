@@ -46,11 +46,7 @@ import static Util.*;
 class LambdaGraphTest {
     @Test
     public void testIso() {
-        LambdaGraph g1 = IsiAmrParser.parse(new StringReader("(v / want-01  :ARG0 (b)  :ARG1 (g))"));
-        
-        g1.draw();
-        Thread.sleep(10000);
-        
+        LambdaGraph g1 = IsiAmrParser.parse(new StringReader("(v / want-01  :ARG0 (b)  :ARG1 (g))"));        
         LambdaGraph g2 = IsiAmrParser.parse(new StringReader("(w / want-01  :ARG0 (b)  :ARG1 (g))"));
         assertIsomorphic(g1, g2, true);
     }
@@ -150,6 +146,33 @@ class LambdaGraphTest {
         x.clear();
         x.add(g2);
         assert x.contains(g);
+    }
+    
+    @Test
+    public void testToIsiAmrString() {
+        LambdaGraph g = pg(IsiAmrParserTest.AMR1);
+        String x = g.toIsiAmrString();
+        
+        LambdaGraph g2 = pg(x);
+        assertIsomorphic(g, g2)
+    }
+    
+    @Test
+    public void testToIsiAmrString2() {
+        LambdaGraph g = pg(IsiAmrParserTest.AMR2);
+        String x = g.toIsiAmrString();
+        
+        LambdaGraph g2 = pg(x);
+        assertIsomorphic(g, g2)
+    }
+    
+    @Test
+    public void testToIsiAmrString4() {
+        LambdaGraph g = pg(IsiAmrParserTest.AMR4);
+        String x = g.toIsiAmrString();
+        
+        LambdaGraph g2 = pg(x);
+        assertIsomorphic(g, g2)
     }
     
 }

@@ -410,6 +410,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public static void main(String args[]) throws Exception {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
+        
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
         final GuiMain guiMain = new GuiMain();
