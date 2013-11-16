@@ -6,7 +6,6 @@ package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 import com.jgraph.layout.JGraphFacade;
 import com.jgraph.layout.JGraphLayout;
 import com.jgraph.layout.hierarchical.JGraphHierarchicalLayout;
@@ -15,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JComponent;
+import javax.swing.JFrame;
 import org.jgraph.JGraph;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.ext.JGraphModelAdapter;
@@ -26,43 +26,45 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  */
 public class LambdaGraph {
     private DirectedGraph<GraphNode, GraphEdge> graph;
-    private Map<String,GraphNode> nameToNode;
+    private Map<String, GraphNode> nameToNode;
     private List<GraphNode> variables;
+    private Map<String, String> oldToNewName;  // in renamed graph: nodename in original graph -> nodename in new graph
     private int nextGensym = 1;
 
     public LambdaGraph() {
         graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
         nameToNode = new HashMap<String, GraphNode>();
         variables = new ArrayList<GraphNode>();
+        oldToNewName = new HashMap<String, String>();
     }
-    
+
     public GraphNode addNode(String name, String label) {
         GraphNode u = new GraphNode(name, label);
         graph.addVertex(u);
         nameToNode.put(name, u);
         return u;
     }
-    
+
     public GraphNode addAnonymousNode(String label) {
         GraphNode u = new GraphNode(gensym("_u"), label);
         graph.addVertex(u);
         return u;
     }
-    
+
     public GraphEdge addEdge(GraphNode src, GraphNode tgt, String label) {
         GraphEdge e = graph.addEdge(src, tgt);
         e.setLabel(label);
         return e;
     }
-    
+
     public void addVariable(GraphNode node) {
         variables.add(node);
     }
-    
+
     public GraphNode getNode(String name) {
         return nameToNode.get(name);
     }
-    
+
     public boolean containsNode(String name) {
         return nameToNode.containsKey(name);
     }
@@ -74,41 +76,138 @@ public class LambdaGraph {
     public List<GraphNode> getVariables() {
         return variables;
     }
-    
-    
-    // g1 + apply(g2, [a,b,c]) = renameNodes().addAll(renameNodes(g2).bindVariables(List(a,b,c))) 
-    
+
+    private String getNodeNameAfterRenaming(String oldName) {
+        String ret = oldToNewName.get(oldName);
+
+        if (ret == null) {
+            return oldName;
+        } else {
+            return ret;
+        }
+    }
+
+    // g1 + apply(g2, [a,b,c]) = g1.renameNodes().addAll(renameNodes(g2).apply(g1.mapNodeNames(List(a,b,c))))
     public LambdaGraph renameNodes() {
-        return null;
+        LambdaGraph ret = new LambdaGraph();
+        Map<String, String> oldToNewNames = new HashMap<String, String>();
+
+        for (GraphNode node : graph.vertexSet()) {
+            String newName = gensym(node.getName());
+            ret.addNode(newName, node.getLabel());
+            oldToNewNames.put(node.getName(), newName);
+        }
+
+        for (GraphEdge edge : graph.edgeSet()) {
+            ret.addEdge(ret.getNode(oldToNewNames.get(edge.getSource().getName())),
+                    ret.getNode(oldToNewNames.get(edge.getTarget().getName())),
+                    edge.getLabel());
+        }
+
+        for (GraphNode v : variables) {
+            ret.addVariable(ret.getNode(oldToNewNames.get(v.getName())));
+        }
+
+        ret.oldToNewName = oldToNewNames;
+
+        return ret;
     }
-    
-    public LambdaGraph addAll(LambdaGraph other) {
+
+    public Function<String, String> renameNodeF() {
+        return new Function<String, String>() {
+            public String apply(String f) {
+                return getNodeNameAfterRenaming(f);
+            }
+        };
+    }
+
+    List<String> mapNodeNames(List<String> nodes) {
+        List<String> ret = new ArrayList<String>();
+
+        Iterables.addAll(ret, Iterables.transform(nodes, renameNodeF()));
+
+        return ret;
+    }
+
+    /**
+     * This modifies both this graph and the other one.
+     *
+     * @param other
+     * @return
+     */
+    public LambdaGraph merge(LambdaGraph other) {
+        for (GraphNode node : other.graph.vertexSet()) {
+            if (containsNode(node.getName())) {
+                if (node.getLabel() != null) {
+                    getNode(node.getName()).setLabel(node.getLabel());
+                }
+            } else {
+                addNode(node.getName(), node.getLabel());
+            }
+        }
+
+        for (GraphEdge edge : other.graph.edgeSet()) {
+            addEdge(getNode(edge.getSource().getName()), getNode(edge.getTarget().getName()), edge.getLabel());
+        }
+
         return this;
     }
-    
-    public LambdaGraph apply(List<GraphNode> nodes) {
-        return this;
+
+    public LambdaGraph apply(List<String> nodeNames) {
+        LambdaGraph ret = new LambdaGraph();
+        Map<GraphNode, GraphNode> varnodeToNodeCopy = new HashMap<GraphNode, GraphNode>();
+
+        for (int i = 0; i < nodeNames.size(); i++) {
+            String nodeName = nodeNames.get(i);
+            GraphNode copy = ret.addNode(nodeName, null);
+            varnodeToNodeCopy.put(variables.get(i), copy);
+        }
+
+//        System.err.println("copies: " + Iterables.transform(nodeCopies, GraphNode.reprF));
+
+        for (GraphNode node : graph.vertexSet()) {
+//            System.err.println("consider " + node.repr());
+            GraphNode copyForVarnode = varnodeToNodeCopy.get(node);
+
+            if (copyForVarnode != null) {
+                // node is variable node
+                copyForVarnode.setLabel(node.getLabel());
+            } else {
+                GraphNode newNode = ret.addNode(node.getName(), node.getLabel());
+//                System.err.println(" -> added " + newNode.repr());
+            }
+        }
+
+        for (GraphEdge edge : graph.edgeSet()) {
+            ret.addEdge(mapNode(edge.getSource(), varnodeToNodeCopy), mapNode(edge.getTarget(), varnodeToNodeCopy), edge.getLabel());
+        }
+
+        return ret;
     }
-    
-    
-    
+
+    private GraphNode mapNode(GraphNode node, Map<GraphNode, GraphNode> varnodeToNodeCopy) {
+        GraphNode ret = varnodeToNodeCopy.get(node);
+
+        if (ret != null) {
+            return ret;
+        } else {
+            return getNode(node.getName());
+        }
+    }
 
     @Override
     public String toString() {
-        String varpart = Iterables.toString(Iterables.transform(variables, new Function<GraphNode, String>() {
-            public String apply(GraphNode f) {
-                return f.getName();
-            }            
-        }));
-        
-        return varpart + " -> " + graph;
+        String varpart = Iterables.transform(variables, GraphNode.nameF).toString();
+        String nodepart = Iterables.transform(graph.vertexSet(), GraphNode.reprF).toString();
+        String edgepart = Iterables.transform(graph.edgeSet(), GraphEdge.reprF).toString();
+
+        return varpart + " -> " + nodepart + edgepart;
     }
-    
+
     private String gensym(String prefix) {
-        return prefix + (nextGensym++);
+        return prefix + "_" + (nextGensym++);
     }
-    
-    
+
     public JComponent makeComponent() {
         JGraphModelAdapter<GraphNode, GraphEdge> adapter = new JGraphModelAdapter<GraphNode, GraphEdge>(graph);
         JGraph jgraph = new JGraph(adapter);
@@ -119,8 +218,18 @@ public class LambdaGraph {
 
         final Map nestedMap = facade.createNestedMap(true, true);
         jgraph.getGraphLayoutCache().edit(nestedMap);
-        
+
         return jgraph;
     }
-    
+
+    public void draw() {
+        JComponent jgraph = makeComponent();
+
+        JFrame frame = new JFrame();
+        frame.getContentPane().add(jgraph);
+        frame.setTitle("LambdaGraph");
+        frame.pack();
+        frame.setVisible(true);
+    }
+
 }

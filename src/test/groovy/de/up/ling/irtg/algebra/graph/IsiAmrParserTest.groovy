@@ -35,6 +35,7 @@ import org.jgrapht.*;
 import org.jgrapht.alg.*;
 import org.jgrapht.graph.*;
 
+
 /**
  *
  * @author koller
@@ -43,28 +44,28 @@ class IsiAmrParserTest {
     @Test
     public void testSimple() {
         LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR1));
-//        System.err.println(graph);
-//        GraphAlgebra.drawGraph(graph);
+        //        System.err.println(graph);
+        //        GraphAlgebra.drawGraph(graph);
         
-//        Thread.sleep(10000);
+        //        Thread.sleep(10000);
     }
     
     @Test
     public void testComplex() {
         LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR2));
-//        System.err.println(graph);
-//        GraphAlgebra.drawGraph(graph);
+        //        System.err.println(graph);
+        //        GraphAlgebra.drawGraph(graph);
         
-//        Thread.sleep(10000);
+        //        Thread.sleep(10000);
     }
     
     @Test
     public void testNoChildren() {
         LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR4));
-//        System.err.println(graph);
-//        GraphAlgebra.drawGraph(graph);
+        //        System.err.println(graph);
+        //        GraphAlgebra.drawGraph(graph);
         
-//        Thread.sleep(10000);
+        //        Thread.sleep(10000);
     }
     
     @Test
@@ -78,11 +79,12 @@ class IsiAmrParserTest {
     public void testVars() {
         LambdaGraph graph = IsiAmrParser.parse(new StringReader(AMR5));
         
-        System.err.println(graph);
+        //        System.err.println(graph);
         
         assertEquals("w", graph.getVariables().get(0).getName())
         assertEquals("b", graph.getVariables().get(1).getName())
     }
+    
     
     private static final String AMR5 = """
    \\w, b
@@ -92,7 +94,7 @@ class IsiAmrParserTest {
           :ARG0 b))
 """;
     
-    private static final String AMR1 = """(w / want-01
+    public static final String AMR1 = """(w / want-01
   :ARG0 (b / boy)
   :ARG1 (g / go-01
           :ARG0 b))

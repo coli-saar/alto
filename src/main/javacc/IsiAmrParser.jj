@@ -70,12 +70,12 @@ GraphNode node() :
 {
   GraphNode u;
   String nodename;
-  String nodelabel;
+  String nodelabel = null;
   String edgelabel;
   GraphNode edgeTarget;  
 }
 {
-  "(" (nodename=token() "/" nodelabel=token()  {
+  "(" (nodename=token() ("/" nodelabel=token())?  {
          u = graph.addNode(nodename, nodelabel);
        })
       (edgelabel=edge()  edgeTarget=node() {

@@ -4,6 +4,10 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.base.Function;
+import org.jgrapht.Graph;
+import org.jgrapht.experimental.equivalence.EquivalenceComparator;
+
 /**
  *
  * @author koller
@@ -26,6 +30,26 @@ class GraphEdge {
         this.label = label;
     }
 
+    public GraphNode getSource() {
+        return source;
+    }
+
+    public GraphNode getTarget() {
+        return target;
+    }
+    
+    public String repr() {
+        return source.getName() + " -" + (label == null ? "-" : label) + "-> " + (target.getName());
+    }
+    
+    public static final Function<GraphEdge,String> reprF =
+        new Function<GraphEdge, String>() {
+            public String apply(GraphEdge f) {
+                return f.repr();
+            }
+        };
+    
+    @Override
     public String toString() {
         return label.toString();
     }
@@ -55,7 +79,6 @@ class GraphEdge {
         }
         return true;
     }
-    
     
     
 }

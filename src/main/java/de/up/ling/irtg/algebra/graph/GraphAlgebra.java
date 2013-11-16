@@ -18,16 +18,7 @@ import javax.swing.JFrame;
  * @author koller
  */
 public class GraphAlgebra extends Algebra<LambdaGraph> {
-    public static void drawGraph(LambdaGraph graph) {
-        JComponent jgraph = graph.makeComponent();
-
-        JFrame frame = new JFrame();
-        frame.getContentPane().add(jgraph);
-        frame.setTitle("JGraphT Adapter to JGraph Demo");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
-    }
+    
 
     @Override
     public LambdaGraph evaluate(Tree<String> t) {

@@ -4,6 +4,10 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.base.Function;
+import org.jgrapht.Graph;
+import org.jgrapht.experimental.equivalence.EquivalenceComparator;
+
 /**
  *
  * @author koller
@@ -24,8 +28,26 @@ class GraphNode {
     public String getLabel() {
         return label;
     }
-    
-    
+
+    void setLabel(String label) {
+        this.label = label;
+    }
+
+    public String repr() {
+        return name + ":" + (label == null ? "<null>" : label);
+    }
+    public static Function<GraphNode, String> reprF =
+            new Function<GraphNode, String>() {
+        public String apply(GraphNode f) {
+            return f.repr();
+        }
+    };
+    public static final Function<GraphNode, String> nameF =
+            new Function<GraphNode, String>() {
+        public String apply(GraphNode f) {
+            return f.getName();
+        }
+    };
 
     @Override
     public String toString() {
@@ -53,7 +75,22 @@ class GraphNode {
         }
         return true;
     }
-    
-    
-    
+
+    static class NodeLabelEquivalenceComparator implements EquivalenceComparator<GraphNode, Graph<GraphNode, GraphEdge>> {
+        public boolean equivalenceCompare(GraphNode e, GraphNode e1, Graph<GraphNode, GraphEdge> c, Graph<GraphNode, GraphEdge> c1) {
+            if (e.label == null) {
+                return e1.label == null;
+            } else {
+                return e.label.equals(e1.label);
+            }
+        }
+
+        public int equivalenceHashcode(GraphNode e, Graph<GraphNode, GraphEdge> c) {
+            if (e.label == null) {
+                return -1;
+            } else {
+                return e.label.hashCode();
+            }
+        }
+    }
 }
