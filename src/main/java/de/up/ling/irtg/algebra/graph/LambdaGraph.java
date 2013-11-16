@@ -6,28 +6,16 @@ package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
-import com.jgraph.layout.JGraphFacade;
-import com.jgraph.layout.JGraphLayout;
-import com.jgraph.layout.hierarchical.JGraphHierarchicalLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import org.jgraph.JGraph;
-import org.jgraph.graph.AttributeMap;
-import org.jgraph.graph.GraphConstants;
 import org.jgrapht.DirectedGraph;
-import org.jgrapht.Graph;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
 import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
 import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
-import org.jgrapht.ext.JGraphModelAdapter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 /**
@@ -223,59 +211,45 @@ public class LambdaGraph {
     private String gensym(String prefix) {
         return prefix + "_" + (nextGensym++);
     }
-
-    private static class MyModelAdapter extends JGraphModelAdapter<GraphNode, GraphEdge> {
-        public MyModelAdapter(Graph<GraphNode, GraphEdge> graph) {
-            super(graph);
-        }
-
-        @Override
-        public AttributeMap getDefaultEdgeAttributes() {
-            AttributeMap map = new AttributeMap();
-
-            GraphConstants.setLineEnd(map, GraphConstants.ARROW_TECHNICAL);
-            GraphConstants.setEndFill(map, true);
-            GraphConstants.setEndSize(map, 10);
-
-            GraphConstants.setForeground(map, Color.decode("#25507C"));
-            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
-            GraphConstants.setLineColor(map, Color.decode("#7AA1E6"));
-
-            return map;
-        }
-
-        @Override
-        public AttributeMap getDefaultVertexAttributes() {
-            AttributeMap map = new AttributeMap();
-
-            GraphConstants.setBounds(map, new Rectangle2D.Double(50, 50, 90, 30));
-            GraphConstants.setBorder(map, BorderFactory.createLineBorder(Color.black));
-            GraphConstants.setForeground(map, Color.black);
+//
+//    private static class MyModelAdapter extends JGraphModelAdapter<GraphNode, GraphEdge> {
+//        public MyModelAdapter(Graph<GraphNode, GraphEdge> graph) {
+//            super(graph);
+//        }
+//
+//        @Override
+//        public AttributeMap getDefaultEdgeAttributes() {
+//            AttributeMap map = new AttributeMap();
+//
+//            GraphConstants.setLineEnd(map, GraphConstants.ARROW_TECHNICAL);
+//            GraphConstants.setEndFill(map, true);
+//            GraphConstants.setEndSize(map, 10);
+//
+//            GraphConstants.setForeground(map, Color.decode("#25507C"));
 //            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
-            GraphConstants.setOpaque(map, true);
-            GraphConstants.setBackground(map, Color.white);
+//            GraphConstants.setLineColor(map, Color.decode("#7AA1E6"));
+//
+//            return map;
+//        }
+//
+//        @Override
+//        public AttributeMap getDefaultVertexAttributes() {
+//            AttributeMap map = new AttributeMap();
+//
+//            GraphConstants.setBounds(map, new Rectangle2D.Double(50, 50, 90, 30));
+//            GraphConstants.setBorder(map, BorderFactory.createLineBorder(Color.black));
+//            GraphConstants.setForeground(map, Color.black);
+////            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
+//            GraphConstants.setOpaque(map, true);
+//            GraphConstants.setBackground(map, Color.white);
+//
+//            return map;
+//        }
+//    }
 
-            return map;
-        }
-    }
-
+    
     public JComponent makeComponent() {
-        JGraphModelAdapter<GraphNode, GraphEdge> adapter = new MyModelAdapter(graph);
-
-        AttributeMap map = adapter.getDefaultVertexAttributes();
-        GraphConstants.setBackground(map, Color.yellow);
-
-
-        JGraph jgraph = new JGraph(adapter);
-
-        JGraphFacade facade = new JGraphFacade(jgraph);
-        JGraphLayout layout = new JGraphHierarchicalLayout();
-        layout.run(facade);
-
-        final Map nestedMap = facade.createNestedMap(true, true);
-        jgraph.getGraphLayoutCache().edit(nestedMap);
-
-        return jgraph;
+        return JGraphXAdapter.makeComponent(graph, GraphNode.labelF, GraphEdge.labelF);
     }
 
     public void draw() {

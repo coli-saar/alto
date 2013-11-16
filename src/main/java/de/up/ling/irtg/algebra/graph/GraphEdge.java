@@ -49,6 +49,13 @@ class GraphEdge {
             }
         };
     
+    public static final Function<GraphEdge,String> labelF =
+        new Function<GraphEdge, String>() {
+            public String apply(GraphEdge f) {
+                return f.getLabel();
+            }
+        };
+    
     @Override
     public String toString() {
         return label.toString();

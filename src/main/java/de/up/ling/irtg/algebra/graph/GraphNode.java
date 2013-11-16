@@ -42,10 +42,18 @@ class GraphNode {
             return f.repr();
         }
     };
+    
     public static final Function<GraphNode, String> nameF =
             new Function<GraphNode, String>() {
         public String apply(GraphNode f) {
             return f.getName();
+        }
+    };
+    
+    public static final Function<GraphNode, String> labelF =
+            new Function<GraphNode, String>() {
+        public String apply(GraphNode f) {
+            return (f.getLabel() == null) ? ("(" + f.getName() + ")") : f.getLabel();
         }
     };
 
