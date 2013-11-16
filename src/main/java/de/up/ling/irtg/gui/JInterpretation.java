@@ -6,6 +6,8 @@ package de.up.ling.irtg.gui;
 
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.gui.popup.PopupMenu;
+import de.up.ling.irtg.gui.popup.PopupTextSource;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
@@ -21,47 +23,67 @@ import javax.swing.ToolTipManager;
  */
 public class JInterpretation extends JDerivationDisplayable {
     private Interpretation interp;
-    
+
     /**
      * Creates new form JInterpretation
      */
     public JInterpretation(Interpretation interp) {
         this.interp = interp;
-        
-        initComponents();        
+
+        initComponents();
+
+
     }
-    
+
     private JComponent makeErrorComponent(Exception e) {
         JLabel ret = new JLabel("<Can't evaluate: " + e.toString() + ">");
-        
+
         String tooltipText = "<html>" + e + "<br>" + StringTools.join(Arrays.asList(e.getStackTrace()), "<br>\n") + "</html>";
-        
+
         ret.setToolTipText(tooltipText);
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
-        
+
         return ret;
     }
-    
+
     @Override
     public void setDerivationTree(Tree<String> derivationTree) {
-        Tree<String> term = interp.getHomomorphism().apply(derivationTree);
-        
+        final Tree<String> term = interp.getHomomorphism().apply(derivationTree);
+
         termPanel.removeAll();
-        termPanel.add(sp(new TreePanel(term)));
-        
+        JComponent treePanel = sp(new TreePanel(term));
+        termPanel.add(treePanel);
+
+        PopupMenu termMenu = new PopupMenu();
+        termMenu.setTextSource(new PopupTextSource() {
+            public String getText() {
+                return term.toString();
+            }
+        });
+        termMenu.addAsMouseListener(treePanel);
+
         valuePanel.removeAll();
-        
+
         JComponent valueComponent = null;
-        
+
         try {
-            valueComponent = interp.getAlgebra().visualize(interp.getAlgebra().evaluate(term));
-        } catch(Exception e) {
+            final Object value = interp.getAlgebra().evaluate(term);
+            valueComponent = interp.getAlgebra().visualize(value);
+
+            PopupMenu valueMenu = new PopupMenu();
+            valueMenu.setTextSource(new PopupTextSource() {
+                public String getText() {
+                    return value.toString();
+                }
+            });
+            valueMenu.addAsMouseListener(valueComponent);
+        } catch (Exception e) {
             valueComponent = makeErrorComponent(e);
         }
-        
-        valuePanel.add(sp(valueComponent));        
+
+        valuePanel.add(sp(valueComponent));
     }
-    
+
     private JComponent sp(JComponent comp) {
         JScrollPane ret = new JScrollPane(comp, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         ret.setBackground(Color.white);
@@ -112,7 +134,6 @@ public class JInterpretation extends JDerivationDisplayable {
         valuePanel.setPreferredSize(valuePanel.getSize());
 //        valuePanel.setm
     }//GEN-LAST:event_handleValuePanelResized
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JSplitPane jSplitPane1;
     private javax.swing.JPanel termPanel;

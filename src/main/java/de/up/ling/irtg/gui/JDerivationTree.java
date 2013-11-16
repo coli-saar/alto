@@ -4,6 +4,8 @@
  */
 package de.up.ling.irtg.gui;
 
+import de.up.ling.irtg.gui.popup.PopupMenu;
+import de.up.ling.irtg.gui.popup.PopupTextSource;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
@@ -20,13 +22,21 @@ public class JDerivationTree extends JDerivationDisplayable {
     public JDerivationTree() {
         initComponents();
     }
-    
+
     @Override
-    public void setDerivationTree(Tree<String> derivationTree) {
+    public void setDerivationTree(final Tree<String> derivationTree) {
         removeAll();
         JScrollPane jsp = new JScrollPane(new TreePanel(derivationTree), JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         jsp.setBackground(Color.white);
-        add(jsp);        
+        add(jsp);
+
+        PopupMenu derivTreeMenu = new PopupMenu();
+        derivTreeMenu.setTextSource(new PopupTextSource() {
+            public String getText() {
+                return derivationTree.toString();
+            }
+        });
+        derivTreeMenu.addAsMouseListener(jsp);
     }
 
     /**

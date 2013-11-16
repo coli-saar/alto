@@ -47,6 +47,10 @@ class LambdaGraphTest {
     @Test
     public void testIso() {
         LambdaGraph g1 = IsiAmrParser.parse(new StringReader("(v / want-01  :ARG0 (b)  :ARG1 (g))"));
+        
+        g1.draw();
+        Thread.sleep(10000);
+        
         LambdaGraph g2 = IsiAmrParser.parse(new StringReader("(w / want-01  :ARG0 (b)  :ARG1 (g))"));
         assertIsomorphic(g1, g2, true);
     }
