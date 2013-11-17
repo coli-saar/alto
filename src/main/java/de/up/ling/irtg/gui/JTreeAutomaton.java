@@ -16,6 +16,8 @@ import de.up.ling.irtg.corpus.Corpus;
 import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.awt.Color;
 import java.awt.Component;
 import java.io.File;
@@ -25,7 +27,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
-import javax.swing.JProgressBar;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -37,11 +38,13 @@ import javax.swing.table.TableCellRenderer;
  * @author koller
  */
 public class JTreeAutomaton extends javax.swing.JFrame {
-
     private TreeAutomaton automaton;
     private InterpretedTreeAutomaton irtg;
     private List<String> annotationsInOrder;
     private List<Rule> rulesInOrder;
+    private long numRules;
+    private long numStates;
+    private int maxArity;
 
     /**
      * Creates new form JInterpretedTreeAutomaton
@@ -77,6 +80,13 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         entries.setColumnIdentifiers(columnIdentifiers);
 
         fillEntries(automaton, annotator);
+        
+        String type = "Tree automaton";
+        if( annotator != null && annotator instanceof IrtgTreeAutomatonAnnotator ) {
+            type = "IRTG";
+        }
+        
+        setStatusBar(type);
 
         TableColumnAdjuster tca = new TableColumnAdjuster(jTable1);
 //        tca.setOnlyAdjustLarger(false);
@@ -100,9 +110,14 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }
 
     private void fillEntries(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
+        IntSet allStates = new IntOpenHashSet();
+
         rulesInOrder = new ArrayList<Rule>(automaton.getRuleSet());
+        maxArity = 0;
 
         for (Rule rule : rulesInOrder) {
+            allStates.add(rule.getParent());
+
             Vector<String> row = new Vector<String>();
             row.add(automaton.getStateForId(rule.getParent()).toString() + (automaton.getFinalStates().contains(rule.getParent()) ? "!" : ""));
             row.add("->");
@@ -110,6 +125,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             List<String> resolvedRhsStates = new ArrayList<String>();
             for (int childState : rule.getChildren()) {
                 resolvedRhsStates.add(automaton.getStateForId(childState).toString());
+                allStates.add(childState);
             }
 
             String label = automaton.getSignature().resolveSymbolId(rule.getLabel());
@@ -127,7 +143,18 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
 
             entries.addRow(row);
+
+            if (rule.getArity() > maxArity) {
+                maxArity = rule.getArity();
+            }
         }
+
+        numRules = rulesInOrder.size();
+        numStates = allStates.size();
+    }
+
+    private void setStatusBar(String desc) {
+        statusBarLabel.setText(desc + " with " + numRules + " rules (max arity " + maxArity + "), " + numStates + " states.");
     }
 
     public void setIrtg(InterpretedTreeAutomaton irtg) {
@@ -155,8 +182,12 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void initComponents() {
 
         entries = new javax.swing.table.DefaultTableModel();
+        jPanel1 = new javax.swing.JPanel();
+        jPanel2 = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
+        statusBar = new javax.swing.JPanel();
+        statusBarLabel = new javax.swing.JLabel();
         jMenuBar2 = new javax.swing.JMenuBar();
         jMenu3 = new javax.swing.JMenu();
         miOpenIrtg = new javax.swing.JMenuItem();
@@ -180,12 +211,39 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miShowMaxentWeights = new javax.swing.JMenuItem();
         miTrainMaxent = new javax.swing.JMenuItem();
 
+        org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(0, 100, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(0, 100, Short.MAX_VALUE)
+        );
+
+        org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(0, 100, Short.MAX_VALUE)
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+            .add(0, 100, Short.MAX_VALUE)
+        );
+
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jTable1.setAutoCreateRowSorter(true);
         jTable1.setModel(entries);
         jTable1.setEnabled(false);
         jScrollPane1.setViewportView(jTable1);
+
+        statusBar.setLayout(new javax.swing.BoxLayout(statusBar, javax.swing.BoxLayout.LINE_AXIS));
+
+        statusBarLabel.setText("jLabel1");
+        statusBar.add(statusBarLabel);
 
         jMenu3.setText("File");
 
@@ -337,14 +395,18 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
             .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 388, Short.MAX_VALUE)
+                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
+                    .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 620, Short.MAX_VALUE)
+                    .add(statusBar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(org.jdesktop.layout.GroupLayout.TRAILING, layout.createSequentialGroup()
+            .add(layout.createSequentialGroup()
                 .addContainerGap()
-                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 266, Short.MAX_VALUE)
+                .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 362, Short.MAX_VALUE)
+                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)
+                .add(statusBar, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
     }// </editor-fold>//GEN-END:initComponents
@@ -488,7 +550,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }//GEN-LAST:event_miTrainVBActionPerformed
 
     private static class ProgressBarTrainingIterationListener implements ProgressListener {
-
         private ChartComputationProgressBar pb;
 
         public ProgressBarTrainingIterationListener(ChartComputationProgressBar pb) {
@@ -557,7 +618,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }//GEN-LAST:event_miSaveMaxentWeightsActionPerformed
 
     private static class FtWeight {
-
         public String feature;
         public String weight;
     }
@@ -626,6 +686,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar2;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
@@ -647,5 +709,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JMenuItem miTrainML;
     private javax.swing.JMenuItem miTrainMaxent;
     private javax.swing.JMenuItem miTrainVB;
+    private javax.swing.JPanel statusBar;
+    private javax.swing.JLabel statusBarLabel;
     // End of variables declaration//GEN-END:variables
 }
