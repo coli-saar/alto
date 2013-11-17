@@ -4,7 +4,9 @@
  */
 package de.up.ling.irtg.gui;
 
+import com.bric.window.WindowList;
 import com.bric.window.WindowMenu;
+import com.google.common.base.Joiner;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.ProgressListener;
@@ -59,9 +61,14 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
             miShowLanguage.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
             miParse.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_MASK));
+            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+            miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.CTRL_MASK));
+
         }
 
         jMenuBar2.add(new WindowMenu(this));
+
+//        new WindowMenu(this).get
 
         this.automaton = automaton;
 
@@ -80,12 +87,12 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         entries.setColumnIdentifiers(columnIdentifiers);
 
         fillEntries(automaton, annotator);
-        
+
         String type = "Tree automaton";
-        if( annotator != null && annotator instanceof IrtgTreeAutomatonAnnotator ) {
+        if (annotator != null && annotator instanceof IrtgTreeAutomatonAnnotator) {
             type = "IRTG";
         }
-        
+
         setStatusBar(type);
 
         TableColumnAdjuster tca = new TableColumnAdjuster(jTable1);
@@ -195,6 +202,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miSaveAutomaton = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
+        miCloseWindow = new javax.swing.JMenuItem();
+        miCloseAllWindows = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
         jMenu4 = new javax.swing.JMenu();
@@ -207,7 +216,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miTrainVB = new javax.swing.JMenuItem();
         miMaxent = new javax.swing.JMenu();
         miLoadMaxentWeights = new javax.swing.JMenuItem();
-        miSaveMaxentWeights = new javax.swing.JMenuItem();
         miShowMaxentWeights = new javax.swing.JMenuItem();
         miTrainMaxent = new javax.swing.JMenuItem();
 
@@ -257,7 +265,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu3.add(miOpenIrtg);
 
         miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
-        miOpenAutomaton.setText("Open tree automaton ...");
+        miOpenAutomaton.setText("Open Tree Automaton ...");
         miOpenAutomaton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miOpenAutomatonActionPerformed(evt);
@@ -267,7 +275,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu3.add(jSeparator1);
 
         miSaveAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.META_MASK));
-        miSaveAutomaton.setText("Save tree automaton ...");
+        miSaveAutomaton.setText("Save Tree Automaton ...");
         miSaveAutomaton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miSaveAutomatonActionPerformed(evt);
@@ -275,6 +283,24 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         });
         jMenu3.add(miSaveAutomaton);
         jMenu3.add(jSeparator4);
+
+        miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.META_MASK));
+        miCloseWindow.setText("Close Window");
+        miCloseWindow.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCloseWindowActionPerformed(evt);
+            }
+        });
+        jMenu3.add(miCloseWindow);
+
+        miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
+        miCloseAllWindows.setText("Close All Windows");
+        miCloseAllWindows.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCloseAllWindowsActionPerformed(evt);
+            }
+        });
+        jMenu3.add(miCloseAllWindows);
         jMenu3.add(jSeparator2);
 
         miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
@@ -291,7 +317,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu4.setText("Tools");
 
         miShowLanguage.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.META_MASK));
-        miShowLanguage.setText("Show language ...");
+        miShowLanguage.setText("Show Language ...");
         miShowLanguage.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miShowLanguageActionPerformed(evt);
@@ -319,7 +345,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu4.add(miBinarize);
         jMenu4.add(jSeparator3);
 
-        miTrainML.setText("Maximum likelihood training ...");
+        miTrainML.setText("Maximum Likelihood Training ...");
         miTrainML.setEnabled(false);
         miTrainML.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -328,7 +354,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         });
         jMenu4.add(miTrainML);
 
-        miTrainEM.setText("EM training ...");
+        miTrainEM.setText("EM Training ...");
         miTrainEM.setEnabled(false);
         miTrainEM.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -337,7 +363,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         });
         jMenu4.add(miTrainEM);
 
-        miTrainVB.setText("Variational Bayes training ...");
+        miTrainVB.setText("Variational Bayes Training ...");
         miTrainVB.setEnabled(false);
         miTrainVB.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -349,7 +375,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miMaxent.setText("Maximum Entropy");
         miMaxent.setEnabled(false);
 
-        miLoadMaxentWeights.setText("Load weights ...");
+        miLoadMaxentWeights.setText("Load Weights ...");
         miLoadMaxentWeights.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miLoadMaxentWeightsActionPerformed(evt);
@@ -357,16 +383,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         });
         miMaxent.add(miLoadMaxentWeights);
 
-        miSaveMaxentWeights.setText("Save weights ...");
-        miSaveMaxentWeights.setEnabled(false);
-        miSaveMaxentWeights.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miSaveMaxentWeightsActionPerformed(evt);
-            }
-        });
-        miMaxent.add(miSaveMaxentWeights);
-
-        miShowMaxentWeights.setText("Show weights ...");
+        miShowMaxentWeights.setText("Show Weights ...");
         miShowMaxentWeights.setEnabled(false);
         miShowMaxentWeights.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -567,8 +584,9 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             GuiMain.loadMaxentWeights((MaximumEntropyIrtg) irtg, this);
             GuiMain.log("Loaded maxent weights, " + GuiMain.formatTimeSince(start));
 
-            miSaveMaxentWeights.setEnabled(true);
             miShowMaxentWeights.setEnabled(true);
+            
+            miShowMaxentWeightsActionPerformed(null);
         }
     }//GEN-LAST:event_miLoadMaxentWeightsActionPerformed
 
@@ -594,30 +612,16 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
                         GuiMain.log("Trained maxent model, " + GuiMain.formatTimeSince(start));
 
-                        miSaveMaxentWeights.setEnabled(true);
                         miShowMaxentWeights.setEnabled(true);
+                        
+                        miShowMaxentWeightsActionPerformed(null);
                     }
                 }
             }.start();
         }
     }//GEN-LAST:event_miTrainMaxentActionPerformed
 
-    private void miSaveMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miSaveMaxentWeightsActionPerformed
-        File file = GuiMain.chooseFileForSaving(new FileNameExtensionFilter("Tree automata", "auto"), this);
-
-        if (file != null) {
-            long start = System.nanoTime();
-
-            try {
-                ((MaximumEntropyIrtg) irtg).writeWeights(new FileWriter(file));
-                GuiMain.log("Saved maxent weights, " + GuiMain.formatTimeSince(start));
-            } catch (IOException e) {
-                GuiMain.showError(this, "An error occurred while saving the maxent weights to " + file.getName() + ": " + e.getMessage());
-            }
-        }
-    }//GEN-LAST:event_miSaveMaxentWeightsActionPerformed
-
-    private static class FtWeight {
+    static class FtWeight {
         public String feature;
         public String weight;
     }
@@ -635,7 +639,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 fts.add(x);
             }
 
-            JTableDialog<FtWeight> dialog = new JTableDialog<FtWeight>("Maxent weights for " + getTitle(), fts);
+            JTableDialog<FtWeight> dialog = new MaxentWeightsFrame("Maxent weights for " + getTitle(), fts, mirtg);
             dialog.setVisible(true);
         }
     }//GEN-LAST:event_miShowMaxentWeightsActionPerformed
@@ -681,6 +685,14 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         }
 
     }//GEN-LAST:event_miBinarizeActionPerformed
+
+    private void miCloseWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseWindowActionPerformed
+        setVisible(false);
+    }//GEN-LAST:event_miCloseWindowActionPerformed
+
+    private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
+        GuiMain.closeAllWindows();
+    }//GEN-LAST:event_miCloseAllWindowsActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
@@ -695,6 +707,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JTable jTable1;
     private javax.swing.JMenuItem miBinarize;
+    private javax.swing.JMenuItem miCloseAllWindows;
+    private javax.swing.JMenuItem miCloseWindow;
     private javax.swing.JMenuItem miLoadMaxentWeights;
     private javax.swing.JMenu miMaxent;
     private javax.swing.JMenuItem miOpenAutomaton;
@@ -702,7 +716,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JMenuItem miParse;
     private javax.swing.JMenuItem miQuit;
     private javax.swing.JMenuItem miSaveAutomaton;
-    private javax.swing.JMenuItem miSaveMaxentWeights;
     private javax.swing.JMenuItem miShowLanguage;
     private javax.swing.JMenuItem miShowMaxentWeights;
     private javax.swing.JMenuItem miTrainEM;

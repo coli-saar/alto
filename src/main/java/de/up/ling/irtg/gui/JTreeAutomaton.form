@@ -57,7 +57,7 @@
                 <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
                   <KeyStroke key="Shift+Meta+O"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Open tree automaton ..."/>
+                <Property name="text" type="java.lang.String" value="Open Tree Automaton ..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miOpenAutomatonActionPerformed"/>
@@ -70,13 +70,35 @@
                 <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
                   <KeyStroke key="Meta+S"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Save tree automaton ..."/>
+                <Property name="text" type="java.lang.String" value="Save Tree Automaton ..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miSaveAutomatonActionPerformed"/>
               </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator4">
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="miCloseWindow">
+              <Properties>
+                <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
+                  <KeyStroke key="Meta+W"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Close Window"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miCloseWindowActionPerformed"/>
+              </Events>
+            </MenuItem>
+            <MenuItem class="javax.swing.JMenuItem" name="miCloseAllWindows">
+              <Properties>
+                <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
+                  <KeyStroke key="Shift+Meta+W"/>
+                </Property>
+                <Property name="text" type="java.lang.String" value="Close All Windows"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miCloseAllWindowsActionPerformed"/>
+              </Events>
             </MenuItem>
             <MenuItem class="javax.swing.JPopupMenu$Separator" name="jSeparator2">
             </MenuItem>
@@ -103,7 +125,7 @@
                 <Property name="accelerator" type="javax.swing.KeyStroke" editor="org.netbeans.modules.form.editors.KeyStrokeEditor">
                   <KeyStroke key="Meta+L"/>
                 </Property>
-                <Property name="text" type="java.lang.String" value="Show language ..."/>
+                <Property name="text" type="java.lang.String" value="Show Language ..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miShowLanguageActionPerformed"/>
@@ -134,7 +156,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="miTrainML">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Maximum likelihood training ..."/>
+                <Property name="text" type="java.lang.String" value="Maximum Likelihood Training ..."/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -143,7 +165,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="miTrainEM">
               <Properties>
-                <Property name="text" type="java.lang.String" value="EM training ..."/>
+                <Property name="text" type="java.lang.String" value="EM Training ..."/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -152,7 +174,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="miTrainVB">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Variational Bayes training ..."/>
+                <Property name="text" type="java.lang.String" value="Variational Bayes Training ..."/>
                 <Property name="enabled" type="boolean" value="false"/>
               </Properties>
               <Events>
@@ -167,24 +189,15 @@
               <SubComponents>
                 <MenuItem class="javax.swing.JMenuItem" name="miLoadMaxentWeights">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Load weights ..."/>
+                    <Property name="text" type="java.lang.String" value="Load Weights ..."/>
                   </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miLoadMaxentWeightsActionPerformed"/>
                   </Events>
                 </MenuItem>
-                <MenuItem class="javax.swing.JMenuItem" name="miSaveMaxentWeights">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Save weights ..."/>
-                    <Property name="enabled" type="boolean" value="false"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miSaveMaxentWeightsActionPerformed"/>
-                  </Events>
-                </MenuItem>
                 <MenuItem class="javax.swing.JMenuItem" name="miShowMaxentWeights">
                   <Properties>
-                    <Property name="text" type="java.lang.String" value="Show weights ..."/>
+                    <Property name="text" type="java.lang.String" value="Show Weights ..."/>
                     <Property name="enabled" type="boolean" value="false"/>
                   </Properties>
                   <Events>

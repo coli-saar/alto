@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
+import com.bric.window.WindowMenu;
 import java.awt.Color;
 import java.awt.Component;
 import java.lang.reflect.Field;
@@ -18,7 +19,7 @@ import javax.swing.table.TableCellRenderer;
  *
  * @author koller
  */
-public class JTableDialog<E> extends javax.swing.JDialog {
+public class JTableDialog<E> extends javax.swing.JFrame {
     private DefaultTableModel model;
 
     /**
@@ -30,6 +31,8 @@ public class JTableDialog<E> extends javax.swing.JDialog {
 
         initComponents();
         fillTable(data);
+
+        jMenuBar1.add(new WindowMenu(this));
     }
 
     private void fillTable(List<E> data) {
@@ -88,10 +91,50 @@ public class JTableDialog<E> extends javax.swing.JDialog {
 
         jScrollPane1 = new javax.swing.JScrollPane();
         table = new javax.swing.JTable();
+        jMenuBar1 = new javax.swing.JMenuBar();
+        fileMenu = new javax.swing.JMenu();
+        miCloseWindow = new javax.swing.JMenuItem();
+        miCloseAllWindows = new javax.swing.JMenuItem();
+        jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        miQuit = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jScrollPane1.setViewportView(table);
+
+        fileMenu.setText("File");
+
+        miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.META_MASK));
+        miCloseWindow.setText("Close Window");
+        miCloseWindow.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCloseWindowActionPerformed(evt);
+            }
+        });
+        fileMenu.add(miCloseWindow);
+
+        miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
+        miCloseAllWindows.setText("Close All Windows");
+        miCloseAllWindows.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCloseAllWindowsActionPerformed(evt);
+            }
+        });
+        fileMenu.add(miCloseAllWindows);
+        fileMenu.add(jSeparator1);
+
+        miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
+        miQuit.setText("Quit");
+        miQuit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miQuitActionPerformed(evt);
+            }
+        });
+        fileMenu.add(miQuit);
+
+        jMenuBar1.add(fileMenu);
+
+        setJMenuBar(jMenuBar1);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -101,13 +144,31 @@ public class JTableDialog<E> extends javax.swing.JDialog {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)
-            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 300, Short.MAX_VALUE)
+            .add(jScrollPane1, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 278, Short.MAX_VALUE)
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void miCloseWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseWindowActionPerformed
+        setVisible(false);
+    }//GEN-LAST:event_miCloseWindowActionPerformed
+
+    private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
+        GuiMain.closeAllWindows();
+    }//GEN-LAST:event_miCloseAllWindowsActionPerformed
+
+    private void miQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miQuitActionPerformed
+        GuiMain.quit();
+    }//GEN-LAST:event_miQuitActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    protected javax.swing.JMenu fileMenu;
+    protected javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JMenuItem miCloseAllWindows;
+    private javax.swing.JMenuItem miCloseWindow;
+    private javax.swing.JMenuItem miQuit;
     private javax.swing.JTable table;
     // End of variables declaration//GEN-END:variables
 }

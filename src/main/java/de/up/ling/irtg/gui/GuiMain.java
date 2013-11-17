@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
+import com.bric.window.WindowList;
 import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.IrtgParser;
@@ -14,6 +15,7 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import java.awt.Component;
+import java.awt.Window;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -81,6 +83,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem4 = new javax.swing.JMenuItem();
+        jSeparator2 = new javax.swing.JPopupMenu.Separator();
         jMenuItem3 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -103,7 +107,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenu1.add(jMenuItem1);
 
         jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
-        jMenuItem2.setText("Load tree automaton ...");
+        jMenuItem2.setText("Load Tree Automaton ...");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem2ActionPerformed(evt);
@@ -111,6 +115,16 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         });
         jMenu1.add(jMenuItem2);
         jMenu1.add(jSeparator1);
+
+        jMenuItem4.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, 0));
+        jMenuItem4.setText("Close All Windows");
+        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem4ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem4);
+        jMenu1.add(jSeparator2);
 
         jMenuItem3.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
         jMenuItem3.setText("Quit");
@@ -161,8 +175,20 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         System.exit(0);
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
+    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+        closeAllWindows();
+    }//GEN-LAST:event_jMenuItem4ActionPerformed
+
     public static void quit() {
         System.exit(0);
+    }
+    
+    public static void closeAllWindows() {
+        for( Window window : WindowList.getWindows(false, false) ) {
+            if( ! (window instanceof GuiMain) ) {
+                window.setVisible(false);
+            }
+        }
     }
 
     public static File chooseFileForSaving(FileFilter filter, Component parent) {
@@ -433,7 +459,9 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
+    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JPopupMenu.Separator jSeparator1;
+    private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JTextArea log;
     private javax.swing.JScrollPane spLog;
     // End of variables declaration//GEN-END:variables

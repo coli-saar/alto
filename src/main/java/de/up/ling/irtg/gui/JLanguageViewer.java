@@ -142,6 +142,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private void initComponents() {
 
         jPanel2 = new javax.swing.JPanel();
+        jSeparator3 = new javax.swing.JSeparator();
         controls = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         leftButton = new javax.swing.JButton();
@@ -155,6 +156,9 @@ public class JLanguageViewer extends javax.swing.JFrame {
         miOpenIrtg = new javax.swing.JMenuItem();
         miOpenAutomaton = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        miCloseWindow = new javax.swing.JMenuItem();
+        miCloseAllWindows = new javax.swing.JMenuItem();
+        jSeparator4 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         miNextTree = new javax.swing.JMenuItem();
@@ -257,7 +261,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jMenu1.add(miOpenIrtg);
 
         miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
-        miOpenAutomaton.setText("Open tree automaton ...");
+        miOpenAutomaton.setText("Open Tree Automaton ...");
         miOpenAutomaton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miOpenAutomatonActionPerformed(evt);
@@ -265,6 +269,25 @@ public class JLanguageViewer extends javax.swing.JFrame {
         });
         jMenu1.add(miOpenAutomaton);
         jMenu1.add(jSeparator1);
+
+        miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.META_MASK));
+        miCloseWindow.setText("Close Window");
+        miCloseWindow.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCloseWindowActionPerformed(evt);
+            }
+        });
+        jMenu1.add(miCloseWindow);
+
+        miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
+        miCloseAllWindows.setText("Close All Windows");
+        miCloseAllWindows.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCloseAllWindowsActionPerformed(evt);
+            }
+        });
+        jMenu1.add(miCloseAllWindows);
+        jMenu1.add(jSeparator4);
 
         miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
         miQuit.setText("Quit");
@@ -280,7 +303,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jMenu2.setText("View");
 
         miNextTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.META_MASK));
-        miNextTree.setText("Go to next derivation");
+        miNextTree.setText("Go to Next Derivation");
         miNextTree.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miNextTreeActionPerformed(evt);
@@ -289,7 +312,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jMenu2.add(miNextTree);
 
         miPreviousTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.META_MASK));
-        miPreviousTree.setText("Go to previous derivation");
+        miPreviousTree.setText("Go to Previous Derivation");
         miPreviousTree.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miPreviousTreeActionPerformed(evt);
@@ -299,7 +322,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jMenu2.add(jSeparator2);
 
         miAddView.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_2, java.awt.event.InputEvent.META_MASK));
-        miAddView.setText("Add view");
+        miAddView.setText("Add View");
         miAddView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miAddViewActionPerformed(evt);
@@ -308,7 +331,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jMenu2.add(miAddView);
 
         miRemoveView.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_1, java.awt.event.InputEvent.META_MASK));
-        miRemoveView.setText("Remove view");
+        miRemoveView.setText("Remove View");
         miRemoveView.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miRemoveViewActionPerformed(evt);
@@ -426,6 +449,14 @@ public class JLanguageViewer extends javax.swing.JFrame {
         rightButtonActionPerformed(evt);
     }//GEN-LAST:event_miNextTreeActionPerformed
 
+    private void miCloseWindowActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseWindowActionPerformed
+        setVisible(false);
+    }//GEN-LAST:event_miCloseWindowActionPerformed
+
+    private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
+        GuiMain.closeAllWindows();
+    }//GEN-LAST:event_miCloseAllWindowsActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private javax.swing.JPanel derivationViewers;
@@ -436,9 +467,13 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JSeparator jSeparator3;
+    private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JLabel languageSizeLabel;
     private javax.swing.JButton leftButton;
     private javax.swing.JMenuItem miAddView;
+    private javax.swing.JMenuItem miCloseAllWindows;
+    private javax.swing.JMenuItem miCloseWindow;
     private javax.swing.JMenuItem miNextTree;
     private javax.swing.JMenuItem miOpenAutomaton;
     private javax.swing.JMenuItem miOpenIrtg;
