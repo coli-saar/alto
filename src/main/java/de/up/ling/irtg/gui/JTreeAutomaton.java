@@ -46,7 +46,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private List<Rule> rulesInOrder;
     private long numRules;
     private long numStates;
-    private int maxArity;
+    private int maxRuleRank;
 
     /**
      * Creates new form JInterpretedTreeAutomaton
@@ -120,7 +120,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         IntSet allStates = new IntOpenHashSet();
 
         rulesInOrder = new ArrayList<Rule>(automaton.getRuleSet());
-        maxArity = 0;
+        maxRuleRank = 0;
 
         for (Rule rule : rulesInOrder) {
             allStates.add(rule.getParent());
@@ -151,8 +151,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
             entries.addRow(row);
 
-            if (rule.getArity() > maxArity) {
-                maxArity = rule.getArity();
+            if (rule.getArity() > maxRuleRank) {
+                maxRuleRank = rule.getArity();
             }
         }
 
@@ -161,7 +161,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }
 
     private void setStatusBar(String desc) {
-        statusBarLabel.setText(desc + " with " + numRules + " rules (max arity " + maxArity + "), " + numStates + " states.");
+        statusBarLabel.setText(desc + " with " + numRules + " rules (max rank " + maxRuleRank + "), " + numStates + " states.");
     }
 
     public void setIrtg(InterpretedTreeAutomaton irtg) {
