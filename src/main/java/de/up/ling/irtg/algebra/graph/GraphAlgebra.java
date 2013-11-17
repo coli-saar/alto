@@ -63,4 +63,15 @@ public class GraphAlgebra extends EvaluatingAlgebra<LambdaGraph> {
     public JComponent visualize(LambdaGraph graph) {
         return graph.makeComponent();
     }
+
+    @Override
+    public Map<String, String> getRepresentations(LambdaGraph object) {
+        Map<String,String> ret = super.getRepresentations(object);
+        
+        ret.put("ISI-style AMR", object.toIsiAmrString());
+        
+        return ret;
+    }
+    
+    
 }

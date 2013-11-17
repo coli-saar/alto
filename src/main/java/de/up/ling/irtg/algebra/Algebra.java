@@ -11,6 +11,8 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.ServiceLoader;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
@@ -114,6 +116,31 @@ public abstract class Algebra<E> {
      */
     public JComponent visualize(E object) {
         return new JLabel(object.toString());
+    }
+    
+    /**
+     * Returns a structure that contains possible string representations
+     * of an object of this algebra. For many algebras, there are multiple
+     * useful string representations that an object might have. A subclass
+     * of Algebra may choose to support this by overriding this method
+     * such that it returns a Map; the key of an entry in this map is the
+     * name of a string representation, and the value is the string representation
+     * of the object itself. One prominent place where this is used is that
+     * the right-click popup menu in the GUI offers a "copy as X" item
+     * for each key X in this map.<p>
+     * 
+     * The default implementation returns a map which
+     * lists the toString value of the object under the "text" key.
+     * 
+     * @param object
+     * @return 
+     */
+    public Map<String,String> getRepresentations(E object) {
+        Map<String,String> ret = new LinkedHashMap<String, String>(); // LinkedHashMap -> predictable order of keys
+        
+        ret.put("text", object.toString());
+        
+        return ret;
     }
     
     /**

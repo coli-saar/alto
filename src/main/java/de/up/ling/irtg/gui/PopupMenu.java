@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.gui.popup;
+package de.up.ling.irtg.gui;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -11,39 +11,49 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
+import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 
 /**
- * A popup menu that copies a string representation of a Swing component
- * to the clipboard. Use {@link #setTextSource(de.up.ling.irtg.gui.popup.PopupTextSource) }
+ * A popup menu that copies a string representation of a Swing component to the
+ * clipboard. Use {@link #setTextSource(de.up.ling.irtg.gui.popup.PopupTextSource)
+ * }
  * to tell the menu how to obtain the text that is to be copied to the
  * clipboard. Use {@link #addAsMouseListener(javax.swing.JComponent) }
- * to add a mouse listener to the component which will open the popup menu
- * on right-click.
- * 
- * 
+ * to add a mouse listener to the component which will open the popup menu on
+ * right-click.
+ *
+ *
  * @author koller
  */
 public class PopupMenu extends JPopupMenu implements ActionListener {
-    private JMenuItem miCopyText;
-    private static final String cmdCopyText = "miCopyText";
-    private PopupTextSource textSource = null;
+    private Map<String, String> labels;
 
-    public PopupMenu() {
+    public PopupMenu(Map<String, String> labels) {
         super();
 
-        miCopyText = new JMenuItem("Copy as text");
-        miCopyText.setActionCommand(cmdCopyText);
-        miCopyText.addActionListener(this);
-        miCopyText.setEnabled(false);
-        add(miCopyText);
+        this.labels = labels;
+
+        for (String key : labels.keySet()) {
+            JMenuItem mi = new JMenuItem("Copy as " + key);
+            mi.setActionCommand(key);
+            mi.addActionListener(this);
+            mi.setEnabled(true);
+            add(mi);
+        }
     }
 
-    public void setTextSource(PopupTextSource src) {
-        textSource = src;
-        miCopyText.setEnabled(true);
+    public static PopupMenu create(String... labelArray) {
+        Map<String, String> labels = new HashMap<String, String>();
+
+        for (int i = 0; i < labelArray.length; i += 2) {
+            labels.put(labelArray[i], labelArray[i + 1]);
+        }
+
+        return new PopupMenu(labels);
     }
 
     public void addAsMouseListener(JComponent comp) {
@@ -51,11 +61,9 @@ public class PopupMenu extends JPopupMenu implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-        if (cmdCopyText.equals(e.getActionCommand())) {
-            StringSelection selection = new StringSelection(textSource.getText());
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(selection, selection);
-        }
+        StringSelection selection = new StringSelection(labels.get(e.getActionCommand()));
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, selection);
     }
 
     private class PopupListener extends MouseAdapter {

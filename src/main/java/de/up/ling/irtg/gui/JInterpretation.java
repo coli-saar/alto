@@ -6,8 +6,7 @@ package de.up.ling.irtg.gui;
 
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
-import de.up.ling.irtg.gui.popup.PopupMenu;
-import de.up.ling.irtg.gui.popup.PopupTextSource;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
@@ -53,30 +52,19 @@ public class JInterpretation extends JDerivationDisplayable {
         termPanel.removeAll();
         JComponent treePanel = sp(new TreePanel(term));
         termPanel.add(treePanel);
-
-        PopupMenu termMenu = new PopupMenu();
-        termMenu.setTextSource(new PopupTextSource() {
-            public String getText() {
-                return term.toString();
-            }
-        });
-        termMenu.addAsMouseListener(treePanel);
+        
+        PopupMenu.create("text", term.toString()).addAsMouseListener(treePanel);
 
         valuePanel.removeAll();
 
         JComponent valueComponent = null;
 
         try {
-            final Object value = interp.getAlgebra().evaluate(term);
-            valueComponent = interp.getAlgebra().visualize(value);
-
-            PopupMenu valueMenu = new PopupMenu();
-            valueMenu.setTextSource(new PopupTextSource() {
-                public String getText() {
-                    return value.toString();
-                }
-            });
-            valueMenu.addAsMouseListener(valueComponent);
+            Algebra alg = interp.getAlgebra();
+            final Object value = alg.evaluate(term);
+            valueComponent = alg.visualize(value);
+            
+            new PopupMenu(alg.getRepresentations(value)).addAsMouseListener(valueComponent);
         } catch (Exception e) {
             valueComponent = makeErrorComponent(e);
         }
