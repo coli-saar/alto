@@ -78,21 +78,21 @@ public class BkvBinarizer {
 
         int ruleNumber = 1;
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
-            log("\n\n\nbinarizing rule: " + rule.toString(irtg.getAutomaton()));
+//            log("\n\n\nbinarizing rule: " + rule.toString(irtg.getAutomaton()));
 
             if (rule.getArity() <= 2) {
                 // rules of low arity => simply copy these to result
-                log(" -> low arity, copy");
+//                log(" -> low arity, copy");
                 copyRule(rule, binarizedRtg, binarizedHom, irtg);
             } else {
                 // rules of higher arity => binarize
                 RuleBinarization rb = binarizeRule(rule, irtg);
 
-                log(" -> binarization: " + rb);
+//                log(" -> binarization: " + rb);
 
                 if (rb == null) {
                     // unbinarizable => copy to result
-                    log(" -> unbinarizable, copy");
+//                    log(" -> unbinarizable, copy");
                     copyRule(rule, binarizedRtg, binarizedHom, irtg);
                 } else {
                     // else, add binarized rule to result
@@ -109,7 +109,7 @@ public class BkvBinarizer {
                     }
 
                     for (String interp : interpretationNames) {
-                        log("\nmake hom for " + interp);
+//                        log("\nmake hom for " + interp);
                         addEntriesToHomomorphism(binarizedHom.get(interp), rb.xi, rb.binarizationTerms.get(interp));
                     }
                 }
@@ -331,7 +331,7 @@ public class BkvBinarizer {
     // xi: _br1(_br0('0','1'),'2')
     // -> hom is _br0 -> *(a, *(?1,?2)), _br1 -> *(?2,?1)
     void addEntriesToHomomorphism(final Homomorphism hom, Tree<String> xi, Tree<String> binarizationTerm) {
-        log("makehom: " + binarizationTerm + " along " + xi);
+//        log("makehom: " + binarizationTerm + " along " + xi);
 
         hom.getTargetSignature().addAllSymbols(binarizationTerm);
 
@@ -423,7 +423,7 @@ public class BkvBinarizer {
 
                                 if (label != null) {
                                     hom.add(label, childrenTrees.get(i));
-                                    log("add hom: " + label + " -> " + childrenTrees.get(i));
+//                                    log("add hom: " + label + " -> " + childrenTrees.get(i));
                                 }
 
                                 int varNum = orderedChildrenVarSets.indexOf(childVarSetHere);
@@ -435,15 +435,15 @@ public class BkvBinarizer {
                     }
                 }
 
-                log("return: " + node + " -> " + ret);
+//                log("return: " + node + " -> " + ret);
                 return ret;
             }
         });
 
         hom.add(xi.getLabel(), subtreeForRoot.tree);
-        log("add hom (r): " + xi.getLabel() + " -> " + subtreeForRoot.tree);
+//        log("add hom (r): " + xi.getLabel() + " -> " + subtreeForRoot.tree);
 
-        log("hom is: " + hom);
+//        log("hom is: " + hom);
     }
 
     /**

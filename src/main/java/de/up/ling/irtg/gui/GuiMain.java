@@ -116,7 +116,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenu1.add(jMenuItem2);
         jMenu1.add(jSeparator1);
 
-        jMenuItem4.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, 0));
+        jMenuItem4.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         jMenuItem4.setText("Close All Windows");
         jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
