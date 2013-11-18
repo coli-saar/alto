@@ -23,8 +23,7 @@ interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 
 S! -> want2(NP, VP)
 [string] *(?1, *(wants, *(to, ?2)))
-[graph]  "(w / want-01  :ARG0 (b)  :ARG1 (g)) + ?1(b) + ?2(g, b)" (?1,
-?2)
+[graph]  "(w / want-01  :ARG0 (b)  :ARG1 (g)) + ?1(b) + ?2(g, b)" (?1, ?2)
 
 S! -> want3(NP, NP, VP)
 [string] *(?1, *(wants, *(?2, *(to, ?3))))

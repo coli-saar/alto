@@ -4,9 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
-import com.bric.window.WindowList;
 import com.bric.window.WindowMenu;
-import com.google.common.base.Joiner;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.ProgressListener;
@@ -22,16 +20,12 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.awt.Color;
 import java.awt.Component;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 

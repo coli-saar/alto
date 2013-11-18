@@ -318,8 +318,8 @@ public class InterpretedTreeAutomaton {
      * it must contain a parse chart for each instance (see {@link Corpus} for
      * details).<p>
      *
-     * Currently the training algorithm performs a fixed number of ten EM
-     * iterations. This should be made more flexible in the future.
+     * The algorithm terminates after a given number of iterations or as soon
+     * as the rate the likelihood increases drops below a given threshold. 
      *
      * @param trainingData
      */
@@ -328,15 +328,17 @@ public class InterpretedTreeAutomaton {
     }
 
     public void trainEM(Corpus trainingData, ProgressListener listener) {
-        trainEM(trainingData, 10, false, listener);
+        trainEM(trainingData, 0, 1E-5, listener);
     }
 
-    public void trainEM(Corpus trainingData, int numIterations, boolean printIntermediate, ProgressListener listener) {
+    public void trainEM(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
         if (!trainingData.hasCharts()) {
             System.err.println("EM training can only be performed on a corpus with attached charts.");
             return;
         }
-
+        if (iterations <= 0 && threshold < 0) {
+            System.err.println("EM training needs either a valid threshold or a valid number of iterations.");
+        }
         if (debug) {
             System.out.println("\n\nInitial model:\n" + automaton);
         }
@@ -348,15 +350,14 @@ public class InterpretedTreeAutomaton {
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
 
-        // assert: originalRuleToIntersectedRules.get(r1) and originalRuleToIntersectedRules.get(r2) disjoint for all r1 != r2
-        // dito fuer intersectedRuleToOriginalRule
-
         Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
+        // Threshold parameters
+        if (iterations <= 0) iterations = Integer.MAX_VALUE;
         double oldLogLikelihood = Double.NEGATIVE_INFINITY;
-
-        for (int iteration = 0; iteration < numIterations; iteration++) {
-            // assert: for all r, r': r' \in originalRuleToIntersectedRules.get(r) => weight(r) = weight(r')
-            // dito fuer intersectedRuleToOriginalRule
+        double difference = Double.POSITIVE_INFINITY;
+        int iteration = 0;
+        
+        while (difference > threshold && iteration < iterations) {
             if (debug) {
                 for (Rule r : originalRuleToIntersectedRules.keySet()) {
                     System.err.println("Iteration:  " + iteration);
@@ -367,13 +368,15 @@ public class InterpretedTreeAutomaton {
                 }
             }
 
-
+            // get the new log likelihood and substract the old one from it for comparrison with the given threshold
             double logLikelihood = estep(parses, globalRuleCount, intersectedRuleToOriginalRule, listener, iteration);
+            assert logLikelihood >= oldLogLikelihood;
+            difference = logLikelihood - oldLogLikelihood;
+            oldLogLikelihood = logLikelihood;
 
             if (debug) {
                 System.err.println("Current LL: " + logLikelihood + "\n");
             }
-            oldLogLikelihood = logLikelihood;
 
             // sum over rules with same parent state to obtain state counts
             Map<Integer, Double> globalStateCount = new HashMap<Integer, Double>();
@@ -396,10 +399,12 @@ public class InterpretedTreeAutomaton {
                 }
             }
 
-            if (printIntermediate) {
+            if (debug) {
                 System.out.println("\n\n***** After iteration " + (iteration + 1) + " *****\n\n" + automaton);
             }
+            ++iteration;
         }
+        
     }
 
     /**
@@ -413,6 +418,10 @@ public class InterpretedTreeAutomaton {
     public void trainVB(Corpus trainingData) {
         trainVB(trainingData, null);
     }
+    
+    public void trainVB(Corpus trainingData, ProgressListener listener) {
+        trainVB(trainingData, 0, 1E-5, listener);
+    }
 
     /**
      * Performs Variational Bayes (VB) training of this (weighted) IRTG using
@@ -421,20 +430,19 @@ public class InterpretedTreeAutomaton {
      * contain a parse chart for each instance (see {@link Corpus} for
      * details).<p>
      *
-     * Currently the training algorithm performs a fixed number of ten
-     * iterations. This should be made more flexible in the future.<p>
-     *
      * This method implements the algorithm from Jones et al., "Semantic Parsing
      * with Bayesian Tree Transducers", ACL 2012.
      *
      * @param trainingData a corpus of parse charts
      */
-    public void trainVB(Corpus trainingData, ProgressListener listener) {
+    public void trainVB(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
         if (!trainingData.hasCharts()) {
             System.err.println("VB training can only be performed on a corpus with attached charts.");
             return;
         }
-
+        if (iterations <= 0 && threshold < 0) {
+            System.err.println("VB training needs either a valid threshold or a valid number of iterations.");
+        }
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
         List<TreeAutomaton> parses = new ArrayList<TreeAutomaton>();
@@ -448,9 +456,14 @@ public class InterpretedTreeAutomaton {
         Arrays.fill(alpha, 1.0); // might want to initialize them differently
 
         Map<Rule, Double> ruleCounts = new HashMap<Rule, Double>();
-
+        // Threshold parameters
+        if (iterations <= 0) iterations = Integer.MAX_VALUE;
+        double oldLogLikelihood = Double.NEGATIVE_INFINITY;
+        double difference = Double.POSITIVE_INFINITY;
+        int iteration = 0;
+        
         // iterate
-        for (int iteration = 0; iteration < 10; iteration++) {
+        while (difference > threshold && iteration < iterations) {
             // for each state, compute sum of alphas for outgoing rules
             Map<Integer, Double> sumAlphaForSameParent = new HashMap<Integer, Double>();
             for (int i = 0; i < numRules; i++) {
@@ -469,10 +482,16 @@ public class InterpretedTreeAutomaton {
             }
 
             // re-estimate hyperparameters
-            estep(parses, ruleCounts, intersectedRuleToOriginalRule, listener, iteration);
+            double logLikelihood = estep(parses, ruleCounts, intersectedRuleToOriginalRule, listener, iteration);
+            assert logLikelihood >= oldLogLikelihood;
             for (int i = 0; i < numRules; i++) {
                 alpha[i] += ruleCounts.get(automatonRules.get(i));
             }
+            
+            // calculate the difference for comparrison with the given threshold 
+            difference = logLikelihood - oldLogLikelihood;
+            oldLogLikelihood = logLikelihood;
+            ++iteration;
         }
     }
 
@@ -498,8 +517,6 @@ public class InterpretedTreeAutomaton {
 
             Map<Integer, Double> inside = parse.inside();
             Map<Integer, Double> outside = parse.outside(inside);
-
-            // check: inside, outside haben korrekte Werte
             
             if (debug) {
                 System.out.println("Inside and outside probabilities for chart #" + i);
