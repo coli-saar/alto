@@ -9,7 +9,11 @@
    which is modeled after Chiang et al., ACL 2012, Figure 2. A crucial difference is that our grammar
    does not attempt to map the pronouns in Chiang et al.'s example to the same nodes as "the boy"
    and "the girl", because this can't be done compositionally anyway. Note also that "want3" introduces
-   a node for the agent of the object-control verb; it is connected to the w node using a "dummy" edge.
+   a node for the agent of the object-control verb; it is connected to
+   the w node using a "dummy" edge.
+
+   For the reverse direction, try parsing the following graph:
+   (w_5 / want-01  :ARG0 (subj_6 / boy)  :ARG1 (vcomp_7 / believe-01  :ARG0 (obj_8 / girl)  :ARG1 (xcomp_6_3 / like-01  :ARG0 (subj_5_2_4 / boy)  :ARG1 (obj_6_3_5 / girl)))  :dummy obj_8)
 */
 
 

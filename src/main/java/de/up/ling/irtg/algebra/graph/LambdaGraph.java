@@ -45,7 +45,7 @@ public class LambdaGraph {
     private Map<String, GraphNode> nameToNode;
     private List<GraphNode> variables;
     private Map<String, String> oldToNewName;  // in renamed graph: nodename in original graph -> nodename in new graph
-    private int nextGensym = 1;
+    private static long nextGensym = 1;
     private int cachedHashcode;
     private boolean hasCachedHashcode = false;
 
