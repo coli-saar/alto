@@ -46,6 +46,32 @@ Adj_N -> b_nop
         
         assertEquals(gold, result)
     }
+
+//To test underspecification using member operation
+@Test
+    public void testGenerateREwithMember() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader('''
+interpretation i: de.up.ling.irtg.algebra.SetAlgebra
+
+N! -> a_rabbit_r2(Adj_N)
+  [i] member_r2(intersect_1(rabbit, ?1))
+
+Adj_N -> b_white
+  [i] white
+
+Adj_N -> b_nop
+  [i] T
+        '''));
+        
+        SetAlgebra alg = (SetAlgebra) irtg.getInterpretation("i").getAlgebra();
+        alg.setAtomicInterpretations(["rabbit" : sl([["r1"], ["r2"]]), "white" : sl([["r1"], ["b"]]), "in": sl([["r1", "h"], ["f", "h2"]]), "hat": sl([["h"], ["h2"]])]);
+        TreeAutomaton chart = irtg.parse(["i":"{r2}"]);
+        
+        Set result = chart.language();
+        Set gold = new HashSet([pt("a_rabbit_r2(b_nop)")])
+        
+        assertEquals(gold, result)
+    }
     
     @Test
     public void testGenerateSent() {

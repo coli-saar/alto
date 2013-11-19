@@ -6,7 +6,7 @@ the atomic predicate symbols. You can do this by passing a JSON representation
 of the model as an option. Try translating {e} and {r1} into strings using the
 following model representation:
 
-{"sleep": [["e", "r1"]], rabbit": [["r1"], ["r2"]], "white": [["r1"], ["b"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }
+{"sleep": [["e", "r1"]], "rabbit": [["r1"], ["r2"]], "white": [["r1"], ["b"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }
 
 */
 
@@ -17,8 +17,8 @@ S! -> a_sleeps_r1(N)
 [sem] project_1(intersect_2(sleep, uniq_r1(?1)))
 [string] *(?1, sleeps)
 
-N! -> a_rabbit(Adj_N)
-[sem] intersect_1(rabbit, ?1)
+N! -> a_rabbit_r2(Adj_N)
+[sem] member_r2(intersect_1(rabbit, ?1))
 [string] *(the, *(?1, rabbit))
 
 Adj_N -> b_white

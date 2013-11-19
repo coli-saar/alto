@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 /**
@@ -30,6 +31,7 @@ import java.util.Set;
  * <li>uniq_a(A) returns the set A (a subset of the universe) itself if A = {a};
  * otherwise it returns the empty set.</li>
  * <li>T returns the universe.</li>
+ * <li>subset_i(R,S) returns the set S if S is a subset of R; otherwise it returns the empty set. (Nikos: this is used for underspecification)</li> 
  * </ul>
  *
  * Importantly, the decomposition automata for this algebra only implement
@@ -43,8 +45,9 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";
     private static final String UNIQ = "uniq_";
+    private static final String MEMBER = "member_";
     private static final String TOP = "T";
-    private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ};
+    private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ, MEMBER};
     private Map<String, Set<List<String>>> atomicInterpretations;
     private Set<String> allIndividuals;
     private Set<List<String>> allIndividualsAsTuples;
@@ -146,6 +149,8 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
             ret = intersect(childrenValues.get(0), childrenValues.get(1), Integer.parseInt(arg(label)) - 1);
         } else if (label.startsWith(UNIQ)) {
             ret = uniq(childrenValues.get(0), arg(label));
+        } else if (label.startsWith(MEMBER)) {
+            ret = member(childrenValues.get(0), arg(label));
         } else if (label.equals(TOP)) {
             ret = allIndividualsAsTuples;
         } else {
@@ -189,6 +194,26 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         return ret;
     }
 
+    /**
+     * returns the smallSet, if it's a subset of the bigSet. Otherwise returns the empty set.
+     * @param bigSet
+     * @param smallSet
+     * @param pos
+     * @return 
+     */
+    private Set<List<String>> member(Set<List<String>> tupleSet, String value) {
+        List<String> memberValue = new ArrayList<String>();
+        memberValue.add(value);
+        
+        Set<List<String>> ret = new HashSet<List<String>>();
+        
+        if (tupleSet.contains(memberValue)) {
+            ret.add(memberValue);
+        }
+        
+        return ret;
+    }
+    
     private Set<List<String>> uniq(Set<List<String>> tupleSet, String value) {
         List<String> uniqArg = new ArrayList<String>();
 
