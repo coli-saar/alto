@@ -15,34 +15,34 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An algebra for trees that supports binarization.
- * The domain of this algebra is the set of all ranked
- * trees over some given signature Sigma. All symbols in Sigma
- * are also symbols of the binarized algebra, but their
- * arities are different: all symbols a that have arity 0
- * in Sigma have arity 0 in this algebra, and all symbols f
- * of arity one or more have arity 1 in Sigma. In addition,
- * there is a single new "append" symbol, @, of arity 2 in
- * the algebra.<p>
+ * An algebra with binarizing terms. Let A be some
+ * algebra of your choice. The binarizing algebra B is
+ * defined on top of the underlying algebra A as follows.
+ * <ul>
+ *   <li>The domain of B consists of lists of elements of the domain of A.</li>
+ *   <li>If a/0 is a symbol in A, then a/0 is a symbol in B.</li>
+ *   <li>If a/k for k &gt; 0 is a symbol in A, then a/1 is a symbol in B.</li>
+ *   <li>B contains a special symbol _@_/2 ("concatenation").</li>
+ *   <li>B interprets a/0 as [|a|] and f/1 as the function that maps the list
+ *       [t1,...,tn] to the singleton list [|f|(t1,...,tn)], where |a| and |f|
+ *       are the interpretations of a/0 and f/n in A, respectively.  _@_ denotes
+ *      list concatenation.</li>
+ * </ul>
  * 
- * Evaluation of a term t over this algebra is defined in terms
- * of lists of trees. A constant a evaluates to the singleton
- * list [a]. The append symbol concatenates lists, i.e.
- * @([t1,...,tn], [t'1,...,t'm]) = [t1,...,tn,t'1,...,t'm].
- * The unary symbols f make the trees in the list the children
- * of a new tree with root symbol f, i.e. f([t1,...,tn])
- * = [f(t1,...,tn)]. The evaluation method assumes that
- * the entire tree evaluates to a singleton list [t'] in this
- * way; the value of the term is then the tree t'.
+ * The intended purpose of B is to provide binary terms that
+ * denote values in the domain of A. This is why in the implementation,
+ * BinarizingAlgebra is over the same type parameter for the domain
+ * as the underlying algebra A. The list values are only generated
+ * as intermediate results in evaluating an A-valued term.
  *
  * @author koller
  */
-public class BinaryTreeAlgebra extends Algebra<Tree<String>> {
-    public static final String APPEND = "@";
-    private Algebra<Tree<String>> underlyingAlgebra;
+public class BinarizingAlgebra<E> extends Algebra<E> {
+    public static final String APPEND = "_@_";
+    private Algebra<E> underlyingAlgebra;
     private Signature signature;
 
-    public BinaryTreeAlgebra(Algebra<Tree<String>> underlyingAlgebra) {
+    public BinarizingAlgebra(Algebra<E> underlyingAlgebra) {
         this.underlyingAlgebra = underlyingAlgebra;
 
         signature = new Signature();
@@ -50,8 +50,10 @@ public class BinaryTreeAlgebra extends Algebra<Tree<String>> {
     }
 
     @Override
-    public Tree<String> evaluate(Tree<String> t) {
-        List<Tree<String>> underlyingTree = t.dfs(new TreeVisitor<String, Void, List<Tree<String>>>() {
+    public E evaluate(Tree<String> t) {
+        signature.addAllSymbols(t);
+        
+        List<Tree<String>> underlyingTerm = t.dfs(new TreeVisitor<String, Void, List<Tree<String>>>() {
             @Override
             public List<Tree<String>> combine(Tree<String> node, List<List<Tree<String>>> childrenValues) {
                 if (node.getLabel().equals(APPEND)) {
@@ -72,11 +74,11 @@ public class BinaryTreeAlgebra extends Algebra<Tree<String>> {
             }
         });
 
-        return underlyingAlgebra.evaluate(underlyingTree.get(0));
+        return underlyingAlgebra.evaluate(underlyingTerm.get(0));
     }
 
     @Override
-    public TreeAutomaton decompose(Tree<String> value) {
+    public TreeAutomaton decompose(E value) {
         final TreeAutomaton<? extends Object> underlyingAutomaton = underlyingAlgebra.decompose(value);
 
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
@@ -141,25 +143,25 @@ public class BinaryTreeAlgebra extends Algebra<Tree<String>> {
     }
 
     @Override
-    public Tree<String> parseString(String representation) throws ParserException {
-        Tree<String> ret = underlyingAlgebra.parseString(representation);
+    public E parseString(String representation) throws ParserException {
+        return underlyingAlgebra.parseString(representation);
 
-        ret.dfs(new TreeVisitor<String, Void, Void>() {
-            @Override
-            public Void combine(Tree<String> node, List<Void> childrenValues) {
-                int arity = underlyingAlgebra.getSignature().getArityForLabel(node.getLabel());
-
-                if (arity <= 2) {
-                    signature.addSymbol(node.getLabel(), arity);
-                } else {
-                    signature.addSymbol(node.getLabel(), 0);
-                }
-
-                return null;
-            }
-        });
-
-        return ret;
+//        ret.dfs(new TreeVisitor<String, Void, Void>() {
+//            @Override
+//            public Void combine(Tree<String> node, List<Void> childrenValues) {
+//                int arity = underlyingAlgebra.getSignature().getArityForLabel(node.getLabel());
+//
+//                if (arity <= 2) {
+//                    signature.addSymbol(node.getLabel(), arity);
+//                } else {
+//                    signature.addSymbol(node.getLabel(), 0);
+//                }
+//
+//                return null;
+//            }
+//        });
+//
+//        return ret;
     }
 
     @Override
