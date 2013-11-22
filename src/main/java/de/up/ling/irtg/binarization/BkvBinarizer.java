@@ -113,6 +113,11 @@ public class BkvBinarizer {
         for (String interp : interpretationNames) {
             ret.addInterpretation(interp, new Interpretation(newAlgebras.get(interp), binarizedHom.get(interp)));
         }
+        
+//        for( String interp : regularSeeds.keySet() ) {
+//            System.err.println("stats for " + interp);
+//            regularSeeds.get(interp).printStats();
+//        }
 
         return ret;
     }

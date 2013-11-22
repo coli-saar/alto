@@ -9,6 +9,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
@@ -388,6 +389,22 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         return ret;
+    }
+    
+    
+    public Iterable<Rule> getRuleIterable() {
+        List<Iterable<Rule>> its = new ArrayList<Iterable<Rule>>();
+        
+        makeAllRulesExplicit();
+
+        for (StateListToStateMap map : explicitRulesBottomUp.values()) {
+            for (Set<Rule> set : map.getAllRules().values()) {
+                its.add(set);
+            }
+        }
+        
+        
+        return Iterables.concat(its);
     }
 
     /**

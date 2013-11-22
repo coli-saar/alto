@@ -52,7 +52,17 @@ public class HomomorphismSymbol {
     }
 
     public static boolean isVariableSymbol(String sym) {
-        return VARNAME_PATTERN.matcher(sym).matches();
+        if( sym.length() < 2 || sym.charAt(0) != '?') {
+            return false;
+        }
+        
+        for( int i = 1; i < sym.length(); i++ ) {
+            if( ! Character.isDigit(sym.charAt(i))) {
+                return false;
+            }
+        }
+        
+        return true;
     }
 
     private static HomomorphismSymbol createFromName(String name, Signature signature, int arity) {
