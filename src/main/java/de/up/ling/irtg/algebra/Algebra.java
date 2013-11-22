@@ -10,6 +10,9 @@ import com.google.common.collect.Iterators;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -81,17 +84,42 @@ public abstract class Algebra<E> {
     abstract public Signature getSignature();
     
     /**
-     * Set the options of the algebra implementation. Most algebras
+     * Sets the options of the algebra implementation. Most algebras
      * do not have options; for these algebras, it is okay to reuse
-     * the default implementation of setOptions, which simply does
+     * the default implementation of readOptions, which simply does
      * nothing. However, if your algebra relies on external data
-     * to work properly, you may provide a string representation
+     * to work properly, you may provide a reader that provides a
+     * string representation
      * of this external data using this method. See {@link SetAlgebra}
      * for an example.
      * 
      * @param optionString 
      */
-    public void setOptions(String optionString) throws Exception {
+    public void readOptions(Reader optionReader) throws Exception {
+        
+    }
+    
+    /**
+     * Sets the options of the algebra implementation from a string.
+     * This method simply wraps the option string into a StringReader
+     * and then calls {@link #readOptions(java.io.Reader) }.
+     * 
+     * @see #readOptions(java.io.Reader) 
+     * @param string
+     * @throws Exception 
+     */
+    public void setOptions(String string) throws Exception {
+        readOptions(new StringReader(string));
+    }
+    
+    /**
+     * Writes the options of the current algebra object to a Writer.
+     * 
+     * @see #readOptions(java.io.Reader) 
+     * @param optionWriter
+     * @throws Exception 
+     */
+    public void writeOptions(Writer optionWriter) throws Exception {
         
     }
     

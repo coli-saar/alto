@@ -6,7 +6,9 @@ package de.up.ling.irtg.algebra;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +16,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 /**
@@ -71,7 +72,8 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     }
 
     @Override
-    public void setOptions(String optionString) throws Exception {
+    public void readOptions(Reader optionReader) throws Exception {
+        String optionString = StringTools.slurp(optionReader);
         Map<String, Set<List<String>>> atomicInterpretations = new HashMap<String, Set<List<String>>>();
 
         if (!optionString.trim().equals("")) {
