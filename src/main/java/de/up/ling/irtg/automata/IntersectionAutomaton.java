@@ -40,6 +40,9 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         stateToLeftState = new Int2IntOpenHashMap();
         stateToRightState = new Int2IntOpenHashMap();
 
+        System.err.println("Left automaton: \n" + left + "\n");
+        System.err.println("Right automaton: \n" + right + "\n\n");
+        
         finalStates = null;
 //        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
     }
@@ -101,6 +104,9 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            System.err.println(explicitRulesToString());
 
             // compute rules and states bottom-up 
+            
+            System.err.println("Partners " + partners);
+            
             long unsuccessful = 0;
             long iterations = 0;
             while (!agenda.isEmpty()) {
@@ -111,23 +117,28 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
 
                 for (Rule leftRule : possibleRules) {
-//                    System.err.println("consider leftrule: " + leftRule.toString(left));
+                    
+                    System.err.println("consider leftrule: " + leftRule.toString(left));
+                    System.err.println("aka                " + leftRule.toString());
 
+                    
                     List<Set<Integer>> partnerStates = new ArrayList<Set<Integer>>();
                     for (int leftState : leftRule.getChildren()) {
                         partnerStates.add(partners.get(leftState));
                     }
-
+                    
+                    
                     CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
                     List<Integer> newStates = new ArrayList<Integer>();
                     while (it.hasNext()) {
                         iterations++;
 
                         List<Integer> partnersHere = it.next();
-//                        System.err.println("right partners: " + partnersHere);
+                        
+                        System.err.println("right partners: " + partnersHere);
 
                         Set<Rule> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
-//                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
+                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
 
 
                         if (rightRules.isEmpty()) {
@@ -160,9 +171,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             if (DEBUG) {
                 System.err.println(iterations + " iterations, " + unsuccessful + " unsucc");
             }
-
-//            System.err.println("after run: " + explicitRules.size());
-//            System.err.println(toString());
+            
+            
+            
+           // System.err.println("after run: " + explicitRules.size());
+            System.err.println("Intersection automaton:\n" + toString());
 
 
         }
