@@ -33,10 +33,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 /**
- * Implements the binarization algorithm of Buechse/Koller/Vogler 2013.
- * See the following paper for details:
+ * Implements the binarization algorithm of Buechse/Koller/Vogler 2013. See the
+ * following paper for details:
  * http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=binarization-13
  *
  * @author koller
@@ -54,17 +55,11 @@ public class BkvBinarizer {
         this.debug = debug;
     }
 
-    private void log(String str) {
-        if (debug) {
-            System.err.println(str);
-        }
-    }
-
-    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String,Algebra> newAlgebras) {
+    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String, Algebra> newAlgebras) {
         return binarize(irtg, newAlgebras, null);
     }
-    
-    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String,Algebra> newAlgebras, ProgressListener listener) {
+
+    public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String, Algebra> newAlgebras, ProgressListener listener) {
         ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<String>();
         Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
         List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
@@ -80,42 +75,35 @@ public class BkvBinarizer {
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
 //            log("\n\n\nbinarizing rule: " + rule.toString(irtg.getAutomaton()));
 
-            if (rule.getArity() <= 2) {
-                // rules of low arity => simply copy these to result
-//                log(" -> low arity, copy");
+            RuleBinarization rb = binarizeRule(rule, irtg);
+
+            if(debug) System.err.println(" -> binarization: " + rb);
+
+            if (rb == null) {
+                // unbinarizable => copy to result
+                if(debug) System.err.println(" -> unbinarizable, copy");
                 copyRule(rule, binarizedRtg, binarizedHom, irtg);
             } else {
-                // rules of higher arity => binarize
-                RuleBinarization rb = binarizeRule(rule, irtg);
+                // else, add binarized rule to result
+                String[] childStates = new String[rule.getArity()];
+                for (int i = 0; i < rule.getArity(); i++) {
+                    childStates[i] = rtg.getStateForId(rule.getChildren()[i]).toString();
+                }
 
-//                log(" -> binarization: " + rb);
+                Object parent = rtg.getStateForId(rule.getParent());
+                String newParent = addRulesToAutomaton(binarizedRtg, rb.xi, parent.toString(), childStates, rule.getWeight());
 
-                if (rb == null) {
-                    // unbinarizable => copy to result
-//                    log(" -> unbinarizable, copy");
-                    copyRule(rule, binarizedRtg, binarizedHom, irtg);
-                } else {
-                    // else, add binarized rule to result
-                    String[] childStates = new String[rule.getArity()];
-                    for (int i = 0; i < rule.getArity(); i++) {
-                        childStates[i] = rtg.getStateForId(rule.getChildren()[i]).toString();
-                    }
+                if (rtg.getFinalStates().contains(rule.getParent())) {
+                    binarizedRtg.addFinalState(binarizedRtg.getIdForState(newParent));
+                }
 
-                    Object parent = rtg.getStateForId(rule.getParent());
-                    String newParent = addRulesToAutomaton(binarizedRtg, rb.xi, parent.toString(), childStates, rule.getWeight());
-
-                    if (rtg.getFinalStates().contains(rule.getParent())) {
-                        binarizedRtg.addFinalState(binarizedRtg.getIdForState(newParent));
-                    }
-
-                    for (String interp : interpretationNames) {
-//                        log("\nmake hom for " + interp);
-                        addEntriesToHomomorphism(binarizedHom.get(interp), rb.xi, rb.binarizationTerms.get(interp));
-                    }
+                for (String interp : interpretationNames) {
+                    if(debug) System.err.println("\nmake hom for " + interp);
+                    addEntriesToHomomorphism(binarizedHom.get(interp), rb.xi, rb.binarizationTerms.get(interp));
                 }
             }
-            
-            if( listener != null ) {
+
+            if (listener != null) {
                 listener.update(ruleNumber++, 0);
             }
         }
@@ -144,7 +132,7 @@ public class BkvBinarizer {
         return vartree.dfs(new TreeVisitor<String, Void, String>() {
             @Override
             public String combine(Tree<String> node, List<String> childrenValues) {
-                if (childrenValues.isEmpty()) {
+                if (childrenValues.isEmpty() && NUMBER_PATTERN.matcher(node.getLabel()).matches()) {
                     int var = Integer.parseInt(node.getLabel());
                     return oldRuleChildren[var];
                 } else {
@@ -174,6 +162,8 @@ public class BkvBinarizer {
         Map<String, Int2ObjectMap<IntSet>> varPerInterpretation = new HashMap<String, Int2ObjectMap<IntSet>>();
         RuleBinarization ret = new RuleBinarization();
 
+        if(debug) System.err.println("\n\n*** BINARIZE " + rule.toString(irtg.getAutomaton()) + " ***");
+
         for (String interpretation : irtg.getInterpretations().keySet()) {
             String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());            // this is alpha from the paper
             Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
@@ -181,10 +171,15 @@ public class BkvBinarizer {
             TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);  // this is G_i
             binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
 
+            if(debug) System.err.println("\nG(" + interpretation + "):\n" + binarizationTermsHere);
+
             Int2ObjectMap<IntSet> varHere = computeVar(binarizationTermsHere);                             // this is var_i
             varPerInterpretation.put(interpretation, varHere);
 
+            if(debug) System.err.println("\nvars(" + interpretation + "):\n" + varHere);
+
             TreeAutomaton<IntSet> variableTrees = vartreesForAutomaton(binarizationTermsHere, varHere);    // this is G'_i  (accepts variable trees)
+            if(debug) System.err.println("\nG'(" + interpretation + "):\n" + variableTrees);
 
             if (commonVariableTrees == null) {
                 commonVariableTrees = variableTrees;
@@ -202,10 +197,16 @@ public class BkvBinarizer {
         Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
         ret.xi = xiFromVartree(commonVariableTree, irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel()));
 
+        if(debug) System.err.println("\nvartree = " + commonVariableTree);
+        if(debug) System.err.println("xi = " + ret.xi);
+
         for (String interpretation : irtg.getInterpretations().keySet()) {
             // this is G''_i
             TreeAutomaton binarizationsForThisVartree = binarizationsForVartree(binarizationTermsPerInterpretation.get(interpretation), commonVariableTree, varPerInterpretation.get(interpretation));
+            if(debug) System.err.println("\nG''(" + interpretation + "):\n" + binarizationsForThisVartree);
+
             Tree<String> binarization = binarizationsForThisVartree.viterbi();
+            if(debug) System.err.println("\nbin(" + interpretation + "):\n" + binarization);
 
             ret.binarizationTerms.put(interpretation, binarization);
         }
@@ -217,7 +218,7 @@ public class BkvBinarizer {
         return vartree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                if (childrenValues.isEmpty()) {
+                if (childrenValues.isEmpty() && isNumber(node.getLabel())) {
                     return node;
                 } else {
                     return Tree.create(gensym(originalLabel + "_br"), childrenValues);
@@ -247,18 +248,18 @@ public class BkvBinarizer {
         ConcreteTreeAutomaton<IntSet> ret = new ConcreteTreeAutomaton<IntSet>();
 
         for (Rule rule : automaton.getRuleSet()) {
+            Rule newRule = null;
+
             if (rule.getArity() == 0) {
                 String label = automaton.getSignature().resolveSymbolId(rule.getLabel());
+                IntSet is = new IntOpenHashSet();
 
-                if (label.startsWith("?")) {
+                if (HomomorphismSymbol.isVariableSymbol(label)) {
                     int var = HomomorphismSymbol.getVariableIndex(label);
-
-                    IntSet is = new IntOpenHashSet();
                     is.add(var);
-
-                    Rule newRule = ret.createRule(is, representVarSet(is), new ArrayList<IntSet>());
-                    ret.addRule(newRule);
                 }
+
+                newRule = ret.createRule(is, representVarSet(is), new ArrayList<IntSet>());
             } else {
                 List<IntSet> rhsVarsets = new ArrayList<IntSet>();
 
@@ -275,12 +276,16 @@ public class BkvBinarizer {
                     Collections.sort(rhsVarsets, new IntSetComparator());
 
                     IntSet parentSet = vars.get(rule.getParent());
-                    Rule newRule = ret.createRule(parentSet, representVarSet(parentSet), rhsVarsets);
-                    ret.addRule(newRule);
+                    newRule = ret.createRule(parentSet, representVarSet(parentSet), rhsVarsets);
 
-                    if (automaton.getFinalStates().contains(rule.getParent())) {
-                        ret.addFinalState(newRule.getParent());
-                    }
+                }
+            }
+
+            if (newRule != null) {
+                ret.addRule(newRule);
+
+                if (automaton.getFinalStates().contains(rule.getParent())) {
+                    ret.addFinalState(newRule.getParent());
                 }
             }
         }
@@ -317,13 +322,17 @@ public class BkvBinarizer {
         @Override
         public String toString() {
             String v = "null";
-            
-            if( varsConstruction != null ) {
+
+            if (varsConstruction != null) {
                 v = representVarSets(varsConstruction);
             }
-            
+
             return tree + "@" + vars + "=" + v;
         }
+    }
+
+    private static boolean isNumber(String s) {
+        return NUMBER_PATTERN.matcher(s).matches();
     }
 
     // add mappings to hom that assign suitable parts of the binarization term to the new labels in xi
@@ -331,7 +340,7 @@ public class BkvBinarizer {
     // xi: _br1(_br0('0','1'),'2')
     // -> hom is _br0 -> *(a, *(?1,?2)), _br1 -> *(?2,?1)
     void addEntriesToHomomorphism(final Homomorphism hom, Tree<String> xi, Tree<String> binarizationTerm) {
-//        log("makehom: " + binarizationTerm + " along " + xi);
+        if(debug) System.err.println("makehom: " + binarizationTerm + " along " + xi);
 
         hom.getTargetSignature().addAllSymbols(binarizationTerm);
 
@@ -341,8 +350,8 @@ public class BkvBinarizer {
             public IntSet combine(Tree<String> node, List<IntSet> childrenValues) {
                 IntSet here = new IntOpenHashSet();
 
-                if (node.getChildren().isEmpty()) {
-                    // leaf of vartree => node label is a number
+                if (node.getChildren().isEmpty() && isNumber(node.getLabel())) {
+                    // variable leaf of vartree => node label is a number
                     here.add(Integer.parseInt(node.getLabel()));
                 } else {
                     labelForFork.put(representVarSets(childrenValues), node.getLabel());
@@ -367,7 +376,7 @@ public class BkvBinarizer {
                 Subtree ret;
 
                 if (childrenValues.isEmpty()) {
-                    if (node.getLabel().startsWith("?")) {
+                    if (HomomorphismSymbol.isVariableSymbol(node.getLabel())) {
                         is.add(HomomorphismSymbol.getVariableIndex(node.getLabel()));
                         ret = new Subtree(Tree.create("?1"), is, new ArrayList<IntSet>());
                     } else {
@@ -435,15 +444,15 @@ public class BkvBinarizer {
                     }
                 }
 
-//                log("return: " + node + " -> " + ret);
+                if(debug) System.err.println("return: " + node + " -> " + ret);
                 return ret;
             }
         });
 
         hom.add(xi.getLabel(), subtreeForRoot.tree);
-//        log("add hom (r): " + xi.getLabel() + " -> " + subtreeForRoot.tree);
+        if(debug) System.err.println("add hom (r): " + xi.getLabel() + " -> " + subtreeForRoot.tree);
 
-//        log("hom is: " + hom);
+        if(debug) System.err.println("hom is: " + hom);
     }
 
     /**
@@ -483,7 +492,6 @@ public class BkvBinarizer {
         return ret;
     }
 
-
     // transfer rule from one automaton to another, and return the rule in the new automaton
     private static <E> Rule transferRule(Rule oldRule, TreeAutomaton<E> fromAutomaton, TreeAutomaton<E> toAutomaton) {
         E[] ruleRhs = (E[]) new Object[oldRule.getArity()];
@@ -517,10 +525,7 @@ public class BkvBinarizer {
     private String gensym(String prefix) {
         return prefix + (nextGensym++);
     }
-    
-    
-    
-    
+
     /**
      * **********************************************************************************
      *
@@ -528,8 +533,6 @@ public class BkvBinarizer {
      *
      ***********************************************************************************
      */
-    
-    
     /**
      * **********************************************************************************
      *
@@ -537,8 +540,6 @@ public class BkvBinarizer {
      *
      ***********************************************************************************
      */
-    
-    
     // Computes the var-map of a tree automaton. The var-map maps a state q
     // of the automaton to the set of all variable numbers that are contained
     // in trees that can be derived from q. As explained in BKV, this variable set
@@ -573,7 +574,7 @@ public class BkvBinarizer {
 
         return ret;
     }
-    
+
     // map IntSet {0,2,1} to string 0_1_2; 
     // unique (sorted) string representation is guaranteed for equal IntSets
     private static String representVarSet(IntSet vs) {
@@ -610,6 +611,7 @@ public class BkvBinarizer {
 
         return StringTools.join(reprs, "+");
     }
+    private static Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
     // Collects the set of string representations of the forks in the
     // given variable tree. A fork is a binary construction 0_1+2_3, which
@@ -623,9 +625,14 @@ public class BkvBinarizer {
                 IntSet here = new IntOpenHashSet();
 
                 if (node.getChildren().isEmpty()) {
-                    // leaf of vartree => node label is a number
-                    ret.add(node.getLabel());
-                    here.add(Integer.parseInt(node.getLabel()));
+                    // leaf of vartree
+                    if (NUMBER_PATTERN.matcher(node.getLabel()).matches()) {
+                        // node label is a number => this is variable index, collect it
+                        ret.add(node.getLabel());
+                        here.add(Integer.parseInt(node.getLabel()));
+                    } else {
+                        // otherwise, just return empty set
+                    }
                 } else {
                     ret.add(representVarSets(childrenValues));
 

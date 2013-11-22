@@ -9,12 +9,15 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author koller
  */
 public class HomomorphismSymbol {
+    private static final Pattern VARNAME_PATTERN = Pattern.compile("\\?\\d+");
+
     public enum Type {
         CONSTANT, VARIABLE
         // GENSYM
@@ -48,9 +51,12 @@ public class HomomorphismSymbol {
         return new HomomorphismSymbol(name, Type.CONSTANT);
     }
 
+    public static boolean isVariableSymbol(String sym) {
+        return VARNAME_PATTERN.matcher(sym).matches();
+    }
 
     private static HomomorphismSymbol createFromName(String name, Signature signature, int arity) {
-        if (name.startsWith("?")) {
+        if (isVariableSymbol(name)) {
             return createVariable(name);
         } else {
             return createConstant(name, signature, arity);
@@ -63,10 +69,10 @@ public class HomomorphismSymbol {
      * Constants will be resolved to symbol IDs using the given signature.
      * Constants that are not known in the signature will be added to the
      * signature, with the number of children in the tree as the arity.
-     * 
+     *
      * @param tree
      * @param signature
-     * @return 
+     * @return
      */
     public static Tree<HomomorphismSymbol> treeFromNames(Tree<String> tree, final Signature signature) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<HomomorphismSymbol>>() {
@@ -76,31 +82,35 @@ public class HomomorphismSymbol {
             }
         });
     }
-    
+
     /**
      * Converts a tree of HomomorphismSymbols into a tree of string labels.
-     * Symbol IDs in constant labels are resolved according to the given signature.
-     * The tree returned by this method can be converted back into a tree of
-     * HomomorphismSymbols using treeFromNames.
-     * 
+     * Symbol IDs in constant labels are resolved according to the given
+     * signature. The tree returned by this method can be converted back into a
+     * tree of HomomorphismSymbols using treeFromNames.
+     *
      * @param tree
      * @param signature
-     * @return 
+     * @return
      */
     public static Tree<String> toStringTree(Tree<HomomorphismSymbol> tree, final Signature signature) {
-        return tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<String>>() {
-            @Override
-            public Tree<String> combine(Tree<HomomorphismSymbol> node, List<Tree<String>> childrenValues) {
-                switch(node.getLabel().getType()) {
-                    case VARIABLE:
-                        return Tree.create("?" + (node.getLabel().getValue()+1));
-                    case CONSTANT:
-                        return Tree.create(signature.resolveSymbolId(node.getLabel().getValue()), childrenValues);
+        if (tree == null) {
+            return Tree.create("<null>");
+        } else {
+            return tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<String>>() {
+                @Override
+                public Tree<String> combine(Tree<HomomorphismSymbol> node, List<Tree<String>> childrenValues) {
+                    switch (node.getLabel().getType()) {
+                        case VARIABLE:
+                            return Tree.create("?" + (node.getLabel().getValue() + 1));
+                        case CONSTANT:
+                            return Tree.create(signature.resolveSymbolId(node.getLabel().getValue()), childrenValues);
+                    }
+
+                    return null;
                 }
-                
-                return null;
-            }
-        });
+            });
+        }
     }
 
     public boolean isConstant() {
@@ -151,17 +161,17 @@ public class HomomorphismSymbol {
 
     @Override
     public String toString() {
-        return (isVariable()?"?":"") + value;
+        return (isVariable() ? "?" : "") + value;
     }
-    
-    private static class HomSymbolToInt implements Function<HomomorphismSymbol,Integer> {
+
+    private static class HomSymbolToInt implements Function<HomomorphismSymbol, Integer> {
         public Integer apply(HomomorphismSymbol f) {
             return f.getValue();
         }
     }
-    private static Function<HomomorphismSymbol,Integer> HOM_SYMBOL_TO_INT = new HomSymbolToInt();
-    
-    public static Function<HomomorphismSymbol,Integer> getHomSymbolToIntFunction() {
+    private static Function<HomomorphismSymbol, Integer> HOM_SYMBOL_TO_INT = new HomSymbolToInt();
+
+    public static Function<HomomorphismSymbol, Integer> getHomSymbolToIntFunction() {
         return HOM_SYMBOL_TO_INT;
     }
 
@@ -190,7 +200,4 @@ public class HomomorphismSymbol {
         }
         return true;
     }
-
-    
-    
 }

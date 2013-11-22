@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -53,12 +54,22 @@ public class StringAlgebraSeed extends RegularSeed {
             targetSignature.addSymbol("?" + (i+1), 0);
         }
         
-        if (sourceSignature.getArityForLabel(symbol) <= 2) {
-            return new SingletonAutomaton(symbol);
-        } else {
-            
-            return new BinarizationAutomaton(symbol);
+        switch(sourceSignature.getArityForLabel(symbol)) {
+            case 0: return new OneSymbolAutomaton(symbol);
+            case 1: return new OneSymbolAutomaton("?1");
+            default: return new BinarizationAutomaton(symbol);
         }
+    }
+    
+    private class OneSymbolAutomaton extends ConcreteTreeAutomaton<String> {
+
+        public OneSymbolAutomaton(String symbol) {
+            signature = targetSignature;
+            
+            addRule(createRule("q", symbol, new ArrayList<String>()));
+            addFinalState(getIdForState("q"));
+        }
+        
     }
 
     private class SingletonAutomaton extends ConcreteTreeAutomaton<String> {
@@ -117,7 +128,7 @@ public class StringAlgebraSeed extends RegularSeed {
             String label = signature.resolveSymbolId(labelId);
             Span parentState = getStateForId(parentStateId);
 
-            if (label.startsWith("?")) {
+            if (HomomorphismSymbol.isVariableSymbol(label)) {
                 int var = Integer.parseInt(label.substring(1))-1;
 
                 if (parentState.start == var && parentState.end == var + 1) {

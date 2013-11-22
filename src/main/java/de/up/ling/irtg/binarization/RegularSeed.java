@@ -9,6 +9,7 @@ import com.google.common.collect.Iterators;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -120,6 +121,15 @@ public abstract class RegularSeed {
                 // if original parent was final state, add new parent as final state to ret
                 if (autoHere.getFinalStates().contains(rule.getParent())) {
                     int newParentId = ret.getIdForState(newParent);
+                    assert finalStateHere == -1 || finalStateHere == newParentId; // ensure at most one final state
+                    finalStateHere = newParentId;
+                }
+            } else {
+                // for rules of the form q -> ?i, we don't need to copy them; but if
+                // q was a final state, the final state of the automaton that we substituted into
+                // ?i is now a final state of the result automaton
+                if( autoHere.getFinalStates().contains(rule.getParent())) {
+                    int newParentId = finalStatesOfChildren[HomomorphismSymbol.getVariableIndex(rule.getLabel(autoHere))];
                     assert finalStateHere == -1 || finalStateHere == newParentId; // ensure at most one final state
                     finalStateHere = newParentId;
                 }

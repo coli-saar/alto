@@ -46,6 +46,26 @@ public class RegularSeedTest {
     }
     
     @Test
+    public void testStringSeedBinary() {
+        Algebra alg = new StringAlgebra();
+        RegularSeed rs = new StringAlgebraSeed(alg, alg);
+
+        alg.getSignature().addAllSymbols(pt("f(a,c)"));
+        TreeAutomaton binAuto = rs.binarize(pt("f(a,c)"));
+        assertEquals(new HashSet([pt("*(a,c)")]), binAuto.language()); 
+    }
+    
+    @Test
+    public void testStringSeedUnary() {
+        Algebra alg = new StringAlgebra();
+        RegularSeed rs = new StringAlgebraSeed(alg, alg);
+
+        alg.getSignature().addAllSymbols(pt("f(a)"));
+        TreeAutomaton binAuto = rs.binarize(pt("f(a)"));
+        assertEquals(new HashSet([pt("a")]), binAuto.language()); 
+    }
+    
+    @Test
     public void testComplexStringSeed() {
         Algebra alg = new StringAlgebra();
         RegularSeed rs = new StringAlgebraSeed(alg, alg);

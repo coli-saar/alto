@@ -161,9 +161,6 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
         
-//        System.err.println(binarized)
-        
-        assertAlmostEquals(2.0, binarized.getAutomaton().getWeight(pt("r1_br1(r1_br0(r2,r3),r4)")))
         
         // check decoding from left to right
         TreeAutomaton chart = binarized.parse(["left": "b c d"])
@@ -181,11 +178,31 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         assert ! chart.language().isEmpty()
         
+        assertAlmostEquals(2.0, chart.getWeight(chart.viterbi()))
+        
         chart.language().each { 
             Map vals = binarized.interpret(it)
             assertEquals(["b","c","d"], vals.get("left"))
             assertEquals(["d", "a", "b", "c"], vals.get("right"))
         }  
+    }
+    
+    @Test
+    public void testBinarizeConstant() {
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(BIN_CONSTANT));
+        
+        Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
+        
+        Algebra leftOutAlgebra = new StringAlgebra()
+        
+        Map newAlgebras = ["left": leftOutAlgebra]
+        Map seeds = ["left": new StringAlgebraSeed(leftAlgebra, leftOutAlgebra)];
+        
+        BkvBinarizer bin = new BkvBinarizer(seeds)
+        
+        InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
+        
+        assertEquals(new HashSet([pt("r1_br0")]), binarized.getAutomaton().language())
     }
     
     @Test
@@ -224,6 +241,13 @@ D -> r4
 [right] d
    """;
 
+    
+   private static final String BIN_CONSTANT = """
+interpretation left: de.up.ling.irtg.algebra.WideStringAlgebra
+
+A! -> r1 [2]
+[left]  'a'
+""";
     
     private IntSet is(List ints) {
         IntSet ret = new IntOpenHashSet()
