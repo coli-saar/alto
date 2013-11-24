@@ -55,21 +55,19 @@ public class StringAlgebraSeed extends RegularSeed {
         }
         
         switch(sourceSignature.getArityForLabel(symbol)) {
-            case 0: return new OneSymbolAutomaton(symbol);
-            case 1: return new OneSymbolAutomaton("?1");
-            default: return new BinarizationAutomaton(symbol);
+            case 0: return new OneSymbolAutomaton(symbol, targetSignature);
+            case 1: return new OneSymbolAutomaton("?1", targetSignature);
+            default: return new BinarizationAutomaton(sourceSignature.getArityForLabel(symbol), targetSignature, binaryConcatenationId);
         }
     }
     
-    private class OneSymbolAutomaton extends ConcreteTreeAutomaton<String> {
-
-        public OneSymbolAutomaton(String symbol) {
-            signature = targetSignature;
+    public static class OneSymbolAutomaton extends ConcreteTreeAutomaton<String> {
+        public OneSymbolAutomaton(String symbol, Signature signature) {
+            this.signature = signature;
             
             addRule(createRule("q", symbol, new ArrayList<String>()));
             addFinalState(getIdForState("q"));
-        }
-        
+        }        
     }
 
     private class SingletonAutomaton extends ConcreteTreeAutomaton<String> {
@@ -91,8 +89,8 @@ public class StringAlgebraSeed extends RegularSeed {
         }
     }
 
-    private class BinarizationAutomaton extends TreeAutomaton<Span> {
-        public BinarizationAutomaton(String symbol) {
+    private class MyBinarizationAutomaton extends TreeAutomaton<Span> {
+        public MyBinarizationAutomaton(String symbol) {
             super(targetSignature);
             addFinalState(addState(new Span(0, sourceSignature.getArityForLabel(symbol))));
         }

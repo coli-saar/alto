@@ -22,10 +22,10 @@ import java.util.List;
  *   <li>The domain of B consists of lists of elements of the domain of A.</li>
  *   <li>If a/0 is a symbol in A, then a/0 is a symbol in B.</li>
  *   <li>If a/k for k &gt; 0 is a symbol in A, then a/1 is a symbol in B.</li>
- *   <li>B contains a special symbol _@_/2 ("concatenation").</li>
+ *   <li>B contains a special symbol @/2 ("concatenation").</li>
  *   <li>B interprets a/0 as [|a|] and f/1 as the function that maps the list
  *       [t1,...,tn] to the singleton list [|f|(t1,...,tn)], where |a| and |f|
- *       are the interpretations of a/0 and f/n in A, respectively.  _@_ denotes
+ *       are the interpretations of a/0 and f/n in A, respectively.  @ denotes
  *      list concatenation.</li>
  * </ul>
  * 
@@ -33,20 +33,32 @@ import java.util.List;
  * denote values in the domain of A. This is why in the implementation,
  * BinarizingAlgebra is over the same type parameter for the domain
  * as the underlying algebra A. The list values are only generated
- * as intermediate results in evaluating an A-valued term.
+ * as intermediate results in evaluating an A-valued term.<p>
+ * 
+ * By default, this algebra uses "_@_" for the concatenation symbol.
+ * You can specify your own symbol by passing it to the constructor.
  *
  * @author koller
  */
 public class BinarizingAlgebra<E> extends Algebra<E> {
-    public static final String APPEND = "_@_";
+    private final String appendSymbol;
     private Algebra<E> underlyingAlgebra;
     private Signature signature;
-
+    
     public BinarizingAlgebra(Algebra<E> underlyingAlgebra) {
+        this(underlyingAlgebra, "_@_");
+    }
+
+    public BinarizingAlgebra(Algebra<E> underlyingAlgebra, String appendSymbol) {
         this.underlyingAlgebra = underlyingAlgebra;
 
+        this.appendSymbol = appendSymbol;
         signature = new Signature();
-        signature.addSymbol(APPEND, 2);
+        signature.addSymbol(appendSymbol, 2);
+    }
+    
+    public String getAppendSymbol() {
+        return appendSymbol;
     }
 
     @Override
@@ -56,7 +68,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
         List<Tree<String>> underlyingTerm = t.dfs(new TreeVisitor<String, Void, List<Tree<String>>>() {
             @Override
             public List<Tree<String>> combine(Tree<String> node, List<List<Tree<String>>> childrenValues) {
-                if (node.getLabel().equals(APPEND)) {
+                if (node.getLabel().equals(appendSymbol)) {
                     List<Tree<String>> ret = childrenValues.get(0);
                     ret.addAll(childrenValues.get(1));
                     return ret;
@@ -76,11 +88,8 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
 
         return underlyingAlgebra.evaluate(underlyingTerm.get(0));
     }
-
-    @Override
-    public TreeAutomaton decompose(E value) {
-        final TreeAutomaton<? extends Object> underlyingAutomaton = underlyingAlgebra.decompose(value);
-
+    
+    public TreeAutomaton binarizeTreeAutomaton(TreeAutomaton<? extends Object> underlyingAutomaton) {
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
         for( int stateId : underlyingAutomaton.getAllStates() ) {
             ret.addState(underlyingAutomaton.getStateForId(stateId).toString());
@@ -110,8 +119,14 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
         for (int finalState : underlyingAutomaton.getFinalStates()) {
             ret.addFinalState(finalState);
         }
-
+        
         return ret;
+    }
+
+    @Override
+    public TreeAutomaton decompose(E value) {
+        final TreeAutomaton<? extends Object> underlyingAutomaton = underlyingAlgebra.decompose(value);
+        return binarizeTreeAutomaton(underlyingAutomaton);
     }
 
 //    private List<String> makeStrings(List children) {
@@ -132,7 +147,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
 
                     String parent = (width1 + width2 == childrenStates.size()) ? ruleName : makeStateName(ruleName, start, width1 + width2);
 
-                    auto.addRule(auto.createRule(parent, APPEND, children));
+                    auto.addRule(auto.createRule(parent, appendSymbol, children));
                 }
             }
         }

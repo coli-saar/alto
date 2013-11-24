@@ -94,5 +94,17 @@ public class RegularSeedTest {
         binAuto = rs.binarize(pt("*(a,b)"))
         assertEquals(new HashSet([pt("*(a,b)")]), binAuto.language())
     }
+    
+    @Test
+    public void testTreeSeed() {
+        TreeAlgebra alg = new TreeAlgebra();
+        Tree t = alg.parseString("f(a,b,g(d,e,e))") // add symbols to algebra
+        
+        BinarizingTreeAlgebra balg = new BinarizingTreeAlgebra();        
+        BinarizingAlgebraSeed rs = new BinarizingAlgebraSeed(alg, balg);
+        
+        TreeAutomaton binAuto = rs.binarize("f");
+        assertEquals(new HashSet([pt("f(_@_(_@_(?1,?2), ?3))"), pt("f(_@_(?1, _@_(?2, ?3)))")]), binAuto.language())
+    }
 }
 

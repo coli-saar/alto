@@ -682,7 +682,6 @@ public class InterpretedTreeAutomaton {
             for (String interp : interpretationOrder) {
                 Homomorphism hom = interpretations.get(interp).getHomomorphism();
                 Tree<HomomorphismSymbol> rhs = hom.get(rule.getLabel());
-                System.err.println("print " + rule.getLabel(automaton) + " on " + interp);
                 pw.println("  [" + interp + "] " + hom.rhsAsString(rhs));
             }
 

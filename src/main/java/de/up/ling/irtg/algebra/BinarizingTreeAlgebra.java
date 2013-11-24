@@ -14,4 +14,8 @@ public class BinarizingTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
     public BinarizingTreeAlgebra() {
         super(new TreeAlgebra());
     }
+    
+    public BinarizingTreeAlgebra(String appendSymbol) {
+        super(new TreeAlgebra(), appendSymbol);
+    }
 }
