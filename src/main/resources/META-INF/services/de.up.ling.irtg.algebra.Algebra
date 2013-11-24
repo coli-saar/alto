@@ -1,4 +1,5 @@
 de.up.ling.irtg.algebra.BinarizingTreeAlgebra
+de.up.ling.irtg.algebra.BinarizingTreeWithAritiesAlgebra
 #de.up.ling.irtg.algebra.PtbTreeAlgebra
 #de.up.ling.irtg.algebra.SetAlgebra
 de.up.ling.irtg.algebra.StringAlgebra
