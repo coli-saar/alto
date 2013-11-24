@@ -129,12 +129,6 @@ String ClassName() :
 }
 {
    (id=name()) { return id; }
-/*
-{ buf.append(id); }
-   ("." id=name() { buf.append("."); buf.append(id); } ) *) {
-     return buf.toString();
-   }
-*/
 }
 
 void RuleWithHomomorphisms() :

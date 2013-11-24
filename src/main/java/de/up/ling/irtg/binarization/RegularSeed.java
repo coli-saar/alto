@@ -70,11 +70,12 @@ public abstract class RegularSeed {
     }
     
     private TreeAutomaton binarizeCached(String label) {
-        TreeAutomaton ret = binarizationCache.get(label);
+        String key = label;
+        TreeAutomaton ret = binarizationCache.get(key);
         
         if( ret == null ) {
             ret = binarize(label);
-            binarizationCache.put(label, ret);
+            binarizationCache.put(key, ret);
         }
         
         return ret;
@@ -92,9 +93,13 @@ public abstract class RegularSeed {
 
         // compute binarization automaton for the current node and compute map
         // that maps q to i iff q -> ?i is a rule
+        
+//        System.err.println("\nbinarize " + term + ", ar=" + arity);
         TreeAutomaton<?> autoHere = binarizeCached(term.getLabel());
-
-        Int2IntMap variableStates = findVariableStates(autoHere, arity);
+//        System.err.println(autoHere);
+        
+        
+        Int2IntMap variableStates = findVariableStates(autoHere, term.getLabel(), arity);
 
         // copy rules of this automaton into ret, renaming states
         for (Rule rule : autoHere.getRuleIterable()) {
@@ -140,7 +145,7 @@ public abstract class RegularSeed {
         return finalStateHere;
     }
 
-    private Int2IntMap findVariableStates(TreeAutomaton automaton, int arity) {
+    private Int2IntMap findVariableStates(TreeAutomaton automaton, String label, int arity) {
         Int2IntMap ret = new Int2IntOpenHashMap();
         int[] emptyChildren = new int[0];
         Signature sig = automaton.getSignature();
@@ -149,7 +154,12 @@ public abstract class RegularSeed {
             String varsym = "?" + i;
             int varid = sig.getIdForSymbol(varsym);
             Set<Rule> rules = automaton.getRulesBottomUp(varid, emptyChildren);
-            assert rules.size() == 1 : "found " + rules.size() + " rules for " + varsym; // by assumption, see above
+            
+            assert rules.size() <= 1;
+            
+            if( rules.isEmpty() ) {
+                throw new RuntimeException("Found no state in binarization automaton for variable " + varsym + " when binarizing symbol " + label + "/" + arity + ". Perhaps you are using " + label + " with two different arities?");
+            }
 
             ret.put(rules.iterator().next().getParent(), i - 1);
         }
