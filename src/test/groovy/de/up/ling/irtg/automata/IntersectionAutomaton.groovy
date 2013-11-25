@@ -29,6 +29,22 @@ public class IntersectionAutomatonTest {
     
     @Test
     public void makeAllRulesExplicitTest() {
+//        String grammarstring = '''
+//interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+//
+//S! -> r1(A, B)
+// [i] *(?1, ?2)
+//
+//A -> r2 
+// [i] a
+//
+//B -> r3(A, D)
+// [i] *(?1, ?2)
+//
+//D -> r4
+// [i] b
+//
+//       ''';
         String grammarstring = '''
 interpretation i: de.up.ling.irtg.algebra.StringAlgebra
 
@@ -41,13 +57,16 @@ A -> r2
 B -> r3(A, D)
  [i] *(?1, ?2)
 
+D -> r5(A, D)
+ [i] *(?1, ?2)
+
 D -> r4
  [i] b
 
        ''';
         
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
-        List words = irtg.parseString("i", "a a b");
+        List words = irtg.parseString("i", "a a a a b");
         TreeAutomaton chart = irtg.parseInputObjects(["i": words]);
 //        chart.makeAllRulesExplicit();
 //        System.err.println(irtg);
