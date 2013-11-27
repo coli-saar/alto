@@ -94,15 +94,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             int[] oldLabelRemap = labelRemap;
             labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
             SetMultimap<Integer, Integer> partners = HashMultimap.create(); 
-//            SetMultimap<Integer, Rule> rightRuleForState = HashMultimap.create();
             int iterations = 0;
             
             double t2 = System.nanoTime();
-//            Slow version!
-//            Set<Rule> rules = right.getRuleSet();
-//            for (Rule rightRule : rules) {
-//                rightRuleForState.put(rightRule.getParent(), rightRule);
-//            }
+
             
             double t3 = System.nanoTime();
             double l1 = 0, l2 = 0, l3 = 0, l1e = 0, l2e = 0, l3e = 0;
@@ -114,7 +109,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 for (Integer label : right.getLabelsTopDown(state)) {
                     l2 += System.nanoTime();
 
-//                    for (Rule rightRule : rightRuleForState.get(state)) { 
                     // iterate over all rules for the current state+label 
                     for (Rule rightRule : right.getRulesTopDown(label, state)) {
                         l3 += System.nanoTime();
@@ -159,16 +153,23 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 }
                 l1e += System.nanoTime();
             }
+            
+            // force recomputation of final states: if we printed any rule within the
+            // intersection algorithm (for debugging purposes), then finalStates will have
+            // a value at this point, which is based on an incomplete set of rules and
+            // therefore wrong
+            finalStates = null;
+            
             double t4 = System.nanoTime();
 
             if (DEBUG) {
-                System.err.println("Runtime - Total: " + (t4 - t1) / 100000);
-                System.err.println("Runtime - 1      " + (t2 - t1) / 100000);
-                System.err.println("Runtime - 2      " + (t3 - t2) / 100000);
-                System.err.println("Runtime - 3      " + (t4 - t3) / 100000);
-                System.err.println("Loop    - 1      " + (l1e - l1) / 100000);
-                System.err.println("Loop    - 2      " + (l2e - l2) / 100000);
-                System.err.println("Loop    - 3      " + (l3e - l3) / 100000);
+                System.err.println("Runtime - Total: " + (t4 - t1) / 1000000);
+                System.err.println("Runtime - 1      " + (t2 - t1) / 1000000);
+                System.err.println("Runtime - 2      " + (t3 - t2) / 1000000);
+                System.err.println("Runtime - 3      " + (t4 - t3) / 1000000);
+                System.err.println("Loop    - 1      " + (l1e - l1) / 1000000);
+                System.err.println("Loop    - 2      " + (l2e - l2) / 1000000);
+                System.err.println("Loop    - 3      " + (l3e - l3) / 1000000);
 
                 System.err.println("Interations: " + iterations);
                 System.err.println("Intersection automaton:\n" + toString());
@@ -182,7 +183,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     @Override
     public void makeAllRulesExplicit() {
 //        makeAllRulesExplicitReversed();
-        makeAllRulesExplicitCKY();
+//        makeAllRulesExplicitCKY();
         if (!isExplicit) {
             isExplicit = true;
             double t1 = System.nanoTime();
@@ -292,7 +293,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             
 //            System.err.println("after run: " + explicitRules.size());
             if (DEBUG) System.err.println("Intersection automaton:\n" + toString());
-            System.err.println("Time: " + (System.nanoTime() - t1) / 100000);
+            System.err.println("Time: " + (System.nanoTime() - t1) / 1000000);
 
 
         }

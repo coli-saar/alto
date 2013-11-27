@@ -67,7 +67,18 @@ D -> r4
         
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
         List words = irtg.parseString("i", "a a a a b");
+
         TreeAutomaton chart = irtg.parseInputObjects(["i": words]);
+        
+        
+        
+//        words = irtg.parseString("i", "a a a a b");
+//        chart = irtg.parseInputObjects(["i": words]);
+//        
+//        
+//        
+//        words = irtg.parseString("i", "a a a a b");
+//        chart = irtg.parseInputObjects(["i": words]);
 //        chart.makeAllRulesExplicit();
 //        System.err.println(irtg);
     } 
