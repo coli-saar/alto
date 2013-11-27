@@ -22,25 +22,48 @@ import java.util.*;
  */
 class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
 
+//    private TreeAutomaton<RightState> left;
+//    private TreeAutomaton<LeftState> right;
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
+    private static final boolean NOISY = false;
     private int[] labelRemap;
     private Int2IntMap stateToLeftState;
     private Int2IntMap stateToRightState;
+    
+//    public IntersectionAutomaton<LeftState, RightState> reverse() {
+//        
+//    }
 
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
 
         labelRemap = left.getSignature().remap(right.getSignature());
 
+//        this.left = right;
+//        this.right = left;
         this.left = left;
         this.right = right;
-
+        
         stateToLeftState = new Int2IntOpenHashMap();
         stateToRightState = new Int2IntOpenHashMap();
-
+        
+        if (NOISY) {
+        System.err.println("Left automaton: \n" + this.left + "\n");
+        System.err.println("Right automaton: \n" + this.right + "\n\n");
+            System.err.println("Left automaton: \n------------------");
+            for (Integer state : this.left.getAllStates()) {
+                System.err.println(state + "\t|  " + this.left.getStateForId(state));
+            }
+            System.err.println("\nRight automaton: \n------------------");
+            for (Integer state : this.right.getAllStates()) {
+                System.err.println(state + "\t|  " + this.right.getStateForId(state));
+            }
+            System.err.println("");
+        }
         finalStates = null;
+//        makeAllRulesExplicitCKY();
 //        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
     }
 
@@ -60,12 +83,109 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     public boolean isBottomUpDeterministic() {
         return left.isBottomUpDeterministic() && right.isBottomUpDeterministic();
     }
+    
+    
+    public void makeAllRulesExplicitCKY() {
+        if (!isExplicit) {
+            
+            double t1 = System.nanoTime();
+            
+            isExplicit = true;
+            int[] oldLabelRemap = labelRemap;
+            labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
+            SetMultimap<Integer, Integer> partners = HashMultimap.create(); 
+//            SetMultimap<Integer, Rule> rightRuleForState = HashMultimap.create();
+            int iterations = 0;
+            
+            double t2 = System.nanoTime();
+//            Slow version!
+//            Set<Rule> rules = right.getRuleSet();
+//            for (Rule rightRule : rules) {
+//                rightRuleForState.put(rightRule.getParent(), rightRule);
+//            }
+            
+            double t3 = System.nanoTime();
+            double l1 = 0, l2 = 0, l3 = 0, l1e = 0, l2e = 0, l3e = 0;
+            
+            // iterate over all states + label
+            for (Integer state : right.getStatesInBottomUpOrder()) {
+                l1 += System.nanoTime();
+
+                for (Integer label : right.getLabelsTopDown(state)) {
+                    l2 += System.nanoTime();
+
+//                    for (Rule rightRule : rightRuleForState.get(state)) { 
+                    // iterate over all rules for the current state+label 
+                    for (Rule rightRule : right.getRulesTopDown(label, state)) {
+                        l3 += System.nanoTime();
+
+                        ++iterations;
+                        // seperate between rules for terminals (arity == 0) and other rules
+                        if (rightRule.getArity() == 0) {
+                            // get all terminal rules in the left automaton that have the same label as the rule from the right one.
+                            Set<Rule> leftRules = left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0]);
+                            
+                            // make rule pairs and store them.
+                            for (Rule leftRule : leftRules) {
+                                Rule rule = combineRules(leftRule, rightRule);
+                                storeRule(rule);
+                                partners.put(rightRule.getParent(), leftRule.getParent()); 
+    //                            System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                            }
+                        } else {
+                            // all other rules
+                            int[] children = rightRule.getChildren();
+                            List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                            // iterate over all children in the right rule
+                            for (int i = 0; i < rightRule.getArity(); ++i) {
+                                // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
+                                remappedChildren.add(partners.get(children[i]));
+                            }
+                            CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
+                            while (it.hasNext()) {
+                                // get all rules from the left automaton, where the rhs is the rhs of the current rule.
+                                Set<Rule> leftRules = left.getRulesBottomUp(remapLabel(rightRule.getLabel()), it.next());
+                                for (Rule leftRule : leftRules) {
+                                    Rule rule = combineRules(leftRule, rightRule);
+                                    storeRule(rule);
+                                    partners.put(rightRule.getParent(), leftRule.getParent());
+    //                                System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                                }
+                            }
+                        }
+                        l3e += System.nanoTime();
+                    }
+                    l2e += System.nanoTime();
+                }
+                l1e += System.nanoTime();
+            }
+            double t4 = System.nanoTime();
+
+            if (DEBUG) {
+                System.err.println("Runtime - Total: " + (t4 - t1) / 100000);
+                System.err.println("Runtime - 1      " + (t2 - t1) / 100000);
+                System.err.println("Runtime - 2      " + (t3 - t2) / 100000);
+                System.err.println("Runtime - 3      " + (t4 - t3) / 100000);
+                System.err.println("Loop    - 1      " + (l1e - l1) / 100000);
+                System.err.println("Loop    - 2      " + (l2e - l2) / 100000);
+                System.err.println("Loop    - 3      " + (l3e - l3) / 100000);
+
+                System.err.println("Interations: " + iterations);
+                System.err.println("Intersection automaton:\n" + toString());
+            }
+            labelRemap = oldLabelRemap;
+        }
+    }
+        
 
     // bottom-up intersection algorithm 
     @Override
     public void makeAllRulesExplicit() {
+//        makeAllRulesExplicitReversed();
+        makeAllRulesExplicitCKY();
         if (!isExplicit) {
             isExplicit = true;
+            double t1 = System.nanoTime();
 
             ListMultimap<Integer, Rule> rulesByChildState = left.getRuleByChildStateMap();  // int = left state ID
             Queue<Integer> agenda = new LinkedList<Integer>();
@@ -101,6 +221,9 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            System.err.println(explicitRulesToString());
 
             // compute rules and states bottom-up 
+            
+//            System.err.println("Partners " + partners);
+            
             long unsuccessful = 0;
             long iterations = 0;
             while (!agenda.isEmpty()) {
@@ -111,19 +234,24 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
 
                 for (Rule leftRule : possibleRules) {
+                    
 //                    System.err.println("consider leftrule: " + leftRule.toString(left));
+//                    System.err.println("aka                " + leftRule.toString());
 
+                    
                     List<Set<Integer>> partnerStates = new ArrayList<Set<Integer>>();
                     for (int leftState : leftRule.getChildren()) {
                         partnerStates.add(partners.get(leftState));
                     }
-
+                    
+                    
                     CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
                     List<Integer> newStates = new ArrayList<Integer>();
                     while (it.hasNext()) {
                         iterations++;
 
                         List<Integer> partnersHere = it.next();
+                        
 //                        System.err.println("right partners: " + partnersHere);
 
                         Set<Rule> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
@@ -160,14 +288,166 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             if (DEBUG) {
                 System.err.println(iterations + " iterations, " + unsuccessful + " unsucc");
             }
-
+            
+            
 //            System.err.println("after run: " + explicitRules.size());
-//            System.err.println(toString());
+            if (DEBUG) System.err.println("Intersection automaton:\n" + toString());
+            System.err.println("Time: " + (System.nanoTime() - t1) / 100000);
 
 
         }
+        
     }
 
+    // bottom-up intersection algorithm 
+    public void makeAllRulesExplicitReversed() {
+        if (!isExplicit) {
+            isExplicit = true;
+            
+            int[] oldLabelRemap = labelRemap;
+            labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
+            ListMultimap<Integer, Rule> rulesByChildState = right.getRuleByChildStateMap();  // int = left state ID
+            Queue<Integer> agenda = new LinkedList<Integer>();
+            Set<Integer> seenStates = new HashSet<Integer>();
+            SetMultimap<Integer, Integer> partners = HashMultimap.create(); // left state ID -> right state IDs
+
+            // initialize agenda with all pairs of rules of the form A -> f
+            int[] noRightChildren = new int[0];
+
+            
+            
+            for (Rule rightRule : right.getRuleSet()) {
+                if (rightRule.getArity() == 0) {
+                    if (NOISY) System.err.println("Right rule: \n " + rightRule.toString(right) + "\nMatching left rules: ");
+//                    System.err.println("Getting rule for right label: "+ rightRule.getLabel(right) + " aka " + remapLabel(rightRule.getLabel()));
+                    Set<Rule> preterminalRulesForLabel = left.getRulesBottomUp(remapLabel(rightRule.getLabel()), noRightChildren);
+
+//                    System.err.println("left rule: " + leftRule.toString() + " = " + leftRule.toString(left));
+//                    System.err.println("right partners: " + preterminalRulesForLabel);
+//                    for (Rule pr : preterminalRulesForLabel) {
+//                        System.err.println("  - " + pr.toString(right));
+//                    }
+
+                    for (Rule leftRule : preterminalRulesForLabel) {
+                        Rule rule = combineRules(leftRule, rightRule);
+                        if (NOISY)  System.err.println("  " + rule.toString(left));
+                        storeRule(rule);
+                        agenda.offer(rule.getParent());
+                        seenStates.add(rule.getParent());
+                        partners.put(rightRule.getParent(), leftRule.getParent());
+                    }
+                    if (NOISY) System.err.println("");
+                }
+            }
+
+            if (NOISY)  System.err.println("after preterminals, agenda: " + getStatesFromIds(agenda) + "\n");
+
+//            System.err.println("after init: " + explicitRules.size());
+//            System.err.println(explicitRulesToString());
+
+            // compute rules and states bottom-up 
+
+            if (NOISY)  System.err.println("Partners: " + partners);
+
+            long unsuccessful = 0;
+            long iterations = 0;
+            while (!agenda.isEmpty()) {
+                int state = agenda.remove();
+                List<Rule> possibleRules = rulesByChildState.get(stateToRightState.get(state));
+
+//                System.err.println("pop: " + state);
+//                System.err.println("rightrules: " + Rule.rulesToStrings(possibleRules, right));
+
+                for (Rule rightRule : possibleRules) {
+
+                    if (NOISY)  System.err.println("Right rule: \n " + rightRule.toString(right));
+
+
+                    List<Set<Integer>> partnerStates = new ArrayList<Set<Integer>>();
+                    for (int rightState : rightRule.getChildren()) {
+                        if (NOISY)  System.err.println("rightState: " + right.getStateForId(rightState));
+                        partnerStates.add(partners.get(rightState));
+                    }
+                    if (NOISY) {
+                        System.err.println("Partner States: ");
+                        for (Set<Integer> partnerSet : partnerStates) {
+                            System.err.print("{");
+                            for (Integer partnerState : partnerSet) {
+                                System.err.print("'"+ left.getStateForId(state) + "', ");
+                            }
+                            System.err.print("}\n");
+                        }
+                    }
+
+                    CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
+                    List<Integer> newStates = new ArrayList<Integer>();
+                    while (it.hasNext()) {
+                        if (NOISY) System.err.println("Entering Iteration\n+ + + + + + + + + + + + + + + + ");
+                        iterations++;
+
+                        List<Integer> partnersHere = it.next();
+                        
+                        if (NOISY) {
+                            System.err.println("Right partners: ");
+                            for (Integer stateI : partnersHere) {
+                                System.err.print(left.getStateForId(stateI) + ", ");
+                            }
+                            System.err.println("");
+
+                            System.err.println("Right (int): " + rightRule.getLabel());
+                            System.err.println("Right (str): " + right.getStateForId(rightRule.getLabel()));
+                            System.err.println("Left  (int): " + remapLabel(rightRule.getLabel()));
+                            System.err.println("Left  (str): " + left.getStateForId(remapLabel(rightRule.getLabel())));
+                        }
+                        Set<Rule> leftRules = left.getRulesBottomUp(remapLabel(rightRule.getLabel()), partnersHere);
+                        if (NOISY) System.err.println("-> left rules: " + Rule.rulesToStrings(leftRules, right));
+
+
+                        if (leftRules.isEmpty()) {
+                            unsuccessful++;
+                        }
+
+                        for (Rule leftRule : leftRules) {
+                            Rule rule = combineRules(leftRule, rightRule);
+//                            System.err.println("** add combined rule: " + rule.toString(this));
+                            storeRule(rule);
+
+                            if (seenStates.add(rule.getParent())) {
+                                newStates.add(rule.getParent());
+                            }
+                        }
+                        if (NOISY)  System.err.println("Leaving Iteration\n- - - - - - - - - - - - - - - - ");
+
+                    }
+                    for (int newState : newStates) {
+                        agenda.offer(newState);
+                        partners.put(stateToRightState.get(newState), stateToLeftState.get(newState));
+                    }
+                }
+            }
+
+            // force recomputation of final states: if we printed any rule within the
+            // intersection algorithm (for debugging purposes), then finalStates will have
+            // a value at this point, which is based on an incomplete set of rules and
+            // therefore wrong
+            finalStates = null;
+
+            if (DEBUG) {
+                System.err.println(iterations + " iterations, " + unsuccessful + " unsucc");
+            }
+
+
+
+//            System.err.println("after run: " + explicitRules.size());
+            if (DEBUG) {
+                System.err.println("Intersection automaton:\n" + toString());
+            }
+
+            labelRemap = oldLabelRemap;
+        }
+    }
+    
+    
     private int addStatePair(int leftState, int rightState) {
         int ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
 
