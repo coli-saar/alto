@@ -94,6 +94,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             int[] oldLabelRemap = labelRemap;
             labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
             SetMultimap<Integer, Integer> partners = HashMultimap.create(); 
+//            SetMultimap<Integer, Rule> rightRuleForState = HashMultimap.create();
             int iterations = 0;
             
             double t2 = System.nanoTime();
@@ -105,7 +106,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             
             double t3 = System.nanoTime();
             double l1 = 0, l2 = 0, l3 = 0, l1e = 0, l2e = 0, l3e = 0;
-                   
+            
+            // iterate over all states + label
             for (Integer state : right.getStatesInBottomUpOrder()) {
                 l1 += System.nanoTime();
 
@@ -113,27 +115,35 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     l2 += System.nanoTime();
 
 //                    for (Rule rightRule : rightRuleForState.get(state)) { 
+                    // iterate over all rules for the current state+label 
                     for (Rule rightRule : right.getRulesTopDown(label, state)) {
                         l3 += System.nanoTime();
 
                         ++iterations;
+                        // seperate between rules for terminals (arity == 0) and other rules
                         if (rightRule.getArity() == 0) {
+                            // get all terminal rules in the left automaton that have the same label as the rule from the right one.
                             Set<Rule> leftRules = left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0]);
-
+                            
+                            // make rule pairs and store them.
                             for (Rule leftRule : leftRules) {
                                 Rule rule = combineRules(leftRule, rightRule);
                                 storeRule(rule);
-                                partners.put(rightRule.getParent(), leftRule.getParent());
+                                partners.put(rightRule.getParent(), leftRule.getParent()); 
     //                            System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                             }
                         } else {
+                            // all other rules
                             int[] children = rightRule.getChildren();
                             List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                            // iterate over all children in the right rule
                             for (int i = 0; i < rightRule.getArity(); ++i) {
+                                // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
                                 remappedChildren.add(partners.get(children[i]));
                             }
                             CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
                             while (it.hasNext()) {
+                                // get all rules from the left automaton, where the rhs is the rhs of the current rule.
                                 Set<Rule> leftRules = left.getRulesBottomUp(remapLabel(rightRule.getLabel()), it.next());
                                 for (Rule leftRule : leftRules) {
                                     Rule rule = combineRules(leftRule, rightRule);
