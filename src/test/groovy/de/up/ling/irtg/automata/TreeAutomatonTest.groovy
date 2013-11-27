@@ -552,6 +552,14 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assertEquals(gold, result)
     }
     
+//    @Test
+    public void testBottomUpOrder() {
+        TreeAutomaton a = parse("s03! -> f(s01,s13)\n s03 -> f(s02,s23)\n s13 -> f(s12, s23)\n s02 -> f(s01, s12)\n s01 -> a\n s12 -> a\n s23 -> a");
+        List states = a.getStatesInBottomUpOrder().collect { a.getStateForId(it)};
+        
+        assertEquals(["s01", "s12", "s23", "s02", "s13", "s03"], states)
+    }
+    
     
     /*
     def "testing whether automaton is bottom-up deterministic"() {

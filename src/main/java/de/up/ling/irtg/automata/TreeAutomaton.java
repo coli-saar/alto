@@ -1579,22 +1579,23 @@ public abstract class TreeAutomaton<State> implements Serializable {
         Set<Integer> visited = new HashSet<Integer>();
 
         // traverse all rules to compute graph
-        Map<Integer, Map<int[], Set<Rule>>> rules = getAllRules();
-        for (Map<int[], Set<Rule>> rulesPerLabel : rules.values()) {
-            for (int[] lhs : rulesPerLabel.keySet()) {
-                Set<Rule> rhsStates = rulesPerLabel.get(lhs);
-
-                for (Rule rule : rhsStates) {
-                    for (int lhsState : lhs) {
-                        children.put(rule.getParent(), lhsState);
-                    }
-                }
-            }
-        }
+//        Map<Integer, Map<int[], Set<Rule>>> rules = getAllRules();
+//        for (Map<int[], Set<Rule>> rulesPerLabel : rules.values()) {
+//            for (int[] lhs : rulesPerLabel.keySet()) {
+//                Set<Rule> rhsStates = rulesPerLabel.get(lhs);
+//
+//                for (Rule rule : rhsStates) {
+//                    for (int lhsState : lhs) {
+//                        children.put(rule.getParent(), lhsState);
+//                    }
+//                }
+//            }
+//        }
 
         // perform topological sort
         for (int q : getFinalStates()) {
-            dfsForStatesInBottomUpOrder(q, children, visited, ret);
+//            dfsForStatesInBottomUpOrder(q, children, visited, ret);
+            dfsForStatesInBottomUpOrder2(q, visited, ret);
         }
 
         return ret;
@@ -1604,8 +1605,24 @@ public abstract class TreeAutomaton<State> implements Serializable {
         if (!visited.contains(q)) {
             visited.add(q);
 
-            for (int parent : children.get(q)) {
-                dfsForStatesInBottomUpOrder(parent, children, visited, ret);
+            for (int child : children.get(q)) {
+                dfsForStatesInBottomUpOrder(child, children, visited, ret);
+            }
+
+            ret.add(q);
+        }
+    }
+    
+    private void dfsForStatesInBottomUpOrder2(int q, Set<Integer> visited, List<Integer> ret) {
+        if (!visited.contains(q)) {
+            visited.add(q);
+            
+            for( int label : getLabelsTopDown(q) ) {
+                for( Rule rule : getRulesTopDown(label, q)) {
+                    for( int child : rule.getChildren() ) {
+                        dfsForStatesInBottomUpOrder2(child, visited, ret);
+                    }
+                }
             }
 
             ret.add(q);

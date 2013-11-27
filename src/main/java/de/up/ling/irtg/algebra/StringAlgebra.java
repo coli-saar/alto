@@ -178,7 +178,9 @@ public class StringAlgebra extends Algebra<List<String>> {
 
         @Override
         public Set<Rule> getRulesTopDown(int label, int parentState) {
-            if (!useCachedRuleTopDown(label, parentState)) {
+            Set<Rule> ret = new HashSet<Rule>();
+            
+//            if (!useCachedRuleTopDown(label, parentState)) {
                 Span parentSpan = getStateForId(parentState);
 
                 if (label == concatSymbolId) {
@@ -187,15 +189,18 @@ public class StringAlgebra extends Algebra<List<String>> {
                         childStates[0] = addState(new Span(parentSpan.start, i));
                         childStates[1] = addState(new Span(i, parentSpan.end));
                         Rule rule = createRule(parentState, label, childStates, 1);
-                        storeRule(rule);
+                        ret.add(rule);
+//                        storeRule(rule);
                     }
                 } else if ((parentSpan.length() == 1) && label == words[parentSpan.start]) {
                     Rule rule = createRule(parentState, label, new int[0], 1);
-                    storeRule(rule);
+                    ret.add(rule);
+//                    storeRule(rule);
                 }
-            }
+//            }
 
-            return getRulesTopDownFromExplicit(label, parentState);
+                return ret;
+//            return getRulesTopDownFromExplicit(label, parentState);
         }
 
         @Override
