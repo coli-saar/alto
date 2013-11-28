@@ -11,9 +11,21 @@ import com.google.common.collect.SetMultimap;
 import de.saar.basic.Agenda;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.IrtgParser;
+import de.up.ling.irtg.ParseException;
+import de.up.ling.irtg.algebra.ParserException;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 
 /**
@@ -150,7 +162,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                         l3e += System.nanoTime();
                     }
                     l2e += System.nanoTime();
-                }
+                }   
                 l1e += System.nanoTime();
             }
             
@@ -176,8 +188,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
             labelRemap = oldLabelRemap;
         }
-    }
-        
+    }  
+
 
     // bottom-up intersection algorithm 
     @Override
@@ -775,5 +787,47 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            }
 //            return hashCode;
 //        }
+        
+        
     }
+    
+    /**
+     * Arg1: IRTG Grammar
+     * Arg2: List of Sentences
+     * Arg3: Interpretation to parse
+     * @param args 
+     */
+    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException {
+        String irtgFilename = args[0];
+        String sentencesFilename = args[1];
+        String interpretation = args[2];
+        try {
+            System.err.print("Reading the IRTG...");
+            InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(new File(irtgFilename)));
+            System.err.println(" Done!");
+            try {
+                FileInputStream instream = new FileInputStream(new File(sentencesFilename));
+                DataInputStream in = new DataInputStream(instream);
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String sentence;
+                
+                while ((sentence = br.readLine()) != null) {
+                    System.err.println("Current sentence: " + sentence);
+                    Map<String, Object> parseInput = new HashMap<String, Object>(1);
+                    Object words = irtg.parseString(interpretation, sentence);
+                    parseInput.put(interpretation, words);
+                    TreeAutomaton chart = irtg.parseInputObjects(parseInput);
+                    System.err.println("Done!\n");
+                }
+            }
+            catch (IOException ex) {
+                System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
+            }
+        } 
+        catch (ParseException ex) {
+            System.err.println("Error while reading the IRTG-file: " + ex.getMessage());
+        }
+    }
+    
+    
 }
