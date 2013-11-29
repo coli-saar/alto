@@ -70,6 +70,11 @@ public class GraphCombiningOperation {
     public Tree<OpNode> getOps() {
         return ops;
     }
+
+    @Override
+    public String toString() {
+        return ops.toString();
+    }
     
     
 

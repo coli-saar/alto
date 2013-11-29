@@ -96,6 +96,54 @@ class GraphCombiningOperationTest {
         assertIsomorphic(pg(OP2), result);
     }
     
+    @Test
+    public void testEmptyGraph() {
+        GraphCombiningOperation gco = IsiAmrParser.parseOperation(new StringReader("\\x ( ) + ?1(x)"));
+        LambdaGraph g = IsiAmrParser.parse(new StringReader("\\x (x / boy)"));
+        LambdaGraph result = gco.evaluate([g]);
+        assertIsomorphic(g, result)        
+    }
+    
+    @Test
+    public void testCombine() {
+        GraphCombiningOperation gco1 = IsiAmrParser.parseOperation(new StringReader("(g / go :ARG0 (b)) + ?1(b)"));
+        GraphCombiningOperation gco2 = IsiAmrParser.parseOperation(new StringReader("\\x (x / boy)"));
+        
+        LambdaGraph result = gco1.evaluate([gco2.evaluate([])])
+        LambdaGraph g = IsiAmrParser.parse(new StringReader("(g / go :ARG0 (b / boy))"));
+        
+        assertIsomorphic(g, result)
+    }
+    
+    @Test
+    public void testCombine2() {
+        GraphCombiningOperation gco1 = IsiAmrParser.parseOperation(new StringReader("(w / want :ARG0 (b) :ARG1 (g)) + ?1(b,g))"));
+        GraphCombiningOperation gco2 = IsiAmrParser.parseOperation(new StringReader("\\x, y (x :ARG0 y)"));
+        
+        LambdaGraph result = gco1.evaluate([gco2.evaluate([])])
+        LambdaGraph g = IsiAmrParser.parse(new StringReader("(w / want :ARG0 (b :ARG0 (g)) :ARG1 (g))"));
+        
+        assertIsomorphic(g, result)
+    }
+    
+    @Test
+    public void testCombine3() {
+        GraphCombiningOperation gco1 = IsiAmrParser.parseOperation(new StringReader("\\x, y () + ?1(x,y) + ?2(x)"));
+        GraphCombiningOperation gco2 = IsiAmrParser.parseOperation(new StringReader("\\x, y (x :ARG0 y)"));
+        GraphCombiningOperation gco3 = IsiAmrParser.parseOperation(new StringReader("\\x (x / boy)"));
+        
+        System.err.println(gco1)
+        System.err.println(gco2)
+        System.err.println(gco3)
+        
+        LambdaGraph result = gco1.evaluate([gco2.evaluate([]), gco3.evaluate([])])
+        LambdaGraph g = IsiAmrParser.parse(new StringReader("\\x, y (x / boy :ARG0 y)"));
+        
+        System.err.println(result)
+        
+        assertIsomorphic(g, result)
+    }
+    
     private static final String OP1 = "(w / want-01  :ARG0 (b)  :ARG1 (g)) + ?1(b) + ?2(g, b)";
     private static final String OP2 = "\\g, b (g / go-01  :ARG0 (b))"
 }

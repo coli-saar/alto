@@ -41,6 +41,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * @author koller
  */
 public class LambdaGraph {
+
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private List<GraphNode> variables;
@@ -57,10 +58,19 @@ public class LambdaGraph {
     }
 
     public GraphNode addNode(String name, String label) {
-        GraphNode u = new GraphNode(name, label);
-        graph.addVertex(u);
-        nameToNode.put(name, u);
-        hasCachedHashcode = false;
+        GraphNode u = nameToNode.get(name);
+        
+        if( u != null ) {
+            if (label != null) {
+                nameToNode.get(name).setLabel(label);
+            }
+        } else {
+            u = new GraphNode(name, label);
+            graph.addVertex(u);
+            nameToNode.put(name, u);
+            hasCachedHashcode = false;
+        }
+        
         return u;
     }
 
@@ -116,6 +126,7 @@ public class LambdaGraph {
 
         for (GraphNode node : graph.vertexSet()) {
             String newName = gensym(node.getName());
+
             ret.addNode(newName, node.getLabel());
             oldToNewNames.put(node.getName(), newName);
         }
@@ -231,6 +242,7 @@ public class LambdaGraph {
     }
 
     private static class MyModelAdapter extends JGraphModelAdapter<GraphNode, GraphEdge> {
+
         private CellFactory<GraphNode, GraphEdge> cf;
 
         public MyModelAdapter(Graph<GraphNode, GraphEdge> graph) {
@@ -275,6 +287,7 @@ public class LambdaGraph {
     }
 
     public static class MappingCellFactory<VV, EE, VU, EU> implements CellFactory<VV, EE>, Serializable {
+
         private static final long serialVersionUID = 3690194343461861173L;
         private Function<VV, VU> nodeMapper;
         private Function<EE, EU> edgeMapper;

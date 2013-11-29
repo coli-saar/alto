@@ -94,11 +94,12 @@ void graph() :
     String name;
     List<String> vars = new ArrayList<String>();
 }{
-    ("\\" name=token() { vars.add(name); }
-          ("," name=token() {vars.add(name);})*    )?
+    ("\\" name=token() { vars.add(name); graph.addNode(name, null);  }
+          ("," name=token() {vars.add(name); graph.addNode(name, null); })*    )?
     g = node() {
       for( String v : vars ) {
-        graph.addVariable(graph.getNode(v));
+        GraphNode n = graph.getNode(v);
+        graph.addVariable(n);
       }
     }
 }
@@ -106,7 +107,7 @@ void graph() :
 
 GraphNode node() :
 {
-  GraphNode u;
+  GraphNode u = null;
   String nodename;
   String nodelabel = null;
   String edgelabel;
@@ -115,7 +116,7 @@ GraphNode node() :
 {
   "(" (nodename=token() ("/" nodelabel=token())?  {
          u = graph.addNode(nodename, nodelabel);
-       })
+       })?
       (edgelabel=edge()  edgeTarget=node() {
          graph.addEdge(u, edgeTarget, edgelabel);
        })*
