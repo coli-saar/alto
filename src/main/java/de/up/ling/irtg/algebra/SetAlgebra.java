@@ -30,8 +30,9 @@ import java.util.Set;
  * universe).</li>
  * <li>uniq_a(A) returns the set A (a subset of the universe) itself if A = {a};
  * otherwise it returns the empty set.</li>
+ * <li>member_a(A) returns the set {{a}} if {a} belongs to A;
+ * otherwise it returns the empty set.</li> 
  * <li>T returns the universe.</li>
- * <li>subset_i(R,S) returns the set S if S is a subset of R; otherwise it returns the empty set. (Nikos: this is used for underspecification)</li> 
  * </ul>
  *
  * Importantly, the decomposition automata for this algebra only implement
@@ -194,15 +195,9 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         return ret;
     }
 
-    /**
-     * returns the smallSet, if it's a subset of the bigSet. Otherwise returns the empty set.
-     * @param bigSet
-     * @param smallSet
-     * @param pos
-     * @return 
-     */
     private Set<List<String>> member(Set<List<String>> tupleSet, String value) {
         List<String> memberValue = new ArrayList<String>();
+        
         memberValue.add(value);
         
         Set<List<String>> ret = new HashSet<List<String>>();
