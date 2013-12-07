@@ -1575,7 +1575,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public List<Integer> getStatesInBottomUpOrder() {
         List<Integer> ret = new ArrayList<Integer>();
-        SetMultimap<Integer, Integer> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
+//        SetMultimap<Integer, Integer> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
         Set<Integer> visited = new HashSet<Integer>();
 
         // traverse all rules to compute graph

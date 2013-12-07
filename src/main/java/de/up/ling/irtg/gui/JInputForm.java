@@ -39,8 +39,8 @@ public class JInputForm extends javax.swing.JDialog {
         JInputForm jif = showForm(f, interps, hasOptions);
         jif.setVisible(true);
 
-        System.out.println(jif.getInputValues());
-        System.out.println(jif.getOptions());
+//        System.out.println(jif.getInputValues());
+//        System.out.println(jif.getOptions());
 
         System.exit(0);
     }
