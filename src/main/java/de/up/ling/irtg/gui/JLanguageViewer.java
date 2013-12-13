@@ -160,6 +160,8 @@ public class JLanguageViewer extends javax.swing.JFrame {
         miCloseAllWindows = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
+        jMenu3 = new javax.swing.JMenu();
+        jMenuItem1 = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         miNextTree = new javax.swing.JMenuItem();
         miPreviousTree = new javax.swing.JMenuItem();
@@ -299,6 +301,18 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jMenu1.add(miQuit);
 
         jMenuBar1.add(jMenu1);
+
+        jMenu3.setText("Tools");
+
+        jMenuItem1.setText("Compute decomposition automaton ...");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        jMenu3.add(jMenuItem1);
+
+        jMenuBar1.add(jMenu3);
 
         jMenu2.setText("View");
 
@@ -457,13 +471,19 @@ public class JLanguageViewer extends javax.swing.JFrame {
         GuiMain.closeAllWindows();
     }//GEN-LAST:event_miCloseAllWindowsActionPerformed
 
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        GuiMain.showDecompositionDialog(this);
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private javax.swing.JPanel derivationViewers;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
+    private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;

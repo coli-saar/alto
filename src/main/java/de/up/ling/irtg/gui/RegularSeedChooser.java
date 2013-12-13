@@ -61,7 +61,7 @@ public class RegularSeedChooser extends javax.swing.JDialog {
         pack();
     }
     
-    private static class ClassByNameComparator implements Comparator<Class> {
+    public static class ClassByNameComparator implements Comparator<Class> {
         public int compare(Class o1, Class o2) {
             return o1.getName().compareTo(o2.getName());
         }        
