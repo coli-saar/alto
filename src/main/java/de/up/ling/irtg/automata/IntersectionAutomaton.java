@@ -245,13 +245,14 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                         
                         if (partners.containsKey(rhs1) && partners.containsKey(rhs2)) {
                             IntIterator it1 = partners.get(rhs1).iterator();
-                            IntIterator it2 = partners.get(rhs2).iterator();
 
                             
                             int[] childStates = new int[2];
                             // The first symbol
                             while (it1.hasNext()) {
                                 childStates[0] = it1.nextInt();
+                                IntIterator it2 = partners.get(rhs2).iterator();
+
                                 while (it2.hasNext()) {
                                     childStates[1] = it2.nextInt();
                                     Set<Rule> leftRules = left.getRulesBottomUp(remapLabel(rightRule.getLabel()), childStates);
@@ -294,9 +295,9 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             // Perform a DFS in the right automaton to find all partner states
             Set<Integer> visited = new HashSet<Integer>();
             for (Integer q : right.getFinalStates()) {
-//                ckyDfsForStatesInBottomUpOrderIterator(q, visited, partners2);
+                ckyDfsForStatesInBottomUpOrderIterator(q, visited, partners2);
 //                ckyDfsForStatesInBottomUpOrderGuava(q, visited, partners);
-                ckyDfsForStatesInBottomUpOrder(q, visited, partners);
+//                ckyDfsForStatesInBottomUpOrder(q, visited, partners);
             }
 
             // force recomputation of final states
@@ -307,7 +308,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             if (DEBUG) {
                 for (int i = 1; i < ckyTimestamp.length; i++) {
                     if (ckyTimestamp[i] != 0 && ckyTimestamp[i-1] != 0) {
-                        System.err.println("CKY runtime " + (i - 1) + " Ð " + i + ": "
+                        System.err.println("CKY runtime " + (i - 1) + " ï¿½ " + i + ": "
                                 + (ckyTimestamp[i] - ckyTimestamp[i - 1]) / 1000000 + "ms");
                     }
                 }
@@ -396,9 +397,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     // bottom-up intersection algorithm 
     @Override
     public void makeAllRulesExplicit() {
+        
 //        makeAllRulesExplicitReversed();
 //        makeAllRulesExplicitCKYOld();
-//        makeAllRulesExplicitCKY();
+        makeAllRulesExplicitCKY();
         if (!isExplicit) {
             isExplicit = true;
             double t1 = System.nanoTime();
