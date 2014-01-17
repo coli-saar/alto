@@ -15,7 +15,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser
  * @author gontrum/koller
  */
 class CondensedTreeAutomatonParserTest {
-//    static CondensedTreeAutomaton automaton;
+    static CondensedTreeAutomaton automaton;
     
     @Test
     public void testParserNotNull() {
@@ -40,10 +40,10 @@ class CondensedTreeAutomatonParserTest {
     
 //    @Test
 //    public void testParser1() {
-//        automaton = parse("q1 -> a \n q2 ! -> f(q1,q1)");        
+//        automaton = parse("q1 -> {a} \n q2 ! -> {f}(q1,q1)");        
 //
-//        assertRulesBottomUp(automaton, "a", [], [r("q1", "a", [])]);
-//        assertRulesBottomUp(automaton, "f", ["q1", "q1"], [r("q2", "f", ["q1","q1"])]);
+//        assertRulesBottomUp(automaton, ["a"], [], [r("q1", "a", [])]);
+//        assertRulesBottomUp(automaton, ["f"], ["q1", "q1"], [r("q2", "f", ["q1","q1"])]);
 //        assertEquals(new HashSet([automaton.getIdForState("q2")]), automaton.getFinalStates());
 //    }
 //
@@ -84,10 +84,10 @@ class CondensedTreeAutomatonParserTest {
 //        assertRulesBottomUp(automaton, "\'", [], [r("Foo", "\'", [])]);
 //    }
 //    
-//    private void assertRulesBottomUp(TreeAutomaton automaton, String label, List childStates, List<Rule> rules) {
-//        assertEquals(new HashSet(rules), automaton.getRulesBottomUp(s(label), childStates.collect { automaton.getIdForState(it) }));
-//    }
-//
+    private void assertRulesBottomUp(CondensedTreeAutomaton automaton, List<String> labels, List childStates, List<CondensedRule> rules) {
+        assertEquals(new HashSet(rules), automaton.getCondensedRulesBottomUp(s(label), childStates.collect { automaton.getIdForState(it) }));
+    }
+
     private CondensedTreeAutomaton parse(String s) {
         return CondensedTreeAutomatonParser.parse(new StringReader(s));
     }

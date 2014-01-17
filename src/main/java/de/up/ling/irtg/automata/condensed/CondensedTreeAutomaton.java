@@ -11,6 +11,8 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,10 +23,11 @@ import java.util.Set;
  */
 public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>{  // TODO Extend TreeAutomaton
     
+    protected CondensedRuleTrie<IntSet, CondensedRule> ruleTrie; // A Trie of ints (states), that stores a Map, wich relates IntSets (condensed labels) to Sets of Rules.
     public CondensedTreeAutomaton(Signature signature) {
         super(signature);
-        allStates = new IntArraySet();
-
+        ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
+              
     }
     
     public CondensedRule createRule(State parent, List<String> labels, List<State> children) {
@@ -66,7 +69,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
     }
 
     protected void storeRule(CondensedRule rule) { 
-        // Do things.
+        ruleTrie.put(rule.getChildren(), rule.getLabels(), rule);
     }
     
     

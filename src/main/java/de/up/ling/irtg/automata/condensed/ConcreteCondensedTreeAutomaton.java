@@ -29,7 +29,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
 
     @Override
     public Set<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return ruleTrie.get(childStates, labelId);
     }
 
     @Override
