@@ -1,0 +1,136 @@
+/**
+ * JavaCC file
+ */
+
+
+options {
+  JDK_VERSION = "1.5";
+  STATIC = false;
+  LOOKAHEAD=2;
+  FORCE_LA_CHECK=true;
+}
+PARSER_BEGIN(CondensedTreeAutomatonParser)
+package de.up.ling.irtg.automata.condensed;
+
+import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.*;
+import java.io.*;
+
+/**
+ * Parser for bottom-up automata
+ * @author Alexander Koller
+ */
+public class CondensedTreeAutomatonParser {
+    private static ConcreteCondensedTreeAutomaton<String> automaton;
+    private static CondensedTreeAutomatonParser parser = new CondensedTreeAutomatonParser(new ByteArrayInputStream(new byte[]{}));
+    private static CondensedRule lastSeenRule = null;
+
+	public static CondensedTreeAutomaton<String> parse(Reader reader) throws ParseException{
+		parser.ReInit(reader);
+		automaton = new ConcreteCondensedTreeAutomaton<String>();
+                lastSeenRule = null;
+
+		parser.automaton();
+		return automaton;
+	}
+}
+PARSER_END(CondensedTreeAutomatonParser)
+
+SKIP : { <"/*">: INSIDE_COMMENT | " " | "\t" | "\n" }
+<INSIDE_COMMENT>
+SKIP: { <"*/">: DEFAULT | <~[]> }
+
+TOKEN :
+{
+    < NAME:     ["a"-"z","A"-"Z","_", "*", "$", "@", "+"] (["a"-"z","A"-"Z","_", "<", ">", "+", "-", "0"-"9", "@", "/", "*", ".", "$"] )* > |
+    <QUOTED_NAME: "\'" (~["\'"])* "\'"> |
+    <DOUBLE_QUOTED_NAME: "\"" (~["\""])* "\""> |
+    <NUMBER : ["0"-"9", "."] (["0"-"9", ".", "e", "E", "-"])* > |
+    < FIN_MARK: [ "\u00b0", "!"] > 
+   // < NEUTRAL_MARK: ["%"] > |
+  //  <LINE_END_COMMENT: "//" (~["\n"])* >
+}
+
+void automaton() :
+{
+}
+{
+		automatonRule() (Weight())? 
+		( 
+				 LOOKAHEAD(2) automatonRule() (Weight())? 
+		)*
+
+}
+
+
+void automatonRule() :
+{
+    List<String> labelList = null;
+    List<String> childStates = null;
+    String parentState = null;
+}
+{
+    parentState=State() "->" labelList=labels() ("(" childStates=StateList() ")")? {
+        if( childStates == null ) childStates = new ArrayList<String>();
+        lastSeenRule = automaton.createRule(parentState, labelList, childStates);
+        automaton.addRule(lastSeenRule);
+    }
+}
+
+List<String> StateList() :
+{
+  List<String> ret = new ArrayList<String>();
+  String x;
+}
+{
+   (x = State() { ret.add(x); } ("," x = State() { ret.add(x); })*  ) { return ret; }
+}
+
+String State() :
+{
+  String state;
+  String fin_mark = null;
+}
+{
+  state = name() (fin_mark = <FIN_MARK>.image)* {
+    if( fin_mark != null ) {
+      automaton.addFinalState(automaton.addState(state));
+    }
+
+    return state;
+  }
+}
+
+List<String> labels() :
+{
+    List<String> ret = new ArrayList<String>();
+    String x;
+}
+{
+    ("{" x = name() { ret.add(x); } ("," x = name() { ret.add(x); })* "}")
+    { return ret; }
+}
+
+
+void Weight() :
+{
+    String num = null;
+}
+{
+    "[" num=<NUMBER>.image "]" {
+        lastSeenRule.setWeight(Double.parseDouble(num));
+    }
+}
+
+
+String name() :
+{
+    Token tok;
+}
+{
+    tok = <NAME> { return tok.image; }
+    | tok = <QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
+    | tok = <DOUBLE_QUOTED_NAME> { return tok.image.substring(1, tok.image.length()-1); }
+}

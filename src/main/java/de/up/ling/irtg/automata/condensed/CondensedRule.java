@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.automata;
+package de.up.ling.irtg.automata.condensed;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Collection;
 import java.util.HashSet;
@@ -36,7 +36,7 @@ public class CondensedRule {
         return labels;
     }
 
-    public Collection<String> getLabels(TreeAutomaton auto) {
+    public Collection<String> getLabels(CondensedTreeAutomaton auto) {
         Set<String> ret = new HashSet<String>();
         for(int label : labels) {
             ret.add(auto.getSignature().resolveSymbolId(label));
@@ -84,4 +84,6 @@ public class CondensedRule {
     public int getArity() {
         return children.length;
     }
+    
+    //TODO toString in a nice way
 }
