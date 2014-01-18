@@ -6,6 +6,7 @@
 
 package de.up.ling.irtg.automata.condensed;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
@@ -22,16 +23,19 @@ import java.util.Set;
  * @author gontrum
  */
 public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>{  // TODO Extend TreeAutomaton
+    protected final boolean DEBUG = true;
+    protected CondensedRuleTrie<IntSet, CondensedRule> ruleTrie; // ButtomUp: A Trie of ints (states), that stores a Map, wich relates IntSets (condensed labels) to Sets of Rules.
+    protected Object2ObjectMap<Pair<Integer,IntSet>,Set<CondensedRule>> explicitCondensedRulesTopDown; // TopDown:  (parent,labels) -> set of rules   
     
-    protected CondensedRuleTrie<IntSet, CondensedRule> ruleTrie; // A Trie of ints (states), that stores a Map, wich relates IntSets (condensed labels) to Sets of Rules.
+    
     public CondensedTreeAutomaton(Signature signature) {
         super(signature);
         ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
-              
+        explicitCondensedRulesTopDown = new Object2ObjectOpenHashMap<Pair<Integer,IntSet>,Set<CondensedRule>>();
     }
     
     public CondensedRule createRule(State parent, List<String> labels, List<State> children) {
-        System.err.println("Adding: " + parent + " -> {" + labels + "} (" + children + ")");
+        if (DEBUG) System.err.println("Adding: " + parent + " -> {" + labels + "} (" + children + ")");
         return createRule(parent, stringListToArray(labels), (State[]) children.toArray(), 0);
     }
     
@@ -53,11 +57,11 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         return ret;
     }
     
-    protected int addState(State state) {
-        int ret = stateInterner.addObject(state);
-        allStates.add(ret);
-        return ret;
+    @Override
+    public int addState(State state) {
+        return super.addState(state);
     }
+
     
     private int[] addStates(State[] states) {
         int[] ret = new int[states.length];
@@ -68,15 +72,42 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         return ret;
     }
 
-    protected void storeRule(CondensedRule rule) { 
+    protected void storeRule(CondensedRule rule) {
+        // Store rules for bottom-up access
         ruleTrie.put(rule.getChildren(), rule.getLabels(), rule);
+        // and in a top-down data structure
+        Pair<Integer, IntSet> key = new Pair<Integer, IntSet>(rule.getParent(), rule.getLabels());
+        if (explicitCondensedRulesTopDown.containsKey(key)) {
+            Set<CondensedRule> ruleSet = explicitCondensedRulesTopDown.get(key);
+            ruleSet.add(rule);
+        } else {
+            Set<CondensedRule> ruleSet = new HashSet<CondensedRule>();
+            ruleSet.add(rule);
+            explicitCondensedRulesTopDown.put(key, ruleSet);
+        }
+        
     }
-    
     
     abstract public Set<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates);
 
     abstract public Set<CondensedRule> getCondensedRulesTopDown(IntSet labelId, int parentState);
 
+    protected Set<CondensedRule> getCondensedRuleBottomUpFromExplicit(IntSet labelId, int[] childStates) {
+        return ruleTrie.get(childStates, labelId);
+    }
+    
+    protected Set<CondensedRule> getCondensedRulesTopDownFromExplicit(IntSet labelId, int parentState) {
+        Set<CondensedRule> ret;
+        Pair<Integer, IntSet> needle = new Pair<Integer, IntSet>(parentState, labelId);
+        if (explicitCondensedRulesTopDown.containsKey(needle)) {
+            ret = explicitCondensedRulesTopDown.get(needle);
+        } else {
+            ret = new HashSet<CondensedRule>();
+        }
+        return ret;
+    }
+
+    
     @Override
     public boolean isBottomUpDeterministic() {
         return false;

@@ -16,25 +16,31 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
     
     public ConcreteCondensedTreeAutomaton() {
         super(new Signature());
+        isExplicit = true;
     }
     
-    public void addRule(CondensedRule rule) {
-        storeRule(rule);
+    @Override
+    public int addState(State state) {
+        return super.addState(state); 
     }
     
     @Override
     public void addFinalState(int state) {
         super.addFinalState(state); 
     }
-
+        
+    public void addRule(CondensedRule rule) {
+        storeRule(rule);
+    }
+    
     @Override
     public Set<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates) {
-        return ruleTrie.get(childStates, labelId);
+        return getCondensedRuleBottomUpFromExplicit(labelId, childStates);
     }
 
     @Override
     public Set<CondensedRule> getCondensedRulesTopDown(IntSet labelId, int parentState) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return getCondensedRulesTopDownFromExplicit(labelId, parentState);
     }
     
 }
