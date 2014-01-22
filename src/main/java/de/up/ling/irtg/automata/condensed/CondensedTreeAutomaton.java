@@ -22,7 +22,7 @@ import java.util.Set;
  *
  * @author gontrum
  */
-public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>{  // TODO Extend TreeAutomaton
+public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>{  
     protected final boolean DEBUG = true;
     protected CondensedRuleTrie<IntSet, CondensedRule> ruleTrie; // ButtomUp: A Trie of ints (states), that stores a Map, wich relates IntSets (condensed labels) to Sets of Rules.
     protected Object2ObjectMap<Pair<Integer,IntSet>,Set<CondensedRule>> explicitCondensedRulesTopDown; // TopDown:  (parent,labels) -> set of rules   
@@ -109,12 +109,12 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
 
     
     @Override
-    public boolean isBottomUpDeterministic() {
+    public boolean isBottomUpDeterministic() { // TODO make a real check
         return false;
     }
 
     @Override
-    public Set<Rule> getRulesBottomUp(int labelId, int[] childStates) {
+    public Set<Rule> getRulesBottomUp(int labelId, int[] childStates) { //TODO Check this
         Set<Rule> ret = new HashSet<Rule>();
         Set<CondensedRule> condensed = getCondensedRulesBottomUp(null, childStates);
 
