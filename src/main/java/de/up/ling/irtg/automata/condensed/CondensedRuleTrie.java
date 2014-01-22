@@ -102,6 +102,24 @@ public class CondensedRuleTrie<K,V> {
         return map.get(id);
     }
     
+    public Set<K> getStoredKeys(int [] keyList) {
+        return getStoredKeys(keyList, 0);
+    }
+    
+    private Set<K> getStoredKeys(int [] keyList, int index) {
+        if (index == keyList.length) {
+            return finalStateMap.keySet();
+        } else {
+            int keyHere = keyList[index];
+            CondensedRuleTrie<K, V> nextTrie = map.get(keyHere);
+            if (nextTrie == null) {
+                return new HashSet<K>();
+            } else {
+                return nextTrie.getStoredKeys(keyList, index + 1);
+            }
+        }
+    }
+    
     /**
      * Returns an IntSet with the symbols for all outgoing transitions.
      * @return 

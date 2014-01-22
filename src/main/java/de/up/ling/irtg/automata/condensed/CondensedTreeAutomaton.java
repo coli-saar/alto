@@ -114,10 +114,17 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
     }
 
     @Override
-    public Set<Rule> getRulesBottomUp(int labelId, int[] childStates) { //TODO Check this
+    public Set<Rule> getRulesBottomUp(int labelId, int[] childStates) { // TODO needs to be tested
         Set<Rule> ret = new HashSet<Rule>();
-        Set<CondensedRule> condensed = getCondensedRulesBottomUp(null, childStates);
-
+        Set<IntSet> possibleLabels = ruleTrie.getStoredKeys(childStates);
+        Set<CondensedRule> condensed = new HashSet<CondensedRule>();
+        
+        for (IntSet labels : possibleLabels) {
+            if (labels.contains(labelId)) {
+                condensed.addAll(getCondensedRulesBottomUp(labels, childStates));
+            }
+        }
+        
         for (CondensedRule cr : condensed) {
             if (cr.getLabels().contains(labelId)) {
                 ret.add(createRule(cr.getParent(), labelId, childStates, cr.getWeight()));
