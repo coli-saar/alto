@@ -6,10 +6,12 @@
 
 package de.up.ling.irtg.automata.condensed;
 
-import de.saar.basic.Pair;
+import com.sun.org.apache.xerces.internal.impl.dv.xs.YearDV;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -23,20 +25,28 @@ import java.util.Set;
  * @author gontrum
  */
 public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>{  
-    protected final boolean DEBUG = true;
+    protected final boolean DEBUG = false;
     protected CondensedRuleTrie<IntSet, CondensedRule> ruleTrie; // ButtomUp: A Trie of ints (states), that stores a Map, wich relates IntSets (condensed labels) to Sets of Rules.
-    protected Object2ObjectMap<Pair<Integer,IntSet>,Set<CondensedRule>> explicitCondensedRulesTopDown; // TopDown:  (parent,labels) -> set of rules   
-    
+    protected Int2ObjectMap<Object2ObjectMap<IntSet, Set<CondensedRule>>> topDownRules; // TopDown: ParentState to I
     
     public CondensedTreeAutomaton(Signature signature) {
         super(signature);
         ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
-        explicitCondensedRulesTopDown = new Object2ObjectOpenHashMap<Pair<Integer,IntSet>,Set<CondensedRule>>();
+        topDownRules = new Int2ObjectOpenHashMap<Object2ObjectMap<IntSet, Set<CondensedRule>>>();
     }
     
     public CondensedRule createRule(State parent, List<String> labels, List<State> children) {
         if (DEBUG) System.err.println("Adding: " + parent + " -> {" + labels + "} (" + children + ")");
-        return createRule(parent, stringListToArray(labels), (State[]) children.toArray(), 0);
+        return createRule(parent, stringListToArray(labels), (State[]) children.toArray(), 1);
+    }
+    
+    public CondensedRule createRule(State parent, List<String> labels, List<State> children, double weight) {
+        if (DEBUG) System.err.println("Adding: " + parent + " -> {" + labels + "} (" + children + ")"); 
+        return createRule(parent, stringListToArray(labels), (State[]) children.toArray(), weight);
+    }
+    
+    public CondensedRule createRule(State parent, String[] labels, State[] children) {
+        return createRule(parent, labels, children, 1);
     }
     
     public CondensedRule createRule(State parent, String[] labels, State[] children, double weight) {
@@ -53,6 +63,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         int i = 0;
         for (String label : strings) {
             ret[i] = label;
+            ++i;
         }
         return ret;
     }
@@ -69,6 +80,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         for (int i = 0; i < states.length; i++) {
             ret[i] = addState(states[i]);
         }
+
         return ret;
     }
 
@@ -76,14 +88,21 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         // Store rules for bottom-up access
         ruleTrie.put(rule.getChildren(), rule.getLabels(), rule);
         // and in a top-down data structure
-        Pair<Integer, IntSet> key = new Pair<Integer, IntSet>(rule.getParent(), rule.getLabels());
-        if (explicitCondensedRulesTopDown.containsKey(key)) {
-            Set<CondensedRule> ruleSet = explicitCondensedRulesTopDown.get(key);
-            ruleSet.add(rule);
+        if (topDownRules.containsKey(rule.getParent())) {
+            Object2ObjectMap<IntSet, Set<CondensedRule>> labelsToRules = topDownRules.get(rule.getParent());
+            if (labelsToRules.containsKey(rule.getLabels())) {
+                labelsToRules.get(rule.getLabels()).add(rule);
+            } else {
+                Set<CondensedRule> insertRules = new HashSet<CondensedRule>();
+                insertRules.add(rule);
+                labelsToRules.put(rule.getLabels(), insertRules);
+            }
         } else {
-            Set<CondensedRule> ruleSet = new HashSet<CondensedRule>();
-            ruleSet.add(rule);
-            explicitCondensedRulesTopDown.put(key, ruleSet);
+            Set<CondensedRule> insertRules = new HashSet<CondensedRule>();
+            Object2ObjectMap<IntSet, Set<CondensedRule>> insertMap = new Object2ObjectOpenHashMap<IntSet, Set<CondensedRule>>();
+            insertRules.add(rule);
+            insertMap.put(rule.getLabels(), insertRules);
+            topDownRules.put(rule.getParent(), insertMap);
         }
         
     }
@@ -92,19 +111,21 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
 
     abstract public Set<CondensedRule> getCondensedRulesTopDown(IntSet labelId, int parentState);
 
-    protected Set<CondensedRule> getCondensedRuleBottomUpFromExplicit(IntSet labelId, int[] childStates) {
-        return ruleTrie.get(childStates, labelId);
+    protected Set<CondensedRule> getCondensedRuleBottomUpFromExplicit(IntSet labelIds, int[] childStates) {
+        return ruleTrie.get(childStates, labelIds);
     }
     
-    protected Set<CondensedRule> getCondensedRulesTopDownFromExplicit(IntSet labelId, int parentState) {
-        Set<CondensedRule> ret;
-        Pair<Integer, IntSet> needle = new Pair<Integer, IntSet>(parentState, labelId);
-        if (explicitCondensedRulesTopDown.containsKey(needle)) {
-            ret = explicitCondensedRulesTopDown.get(needle);
+    protected Set<CondensedRule> getCondensedRulesTopDownFromExplicit(IntSet labelIds, int parentState) {
+        if (topDownRules.containsKey(parentState)) {
+            Object2ObjectMap<IntSet, Set<CondensedRule>> labelsToRules = topDownRules.get(parentState);
+            if (labelsToRules.containsKey(labelIds)) {
+                return labelsToRules.get(labelIds);
+            } else {
+                return new HashSet<CondensedRule>();
+            }
         } else {
-            ret = new HashSet<CondensedRule>();
+            return new HashSet<CondensedRule>();
         }
-        return ret;
     }
 
     
@@ -114,28 +135,34 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
     }
 
     @Override
-    public Set<Rule> getRulesBottomUp(int labelId, int[] childStates) { // TODO needs to be tested
+    public Set<Rule> getRulesBottomUp(int labelId, int[] childStates) {
         Set<Rule> ret = new HashSet<Rule>();
-        Set<IntSet> possibleLabels = ruleTrie.getStoredKeys(childStates);
-        Set<CondensedRule> condensed = new HashSet<CondensedRule>();
-        
-        for (IntSet labels : possibleLabels) {
+        // Get all IntSets (labels) for rules that have childStates
+        Object2ObjectMap<IntSet, Set<CondensedRule>> ruleMap = ruleTrie.getMapForStoredKeys(childStates);
+        // Check if the given labenId is in an IntSet (labels)
+        for (IntSet labels : ruleMap.keySet()) {
             if (labels.contains(labelId)) {
-                condensed.addAll(getCondensedRulesBottomUp(labels, childStates));
+                for (CondensedRule cr : ruleMap.get(labels)) {
+                    ret.add(createRule(cr.getParent(), labelId, childStates, cr.getWeight()));
+                }
             }
         }
-        
-        for (CondensedRule cr : condensed) {
-            if (cr.getLabels().contains(labelId)) {
-                ret.add(createRule(cr.getParent(), labelId, childStates, cr.getWeight()));
-            }
-        }
-
         return ret;
     }
 
     @Override
     public Set<Rule> getRulesTopDown(int labelId, int parentState) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Set<Rule> ret = new HashSet<Rule>();
+        if (topDownRules.containsKey(parentState)) {
+            Object2ObjectMap<IntSet, Set<CondensedRule>> labelsToRules = topDownRules.get(parentState);
+            for (IntSet labelSet : labelsToRules.keySet()) {
+                if (labelSet.contains(labelId)) {
+                    for (CondensedRule cr : labelsToRules.get(labelSet)) {
+                        ret.add(createRule(cr.getParent(), labelId, cr.getChildren(), cr.getWeight()));
+                    }
+                }
+            }
+        }
+        return ret;
     }
 }

@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.util.HashSet;
 import java.util.Set;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -19,7 +20,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
  * @param <V>
  */
 public class CondensedRuleTrie<K,V> {
-    private final Int2ObjectOpenHashMap<CondensedRuleTrie<K,V>> map;
+    private final Int2ObjectMap<CondensedRuleTrie<K,V>> map;
     private final Object2ObjectMap<K,Set<V>> finalStateMap;
 
     public CondensedRuleTrie() {
@@ -100,6 +101,24 @@ public class CondensedRuleTrie<K,V> {
      */
     public CondensedRuleTrie<K,V> getSubtrie(int id) {
         return map.get(id);
+    }
+    
+    protected Object2ObjectMap<K, Set<V>> getMapForStoredKeys(int [] keyList) {
+        return getMapForStoredKeys(keyList, 0); 
+    }
+    
+    private Object2ObjectMap<K, Set<V>> getMapForStoredKeys(int[] keyList, int index) {
+        if (index == keyList.length) {
+            return finalStateMap;
+        } else {
+            int keyHere = keyList[index];
+            CondensedRuleTrie<K, V> nextTrie = map.get(keyHere);
+            if (nextTrie == null) {
+                return new Object2ObjectOpenHashMap<K,Set<V>>();
+            } else {
+                return nextTrie.getMapForStoredKeys(keyList, index + 1);
+            }
+        }
     }
     
     public Set<K> getStoredKeys(int [] keyList) {

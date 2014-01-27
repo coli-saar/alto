@@ -44,7 +44,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private static final boolean NOISY = false; // more detailed debugging
     private int[] labelRemap;
     private Int2IntMap stateToLeftState;
@@ -308,7 +308,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             if (DEBUG) {
                 for (int i = 1; i < ckyTimestamp.length; i++) {
                     if (ckyTimestamp[i] != 0 && ckyTimestamp[i-1] != 0) {
-                        System.err.println("CKY runtime " + (i - 1) + " � " + i + ": "
+                        System.err.println("CKY runtime " + (i - 1) + " ??? " + i + ": "
                                 + (ckyTimestamp[i] - ckyTimestamp[i - 1]) / 1000000 + "ms");
                     }
                 }
@@ -400,7 +400,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         
 //        makeAllRulesExplicitReversed();
 //        makeAllRulesExplicitCKYOld();
-        makeAllRulesExplicitCKY();
+//        makeAllRulesExplicitCKY();
         if (!isExplicit) {
             isExplicit = true;
             double t1 = System.nanoTime();
