@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Set;
@@ -17,6 +18,10 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
     public ConcreteCondensedTreeAutomaton() {
         super(new Signature());
         isExplicit = true;
+    }
+    
+    public ConcreteCondensedTreeAutomaton(TreeAutomaton<State> origin) {
+        super(origin);
     }
     
     @Override

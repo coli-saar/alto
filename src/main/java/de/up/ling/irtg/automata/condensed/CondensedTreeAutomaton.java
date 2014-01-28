@@ -16,6 +16,8 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectCollection;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -33,6 +35,13 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         super(signature);
         ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
         topDownRules = new Int2ObjectOpenHashMap<Object2ObjectMap<IntSet, Set<CondensedRule>>>();
+    }
+    
+    public CondensedTreeAutomaton(TreeAutomaton<State> origin) {
+        super(origin.getSignature());
+        ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
+        topDownRules = new Int2ObjectOpenHashMap<Object2ObjectMap<IntSet, Set<CondensedRule>>>();
+        absorbTreeAutomaton(origin);
     }
     
     public CondensedRule createRule(State parent, List<String> labels, List<State> children) {
@@ -56,6 +65,10 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         }
         return new CondensedRule(addState(parent), labelSet, addStates(children), weight);
         
+    }
+    
+    public CondensedRule createRule(int parent, IntSet labels, int[] children, double weight) {
+        return new CondensedRule(parent, labels, children, weight);
     }
     
     private String[] stringListToArray(List<String> strings) {
@@ -163,6 +176,60 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
                 }
             }
         }
+        return ret;
+    }
+    
+    final public void absorbTreeAutomaton(TreeAutomaton<State> auto) {
+        for (Rule rule : auto.getRuleSet()) {
+            storeRule(rule, auto);
+        }
+    }
+    
+    public void storeRule(Rule rule, TreeAutomaton<State> auto) {
+        //            System.err.println("IN : " + rule.toString(auto));
+        int[] newChildren = convertChildrenStates(rule.getChildren(), auto);
+        int newParent = addState(auto.getStateForId(rule.getParent()));
+        int newLabel = signature.addSymbol(rule.getLabel(auto), newChildren.length);
+        IntSet newLabels = null;
+        Object2ObjectMap<IntSet, Set<CondensedRule>> ruleMap = ruleTrie.getMapForStoredKeys(newChildren);
+
+        for (IntSet possibleLabels : ruleMap.keySet()) {
+            if (ruleMap.get(possibleLabels).iterator().next().getParent() == newParent) { //That's ugly..
+                newLabels = possibleLabels;
+            }
+        }
+        if (newLabels == null) {
+            newLabels = new IntArraySet();
+        }
+        newLabels.add(newLabel);
+
+        CondensedRule newRule = createRule(newParent, newLabels, newChildren, rule.getWeight());
+        newRule.setExtra(rule.getExtra());
+        storeRule(newRule);
+        // Absorb final states
+        if (auto.getFinalStates().contains(rule.getParent())) {
+            finalStates.add(newParent);
+        }
+//            System.err.println("OUT: " + newRule.toString(this));
+    }
+    
+    private int[] convertChildrenStates(int [] children, TreeAutomaton<State> auto) {
+        int[] ret = new int[children.length];
+        for (int i = 0; i < children.length; i++) {
+            ret[i] = addState(auto.getStateForId(children[i]));
+        }
+        return ret;
+    }
+    
+    public Set<CondensedRule> getCondensedRuleSet() {
+        Set<CondensedRule> ret = new HashSet<CondensedRule>();
+        
+        for (Object2ObjectMap<IntSet, Set<CondensedRule>> labelToRules : topDownRules.values()) {
+            for (Set<CondensedRule> crs : labelToRules.values()) {
+                ret.addAll(crs);
+            }
+        }
+        
         return ret;
     }
 }

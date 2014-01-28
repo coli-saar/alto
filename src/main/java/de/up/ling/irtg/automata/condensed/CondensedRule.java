@@ -5,6 +5,8 @@
  */
 
 package de.up.ling.irtg.automata.condensed;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Collection;
 import java.util.HashSet;
@@ -85,5 +87,42 @@ public class CondensedRule {
         return children.length;
     }
     
-    //TODO toString in a nice way
+    
+    public String toString(CondensedTreeAutomaton auto) {
+        return toString(auto, auto.getFinalStates().contains(parent));
+    }
+
+    public String toString(CondensedTreeAutomaton auto, boolean parentIsFinal) {
+        boolean first = true;
+        StringBuilder ret = new StringBuilder(Tree.encodeLabel(auto.getStateForId(parent).toString()) + (parentIsFinal ? "!" : "") + " -> {");
+        
+        for (String label : getLabels(auto)) { 
+            ret.append(label + ",");
+        }
+
+        if (!getLabels().isEmpty()) { 
+            ret.deleteCharAt(ret.length()-1);
+        }
+        
+        ret.append("} ");
+        if (children.length > 0) {
+            ret.append("(");
+
+            for (int child : children) {
+                if (first) {
+                    first = false;
+                } else {
+                    ret.append(", ");
+                }
+
+                ret.append((child == 0) ? "null" : Tree.encodeLabel(auto.getStateForId(child).toString()));
+            }
+
+            ret.append(")");
+        }
+
+        ret.append(" [" + weight + "]");
+        return ret.toString();
+    }
+    
 }
