@@ -6,7 +6,6 @@
 
 package de.up.ling.irtg.automata.condensed;
 
-import com.sun.org.apache.xerces.internal.impl.dv.xs.YearDV;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
@@ -16,8 +15,6 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectCollection;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +34,12 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         topDownRules = new Int2ObjectOpenHashMap<Object2ObjectMap<IntSet, Set<CondensedRule>>>();
     }
     
+    /**
+     * Creates a new CondensedTreeAutomaton based on the rules and final states of another TreeAutomaton.
+     * Rules in the original TreeAutomaton, that have the same child states and the the same parent state, 
+     * but differ in their label, will be merged to form a CondensedRule
+     * @param origin
+     */
     public CondensedTreeAutomaton(TreeAutomaton<State> origin) {
         super(origin.getSignature());
         ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
@@ -85,7 +88,6 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
     public int addState(State state) {
         return super.addState(state);
     }
-
     
     private int[] addStates(State[] states) {
         int[] ret = new int[states.length];
@@ -97,6 +99,10 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         return ret;
     }
 
+    /**
+     * Saves a CondensedRule in the internal data structures for TopDown and BottomUp access
+     * @param rule
+     */
     protected void storeRule(CondensedRule rule) {
         // Store rules for bottom-up access
         ruleTrie.put(rule.getChildren(), rule.getLabels(), rule);
@@ -140,7 +146,6 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
             return new HashSet<CondensedRule>();
         }
     }
-
     
     @Override
     public boolean isBottomUpDeterministic() { // TODO make a real check
@@ -179,12 +184,23 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         return ret;
     }
     
+    /**
+     * Copies all rules from a TreeAutomaton to this automaton. Merges rules, that can be condensed.
+     * @param auto
+     */
     final public void absorbTreeAutomaton(TreeAutomaton<State> auto) {
         for (Rule rule : auto.getRuleSet()) {
             storeRule(rule, auto);
         }
     }
     
+    
+    /**
+     * Creates a condensed rule based on a given rule and the automaton, that has created it.
+     * The new rule will be stored in the internal data structures, see storeRule
+     * @param rule
+     * @param auto
+     */
     public void storeRule(Rule rule, TreeAutomaton<State> auto) {
         //            System.err.println("IN : " + rule.toString(auto));
         int[] newChildren = convertChildrenStates(rule.getChildren(), auto);
@@ -221,6 +237,10 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         return ret;
     }
     
+    /**
+     * Returns a set of all rules, that are part of this automaton.
+     * @return
+     */
     public Set<CondensedRule> getCondensedRuleSet() {
         Set<CondensedRule> ret = new HashSet<CondensedRule>();
         
