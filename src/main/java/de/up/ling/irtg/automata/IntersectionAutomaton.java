@@ -509,8 +509,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             
             
 //            System.err.println("after run: " + explicitRules.size());
-            if (DEBUG) System.err.println("Intersection automaton:\n" + toString());
-            System.err.println("Time: " + (System.nanoTime() - t1) / 1000000);
+            if (DEBUG) {
+                System.err.println("Intersection automaton:\n" + toString());
+                System.err.println("Time: " + (System.nanoTime() - t1) / 1000000);
+            }
 
 
         }

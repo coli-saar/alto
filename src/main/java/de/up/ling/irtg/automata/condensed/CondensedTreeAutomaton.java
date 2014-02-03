@@ -176,7 +176,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
             for (IntSet labelSet : labelsToRules.keySet()) {
                 if (labelSet.contains(labelId)) {
                     for (CondensedRule cr : labelsToRules.get(labelSet)) {
-                        ret.add(createRule(cr.getParent(), labelId, cr.getChildren(), cr.getWeight()));
+                        ret.add(createRule(cr.getParent(), labelId, cr.getChildren(), cr.getWeight())); //Check!
                     }
                 }
             }

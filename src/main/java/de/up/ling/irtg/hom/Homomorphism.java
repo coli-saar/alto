@@ -4,9 +4,19 @@
  */
 package de.up.ling.irtg.hom;
 
+import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
+import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
+import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -21,46 +31,91 @@ import java.util.regex.Pattern;
 public class Homomorphism {
 //    private static int gensymNext = 1;
     private static Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-Z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
-    private Map<Integer, Tree<HomomorphismSymbol>> mappings;
+//    private Map<Integer, Tree<HomomorphismSymbol>> mappings; // TODO remove
     private Signature srcSignature, tgtSignature;
-    private boolean debug = false;
+    private boolean debug = true;
+    
+    private List<IntSet> labelSets;    // Maps an int to an IntSet (labelSet), so we can change the content of the Set and can still use it as a key in a HashMap
+    private Interner<Tree<HomomorphismSymbol>> terms;   // Maps an ID to each term
+    private Int2IntMap termsToLabelSet; // Lookup for existing terms
+    private Int2IntMap labelToLabelSet; // Find the labelSet for a given label
+    private Int2IntMap labelSetToTerm;  // Lookup the term that has been maped to a labelSet
+    private Object2IntMap<IntSet> labelSetToLabelSetID;
 
     public Homomorphism(Signature src, Signature tgt) {
-        mappings = new HashMap<Integer, Tree<HomomorphismSymbol>>();
+        if (debug) System.err.println("New Homomorphism created...\n");
+//        mappings = new HashMap<Integer, Tree<HomomorphismSymbol>>();
         srcSignature = src;
         tgtSignature = tgt;
+
+        labelSets = new ArrayList<IntSet>();
+        terms = new Interner<Tree<HomomorphismSymbol>>();
+        termsToLabelSet = new Int2IntArrayMap();
+        labelToLabelSet = new Int2IntArrayMap();
+        labelSetToTerm = new Int2IntArrayMap();
+        labelSetToLabelSetID = new Object2IntArrayMap<IntSet>();
     }
     
-    /**
-     * Adds a mapping to the homomorphism. The label is expected to exist
-     * in the homomorphism's source signature. Its "mapping" (= the tree
-     * h(label)) will be resolved according to the homomorphism's target
-     * signature. If the symbols in "mapping" do not exist in the target
-     * signature yet, they will be added, with the numbers of children in the
-     * "mapping" tree as their arities.
-     * 
-     * @param label
-     * @param mapping 
-     */
+    
     public void add(String label, Tree<String> mapping) {
-        mappings.put(srcSignature.getIdForSymbol(label), HomomorphismSymbol.treeFromNames(mapping, tgtSignature));
+        add(srcSignature.getIdForSymbol(label), HomomorphismSymbol.treeFromNames(mapping, tgtSignature));
     }
 
-    /**
-     * Adds a mapping to the homomorphism, using symbol IDs. The symbol
-     * ID of "label" is relative to the homomorphism's source signature;
-     * the symbol IDs of the constants in the "mapping" tree are relative
-     * to the homomomorphism's target signature.
-     * 
-     * @param label
-     * @param mapping 
-     */
     public void add(int label, Tree<HomomorphismSymbol> mapping) {
-        // symbols for target signature should already have been added
-        // in constructing the "mapping" tree
-        mappings.put(label, mapping);
+//        mappings.put(label, mapping); // To be removed later...
+        if (debug) System.err.println("Adding " + label + " - " + mapping);
+        if (terms.isKnownObject(mapping)) { // Term is already processed. We only need to add the given label to the proper labelSet
+            if (debug) System.err.println("-> " + mapping + " is already known.");
+            int termID = terms.resolveObject(mapping); 
+            assert termsToLabelSet.containsKey(termID);
+            int labelSetID = termsToLabelSet.get(termID);
+            addToLabelSet(label, labelSetID);
+            if (debug) System.err.println("termID = " + termID);
+            if (debug) System.err.println("labelSetID = " + labelSetID);
+            labelToLabelSet.put(label, labelSetID); // Add the mapping from the label to the labelSet
+        } else {
+            if (debug) System.err.println("-> " + mapping + " is new.");
+            int termID = terms.addObject(mapping); 
+            int labelSetID = createNewLabelSet(label);
+            if (debug) System.err.println("termID = " + termID);
+            labelToLabelSet.put(label, labelSetID);
+            labelSetToTerm.put(labelSetID, termID);
+            termsToLabelSet.put(termID, labelSetID);
+        }
     }
 
+    // returns the labelSetID for a new labelSet.
+    private int createLabelSetID(IntSet labelSet) {
+        labelSets.add(labelSet);
+        return labelSets.size() - 1;
+    }
+    
+    private IntSet getLabelSet(int labelSetID) {
+        if (labelSetID < labelSets.size()) {
+            return labelSets.get(labelSetID);
+        } else return new IntArraySet();
+    }
+    
+    // Adds a label to an existing labelSet.
+    private void addToLabelSet(int label, int labelSetID) {
+        IntSet labelSet = getLabelSet(labelSetID);
+        if (debug) System.err.println("labelSet = " + labelSet);
+        assert labelSetToLabelSetID.containsKey(labelSet);
+        labelSetToLabelSetID.remove(labelSet);
+        labelSet.add(label);
+        labelSetToLabelSetID.put(labelSet, labelSetID);
+        if (debug) System.err.println("labelSet\\ = " + labelSet);
+    }
+    
+    // Creates a new labelSet for a new label and returns the labelSetID
+    private int createNewLabelSet(int label) {
+        IntSet labelSet = new IntArraySet();
+        int labelSetID = createLabelSetID(labelSet);
+        labelSet.add(label);
+        labelSetToLabelSetID.put(labelSet, labelSetID);
+        if (debug) System.err.println("labelSetID = " + labelSetID);
+        return labelSetID;
+    }
     /**
      * Returns the value h(label), using symbol IDs.
      * 
@@ -68,7 +123,25 @@ public class Homomorphism {
      * @return 
      */
     public Tree<HomomorphismSymbol> get(int label) {
-        return mappings.get(label);
+        if (debug) System.err.println("Getting mapping for " + label);
+        if (!labelToLabelSet.containsKey(label)) {
+            return null;
+        }
+        int labelSetID = labelToLabelSet.get(label);
+        int termID = labelSetToTerm.get(labelSetID);
+//        if (debug) System.err.println("New: " + terms.resolveId(termID));
+//        if (debug) System.err.println("Old: " + mappings.get(label));
+//        assert mappings.get(label).equals(terms.resolveId(termID));
+        return terms.resolveId(termID);
+    }
+    
+    public Tree<HomomorphismSymbol> get(IntSet labelSet) {
+        if (labelSetToLabelSetID.containsKey(labelSet)) {
+            int labelSetID = labelSetToLabelSetID.get(labelSet);
+            assert labelSetToTerm.containsKey(labelSetID);
+            int termID = labelSetToTerm.get(labelSetID);
+            return terms.resolveId(termID);
+        } else return null;
     }
     
     
@@ -85,6 +158,7 @@ public class Homomorphism {
      * @return 
      */
     public Tree<String> get(String label) {
+        if (debug) System.err.println("Getting for " + label);
         return HomomorphismSymbol.toStringTree(get(srcSignature.getIdForSymbol(label)), tgtSignature);
     }
 
@@ -99,10 +173,10 @@ public class Homomorphism {
         return tree.dfs(new TreeVisitor<Integer, Void, Tree<Integer>>() {
             @Override
             public Tree<Integer> combine(Tree<Integer> node, List<Tree<Integer>> childrenValues) {
-                Tree<Integer> ret = constructRaw(mappings.get(node.getLabel()), childrenValues);
+                Tree<Integer> ret = constructRaw(get(node.getLabel()), childrenValues);
                 if (debug) {
                     System.err.println("\n" + node + ":");
-                    System.err.println("  " + rhsAsString(mappings.get(node.getLabel())));
+                    System.err.println("  " + rhsAsString(get(node.getLabel())));
                     for (Tree<Integer> child : childrenValues) {
                         System.err.println("   + " + child);
                     }
@@ -169,9 +243,8 @@ public class Homomorphism {
     public String toString() {
         StringBuilder buf = new StringBuilder();
         
-        for (Integer key : mappings.keySet()) {
-            buf.append(srcSignature.resolveSymbolId(key) + " -> " + 
-                    rhsAsString(mappings.get(key)) + "\n");
+        for (int key : labelToLabelSet.keySet()) {
+            buf.append(srcSignature.resolveSymbolId(key)).append(" -> ").append(rhsAsString(get(key))).append("\n");
         }
 
         return buf.toString();
@@ -220,17 +293,17 @@ public class Homomorphism {
             int[] sourceRemap = srcSignature.remap(other.srcSignature);
             int[] targetRemap = tgtSignature.remap(other.tgtSignature);
             
-            if( mappings.size() != other.mappings.size() ) {
+            if( labelToLabelSet.size() != other.labelToLabelSet.size() ) {
                 return false;
             }
             
-            for( int srcSym : mappings.keySet() ) {
+            for( int srcSym : labelToLabelSet.keySet() ) {
                 if( sourceRemap[srcSym] == 0 ) {
                     return false;
                 }
                 
-                Tree<HomomorphismSymbol> thisRhs = mappings.get(srcSym);
-                Tree<HomomorphismSymbol> otherRhs = other.mappings.get(sourceRemap[srcSym]);
+                Tree<HomomorphismSymbol> thisRhs = get(srcSym);
+                Tree<HomomorphismSymbol> otherRhs = other.get(sourceRemap[srcSym]);
                 
                 if( ! equalRhsTrees(thisRhs, otherRhs, targetRemap)) {
                     return false;
@@ -281,8 +354,8 @@ public class Homomorphism {
     }
 
     public boolean isNonDeleting() {
-        for (Integer label : mappings.keySet()) {
-            Tree<HomomorphismSymbol> rhs = mappings.get(label);
+        for (int label : labelToLabelSet.keySet()) {
+            Tree<HomomorphismSymbol> rhs = get(label);
             Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
             for (HomomorphismSymbol l : rhs.getLeafLabels()) {
                 if (l.isVariable()) {
