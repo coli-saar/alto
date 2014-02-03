@@ -206,22 +206,20 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         int[] newChildren = convertChildrenStates(rule.getChildren(), auto);
         int newParent = addState(auto.getStateForId(rule.getParent()));
         int newLabel = signature.addSymbol(rule.getLabel(auto), newChildren.length);
-        IntSet newLabels = null;
+        IntSet newLabels = new IntArraySet();
         Object2ObjectMap<IntSet, Set<CondensedRule>> ruleMap = ruleTrie.getMapForStoredKeys(newChildren);
 
         for (IntSet possibleLabels : ruleMap.keySet()) {
             if (ruleMap.get(possibleLabels).iterator().next().getParent() == newParent) { //That's ugly..
-                newLabels = possibleLabels;
+                newLabels.addAll(possibleLabels);
             }
         }
-        if (newLabels == null) {
-            newLabels = new IntArraySet();
-        }
-        newLabels.add(newLabel);
-
+        
         CondensedRule newRule = createRule(newParent, newLabels, newChildren, rule.getWeight());
         newRule.setExtra(rule.getExtra());
-        storeRule(newRule);
+        if (newLabels.size() == 1) { // no existing labelset
+            storeRule(newRule);
+        }
         // Absorb final states
         if (auto.getFinalStates().contains(rule.getParent())) {
             finalStates.add(newParent);

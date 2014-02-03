@@ -25,9 +25,9 @@ class CondensedTreeAutomatonTest {
     public void testToAutomaton() {
         System.out.println("\nCondensedTreeAutomaton:")
         CondensedTreeAutomaton automaton = parse("q! -> {f,g}(q2) q2! -> {a}");
-        System.out.println(automaton.toStringBottomUp());
-        System.out.println("String:\n" + automaton.toString());
-        System.out.println(automaton.language());
+        System.out.println("toString BottomUp:\n" + automaton.toStringBottomUp());
+        System.out.println("toString TopDown:\n" + automaton.toString());
+        System.out.println("toString Language:\n" + automaton.language());
         for (CondensedRule cr : automaton.getCondensedRuleSet()) {
             System.out.println(cr.toString(automaton));
         }

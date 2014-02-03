@@ -48,7 +48,10 @@ public class CondensedRuleTrie<K,V> {
     private void put(int[] keyList, K key, V value, int index) {
         if( index == keyList.length) {
             if (finalStateMap.containsKey(key)) {
-                finalStateMap.get(key).add(value);
+                Set<V> values = finalStateMap.get(key);
+                values.add(value);
+                finalStateMap.remove(key);
+                finalStateMap.put(key, values);
             } else {
                 Set<V> internalSet = new HashSet<V>();
                 internalSet.add(value);

@@ -17,7 +17,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
     
     public ConcreteCondensedTreeAutomaton() {
         super(new Signature());
-        isExplicit = true;
+//        isExplicit = true;
     }
     
     public ConcreteCondensedTreeAutomaton(TreeAutomaton<State> origin) {
