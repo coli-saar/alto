@@ -12,10 +12,13 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,29 +34,27 @@ import java.util.regex.Pattern;
 public class Homomorphism {
 //    private static int gensymNext = 1;
     private static Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-Z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
-//    private Map<Integer, Tree<HomomorphismSymbol>> mappings; // TODO remove
+    private Map<Integer, Tree<HomomorphismSymbol>> mappings; // TODO remove
     private Signature srcSignature, tgtSignature;
-    private boolean debug = true;
+    private boolean debug = false;
     
-    private List<IntSet> labelSets;    // Maps an int to an IntSet (labelSet), so we can change the content of the Set and can still use it as a key in a HashMap
     private Interner<Tree<HomomorphismSymbol>> terms;   // Maps an ID to each term
+    private Interner<IntSet> labelSetInterner;
     private Int2IntMap termsToLabelSet; // Lookup for existing terms
     private Int2IntMap labelToLabelSet; // Find the labelSet for a given label
     private Int2IntMap labelSetToTerm;  // Lookup the term that has been maped to a labelSet
-    private Object2IntMap<IntSet> labelSetToLabelSetID;
 
     public Homomorphism(Signature src, Signature tgt) {
-        if (debug) System.err.println("New Homomorphism created...\n");
-//        mappings = new HashMap<Integer, Tree<HomomorphismSymbol>>();
+//        if (debug) System.err.println("New Homomorphism created...\n");
+        mappings = new HashMap<Integer, Tree<HomomorphismSymbol>>();
         srcSignature = src;
         tgtSignature = tgt;
 
-        labelSets = new ArrayList<IntSet>();
         terms = new Interner<Tree<HomomorphismSymbol>>();
-        termsToLabelSet = new Int2IntArrayMap();
-        labelToLabelSet = new Int2IntArrayMap();
-        labelSetToTerm = new Int2IntArrayMap();
-        labelSetToLabelSetID = new Object2IntArrayMap<IntSet>();
+        termsToLabelSet = new Int2IntOpenHashMap();
+        labelToLabelSet = new Int2IntOpenHashMap();
+        labelSetToTerm = new Int2IntOpenHashMap();
+        labelSetInterner = new Interner<IntSet>();
     }
     
     
@@ -62,7 +63,7 @@ public class Homomorphism {
     }
 
     public void add(int label, Tree<HomomorphismSymbol> mapping) {
-//        mappings.put(label, mapping); // To be removed later...
+        mappings.put(label, mapping); // To be removed later?
         if (debug) System.err.println("Adding " + label + " - " + mapping);
         if (terms.isKnownObject(mapping)) { // Term is already processed. We only need to add the given label to the proper labelSet
             if (debug) System.err.println("-> " + mapping + " is already known.");
@@ -84,35 +85,27 @@ public class Homomorphism {
         }
     }
 
-    // returns the labelSetID for a new labelSet.
-    private int createLabelSetID(IntSet labelSet) {
-        labelSets.add(labelSet);
-        return labelSets.size() - 1;
-    }
     
     private IntSet getLabelSet(int labelSetID) {
-        if (labelSetID < labelSets.size()) {
-            return labelSets.get(labelSetID);
-        } else return new IntArraySet();
+        IntSet ret = labelSetInterner.resolveId(labelSetID);
+        if (ret != null) {
+            return ret;
+        } else return new IntOpenHashSet();
     }
     
     // Adds a label to an existing labelSet.
     private void addToLabelSet(int label, int labelSetID) {
         IntSet labelSet = getLabelSet(labelSetID);
         if (debug) System.err.println("labelSet = " + labelSet);
-        assert labelSetToLabelSetID.containsKey(labelSet);
-        labelSetToLabelSetID.remove(labelSet);
         labelSet.add(label);
-        labelSetToLabelSetID.put(labelSet, labelSetID);
         if (debug) System.err.println("labelSet\\ = " + labelSet);
     }
     
     // Creates a new labelSet for a new label and returns the labelSetID
     private int createNewLabelSet(int label) {
-        IntSet labelSet = new IntArraySet();
-        int labelSetID = createLabelSetID(labelSet);
+        IntSet labelSet = new IntOpenHashSet();
+        int labelSetID = labelSetInterner.addObject(labelSet);
         labelSet.add(label);
-        labelSetToLabelSetID.put(labelSet, labelSetID);
         if (debug) System.err.println("labelSetID = " + labelSetID);
         return labelSetID;
     }
@@ -124,26 +117,44 @@ public class Homomorphism {
      */
     public Tree<HomomorphismSymbol> get(int label) {
         if (debug) System.err.println("Getting mapping for " + label);
-        if (!labelToLabelSet.containsKey(label)) {
-            return null;
-        }
-        int labelSetID = labelToLabelSet.get(label);
-        int termID = labelSetToTerm.get(labelSetID);
-//        if (debug) System.err.println("New: " + terms.resolveId(termID));
-//        if (debug) System.err.println("Old: " + mappings.get(label));
-//        assert mappings.get(label).equals(terms.resolveId(termID));
-        return terms.resolveId(termID);
+//        assert mappings.get(label).equals(terms.resolveId(labelSetToTerm.get(labelToLabelSet.get(label))));
+        return mappings.get(label);
+//        if (!labelToLabelSet.containsKey(label)) {
+//            return null;
+//        }
+//        int labelSetID = labelToLabelSet.get(label);
+//        int termID = labelSetToTerm.get(labelSetID);
+////        if (debug) System.err.println("New: " + terms.resolveId(termID));
+////        if (debug) System.err.println("Old: " + mappings.get(label));
+////        assert mappings.get(label).equals(terms.resolveId(labelSetToTerm.get(labelToLabelSet.get(label))));
+//        return terms.resolveId(termID);
     }
     
     public Tree<HomomorphismSymbol> get(IntSet labelSet) {
-        if (labelSetToLabelSetID.containsKey(labelSet)) {
-            int labelSetID = labelSetToLabelSetID.get(labelSet);
+        if (labelSetInterner.isKnownObject(labelSet)) {
+            int labelSetID = labelSetInterner.resolveObject(labelSet);
             assert labelSetToTerm.containsKey(labelSetID);
             int termID = labelSetToTerm.get(labelSetID);
             return terms.resolveId(termID);
         } else return null;
     }
     
+    public int getTermID(int label) {
+        int labelSetID = labelToLabelSet.get(label);
+        return labelSetToTerm.get(labelSetID);
+    }
+    
+    public int getLabelSetID(int label) {
+        return labelToLabelSet.get(label);
+    }
+    
+    public int getTermIDByLabelSet(int labelSetID) {
+        return labelSetToTerm.get(labelSetID);
+    }
+    
+    public IntSet getLabelSetForLabel(int label) {
+        return getLabelSet(labelToLabelSet.get(label));
+    }
     
     /**
      * Returns the value h(label). The label is resolved
@@ -237,6 +248,21 @@ public class Homomorphism {
         return prefix + knownGensyms.get(gensymKey);
     }
     */
+    
+    public String toStringCondensed() {
+        StringBuilder buf = new StringBuilder();
+        buf.append("Labelsets mapped to terms in Homomorphism:\n");
+        for (IntSet labels : labelSetInterner.getSymbolTable().keySet()) {
+            StringBuilder labelSetStrings = new StringBuilder();
+            labelSetStrings.append("{");
+            for (int label : labels) {
+                labelSetStrings.append(srcSignature.resolveSymbolId(label)).append(",");
+            }
+            labelSetStrings.setLength(labelSetStrings.length()-1);
+            buf.append(labelSetStrings.toString()).append("} -> ").append(rhsAsString(get(labels))).append("\n");
+        }
+        return buf.toString();
+    }
 
 
     @Override

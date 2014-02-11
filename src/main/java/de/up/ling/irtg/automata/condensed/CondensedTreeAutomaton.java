@@ -250,4 +250,12 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         
         return ret;
     }
+    
+    public String toStringCondensed() {
+        StringBuilder buf = new StringBuilder();
+        for (CondensedRule cr : getCondensedRuleSet()) {
+            buf.append(cr.toString(this)).append("\n");
+        }
+        return buf.toString();
+    }
 }

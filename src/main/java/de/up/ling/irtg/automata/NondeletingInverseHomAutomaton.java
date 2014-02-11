@@ -10,9 +10,17 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,11 +37,16 @@ import java.util.Set;
  * @author koller
  */
 public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object> {
+    private final boolean debug = false;
+
     private TreeAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
 //    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
     private Function<HomomorphismSymbol,Integer> remappingHomSymbolToIntFunction;
+    private Int2ObjectMap<Int2ObjectMap<Set<Rule>>> termIDCache;    // termid -> hash(childstates) -> rules
+    private Int2ObjectMap<Int2ObjectMap<Set<Rule>>> parentToTermID;
+    
 
     public NondeletingInverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
@@ -74,12 +87,114 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 //            String normalized = addState(s.toString());
 //            rhsState.put(normalized, s);
 //        }
+        
+        termIDCache = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
+        parentToTermID = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
+    }
+    public Set<Rule> getRulesBottomUpFromExplicitWithTermID(int termID, int[] childStates) {
+        int childHash = Arrays.hashCode(childStates);
+        if (debug) {
+            System.err.println("Getting for termID " + termID + " and CS: " + childStatesToString(childStates));
+        }
+        Int2ObjectMap<Set<Rule>> childToRules = termIDCache.get(termID);
+        if (childToRules != null) {
+            return childToRules.get(childHash);
+        } else return null;
+    }
+
+    private String childStatesToString(int[] childStates) {
+        if (childStates.length == 0) {
+            return "{}";
+        }
+        StringBuilder buf = new StringBuilder("{");
+        for (int i = 0; i < childStates.length; i++) {
+            buf.append(childStates[i]).append(",");
+        }
+        buf.setLength(buf.length() - 1);
+
+        return buf.toString() + "}";
+    }
+
+    /**
+     * Checks whether the cache contains a bottom-up rule for the given termID
+     * and children states.
+     *
+     * @param termID
+     * @param childStates
+     * @return
+     */
+    protected boolean useCachedRuleBottomUpWithTermID(int termID, int[] childStates) {
+        int childHash = Arrays.hashCode(childStates);
+        Int2ObjectMap<Set<Rule>> childToRules = termIDCache.get(termID);
+        if (childToRules != null) {
+            return childToRules.get(childHash) != null;
+        } else return false;
+    }
+
+    @Override
+    protected void storeRule(Rule rule) {
+//        if (useCachedRuleBottomUpWithTermID(hom.getTermID(rule.getLabel()), rule.getChildren())) {
+//            System.err.println("Why is termID and " + hom.getTermID(rule.getLabel()) + " and CS: " + childStatesToString(rule.getChildren()) + " mapped again?");
+//            System.err.println("-> " + rule.toString());
+//        }
+        // store as bottom-up rule
+        int termID = hom.getTermID(rule.getLabel());
+        int childHash = Arrays.hashCode(rule.getChildren());
+        Int2ObjectMap<Set<Rule>> childToRules = termIDCache.get(termID);
+        if (childToRules != null) {
+            Set<Rule> ruleSet = childToRules.get(childHash);
+            if (ruleSet != null) {
+                ruleSet.add(rule);
+            } else {
+                ruleSet = new HashSet<Rule>();
+                ruleSet.add(rule);
+                childToRules.put(childHash, ruleSet);
+            }
+        } else {
+            childToRules = new Int2ObjectArrayMap<Set<Rule>>();
+            Set<Rule> ruleSet = new HashSet<Rule>();
+            ruleSet.add(rule);
+            childToRules.put(childHash, ruleSet);
+            termIDCache.put(termID, childToRules);
+        }
+        
+        // store as top-down rule
+        
+        Int2ObjectMap<Set<Rule>> termIDToRules = parentToTermID.get(rule.getParent());
+        if (termIDToRules != null) {
+            Set<Rule> ruleSet = termIDToRules.get(termID);
+            if (ruleSet != null) {
+                ruleSet.add(rule);
+            } else {
+                ruleSet = new HashSet<Rule>();
+                ruleSet.add(rule);
+                termIDToRules.put(termID, ruleSet);
+            }
+        } else {
+            termIDToRules = new Int2ObjectArrayMap<Set<Rule>>();
+            Set<Rule> ruleSet = new HashSet<Rule>();
+            ruleSet.add(rule);
+            termIDToRules.put(termID, ruleSet);
+            parentToTermID.put(rule.getParent(), termIDToRules);
+        }
+        
+//        // remember that rules also need to be stored top-down
+//        unprocessedUpdatesForTopDown.add(rule);
+
+        // remember that rules need to be indexed for RHS -> rule
+        unprocessedUpdatesForRulesForRhsState.add(rule);
+//        super.storeRule(rule);
     }
 
     @Override
     public Set<Rule> getRulesBottomUp(int label, final int[] childStates) {
-        if (useCachedRuleBottomUp(label, childStates)) {
-            return getRulesBottomUpFromExplicit(label, childStates);
+        if (debug) {
+            System.err.println("Handling label " + label + " and CS : " + childStatesToString(childStates));
+        }
+        // lazy bottom-up computation of bottom-up rules
+        int termID = hom.getTermID(label);
+        if (useCachedRuleBottomUpWithTermID(termID, childStates)) {
+            return getRulesBottomUpFromExplicitWithTermID(termID, childStates);
         } else {
             Set<Rule> ret = new HashSet<Rule>();
 
@@ -98,19 +213,41 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 
             for (int r : resultStates) {
                 // TODO: weight
-                Rule rule = createRule(r, label, childStates, 1);
-                storeRule(rule);
-                ret.add(rule);
+                for (int newLabel : hom.getLabelSetForLabel(label)) {
+                    Rule rule = createRule(r, newLabel, childStates, 1);
+                    storeRule(rule);
+                    ret.add(rule);
+                }
             }
 
             return ret;
         }
     }
 
+    private boolean useCachedRuleTopDownWithTermID(int termID, int parentState) {
+        Int2ObjectMap<Set<Rule>> termIDToRules = parentToTermID.get(parentState);
+        if (termIDToRules != null) {
+            return termIDToRules.get(termID) != null;
+        } else {
+            return false;
+        }
+    }
+    
+    private Set<Rule> getRulesTopDownFromExplicitWithTermID(int termID, int parentState) {
+        Int2ObjectMap<Set<Rule>> termIDToRules = parentToTermID.get(parentState);
+        if (termIDToRules != null) {
+            return termIDToRules.get(termID);
+        } else {
+            return null;
+        }
+        
+    }
+    
     @Override
     public Set<Rule> getRulesTopDown(int label, int parentState) {
-        if (useCachedRuleTopDown(label, parentState)) {
-            return getRulesTopDownFromExplicit(label, parentState);
+        int termID = hom.getTermID(label);
+        if (useCachedRuleTopDownWithTermID(termID, parentState)) {
+            return getRulesTopDownFromExplicitWithTermID(termID, parentState);
         } else {
             Tree<HomomorphismSymbol> rhs = hom.get(label);
             Set<Rule> ret = new HashSet<Rule>();
@@ -118,9 +255,11 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
             for (List<Integer> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs))) {
                 if (isCompleteSubstitutionTuple(substitutionTuple)) {
                     // TODO: weights
-                    Rule rule = createRule(parentState, label, substitutionTuple, 1);
-                    storeRule(rule);
-                    ret.add(rule);
+                    for (int newLabel : hom.getLabelSetForLabel(label)) {
+                        Rule rule = createRule(parentState, newLabel, substitutionTuple, 1);
+                        storeRule(rule);
+                        ret.add(rule); 
+                    }
                 }
             }
 
