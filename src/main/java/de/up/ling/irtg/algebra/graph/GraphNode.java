@@ -12,7 +12,7 @@ import org.jgrapht.experimental.equivalence.EquivalenceComparator;
  *
  * @author koller
  */
-class GraphNode {
+public class GraphNode {
     private String name;
     private String label;
 
