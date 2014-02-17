@@ -160,7 +160,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param childStates
      * @return
      */
-    abstract public Set<Rule> getRulesBottomUp(int labelId, int[] childStates);
+    abstract public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates);
 
     /**
      * Finds automaton rules bottom-up. This is like {@link #getRulesBottomUp(int, int[])
@@ -170,8 +170,32 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param childStates
      * @return
      */
-    public Set<Rule> getRulesBottomUp(int labelId, List<Integer> childStates) {
+    public Iterable<Rule> getRulesBottomUp(int labelId, List<Integer> childStates) {
         return getRulesBottomUp(labelId, intListToArray(childStates));
+    }
+    
+    /**
+     * Finds automaton rules bottom-up for a given list of child states
+     * and a given set of parent labels. The method returns an iterable which
+     * contains all rules that have the given child states and whose label
+     * is contained in the "labelIds" set.
+     * 
+     * @param labelIds
+     * @param childStates
+     * @return 
+     */
+    public Iterable<Rule> getRulesBottomUp(IntSet labelIds, List<Integer> childStates) {
+        List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
+        
+        for( int label : labelIds ) {
+            Iterable<Rule> it = getRulesBottomUp(label, childStates);
+            
+            if( it.iterator().hasNext() ) {
+                ruleSets.add(it);
+            }            
+        }
+        
+        return Iterables.concat(ruleSets);
     }
 
     protected static int[] intListToArray(List<Integer> ints) {
@@ -371,24 +395,24 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns the set of all rules of this automaton. This method is currently
-     * implemented rather inefficiently. Note that it necessarily _computes_ the
+     * Returns the set of all rules of this automaton.  
+     * Note that this necessarily _computes_ the
      * set of all rules, which may be expensive for lazy automata.
      *
      * @return
      */
-    public Set<Rule> getRuleSet() {
-        Set<Rule> ret = new HashSet<Rule>();
-
+    public Iterable<Rule> getRuleSet() {
+        List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
+        
         makeAllRulesExplicit();
 
         for (StateListToStateMap map : explicitRulesBottomUp.values()) {
             for (Set<Rule> set : map.getAllRules().values()) {
-                ret.addAll(set);
+                ruleSets.add(set);
             }
         }
-
-        return ret;
+        
+        return Iterables.concat(ruleSets);
     }
     
     
@@ -679,8 +703,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
             for (int[] children : allRules.get(f).keySet()) {
                 int[] childrenOther = Interner.remapArray(children, stateRemap);
 
-                Set<Rule> rules = getRulesBottomUp(f, children);
-                Set<Rule> otherRules = other.getRulesBottomUp(labelRemap[f], childrenOther);
+                Iterable<Rule> rules = getRulesBottomUp(f, children);
+                Iterable<Rule> otherRules = other.getRulesBottomUp(labelRemap[f], childrenOther);
 
                 if (!ruleSetsEqual(rules, otherRules, labelRemap, stateRemap, other)) {
                     return false;
@@ -692,13 +716,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     // this is slow
-    private boolean ruleSetsEqual(Set<Rule> r1, Set<Rule> r2, int[] labelRemap, int[] stateRemap, TreeAutomaton other) {
-        if (r1.size() != r2.size()) {
+    private boolean ruleSetsEqual(Iterable<Rule> r1, Iterable<Rule> r2, int[] labelRemap, int[] stateRemap, TreeAutomaton other) {
+        if (Iterables.size(r1) != Iterables.size(r2)) {
             return false;
         }
 
         List<Rule> tmp = new ArrayList<Rule>();
-        tmp.addAll(r2);
+        Iterables.addAll(tmp, r2);
 
         for (Rule r : r1) {
             Rule found = null;
@@ -1162,11 +1186,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 }
             }
 
-            Set<Rule> rules = getRulesBottomUp(labelIdSource.apply(f), childStates);
-            if (rules.isEmpty()) {
-                return 0;
+            Iterable<Rule> rules = getRulesBottomUp(labelIdSource.apply(f), childStates);
+            Iterator<Rule> it = rules.iterator();
+            
+            if( it.hasNext() ) {
+                return it.next().getParent();
             } else {
-                return rules.iterator().next().getParent();
+                return 0;
             }
         }
     }
@@ -1978,7 +2004,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * computing all the rules, which may be expensive for lazy automata.
      */
     public void normalizeRuleWeights() {
-        Collection<Rule> rules = getRuleSet();
+        Iterable<Rule> rules = getRuleSet();
         Int2DoubleMap lhsWeightSum = new Int2DoubleOpenHashMap();
         
         for( Rule rule : rules ) {

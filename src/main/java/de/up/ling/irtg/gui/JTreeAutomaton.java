@@ -5,6 +5,7 @@
 package de.up.ling.irtg.gui;
 
 import com.bric.window.WindowMenu;
+import com.google.common.collect.Iterables;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.ProgressListener;
@@ -113,7 +114,9 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void fillEntries(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
         IntSet allStates = new IntOpenHashSet();
 
-        rulesInOrder = new ArrayList<Rule>(automaton.getRuleSet());
+        rulesInOrder = new ArrayList<Rule>();
+        Iterables.addAll(rulesInOrder, automaton.getRuleSet());
+        
         maxRuleRank = 0;
 
         for (Rule rule : rulesInOrder) {
@@ -647,7 +650,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 new Thread() {
                     @Override
                     public void run() {
-                        final ProgressBarDialog pb = new ProgressBarDialog("Binarizing IRTG", irtg.getAutomaton().getRuleSet().size(), JTreeAutomaton.this, false);
+                        int max = (numRules < Integer.MAX_VALUE) ? ((int) numRules) : Integer.MAX_VALUE;
+                        final ProgressBarDialog pb = new ProgressBarDialog("Binarizing IRTG", max, JTreeAutomaton.this, false);
                         pb.setVisible(true);
 
                         ProgressListener listener = new ProgressListener() {

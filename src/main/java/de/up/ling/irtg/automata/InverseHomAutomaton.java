@@ -186,9 +186,9 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
                                 childSubsts.add(item.substitution);
                             }
 
-                            Set<Rule> rules = rhsAutomaton.getRulesBottomUp(labelsRemap[node.getLabel().getValue()], childStates);
+                            Iterable<Rule> rules = rhsAutomaton.getRulesBottomUp(labelsRemap[node.getLabel().getValue()], childStates);
 
-                            if (!rules.isEmpty()) {
+                            if( rules.iterator().hasNext() ) {
                                 Map<HomomorphismSymbol, Integer> subst = mergeSubstitutions(childSubsts);
                                 for (Rule r : rules) {
                                     ret.add(new Item(r.getParent(), subst));

@@ -42,7 +42,7 @@ class MaximumEntropyIrtgTest {
         irtg.readWeights(new StringReader(WEIGHTS_STR));
         TreeAutomaton chart = irtg.parse(i:SENTENCE_STR);
         
-        Set<Rule> rules = chart.getRuleSet();
+        Iterable<Rule> rules = chart.getRuleSet();
         for( Rule<String> rule : rules ) {
             assert rule.getWeight() > 0.0, "Rule weight must be greater than 0.0";
         }

@@ -5,6 +5,7 @@
 package de.up.ling.irtg;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
@@ -451,7 +452,9 @@ public class InterpretedTreeAutomaton {
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, null);
 
         // initialize hyperparameters
-        List<Rule> automatonRules = new ArrayList<Rule>(getAutomaton().getRuleSet()); // bring rules in defined order
+        List<Rule> automatonRules = new ArrayList<Rule>();
+        Iterables.addAll(automatonRules, getAutomaton().getRuleSet()); // bring rules in defined order
+        
         int numRules = automatonRules.size();
         double[] alpha = new double[numRules];
         Arrays.fill(alpha, 1.0); // might want to initialize them differently
@@ -588,7 +591,7 @@ public class InterpretedTreeAutomaton {
         for (Instance instance : trainingData) {
             parses.add(instance.getChart());
 
-            Set<Rule> rules = instance.getChart().getRuleSet();
+            Iterable<Rule> rules = instance.getChart().getRuleSet();
             Map<Rule, Rule> irtorHere = new HashMap<Rule, Rule>();
             for (Rule intersectedRule : rules) {
                 Rule originalRule = getRuleInGrammar(intersectedRule, instance.getChart());
