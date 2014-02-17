@@ -200,7 +200,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param parentState
      * @return
      */
-    abstract public Set<Rule> getRulesTopDown(int labelId, int parentState);
+    abstract public Iterable<Rule> getRulesTopDown(int labelId, int parentState);
 
     /**
      * Determines whether the automaton is deterministic if read as a bottom-up
@@ -796,10 +796,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 int state = agenda.remove();
 
                 for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
-                    Set<Rule> rules = getRulesTopDown(label, state);
-                    if (!rules.isEmpty()) {
-//                        System.err.println("  rules for " + label + ": " + rules);
-                    }
+                    Iterable<Rule> rules = getRulesTopDown(label, state);
 
                     for (Rule rule : rules) {
                         storeRule(rule);
@@ -1028,7 +1025,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
     
     private Tree<Rule> getRuleTree(Tree<Integer> derivationTree, int state) throws Exception {
-        Collection<Rule> rules = getRulesTopDown(derivationTree.getLabel(), state);
+        Iterable<Rule> rules = getRulesTopDown(derivationTree.getLabel(), state);
         Tree<Rule> ret = null;
         
 //        System.err.println("grt " + getSignature().resolve(derivationTree) + " @" + stateInterner.resolveId(state));
@@ -1481,7 +1478,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             E accu = semiring.zero();
 
             for (int label : getLabelsTopDown(s)) {
-                Set<Rule> rules = getRulesTopDown(label, s);
+                Iterable<Rule> rules = getRulesTopDown(label, s);
 
                 for (Rule rule : rules) {
                     E valueThisRule = evaluator.evaluateRule(rule);
