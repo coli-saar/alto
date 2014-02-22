@@ -82,8 +82,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected SetMultimap<Integer, Rule> rulesForRhsState;
     protected Signature signature;
     private Predicate<Rule> filter = null;
-    private List<Rule> unprocessedUpdatesForRulesForRhsState;
-    private List<Rule> unprocessedUpdatesForTopDown;
+    protected List<Rule> unprocessedUpdatesForRulesForRhsState;
+    protected List<Rule> unprocessedUpdatesForTopDown;
     protected boolean explicitIsBottomUpDeterministic = true;
     protected Interner<State> stateInterner;
 
