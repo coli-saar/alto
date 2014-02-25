@@ -15,9 +15,11 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import com.google.common.collect.Iterables;
 
 /**
  *
@@ -45,6 +47,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
         topDownRules = new Int2ObjectOpenHashMap<Object2ObjectMap<IntSet, Set<CondensedRule>>>();
         absorbTreeAutomaton(origin);
+        assert equals(origin);
     }
     
     public CondensedRule createRule(State parent, List<String> labels, List<State> children) {
@@ -184,6 +187,12 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         return ret;
     }
     
+    
+    public Iterable<CondensedRule> getRulesByParentState(int parentState) {
+        if (topDownRules.containsKey(parentState)) {
+            return Iterables.concat(topDownRules.get(parentState).values());
+        } else return new ArrayList<CondensedRule>();
+    }
     /**
      * Copies all rules from a TreeAutomaton to this automaton. Merges rules, that can be condensed.
      * @param auto
@@ -208,7 +217,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         int newLabel = signature.addSymbol(rule.getLabel(auto), newChildren.length);
         IntSet newLabels = new IntArraySet();
         Object2ObjectMap<IntSet, Set<CondensedRule>> ruleMap = ruleTrie.getMapForStoredKeys(newChildren);
-
+        newLabels.add(newLabel);
         for (IntSet possibleLabels : ruleMap.keySet()) {
             if (ruleMap.get(possibleLabels).iterator().next().getParent() == newParent) { //That's ugly..
                 newLabels.addAll(possibleLabels);

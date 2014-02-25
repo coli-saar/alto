@@ -32,7 +32,7 @@ class MaximumEntropyIrtgTest {
         MaximumEntropyIrtg.setLoggingLevel(Level.OFF);
     }
     
-    @Test
+//    @Test
     public void testMaxentIrtgParsing() {
         InterpretedTreeAutomaton irtg = iparse(CFG_STR);
         assert irtg instanceof MaximumEntropyIrtg;

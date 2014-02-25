@@ -104,7 +104,7 @@ public class CondensedRule {
             ret.deleteCharAt(ret.length()-1);
         }
         
-        ret.append("} ");
+        ret.append("}");
         if (children.length > 0) {
             ret.append("(");
 
