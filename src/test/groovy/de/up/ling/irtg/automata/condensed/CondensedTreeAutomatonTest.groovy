@@ -69,7 +69,7 @@ class CondensedTreeAutomatonTest {
     }
     
     private CondensedTreeAutomaton parseTA(String s) {
-        return new ConcreteCondensedTreeAutomaton(TreeAutomatonParser.parse(new StringReader(s)));
+        return ConcreteCondensedTreeAutomaton.fromTreeAutomaton(TreeAutomatonParser.parse(new StringReader(s)));
     }
 
 }

@@ -2015,6 +2015,16 @@ public abstract class TreeAutomaton<State> implements Serializable {
             rule.setWeight(rule.getWeight() / lhsWeightSum.get(rule.getParent()));
         }
     }
+    
+    /**
+     * Returns the state interner for this tree automaton. You should only
+     * use this method if you know what you're doing.
+     * 
+     * @return 
+     */
+    public Interner getStateInterner() {
+        return stateInterner;
+    }
 }
 /**
  * * for profiling of languageIterator:

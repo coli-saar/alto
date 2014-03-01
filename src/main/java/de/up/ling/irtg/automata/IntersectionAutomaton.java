@@ -38,12 +38,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import com.google.common.collect.Iterables;
+
 /**
  *
  * @author koller
  */
 class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
-
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
     private CondensedTreeAutomaton<RightState> condensedRight;
@@ -60,9 +60,9 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
         this.left = left;
         this.right = right;
-        
-        condensedRight = new ConcreteCondensedTreeAutomaton<RightState>(right); // convert the right automaton to a CTA
-        
+
+        condensedRight = ConcreteCondensedTreeAutomaton.fromTreeAutomaton(right); // convert the right automaton to a CTA
+
 //        System.err.println("~~~~~~~~~~~~~~~~~~~~~~~~~~");
 //        System.err.println(right.toString());
 //        
@@ -70,8 +70,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //        System.err.println(condensedRight.toStringCondensed());
 //        
 //        System.err.println("~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        assert right.equals(condensedRight);
+//        
+//        System.err.println("right interner: " + right.stateInterner);
+//        System.err.println("condensed-right interner: " + condensedRight.stateInterner);
         
+        
+
         stateToLeftState = new Int2IntOpenHashMap();
         stateToRightState = new Int2IntOpenHashMap();
 
@@ -132,9 +136,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             labelRemap = oldLabelRemap;
         }
     }
-    
-    private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners){
+
+    private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
         if (!visited.contains(q)) {
+            System.err.println("visit: " + q + " = " + right.getStateForId(q));
+
+
             visited.add(q);
             for (CondensedRule rightRule : condensedRight.getRulesByParentState(q)) {
 //                System.err.println("\nconsider rightrule:  " + rightRule.toString(condensedRight));
@@ -143,16 +150,16 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     // iterate over all rules from the left automaton, that have no children and one of labels of the condensed rule
                     // could be implemented with a single call that has the set of values as an argument and that finds the rules within the internal datastructures
                     // of the left autonatom. But for this, the left automaton must be explicit! //TODO
-                    
+
 //                     iterate over all rules by concating the single iterators over rules with different labels
                     Iterable<Rule> itLeftRules = Iterables.concat(
-                            Iterables.transform(rightRule.getLabels(), 
+                            Iterables.transform(rightRule.getLabels(),
                             new Function<Integer, Iterable<Rule>>() {
-                                @Override
-                                public Iterable<Rule> apply(Integer f) {
-                                    return left.getRulesBottomUp(remapLabel(f), new int[0]);
-                                }
-                            }));
+                        @Override
+                        public Iterable<Rule> apply(Integer f) {
+                            return left.getRulesBottomUp(remapLabel(f), new int[0]);
+                        }
+                    }));
 //                    Set<Rule> leftRules = new HashSet<Rule>();
 //                    for (int label : rightRule.getLabels()) {
 //                        for (Rule r : left.getRulesBottomUp(remapLabel(label), new int[0])) {
@@ -185,12 +192,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                         Iterable<Rule> itLeftRules = Iterables.concat(
                                 Iterables.transform(rightRule.getLabels(),
                                 new Function<Integer, Iterable<Rule>>() {
-                                    @Override
-                                    public Iterable<Rule> apply(Integer f) {
-                                        return left.getRulesBottomUp(remapLabel(f), it.next());
-                                    }
-                                }));
-                        
+                            @Override
+                            public Iterable<Rule> apply(Integer f) {
+                                return left.getRulesBottomUp(remapLabel(f), it.next());
+                            }
+                        }));
+
                         for (Rule leftRule : itLeftRules) {
 //                                System.err.println("consider leftrule:  " + leftRule.toString(left));
 
@@ -204,7 +211,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
         }
     }
-    
+
 //        private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
 //        if (!visited.contains(q)) {
 //            visited.add(q);
@@ -263,7 +270,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            }
 //        }
 //    }
-    
     // bottom-up intersection algorithm 
     @Override
     public void makeAllRulesExplicit() {
@@ -391,8 +397,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
         return createRule(parentState, leftRule.getLabel(), childStates, leftRule.getWeight() * rightRule.getWeight());
     }
-    
-        private Rule combineRules(Rule leftRule, CondensedRule rightRule) {
+
+    private Rule combineRules(Rule leftRule, CondensedRule rightRule) {
         int[] childStates = new int[leftRule.getArity()];
 
         for (int i = 0; i < leftRule.getArity(); i++) {
@@ -407,7 +413,13 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     @Override
     public Set<Integer> getFinalStates() {
         if (finalStates == null) {
+//            System.err.println("compute final states");
+            
             getAllStates(); // initialize data structure for addState
+            
+//            System.err.println("left final states: " + left.getFinalStates() + " = " + left.stateInterner.resolveIds(left.getFinalStates()));
+//            System.err.println("right final states: " + right.getFinalStates() + " = " + right.stateInterner.resolveIds(right.getFinalStates()));
+            
             finalStates = new IntOpenHashSet();
             collectStatePairs(left.getFinalStates(), right.getFinalStates(), finalStates);
         }
@@ -419,13 +431,20 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         List<Collection> stateSets = new ArrayList<Collection>();
         stateSets.add(leftStates);
         stateSets.add(rightStates);
+        
+//        System.err.println("known states: " + stateInterner.getKnownObjects());
 
         CartesianIterator<Integer> it = new CartesianIterator(stateSets);
         while (it.hasNext()) {
             List<Integer> states = it.next();
+            
+            Pair<LeftState, RightState> statePair = new Pair(left.getStateForId(states.get(0)), right.getStateForId(states.get(1)));
+//            System.err.println("consider pair for final state: " + statePair);
 
-            int state = stateInterner.resolveObject(new Pair(left.getStateForId(states.get(0)), right.getStateForId(states.get(1))));
+            int state = stateInterner.resolveObject(statePair);
+            
             if (state != 0) {
+//                System.err.println(" -> state pair exists");
                 pairStates.add(state);
             }
         }
@@ -598,7 +617,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     private class CompleteEarleyItem {
-
         Rule leftRule;
         Rule rightRule;
 
@@ -634,7 +652,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     private class IncompleteEarleyItem {
-
         Rule leftRule;
         int rightChildState;
         IncompleteEarleyItem itemWithEarlierRightChildStates;
@@ -711,13 +728,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //        }
     }
 
- /**
-     * Arg1: IRTG Grammar
-     * Arg2: List of Sentences
-     * Arg3: Interpretation to parse
-     * Arg4: Outputfile
-     * Arg5: Comments
-     * @param args 
+    /**
+     * Arg1: IRTG Grammar Arg2: List of Sentences Arg3: Interpretation to parse
+     * Arg4: Outputfile Arg5: Comments
+     *
+     * @param args
      */
     public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.ParseException {
         String irtgFilename = args[0];
@@ -732,7 +747,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(new File(irtgFilename)));
         timestamp[1] = System.nanoTime();
         System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
-        try{
+        try {
             FileWriter outstream;
             outstream = new FileWriter(outputFile);
             BufferedWriter out = new BufferedWriter(outstream);
@@ -761,14 +776,13 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     timestamp[3] = System.nanoTime();
 
                     System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
-                    out.write("Parsed \n" + sentence + "\nIn " +((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
+                    out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
                     out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;
                 }
-                out.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times +"ms. \n");
+                out.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");
                 out.flush();
-            }
-            catch (IOException ex) {
+            } catch (IOException ex) {
                 System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
             }
         } catch (Exception ex) {

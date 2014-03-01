@@ -25,7 +25,7 @@ import com.google.common.collect.Iterables;
  *
  * @author gontrum
  */
-public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>{  
+public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State> {  
     protected final boolean DEBUG = false;
     protected CondensedRuleTrie<IntSet, CondensedRule> ruleTrie; // ButtomUp: A Trie of ints (states), that stores a Map, wich relates IntSets (condensed labels) to Sets of Rules.
     protected Int2ObjectMap<Object2ObjectMap<IntSet, Set<CondensedRule>>> topDownRules; // TopDown: ParentState to I
@@ -34,20 +34,6 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         super(signature);
         ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
         topDownRules = new Int2ObjectOpenHashMap<Object2ObjectMap<IntSet, Set<CondensedRule>>>();
-    }
-    
-    /**
-     * Creates a new CondensedTreeAutomaton based on the rules and final states of another TreeAutomaton.
-     * Rules in the original TreeAutomaton, that have the same child states and the the same parent state, 
-     * but differ in their label, will be merged to form a CondensedRule
-     * @param origin
-     */
-    public CondensedTreeAutomaton(TreeAutomaton<State> origin) {
-        super(origin.getSignature());
-        ruleTrie = new CondensedRuleTrie<IntSet, CondensedRule>();
-        topDownRules = new Int2ObjectOpenHashMap<Object2ObjectMap<IntSet, Set<CondensedRule>>>();
-        absorbTreeAutomaton(origin);
-        assert equals(origin);
     }
     
     public CondensedRule createRule(State parent, List<String> labels, List<State> children) {
@@ -193,56 +179,17 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
             return Iterables.concat(topDownRules.get(parentState).values());
         } else return new ArrayList<CondensedRule>();
     }
-    /**
-     * Copies all rules from a TreeAutomaton to this automaton. Merges rules, that can be condensed.
-     * @param auto
-     */
-    final public void absorbTreeAutomaton(TreeAutomaton<State> auto) {
-        for (Rule rule : auto.getRuleSet()) {
-            storeRule(rule, auto);
-        }
-    }
     
     
-    /**
-     * Creates a condensed rule based on a given rule and the automaton, that has created it.
-     * The new rule will be stored in the internal data structures, see storeRule
-     * @param rule
-     * @param auto
-     */
-    public void storeRule(Rule rule, TreeAutomaton<State> auto) {
-        //            System.err.println("IN : " + rule.toString(auto));
-        int[] newChildren = convertChildrenStates(rule.getChildren(), auto);
-        int newParent = addState(auto.getStateForId(rule.getParent()));
-        int newLabel = signature.addSymbol(rule.getLabel(auto), newChildren.length);
-        IntSet newLabels = new IntArraySet();
-        Object2ObjectMap<IntSet, Set<CondensedRule>> ruleMap = ruleTrie.getMapForStoredKeys(newChildren);
-        newLabels.add(newLabel);
-        for (IntSet possibleLabels : ruleMap.keySet()) {
-            if (ruleMap.get(possibleLabels).iterator().next().getParent() == newParent) { //That's ugly..
-                newLabels.addAll(possibleLabels);
-            }
-        }
-        
-        CondensedRule newRule = createRule(newParent, newLabels, newChildren, rule.getWeight());
-        newRule.setExtra(rule.getExtra());
-        if (newLabels.size() == 1) { // no existing labelset
-            storeRule(newRule);
-        }
-        // Absorb final states
-        if (auto.getFinalStates().contains(rule.getParent())) {
-            finalStates.add(newParent);
-        }
-//            System.err.println("OUT: " + newRule.toString(this));
-    }
     
-    private int[] convertChildrenStates(int [] children, TreeAutomaton<State> auto) {
-        int[] ret = new int[children.length];
-        for (int i = 0; i < children.length; i++) {
-            ret[i] = addState(auto.getStateForId(children[i]));
-        }
-        return ret;
-    }
+//    
+//    private int[] convertChildrenStates(int [] children, TreeAutomaton<State> auto) {
+//        int[] ret = new int[children.length];
+//        for (int i = 0; i < children.length; i++) {
+//            ret[i] = addState(auto.getStateForId(children[i]));
+//        }
+//        return ret;
+//    }
     
     /**
      * Returns a set of all rules, that are part of this automaton.
