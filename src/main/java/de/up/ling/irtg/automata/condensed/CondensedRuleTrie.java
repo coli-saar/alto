@@ -4,142 +4,146 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.util.HashSet;
 import java.util.Set;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 
-// TODO Adjust comments (still for original version of this class)
+
 /**
- * A recursively defined Trie of <V>
+ * A recursively defined Trie for CondensedRules
  * @author koller, modified by gontrum to use primitive int as keys.
  * @param <V>
  */
-public class CondensedRuleTrie<K,V> {
-    private final Int2ObjectMap<CondensedRuleTrie<K,V>> map;
-    private final Object2ObjectMap<K,Set<V>> finalStateMap;
+public class CondensedRuleTrie {
+    private final Int2ObjectMap<CondensedRuleTrie> map;
+    private final Int2ObjectMap<Set<CondensedRule>> labelSetIDToRules;
+    private final Int2IntMap labelSetIDToParentState;
 
     public CondensedRuleTrie() {
-        map = new Int2ObjectOpenHashMap<CondensedRuleTrie<K,V>>();
-        finalStateMap = new Object2ObjectOpenHashMap<K,Set<V>>();
+        map = new Int2ObjectOpenHashMap<CondensedRuleTrie>();
+        labelSetIDToRules = new Int2ObjectOpenHashMap<Set<CondensedRule>>();
+        labelSetIDToParentState = new Int2IntOpenHashMap();
     }
 
     /**
      * Stores a sequence of ints (the Array) in the Trie 
-     * and maps the final state to the given value.
-     * @param keyList
-     * @param value 
+     * and maps the final state to the given rule.
+     * @param childstates
+     * @param rule 
      */
-    public void put(int[] keyList, K key, V value) {
-        put(keyList, key, value, 0);
+    public void put(int[] childstates, int labelSetID, CondensedRule rule) {
+        put(childstates, labelSetID, rule, 0);
     }
     
     /**
      * Recursive version of put.
      * Go as deep as the length of the given array.
-     * @param keyList
-     * @param value
+     * @param childstates
+     * @param rule
      * @param index 
      */
-    private void put(int[] keyList, K key, V value, int index) {
-        if( index == keyList.length) {
-            if (finalStateMap.containsKey(key)) {
-                Set<V> values = finalStateMap.get(key);
-                values.add(value);
-                finalStateMap.remove(key);
-                finalStateMap.put(key, values);
+    private void put(int[] childstates, int labelSetID, CondensedRule rule, int index) {
+        if( index == childstates.length) {
+            if (labelSetIDToRules.containsKey(labelSetID)) {
+                assert labelSetIDToParentState.get(labelSetID) == labelSetIDToParentState.defaultReturnValue();
+                labelSetIDToParentState.put(labelSetID, rule.getParent());
+                labelSetIDToRules.get(labelSetID).add(rule);
             } else {
-                Set<V> internalSet = new HashSet<V>();
-                internalSet.add(value);
-                finalStateMap.put(key, internalSet);
+                Set<CondensedRule> internalSet = new HashSet<CondensedRule>();
+                internalSet.add(rule);
+                labelSetIDToRules.put(labelSetID, internalSet);
             }
         } else {
-            int keyHere = keyList[index];
-            CondensedRuleTrie<K,V> nextTrie = map.get(keyHere);
+            int keyHere = childstates[index];
+            CondensedRuleTrie nextTrie = map.get(keyHere);
             
             if( nextTrie == null ) {
-                nextTrie = new CondensedRuleTrie<K,V>();
+                nextTrie = new CondensedRuleTrie();
                 map.put(keyHere, nextTrie);
             }
             
-            nextTrie.put(keyList, key, value, index+1);
+            nextTrie.put(childstates, labelSetID, rule, index+1);
         }
     }
     
     /**
      * Returns a set of values, that is mapped to the final state
-     * we reach with the sequence of transitions in keyList.
-     * @param keyList
+     * we reach with the sequence of transitions in childstates.
+     * @param childstates
      * @return 
      */
-    public Set<V> get(int[] keyList, K storedKey) {
-        return get(keyList, storedKey, 0);
+    public Set<CondensedRule> get(int[] childstates, int labelSetID) {
+        return get(childstates, labelSetID, 0);
     }
     
-    private Set<V> get(int[] keyList, K storedKey, int index) {
-        if( index == keyList.length) {
-            if (finalStateMap.containsKey(storedKey)) {
-                return finalStateMap.get(storedKey);
-            } else return new HashSet<V>();
+    private Set<CondensedRule> get(int[] childstates, int labelSetID, int index) {
+        if( index == childstates.length) {
+            if (labelSetIDToRules.containsKey(labelSetID)) {
+                return labelSetIDToRules.get(labelSetID);
+            } else return new HashSet<CondensedRule>();
         } else {
-            int keyHere = keyList[index];
-            CondensedRuleTrie<K,V> nextTrie = map.get(keyHere);
+            int keyHere = childstates[index];
+            CondensedRuleTrie nextTrie = map.get(keyHere);
             
             if( nextTrie == null ) {
-                return new HashSet<V>();
+                return new HashSet<CondensedRule>();
             } else {
-                return nextTrie.get(keyList, storedKey, index+1);
+                return nextTrie.get(childstates, labelSetID, index+1);
+            }
+        }
+    }
+    
+    
+    /**
+     * Returns the Trie at the final state of the given childstates.
+     * @param childstates
+     * @return
+     */
+    protected CondensedRuleTrie getFinalTrie(int [] childstates) {
+        return getFinalTrie(childstates, 0); 
+    }
+    
+    private CondensedRuleTrie getFinalTrie(int[] childstates, int index) {
+        if (index == childstates.length) {
+            return this;
+        } else {
+            int keyHere = childstates[index];
+            CondensedRuleTrie nextTrie = map.get(keyHere);
+            if (nextTrie == null) {
+                return new CondensedRuleTrie();
+            } else {
+                return nextTrie.getFinalTrie(childstates, index + 1);
             }
         }
     }
     
     /**
-     * Returns the subtrie that we reach with a transition with the given symbol.
+     * Returns the subtrie that we reach with a transition with the given
+     * symbol.
+     *
      * @param id
-     * @return 
+     * @return
      */
-    public CondensedRuleTrie<K,V> getSubtrie(int id) {
+    public CondensedRuleTrie getSubtrie(int id) {
         return map.get(id);
     }
     
-    protected Object2ObjectMap<K, Set<V>> getMapForStoredKeys(int [] keyList) {
-        return getMapForStoredKeys(keyList, 0); 
+    public int getParent(int labelSetID) {
+        return labelSetIDToParentState.get(labelSetID);
     }
     
-    private Object2ObjectMap<K, Set<V>> getMapForStoredKeys(int[] keyList, int index) {
-        if (index == keyList.length) {
-            return finalStateMap;
-        } else {
-            int keyHere = keyList[index];
-            CondensedRuleTrie<K, V> nextTrie = map.get(keyHere);
-            if (nextTrie == null) {
-                return new Object2ObjectOpenHashMap<K,Set<V>>();
-            } else {
-                return nextTrie.getMapForStoredKeys(keyList, index + 1);
-            }
-        }
+    protected Int2ObjectMap<Set<CondensedRule>> getLabelSetIDToRulesMap() {
+        return labelSetIDToRules;
     }
     
-    public Set<K> getStoredKeys(int [] keyList) {
-        return getStoredKeys(keyList, 0);
-    }
     
-    private Set<K> getStoredKeys(int [] keyList, int index) {
-        if (index == keyList.length) {
-            return finalStateMap.keySet();
-        } else {
-            int keyHere = keyList[index];
-            CondensedRuleTrie<K, V> nextTrie = map.get(keyHere);
-            if (nextTrie == null) {
-                return new HashSet<K>();
-            } else {
-                return nextTrie.getStoredKeys(keyList, index + 1);
-            }
-        }
+    public IntSet getStoredKeys() {
+        return labelSetIDToRules.keySet();
     }
     
     /**
@@ -150,35 +154,4 @@ public class CondensedRuleTrie<K,V> {
         return map.keySet();
     }
     
-//    /**
-//     * Returns the stored values that we get from the state we reach 
-//     * with the given symbol.
-//     * @param id
-//     * @return 
-//     */
-//    public Collection<V> getValuesForId(int id){
-//        if (map.containsKey(id)) {
-//            return map.get(id).values();
-//        } else {
-//            return new HashSet<V>();
-//        }
-//    }
-    
-    /**
-     * Get all values that are stored in this trie including its subtries.
-     * @return 
-     */
-//    public Collection<V> values() {
-//    	Collection<V> ret = new ArrayList<V>();
-//    	collectValues(ret);    	
-//    	return ret;
-//    }
-//    
-//    private void collectValues(Collection<V> ret) {
-//    	ret.addAll(values);
-//    	
-//    	for( CondensedRuleTrie<K,V> child : map.values() ) {
-//    		child.collectValues(ret);
-//    	}
-//    }
 }

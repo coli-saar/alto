@@ -47,7 +47,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
     private CondensedTreeAutomaton<RightState> condensedRight;
-    private static final boolean DEBUG = false;
+    private static final boolean DEBUG = true;
     private int[] labelRemap;
     private Int2IntMap stateToLeftState;
     private Int2IntMap stateToRightState;
@@ -153,7 +153,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
 //                     iterate over all rules by concating the single iterators over rules with different labels
                     Iterable<Rule> itLeftRules = Iterables.concat(
-                            Iterables.transform(rightRule.getLabels(),
+                            Iterables.transform(rightRule.getLabels(condensedRight),
                             new Function<Integer, Iterable<Rule>>() {
                         @Override
                         public Iterable<Rule> apply(Integer f) {
@@ -190,7 +190,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     while (it.hasNext()) {
                         // iterate over all rules by concating the single iterators over rules with different labels
                         Iterable<Rule> itLeftRules = Iterables.concat(
-                                Iterables.transform(rightRule.getLabels(),
+                                Iterables.transform(rightRule.getLabels(condensedRight),
                                 new Function<Integer, Iterable<Rule>>() {
                             @Override
                             public Iterable<Rule> apply(Integer f) {

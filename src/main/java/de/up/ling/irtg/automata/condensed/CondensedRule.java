@@ -17,15 +17,15 @@ import java.util.Set;
  * @author gontrum
  */
 public class CondensedRule {
-    private IntSet labels;
+    private int labelSetID;
     private int parent;
     private int[] children;
     private double weight;
     private Object extra;
     
-    public CondensedRule(int parent, IntSet labels, int[] children, double weight) {
+    public CondensedRule(int parent, int labelSetID, int[] children, double weight) {
         this.parent = parent;
-        this.labels = labels;
+        this.labelSetID = labelSetID;
         this.children = children;
         this.weight = weight;
     }
@@ -34,13 +34,22 @@ public class CondensedRule {
         return children;
     }
 
-    public IntSet getLabels() {
-        return labels;
+    public int getLabelSetID() {
+        return labelSetID;
     }
-
-    public Collection<String> getLabels(CondensedTreeAutomaton auto) {
+    
+    public IntSet getLabels(CondensedTreeAutomaton auto) {
+        return auto.getLabelsForID(labelSetID);
+    }
+    
+    /**
+     * Returns a Set of Strings for the labels of this rule.
+     * @param auto
+     * @return
+     */
+    public Collection<String> getLabelStrings(CondensedTreeAutomaton auto) {
         Set<String> ret = new HashSet<String>();
-        for(int label : labels) {
+        for(int label : getLabels(auto)) {
             ret.add(auto.getSignature().resolveSymbolId(label));
         }
         return ret;
@@ -54,7 +63,7 @@ public class CondensedRule {
     public void setParent(int parent) {
         this.parent = parent;
     }
-
+   
     public double getWeight() {
         return weight;
     }
@@ -96,11 +105,11 @@ public class CondensedRule {
         boolean first = true;
         StringBuilder ret = new StringBuilder(Tree.encodeLabel(auto.getStateForId(parent).toString()) + (parentIsFinal ? "!" : "") + " -> {");
         
-        for (String label : getLabels(auto)) { 
+        for (String label : getLabelStrings(auto)) { 
             ret.append(label + ",");
         }
 
-        if (!getLabels().isEmpty()) { 
+        if (!getLabelStrings(auto).isEmpty()) { 
             ret.deleteCharAt(ret.length()-1);
         }
         
