@@ -137,6 +137,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 //            System.err.println("Why is termID and " + hom.getTermID(rule.getLabel()) + " and CS: " + childStatesToString(rule.getChildren()) + " mapped again?");
 //            System.err.println("-> " + rule.toString());
 //        }
+        
         // store as bottom-up rule
         int termID = hom.getTermID(rule.getLabel());
         int childHash = Arrays.hashCode(rule.getChildren());

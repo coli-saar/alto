@@ -200,8 +200,9 @@ public class InterpretedTreeAutomaton {
             Object input = inputs.get(interpName);
             
             TreeAutomaton interpParse = interp.parse(input);
+            
 
-//            System.err.println("invhom(decomp(" + input  + "):\n" + interpParse.toStringBottomUp());
+            System.err.println("invhom(decomp(" + input  + "):\n" + interpParse.toStringBottomUp());
 
             ret = ret.intersect(interpParse);
         }

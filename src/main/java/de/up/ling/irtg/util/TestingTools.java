@@ -8,6 +8,8 @@ import com.google.common.collect.Iterables;
 import de.saar.basic.StringOrVariable;
 import de.saar.chorus.term.Term;
 import de.saar.chorus.term.parser.TermParser;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.automata.ParseException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -49,6 +51,10 @@ public class TestingTools {
 
     public static TreeAutomaton pa(String s) throws ParseException {
         return TreeAutomatonParser.parse(new StringReader(s));
+    }
+    
+    public static InterpretedTreeAutomaton pi(String s) throws de.up.ling.irtg.ParseException {
+        return IrtgParser.parse(new StringReader(s));
     }
 
     public static Homomorphism hom(Map<String, String> mappings, Signature sourceSignature) {

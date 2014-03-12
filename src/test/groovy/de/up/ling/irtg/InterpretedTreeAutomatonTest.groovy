@@ -64,7 +64,7 @@ class InterpretedTreeAutomatonTest {
         Map inputs = ["german":"hans betrachtet die frau mit dem fernrohr"]
         Set decoded = irtg.decode("english", inputs);
 
-        assertEquals(decoded, new HashSet([["john", "watches", "the", "woman", "with", "the", "telescope"]]))
+        assertEquals(new HashSet([["john", "watches", "the", "woman", "with", "the", "telescope"]]), decoded)
     }
 
     @Test
