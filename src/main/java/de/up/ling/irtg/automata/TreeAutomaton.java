@@ -280,6 +280,25 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
+    
+    /**
+     * Returns a set of label IDs that contains all the terminal symbols
+     * that occur in rules of this automaton. The default implementation
+     * simply returns the set of all symbols in the signature. 
+     * Derived classes are encouraged to overwrite this with a tighter
+     * upper bound.
+     * 
+     * @return 
+     */
+    public IntSet getAllLabels() {
+        IntSet ret = new IntOpenHashSet();
+
+        for (int i = 1; i <= getSignature().getMaxSymbolId(); i++) {
+            ret.add(i);
+        }
+
+        return ret;
+    }
 
     /**
      * Returns true whenever the automaton has a bottom-up rule whose first n

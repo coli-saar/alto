@@ -10,6 +10,8 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,20 +24,21 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 
 /**
- * The binary string algebra. The elements of this algebra are lists
- * of strings, which can be thought of as the words in a sentence.
- * The algebra has a single binary operation symbol, *, which evaluates
- * to string concatenation. All other strings are nullary symbols of this
- * algebra; the string w evaluates to the list [w].<p>
- * 
- * Notice that the algebra's signature is made aware of these nullary
- * symbols only when {@link StringAlgebra#parseString(java.lang.String) }
- * sees these symbols. This means that the contents of the signature
- * may change as more string representations are parsed.
+ * The binary string algebra. The elements of this algebra are lists of strings,
+ * which can be thought of as the words in a sentence. The algebra has a single
+ * binary operation symbol, *, which evaluates to string concatenation. All
+ * other strings are nullary symbols of this algebra; the string w evaluates to
+ * the list [w].<p>
+ *
+ * Notice that the algebra's signature is made aware of these nullary symbols
+ * only when {@link StringAlgebra#parseString(java.lang.String) }
+ * sees these symbols. This means that the contents of the signature may change
+ * as more string representations are parsed.
  *
  * @author koller
  */
 public class StringAlgebra extends Algebra<List<String>> {
+
     public static final String CONCAT = "*";
     protected int concatSymbolId;
     private Set<Integer> concatSet;
@@ -47,7 +50,7 @@ public class StringAlgebra extends Algebra<List<String>> {
         concatSet = new HashSet<Integer>();
         concatSet.add(concatSymbolId);
     }
-    
+
     @Override
     public List<String> evaluate(Tree<String> t) {
         final List<String> ret = new ArrayList<String>();
@@ -94,38 +97,42 @@ public class StringAlgebra extends Algebra<List<String>> {
 
     @Override
     public Map<String, String> getRepresentations(List<String> object) {
-        Map<String,String> ret = new LinkedHashMap<String, String>(); // LinkedHashMap -> predictable order of keys
-        
+        Map<String, String> ret = new LinkedHashMap<String, String>(); // LinkedHashMap -> predictable order of keys
+
         ret.put("text", StringTools.join(object, " "));
-        
+
         return ret;
     }
-    
-    
-    
 
     private class CkyAutomaton extends TreeAutomaton<Span> {
+
         private int[] words;
-        private Set<String> allLabels;
+        private IntSet allLabels;
         private boolean isBottomUpDeterministic;
 
         public CkyAutomaton(List<String> words) {
             super(StringAlgebra.this.getSignature());
 
+            allLabels = new IntOpenHashSet();
+            allLabels.add(signature.getIdForSymbol(CONCAT));
+
             this.words = new int[words.size()];
             for (int i = 0; i < words.size(); i++) {
-                this.words[i] = StringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
+                int symbolID = StringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
+                this.words[i] = symbolID;
+                allLabels.add(symbolID);
             }
 
             finalStates.add(addState(new Span(0, words.size())));
 
-            allLabels = new HashSet<String>();
-            allLabels.add(CONCAT);
-            allLabels.addAll(words);
-
             // automaton becomes nondeterministic if the same word
             // occurs twice in the string
             isBottomUpDeterministic = new HashSet<String>(words).size() == words.size();
+        }
+
+        @Override
+        public IntSet getAllLabels() {
+            return allLabels;
         }
 
         @Override
@@ -201,7 +208,7 @@ public class StringAlgebra extends Algebra<List<String>> {
         @Override
         public Set<Integer> getLabelsTopDown(int parentState) {
             Span parentSpan = getStateForId(parentState);
-            
+
             if (parentSpan.end == parentSpan.start + 1) {
                 Set<Integer> ret = new HashSet<Integer>();
                 ret.add(words[parentSpan.start]);
@@ -240,7 +247,6 @@ public class StringAlgebra extends Algebra<List<String>> {
 //        public Set<Integer> getFinalStates() {
 //            return finalStates;
 //        }
-
         @Override
         public boolean isBottomUpDeterministic() {
             return isBottomUpDeterministic;
@@ -248,6 +254,7 @@ public class StringAlgebra extends Algebra<List<String>> {
     }
 
     public static class Span implements Serializable {
+
         public int start, end;
 
         public Span(int start, int end) {
@@ -290,7 +297,7 @@ public class StringAlgebra extends Algebra<List<String>> {
             return hash;
         }
     }
-    
+
     public String getBinaryConcatenation() {
         return CONCAT;
     }
