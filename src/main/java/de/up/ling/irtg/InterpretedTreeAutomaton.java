@@ -12,6 +12,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.corpus.Corpus;
@@ -199,12 +200,15 @@ public class InterpretedTreeAutomaton {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
             
-            TreeAutomaton interpParse = interp.parse(input);
+            CondensedTreeAutomaton interpParse = interp.parse(input);
             
 
             System.err.println("invhom(decomp(" + input  + "):\n" + interpParse.toStringBottomUp());
 
-            ret = ret.intersect(interpParse);
+//            ret = ret.intersect(interpParse);
+
+            ret = ret.intersectCondensed(interpParse);
+
         }
 
 //        System.err.println("chart before reduction:\n" + ret);

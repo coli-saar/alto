@@ -7,6 +7,7 @@ package de.up.ling.irtg;
 
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
 
@@ -35,7 +36,7 @@ public class Interpretation<E> {
         return hom;
     }
     
-    public TreeAutomaton parse(E object) {
+    public CondensedTreeAutomaton parse(E object) {
         return algebra.decompose(object).inverseHomomorphism(hom);
     }
 

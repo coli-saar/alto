@@ -43,7 +43,7 @@ public class Homomorphism {
     private Int2IntMap termsToLabelSet; // Lookup for existing terms
     private Int2IntMap labelToLabelSet; // Find the labelSet for a given label
     private Int2IntMap labelSetToTerm;  // Lookup the term that has been maped to a labelSet
-
+    
     public Homomorphism(Signature src, Signature tgt) {
 //        if (debug) System.err.println("New Homomorphism created...\n");
         mappings = new HashMap<Integer, Tree<HomomorphismSymbol>>();
@@ -56,7 +56,7 @@ public class Homomorphism {
         labelSetToTerm = new Int2IntOpenHashMap();
         labelSetInterner = new Interner<IntSet>();
     }
-    
+
     
     public void add(String label, Tree<String> mapping) {
         add(srcSignature.getIdForSymbol(label), HomomorphismSymbol.treeFromNames(mapping, tgtSignature));
@@ -137,6 +137,15 @@ public class Homomorphism {
             int termID = labelSetToTerm.get(labelSetID);
             return terms.resolveId(termID);
         } else return null;
+    }
+    
+    public Tree<HomomorphismSymbol> getByLabelSetID(int labelSetID) {
+        if (labelSetToTerm.containsKey(labelSetID)) {
+            int termID = labelSetToTerm.get(labelSetID);
+            return terms.resolveId(termID);
+        } else {
+            return null;
+        }
     }
     
     public int getTermID(int label) {

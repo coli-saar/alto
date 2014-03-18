@@ -96,6 +96,30 @@ public class CondensedRule {
         return children.length;
     }
     
+    @Override
+    public String toString() {
+        boolean first = true;
+        StringBuilder ret = new StringBuilder(parent + " -> %" + labelSetID + "%");
+        if (children.length > 0) {
+            ret.append("(");
+
+            for (int child : children) {
+                if (first) {
+                    first = false;
+                } else {
+                    ret.append(", ");
+                }
+
+                ret.append(child);
+            }
+
+            ret.append(")");
+        }
+
+        ret.append(" [" + weight + "]");
+        return ret.toString();
+    }
+    
     
     public String toString(CondensedTreeAutomaton auto) {
         return toString(auto, auto.getFinalStates().contains(parent));

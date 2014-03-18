@@ -13,6 +13,7 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -74,8 +75,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
     public Set<CondensedRule> getCondensedRulesTopDown(IntSet labelId, int parentState) {
         return getCondensedRulesTopDownFromExplicit(labelId, parentState);
     }
-    
-    
+
     /**
      * Copies all rules from a TreeAutomaton to this automaton. Merges rules, that can be condensed.
      * @param auto
@@ -110,7 +110,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
         // iterate over all labelSetIDs for the current children.
         for (int possibleLabelSetID : ruleMap.keySet()) {
             // if the parentstate for the current labelSetID matches, we found or labelSet
-            if (finalTrie.getParent(possibleLabelSetID) == newParent) {
+            if (finalTrie.getParents(possibleLabelSetID).contains(newParent)) {
                 newLabelSetID = possibleLabelSetID;
             }
         }
@@ -124,6 +124,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
         }
         
         CondensedRule newRule = createRuleRaw(newParent, newLabelSetID, newChildren, rule.getWeight());
+        
         newRule.setExtra(rule.getExtra());
 
         storeRule(newRule);
@@ -132,7 +133,14 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
         if (auto.getFinalStates().contains(rule.getParent())) {
             finalStates.add(newParent);
         }
+        System.err.println("created Rule: " + newRule.toString(this));
+
 //            System.err.println("OUT: " + newRule.toString(this));
+    }
+
+    @Override
+    public void makeAllRulesCondensedExplicit() {
+        isCondensedExplicit = true; 
     }
     
 }

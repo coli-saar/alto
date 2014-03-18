@@ -17,6 +17,8 @@ import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
@@ -45,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 
 /**
  * A finite tree automaton. Objects of this class can be simultaneously seen as
@@ -101,7 +104,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
         unprocessedUpdatesForTopDown = new ArrayList<Rule>();
     }
-
+    
     /**
      * Returns the numeric ID for the given state. If the automaton does not
      * have a state of the given name, the method returns 0.
@@ -949,6 +952,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ret.makeAllRulesExplicit();
         return ret;
     }
+    
+    
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other);
+        ret.makeAllRulesExplicit();
+        return ret;
+    }
+    
 
     /**
      * Intersects this automaton with another one, using an Earley-style
@@ -972,11 +983,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param hom the homomorphism.
      * @return an automaton representing the homomorphic pre-image.
      */
-    public TreeAutomaton inverseHomomorphism(Homomorphism hom) {
+    public CondensedTreeAutomaton inverseHomomorphism(Homomorphism hom) {
         if (hom.isNonDeleting()) {
-            return new NondeletingInverseHomAutomaton<State>(this, hom);
+            return new CondensedNondeletingInverseHomAutomaton<State>(this, hom);
         } else {
-            return new InverseHomAutomaton<State>(this, hom);
+            // Bad!
+            return new CondensedNondeletingInverseHomAutomaton<State>(this, hom);
         }
     }
 

@@ -10,6 +10,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.util.HashSet;
 import java.util.Set;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
 
@@ -22,12 +23,12 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 public class CondensedRuleTrie {
     private final Int2ObjectMap<CondensedRuleTrie> map;
     private final Int2ObjectMap<Set<CondensedRule>> labelSetIDToRules;
-    private final Int2IntMap labelSetIDToParentState;
+    private final Int2ObjectMap<IntSet> labelSetIDToParentStateSet;
 
     public CondensedRuleTrie() {
         map = new Int2ObjectOpenHashMap<CondensedRuleTrie>();
         labelSetIDToRules = new Int2ObjectOpenHashMap<Set<CondensedRule>>();
-        labelSetIDToParentState = new Int2IntOpenHashMap();
+        labelSetIDToParentStateSet = new Int2ObjectOpenHashMap<IntSet>();
     }
 
     /**
@@ -50,8 +51,12 @@ public class CondensedRuleTrie {
     private void put(int[] childstates, int labelSetID, CondensedRule rule, int index) {
         if( index == childstates.length) {
             if (labelSetIDToRules.containsKey(labelSetID)) {
-                assert labelSetIDToParentState.get(labelSetID) == labelSetIDToParentState.defaultReturnValue();
-                labelSetIDToParentState.put(labelSetID, rule.getParent());
+                IntSet statesHere = labelSetIDToParentStateSet.get(labelSetID);
+                if (statesHere == null) {
+                    statesHere = new IntOpenHashSet();
+                    labelSetIDToParentStateSet.put(labelSetID, statesHere);
+                }
+                statesHere.add(rule.getParent());
                 labelSetIDToRules.get(labelSetID).add(rule);
             } else {
                 Set<CondensedRule> internalSet = new HashSet<CondensedRule>();
@@ -133,8 +138,8 @@ public class CondensedRuleTrie {
         return map.get(id);
     }
     
-    public int getParent(int labelSetID) {
-        return labelSetIDToParentState.get(labelSetID);
+    public IntSet getParents(int labelSetID) {
+        return labelSetIDToParentStateSet.get(labelSetID);
     }
     
     protected Int2ObjectMap<Set<CondensedRule>> getLabelSetIDToRulesMap() {
