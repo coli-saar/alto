@@ -6,7 +6,6 @@ package de.up.ling.irtg.automata;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
-import static de.up.ling.irtg.automata.RulesIterator.getAllRulesIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Iterator;
@@ -14,26 +13,23 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 /**
- *
+ * Provides a two-level iterator over the rules of a given tree automaton.
+ * The outer iterator proceeds over all top-down reachable states of the
+ * automaton, starting with the final states. For each state, the inner iterator
+ * iterates over the rules that have this state as the parent. The
+ * iterators can be combined into a single iterator over all rules of
+ * the automaton by Guava's Iterators.concat or something similar.<p>
+ * 
+ * This class calls {@link TreeAutomaton#getRulesTopDown(int) } to identify
+ * the rules in which a given state is the parent.
+ * 
  * @author koller
  */
-public class RuleIterator implements Iterator<Iterator<Rule>> {
+class RuleIterator implements Iterator<Iterator<Rule>> {
     private TreeAutomaton automaton;
     private Queue<Integer> stateAgenda;
     private IntSet visitedStates;  // states in this set are never added ot the agenda (again)
     
-    public static Iterable<Rule> getAllRules(final TreeAutomaton automaton) {
-        return new Iterable<Rule>() {
-            public Iterator<Rule> iterator() {
-                return getAllRulesIterator(automaton);
-            }
-        };
-    }
-    
-    public static Iterator<Rule> getAllRulesIterator(TreeAutomaton automaton) {
-        return Iterators.concat(new RuleIterator(automaton));
-    }
-
     public RuleIterator(TreeAutomaton automaton) {
         this.automaton = automaton;
         stateAgenda = new LinkedList<Integer>();
