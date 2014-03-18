@@ -30,6 +30,20 @@ public class JDerivationViewer extends javax.swing.JPanel {
      */
     public JDerivationViewer() {
         initComponents();
+        
+        viewsInOrder = new ArrayList<String>();        
+        viewsInOrder.add("** derivation tree **");
+        
+        displayables = new HashMap<String, JDerivationDisplayable>();
+        displayables.put("** derivation tree **", new JDerivationTree());
+        
+        String[] possibleViews = new String[1];
+        possibleViews[0] = DERIVATION_TREE;
+        componentSelector.setModel(new DefaultComboBoxModel(possibleViews));
+        
+        componentSelector.setSelectedIndex(0);
+        
+        
     }
 
     public void setInterpretedTreeAutomaton(InterpretedTreeAutomaton irtg) {
@@ -40,14 +54,12 @@ public class JDerivationViewer extends javax.swing.JPanel {
         }
 
         displayables = new HashMap<String, JDerivationDisplayable>();
-        viewsInOrder = new ArrayList<String>();
         String[] possibleViews = new String[N];
         interpretationForSelection = new Interpretation[N - 1];
 
         possibleViews[0] = DERIVATION_TREE;
         possibleViews[0] = DERIVATION_TREE;
         displayables.put("** derivation tree **", new JDerivationTree());
-        viewsInOrder.add("** derivation tree **");
 
         if (irtg != null) {
             int i = 0;

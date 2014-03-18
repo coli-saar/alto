@@ -16,7 +16,7 @@ import de.up.ling.irtg.*
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.algebra.*
 import de.up.ling.irtg.signature.*
-import com.google.common.collect.Iterators;
+import com.google.common.collect.*
 import static org.junit.Assert.*
 import static de.up.ling.irtg.util.TestingTools.*;
 
@@ -129,8 +129,6 @@ class TreeAutomatonTest{
         TreeAutomaton intersect = auto1.intersect(auto2);
         
         assertEquals(new HashSet(["q1,p1"]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it).toString() }));
-        
-//        assert intersect.getFinalStates().size() == 1;
     }
     
     @Test
@@ -587,6 +585,24 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assertEquals(gold, result)
     }
     
+    @Test
+    public void testRuleIterable() {
+        TreeAutomaton a = parse("s03! -> f(s01,s13)\n s03 -> f(s02,s23)\n s13 -> f(s12, s23)\n s02 -> f(s01, s12)\n s01 -> a\n s12 -> a\n s23 -> a");
+        
+        assertEquals(h(a.getRuleSet()), h(a.getRuleIterable()));
+        assertEquals(h(a.getRuleSet()), h(a.getRuleIterable())); // can use iterable twice
+    }
+    
+    @Test
+    public void testRuleIterator() {
+        TreeAutomaton a = parse("s03! -> f(s01,s13)\n s03 -> f(s02,s23)\n s13 -> f(s12, s23)\n s02 -> f(s01, s12)\n s01 -> a\n s12 -> a\n s23 -> a");
+        
+        Set fromIterator = new HashSet()
+        Iterators.addAll(fromIterator, a.getRuleIterator());
+        
+        assertEquals(h(a.getRuleSet()), fromIterator);
+    }
+    
 //    @Test
     public void testBottomUpOrder() {
         TreeAutomaton a = parse("s03! -> f(s01,s13)\n s03 -> f(s02,s23)\n s13 -> f(s12, s23)\n s02 -> f(s01, s12)\n s01 -> a\n s12 -> a\n s23 -> a");
@@ -620,6 +636,11 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     }
     */
     
+    private static Set h(Iterable x) {
+        Set ret = new HashSet();
+        Iterables.addAll(ret, x);
+        return ret;
+    }
     
 
     private static Pair p(Object a, Object b) {

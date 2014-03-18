@@ -77,6 +77,7 @@ import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
  * @author koller
  */
 public abstract class TreeAutomaton<State> implements Serializable {
+
     protected Int2ObjectMap<StateListToStateMap> explicitRulesBottomUp;        // label -> smap
     protected Int2ObjectMap<SetMultimap<Integer, Rule>> explicitRulesTopDown;  // label -> state -> set(rule)
     protected IntSet finalStates;                                             // final states, subset of allStates
@@ -176,28 +177,28 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Iterable<Rule> getRulesBottomUp(int labelId, List<Integer> childStates) {
         return getRulesBottomUp(labelId, intListToArray(childStates));
     }
-    
+
     /**
-     * Finds automaton rules bottom-up for a given list of child states
-     * and a given set of parent labels. The method returns an iterable which
-     * contains all rules that have the given child states and whose label
-     * is contained in the "labelIds" set.
-     * 
+     * Finds automaton rules bottom-up for a given list of child states and a
+     * given set of parent labels. The method returns an iterable which contains
+     * all rules that have the given child states and whose label is contained
+     * in the "labelIds" set.
+     *
      * @param labelIds
      * @param childStates
-     * @return 
+     * @return
      */
     public Iterable<Rule> getRulesBottomUp(IntSet labelIds, List<Integer> childStates) {
         List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
-        
-        for( int label : labelIds ) {
+
+        for (int label : labelIds) {
             Iterable<Rule> it = getRulesBottomUp(label, childStates);
-            
-            if( it.iterator().hasNext() ) {
+
+            if (it.iterator().hasNext()) {
                 ruleSets.add(it);
-            }            
+            }
         }
-        
+
         return Iterables.concat(ruleSets);
     }
 
@@ -228,6 +229,26 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     abstract public Iterable<Rule> getRulesTopDown(int labelId, int parentState);
+
+    /**
+     * Finds all automaton rules top-down with a given state on the left-hand
+     * side. The method uses getRulesTopDown to collect all rules for this state
+     * and any label that is returned by getLabelsTopDown. The method
+     * necessarily enforces the computation of all top-down rules for the given
+     * parentState, but does no further copying of rules beyond this.
+     *
+     * @param parentState
+     * @return
+     */
+    public Iterable<Rule> getRulesTopDown(int parentState) {
+        List<Iterable<Rule>> ruleLists = new ArrayList<Iterable<Rule>>();
+
+        for (int label : getLabelsTopDown(parentState)) {
+            ruleLists.add(getRulesTopDown(label, parentState));
+        }
+
+        return Iterables.concat(ruleLists);
+    }
 
     /**
      * Determines whether the automaton is deterministic if read as a bottom-up
@@ -398,96 +419,123 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns the set of all rules of this automaton.  
-     * Note that this necessarily _computes_ the
-     * set of all rules, which may be expensive for lazy automata.
+     * Returns the set of all rules of this automaton. Note that this
+     * necessarily _computes_ the set of all rules, which may be expensive for
+     * lazy automata.
      *
      * @return
      */
     public Iterable<Rule> getRuleSet() {
         List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
-        
+
         makeAllRulesExplicit();
 
         for (StateListToStateMap map : explicitRulesBottomUp.values()) {
-            for (Set<Rule> set : map.getAllRules().values()) {
-                ruleSets.add(set);
-            }
+            ruleSets.addAll(map.getAllRules().values());
         }
-        
+
         return Iterables.concat(ruleSets);
     }
     
-    
+    /**
+     * Returns an iterable over the rules of this automaton. Each
+     * request to provide an iterator returns a fresh instance
+     * of {@link #getRuleIterator() }.
+     * 
+     * @return 
+     */
     public Iterable<Rule> getRuleIterable() {
-        List<Iterable<Rule>> its = new ArrayList<Iterable<Rule>>();
-        
-        makeAllRulesExplicit();
-
-        for (StateListToStateMap map : explicitRulesBottomUp.values()) {
-            for (Set<Rule> set : map.getAllRules().values()) {
-                its.add(set);
+        return new Iterable<Rule>() {
+            public Iterator<Rule> iterator() {
+                return getRuleIterator();
             }
-        }
-        
-        
-        return Iterables.concat(its);
+        };
+    }
+    
+    /**
+     * Returns an iterator over the rules of this automaton. Rules
+     * are computed by need, so this rule requires a lower initial
+     * computational overhead than {@link #getRuleSet() }. Of course,
+     * after the iteration has finished, all rules of the automaton
+     * that can be reached top-down from the final states 
+     * have been computed explicitly anyway.<p>
+     * 
+     * The implementation of this method accesses rules via
+     * {@link #getRulesTopDown(int) }.
+     */
+    public Iterator<Rule> getRuleIterator() {
+        return Iterators.concat(new RuleIterator(this));
     }
 
+//    
+//    public Iterable<Rule> getRuleIterable() {
+//        List<Iterable<Rule>> its = new ArrayList<Iterable<Rule>>();
+//        
+//        makeAllRulesExplicit();
+//
+//        for (StateListToStateMap map : explicitRulesBottomUp.values()) {
+//            for (Set<Rule> set : map.getAllRules().values()) {
+//                its.add(set);
+//            }
+//        }
+//        
+//        
+//        return Iterables.concat(its);
+//    }
     /**
      * Returns the set of all rules, indexed by parent label and children
      * states.
      *
      * @return
      */
-    private Map<Integer, Map<int[], Set<Rule>>> getAllRules() {
-        Map<Integer, Map<int[], Set<Rule>>> ret = new HashMap<Integer, Map<int[], Set<Rule>>>();
+//    private Map<Integer, Map<int[], Set<Rule>>> getAllRules() {
+//        Map<Integer, Map<int[], Set<Rule>>> ret = new HashMap<Integer, Map<int[], Set<Rule>>>();
+//
+//        makeAllRulesExplicit();
+//
+//        for (int f = 1; f <= getSignature().getMaxSymbolId(); f++) {
+//            ret.put(f, getAllRules(f));
+//        }
+//
+//        return ret;
+//    }
 
-        makeAllRulesExplicit();
+//    private Map<int[], Set<Rule>> getAllRules(int label) {
+//        if (explicitRulesBottomUp.containsKey(label)) {
+//            return explicitRulesBottomUp.get(label).getAllRules();
+//        } else {
+//            return new HashMap<int[], Set<Rule>>();
+//        }
+//    }
 
-        for (int f = 1; f <= getSignature().getMaxSymbolId(); f++) {
-            ret.put(f, getAllRules(f));
-        }
-
-        return ret;
-    }
-
-    private Map<int[], Set<Rule>> getAllRules(int label) {
-        if (explicitRulesBottomUp.containsKey(label)) {
-            return explicitRulesBottomUp.get(label).getAllRules();
-        } else {
-            return new HashMap<int[], Set<Rule>>();
-        }
-    }
-    
     public boolean isCyclic() {
         boolean[] discovered = new boolean[stateInterner.getNextIndex()];
-        
-        for( int f : getFinalStates() ) {
-            if( exploreForCyclicity(f, discovered) ) {
+
+        for (int f : getFinalStates()) {
+            if (exploreForCyclicity(f, discovered)) {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     private boolean exploreForCyclicity(int state, boolean[] discovered) {
-        if( discovered[state]) {
+        if (discovered[state]) {
             return true;
         } else {
             discovered[state] = true;
-            for( int label : getLabelsTopDown(state)) {
-                for( Rule rule : getRulesTopDown(label, state)) {
-                    for( int child : rule.getChildren() ) {
-                        if( exploreForCyclicity(child, discovered)) {
+            for (int label : getLabelsTopDown(state)) {
+                for (Rule rule : getRulesTopDown(label, state)) {
+                    for (int child : rule.getChildren()) {
+                        if (exploreForCyclicity(child, discovered)) {
                             return true;
                         }
                     }
                 }
             }
             discovered[state] = false;
-            
+
             return false;
         }
     }
@@ -672,7 +720,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     /**
      * Compares two automata for equality. Two automata are equal if they have
      * the same rules and the same final states. All label and state IDs are
-     * resolved to the actual labels and states for this comparison.
+     * resolved to the actual labels and states for this comparison.<p>
+     *
+     * The implementation of this method is currently very slow, and should only
+     * be used for small automata (e.g. in unit tests).
      *
      * @param o
      * @return
@@ -687,35 +738,41 @@ public abstract class TreeAutomaton<State> implements Serializable {
         int[] stateRemap = stateInterner.remap(other.stateInterner);                         // stateId and stateRemap[stateId] are the same state
         int[] labelRemap = getSignature().remap(other.getSignature());                       // labelId and labelRemap[labelId] are the same label
 
-        Map<Integer, Map<int[], Set<Rule>>> allRules = getAllRules();
-        Map<Integer, Map<int[], Set<Rule>>> otherAllRules = other.getAllRules();
+        Iterable<Rule> allRules = getRuleSet();
+        Iterable<Rule> otherAllRules = other.getRuleSet();
 
-        if (allRules.size() != otherAllRules.size()) {
-            return false;
-        }
+        return ruleSetsEqual(allRules, otherAllRules, labelRemap, stateRemap, other);
 
-        for (int f : allRules.keySet()) {
-            if (labelRemap[f] == 0) {
-                return false;
-            }
-
-            if (allRules.get(f).size() != otherAllRules.get(labelRemap[f]).size()) {
-                return false;
-            }
-
-            for (int[] children : allRules.get(f).keySet()) {
-                int[] childrenOther = Interner.remapArray(children, stateRemap);
-
-                Iterable<Rule> rules = getRulesBottomUp(f, children);
-                Iterable<Rule> otherRules = other.getRulesBottomUp(labelRemap[f], childrenOther);
-
-                if (!ruleSetsEqual(rules, otherRules, labelRemap, stateRemap, other)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
+//
+//        Map<Integer, Map<int[], Set<Rule>>> allRules = getAllRules();
+//        Map<Integer, Map<int[], Set<Rule>>> otherAllRules = other.getAllRules();
+//
+//        if (allRules.size() != otherAllRules.size()) {
+//            return false;
+//        }
+//
+//        for (int f : allRules.keySet()) {
+//            if (labelRemap[f] == 0) {
+//                return false;
+//            }
+//
+//            if (allRules.get(f).size() != otherAllRules.get(labelRemap[f]).size()) {
+//                return false;
+//            }
+//
+//            for (int[] children : allRules.get(f).keySet()) {
+//                int[] childrenOther = Interner.remapArray(children, stateRemap);
+//
+//                Iterable<Rule> rules = getRulesBottomUp(f, children);
+//                Iterable<Rule> otherRules = other.getRulesBottomUp(labelRemap[f], childrenOther);
+//
+//                if (!ruleSetsEqual(rules, otherRules, labelRemap, stateRemap, other)) {
+//                    return false;
+//                }
+//            }
+//        }
+//
+//        return true;
     }
 
     // this is slow
@@ -760,17 +817,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public String toString() {
         StringBuilder buf = new StringBuilder();
         long countSuppressed = 0;
-        Map<Integer, Map<int[], Set<Rule>>> rules = getAllRules();
 
-        for (int f : rules.keySet()) {
-            for (int[] children : rules.get(f).keySet()) {
-                for (Rule rule : rules.get(f).get(children)) {
-                    if (isRulePrinting(rule)) {
-                        buf.append(rule.toString(this, getFinalStates().contains(rule.getParent())) + "\n");
-                    } else {
-                        countSuppressed++;
-                    }
-                }
+        for (Rule rule : getRuleSet()) {
+            if (isRulePrinting(rule)) {
+                buf.append(rule.toString(this, getFinalStates().contains(rule.getParent())) + "\n");
+            } else {
+                countSuppressed++;
             }
         }
 
@@ -867,18 +919,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
-    
+
     /**
      * Computes a concrete representation of this automaton. The method returns
      * a {@link ConcreteTreeAutomaton} that is equals to the given automaton.
      * The method enumerates the rules of the automaton bottom-up.
-     * 
-     * @return 
+     *
+     * @return
      */
     public ConcreteTreeAutomaton asConcreteTreeAutomatonBottomUp() {
         return new UniversalAutomaton(getSignature()).intersect(this).asConcreteTreeAutomaton();
     }
-    
 
     /**
      * Checks whether the cache contains a bottom-up rule for the given parent
@@ -1036,61 +1087,60 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public boolean accepts(Tree<String> tree) {
         return acceptsRaw(getSignature().addAllSymbols(tree));
     }
-    
+
     /**
-     * Returns a tree of automaton rules that generates the given
-     * tree. This method assumes that the automaton can only accept
-     * the tree in a single way; this is true, for instance, if the
-     * automaton is a parse chart and the tree is a derivation tree.
-     * If this is not the case, the method throws an exception with
-     * some debugging information. If the automaton does not accept
-     * the tree at all, the method returns null.
-     * 
+     * Returns a tree of automaton rules that generates the given tree. This
+     * method assumes that the automaton can only accept the tree in a single
+     * way; this is true, for instance, if the automaton is a parse chart and
+     * the tree is a derivation tree. If this is not the case, the method throws
+     * an exception with some debugging information. If the automaton does not
+     * accept the tree at all, the method returns null.
+     *
      * @param derivationTree
      * @return
-     * @throws Exception 
+     * @throws Exception
      */
     public Tree<Rule> getRuleTree(Tree<Integer> derivationTree) throws Exception {
         Tree<Rule> ret = null;
-        
-        for( int state : getFinalStates() ) {
+
+        for (int state : getFinalStates()) {
             Tree<Rule> retHere = getRuleTree(derivationTree, state);
-            
-            if( retHere != null ) {
-                if( ret == null ) {
+
+            if (retHere != null) {
+                if (ret == null) {
                     ret = retHere;
                 } else {
                     throw new Exception("Two rule trees available for " + getSignature().resolve(derivationTree) + "; second final state is " + stateInterner.resolveId(state));
-                } 
+                }
             }
         }
-        
+
         return ret;
     }
-    
+
     private Tree<Rule> getRuleTree(Tree<Integer> derivationTree, int state) throws Exception {
         Iterable<Rule> rules = getRulesTopDown(derivationTree.getLabel(), state);
         Tree<Rule> ret = null;
-        
+
 //        System.err.println("grt " + getSignature().resolve(derivationTree) + " @" + stateInterner.resolveId(state));
-        
+
         ruleLoop:
-        for( Rule rule : rules ) {
+        for (Rule rule : rules) {
             List<Tree<Rule>> childResults = new ArrayList<Tree<Rule>>();
-            
-            for( int i = 0; i < rule.getArity(); i++ ) {
+
+            for (int i = 0; i < rule.getArity(); i++) {
                 Tree<Rule> resultHere = getRuleTree(derivationTree.getChildren().get(i), rule.getChildren()[i]);
-                
-                if( resultHere == null ) {
+
+                if (resultHere == null) {
                     continue ruleLoop;
                 } else {
                     childResults.add(resultHere);
                 }
             }
-            
-            if( ret == null ) {
+
+            if (ret == null) {
 //                System.err.println(" -> found childResults: " + childResults);
-                
+
                 ret = Tree.create(rule, childResults);
             } else {
                 throw new Exception("Subtree with two rule trees: " + getSignature().resolve(derivationTree) + " in state " + stateInterner.resolveId(state));
@@ -1142,6 +1192,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private static class IntegerIdentity implements Function<Integer, Integer> {
+
         public Integer apply(Integer f) {
             return f;
         }
@@ -1208,8 +1259,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
             Iterable<Rule> rules = getRulesBottomUp(labelIdSource.apply(f), childStates);
             Iterator<Rule> it = rules.iterator();
-            
-            if( it.hasNext() ) {
+
+            if (it.hasNext()) {
                 return it.next().getParent();
             } else {
                 return 0;
@@ -1224,6 +1275,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     enum D1aResult {
+
         OK, EMPTY, NON_SINGLETON
     };
 
@@ -1306,6 +1358,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private static class ListCartesianIterator<E> implements Iterator<List<E>> {
+
         private List<List<E>> lists;
         private int N;
         private int[] lengths;
@@ -1605,6 +1658,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private static enum AdditionClass {
+
         RULE_WAS_KNOWN, OTHER_RULE_WAS_KNOWN_FOR_RHS, FIRST_RULE_FOR_RHS
     };
 
@@ -1618,7 +1672,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public List<Integer> getStatesInBottomUpOrder() {
         List<Integer> ret = new ArrayList<Integer>();
-        SetMultimap<Integer, Integer> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
+//        SetMultimap<Integer, Integer> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
         Set<Integer> visited = new HashSet<Integer>();
 
         // traverse all rules to compute graph
@@ -1655,14 +1709,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
             ret.add(q);
         }
     }
-    
+
     private void dfsForStatesInBottomUpOrder2(int q, Set<Integer> visited, List<Integer> ret) {
         if (!visited.contains(q)) {
             visited.add(q);
-            
-            for( int label : getLabelsTopDown(q) ) {
-                for( Rule rule : getRulesTopDown(label, q)) {
-                    for( int child : rule.getChildren() ) {
+
+            for (int label : getLabelsTopDown(q)) {
+                for (Rule rule : getRulesTopDown(label, q)) {
+                    for (int child : rule.getChildren()) {
                         dfsForStatesInBottomUpOrder2(child, visited, ret);
                     }
                 }
@@ -1696,6 +1750,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     protected class StateListToStateMap implements Serializable {
+
         private Int2ObjectMap<StateListToStateMap> nextStep;
         private Set<Rule> rulesHere;
         private int arity;
@@ -1856,14 +1911,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        makeAllRulesExplicit();
         return new LanguageIterator(new SortedLanguageIterator<State>(this));
     }
-    
+
     /**
      * Determines whether the language accepted by this automaton is empty.
-     * 
-     * @return 
+     *
+     * @return
      */
     public boolean isEmpty() {
-        return ! sortedLanguageIterator().hasNext();
+        return !sortedLanguageIterator().hasNext();
     }
 
     /**
@@ -1898,6 +1953,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private class LanguageIterator implements Iterator<Tree<Integer>> {
+
         private Iterator<WeightedTree> it;
 
         public LanguageIterator(Iterator<WeightedTree> it) {
@@ -2016,22 +2072,22 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Rule createRule(State parent, String label, List<State> children) {
         return createRule(parent, label, children, 1);
     }
-    
-    
+
     /**
      * Modifies the weights of the rules in this automaton such that the weights
-     * of all rules with the same parent state sum to one. Note that this requires
-     * computing all the rules, which may be expensive for lazy automata.
+     * of all rules with the same parent state sum to one. Note that this
+     * requires computing all the rules, which may be expensive for lazy
+     * automata.
      */
     public void normalizeRuleWeights() {
         Iterable<Rule> rules = getRuleSet();
         Int2DoubleMap lhsWeightSum = new Int2DoubleOpenHashMap();
-        
-        for( Rule rule : rules ) {
+
+        for (Rule rule : rules) {
             lhsWeightSum.put(rule.getParent(), lhsWeightSum.get(rule.getParent()) + rule.getWeight());
         }
-        
-        for( Rule rule : rules ) {
+
+        for (Rule rule : rules) {
             rule.setWeight(rule.getWeight() / lhsWeightSum.get(rule.getParent()));
         }
     }

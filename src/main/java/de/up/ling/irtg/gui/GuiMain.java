@@ -15,6 +15,7 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import java.awt.Component;
+import java.awt.Frame;
 import java.awt.Window;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -86,6 +87,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenuItem4 = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         jMenuItem3 = new javax.swing.JMenuItem();
+        jMenu2 = new javax.swing.JMenu();
+        jMenuItem5 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("IRTG GUI");
@@ -137,6 +140,18 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         jMenuBar1.add(jMenu1);
 
+        jMenu2.setText("Tools");
+
+        jMenuItem5.setText("Compute decomposition automaton ...");
+        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem5ActionPerformed(evt);
+            }
+        });
+        jMenu2.add(jMenuItem5);
+
+        jMenuBar1.add(jMenu2);
+
         setJMenuBar(jMenuBar1);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
@@ -179,6 +194,14 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         closeAllWindows();
     }//GEN-LAST:event_jMenuItem4ActionPerformed
 
+    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+        showDecompositionDialog(this);
+    }//GEN-LAST:event_jMenuItem5ActionPerformed
+
+    public static void showDecompositionDialog(java.awt.Frame parent) {
+        new DecompositionDialog(parent, true).setVisible(true);
+    }
+    
     public static void quit() {
         System.exit(0);
     }
@@ -455,11 +478,13 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu jMenu1;
+    private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
+    private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JTextArea log;

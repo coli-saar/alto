@@ -103,7 +103,7 @@ public abstract class RegularSeed {
         Int2IntMap variableStates = findVariableStates(autoHere, term.getLabel(), arity);
 
         // copy rules of this automaton into ret, renaming states
-        for (Rule rule : autoHere.getRuleIterable()) {
+        for (Rule rule : autoHere.getRuleSet()) {
             // skip rules of the form q -> ?i
             if (!variableStates.containsKey(rule.getParent())) {
                 String newParent = nodeName + "_" + autoHere.getStateForId(rule.getParent()).toString();
