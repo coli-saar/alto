@@ -225,6 +225,26 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     abstract public Iterable<Rule> getRulesTopDown(int labelId, int parentState);
+    
+    /**
+     * Finds all automaton rules top-down with a given state on the left-hand side.
+     * The method uses getRulesTopDown to collect all rules for this state and
+     * any label that is returned by getLabelsTopDown. The method necessarily
+     * enforces the computation of all top-down rules for the given parentState,
+     * but does no further copying of rules beyond this.
+     * 
+     * @param parentState
+     * @return 
+     */
+    public Iterable<Rule> getRulesTopDown(int parentState) {
+        List<Iterable<Rule>> ruleLists = new ArrayList<Iterable<Rule>>();
+        
+        for( int label : getLabelsTopDown(parentState) ) {
+            ruleLists.add(getRulesTopDown(label, parentState));
+        }
+        
+        return Iterables.concat(ruleLists);
+    }
 
     /**
      * Determines whether the automaton is deterministic if read as a bottom-up
