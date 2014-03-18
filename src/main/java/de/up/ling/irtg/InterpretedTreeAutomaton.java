@@ -203,7 +203,7 @@ public class InterpretedTreeAutomaton {
             TreeAutomaton interpParse = interp.parse(input);
             
 
-            System.err.println("invhom(decomp(" + input  + "):\n" + interpParse.toStringBottomUp());
+//            System.err.println("invhom(decomp(" + input  + "):\n" + interpParse.toStringBottomUp());
 
 //            ret = ret.intersect(interpParse);
 
@@ -226,7 +226,7 @@ public class InterpretedTreeAutomaton {
             CondensedTreeAutomaton interpParse = interp.parseToCondensed(input);
 
 
-            System.err.println("invhom(decomp(" + input + "):\n" + interpParse.toStringBottomUp());
+//            System.err.println("invhom(decomp(" + input + "):\n" + interpParse.toStringBottomUp());
 
 //            ret = ret.intersect(interpParse);
 

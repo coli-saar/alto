@@ -10,6 +10,8 @@ import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
@@ -33,30 +35,60 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 
     private TreeAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
-//    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
-    private Function<HomomorphismSymbol,Integer> remappingHomSymbolToIntFunction;   
+    private IntSet labelSetsWithVariables;  // stores all the other labelsets
+    private IntSet labelsInRhsAutomaton; 
+    private IntSet validLabelSetIDs;
+    private Int2ObjectMap<IntSet> stateToNewLabelSetIDs; // maps a parentstate that derives no children to the coresponding labelsetids
+
     
 
     public CondensedNondeletingInverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
+        assert hom.isNonDeleting();
+
         this.rhsAutomaton = rhsAutomaton;
         this.hom = hom;
         isCondensedExplicit = false;
         
         labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
         
-        remappingHomSymbolToIntFunction = new Function<HomomorphismSymbol, Integer>() {
-            public Integer apply(HomomorphismSymbol f) {
-                return labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().apply(f)];
-            }
-        };
-
-        assert hom.isNonDeleting();
-
         this.stateInterner = rhsAutomaton.getStateInterner();
         finalStates.addAll(rhsAutomaton.getFinalStates());
-      
+        
+        Function<Tree<HomomorphismSymbol>, Integer> RETURN_ZERO = new Function<Tree<HomomorphismSymbol>, Integer>() {
+            public Integer apply(Tree<HomomorphismSymbol> f) {
+                return 0;
+            }
+        };
+        
+        // Get only the labelsetIDs that we actual need according to the given automaton.
+        validLabelSetIDs = hom.getLabelsetIDsForTgtSymbols(rhsAutomaton.getAllLabels());
+        stateToNewLabelSetIDs = new Int2ObjectOpenHashMap<IntSet>();
+        // Seperate between labelsetIDs that stand for symbols, wich resolve into trees with an arity of 0 and others.
+        for (int labelSetID : validLabelSetIDs) {
+            Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
+          
+            if (rhs.getMaximumArity() == 0) {                
+                // iterate over all states that can be reached buttom-up from the the rhs.
+                for (Integer state : rhsAutomaton.run(rhs, HomomorphismSymbol.getHomSymbolToIntFunction(), RETURN_ZERO)) {
+
+                    // save the labelSetID in the signature of this automaton
+                    int newLabelSetID = this.getLabelSetID(hom.getLabelSetByLabelSetID(labelSetID));
+
+                    if (stateToNewLabelSetIDs.containsKey(state)) {
+                        stateToNewLabelSetIDs.get(state).add(newLabelSetID);
+                    } else {
+                        IntSet insert = new IntOpenHashSet();
+                        insert.add(newLabelSetID);
+                        stateToNewLabelSetIDs.put(state, insert);
+                    }
+                }
+            }
+        }
+        // Create a set to iterate over in case the state does not derive to a terminal symbol
+        labelSetsWithVariables = new IntOpenHashSet(validLabelSetIDs);
+        labelSetsWithVariables.removeAll(stateToNewLabelSetIDs.keySet());   
     }
    
     /**
@@ -70,40 +102,41 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     @Override
     public Iterable<CondensedRule> getCondensedRulesByParentState(int parentState) {
         Set<CondensedRule> ret = new HashSet<CondensedRule>();
-        IntSet processedLabelSets = new IntOpenHashSet();
 //        System.err.println("Parent: " + getStateInterner().resolveId(parentState).toString());
-        // Iterate over all labels for a parentState and add all calcualted rules to the return set.
-         
-        for(Integer label : getLabelsTopDown(parentState)) {
-//            System.err.println("Label: " + getSignature().resolveSymbolId(label)+ "(" + label + ")");
-            // First, use the homomorphism to get the ID of the LabelSet, 
-            // to wich the current label belongs.
-            int labelSetID = hom.getLabelSetID(label);
-//            System.err.println("Parent State: " + parentState + " - Label: " + label + " ID " + labelSetID);
-//            System.err.println("It belongs to the LabelSet: " + labelSetID);
-//            System.err.println("Processed? " + processedLabelSets.contains(labelSetID));
+        
+        // Check if this state derives a span of the lenght 0
+        IntSet newLabelSetIDs = stateToNewLabelSetIDs.get(parentState);
+        if (newLabelSetIDs != null) {
+            for (int newLabelSetID : newLabelSetIDs) {
+                CondensedRule cr = new CondensedRule(parentState, newLabelSetID, new int[0], 1);
+                ret.add(cr);
+//                System.err.println("Creating Rule for arity0");
+//                System.err.println(cr.toString(this));
+            }
+        } else {
+            // Iterate over all labels for a parentState and add all calcualted rules to the return set.
+            for (int labelSetID : labelSetsWithVariables) {
+//                System.err.println("New labelSetID: " + labelSetID);          
 
-            // Proceed only if we have not processed any other labels, that belong
-            // to this labelset.
-      
-            if (!processedLabelSets.contains(labelSetID)) {
-                processedLabelSets.add(labelSetID);
                 Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
-                
-//                System.err.println("RHS: " + hom.rhsAsString(rhs));
 
                 // Find childstates
                 for (List<Integer> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs))) {
                     if (isCompleteSubstitutionTuple(substitutionTuple)) {
                         // TODO: weights
                         // Transform the labelSetID from the homomorphism to one of this automaton.
-                        int newLabelSetID = this.getLabelSetID(hom.getLabelSetForLabel(label));
+                        int newLabelSetID = this.getLabelSetID(hom.getLabelSetByLabelSetID(labelSetID));
                         CondensedRule cr = new CondensedRule(parentState, newLabelSetID, intListToArray(substitutionTuple), 1); //createRuleRaw(parentState, newLabelSetID, intListToArray(substitutionTuple), 1);
                         ret.add(cr);
+                        
+//                        System.err.println("Creating Rule for arity>0");
+//                        System.err.println(cr.toString(this));
                     }
                 }
             }
         }
+        
+        
         return ret;
     }
 

@@ -45,6 +45,15 @@ D -> r5(A, D) [0.5]
 D -> r4 [0.5]
  [i] b
 
+C -> r6(X,Y)
+ [i] *(?1, ?2)
+
+X -> r7
+  [i] x
+
+Y -> r8(X,X)
+[i] *(?1, ?2)
+
 
        ''';
     
@@ -66,8 +75,8 @@ D -> r4 [0.5]
         
         // Create an (Nondeleting) InverseHomomorphism
         CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(h);
-        System.out.println("Invhom Automaton (condensed):\n" + inv.toStringCondensed());
-        System.out.println("Invhom Automaton :\n" + inv.toString());
+//        System.out.println("Invhom Automaton (condensed):\n" + inv.toStringCondensed());
+//        System.out.println("Invhom Automaton :\n" + inv.toString());
 
 //        System.err.println("invhom(decomp(" + input  + "):\n" + inv.toStringBottomUp());
                 

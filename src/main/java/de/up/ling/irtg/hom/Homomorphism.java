@@ -13,6 +13,8 @@ import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -44,6 +46,9 @@ public class Homomorphism {
     private Int2IntMap labelToLabelSet; // Find the labelSet for a given label
     private Int2IntMap labelSetToTerm;  // Lookup the term that has been maped to a labelSet
     
+    private Int2IntMap tgtIDToSrcID;    // maps an int that resolves to an string in the tgt signature 
+                                        // to an int, that resolves to the coresponding string in the src signature
+    
     public Homomorphism(Signature src, Signature tgt) {
 //        if (debug) System.err.println("New Homomorphism created...\n");
         mappings = new HashMap<Integer, Tree<HomomorphismSymbol>>();
@@ -55,6 +60,8 @@ public class Homomorphism {
         labelToLabelSet = new Int2IntOpenHashMap();
         labelSetToTerm = new Int2IntOpenHashMap();
         labelSetInterner = new Interner<IntSet>();
+        
+        tgtIDToSrcID = new Int2IntOpenHashMap();
     }
 
     
@@ -62,14 +69,15 @@ public class Homomorphism {
         add(srcSignature.getIdForSymbol(label), HomomorphismSymbol.treeFromNames(mapping, tgtSignature));
     }
 
-    public void add(int label, Tree<HomomorphismSymbol> mapping) {
+    public void add(int label, Tree<HomomorphismSymbol> mapping) {        
         mappings.put(label, mapping); // To be removed later?
         if (debug) System.err.println("Adding " + label + " - " + mapping);
+        int labelSetID;
         if (terms.isKnownObject(mapping)) { // Term is already processed. We only need to add the given label to the proper labelSet
             if (debug) System.err.println("-> " + mapping + " is already known.");
             int termID = terms.resolveObject(mapping); 
             assert termsToLabelSet.containsKey(termID);
-            int labelSetID = termsToLabelSet.get(termID);
+            labelSetID = termsToLabelSet.get(termID);
             addToLabelSet(label, labelSetID);
             if (debug) System.err.println("termID = " + termID);
             if (debug) System.err.println("labelSetID = " + labelSetID);
@@ -77,12 +85,16 @@ public class Homomorphism {
         } else {
             if (debug) System.err.println("-> " + mapping + " is new.");
             int termID = terms.addObject(mapping); 
-            int labelSetID = createNewLabelSet(label);
+            labelSetID = createNewLabelSet(label);
             if (debug) System.err.println("termID = " + termID);
             labelToLabelSet.put(label, labelSetID);
             labelSetToTerm.put(labelSetID, termID);
             termsToLabelSet.put(termID, labelSetID);
         }
+        
+        // Save a link between the label of the current Tree to the ID in the target signature
+        int tgtID = HomomorphismSymbol.getHomSymbolToIntFunction().apply(mapping.getLabel());
+        tgtIDToSrcID.put(tgtID, labelSetID);
     }
 
     
@@ -148,6 +160,11 @@ public class Homomorphism {
         }
     }
     
+    public IntSet getLabelSetByLabelSetID(int labelSetID) {
+        assert labelSetID < labelSetInterner.getNextIndex();
+        return labelSetInterner.resolveId(labelSetID);
+    }
+    
     public int getTermID(int label) {
         int labelSetID = labelToLabelSet.get(label);
         return labelSetToTerm.get(labelSetID);
@@ -182,6 +199,17 @@ public class Homomorphism {
         return HomomorphismSymbol.toStringTree(get(srcSignature.getIdForSymbol(label)), tgtSignature);
     }
 
+    
+    public IntSet getLabelsetIDsForTgtSymbols(IntSet tgtSymbols) {
+        IntSet ret = new IntOpenHashSet();
+        for (int tgtSymbol : tgtSymbols) {
+            ret.add(tgtIDToSrcID.get(tgtSymbol));
+        }
+        
+        return ret;
+    }
+    
+    
     /*
      * Applies the homomorphism to the given tree. Returns the homomorphic image
      * of the tree under this homomorphism.
