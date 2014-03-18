@@ -42,7 +42,7 @@ class CondensedNondeletingInverseHomAutomatonTest {
         
         assert h.isNonDeleting();
 
-        CondensedTreeAutomaton inv = decomp.inverseHomomorphism(h);
+        CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(h);
         
 //        System.err.println("++++++++++++++++");
 //        System.err.println(inv.toString());

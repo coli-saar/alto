@@ -16,7 +16,7 @@ import de.saar.basic.Pair
 
 class TagAlgebrasTest {
     
-    @Test
+    //@Test
     public void testTinyTagAdjective() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
         
@@ -27,7 +27,7 @@ class TagAlgebrasTest {
         assertEquals(new HashSet([pt("inx0V-sleep(iNXN-businessman(aAn-small(*NOP*,*NOP*),aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")]), chart.language());
     }
     
-    @Test
+    //@Test
     public void testTinyTagPre() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
         Interpretation i = irtg.getInterpretations().get("string")
@@ -39,21 +39,21 @@ class TagAlgebrasTest {
         assert decomp.accepts(i.getHomomorphism().apply(dt))
     }
     
-    @Test
+    //@Test
     public void testTinyTag() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));        
         TreeAutomaton chart = irtg.parse(["string": "the businessman sleep"]);
         assertEquals(new HashSet([pt("inx0V-sleep(iNXN-businessman(*NOP*,aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")]), chart.language());
     }
     
-    @Test
+    //@Test
     public void testTinyTagTree() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));        
         TreeAutomaton chart = irtg.parse(["tree": "S2(NP2(D0(the),NP1(N0(businessman))),VP1(V0(sleep)))"]);        
         assertEquals(new HashSet([pt("inx0V-sleep(iNXN-businessman(*NOP*,aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)")]), chart.language());
     }
     
-    @Test
+    //@Test
     public void testTinyTagAdjectivePre() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
         Interpretation si = irtg.getInterpretations().get("string");
@@ -62,7 +62,7 @@ class TagAlgebrasTest {
         assertEquals(si.getAlgebra().parseString("the small businessman sleep"), si.getAlgebra().evaluate(ht));
     }
 
-    @Test
+    //@Test
     public void testTinyTagAdjectiveDecomp() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));
         Interpretation si = irtg.getInterpretations().get("string");
@@ -72,7 +72,7 @@ class TagAlgebrasTest {
     }
     
     
-    @Test
+    //@Test
     public void testNessonShieberPrePos() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(nessonShieber));
         
@@ -86,7 +86,7 @@ class TagAlgebrasTest {
         assert decomp.accepts(i.getHomomorphism().apply(dt))
     }
 
-    @Test
+    //@Test
     public void testNessonShieberPreNeg() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(nessonShieber));
         
@@ -100,7 +100,7 @@ class TagAlgebrasTest {
         assert ! decomp.accepts(i.getHomomorphism().apply(dt))
     }
     
-    @Test
+    //@Test
     public void testNessonShieber() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(nessonShieber));
         TreeAutomaton chart = irtg.parse(["syntax": "s(np(john), vp(adv(apparently), vp(v(likes), np(mary))))"]);
@@ -108,7 +108,7 @@ class TagAlgebrasTest {
     }
 
 
-    @Test
+    //@Test
     public void testNessonShieberGen() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(nessonShieber));
         TreeAutomaton chart = irtg.parse(["semantics": "t(t_t(apparently),t(e_t(likes,e(mary)),e(john)))"]);        
@@ -117,7 +117,7 @@ class TagAlgebrasTest {
     
     
     
-    @Test
+    //@Test
     public void testTinyTagBottomUp() {
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(tinyTag));        
         Algebra alg = irtg.getInterpretations().get("tree").getAlgebra();
@@ -128,7 +128,7 @@ class TagAlgebrasTest {
         assert decomp.accepts(tree);        
     }
     
-    @Test
+    //@Test
     public void testTinyTagTopDown() {
         InterpretedTreeAutomaton g2 = IrtgParser.parse(new StringReader(tinyTag));
         Algebra alg = g2.getInterpretations().get("tree").getAlgebra();

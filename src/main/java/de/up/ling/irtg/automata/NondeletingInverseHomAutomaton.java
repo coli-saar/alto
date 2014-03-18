@@ -133,7 +133,6 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 
     @Override
     protected void storeRule(Rule rule) {
-        System.err.println("Called (" + this.hashCode() +  ")");
 //        if (useCachedRuleBottomUpWithTermID(hom.getTermID(rule.getLabel()), rule.getChildren())) {
 //            System.err.println("Why is termID and " + hom.getTermID(rule.getLabel()) + " and CS: " + childStatesToString(rule.getChildren()) + " mapped again?");
 //            System.err.println("-> " + rule.toString());
@@ -184,14 +183,12 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 //        unprocessedUpdatesForTopDown.add(rule);
 
         // remember that rules need to be indexed for RHS -> rule
-        unprocessedUpdatesForRulesForRhsState.add(rule);
-//        super.storeRule(rule);
+//        unprocessedUpdatesForRulesForRhsState.add(rule);
+        super.storeRule(rule);
     }
 
     @Override
     public Set<Rule> getRulesBottomUp(int label, final int[] childStates) {
-        System.err.println("AskedBU");
-
         if (debug) {
             System.err.println("Handling label " + label + " and CS : " + childStatesToString(childStates));
         }
@@ -219,7 +216,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
                 // TODO: weight
                 for (int newLabel : hom.getLabelSetForLabel(label)) {
                     Rule rule = createRule(r, newLabel, childStates, 1);
-//                    storeRule(rule);
+                    storeRule(rule);
                     ret.add(rule);
                 }
             }
@@ -249,7 +246,6 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
     
     @Override
     public Set<Rule> getRulesTopDown(int label, int parentState) {
-        System.err.println("AskedTD");
         int termID = hom.getTermID(label);
         if (useCachedRuleTopDownWithTermID(termID, parentState)) {
             return getRulesTopDownFromExplicitWithTermID(termID, parentState);
@@ -262,11 +258,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
                     // TODO: weights
                     for (int newLabel : hom.getLabelSetForLabel(label)) {
                         Rule rule = createRule(parentState, newLabel, substitutionTuple, 1);
-                        System.err.println("Calling (" + this.hashCode() + "){");
-                        
-//                        storeRule(rule);
-                        System.err.println("}");
-
+                        storeRule(rule);
                         ret.add(rule); 
                     }
                 }

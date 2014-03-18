@@ -42,11 +42,13 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
         ret.ruleTrie = new CondensedRuleTrie();
         ret.topDownRules = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<CondensedRule>>>();
         ret.absorbTreeAutomaton(origin);
-        
-        System.err.println("condensed: " + ret.toStringCondensed());
-        
-        System.err.println("condensed as ordinary automaton: " + ret);
-        
+//        
+//        System.err.println("original: \n" + origin);
+//        
+//        System.err.println("condensed: \n" + ret.toStringCondensed());
+//        
+//        System.err.println("condensed as ordinary automaton: \n" + ret);
+//        
         assert ret.equals(origin);
         
         return ret;
@@ -82,7 +84,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
      */
     public void absorbTreeAutomaton(TreeAutomaton<State> auto) {
         for (Rule rule : auto.getRuleSet()) {
-            System.err.println("absorb rule: " + rule.toString(auto));
+//            System.err.println("absorb rule: " + rule.toString(auto));
             storeRule(rule, auto);
         }
     }
@@ -108,9 +110,10 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
         // on the other hand, may have to search for parent in more than just the first rule
         
         // iterate over all labelSetIDs for the current children.
-        for (int possibleLabelSetID : ruleMap.keySet()) {
+        for (int possibleLabelSetID : finalTrie.getStoredKeys()) {
             // if the parentstate for the current labelSetID matches, we found or labelSet
-            if (finalTrie.getParents(possibleLabelSetID).contains(newParent)) {
+            IntSet parents =  finalTrie.getParents(possibleLabelSetID);
+            if (parents.contains(newParent)) {
                 newLabelSetID = possibleLabelSetID;
             }
         }
@@ -121,6 +124,9 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
             IntSet newLabels = new IntOpenHashSet();
             newLabels.add(newLabel);
             newLabelSetID = labelSetInterner.addObject(newLabels);
+        } else {
+            // add current label to the existing labelset
+            labelSetInterner.resolveId(newLabelSetID).add(newLabel);
         }
         
         CondensedRule newRule = createRuleRaw(newParent, newLabelSetID, newChildren, rule.getWeight());
@@ -133,7 +139,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
         if (auto.getFinalStates().contains(rule.getParent())) {
             finalStates.add(newParent);
         }
-        System.err.println("created Rule: " + newRule.toString(this));
+//        System.err.println("created Rule: " + newRule.toString(this));
 
 //            System.err.println("OUT: " + newRule.toString(this));
     }

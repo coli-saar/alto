@@ -36,8 +36,12 @@ public class Interpretation<E> {
         return hom;
     }
     
-    public CondensedTreeAutomaton parse(E object) {
+    public TreeAutomaton parse(E object) {
         return algebra.decompose(object).inverseHomomorphism(hom);
+    }
+    
+    public CondensedTreeAutomaton parseToCondensed(E object) {
+        return algebra.decompose(object).inverseCondensedHomomorphism(hom);
     }
 
     @Override

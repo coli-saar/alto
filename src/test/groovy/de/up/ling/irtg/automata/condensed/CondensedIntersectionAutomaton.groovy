@@ -65,7 +65,7 @@ D -> r4 [0.5]
 //        System.out.println("Decomp Automaton for the input string:\n" + decomp.toString());
         
         // Create an (Nondeleting) InverseHomomorphism
-        CondensedTreeAutomaton inv = decomp.inverseHomomorphism(h);
+        CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(h);
 //        System.out.println("Invhom Automaton :\n" + inv.toString());
 
 //        System.err.println("invhom(decomp(" + input  + "):\n" + inv.toStringBottomUp());

@@ -200,10 +200,33 @@ public class InterpretedTreeAutomaton {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
             
-            CondensedTreeAutomaton interpParse = interp.parse(input);
+            TreeAutomaton interpParse = interp.parse(input);
             
 
             System.err.println("invhom(decomp(" + input  + "):\n" + interpParse.toStringBottomUp());
+
+//            ret = ret.intersect(interpParse);
+
+            ret = ret.intersect(interpParse);
+
+        }
+
+//        System.err.println("chart before reduction:\n" + ret);
+
+        return ret.reduceTopDown();
+    }
+    
+    public TreeAutomaton parseInputObjectsCondensed(Map<String, Object> inputs) {
+        TreeAutomaton ret = automaton;
+
+        for (String interpName : inputs.keySet()) {
+            Interpretation interp = interpretations.get(interpName);
+            Object input = inputs.get(interpName);
+
+            CondensedTreeAutomaton interpParse = interp.parseToCondensed(input);
+
+
+            System.err.println("invhom(decomp(" + input + "):\n" + interpParse.toStringBottomUp());
 
 //            ret = ret.intersect(interpParse);
 

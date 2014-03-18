@@ -35,14 +35,14 @@ class CondensedTreeAutomatonTest {
     
     @Test
     public void testTAtoCTA() {
-        System.out.println("\nCTA from TA:")
+//        System.out.println("\nCTA from TA:")
         CondensedTreeAutomaton automaton = parseTA("q! -> f(q2) q! -> g(q2) q2! -> a");
-        System.out.println("toString BottomUp:\n" + automaton.toStringBottomUp());
-        System.out.println("toString TopDown:\n" + automaton.toString());
-        System.out.println("toString Language:\n" + automaton.language());
-        for (CondensedRule cr : automaton.getCondensedRuleSet()) {
-            System.out.println(cr.toString(automaton));
-        }
+//        System.out.println("toString BottomUp:\n" + automaton.toStringBottomUp());
+//        System.out.println("toString TopDown:\n" + automaton.toString());
+//        System.out.println("toString Language:\n" + automaton.language());
+//        for (CondensedRule cr : automaton.getCondensedRuleSet()) {
+//            System.out.println(cr.toString(automaton));
+//        }
     }
     
     @Test

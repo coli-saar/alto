@@ -39,7 +39,9 @@ public class CondensedRuleTrie {
      */
     public void put(int[] childstates, int labelSetID, CondensedRule rule) {
         put(childstates, labelSetID, rule, 0);
+        assert labelSetIDToParentStateSet.keySet().equals(labelSetIDToRules.keySet());
     }
+    
     
     /**
      * Recursive version of put.
@@ -50,13 +52,15 @@ public class CondensedRuleTrie {
      */
     private void put(int[] childstates, int labelSetID, CondensedRule rule, int index) {
         if( index == childstates.length) {
-            if (labelSetIDToRules.containsKey(labelSetID)) {
-                IntSet statesHere = labelSetIDToParentStateSet.get(labelSetID);
-                if (statesHere == null) {
-                    statesHere = new IntOpenHashSet();
-                    labelSetIDToParentStateSet.put(labelSetID, statesHere);
-                }
+            if (labelSetIDToParentStateSet.containsKey(labelSetID)) {
+                labelSetIDToParentStateSet.get(labelSetID).add(rule.getParent());
+            } else {
+                IntSet statesHere = new IntOpenHashSet();
                 statesHere.add(rule.getParent());
+                labelSetIDToParentStateSet.put(labelSetID, statesHere);
+            }
+            
+            if (labelSetIDToRules.containsKey(labelSetID)) {
                 labelSetIDToRules.get(labelSetID).add(rule);
             } else {
                 Set<CondensedRule> internalSet = new HashSet<CondensedRule>();
@@ -139,6 +143,7 @@ public class CondensedRuleTrie {
     }
     
     public IntSet getParents(int labelSetID) {
+        assert labelSetIDToParentStateSet.containsKey(labelSetID);
         return labelSetIDToParentStateSet.get(labelSetID);
     }
     

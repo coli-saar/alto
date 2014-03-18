@@ -983,15 +983,23 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param hom the homomorphism.
      * @return an automaton representing the homomorphic pre-image.
      */
-    public CondensedTreeAutomaton inverseHomomorphism(Homomorphism hom) {
+    public TreeAutomaton inverseHomomorphism(Homomorphism hom) {
         if (hom.isNonDeleting()) {
-            return new CondensedNondeletingInverseHomAutomaton<State>(this, hom);
+            return new NondeletingInverseHomAutomaton<State>(this, hom);
         } else {
-            // Bad!
-            return new CondensedNondeletingInverseHomAutomaton<State>(this, hom);
+            return new InverseHomAutomaton<State>(this, hom);
         }
     }
 
+   
+    public CondensedTreeAutomaton inverseCondensedHomomorphism(Homomorphism hom) {
+        if (hom.isNonDeleting()) {
+            return new CondensedNondeletingInverseHomAutomaton<State>(this, hom);
+        } else {
+            throw new UnsupportedOperationException("Condensed deleting Inv Hom is not implemented yet.");
+        }
+    }
+    
     /**
      * Computes the image of this automaton under a homomorphism. This will only
      * work if the homomorphism is linear.
