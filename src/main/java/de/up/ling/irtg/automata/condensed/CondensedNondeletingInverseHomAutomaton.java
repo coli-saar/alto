@@ -37,7 +37,6 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     private Homomorphism hom;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
     private IntSet labelSetsWithVariables;  // stores all the other labelsets
-    private IntSet labelsInRhsAutomaton; 
     private IntSet validLabelSetIDs;
     private Int2ObjectMap<IntSet> stateToNewLabelSetIDs; // maps a parentstate that derives no children to the coresponding labelsetids
 
@@ -104,7 +103,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         Set<CondensedRule> ret = new HashSet<CondensedRule>();
 //        System.err.println("Parent: " + getStateInterner().resolveId(parentState).toString());
         
-        // Check if this state derives a span of the lenght 0
+        // Check if this state derives a span of the length 0
         IntSet newLabelSetIDs = stateToNewLabelSetIDs.get(parentState);
         if (newLabelSetIDs != null) {
             for (int newLabelSetID : newLabelSetIDs) {
