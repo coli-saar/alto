@@ -9,7 +9,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterators;
-import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.Agenda;
 import de.saar.basic.CartesianIterator;
@@ -39,6 +38,9 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 import com.google.common.collect.Iterables;
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.hom.Homomorphism;
 
 /**
  *
@@ -47,7 +49,7 @@ import com.google.common.collect.Iterables;
 public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
     private TreeAutomaton<LeftState> left;
     private CondensedTreeAutomaton<RightState> right;
-    private static final boolean DEBUG = true;
+    private static final boolean DEBUG = false;
     private int[] labelRemap;
     private Int2IntMap stateToLeftState;
     private Int2IntMap stateToRightState;
@@ -140,7 +142,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
     private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
         if (!visited.contains(q)) {
-            System.err.println("visit: " + q + " = " + right.getStateForId(q));
+//            System.err.println("visit: " + q + " = " + right.getStateForId(q));
 
 
             visited.add(q);
@@ -325,6 +327,15 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
      * @param args
      */
     public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.ParseException {
+        if (args.length != 5) {
+            System.err.println("1. IRTG\n"
+                    + "2. Sentences\n"
+                    + "3. Interpretation\n"
+                    + "4. Output file\n"
+                    + "5. Comments");
+            System.exit(1);
+        }
+        
         String irtgFilename = args[0];
         String sentencesFilename = args[1];
         String interpretation = args[2];
@@ -334,14 +345,19 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
         System.err.print("Reading the IRTG...");
         timestamp[0] = System.nanoTime();
+        
         InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(new File(irtgFilename)));
+        Interpretation interp = irtg.getInterpretation(interpretation);
+        Homomorphism hom = interp.getHomomorphism();
+        Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
+        
         timestamp[1] = System.nanoTime();
         System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
         try {
             FileWriter outstream;
             outstream = new FileWriter(outputFile);
             BufferedWriter out = new BufferedWriter(outstream);
-            out.write("Testing IntersectionAutomaton...\n"
+            out.write("Testing IntersectionAutomaton with condensed intersectio ...\n"
                     + "IRTG-File  : " + irtgFilename + "\n"
                     + "Input-File : " + sentencesFilename + "\n"
                     + "Output-File: " + outputFile + "\n"
@@ -359,10 +375,11 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     ++sentences;
                     System.err.println("Current sentence: " + sentence);
                     timestamp[2] = System.nanoTime();
-                    Map<String, Object> parseInput = new HashMap<String, Object>(1);
-                    Object words = irtg.parseString(interpretation, sentence);
-                    parseInput.put(interpretation, words);
-                    TreeAutomaton chart = irtg.parseInputObjects(parseInput);
+                    
+                    TreeAutomaton decomp = alg.decompose(alg.parseString(sentence));
+                    CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(hom);
+                    TreeAutomaton<String> result = irtg.getAutomaton().intersectCondensed(inv);
+                    
                     timestamp[3] = System.nanoTime();
 
                     System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");

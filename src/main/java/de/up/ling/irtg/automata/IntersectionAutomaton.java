@@ -9,12 +9,34 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import de.saar.basic.Agenda;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.IrtgParser;
+import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.hom.Homomorphism;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.*;
 
 /**
@@ -26,9 +48,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
     private static final boolean DEBUG = false;
+    private static final boolean NOISY = false; // more detailed debugging
     private int[] labelRemap;
     private Int2IntMap stateToLeftState;
     private Int2IntMap stateToRightState;
+    private long[] ckyTimestamp = new long[10];
 
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
@@ -62,9 +86,298 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         return left.isBottomUpDeterministic() && right.isBottomUpDeterministic();
     }
 
+    private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners){
+        if (!visited.contains(q)) {
+            visited.add(q);
+            for (int label : right.getLabelsTopDown(q)) {
+                for (Rule rightRule : right.getRulesTopDown(label, q)) {
+    
+   
+                    // seperate between rules for terminals (arity == 0) and other rules
+                    ckyTimestamp[4] += System.nanoTime();
+                    if (rightRule.getArity() == 0) {
+                        // get all terminal rules in the left automaton that have the same label as the rule from the right one.
+    
+                        // make rule pairs and store them.
+                        for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0])) {
+//                            System.err.println("consider leftrule:  " + leftRule.toString(left));
+    
+                            Rule rule = combineRules(leftRule, rightRule);
+                            storeRule(rule);
+                            partners.put(rightRule.getParent(), leftRule.getParent());
+                            //  System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                        }
+                    } else {
+                        // all other rules
+                        int[] children = rightRule.getChildren();
+                        List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                        // iterate over all children in the right rule
+                        for (int i = 0; i < rightRule.getArity(); ++i) {
+                            // RECURSION! 
+                            ckyDfsForStatesInBottomUpOrder(children[i], visited, partners);
+                            // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
+                            remappedChildren.add(partners.get(children[i]));
+                        }
+                        
+                        CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
+                        while (it.hasNext()) {
+                            // get all rules from the left automaton, where the rhs is the rhs of the current rule.
+                            for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), it.next())) {
+//                                System.err.println("consider leftrule:  " + leftRule.toString(left));
+
+                                Rule rule = combineRules(leftRule, rightRule);
+                                storeRule(rule);
+                                partners.put(rightRule.getParent(), leftRule.getParent());
+                                // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                            }
+                        }
+                    }
+                    ckyTimestamp[5] += System.nanoTime();
+                }
+            }
+        }
+    }
+    
+    private void ckyDfsForStatesInBottomUpOrderGuava(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
+        if (!visited.contains(q)) {
+            visited.add(q);
+            for (int label : right.getLabelsTopDown(q)) {
+                for (Rule rightRule : right.getRulesTopDown(label, q)) {
+
+//                    System.err.println("consider rightrule: " + rightRule.toString(right));
+
+                    // seperate between rules for terminals (arity == 0) and other rules
+                    ckyTimestamp[4] += System.nanoTime();
+                    if (rightRule.getArity() == 0) {
+                        // get all terminal rules in the left automaton that have the same label as the rule from the right one.
+
+                        // make rule pairs and store them.
+                        for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0])) {
+//                            System.err.println("consider leftrule:  " + leftRule.toString(left));
+
+                            Rule rule = combineRules(leftRule, rightRule);
+                            storeRule(rule);
+                            partners.put(rightRule.getParent(), leftRule.getParent());
+                            //  System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                        }
+                    } else {
+                        // all other rules
+                        int[] children = rightRule.getChildren();
+                        List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                        // iterate over all children in the right rule
+                        for (int i = 0; i < rightRule.getArity(); ++i) {
+                            // RECURSION! 
+                            ckyDfsForStatesInBottomUpOrder(children[i], visited, partners);
+                            // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
+                            remappedChildren.add(partners.get(children[i]));
+                        }
+
+                        for (List<Integer> rhs : Sets.cartesianProduct(remappedChildren)) {
+                            for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), rhs)) {
+//                                System.err.println("consider leftrule:  " + leftRule.toString(left));
+
+                                Rule rule = combineRules(leftRule, rightRule);
+                                storeRule(rule);
+                                partners.put(rightRule.getParent(), leftRule.getParent());
+                                // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                            }
+                        }
+                    }
+                    ckyTimestamp[5] += System.nanoTime();
+                }
+            }
+        }
+    }
+    
+    private void ckyDfsForStatesInBottomUpOrderIterator(Integer q, Set<Integer> visited, Int2ObjectOpenHashMap<IntSet> partners){
+        if (!visited.contains(q)) {
+            visited.add(q);
+            for (int label : right.getLabelsTopDown(q)) {
+                for (Rule rightRule : right.getRulesTopDown(label, q)) {
+                    
+//                    System.err.println("consider rightrule: " + rightRule.toString(right));
+
+                    // seperate between rules for terminals (arity == 0) and other rules
+                    ckyTimestamp[4] += System.nanoTime();
+                    if (rightRule.getArity() == 0) {
+                        // get all terminal rules in the left automaton that have the same label as the rule from the right one.
+
+                        // make rule pairs and store them.
+                        for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0])) {
+//                            System.err.println("consider leftrule:  " + leftRule.toString(left));
+
+                            Rule rule = combineRules(leftRule, rightRule);
+                            storeRule(rule);
+                            if (!partners.containsKey(rightRule.getParent())) {
+                                IntSet partnerSet = new IntArraySet();
+                                partnerSet.add(leftRule.getParent());
+                                partners.put(rightRule.getParent(), partnerSet);
+                            } else {
+                                partners.get(rightRule.getParent()).add(leftRule.getParent());
+                            }
+                            //  System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                        }
+                    } else {
+                        // Trying to work directly with the iterators instead of making a cartesian product
+                        // Disadvantage: Requires a binarized grammar
+                        assert rightRule.getArity() == 2;
+                        int rhs1 = rightRule.getChildren()[0];
+                        int rhs2 = rightRule.getChildren()[1];
+                        ckyDfsForStatesInBottomUpOrderIterator(rhs1, visited, partners);
+                        ckyDfsForStatesInBottomUpOrderIterator(rhs2, visited, partners);                   
+                        
+                        if (partners.containsKey(rhs1) && partners.containsKey(rhs2)) {
+                            IntIterator it1 = partners.get(rhs1).iterator();
+
+                            
+                            int[] childStates = new int[2];
+                            // The first symbol
+                            while (it1.hasNext()) {
+                                childStates[0] = it1.nextInt();
+                                IntIterator it2 = partners.get(rhs2).iterator();
+
+                                while (it2.hasNext()) {
+                                    childStates[1] = it2.nextInt();
+                                    for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), childStates)) {
+//                                            System.err.println("consider leftrule:  " + leftRule.toString(left));
+                                        Rule rule = combineRules(leftRule, rightRule);
+                                        storeRule(rule);
+                                        if (!partners.containsKey(rightRule.getParent())) {
+                                            IntSet partnerSet = new IntArraySet();
+                                            partnerSet.add(leftRule.getParent());
+                                            partners.put(rightRule.getParent(), partnerSet);
+                                        } else {
+                                            partners.get(rightRule.getParent()).add(leftRule.getParent());
+                                        }
+                                        // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ckyTimestamp[5] += System.nanoTime();
+                }
+            }
+        }
+    }
+
+    
+    public void makeAllRulesExplicitCKY() {
+        if (!isExplicit) {
+            ckyTimestamp[0] = System.nanoTime();
+            isExplicit = true;
+            
+            int[] oldLabelRemap = labelRemap;
+            labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
+            SetMultimap<Integer, Integer> partners = HashMultimap.create();
+            Int2ObjectOpenHashMap<IntSet> partners2 = new Int2ObjectOpenHashMap<IntSet>();
+            
+            ckyTimestamp[1]= System.nanoTime();
+            
+            // Perform a DFS in the right automaton to find all partner states
+            Set<Integer> visited = new HashSet<Integer>();
+            for (Integer q : right.getFinalStates()) {
+                ckyDfsForStatesInBottomUpOrderIterator(q, visited, partners2);
+//                ckyDfsForStatesInBottomUpOrderGuava(q, visited, partners);
+//                ckyDfsForStatesInBottomUpOrder(q, visited, partners);
+            }
+
+            // force recomputation of final states
+            finalStates = null;
+            
+            ckyTimestamp[2] = System.nanoTime();
+            
+            if (DEBUG) {
+                for (int i = 1; i < ckyTimestamp.length; i++) {
+                    if (ckyTimestamp[i] != 0 && ckyTimestamp[i-1] != 0) {
+                        System.err.println("CKY runtime " + (i - 1) + " ??? " + i + ": "
+                                + (ckyTimestamp[i] - ckyTimestamp[i - 1]) / 1000000 + "ms");
+                    }
+                }
+                System.err.println("Intersection automaton CKY:\n" + toString());
+            }
+            labelRemap = oldLabelRemap;
+        }
+    }  
+    
+    
+    public void makeAllRulesExplicitCKYOld() {
+        if (!isExplicit) {
+
+            double t1 = System.nanoTime();
+
+            isExplicit = true;
+            int[] oldLabelRemap = labelRemap;
+            labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
+            SetMultimap<Integer, Integer> partners = HashMultimap.create();
+            int iterations = 0;
+
+            double t2 = System.nanoTime();
+
+            // iterate over all states + label
+            for (Integer state : right.getStatesInBottomUpOrder()) {
+                for (Integer label : right.getLabelsTopDown(state)) {
+                    // iterate over all rules for the current state+label 
+                    for (Rule rightRule : right.getRulesTopDown(label, state)) {
+                        ++iterations;
+                        // seperate between rules for terminals (arity == 0) and other rules
+                        if (rightRule.getArity() == 0) {
+                            // get all terminal rules in the left automaton that have the same label as the rule from the right one.
+
+                            // make rule pairs and store them.
+                            for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0])) {
+                                Rule rule = combineRules(leftRule, rightRule);
+                                storeRule(rule);
+                                partners.put(rightRule.getParent(), leftRule.getParent());
+                                //                            System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                            }
+                        } else {
+                            // all other rules
+                            int[] children = rightRule.getChildren();
+                            List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                            // iterate over all children in the right rule
+                            for (int i = 0; i < rightRule.getArity(); ++i) {
+                                // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
+                                remappedChildren.add(partners.get(children[i]));
+                            }
+                            CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
+                            while (it.hasNext()) {
+                                // get all rules from the left automaton, where the rhs is the rhs of the current rule.
+                                for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), it.next())) {
+                                    Rule rule = combineRules(leftRule, rightRule);
+                                    storeRule(rule);
+                                    partners.put(rightRule.getParent(), leftRule.getParent());
+                                    //                                System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // force recomputation of final states: if we printed any rule within the
+            // intersection algorithm (for debugging purposes), then finalStates will have
+            // a value at this point, which is based on an incomplete set of rules and
+            // therefore wrong
+            finalStates = null;
+
+            double t3 = System.nanoTime();
+
+            if (DEBUG) {
+                System.err.println("Runtime - Total: " + (t3 - t1) / 1000000);
+                System.err.println("Runtime - 1      " + (t2 - t1) / 1000000);
+                System.err.println("Runtime - 2      " + (t3 - t2) / 1000000);
+                System.err.println("Intersection automaton:\n" + toString());
+            }
+            labelRemap = oldLabelRemap;
+        }
+    }
+
+
     // bottom-up intersection algorithm 
     @Override
     public void makeAllRulesExplicit() {
+        makeAllRulesExplicitCKY();
         if (!isExplicit) {
             isExplicit = true;
 
@@ -495,4 +808,82 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            return hashCode;
 //        }
     }
+    /**
+     * Arg1: IRTG Grammar Arg2: List of Sentences Arg3: Interpretation to parse
+     * Arg4: Outputfile Arg5: Comments
+     *
+     * @param args
+     */
+    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.ParseException {
+        if (args.length != 5) {
+            System.err.println("1. IRTG\n"
+                    + "2. Sentences\n"
+                    + "3. Interpretation\n"
+                    + "4. Output file\n"
+                    + "5. Comments");
+            System.exit(1);
+        }
+        
+        String irtgFilename = args[0];
+        String sentencesFilename = args[1];
+        String interpretation = args[2];
+        String outputFile = args[3];
+        String comments = args[4];
+        long[] timestamp = new long[5];
+
+        System.err.print("Reading the IRTG...");
+        timestamp[0] = System.nanoTime();
+
+        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(new File(irtgFilename)));
+        Interpretation interp = irtg.getInterpretation(interpretation);
+        Homomorphism hom = interp.getHomomorphism();
+        Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
+        
+        timestamp[1] = System.nanoTime();
+        System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
+        try {
+            FileWriter outstream;
+            outstream = new FileWriter(outputFile);
+            BufferedWriter out = new BufferedWriter(outstream);
+            out.write("Testing IntersectionAutomaton with old intersection...\n"
+                    + "IRTG-File  : " + irtgFilename + "\n"
+                    + "Input-File : " + sentencesFilename + "\n"
+                    + "Output-File: " + outputFile + "\n"
+                    + "Comments   : " + comments + "\n\n"
+                    + "IRTG read  : " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms\n");
+            out.flush();
+            try {
+                FileInputStream instream = new FileInputStream(new File(sentencesFilename));
+                DataInputStream in = new DataInputStream(instream);
+                BufferedReader br = new BufferedReader(new InputStreamReader(in));
+                String sentence;
+                int times = 0;
+                int sentences = 0;
+
+                while ((sentence = br.readLine()) != null) {
+                    ++sentences;
+                    System.err.println("Current sentence: " + sentence);
+                    timestamp[2] = System.nanoTime();
+               
+                    TreeAutomaton decomp = alg.decompose(alg.parseString(sentence));
+                    CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(hom);
+                    TreeAutomaton<String> result = irtg.getAutomaton().intersect(inv);
+
+                    timestamp[3] = System.nanoTime();
+
+                    System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
+                    outstream.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
+                    times += (timestamp[3] - timestamp[2]) / 1000000;
+                    outstream.flush();
+                }
+                outstream.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");
+            } catch (IOException ex) {
+                System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
+            }
+        } catch (Exception ex) {
+            System.out.println("Error while writing to file:" + ex.getMessage());
+        }
+
+    }
+    
 }
