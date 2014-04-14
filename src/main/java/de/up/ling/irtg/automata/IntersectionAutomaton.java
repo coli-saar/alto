@@ -6,7 +6,6 @@ package de.up.ling.irtg.automata;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
@@ -86,22 +85,22 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         return left.isBottomUpDeterministic() && right.isBottomUpDeterministic();
     }
 
-    private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners){
+    private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
         if (!visited.contains(q)) {
             visited.add(q);
             for (int label : right.getLabelsTopDown(q)) {
                 for (Rule rightRule : right.getRulesTopDown(label, q)) {
-    
-   
+
+
                     // seperate between rules for terminals (arity == 0) and other rules
                     ckyTimestamp[4] += System.nanoTime();
                     if (rightRule.getArity() == 0) {
                         // get all terminal rules in the left automaton that have the same label as the rule from the right one.
-    
+
                         // make rule pairs and store them.
                         for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0])) {
 //                            System.err.println("consider leftrule:  " + leftRule.toString(left));
-    
+
                             Rule rule = combineRules(leftRule, rightRule);
                             storeRule(rule);
                             partners.put(rightRule.getParent(), leftRule.getParent());
@@ -113,12 +112,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                         List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
                         // iterate over all children in the right rule
                         for (int i = 0; i < rightRule.getArity(); ++i) {
-                            // RECURSION! 
+                            // RECURSION!
                             ckyDfsForStatesInBottomUpOrder(children[i], visited, partners);
                             // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
                             remappedChildren.add(partners.get(children[i]));
                         }
-                        
+
                         CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
                         while (it.hasNext()) {
                             // get all rules from the left automaton, where the rhs is the rhs of the current rule.
@@ -137,7 +136,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
         }
     }
-    
+
     private void ckyDfsForStatesInBottomUpOrderGuava(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
         if (!visited.contains(q)) {
             visited.add(q);
@@ -166,7 +165,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                         List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
                         // iterate over all children in the right rule
                         for (int i = 0; i < rightRule.getArity(); ++i) {
-                            // RECURSION! 
+                            // RECURSION!
                             ckyDfsForStatesInBottomUpOrder(children[i], visited, partners);
                             // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
                             remappedChildren.add(partners.get(children[i]));
@@ -188,13 +187,13 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
         }
     }
-    
-    private void ckyDfsForStatesInBottomUpOrderIterator(Integer q, Set<Integer> visited, Int2ObjectOpenHashMap<IntSet> partners){
+
+    private void ckyDfsForStatesInBottomUpOrderIterator(Integer q, Set<Integer> visited, Int2ObjectOpenHashMap<IntSet> partners) {
         if (!visited.contains(q)) {
             visited.add(q);
             for (int label : right.getLabelsTopDown(q)) {
                 for (Rule rightRule : right.getRulesTopDown(label, q)) {
-                    
+
 //                    System.err.println("consider rightrule: " + rightRule.toString(right));
 
                     // seperate between rules for terminals (arity == 0) and other rules
@@ -224,12 +223,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                         int rhs1 = rightRule.getChildren()[0];
                         int rhs2 = rightRule.getChildren()[1];
                         ckyDfsForStatesInBottomUpOrderIterator(rhs1, visited, partners);
-                        ckyDfsForStatesInBottomUpOrderIterator(rhs2, visited, partners);                   
-                        
+                        ckyDfsForStatesInBottomUpOrderIterator(rhs2, visited, partners);
+
                         if (partners.containsKey(rhs1) && partners.containsKey(rhs2)) {
                             IntIterator it1 = partners.get(rhs1).iterator();
 
-                            
+
                             int[] childStates = new int[2];
                             // The first symbol
                             while (it1.hasNext()) {
@@ -261,19 +260,18 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         }
     }
 
-    
     public void makeAllRulesExplicitCKY() {
         if (!isExplicit) {
             ckyTimestamp[0] = System.nanoTime();
             isExplicit = true;
-            
+
             int[] oldLabelRemap = labelRemap;
             labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
             SetMultimap<Integer, Integer> partners = HashMultimap.create();
             Int2ObjectOpenHashMap<IntSet> partners2 = new Int2ObjectOpenHashMap<IntSet>();
-            
-            ckyTimestamp[1]= System.nanoTime();
-            
+
+            ckyTimestamp[1] = System.nanoTime();
+
             // Perform a DFS in the right automaton to find all partner states
             Set<Integer> visited = new HashSet<Integer>();
             for (Integer q : right.getFinalStates()) {
@@ -284,12 +282,12 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
             // force recomputation of final states
             finalStates = null;
-            
+
             ckyTimestamp[2] = System.nanoTime();
-            
+
             if (DEBUG) {
                 for (int i = 1; i < ckyTimestamp.length; i++) {
-                    if (ckyTimestamp[i] != 0 && ckyTimestamp[i-1] != 0) {
+                    if (ckyTimestamp[i] != 0 && ckyTimestamp[i - 1] != 0) {
                         System.err.println("CKY runtime " + (i - 1) + " ??? " + i + ": "
                                 + (ckyTimestamp[i] - ckyTimestamp[i - 1]) / 1000000 + "ms");
                     }
@@ -298,9 +296,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
             labelRemap = oldLabelRemap;
         }
-    }  
-    
-    
+    }
+
     public void makeAllRulesExplicitCKYOld() {
         if (!isExplicit) {
 
@@ -317,7 +314,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             // iterate over all states + label
             for (Integer state : right.getStatesInBottomUpOrder()) {
                 for (Integer label : right.getLabelsTopDown(state)) {
-                    // iterate over all rules for the current state+label 
+                    // iterate over all rules for the current state+label
                     for (Rule rightRule : right.getRulesTopDown(label, state)) {
                         ++iterations;
                         // seperate between rules for terminals (arity == 0) and other rules
@@ -373,11 +370,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         }
     }
 
-
-    // bottom-up intersection algorithm 
+    // bottom-up intersection algorithm
     @Override
     public void makeAllRulesExplicit() {
-        makeAllRulesExplicitCKY();
+//        makeAllRulesExplicitCKY();
         if (!isExplicit) {
             isExplicit = true;
 
@@ -414,7 +410,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            System.err.println("after init: " + explicitRules.size());
 //            System.err.println(explicitRulesToString());
 
-            // compute rules and states bottom-up 
+            // compute rules and states bottom-up
             long unsuccessful = 0;
             long iterations = 0;
             while (!agenda.isEmpty()) {
@@ -537,7 +533,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
         return getRulesBottomUpFromExplicit(label, childStates);
 
-//        
+//
 //
 ////        System.err.println("grbu " + getSignature().resolveSymbolId(label) + ", children=" + childStates);
 //
@@ -808,6 +804,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            return hashCode;
 //        }
     }
+
     /**
      * Arg1: IRTG Grammar Arg2: List of Sentences Arg3: Interpretation to parse
      * Arg4: Outputfile Arg5: Comments
@@ -823,7 +820,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     + "5. Comments");
             System.exit(1);
         }
-        
+
         String irtgFilename = args[0];
         String sentencesFilename = args[1];
         String interpretation = args[2];
@@ -838,7 +835,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         Interpretation interp = irtg.getInterpretation(interpretation);
         Homomorphism hom = interp.getHomomorphism();
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
-        
+
         timestamp[1] = System.nanoTime();
         System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
         try {
@@ -864,7 +861,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                     ++sentences;
                     System.err.println("Current sentence: " + sentence);
                     timestamp[2] = System.nanoTime();
-               
+
                     TreeAutomaton decomp = alg.decompose(alg.parseString(sentence));
                     CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(hom);
                     TreeAutomaton<String> result = irtg.getAutomaton().intersect(inv);
@@ -885,5 +882,4 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         }
 
     }
-    
 }
