@@ -116,9 +116,12 @@ public class Homomorphism {
     // Creates a new labelSet for a new label and returns the labelSetID
     private int createNewLabelSet(int label) {
         IntSet labelSet = new IntOpenHashSet();
-        int labelSetID = labelSetInterner.addObject(labelSet);
         labelSet.add(label);
+
+        int labelSetID = labelSetInterner.addObject(labelSet);
+        
         if (debug) System.err.println("labelSetID = " + labelSetID);
+        
         return labelSetID;
     }
     /**

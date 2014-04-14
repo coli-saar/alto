@@ -211,7 +211,8 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         makeAllRulesCondensedExplicit();
         
         if (topDownRules.containsKey(parentState)) {
-            return Iterables.concat(topDownRules.get(parentState).values());
+            return new ConcatenatedIterable<CondensedRule>(topDownRules.get(parentState).values());            
+//            return Iterables.concat(topDownRules.get(parentState).values());
         } else return new ArrayList<CondensedRule>();
     }   
     

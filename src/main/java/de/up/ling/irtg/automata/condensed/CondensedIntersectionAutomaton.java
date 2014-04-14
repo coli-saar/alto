@@ -147,7 +147,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     // of the left autonatom. But for this, the left automaton must be explicit! //TODO
 
 //                     iterate over all rules by concating the single iterators over rules with different labels
-                    Iterable<Rule> itLeftRules = Iterables.concat(
+                    Iterable<Rule> itLeftRules = new ConcatenatedIterable<Rule>(
                             Iterables.transform(rightRule.getLabels(right),
                             new Function<Integer, Iterable<Rule>>() {
                         @Override
