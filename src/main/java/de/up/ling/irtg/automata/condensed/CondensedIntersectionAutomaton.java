@@ -55,7 +55,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         this.left = left;
         this.right = right;
 
-
 //        System.err.println("~~~~~~~~~~~~LEFT~~~~~~~~~~~~~~");
 //        System.err.println(left.toString());
 //
@@ -69,9 +68,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 //
 //        System.err.println("right interner: " + right.stateInterner);
 //        System.err.println("condensed-right interner: " + condensedRight.stateInterner);
-
-
-
         stateToLeftState = new Int2IntOpenHashMap();
         stateToRightState = new Int2IntOpenHashMap();
 
@@ -136,7 +132,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         if (!visited.contains(q)) {
 //            System.err.println("visit: " + q + " = " + right.getStateForId(q));
 
-
             visited.add(q);
             for (CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
 //                System.err.println("\nconsider rightrule:  " + rightRule.toString(condensedRight));
@@ -146,52 +141,53 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     // could be implemented with a single call that has the set of values as an argument and that finds the rules within the internal datastructures
                     // of the left autonatom. But for this, the left automaton must be explicit! //TODO
 
-//                     iterate over all rules by concating the single iterators over rules with different labels
+                    // create iterator over rules for all labels in the (condensed) rightRule
                     Iterable<Rule> itLeftRules = new ConcatenatedIterable<Rule>(
                             Iterables.transform(rightRule.getLabels(right),
-                            new Function<Integer, Iterable<Rule>>() {
-                        @Override
-                        public Iterable<Rule> apply(Integer f) {
-                            return left.getRulesBottomUp(remapLabel(f), new int[0]);
-                        }
-                    }));
-//                    Set<Rule> leftRules = new HashSet<Rule>();
-//                    for (int label : rightRule.getLabels()) {
-//                        for (Rule r : left.getRulesBottomUp(remapLabel(label), new int[0])) {
-//                            leftRules.add(r);
-//                        }
-//                    }
+                                    new Function<Integer, Iterable<Rule>>() {
+                                        @Override
+                                        public Iterable<Rule> apply(Integer f) {
+                                            return left.getRulesBottomUp(remapLabel(f), new int[0]);
+                                        }
+                                    }));
+
                     for (Rule leftRule : itLeftRules) {
-//                        System.err.println("consider leftrule:  " + leftRule.toString(left));
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
                         partners.put(rightRule.getParent(), leftRule.getParent());
                     }
                 } else {
                     // all other rules
-                    Long id = System.nanoTime();
-//                    System.err.println("{["+id.hashCode()+"]");
                     int[] children = rightRule.getChildren();
                     List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+
                     // iterate over all children in the right rule
                     for (int i = 0; i < rightRule.getArity(); ++i) {
-                        // RECURSION!
                         ckyDfsForStatesInBottomUpOrder(children[i], visited, partners);
+
                         // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
                         remappedChildren.add(partners.get(children[i]));
                     }
-//                    System.err.println("}["+id.hashCode()+"]");
+
+                    for (int leftParent : left.getAllStates()) {
+                        for (int rightLabel : rightRule.getLabels(right)) {
+                            for (Rule leftRule : left.getRulesTopDown(leftParent, remapLabel(rightLabel))) {
+
+                            }
+                        }
+                    }
+
                     final CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
                     while (it.hasNext()) {
                         // iterate over all rules by concating the single iterators over rules with different labels
                         Iterable<Rule> itLeftRules = Iterables.concat(
                                 Iterables.transform(rightRule.getLabels(right),
-                                new Function<Integer, Iterable<Rule>>() {
-                            @Override
-                            public Iterable<Rule> apply(Integer f) {
-                                return left.getRulesBottomUp(remapLabel(f), it.next());
-                            }
-                        }));
+                                        new Function<Integer, Iterable<Rule>>() {
+                                            @Override
+                                            public Iterable<Rule> apply(Integer f) {
+                                                return left.getRulesBottomUp(remapLabel(f), it.next());
+                                            }
+                                        }));
 
                         for (Rule leftRule : itLeftRules) {
 //                                System.err.println("consider leftrule:  " + leftRule.toString(left));
@@ -256,7 +252,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
 //            System.err.println("left final states: " + left.getFinalStates() + " = " + left.stateInterner.resolveIds(left.getFinalStates()));
 //            System.err.println("right final states: " + right.getFinalStates() + " = " + right.stateInterner.resolveIds(right.getFinalStates()));
-
             finalStates = new IntOpenHashSet();
             collectStatePairs(left.getFinalStates(), right.getFinalStates(), finalStates);
         }
@@ -270,7 +265,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         stateSets.add(rightStates);
 
 //        System.err.println("known states: " + stateInterner.getKnownObjects());
-
         CartesianIterator<Integer> it = new CartesianIterator(stateSets);
         while (it.hasNext()) {
             List<Integer> states = it.next();
