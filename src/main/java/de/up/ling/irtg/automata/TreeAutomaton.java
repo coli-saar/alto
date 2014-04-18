@@ -17,6 +17,7 @@ import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -47,7 +48,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 
 /**
  * A finite tree automaton. Objects of this class can be simultaneously seen as
@@ -634,7 +634,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 return new Pair<Double, Rule>(rule.getWeight(), rule);
             }
         });
-
+            
         // find final state with highest weight
         int bestFinalState = 0;
         double weightBestFinalState = Double.POSITIVE_INFINITY;
@@ -651,20 +651,23 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 }
             }
         }
-
         // extract best tree from backpointers
         return extractTreeFromViterbi(bestFinalState, map);
     }
 
     private Tree<String> extractTreeFromViterbi(int state, Map<Integer, Pair<Double, Rule>> map) {
-        Rule backpointer = map.get(state).right;
-        List<Tree<String>> childTrees = new ArrayList<Tree<String>>();
+        if (map.containsKey(state)) {
+            Rule backpointer = map.get(state).right;
+            List<Tree<String>> childTrees = new ArrayList<Tree<String>>();
 
-        for (int child : backpointer.getChildren()) {
-            childTrees.add(extractTreeFromViterbi(child, map));
+            for (int child : backpointer.getChildren()) {
+                childTrees.add(extractTreeFromViterbi(child, map));
+            }
+
+            return Tree.create(getSignature().resolveSymbolId(backpointer.getLabel()), childTrees);
         }
-
-        return Tree.create(getSignature().resolveSymbolId(backpointer.getLabel()), childTrees);
+        return Tree.create(""); // create empty tree, if language is empty. //TODO is this the correct output value?
+        
     }
 
     /**

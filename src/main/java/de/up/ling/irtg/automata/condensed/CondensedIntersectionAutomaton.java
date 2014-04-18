@@ -5,9 +5,7 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.base.Function;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
@@ -20,7 +18,10 @@ import de.up.ling.irtg.automata.condensed.ParseException;
 import de.up.ling.irtg.hom.Homomorphism;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -99,14 +100,13 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
             int[] oldLabelRemap = labelRemap;
             labelRemap = right.getSignature().remap(left.getSignature());
-            SetMultimap<Integer, Integer> partners = HashMultimap.create();
-//            Int2ObjectOpenHashMap<IntSet> partners2 = new Int2ObjectOpenHashMap<IntSet>();
+            Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<IntSet>();
 
             ckyTimestamp[1] = System.nanoTime();
 
             // Perform a DFS in the right automaton to find all partner states
-            Set<Integer> visited = new HashSet<Integer>();
-            for (Integer q : right.getFinalStates()) {
+            IntSet visited = new IntOpenHashSet();
+            for (int q : right.getFinalStates()) {
                 ckyDfsForStatesInBottomUpOrder(q, visited, partners);
             }
 
@@ -128,7 +128,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         }
     }
 
-    private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
+    private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, Int2ObjectMap<IntSet> partners) {
         if (!visited.contains(q)) {
 //            System.err.println("visit: " + q + " = " + right.getStateForId(q));
 
@@ -150,32 +150,44 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                                             return left.getRulesBottomUp(remapLabel(f), new int[0]);
                                         }
                                     }));
-
+                    
+                    // Add partners
                     for (Rule leftRule : itLeftRules) {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
-                        partners.put(rightRule.getParent(), leftRule.getParent());
+                        
+                        if (partners.containsKey(rightRule.getParent())) {
+                            partners.get(rightRule.getParent()).add(leftRule.getParent());
+                        } else {
+                            IntSet insert = new IntOpenHashSet();
+                            insert.add(leftRule.getParent());
+                            partners.put(rightRule.getParent(), insert);
+                        }
+                        
                     }
                 } else {
                     // all other rules
                     int[] children = rightRule.getChildren();
-                    List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                    List<IntSet> remappedChildren = new ArrayList<IntSet>();
 
                     // iterate over all children in the right rule
                     for (int i = 0; i < rightRule.getArity(); ++i) {
                         ckyDfsForStatesInBottomUpOrder(children[i], visited, partners);
 
                         // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
-                        remappedChildren.add(partners.get(children[i]));
-                    }
-
-                    for (int leftParent : left.getAllStates()) {
-                        for (int rightLabel : rightRule.getLabels(right)) {
-                            for (Rule leftRule : left.getRulesTopDown(leftParent, remapLabel(rightLabel))) {
-
-                            }
+                        IntSet states = partners.get(children[i]);
+                        if (states != null) {
+                            remappedChildren.add(states);
                         }
                     }
+
+//                    for (int leftParent : left.getAllStates()) {
+//                        for (int rightLabel : rightRule.getLabels(right)) {
+//                            for (Rule leftRule : left.getRulesTopDown(leftParent, remapLabel(rightLabel))) {
+//
+//                            }
+//                        }
+//                    }
 
                     final CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
                     while (it.hasNext()) {
@@ -194,7 +206,16 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
                             Rule rule = combineRules(leftRule, rightRule);
                             storeRule(rule);
-                            partners.put(rightRule.getParent(), leftRule.getParent());
+
+                            // Add partners
+                            if (partners.containsKey(rightRule.getParent())) {
+                                partners.get(rightRule.getParent()).add(leftRule.getParent());
+                            } else {
+                                IntSet insert = new IntOpenHashSet();
+                                insert.add(leftRule.getParent());
+                                partners.put(rightRule.getParent(), insert);
+                            }
+                            
                             // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                         }
                     }
@@ -247,7 +268,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     public Set<Integer> getFinalStates() {
         if (finalStates == null) {
 //            System.err.println("compute final states");
-
             getAllStates(); // initialize data structure for addState
 
 //            System.err.println("left final states: " + left.getFinalStates() + " = " + left.stateInterner.resolveIds(left.getFinalStates()));
@@ -335,20 +355,24 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         Interpretation interp = irtg.getInterpretation(interpretation);
         Homomorphism hom = interp.getHomomorphism();
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
-
+        
         timestamp[1] = System.nanoTime();
         System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
         try {
-            FileWriter outstream;
-            outstream = new FileWriter(outputFile);
+            File oFile = new File(outputFile);
+            System.err.println("Can write to file? " + oFile.canWrite());
+            FileWriter outstream = new FileWriter(oFile);
             BufferedWriter out = new BufferedWriter(outstream);
             out.write("Testing IntersectionAutomaton with condensed intersectio ...\n"
                     + "IRTG-File  : " + irtgFilename + "\n"
                     + "Input-File : " + sentencesFilename + "\n"
                     + "Output-File: " + outputFile + "\n"
                     + "Comments   : " + comments + "\n\n");
-            out.flush();
+          //  out.flush();
+            System.err.println("Can write to file? " + oFile.canWrite());
+
             try {
+
                 FileInputStream instream = new FileInputStream(new File(sentencesFilename));
                 DataInputStream in = new DataInputStream(instream);
                 BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -364,22 +388,37 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     TreeAutomaton decomp = alg.decompose(alg.parseString(sentence));
                     CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(hom);
                     TreeAutomaton<String> result = irtg.getAutomaton().intersectCondensed(inv);
+                    
+                    if (!result.getFinalStates().isEmpty()) {
+                        System.err.println("Language:\n" + result.language().toString());
+                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
+                    }
+
 
                     timestamp[3] = System.nanoTime();
 
                     System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
-                    out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
-                    out.flush();
+                    outstream.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
+//                    out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;
                 }
-                out.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");
-                out.flush();
+                outstream.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");
+//                out.flush();
             } catch (IOException ex) {
                 System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
             }
         } catch (Exception ex) {
-            System.out.println("Error while writing to file:" + ex.getMessage());
+            System.out.println("Error while writing to file:" + ex.getMessage() + "\n" + stackTraceToString(ex.getStackTrace()));
         }
 
+    }
+    
+    public static String stackTraceToString(StackTraceElement[] elements) {
+        StringBuilder sb = new StringBuilder();
+        for (StackTraceElement element : elements) {
+            sb.append(element.toString());
+            sb.append("\n");
+        }
+        return sb.toString();
     }
 }
