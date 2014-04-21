@@ -4,9 +4,7 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
@@ -16,11 +14,11 @@ import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.*;
-import de.up.ling.irtg.automata.condensed.ParseException;
 import de.up.ling.irtg.hom.Homomorphism;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -105,8 +103,8 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
             ckyTimestamp[1] = System.nanoTime();
 
             // Perform a DFS in the right automaton to find all partner states
-            Set<Integer> visited = new HashSet<Integer>();
-            for (Integer q : right.getFinalStates()) {
+            IntSet visited = new IntOpenHashSet();
+            for (int q : right.getFinalStates()) {
                 ckyDfsForStatesInBottomUpOrder(q, visited, partners);
             }
 
@@ -128,6 +126,31 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         }
     }
 
+    private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, SetMultimap<Integer, Integer> partners) {
+        if (!visited.contains(q)) {
+            visited.add(q);
+            for (CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
+                int[] rightChildren = rightRule.getChildren();
+                List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+
+                // iterate over all children in the right rule
+                for (int i = 0; i < rightRule.getArity(); ++i) {
+                    ckyDfsForStatesInBottomUpOrder(rightChildren[i], visited, partners);
+
+                    // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
+                    remappedChildren.add(partners.get(rightChildren[i]));
+                }
+
+                for (Rule leftRule : left.getRulesBottomUpForSets(rightRule.getLabels(right), remappedChildren, labelRemap)) {
+                    Rule rule = combineRules(leftRule, rightRule);
+                    storeRule(rule);
+                    partners.put(rightRule.getParent(), leftRule.getParent());
+                }
+            }
+        }
+    }
+
+    /*
     private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
         if (!visited.contains(q)) {
 //            System.err.println("visit: " + q + " = " + right.getStateForId(q));
@@ -158,25 +181,41 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     }
                 } else {
                     // all other rules
-                    int[] children = rightRule.getChildren();
+                    int[] rightChildren = rightRule.getChildren();
                     List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
 
                     // iterate over all children in the right rule
                     for (int i = 0; i < rightRule.getArity(); ++i) {
-                        ckyDfsForStatesInBottomUpOrder(children[i], visited, partners);
+                        ckyDfsForStatesInBottomUpOrder(rightChildren[i], visited, partners);
 
                         // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
-                        remappedChildren.add(partners.get(children[i]));
+                        remappedChildren.add(partners.get(rightChildren[i]));
                     }
 
-                    for (int leftParent : left.getAllStates()) {
-                        for (int rightLabel : rightRule.getLabels(right)) {
-                            for (Rule leftRule : left.getRulesTopDown(leftParent, remapLabel(rightLabel))) {
-
-                            }
-                        }
-                    }
-
+//                    System.err.println("start iterating for right-rule " + rightRule.toString(right));
+//                    
+//                    long count = 0;
+//                    for (int leftParent : left.getAllStates()) {
+//                        for (int rightLabel : rightRule.getLabels(right)) {                            
+//                            for (Rule leftRule : left.getRulesTopDown(leftParent, remapLabel(rightLabel))) {
+//                                count++;
+//                                if( count % 100 == 0 ) System.err.println(count);
+//                                boolean allChildrenArePartners = true;
+//                                int[] leftChildren = leftRule.getChildren();
+//
+//                                for (int i = 0; i < leftRule.getArity(); i++) {
+//                                    allChildrenArePartners = allChildrenArePartners && partners.get(rightChildren[i]).contains(leftChildren[i]);
+//                                }
+//
+//                                if (allChildrenArePartners) {
+//                                    Rule rule = combineRules(leftRule, rightRule);
+//                                    storeRule(rule);
+//                                    partners.put(rightRule.getParent(), leftParent);
+//                                }
+//                            }
+//                        }
+//                    }
+//                    System.err.println("count=" + count);
                     final CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
                     while (it.hasNext()) {
                         // iterate over all rules by concating the single iterators over rules with different labels
@@ -202,6 +241,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
             }
         }
     }
+    */
 
     // bottom-up intersection algorithm
     @Override
