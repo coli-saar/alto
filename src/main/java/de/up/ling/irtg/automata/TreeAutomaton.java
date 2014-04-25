@@ -203,15 +203,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return Iterables.concat(ruleSets);
     }
 
-    public void foreachRuleBottomUpForSets(IntSet labelIds, List<Set<Integer>> childStateSets, int[] labelRemap, Function<Rule,Void> fn) {
+    public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, int[] labelRemap, Function<Rule, Void> fn) {
 //        List<Iterable<Rule>> allIterables = new ArrayList<Iterable<Rule>>();
 
-        final CartesianIterator<Integer> it = new CartesianIterator<Integer>(childStateSets);
-        while (it.hasNext()) {
-            List<Integer> childStates = it.next();
-            for (int labelId : labelIds) {
-                for( Rule rule : getRulesBottomUp(labelRemap[labelId], childStates) ) {
-                    fn.apply(rule);
+        for (int labelId : labelIds) {
+            if (signature.getArity(labelId) == childStateSets.size()) {
+
+                final CartesianIterator<Integer> it = new CartesianIterator<Integer>(childStateSets);
+                while (it.hasNext()) {
+                    List<Integer> childStates = it.next();
+                    for (Rule rule : getRulesBottomUp(labelRemap[labelId], childStates)) {
+                        fn.apply(rule);
+                    }
                 }
             }
         }
@@ -644,13 +647,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Tree<String> viterbi() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
 
-        Map<Integer, Pair<Double, Rule>> map =
-                evaluateInSemiring(new ViterbiWithBackpointerSemiring(), new RuleEvaluator<Pair<Double, Rule>>() {
-            public Pair<Double, Rule> evaluateRule(Rule rule) {
-                return new Pair<Double, Rule>(rule.getWeight(), rule);
-            }
-        });
-            
+        Map<Integer, Pair<Double, Rule>> map
+                = evaluateInSemiring(new ViterbiWithBackpointerSemiring(), new RuleEvaluator<Pair<Double, Rule>>() {
+                    public Pair<Double, Rule> evaluateRule(Rule rule) {
+                        return new Pair<Double, Rule>(rule.getWeight(), rule);
+                    }
+                });
+
         // find final state with highest weight
         int bestFinalState = 0;
         double weightBestFinalState = Double.POSITIVE_INFINITY;
@@ -683,7 +686,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return Tree.create(getSignature().resolveSymbolId(backpointer.getLabel()), childTrees);
         }
         return Tree.create(""); // create empty tree, if language is empty. //TODO is this the correct output value?
-        
+
     }
 
     /**
@@ -1913,21 +1916,21 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return buf.toString();
         }
 
-        public void foreachRuleForStateSets(List<Set<Integer>> childStateSets, Function<Rule, Void> fn) {
+        public void foreachRuleForStateSets(List<IntSet> childStateSets, Function<Rule, Void> fn) {
             foreachRuleForStateSets(0, childStateSets, fn);
         }
-        
-        private void foreachRuleForStateSets(int depth, List<Set<Integer>> childStateSets, Function<Rule, Void> fn) {
-            if( depth == childStateSets.size() ) {
-                for( Rule rule : rulesHere ) {
+
+        private void foreachRuleForStateSets(int depth, List<IntSet> childStateSets, Function<Rule, Void> fn) {
+            if (depth == childStateSets.size()) {
+                for (Rule rule : rulesHere) {
                     fn.apply(rule);
                 }
             } else {
-                Set<Integer> childStatesHere = childStateSets.get(depth);
-                for( int child : childStatesHere ) {
+                IntSet childStatesHere = childStateSets.get(depth);
+                for (int child : childStatesHere) {
                     StateListToStateMap next = nextStep.get(child);
-                    if( next != null ) {
-                        next.foreachRuleForStateSets(depth+1, childStateSets, fn);
+                    if (next != null) {
+                        next.foreachRuleForStateSets(depth + 1, childStateSets, fn);
                     }
                 }
             }
