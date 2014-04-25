@@ -203,17 +203,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return Iterables.concat(ruleSets);
     }
 
-    public Iterable<Rule> getRulesBottomUpForSets(IntSet labelIds, List<Set<Integer>> childStateSets, int[] labelRemap) {
-        List<Iterable<Rule>> allIterables = new ArrayList<Iterable<Rule>>();
+    public void foreachRuleBottomUpForSets(IntSet labelIds, List<Set<Integer>> childStateSets, int[] labelRemap, Function<Rule,Void> fn) {
+//        List<Iterable<Rule>> allIterables = new ArrayList<Iterable<Rule>>();
 
         final CartesianIterator<Integer> it = new CartesianIterator<Integer>(childStateSets);
         while (it.hasNext()) {
+            List<Integer> childStates = it.next();
             for (int labelId : labelIds) {
-                allIterables.add(getRulesBottomUp(labelRemap[labelId], it.next()));
+                for( Rule rule : getRulesBottomUp(labelRemap[labelId], childStates) ) {
+                    fn.apply(rule);
+                }
             }
         }
-
-        return Iterables.concat(allIterables);
     }
 
     protected static int[] intListToArray(List<Integer> ints) {
@@ -1906,6 +1907,26 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
 
             return buf.toString();
+        }
+
+        public void foreachRuleForStateSets(List<Set<Integer>> childStateSets, Function<Rule, Void> fn) {
+            foreachRuleForStateSets(0, childStateSets, fn);
+        }
+        
+        private void foreachRuleForStateSets(int depth, List<Set<Integer>> childStateSets, Function<Rule, Void> fn) {
+            if( depth == childStateSets.size() ) {
+                for( Rule rule : rulesHere ) {
+                    fn.apply(rule);
+                }
+            } else {
+                Set<Integer> childStatesHere = childStateSets.get(depth);
+                for( int child : childStatesHere ) {
+                    StateListToStateMap next = nextStep.get(child);
+                    if( next != null ) {
+                        next.foreachRuleForStateSets(depth+1, childStateSets, fn);
+                    }
+                }
+            }
         }
     }
 

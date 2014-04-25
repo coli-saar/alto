@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
+import com.google.common.base.Function;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.CartesianIterator;
@@ -126,10 +127,10 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         }
     }
 
-    private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, SetMultimap<Integer, Integer> partners) {
+    private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, final SetMultimap<Integer, Integer> partners) {
         if (!visited.contains(q)) {
             visited.add(q);
-            for (CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
+            for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
                 int[] rightChildren = rightRule.getChildren();
                 List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
 
@@ -141,108 +142,110 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     remappedChildren.add(partners.get(rightChildren[i]));
                 }
 
-                for (Rule leftRule : left.getRulesBottomUpForSets(rightRule.getLabels(right), remappedChildren, labelRemap)) {
-                    Rule rule = combineRules(leftRule, rightRule);
-                    storeRule(rule);
-                    partners.put(rightRule.getParent(), leftRule.getParent());
-                }
+                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, labelRemap, new Function<Rule, Void>() {
+                    public Void apply(Rule leftRule) {
+                        Rule rule = combineRules(leftRule, rightRule);
+                        storeRule(rule);
+                        partners.put(rightRule.getParent(), leftRule.getParent());
+                        return null;
+                    }
+                });
             }
         }
     }
 
     /*
-    private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
-        if (!visited.contains(q)) {
-//            System.err.println("visit: " + q + " = " + right.getStateForId(q));
+     private void ckyDfsForStatesInBottomUpOrder(Integer q, Set<Integer> visited, SetMultimap<Integer, Integer> partners) {
+     if (!visited.contains(q)) {
+     //            System.err.println("visit: " + q + " = " + right.getStateForId(q));
 
-            visited.add(q);
-            for (CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
-//                System.err.println("\nconsider rightrule:  " + rightRule.toString(condensedRight));
+     visited.add(q);
+     for (CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
+     //                System.err.println("\nconsider rightrule:  " + rightRule.toString(condensedRight));
 
-                if (rightRule.getArity() == 0) {
-                    // iterate over all rules from the left automaton, that have no children and one of labels of the condensed rule
-                    // could be implemented with a single call that has the set of values as an argument and that finds the rules within the internal datastructures
-                    // of the left autonatom. But for this, the left automaton must be explicit! //TODO
+     if (rightRule.getArity() == 0) {
+     // iterate over all rules from the left automaton, that have no children and one of labels of the condensed rule
+     // could be implemented with a single call that has the set of values as an argument and that finds the rules within the internal datastructures
+     // of the left autonatom. But for this, the left automaton must be explicit! //TODO
 
-                    // create iterator over rules for all labels in the (condensed) rightRule
-                    Iterable<Rule> itLeftRules = new ConcatenatedIterable<Rule>(
-                            Iterables.transform(rightRule.getLabels(right),
-                                    new Function<Integer, Iterable<Rule>>() {
-                                        @Override
-                                        public Iterable<Rule> apply(Integer f) {
-                                            return left.getRulesBottomUp(remapLabel(f), new int[0]);
-                                        }
-                                    }));
+     // create iterator over rules for all labels in the (condensed) rightRule
+     Iterable<Rule> itLeftRules = new ConcatenatedIterable<Rule>(
+     Iterables.transform(rightRule.getLabels(right),
+     new Function<Integer, Iterable<Rule>>() {
+     @Override
+     public Iterable<Rule> apply(Integer f) {
+     return left.getRulesBottomUp(remapLabel(f), new int[0]);
+     }
+     }));
 
-                    for (Rule leftRule : itLeftRules) {
-                        Rule rule = combineRules(leftRule, rightRule);
-                        storeRule(rule);
-                        partners.put(rightRule.getParent(), leftRule.getParent());
-                    }
-                } else {
-                    // all other rules
-                    int[] rightChildren = rightRule.getChildren();
-                    List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+     for (Rule leftRule : itLeftRules) {
+     Rule rule = combineRules(leftRule, rightRule);
+     storeRule(rule);
+     partners.put(rightRule.getParent(), leftRule.getParent());
+     }
+     } else {
+     // all other rules
+     int[] rightChildren = rightRule.getChildren();
+     List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
 
-                    // iterate over all children in the right rule
-                    for (int i = 0; i < rightRule.getArity(); ++i) {
-                        ckyDfsForStatesInBottomUpOrder(rightChildren[i], visited, partners);
+     // iterate over all children in the right rule
+     for (int i = 0; i < rightRule.getArity(); ++i) {
+     ckyDfsForStatesInBottomUpOrder(rightChildren[i], visited, partners);
 
-                        // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
-                        remappedChildren.add(partners.get(rightChildren[i]));
-                    }
+     // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
+     remappedChildren.add(partners.get(rightChildren[i]));
+     }
 
-//                    System.err.println("start iterating for right-rule " + rightRule.toString(right));
-//                    
-//                    long count = 0;
-//                    for (int leftParent : left.getAllStates()) {
-//                        for (int rightLabel : rightRule.getLabels(right)) {                            
-//                            for (Rule leftRule : left.getRulesTopDown(leftParent, remapLabel(rightLabel))) {
-//                                count++;
-//                                if( count % 100 == 0 ) System.err.println(count);
-//                                boolean allChildrenArePartners = true;
-//                                int[] leftChildren = leftRule.getChildren();
-//
-//                                for (int i = 0; i < leftRule.getArity(); i++) {
-//                                    allChildrenArePartners = allChildrenArePartners && partners.get(rightChildren[i]).contains(leftChildren[i]);
-//                                }
-//
-//                                if (allChildrenArePartners) {
-//                                    Rule rule = combineRules(leftRule, rightRule);
-//                                    storeRule(rule);
-//                                    partners.put(rightRule.getParent(), leftParent);
-//                                }
-//                            }
-//                        }
-//                    }
-//                    System.err.println("count=" + count);
-                    final CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
-                    while (it.hasNext()) {
-                        // iterate over all rules by concating the single iterators over rules with different labels
-                        Iterable<Rule> itLeftRules = Iterables.concat(
-                                Iterables.transform(rightRule.getLabels(right),
-                                        new Function<Integer, Iterable<Rule>>() {
-                                            @Override
-                                            public Iterable<Rule> apply(Integer f) {
-                                                return left.getRulesBottomUp(remapLabel(f), it.next());
-                                            }
-                                        }));
+     //                    System.err.println("start iterating for right-rule " + rightRule.toString(right));
+     //                    
+     //                    long count = 0;
+     //                    for (int leftParent : left.getAllStates()) {
+     //                        for (int rightLabel : rightRule.getLabels(right)) {                            
+     //                            for (Rule leftRule : left.getRulesTopDown(leftParent, remapLabel(rightLabel))) {
+     //                                count++;
+     //                                if( count % 100 == 0 ) System.err.println(count);
+     //                                boolean allChildrenArePartners = true;
+     //                                int[] leftChildren = leftRule.getChildren();
+     //
+     //                                for (int i = 0; i < leftRule.getArity(); i++) {
+     //                                    allChildrenArePartners = allChildrenArePartners && partners.get(rightChildren[i]).contains(leftChildren[i]);
+     //                                }
+     //
+     //                                if (allChildrenArePartners) {
+     //                                    Rule rule = combineRules(leftRule, rightRule);
+     //                                    storeRule(rule);
+     //                                    partners.put(rightRule.getParent(), leftParent);
+     //                                }
+     //                            }
+     //                        }
+     //                    }
+     //                    System.err.println("count=" + count);
+     final CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
+     while (it.hasNext()) {
+     // iterate over all rules by concating the single iterators over rules with different labels
+     Iterable<Rule> itLeftRules = Iterables.concat(
+     Iterables.transform(rightRule.getLabels(right),
+     new Function<Integer, Iterable<Rule>>() {
+     @Override
+     public Iterable<Rule> apply(Integer f) {
+     return left.getRulesBottomUp(remapLabel(f), it.next());
+     }
+     }));
 
-                        for (Rule leftRule : itLeftRules) {
-//                                System.err.println("consider leftrule:  " + leftRule.toString(left));
+     for (Rule leftRule : itLeftRules) {
+     //                                System.err.println("consider leftrule:  " + leftRule.toString(left));
 
-                            Rule rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
-                            partners.put(rightRule.getParent(), leftRule.getParent());
-                            // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
-                        }
-                    }
-                }
-            }
-        }
-    }
-    */
-
+     Rule rule = combineRules(leftRule, rightRule);
+     storeRule(rule);
+     partners.put(rightRule.getParent(), leftRule.getParent());
+     // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
+     }
+     }
+     }
+     }
+     }
+     }
+     */
     // bottom-up intersection algorithm
     @Override
     public void makeAllRulesExplicit() {
