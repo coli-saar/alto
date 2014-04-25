@@ -19,6 +19,7 @@ import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
@@ -202,7 +203,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return Iterables.concat(ruleSets);
     }
-    
+
     public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, int[] inverseLabelRemap, Function<Rule, Void> fn) {
         throw new UnsupportedOperationException("only implemented for concrete tree automata");
 //        for (int labelId : labelIds) {
@@ -647,12 +648,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
 
         Map<Integer, Pair<Double, Rule>> map
-                = evaluateInSemiring(new ViterbiWithBackpointerSemiring(), new RuleEvaluator<Pair<Double, Rule>>() {
+                = evaluateInSemiring2(new ViterbiWithBackpointerSemiring(), new RuleEvaluator<Pair<Double, Rule>>() {
                     public Pair<Double, Rule> evaluateRule(Rule rule) {
                         return new Pair<Double, Rule>(rule.getWeight(), rule);
                     }
                 });
-
+        
         // find final state with highest weight
         int bestFinalState = 0;
         double weightBestFinalState = Double.POSITIVE_INFINITY;
@@ -1589,6 +1590,75 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public Set<Integer> getReachableStates() {
         return new HashSet<Integer>(getStatesInBottomUpOrder());
+    }
+
+    public static interface BottomUpStateVisitor {
+
+        public void visit(int state, Iterable<Rule> rulesTopDown);
+    }
+
+    public void foreachStateInBottomUpOrder(BottomUpStateVisitor visitor) {
+        IntSet visited = new IntOpenHashSet();
+
+        for (int q : getFinalStates()) {
+            foreachStateInBottomUpOrder(q, visited, visitor);
+        }
+    }
+
+    private void foreachStateInBottomUpOrder(int q, IntSet visited, BottomUpStateVisitor visitor) {
+        if( ! visited.contains(q) ) {
+            visited.add(q);
+
+            Iterable<Rule> rulesTopDown = getRulesTopDown(q);
+
+            for (final Rule rule : rulesTopDown) {
+                int[] children = rule.getChildren();
+
+                for (int i = 0; i < rule.getArity(); ++i) {
+                    foreachStateInBottomUpOrder(children[i], visited, visitor);
+                }
+            }
+
+            visitor.visit(q, rulesTopDown);
+        }
+    }
+
+    public <E> Int2ObjectMap<E> evaluateInSemiring2(final Semiring<E> semiring, final RuleEvaluator<E> evaluator) {
+        final Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<E>();
+
+        foreachStateInBottomUpOrder(new BottomUpStateVisitor() {
+            public void visit(int state, Iterable<Rule> rulesTopDown) {
+//                System.err.println("visit: " + getStateForId(state));
+//                List<Rule> rules = new ArrayList<Rule>();
+//                Iterators.addAll(rules, rulesTopDown.iterator());
+//                System.err.println("rules: " + Rule.rulesToStrings(rules, TreeAutomaton.this));
+                
+                E accu = semiring.zero();
+
+                for (Rule rule : rulesTopDown) {
+                    E valueThisRule = evaluator.evaluateRule(rule);
+                    for (int child : rule.getChildren()) {
+                        if (valueThisRule != null) {
+                            if (ret.containsKey(child)) {
+                                valueThisRule = semiring.multiply(valueThisRule, ret.get(child));
+                            } else {
+                                // if a child state hasn't been evaluated yet, this means that it
+                                // is not reachable bottom-up, and therefore shouldn't be counted here
+                                valueThisRule = null;
+                            }
+                        }
+                    }
+
+                    if (valueThisRule != null) {
+                        accu = semiring.add(accu, valueThisRule);
+                    }
+                }
+                
+                ret.put(state, accu);
+            }
+        });
+
+        return ret;
     }
 
     /**

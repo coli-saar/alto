@@ -9,13 +9,14 @@ import com.google.common.base.Function;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.io.Serializable;
 import java.util.List;
 
 /**
  *
  * @author koller
  */
-public class IntTrie<E> {
+public class IntTrie<E> implements Serializable {
 
     private Int2ObjectMap<IntTrie<E>> nextStep;
     private E value;
