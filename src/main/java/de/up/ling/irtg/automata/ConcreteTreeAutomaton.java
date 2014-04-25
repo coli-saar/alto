@@ -58,19 +58,19 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     }
 
     @Override
-    public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final int[] labelRemap, final Function<Rule, Void> fn) {
+    public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final int[] thisToOtherLabelRemap, final Function<Rule, Void> fn) {
 //        System.err.println("cta frbupfs");
         ensureRuleTrie();
 
-        final IntSet remappedLabelIds = new IntOpenHashSet();
-        for (int labelId : labelIds) {
-            remappedLabelIds.add(labelRemap[labelId]);
-        }
+//        final IntSet remappedLabelIds = new IntOpenHashSet();
+//        for (int labelId : labelIds) {
+//            remappedLabelIds.add(labelRemap[labelId]);
+//        }
 
         ruleTrie.foreachValueForKeySets(childStateSets, new Function<Int2ObjectMap<Set<Rule>>, Void>() {
             public Void apply(Int2ObjectMap<Set<Rule>> ruleMap) {
                 for (int label : ruleMap.keySet()) {
-                    if (remappedLabelIds.contains(label)) {
+                    if( labelIds.contains(thisToOtherLabelRemap[label])) {
                         for (Rule rule : ruleMap.get(label)) {
                             fn.apply(rule);
                         }

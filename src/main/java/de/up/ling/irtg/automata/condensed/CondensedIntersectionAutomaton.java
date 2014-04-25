@@ -42,7 +42,8 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     private TreeAutomaton<LeftState> left;
     private CondensedTreeAutomaton<RightState> right;
     private static final boolean DEBUG = false;
-    private int[] labelRemap;
+    private int[] leftToRightLabelRemap;
+    private int[] rightToLeftLabelRemap;
     private Int2IntMap stateToLeftState;
     private Int2IntMap stateToRightState;
     private long[] ckyTimestamp = new long[10];
@@ -50,7 +51,8 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
 
-        labelRemap = left.getSignature().remap(right.getSignature());
+        leftToRightLabelRemap = left.getSignature().remap(right.getSignature());
+        rightToLeftLabelRemap = right.getSignature().remap(left.getSignature());
 
         this.left = left;
         this.right = right;
@@ -84,7 +86,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
      * @return
      */
     private int remapLabel(int leftLabelId) {
-        return labelRemap[leftLabelId];
+        return leftToRightLabelRemap[leftLabelId];
     }
 
     @Override
@@ -97,8 +99,10 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
             isExplicit = true;
             ckyTimestamp[0] = System.nanoTime();
 
-            int[] oldLabelRemap = labelRemap;
-            labelRemap = right.getSignature().remap(left.getSignature());
+//            int[] oldLabelRemap = labelRemap;
+//            labelRemap = right.getSignature().remap(left.getSignature());
+            
+            
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<IntSet>();
 
             ckyTimestamp[1] = System.nanoTime();
@@ -123,7 +127,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                 }
                 System.err.println("Intersection automaton CKY:\n" + toString() + "\n~~~~~~~~~~~~~~~~~~");
             }
-            labelRemap = oldLabelRemap;
+//            labelRemap = oldLabelRemap;
         }
     }
     
@@ -142,7 +146,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     remappedChildren.add(partners.get(rightChildren[i]));
                 }
 
-                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, labelRemap, new Function<Rule, Void>() {
+                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightLabelRemap, new Function<Rule, Void>() {
                     public Void apply(Rule leftRule) {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
@@ -329,15 +333,18 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(hom);
                     TreeAutomaton<String> result = irtg.getAutomaton().intersectCondensed(inv);
 
-//                    if (!result.getFinalStates().isEmpty()) {
-//                        System.err.println("Language:\n" + result.language().toString());
-//                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
-//                    }
 
                     timestamp[3] = System.nanoTime();
 
                     System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
                     outstream.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
+
+
+//                    if (!result.getFinalStates().isEmpty()) {
+//                        System.err.println("Language:\n" + result.language().toString());
+//                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
+//                    }
+
 //                    out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;
                 }

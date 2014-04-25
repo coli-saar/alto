@@ -202,22 +202,21 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return Iterables.concat(ruleSets);
     }
-
-    public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, int[] labelRemap, Function<Rule, Void> fn) {
-//        List<Iterable<Rule>> allIterables = new ArrayList<Iterable<Rule>>();
-
-        for (int labelId : labelIds) {
-            if (signature.getArity(labelId) == childStateSets.size()) {
-
-                final CartesianIterator<Integer> it = new CartesianIterator<Integer>(childStateSets);
-                while (it.hasNext()) {
-                    List<Integer> childStates = it.next();
-                    for (Rule rule : getRulesBottomUp(labelRemap[labelId], childStates)) {
-                        fn.apply(rule);
-                    }
-                }
-            }
-        }
+    
+    public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, int[] inverseLabelRemap, Function<Rule, Void> fn) {
+        throw new UnsupportedOperationException("only implemented for concrete tree automata");
+//        for (int labelId : labelIds) {
+//            if (signature.getArity(labelId) == childStateSets.size()) {
+//
+//                final CartesianIterator<Integer> it = new CartesianIterator<Integer>(childStateSets);
+//                while (it.hasNext()) {
+//                    List<Integer> childStates = it.next();
+//                    for (Rule rule : getRulesBottomUp(labelRemap[labelId], childStates)) {
+//                        fn.apply(rule);
+//                    }
+//                }
+//            }
+//        }
     }
 
     protected static int[] intListToArray(List<Integer> ints) {
