@@ -24,7 +24,7 @@ public class PtbParsingEvaluator {
         String grammarFilename = args[0];
         String corpusFilename = args[1];
 
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(grammarFilename));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileReader(grammarFilename));
 //        Homomorphism hom = irtg.getInterpretation("i").getHomomorphism();
         Signature sig = irtg.getAutomaton().getSignature();
         Corpus corpus = irtg.readCorpus(new FileReader(corpusFilename));

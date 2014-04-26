@@ -178,28 +178,7 @@ public class RegularSeedChooser extends javax.swing.JDialog {
         setVisible(false);
     }//GEN-LAST:event_cancelButtonActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) throws Exception {
-
-
-        final InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader("examples/tiny-tag.irtg"));
-
-        /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                RegularSeedChooser dialog = new RegularSeedChooser(irtg, new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton cancelButton;
     private javax.swing.JPanel ispContainer;

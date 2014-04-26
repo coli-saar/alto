@@ -34,7 +34,7 @@ class MaximumEntropyIrtgTest {
     
 //    @Test
     public void testMaxentIrtgParsing() {
-        InterpretedTreeAutomaton irtg = iparse(CFG_STR);
+        InterpretedTreeAutomaton irtg = pi(CFG_STR);
         assert irtg instanceof MaximumEntropyIrtg;
         
         assertEquals( new ArrayList(["f1","f2"]), irtg.getFeatureNames());
@@ -60,7 +60,7 @@ class MaximumEntropyIrtgTest {
     
     @Test
     public void testFeatureWithArgs() {
-        MaximumEntropyIrtg irtg = (MaximumEntropyIrtg) iparse(ARGFT_GRAMMAR);
+        MaximumEntropyIrtg irtg = (MaximumEntropyIrtg) pi(ARGFT_GRAMMAR);
         assertEquals( new ArrayList(["f1","f2"]), irtg.getFeatureNames());
 
         assertEquals("one", irtg.getFeatureFunction("f1").getX());
@@ -69,7 +69,7 @@ class MaximumEntropyIrtgTest {
     
     @Test
     public void testMaxEntTraining() {
-        InterpretedTreeAutomaton irtg = iparse(CFG_STR);
+        InterpretedTreeAutomaton irtg = pi(CFG_STR);
         assert irtg instanceof MaximumEntropyIrtg;
 //        MaximumEntropyIrtg trainer = new MaximumEntropyIrtg(irtg);
 
@@ -163,11 +163,14 @@ interpretation i: de.up.ling.irtg.algebra.StringAlgebra
 feature f1: de.up.ling.irtg.maxent.RuleNameFeature('one')
 feature f2: de.up.ling.irtg.maxent.RuleNameFeature('two')
 
+N -> r10
+  [i] woman
+
     """;
     
-    private static InterpretedTreeAutomaton iparse(String s) {
-        return IrtgParser.parse(new StringReader(s));
-    }
+//    private static InterpretedTreeAutomaton iparse(String s) {
+//        return pi(new StringReader(s));
+//    }
     
     
 }

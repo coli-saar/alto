@@ -367,7 +367,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         try {
             if (file != null) {
                 long start = System.nanoTime();
-                irtg = IrtgParser.parse(new FileReader(file));
+                irtg = InterpretedTreeAutomaton.read(new FileReader(file));
                 log("Loaded IRTG from " + file.getName() + ", " + formatTimeSince(start));
             }
         } catch (Exception e) {

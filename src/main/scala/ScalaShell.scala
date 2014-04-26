@@ -11,7 +11,7 @@ object ScalaShell {
 
   def loadAutomaton(filename: String) = TreeAutomatonParser.parse(file(filename))
 
-  def loadIrtg(filename: String) = IrtgParser.parse(file(filename))
+  def loadIrtg(filename: String) = InterpretedTreeAutomaton.read(file(filename))
   def saveIrtg(irtg: InterpretedTreeAutomaton, filename:String) = {
     val w = new PrintWriter(new FileWriter(new File(filename)))
     w.println(irtg.toString)

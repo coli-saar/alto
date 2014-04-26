@@ -5,12 +5,11 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.base.Function;
-import com.google.common.collect.Iterables;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.AntlrIrtgBuilder;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.*;
@@ -275,7 +274,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
      *
      * @param args
      */
-    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.ParseException {
+    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException, AntlrIrtgBuilder.ParseException {
         if (args.length != 5) {
             System.err.println("1. IRTG\n"
                     + "2. Sentences\n"
@@ -295,7 +294,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         System.err.print("Reading the IRTG...");
         timestamp[0] = System.nanoTime();
 
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new FileReader(new File(irtgFilename)));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileReader(new File(irtgFilename)));
         Interpretation interp = irtg.getInterpretation(interpretation);
         Homomorphism hom = interp.getHomomorphism();
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();

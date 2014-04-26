@@ -31,6 +31,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.atn.PredictionMode;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.commons.math3.special.Gamma;
 
 /**
@@ -51,6 +56,7 @@ import org.apache.commons.math3.special.Gamma;
  * @author koller
  */
 public class InterpretedTreeAutomaton {
+
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;
@@ -199,23 +205,19 @@ public class InterpretedTreeAutomaton {
         for (String interpName : inputs.keySet()) {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
-            
+
             TreeAutomaton interpParse = interp.parse(input);
-            
 
 //            System.err.println("invhom(decomp(" + input  + "):\n" + interpParse.toStringBottomUp());
-
 //            ret = ret.intersect(interpParse);
-
             ret = ret.intersect(interpParse);
 
         }
 
 //        System.err.println("chart before reduction:\n" + ret);
-
         return ret.reduceTopDown();
     }
-    
+
     public TreeAutomaton parseInputObjectsCondensed(Map<String, Object> inputs) {
         TreeAutomaton ret = automaton;
 
@@ -225,17 +227,13 @@ public class InterpretedTreeAutomaton {
 
             CondensedTreeAutomaton interpParse = interp.parseToCondensed(input);
 
-
 //            System.err.println("invhom(decomp(" + input + "):\n" + interpParse.toStringBottomUp());
-
 //            ret = ret.intersect(interpParse);
-
             ret = ret.intersectCondensed(interpParse);
 
         }
 
 //        System.err.println("chart before reduction:\n" + ret);
-
         return ret.reduceTopDown();
     }
 
@@ -346,10 +344,11 @@ public class InterpretedTreeAutomaton {
      * using the given corpus. The corpus may be unannotated; if it contains
      * annotated derivation trees, these are ignored by the algorithm. However,
      * it must contain a parse chart for each instance (see {@link Corpus} for
-     * details).<p>
+     * details)
+     * .<p>
      *
-     * The algorithm terminates after a given number of iterations or as soon
-     * as the rate the likelihood increases drops below a given threshold. 
+     * The algorithm terminates after a given number of iterations or as soon as
+     * the rate the likelihood increases drops below a given threshold.
      *
      * @param trainingData
      */
@@ -382,11 +381,13 @@ public class InterpretedTreeAutomaton {
 
         Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
         // Threshold parameters
-        if (iterations <= 0) iterations = Integer.MAX_VALUE;
+        if (iterations <= 0) {
+            iterations = Integer.MAX_VALUE;
+        }
         double oldLogLikelihood = Double.NEGATIVE_INFINITY;
         double difference = Double.POSITIVE_INFINITY;
         int iteration = 0;
-        
+
         while (difference > threshold && iteration < iterations) {
             if (debug) {
                 for (Rule r : originalRuleToIntersectedRules.keySet()) {
@@ -434,7 +435,7 @@ public class InterpretedTreeAutomaton {
             }
             ++iteration;
         }
-        
+
     }
 
     /**
@@ -448,7 +449,7 @@ public class InterpretedTreeAutomaton {
     public void trainVB(Corpus trainingData) {
         trainVB(trainingData, null);
     }
-    
+
     public void trainVB(Corpus trainingData, ProgressListener listener) {
         trainVB(trainingData, 0, 1E-5, listener);
     }
@@ -457,8 +458,8 @@ public class InterpretedTreeAutomaton {
      * Performs Variational Bayes (VB) training of this (weighted) IRTG using
      * the given corpus. The corpus may be unannotated; if it contains annotated
      * derivation trees, these are ignored by the algorithm. However, it must
-     * contain a parse chart for each instance (see {@link Corpus} for
-     * details).<p>
+     * contain a parse chart for each instance (see {@link Corpus} for details)
+     * .<p>
      *
      * This method implements the algorithm from Jones et al., "Semantic Parsing
      * with Bayesian Tree Transducers", ACL 2012.
@@ -482,18 +483,20 @@ public class InterpretedTreeAutomaton {
         // initialize hyperparameters
         List<Rule> automatonRules = new ArrayList<Rule>();
         Iterables.addAll(automatonRules, getAutomaton().getRuleSet()); // bring rules in defined order
-        
+
         int numRules = automatonRules.size();
         double[] alpha = new double[numRules];
         Arrays.fill(alpha, 1.0); // might want to initialize them differently
 
         Map<Rule, Double> ruleCounts = new HashMap<Rule, Double>();
         // Threshold parameters
-        if (iterations <= 0) iterations = Integer.MAX_VALUE;
+        if (iterations <= 0) {
+            iterations = Integer.MAX_VALUE;
+        }
         double oldLogLikelihood = Double.NEGATIVE_INFINITY;
         double difference = Double.POSITIVE_INFINITY;
         int iteration = 0;
-        
+
         // iterate
         while (difference > threshold && iteration < iterations) {
             // for each state, compute sum of alphas for outgoing rules
@@ -519,7 +522,7 @@ public class InterpretedTreeAutomaton {
             for (int i = 0; i < numRules; i++) {
                 alpha[i] += ruleCounts.get(automatonRules.get(i));
             }
-            
+
             // calculate the difference for comparrison with the given threshold 
             difference = logLikelihood - oldLogLikelihood;
             oldLogLikelihood = logLikelihood;
@@ -549,7 +552,7 @@ public class InterpretedTreeAutomaton {
 
             Map<Integer, Double> inside = parse.inside();
             Map<Integer, Double> outside = parse.outside(inside);
-            
+
             if (debug) {
                 System.out.println("Inside and outside probabilities for chart #" + i);
 
@@ -563,8 +566,7 @@ public class InterpretedTreeAutomaton {
                 }
                 System.out.println("");
             }
-            
-            
+
             double likelihoodHere = 0;
             for (Object finalState : parse.getFinalStates()) {
                 likelihoodHere += inside.get(finalState);
@@ -583,8 +585,6 @@ public class InterpretedTreeAutomaton {
 
                 globalRuleCount.put(originalRule, oldRuleCount + thisRuleCount);
             }
-
-            
 
             logLikelihood += Math.log(likelihoodHere);
 
@@ -756,5 +756,52 @@ public class InterpretedTreeAutomaton {
         }
 
         return true;
+    }
+
+    public static InterpretedTreeAutomaton read(Reader r) throws IOException, AntlrIrtgBuilder.ParseException {
+        IrtgLexer l = new IrtgLexer(new ANTLRInputStream(r));
+        IrtgParser p = new IrtgParser(new CommonTokenStream(l));
+        p.setErrorHandler(new BailErrorStrategy());
+
+        /*
+         parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
+         try {
+         parser.stat();  // STAGE 1
+         }
+         catch (Exception ex) {
+         tokens.reset(); // rewind input stream
+         parser.reset();
+         parser.getInterpreter().setPredictionMode(PredictionMode.LL);
+         parser.stat();  // STAGE 2
+         // if we parse ok, it's LL not SLL
+         }
+         */
+        p.getInterpreter().setPredictionMode(PredictionMode.SLL);
+
+        try {
+            long t1 = System.nanoTime();
+            IrtgParser.IrtgContext result = null;
+
+            try {
+                result = p.irtg();
+            } catch (Exception e) {
+                System.err.println("retry");
+                l.reset(); // rewind input stream
+                p.reset();
+                p.getInterpreter().setPredictionMode(PredictionMode.LL);
+                result = p.irtg();  // STAGE 2
+            }
+            
+            long t2 = System.nanoTime();
+            InterpretedTreeAutomaton irtg = new AntlrIrtgBuilder().build(result);
+            long t3 = System.nanoTime();
+
+            System.err.println("parsing: " + (t2 - t1) / 1000000 + "ms / construction: " + (t3 - t2) / 1000000 + "ms");
+
+            return irtg;
+        } catch (ParseCancellationException e) {
+            throw new AntlrIrtgBuilder.ParseException(e.getCause());
+
+        }
     }
 }

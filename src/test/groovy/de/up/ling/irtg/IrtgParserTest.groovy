@@ -83,7 +83,7 @@ P -> r12
 
         ''';
 
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
         
 //        System.err.println("parsed: " + irtg.getAutomaton())
 
@@ -122,7 +122,7 @@ P -> r12
             Foo -> a [i] 'foo bar'
         ''';
 
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
     }
 
     @Test
@@ -133,7 +133,7 @@ P -> r12
             Foo -> a [i] '"'
         ''';
 
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
     }
     
     @Test
@@ -144,7 +144,7 @@ P -> r12
             Foo -> a [i] "foo bar"
         ''';
 
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
     }
     
     @Test
@@ -155,16 +155,16 @@ P -> r12
             Foo -> a [i] "'"
         ''';
 
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
     }
 
-    @Test(expected=ParseException.class)
+    @Test(expected=AntlrIrtgBuilder.ParseException.class)
     public void testIllegalInterpretation() {
         String grammarstring = "interpretation 1: java.lang.String";
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
     }
 
-    @Test(expected=ParseException.class)
+    @Test(expected=AntlrIrtgBuilder.ParseException.class)
     public void testUndeclaredInterpretation() {
         String grammarstring = '''
             interpretation i: de.up.ling.irtg.algebra.StringAlgebra
@@ -172,10 +172,10 @@ P -> r12
             Foo -> a [j] bar
         ''';
 
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
     }
 
-    @Test(expected=ParseException.class)
+    @Test(expected=AntlrIrtgBuilder.ParseException.class)
     public void testInconsistentHoms() {
         String grammarstring = '''
             interpretation i: de.up.ling.irtg.algebra.StringAlgebra
@@ -183,7 +183,7 @@ P -> r12
             Foo -> a  [i] bar
             Fooo -> a  [i] baz
         ''';
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
     }
 }
 

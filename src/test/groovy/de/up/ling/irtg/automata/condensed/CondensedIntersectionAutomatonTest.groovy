@@ -60,7 +60,7 @@ Y -> r8(X,X)
     @Test
     public void makeAllRulesExplicitTest() {
         // Create an IRTG
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
         String toParse = "a a a a b ";
         
         System.out.println("Parsing the String '" + toParse + "' with the IRTG: \n" + irtg.toString());

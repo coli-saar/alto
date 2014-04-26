@@ -152,7 +152,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     // sometimes pass, sometimes fail. :)
     @Test
     public void testBinarize() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(BIN_IRTG));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(BIN_IRTG));
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
         Algebra rightAlgebra = irtg.getInterpretation("right").getAlgebra()
@@ -200,7 +200,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     
     @Test
     public void testBinarizeConstant() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(BIN_CONSTANT));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(BIN_CONSTANT));
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
         
@@ -218,7 +218,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     
     @Test
     public void testBinarizeTag() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(de.up.ling.irtg.algebra.TagAlgebrasTest.tinyTag))
+        InterpretedTreeAutomaton irtg = pi(new StringReader(de.up.ling.irtg.algebra.TagAlgebrasTest.tinyTag))
         
         Algebra ta = irtg.getInterpretation("tree").getAlgebra()
         Algebra sa = irtg.getInterpretation("string").getAlgebra()
@@ -232,7 +232,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     
     @Test
     public void testBinarizeTree() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(SYNC_IRTG));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(SYNC_IRTG));
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
         Algebra rightAlgebra = irtg.getInterpretation("right").getAlgebra()

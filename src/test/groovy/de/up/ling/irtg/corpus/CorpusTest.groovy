@@ -26,7 +26,7 @@ class CorpusTest {
     public void testComputeCharts() {
         // parse corpus and save to byte stream
         ByteArrayOutputStream ostream = new ByteArrayOutputStream();        
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(CFG_STR));
         Corpus corpus = Corpus.readCorpus(new StringReader(UNANNOTATED_CORPUS), irtg);        
         Charts.computeCharts(corpus, irtg, ostream);
         
@@ -45,7 +45,7 @@ class CorpusTest {
     
     @Test
     public void testNewCorpusUnanno() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(CFG_STR));
         Corpus corpus = Corpus.readCorpus(new StringReader(UNANNOTATED_CORPUS), irtg);
         assert corpus.getNumberOfInstances() == 3;
         assert ! corpus.isAnnotated();
@@ -53,7 +53,7 @@ class CorpusTest {
     
      @Test
     public void testNewCorpusAnno() {
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(CFG_STR));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(CFG_STR));
         Corpus corpus = Corpus.readCorpus(new StringReader(ANNOTATED_CORPUS), irtg);
         assert corpus.getNumberOfInstances() == 3;
         assert corpus.isAnnotated();

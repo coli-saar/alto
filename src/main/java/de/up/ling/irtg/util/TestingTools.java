@@ -8,8 +8,8 @@ import com.google.common.collect.Iterables;
 import de.saar.basic.StringOrVariable;
 import de.saar.chorus.term.Term;
 import de.saar.chorus.term.parser.TermParser;
+import de.up.ling.irtg.AntlrIrtgBuilder;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.automata.ParseException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -19,6 +19,8 @@ import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
+import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.List;
@@ -53,8 +55,12 @@ public class TestingTools {
         return TreeAutomatonParser.parse(new StringReader(s));
     }
     
-    public static InterpretedTreeAutomaton pi(String s) throws de.up.ling.irtg.ParseException {
-        return IrtgParser.parse(new StringReader(s));
+    public static InterpretedTreeAutomaton pi(String s) throws IOException, AntlrIrtgBuilder.ParseException {
+        return InterpretedTreeAutomaton.read(new StringReader(s));
+    }
+    
+    public static InterpretedTreeAutomaton pi(Reader r) throws IOException, AntlrIrtgBuilder.ParseException {
+        return InterpretedTreeAutomaton.read(r);
     }
 
     public static Homomorphism hom(Map<String, String> mappings, Signature sourceSignature) {

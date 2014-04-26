@@ -18,7 +18,6 @@ import de.up.ling.irtg.hom.*;
 import de.up.ling.irtg.corpus.*
 import static de.up.ling.irtg.util.TestingTools.*;
 import de.up.ling.irtg.InterpretedTreeAutomaton
-import de.up.ling.irtg.IrtgParser;
 
 /**
  *
@@ -65,7 +64,7 @@ D -> r4
 
        ''';
         
-        InterpretedTreeAutomaton irtg = IrtgParser.parse(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
         List words = irtg.parseString("i", "a a a a b");
 
         TreeAutomaton chart = irtg.parseInputObjects(["i": words]);
