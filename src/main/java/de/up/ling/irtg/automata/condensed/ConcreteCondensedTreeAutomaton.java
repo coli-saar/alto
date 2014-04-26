@@ -9,11 +9,8 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -126,7 +123,8 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
             newLabelSetID = labelSetInterner.addObject(newLabels);
         } else {
             // add current label to the existing labelset
-            labelSetInterner.resolveId(newLabelSetID).add(newLabel);
+            labelSetInterner.addValueToSetByID(newLabelSetID, newLabel);
+//            labelSetInterner.resolveId(newLabelSetID).add(newLabel);
         }
         
         CondensedRule newRule = createRuleRaw(newParent, newLabelSetID, newChildren, rule.getWeight());

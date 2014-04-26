@@ -20,8 +20,8 @@ import java.util.Set;
  * @author koller
  */
 public class Interner<E> implements Serializable, Cloneable {
-    private Object2IntMap<E> objectToInt;
-    private Int2ObjectMap<E> intToObject;
+    protected Object2IntMap<E> objectToInt;
+    protected Int2ObjectMap<E> intToObject;
     int nextIndex;
 
     public Interner() {

@@ -4,9 +4,9 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import de.up.ling.irtg.automata.*;
 import com.google.common.base.Function;
 import de.saar.basic.CartesianIterator;
+import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
@@ -73,7 +73,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
                 for (Integer state : rhsAutomaton.run(rhs, HomomorphismSymbol.getHomSymbolToIntFunction(), RETURN_ZERO)) {
 
                     // save the labelSetID in the signature of this automaton
-                    int newLabelSetID = this.getLabelSetID(hom.getLabelSetByLabelSetID(labelSetID));
+                    int newLabelSetID = this.addLabelSetID(hom.getLabelSetByLabelSetID(labelSetID));
 
                     if (stateToNewLabelSetIDs.containsKey(state)) {
                         stateToNewLabelSetIDs.get(state).add(newLabelSetID);
@@ -124,7 +124,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
                     if (isCompleteSubstitutionTuple(substitutionTuple)) {
                         // TODO: weights
                         // Transform the labelSetID from the homomorphism to one of this automaton.
-                        int newLabelSetID = this.getLabelSetID(hom.getLabelSetByLabelSetID(labelSetID));
+                        int newLabelSetID = this.addLabelSetID(hom.getLabelSetByLabelSetID(labelSetID));
                         CondensedRule cr = new CondensedRule(parentState, newLabelSetID, intListToArray(substitutionTuple), 1); //createRuleRaw(parentState, newLabelSetID, intListToArray(substitutionTuple), 1);
                         ret.add(cr);
                         
