@@ -65,7 +65,7 @@ public class AntlrIrtgBuilder {
         } catch (ParseException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
+//            e.printStackTrace();
             throw new ParseException("Unexpected parsing error: " + e.toString());
         }
     }

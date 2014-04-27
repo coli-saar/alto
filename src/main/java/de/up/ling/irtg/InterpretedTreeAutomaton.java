@@ -762,36 +762,11 @@ public class InterpretedTreeAutomaton {
         IrtgLexer l = new IrtgLexer(new ANTLRInputStream(r));
         IrtgParser p = new IrtgParser(new CommonTokenStream(l));
         p.setErrorHandler(new BailErrorStrategy());
-
-        /*
-         parser.getInterpreter().setPredictionMode(PredictionMode.SLL);
-         try {
-         parser.stat();  // STAGE 1
-         }
-         catch (Exception ex) {
-         tokens.reset(); // rewind input stream
-         parser.reset();
-         parser.getInterpreter().setPredictionMode(PredictionMode.LL);
-         parser.stat();  // STAGE 2
-         // if we parse ok, it's LL not SLL
-         }
-         */
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         try {
             long t1 = System.nanoTime();
-            IrtgParser.IrtgContext result = null;
-
-            try {
-                result = p.irtg();
-            } catch (Exception e) {
-                System.err.println("retry");
-                l.reset(); // rewind input stream
-                p.reset();
-                p.getInterpreter().setPredictionMode(PredictionMode.LL);
-                result = p.irtg();  // STAGE 2
-            }
-            
+            IrtgParser.IrtgContext result = p.irtg();
             long t2 = System.nanoTime();
             InterpretedTreeAutomaton irtg = new AntlrIrtgBuilder().build(result);
             long t3 = System.nanoTime();
