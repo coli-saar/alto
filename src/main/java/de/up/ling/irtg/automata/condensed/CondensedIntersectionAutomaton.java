@@ -350,6 +350,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 //                        System.err.println("\n**** EMPTY ****\n");
 //                    }
 
+                    
                     // try to trigger gc
                     result = null;
                     System.gc();
