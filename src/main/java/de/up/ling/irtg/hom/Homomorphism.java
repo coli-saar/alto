@@ -7,6 +7,7 @@ package de.up.ling.irtg.hom;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -43,6 +44,7 @@ public class Homomorphism {
     private final Int2IntMap tgtIDToSrcID;    // maps an int that resolves to an string in the tgt signature
     // to an int, that resolves to the coresponding string in the src signature
 
+    private SignatureMapper signatureMapper;
     
 
     public Homomorphism(Signature src, Signature tgt) {
@@ -60,6 +62,7 @@ public class Homomorphism {
         labelSetList.add(null); // dummies to ensure that IDs start at 1 (so 0 can be used for "not found")
 
         labelSetsDirty = true;
+        signatureMapper = null;
     }
 
     public void add(String label, Tree<String> mapping) {
@@ -439,5 +442,22 @@ public class Homomorphism {
         }
 
         return true;
+    }
+    
+    /**
+     * Returns a mapper that translates symbols of the source signature
+     * into symbols of the target signature (and back). The mapper is computed
+     * by need, when this method is called for the first time, and then reused.
+     * Note that if one of the underlying signatures changes, you need to call
+     * {@link SignatureMapper#recompute() } to update the mapper.
+     * 
+     * @return 
+     */
+    public SignatureMapper getSignatureMapper() {
+        if( signatureMapper == null ) {
+            signatureMapper = new SignatureMapper(srcSignature, tgtSignature);
+        }
+        
+        return signatureMapper;
     }
 }

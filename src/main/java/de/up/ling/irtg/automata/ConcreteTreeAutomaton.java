@@ -6,9 +6,9 @@ package de.up.ling.irtg.automata;
 
 import com.google.common.base.Function;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.signature.SignatureMapper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.HashSet;
 import java.util.List;
@@ -58,7 +58,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     }
 
     @Override
-    public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final int[] thisToOtherLabelRemap, final Function<Rule, Void> fn) {
+    public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Function<Rule, Void> fn) {
 //        System.err.println("cta frbupfs");
         ensureRuleTrie();
 
@@ -70,7 +70,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
         ruleTrie.foreachValueForKeySets(childStateSets, new Function<Int2ObjectMap<Set<Rule>>, Void>() {
             public Void apply(Int2ObjectMap<Set<Rule>> ruleMap) {
                 for (int label : ruleMap.keySet()) {
-                    if( labelIds.contains(thisToOtherLabelRemap[label])) {
+                    if( labelIds.contains(signatureMapper.remapForward(label))) {
                         for (Rule rule : ruleMap.get(label)) {
                             fn.apply(rule);
                         }

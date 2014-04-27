@@ -26,8 +26,10 @@ import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
+import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
@@ -204,7 +206,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return Iterables.concat(ruleSets);
     }
 
-    public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, int[] inverseLabelRemap, Function<Rule, Void> fn) {
+    public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Function<Rule, Void> fn) {
         throw new UnsupportedOperationException("only implemented for concrete tree automata");
 //        for (int labelId : labelIds) {
 //            if (signature.getArity(labelId) == childStateSets.size()) {
@@ -1045,10 +1047,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
-    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
-        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other);
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
         ret.makeAllRulesExplicit();
         return ret;
+    }
+    
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
+        return intersectCondensed(other, new IdentitySignatureMapper(signature));
     }
 
     /**

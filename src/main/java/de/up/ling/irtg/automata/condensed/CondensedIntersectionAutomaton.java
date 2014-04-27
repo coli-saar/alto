@@ -13,8 +13,8 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.*;
-import de.up.ling.irtg.automata.condensed.ParseException;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.signature.SignatureMapper;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -44,17 +44,17 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     private TreeAutomaton<LeftState> left;
     private CondensedTreeAutomaton<RightState> right;
     private static final boolean DEBUG = false;
-    private int[] leftToRightLabelRemap;
-    private int[] rightToLeftLabelRemap;
     private Int2IntMap stateToLeftState;
     private Int2IntMap stateToRightState;
     private long[] ckyTimestamp = new long[10];
+    private final SignatureMapper leftToRightSignatureMapper;
 
-    public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right) {
-        super(left.getSignature()); // TODO = should intersect this with the right signature
+    public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
+        super(left.getSignature()); // TODO = should intersect this with the (remapped) right signature
 
-        leftToRightLabelRemap = left.getSignature().remap(right.getSignature());
-        rightToLeftLabelRemap = right.getSignature().remap(left.getSignature());
+        this.leftToRightSignatureMapper = sigMapper;
+
+//        System.err.println(sigMapper);
 
         this.left = left;
         this.right = right;
@@ -87,10 +87,9 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
      * @param leftLabelId
      * @return
      */
-    private int remapLabel(int leftLabelId) {
-        return leftToRightLabelRemap[leftLabelId];
-    }
-
+//    private int remapLabel(int leftLabelId) {
+//        return leftToRightLabelRemap[leftLabelId];
+//    }
     @Override
     public boolean isBottomUpDeterministic() {
         return left.isBottomUpDeterministic() && right.isBottomUpDeterministic();
@@ -103,8 +102,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
 //            int[] oldLabelRemap = labelRemap;
 //            labelRemap = right.getSignature().remap(left.getSignature());
-            
-            
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<IntSet>();
 
             ckyTimestamp[1] = System.nanoTime();
@@ -132,7 +129,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 //            labelRemap = oldLabelRemap;
         }
     }
-    
+
     private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, final Int2ObjectMap<IntSet> partners) {
         if (!visited.contains(q)) {
             visited.add(q);
@@ -148,7 +145,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     remappedChildren.add(partners.get(rightChildren[i]));
                 }
 
-                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightLabelRemap, new Function<Rule, Void>() {
+                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, new Function<Rule, Void>() {
                     public Void apply(Rule leftRule) {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
@@ -169,7 +166,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         }
     }
 
-    
     // bottom-up intersection algorithm
     @Override
     public void makeAllRulesExplicit() {
@@ -292,7 +288,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         String interpretation = args[2];
         String outputFile = args[3];
         String comments = args[4];
-        
+
         // initialize CPU-time benchmarking
         long[] timestamp = new long[4];
         ThreadMXBean benchmarkBean = ManagementFactory.getThreadMXBean();
@@ -300,20 +296,19 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         if (useCPUTime) {
             System.err.println("Using CPU time for measuring the results.");
         }
-        
+
         System.err.print("Reading the IRTG...");
-        
+
         updateBenchmark(timestamp, 0, useCPUTime, benchmarkBean);
 
 //        timestamp[0] = System.nanoTime();
-
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileReader(new File(irtgFilename)));
         Interpretation interp = irtg.getInterpretation(interpretation);
         Homomorphism hom = interp.getHomomorphism();
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
 
         updateBenchmark(timestamp, 1, useCPUTime, benchmarkBean);
-        
+
         System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
         try {
             File oFile = new File(outputFile);
@@ -325,7 +320,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     + "Output-File: " + outputFile + "\n"
                     + "Comments   : " + comments + "\n"
                     + "CPU-Time   : " + useCPUTime + "\n\n");
-              out.flush();
+            out.flush();
 
             try {
                 // setting up inputstream for the sentences
@@ -344,24 +339,23 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     // intersect
                     TreeAutomaton decomp = alg.decompose(alg.parseString(sentence));
                     CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(hom);
+
                     TreeAutomaton<String> result = irtg.getAutomaton().intersectCondensed(inv);
-                    
+
                     updateBenchmark(timestamp, 3, useCPUTime, benchmarkBean);
-                    
-                    
-                    if (!result.getFinalStates().isEmpty()) {
-//                        System.err.println("Language:\n" + result.language().toString());
-                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
-                    }
-                    
+
+//                    if (!result.getFinalStates().isEmpty()) {
+//                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
+//                    } else {
+//                        System.err.println("\n**** EMPTY ****\n");
+//                    }
+
                     // try to trigger gc
                     result = null;
                     System.gc();
 
                     System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
                     out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
-                    
-
 
                     out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;
@@ -386,7 +380,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
             timestamp[index] = System.nanoTime();
         }
     }
-    
+
     private static String stackTraceToString(StackTraceElement[] elements) {
         StringBuilder sb = new StringBuilder();
         for (StackTraceElement element : elements) {

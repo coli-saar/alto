@@ -80,7 +80,7 @@ Y -> r8(X,X)
 
 //        System.err.println("invhom(decomp(" + input  + "):\n" + inv.toStringBottomUp());
                 
-        TreeAutomaton<String> result = irtg.getAutomaton().intersectCondensed(inv);
+        TreeAutomaton<String> result = irtg.getAutomaton().intersectCondensed(inv, h.getSignatureMapper());
 
         
 //        

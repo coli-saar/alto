@@ -132,6 +132,13 @@ public class Signature implements Serializable {
         return "[" + StringTools.join(syms, ", ") + "]";
     }
     
+    /**
+     * Returns an arrary x such that the symbol with ID
+     * i in this signature is the same as the symbol with ID
+     * x[i] in the other signature. If the symbol
+     * does not exist in the other signature, x[i]
+     * will be 0.
+     */
     public int[] remap(Signature other) {
         return interner.remap(other.interner);
     }    
