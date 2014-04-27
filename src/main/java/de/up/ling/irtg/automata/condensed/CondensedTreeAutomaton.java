@@ -8,6 +8,7 @@ package de.up.ling.irtg.automata.condensed;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.signature.IntSetInterner;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -17,8 +18,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import com.google.common.collect.Iterables;
-import de.up.ling.irtg.signature.Interner;
 
 
 /**
@@ -29,7 +28,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
     protected final boolean DEBUG = false;
     protected CondensedRuleTrie ruleTrie; // ButtomUp: A Trie of ints (states), that stores a Map, wich relates IntSets (condensed labels) to Sets of Rules.
     protected Int2ObjectMap<Int2ObjectMap<Set<CondensedRule>>> topDownRules; // TopDown: ParentState to Labels
-    protected Interner<IntSet> labelSetInterner;    // adds an int to actual Intset, that represent the LabelSet. During the creation of an CTA the Labelset may change, thats why an interner is needed.
+    protected IntSetInterner labelSetInterner;    // adds an int to actual Intset, that represent the LabelSet. During the creation of an CTA the Labelset may change, thats why an interner is needed.
     protected boolean isCondensedExplicit; // is true, if the internal data structures tobDownRules and ruleTrie are filled correctly.
     
     public CondensedTreeAutomaton(Signature signature) {
@@ -37,7 +36,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         isCondensedExplicit = true; // depend on the implemenation of storeRule()
         ruleTrie = new CondensedRuleTrie();
         topDownRules = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<CondensedRule>>>();
-        labelSetInterner = new Interner<IntSet>();
+        labelSetInterner = new IntSetInterner();
     }
     
     public CondensedRule createRule(State parent, List<String> labels, List<State> children) {
@@ -57,7 +56,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         for (int i = 0; i < labels.length; i++) {
             labelSet.add(signature.addSymbol(labels[i], children.length));
         }
-        return new CondensedRule(addState(parent), labelSetInterner.addObject(labelSet), addStates(children), weight);
+        return new CondensedRule(addState(parent), addLabelSetID(labelSet), addStates(children), weight);
         
     }
     
@@ -73,9 +72,15 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         return new CondensedRule(parent, labelSetID, children, weight);
     }
     
+    // Returns the ID for a labelset, but does not add it! Returns 0 if it is not 
+    // represented in the interner
+    protected int getLabelSetID(IntSet labels) {
+        return labelSetInterner.resolveObject(labels);
+    }
+    
     // Adds a given labelSet to the interner and returns the int value representing it. 
     // This should be called while creating a rule for this automaton.
-    protected int getLabelSetID(IntSet labels) {
+    protected int addLabelSetID(IntSet labels) {
         return labelSetInterner.addObject(labels);
     }
     
@@ -143,7 +148,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
 
     protected Set<CondensedRule> getCondensedRuleBottomUpFromExplicit(IntSet labelIds, int[] childStates) {
         makeAllRulesCondensedExplicit();
-        return ruleTrie.get(childStates, labelSetInterner.addObject(labelIds));
+        return ruleTrie.get(childStates, getLabelSetID(labelIds));
     }
     
     protected Set<CondensedRule> getCondensedRulesTopDownFromExplicit(IntSet labelIds, int parentState) {
@@ -173,7 +178,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         Int2ObjectMap<Set<CondensedRule>> ruleMap = ruleTrie.getFinalTrie(childStates).getLabelSetIDToRulesMap();
         // Check if the given labenId is in an IntSet (labels)
         for (int labelSetID : ruleMap.keySet()) {
-            IntSet labels = labelSetInterner.resolveId(labelSetID);
+            IntSet labels = getLabelsForID(labelSetID);
             if (labels.contains(labelId)) {
                 for (CondensedRule cr : ruleMap.get(labelSetID)) {
                     ret.add(createRule(cr.getParent(), labelId, childStates, cr.getWeight()));
@@ -190,7 +195,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         if (topDownRules.containsKey(parentState)) {
             Int2ObjectMap<Set<CondensedRule>> labelsToRules = topDownRules.get(parentState);
             for (int labelSetID : labelsToRules.keySet()) {
-                IntSet labelSet = labelSetInterner.resolveId(labelSetID);
+                IntSet labelSet = getLabelsForID(labelSetID);
                 if (labelSet.contains(labelId)) {
                     for (CondensedRule cr : labelsToRules.get(labelSetID)) {
                         ret.add(createRule(cr.getParent(), labelId, cr.getChildren(), cr.getWeight())); //Check!

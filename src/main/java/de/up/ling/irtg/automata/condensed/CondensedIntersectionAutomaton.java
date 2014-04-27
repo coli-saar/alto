@@ -13,6 +13,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.*;
+import de.up.ling.irtg.automata.condensed.ParseException;
 import de.up.ling.irtg.hom.Homomorphism;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -30,6 +31,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadMXBean;
 import java.util.*;
 
 /**
@@ -289,7 +292,18 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         String interpretation = args[2];
         String outputFile = args[3];
         String comments = args[4];
-        long[] timestamp = new long[5];
+        
+        // initialize CPU-time benchmarking
+        long[] timestamp = new long[4];
+        ThreadMXBean benchmarkBean = ManagementFactory.getThreadMXBean();
+        boolean useCPUTime = benchmarkBean.isCurrentThreadCpuTimeSupported();
+        if (useCPUTime) {
+            System.err.println("Using CPU time for measuring the results.");
+        }
+        
+        System.err.print("Reading the IRTG...");
+        
+        updateBenchmark(timestamp, 0, useCPUTime, benchmarkBean);
 
         System.err.print("Reading the IRTG...");
         timestamp[0] = System.nanoTime();
@@ -299,23 +313,23 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         Homomorphism hom = interp.getHomomorphism();
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
 
-        timestamp[1] = System.nanoTime();
+        updateBenchmark(timestamp, 1, useCPUTime, benchmarkBean);
+        
         System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
         try {
             File oFile = new File(outputFile);
-//            System.err.println("Can write to file? " + oFile.canWrite());
             FileWriter outstream = new FileWriter(oFile);
             BufferedWriter out = new BufferedWriter(outstream);
-            out.write("Testing IntersectionAutomaton with condensed intersectio ...\n"
+            out.write("Testing IntersectionAutomaton with condensed intersection ...\n"
                     + "IRTG-File  : " + irtgFilename + "\n"
                     + "Input-File : " + sentencesFilename + "\n"
                     + "Output-File: " + outputFile + "\n"
-                    + "Comments   : " + comments + "\n\n");
-            //  out.flush();
-//            System.err.println("Can write to file? " + oFile.canWrite());
+                    + "Comments   : " + comments + "\n"
+                    + "CPU-Time   : " + useCPUTime + "\n\n");
+              out.flush();
 
             try {
-
+                // setting up inputstream for the sentences
                 FileInputStream instream = new FileInputStream(new File(sentencesFilename));
                 DataInputStream in = new DataInputStream(instream);
                 BufferedReader br = new BufferedReader(new InputStreamReader(in));
@@ -326,29 +340,33 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                 while ((sentence = br.readLine()) != null) {
                     ++sentences;
                     System.err.println("Current sentence: " + sentence);
-                    timestamp[2] = System.nanoTime();
+                    updateBenchmark(timestamp, 2, useCPUTime, benchmarkBean);
 
+                    // intersect
                     TreeAutomaton decomp = alg.decompose(alg.parseString(sentence));
                     CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(hom);
                     TreeAutomaton<String> result = irtg.getAutomaton().intersectCondensed(inv);
-
-
-                    timestamp[3] = System.nanoTime();
+                    
+                    updateBenchmark(timestamp, 3, useCPUTime, benchmarkBean);
+                    
+                    // try to trigger gc
+                    result = null;
+                    System.gc();
 
                     System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
-                    outstream.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
-
+                    out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
+                    
 
 //                    if (!result.getFinalStates().isEmpty()) {
 //                        System.err.println("Language:\n" + result.language().toString());
 //                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
 //                    }
 
-//                    out.flush();
+                    out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;
                 }
-                outstream.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");
-//                out.flush();
+                out.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");
+                out.flush();
             } catch (IOException ex) {
                 System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
             }
@@ -358,7 +376,16 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
     }
 
-    public static String stackTraceToString(StackTraceElement[] elements) {
+    // Saves the current time / CPU time in the timestamp-variable
+    private static void updateBenchmark(long[] timestamp, int index, boolean useCPU, ThreadMXBean bean) {
+        if (useCPU) {
+            timestamp[index] = bean.getCurrentThreadCpuTime();
+        } else {
+            timestamp[index] = System.nanoTime();
+        }
+    }
+    
+    private static String stackTraceToString(StackTraceElement[] elements) {
         StringBuilder sb = new StringBuilder();
         for (StackTraceElement element : elements) {
             sb.append(element.toString());
