@@ -305,8 +305,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         
         updateBenchmark(timestamp, 0, useCPUTime, benchmarkBean);
 
-        System.err.print("Reading the IRTG...");
-        timestamp[0] = System.nanoTime();
+//        timestamp[0] = System.nanoTime();
 
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileReader(new File(irtgFilename)));
         Interpretation interp = irtg.getInterpretation(interpretation);
@@ -357,10 +356,10 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
                     
 
-//                    if (!result.getFinalStates().isEmpty()) {
+                    if (!result.getFinalStates().isEmpty()) {
 //                        System.err.println("Language:\n" + result.language().toString());
-//                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
-//                    }
+                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
+                    }
 
                     out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;

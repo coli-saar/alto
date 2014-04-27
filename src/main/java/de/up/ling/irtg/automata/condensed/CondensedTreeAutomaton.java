@@ -190,7 +190,8 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
 
     @Override
     public Set<Rule> getRulesTopDown(int labelId, int parentState) {
-        makeAllRulesCondensedExplicit();
+        makeAllRulesCondensedExplicit();  // TODO - this calls storeRule on everything - AK
+        
         Set<Rule> ret = new HashSet<Rule>();
         if (topDownRules.containsKey(parentState)) {
             Int2ObjectMap<Set<CondensedRule>> labelsToRules = topDownRules.get(parentState);

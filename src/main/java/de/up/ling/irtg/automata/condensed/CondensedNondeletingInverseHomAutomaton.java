@@ -73,7 +73,8 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
                 for (Integer state : rhsAutomaton.run(rhs, HomomorphismSymbol.getHomSymbolToIntFunction(), RETURN_ZERO)) {
 
                     // save the labelSetID in the signature of this automaton
-                    int newLabelSetID = this.addLabelSetID(hom.getLabelSetByLabelSetID(labelSetID));
+//                    int newLabelSetID = this.addLabelSetID(hom.getLabelSetByLabelSetID(labelSetID)); // AK
+                    int newLabelSetID = labelSetID;
 
                     if (stateToNewLabelSetIDs.containsKey(state)) {
                         stateToNewLabelSetIDs.get(state).add(newLabelSetID);
@@ -124,7 +125,9 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
                     if (isCompleteSubstitutionTuple(substitutionTuple)) {
                         // TODO: weights
                         // Transform the labelSetID from the homomorphism to one of this automaton.
-                        int newLabelSetID = this.addLabelSetID(hom.getLabelSetByLabelSetID(labelSetID));
+                        
+//                        int newLabelSetID = this.addLabelSetID(hom.getLabelSetByLabelSetID(labelSetID)); // AK
+                        int newLabelSetID = labelSetID;
                         CondensedRule cr = new CondensedRule(parentState, newLabelSetID, intListToArray(substitutionTuple), 1); //createRuleRaw(parentState, newLabelSetID, intListToArray(substitutionTuple), 1);
                         ret.add(cr);
                         
@@ -137,6 +140,26 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         
         
         return ret;
+    }
+    
+    // Returns the ID for a labelset, but does not add it! Returns 0 if it is not 
+    // represented in the interner
+    @Override
+    protected int getLabelSetID(IntSet labels) {
+        return hom.getLabelSetIDByLabelSet(labels);
+    }
+    
+    // Adds a given labelSet to the interner and returns the int value representing it. 
+    // This should be called while creating a rule for this automaton.
+    @Override
+    protected int addLabelSetID(IntSet labels) {
+        throw new UnsupportedOperationException("cannot add label set IDs to invhom automaton");
+    }
+    
+    // Reverse function of getLabelSetID. Shold be used by a CondensedRule Object.
+    @Override
+    protected IntSet getLabelsForID(int labelSetID) {
+        return hom.getLabelSetByLabelSetID(labelSetID);
     }
 
     public void makeAllRulesCondensedExplicit() {

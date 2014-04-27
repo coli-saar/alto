@@ -14,6 +14,8 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +38,7 @@ public class Homomorphism {
     
     private Interner<Tree<HomomorphismSymbol>> terms;   // Maps an ID to each term
     private List<IntSet> labelSetList;  // List of labelSets. Their index is their labelSet OD
+    private Object2IntMap<IntSet> labelSetToLabelID;
    
     private Int2IntMap termsToLabelSet; // Lookup for existing terms
     private Int2IntMap labelToLabelSet; // Find the labelSet for a given label
@@ -54,6 +57,7 @@ public class Homomorphism {
         labelToLabelSet = new Int2IntOpenHashMap();
         labelSetToTerm = new Int2IntOpenHashMap();
         labelSetList = new ArrayList<IntSet>();
+        labelSetToLabelID = new Object2IntOpenHashMap<IntSet>();
         
         tgtIDToSrcID = new Int2IntOpenHashMap();
     }
@@ -126,7 +130,11 @@ public class Homomorphism {
     // Adds a label to an existing labelSet.
     private void addToLabelSet(int label, int labelSetID) {
         IntSet labelSet = getLabelSet(labelSetID);  // Get the actual labelset
+        
+        labelSetToLabelID.remove(labelSet);
+        
         labelSet.add(label);                        // Now change the content of the set
+        labelSetToLabelID.put(labelSet, labelSetID); // and update set-to-int map
 
         if (debug) {
             System.err.println("labelSet = " + labelSet);
@@ -143,6 +151,7 @@ public class Homomorphism {
         labelSet.add(label);            // put first element in set
         labelSetList.add(labelSet);     // add set to the list
         int labelSetID = labelSetList.size() - 1; // = the position in the list
+        labelSetToLabelID.put(labelSet, labelSetID);
         
         if (debug) {
             System.err.println("labelSetID = " + labelSetID);
@@ -177,6 +186,10 @@ public class Homomorphism {
     public IntSet getLabelSetByLabelSetID(int labelSetID) {
         assert labelSetID < labelSetList.size();
         return labelSetList.get(labelSetID);
+    }
+    
+    public int getLabelSetIDByLabelSet(IntSet labelSet) {
+        return labelSetToLabelID.getInt(labelSet);
     }
 
     public int getTermID(int label) {
