@@ -165,6 +165,8 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     public void makeAllRulesCondensedExplicit() {
         if (!isCondensedExplicit) {
             
+            System.err.println("*** EXPLICIT ");
+            
 //            System.err.println("This  Signature:   \n" + getSignature().toString());
 //            System.err.println("Rhs  Signature:   \n" + rhsAutomaton.getSignature().toString());
 //            System.err.println("Hom SRC Signature: \n" + hom.getSourceSignature().toString());

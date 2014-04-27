@@ -348,6 +348,12 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     
                     updateBenchmark(timestamp, 3, useCPUTime, benchmarkBean);
                     
+                    
+                    if (!result.getFinalStates().isEmpty()) {
+//                        System.err.println("Language:\n" + result.language().toString());
+                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
+                    }
+                    
                     // try to trigger gc
                     result = null;
                     System.gc();
@@ -356,10 +362,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
                     
 
-                    if (!result.getFinalStates().isEmpty()) {
-//                        System.err.println("Language:\n" + result.language().toString());
-                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
-                    }
 
                     out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;
@@ -370,7 +372,8 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                 System.err.println("Error while reading the Sentences-file: " + ex.getMessage());
             }
         } catch (Exception ex) {
-            System.out.println("Error while writing to file:" + ex.getMessage() + "\n" + stackTraceToString(ex.getStackTrace()));
+            System.out.println("Error while writing to file:" + ex.getMessage());
+            ex.printStackTrace(System.err);
         }
 
     }
