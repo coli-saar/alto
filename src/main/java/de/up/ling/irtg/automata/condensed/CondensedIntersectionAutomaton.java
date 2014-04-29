@@ -357,11 +357,14 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
                     updateBenchmark(timestamp, 3, useCPUTime, benchmarkBean);
 
-//                    if (!result.getFinalStates().isEmpty()) {
+                    if (result.getFinalStates().isEmpty()) {
+                        System.err.println("\n**** EMPTY ****\n");
+                    } 
+//                    else {
 //                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
-//                    } else {
-//                        System.err.println("\n**** EMPTY ****\n");
 //                    }
+                    
+                    
                     // try to trigger gc
                     result = null;
                     System.gc();
