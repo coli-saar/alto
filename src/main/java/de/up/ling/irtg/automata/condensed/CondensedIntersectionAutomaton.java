@@ -44,39 +44,31 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     private TreeAutomaton<LeftState> left;
     private CondensedTreeAutomaton<RightState> right;
     private static final boolean DEBUG = false;
-    private Int2IntMap stateToLeftState;
-    private Int2IntMap stateToRightState;
+//    private Int2IntMap stateToLeftState;
+//    private Int2IntMap stateToRightState;
     private long[] ckyTimestamp = new long[10];
     private final SignatureMapper leftToRightSignatureMapper;
+
+    private final IntInt2IntMap stateMapping;
+//    private final List<Pair<Integer,Integer>> outputStates;
+//    private int nextOutputStateId;
 
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
         super(left.getSignature()); // TODO = should intersect this with the (remapped) right signature
 
         this.leftToRightSignatureMapper = sigMapper;
 
-//        System.err.println(sigMapper);
-
         this.left = left;
         this.right = right;
 
-//        System.err.println("~~~~~~~~~~~~LEFT~~~~~~~~~~~~~~");
-//        System.err.println(left.toString());
-//
-//        System.err.println("~~~~~~~~~+++RIGHT CONDENSED+++~~~~~~~~~~~~");
-//        System.err.println(right.toStringCondensed());
-//
-//        System.err.println("~~~~~~~~~+++RIGHT ALL RULES+++~~~~~~~~~~~~");
-//        System.err.println(right.toString());
-//
-//        System.err.println("~~~~~~~~~~~~~~~~~~~~~~~~~~");
-//
-//        System.err.println("right interner: " + right.stateInterner);
-//        System.err.println("condensed-right interner: " + condensedRight.stateInterner);
-        stateToLeftState = new Int2IntOpenHashMap();
-        stateToRightState = new Int2IntOpenHashMap();
-
+//        stateToLeftState = new Int2IntOpenHashMap();
+//        stateToRightState = new Int2IntOpenHashMap();
         finalStates = null;
-//        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
+
+        stateMapping = new IntInt2IntMap();
+//        outputStates = new ArrayList<Pair<Integer, Integer>>();
+//        outputStates.add(null);
+//        nextOutputStateId = 1;
     }
 
     /**
@@ -117,6 +109,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
             ckyTimestamp[2] = System.nanoTime();
 
+//            System.err.println("-> " + getAllStates().size());
             if (DEBUG) {
                 for (int i = 1; i < ckyTimestamp.length; i++) {
                     if (ckyTimestamp[i] != 0 && ckyTimestamp[i - 1] != 0) {
@@ -146,7 +139,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                 }
 
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, new Function<Rule, Void>() {
-                    public Void apply(Rule leftRule) {
+                    public Void apply(final Rule leftRule) {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
 
@@ -174,27 +167,17 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     }
 
     private int addStatePair(int leftState, int rightState) {
-        int ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
+        int ret = stateMapping.get(leftState, rightState);
 
-        stateToLeftState.put(ret, leftState);
-        stateToRightState.put(ret, rightState);
-
+        if (ret == 0) {
+            ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
+            stateMapping.put(leftState, rightState, ret);
+        }
+        
         return ret;
     }
 
-    private Rule combineRules(Rule leftRule, Rule rightRule) {
-        int[] childStates = new int[leftRule.getArity()];
-
-        for (int i = 0; i < leftRule.getArity(); i++) {
-            childStates[i] = addStatePair(leftRule.getChildren()[i], rightRule.getChildren()[i]);
-        }
-
-        int parentState = addStatePair(leftRule.getParent(), rightRule.getParent());
-
-        return createRule(parentState, leftRule.getLabel(), childStates, leftRule.getWeight() * rightRule.getWeight());
-    }
-
-    private Rule combineRules(Rule leftRule, CondensedRule rightRule) {
+    Rule combineRules(Rule leftRule, CondensedRule rightRule) {
         int[] childStates = new int[leftRule.getArity()];
 
         for (int i = 0; i < leftRule.getArity(); i++) {
@@ -265,6 +248,36 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     public Set<Integer> getAllStates() {
         makeAllRulesExplicit();
         return super.getAllStates();
+    }
+
+    private static class IntInt2IntMap {
+
+        private final Int2ObjectMap<Int2IntMap> map;
+
+        public IntInt2IntMap() {
+            map = new Int2ObjectOpenHashMap<Int2IntMap>();
+        }
+
+        public int get(int x, int y) {
+            Int2IntMap m = map.get(x);
+
+            if (m == null) {
+                return 0;
+            } else {
+                return m.get(y);
+            }
+        }
+
+        public void put(int x, int y, int value) {
+            Int2IntMap m = map.get(x);
+
+            if (m == null) {
+                m = new Int2IntOpenHashMap();
+                map.put(x, m);
+            }
+
+            m.put(y, value);
+        }
     }
 
     /**
@@ -349,8 +362,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 //                    } else {
 //                        System.err.println("\n**** EMPTY ****\n");
 //                    }
-
-                    
                     // try to trigger gc
                     result = null;
                     System.gc();
