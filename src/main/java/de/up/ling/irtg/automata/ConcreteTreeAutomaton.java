@@ -20,12 +20,12 @@ import java.util.Set;
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 
-    private IntTrie<Int2ObjectMap<Set<Rule>>> ruleTrie = null;
+//    private IntTrie<Int2ObjectMap<Set<Rule>>> ruleTrie = null;
 
     public ConcreteTreeAutomaton() {
         super(new Signature());
         isExplicit = true;
-        ruleTrie = new IntTrie<Int2ObjectMap<Set<Rule>>>();
+//        ruleTrie = new IntTrie<Int2ObjectMap<Set<Rule>>>();
     }
 
     @Override
@@ -60,14 +60,14 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     @Override
     public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Function<Rule, Void> fn) {
 //        System.err.println("cta frbupfs");
-        ensureRuleTrie();
+//        ensureRuleTrie();
 
 //        final IntSet remappedLabelIds = new IntOpenHashSet();
 //        for (int labelId : labelIds) {
 //            remappedLabelIds.add(labelRemap[labelId]);
 //        }
 
-        ruleTrie.foreachValueForKeySets(childStateSets, new Function<Int2ObjectMap<Set<Rule>>, Void>() {
+        explicitRuleBottomUp.foreachValueForKeySets(childStateSets, new Function<Int2ObjectMap<Set<Rule>>, Void>() {
             public Void apply(Int2ObjectMap<Set<Rule>> ruleMap) {
                 for (int label : ruleMap.keySet()) {
                     if( labelIds.contains(signatureMapper.remapForward(label))) {
@@ -107,44 +107,44 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 //        
 //        return ret;
 //    }
-    @Override
-    protected void storeRule(Rule rule) {
-        super.storeRule(rule); //To change body of generated methods, choose Tools | Templates.
-        storeRuleInTrie(rule);
-    }
+//    @Override
+//    protected void storeRule(Rule rule) {
+//        super.storeRule(rule); //To change body of generated methods, choose Tools | Templates.
+////        storeRuleInTrie(rule);
+//    }
     
     
     
-    private void storeRuleInTrie(Rule rule) {
-        Int2ObjectMap<Set<Rule>> knownRuleMap = ruleTrie.get(rule.getChildren());
+//    private void storeRuleInTrie(Rule rule) {
+//        Int2ObjectMap<Set<Rule>> knownRuleMap = ruleTrie.get(rule.getChildren());
+//
+//        if (knownRuleMap == null) {
+//            knownRuleMap = new Int2ObjectOpenHashMap<Set<Rule>>();
+//            ruleTrie.put(rule.getChildren(), knownRuleMap);
+//        }
+//
+//        Set<Rule> knownRules = knownRuleMap.get(rule.getLabel());
+//
+//        if (knownRules == null) {
+//            knownRules = new HashSet<Rule>();
+//            knownRuleMap.put(rule.getLabel(), knownRules);
+//        }
+//
+//        knownRules.add(rule);
+//    }
 
-        if (knownRuleMap == null) {
-            knownRuleMap = new Int2ObjectOpenHashMap<Set<Rule>>();
-            ruleTrie.put(rule.getChildren(), knownRuleMap);
-        }
-
-        Set<Rule> knownRules = knownRuleMap.get(rule.getLabel());
-
-        if (knownRules == null) {
-            knownRules = new HashSet<Rule>();
-            knownRuleMap.put(rule.getLabel(), knownRules);
-        }
-
-        knownRules.add(rule);
-    }
-
-    private void ensureRuleTrie() {
-        if (ruleTrie == null) {
-            System.err.println("reindexing ...");
-
-            long startTime = System.nanoTime();
-
-            ruleTrie = new IntTrie<Int2ObjectMap<Set<Rule>>>();
-            for (Rule rule : getRuleIterable()) {
-                storeRuleInTrie(rule);
-            }
-
-            System.err.println("reindexing trie: " + (System.nanoTime() - startTime) / 1000000 + "ms");
-        }
-    }
+//    private void ensureRuleTrie() {
+//        if (ruleTrie == null) {
+//            System.err.println("reindexing ...");
+//
+//            long startTime = System.nanoTime();
+//
+//            ruleTrie = new IntTrie<Int2ObjectMap<Set<Rule>>>();
+//            for (Rule rule : getRuleIterable()) {
+//                storeRuleInTrie(rule);
+//            }
+//
+//            System.err.println("reindexing trie: " + (System.nanoTime() - startTime) / 1000000 + "ms");
+//        }
+//    }
 }

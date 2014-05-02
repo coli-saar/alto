@@ -8,8 +8,12 @@ package de.up.ling.irtg.automata;
 import com.google.common.base.Function;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -17,30 +21,58 @@ import java.util.List;
  * @author koller
  */
 public class IntTrie<E> implements Serializable {
-
     private Int2ObjectMap<IntTrie<E>> nextStep;
     private E value;
+//    private Set<E> allValues; // only has meaningful content at top-level
 
-    public IntTrie() {
+    private IntTrie(boolean toplevel) {
         nextStep = new Int2ObjectOpenHashMap<IntTrie<E>>();
         value = null;
+
+//        if (toplevel) {
+//            allValues = new HashSet<E>();
+//        } else {
+//            allValues = null;
+//        }
     }
 
-    public void put(int[] key, E value) {
-        put(0, key, value);
+    public IntTrie() {
+        this(true);
     }
 
-    private void put(int index, int[] key, E value) {
+    /**
+     * Returns the previously known entry, or null if an entry
+     * for this key was not known.
+     * 
+     * @param key
+     * @param value
+     * @return 
+     */
+    public E put(int[] key, E value) {
+        E ret = put(0, key, value);
+        
+//        if( ret != null ) {
+//            allValues.remove(ret);
+//        }
+//        
+//        allValues.add(value);
+        
+        return ret;
+    }
+
+    private E put(int index, int[] key, E value) {
         if (index == key.length) {
+            E ret = this.value;
             this.value = value;
+            return ret;
         } else {
             IntTrie<E> next = nextStep.get(key[index]);
             if (next == null) {
-                next = new IntTrie<E>();
+                next = new IntTrie<E>(false);
                 nextStep.put(key[index], next);
             }
 
-            next.put(index + 1, key, value);
+            return next.put(index + 1, key, value);
         }
     }
 
@@ -83,5 +115,53 @@ public class IntTrie<E> implements Serializable {
                 }
             }
         }
+    }
+
+    
+    public static interface EntryVisitor<E> {
+        public void visit(IntList keys, E value);
+    }
+    
+    public void foreach(EntryVisitor<E> visitor) {
+        IntList keys = new IntArrayList();
+        foreach(keys, visitor);
+    }
+    
+    private void foreach(IntList keys, EntryVisitor<E> visitor) {
+        if( value != null ) {
+            visitor.visit(keys, value);
+        }
+
+        for( int next : nextStep.keySet() ) {
+            int size = keys.size();
+            keys.add(next);
+            nextStep.get(next).foreach(keys, visitor);
+            keys.remove(size);
+        }
+    }
+
+    public Collection<E> getValues() {
+        final List<E> allValues = new ArrayList<E>();
+        
+        foreach(new EntryVisitor<E>() {
+            public void visit(IntList keys, E value) {
+                allValues.add(value);
+            }
+        });
+        
+        return allValues;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder buf = new StringBuilder();
+        
+        foreach(new EntryVisitor<E>() {
+            public void visit(IntList keys, E value) {
+                buf.append(keys + " -> " + value + "\n");
+            }
+        });
+        
+        return buf.toString();
     }
 }
