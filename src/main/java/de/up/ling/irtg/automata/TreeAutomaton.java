@@ -91,8 +91,7 @@ import java.util.Set;
  * @author koller
  */
 public abstract class TreeAutomaton<State> implements Serializable {
-
-    IntTrie<Int2ObjectMap<Set<Rule>>> explicitRulesBottomUp;                    // children -> label -> set(rules)
+    IntTrie<Int2ObjectMap<Set<Rule>>> explicitRulesBottomUp;        // children -> label -> set(rules)
     Int2ObjectMap<Int2ObjectMap<Set<Rule>>> explicitRulesTopDown;              // parent -> label -> set(rules)
     protected IntSet finalStates;                                             // final states, subset of allStates
     protected IntSet allStates;                                                 // subset of stateInterner.keySet() that actually occurs in this automaton; allows for sharing interners across automata to preserve state IDs

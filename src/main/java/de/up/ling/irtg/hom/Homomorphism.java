@@ -14,10 +14,10 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.ints.IntSets;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
  * @author koller
  */
 public class Homomorphism {
+
     private static final Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-Z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
     private final Signature srcSignature, tgtSignature;
     private static final boolean debug = false;
@@ -39,13 +40,11 @@ public class Homomorphism {
 
     private Object2IntMap<IntSet> labelSetToLabelID;  // maps a label set to its ID; only computed by need
     private boolean labelSetsDirty;                   // is current value of labelSetToLabelID valid?
-    
-    
+
     private final Int2IntMap tgtIDToSrcID;    // maps an int that resolves to an string in the tgt signature
     // to an int, that resolves to the coresponding string in the src signature
 
     private SignatureMapper signatureMapper;
-    
 
     public Homomorphism(Signature src, Signature tgt) {
         srcSignature = src;
@@ -71,9 +70,9 @@ public class Homomorphism {
 
     public void add(int label, Tree<HomomorphismSymbol> mapping) {
         int termID;
-        
+
         labelSetsDirty = true;
-        
+
         if (termToId.containsKey(mapping)) {
             // Term is already processed. We only need to add the given label to the proper labelSet
             if (debug) {
@@ -164,15 +163,15 @@ public class Homomorphism {
         assert labelSetID < labelSetList.size();
         return labelSetList.get(labelSetID);
     }
-    
+
     private void ensureCleanLabelSets() {
-        if( labelSetsDirty ) {
+        if (labelSetsDirty) {
             labelSetToLabelID.clear();
-            
-            for( int i = 1; i < labelSetList.size(); i++ ) {
+
+            for (int i = 1; i < labelSetList.size(); i++) {
                 labelSetToLabelID.put(labelSetList.get(i), i);
             }
-            
+
             labelSetsDirty = false;
         }
     }
@@ -193,7 +192,6 @@ public class Homomorphism {
 //    public int getTermIDByLabelSet(int labelSetID) {
 //        return labelSetID;
 //    }
-
     public IntSet getLabelSetForLabel(int label) {
         return getLabelSet(labelToLabelSet.get(label));
     }
@@ -443,21 +441,21 @@ public class Homomorphism {
 
         return true;
     }
-    
+
     /**
-     * Returns a mapper that translates symbols of the source signature
-     * into symbols of the target signature (and back). The mapper is computed
-     * by need, when this method is called for the first time, and then reused.
+     * Returns a mapper that translates symbols of the source signature into
+     * symbols of the target signature (and back). The mapper is computed by
+     * need, when this method is called for the first time, and then reused.
      * Note that if one of the underlying signatures changes, you need to call
      * {@link SignatureMapper#recompute() } to update the mapper.
-     * 
-     * @return 
+     *
+     * @return
      */
     public SignatureMapper getSignatureMapper() {
-        if( signatureMapper == null ) {
+        if (signatureMapper == null) {
             signatureMapper = new SignatureMapper(srcSignature, tgtSignature);
         }
-        
+
         return signatureMapper;
     }
 }

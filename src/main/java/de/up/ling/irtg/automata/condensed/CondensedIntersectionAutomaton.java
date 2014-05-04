@@ -37,11 +37,9 @@ import java.util.*;
 
 
 /*
-TODO: 
-- collectStatePairs: remove CartesianIterator, use IntCartesianIterator to avoid boxing
-*/
-
-
+ TODO: 
+ - collectStatePairs: remove CartesianIterator, use IntCartesianIterator to avoid boxing
+ */
 /**
  *
  * @author koller
@@ -98,7 +96,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         if (!isExplicit) {
             isExplicit = true;
             getStateInterner().setTrustingMode(true);
-            
+
             ckyTimestamp[0] = System.nanoTime();
 
 //            int[] oldLabelRemap = labelRemap;
@@ -164,6 +162,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                         return null;
                     }
                 });
+
             }
         }
     }
@@ -182,7 +181,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
             ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
             stateMapping.put(leftState, rightState, ret);
         }
-        
+
         return ret;
     }
 
@@ -258,7 +257,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 //        makeAllRulesExplicit();
 //        return super.getAllStates();
 //    }
-
     private static class IntInt2IntMap {
 
         private final Int2ObjectMap<Int2IntMap> map;
