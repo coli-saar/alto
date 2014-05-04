@@ -8,6 +8,7 @@ import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.Lazy;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -421,25 +422,29 @@ public class Homomorphism {
         return true;
     }
 
-//    public void setDebug(boolean debug) {
-//        this.debug = debug;
-//    }
-    public boolean isNonDeleting() {
-        for (int label : labelToLabelSet.keySet()) {
-            Tree<HomomorphismSymbol> rhs = get(label);
-            Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
-            for (HomomorphismSymbol l : rhs.getLeafLabels()) {
-                if (l.isVariable()) {
-                    variables.add(l);
+    private Lazy<Boolean> nondeleting = new Lazy<Boolean>() {
+        @Override
+        protected Boolean evaluate() {
+            for (int label : labelToLabelSet.keySet()) {
+                Tree<HomomorphismSymbol> rhs = get(label);
+                Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
+                for (HomomorphismSymbol l : rhs.getLeafLabels()) {
+                    if (l.isVariable()) {
+                        variables.add(l);
+                    }
+                }
+
+                if (variables.size() < srcSignature.getArity((int) label)) {
+                    return false;
                 }
             }
 
-            if (variables.size() < srcSignature.getArity((int) label)) {
-                return false;
-            }
+            return true;
         }
+    };
 
-        return true;
+    public boolean isNonDeleting() {
+        return nondeleting.getValue();
     }
 
     /**
