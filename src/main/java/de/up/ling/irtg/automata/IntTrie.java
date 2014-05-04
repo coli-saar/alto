@@ -6,6 +6,7 @@
 package de.up.ling.irtg.automata;
 
 import com.google.common.base.Function;
+import de.up.ling.irtg.util.FastutilUtils;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -99,31 +100,49 @@ public class IntTrie<E> implements Serializable {
         foreachValueForKeySets(0, keySets, fn);
     }
 
-    private void foreachValueForKeySets(int depth, List<IntSet> keySets, Function<E, Void> fn) {
+    private void foreachValueForKeySets(final int depth, final List<IntSet> keySets, final Function<E, Void> fn) {
         if (depth == keySets.size()) {
             if (value != null) {
                 fn.apply(value);
             }
         } else {
-            IntSet keysHere = keySets.get(depth);
+            final IntSet keysHere = keySets.get(depth);
 
             if (keysHere != null) {
                 int nextStepSize = nextStep.size();
 
                 if (keysHere.size() < nextStepSize) {
-                    for (int key : keysHere) {
-                        IntTrie<E> next = nextStep.get(key);
+                    FastutilUtils.foreachIntIterable(keysHere, new FastutilUtils.IntVisitor() {
+                        public void visit(int key) {
+                            IntTrie<E> next = nextStep.get(key);
 
-                        if (next != null) {
-                            next.foreachValueForKeySets(depth + 1, keySets, fn);
+                            if (next != null) {
+                                next.foreachValueForKeySets(depth + 1, keySets, fn);
+                            }
                         }
-                    }
+                    });
+
+//                    for (int key : keysHere) {
+//                        IntTrie<E> next = nextStep.get(key);
+//
+//                        if (next != null) {
+//                            next.foreachValueForKeySets(depth + 1, keySets, fn);
+//                        }
+//                    }
                 } else {
-                    for( int key : nextStep.keySet() ) {
-                        if( keysHere.contains(key)) {
-                            nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
+                    FastutilUtils.foreachIntIterable(nextStep.keySet(), new FastutilUtils.IntVisitor() {
+                        public void visit(int key) {
+                            if (keysHere.contains(key)) {
+                                nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
+                            }
                         }
-                    }
+                    });
+
+//                    for (int key : nextStep.keySet()) {
+//                        if (keysHere.contains(key)) {
+//                            nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
+//                        }
+//                    }
                 }
             }
         }
