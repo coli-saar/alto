@@ -568,7 +568,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     @Override
-    public Set<Rule> getRulesTopDown(int label, int parentState) {
+    public Iterable<Rule> getRulesTopDown(int label, int parentState) {
         makeAllRulesExplicit();
 
         assert useCachedRuleTopDown(label, parentState);

@@ -8,9 +8,7 @@ import com.google.common.base.Function;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -48,7 +46,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     }
 
     @Override
-    public Set<Rule> getRulesTopDown(int label, int parentState) {
+    public Iterable<Rule> getRulesTopDown(int label, int parentState) {
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
@@ -67,7 +65,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 //            remappedLabelIds.add(labelRemap[labelId]);
 //        }
 
-        explicitRuleBottomUp.foreachValueForKeySets(childStateSets, new Function<Int2ObjectMap<Set<Rule>>, Void>() {
+        explicitRulesBottomUp.foreachValueForKeySets(childStateSets, new Function<Int2ObjectMap<Set<Rule>>, Void>() {
             public Void apply(Int2ObjectMap<Set<Rule>> ruleMap) {
                 for (int label : ruleMap.keySet()) {
                     if( labelIds.contains(signatureMapper.remapForward(label))) {

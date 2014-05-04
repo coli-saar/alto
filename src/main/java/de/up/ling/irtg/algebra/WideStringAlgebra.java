@@ -9,6 +9,9 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntIterable;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -120,7 +123,7 @@ public class WideStringAlgebra extends StringAlgebra {
         }
 
         @Override
-        public Set<Rule> getRulesTopDown(final int label, final int parentState) {
+        public Iterable<Rule> getRulesTopDown(final int label, final int parentState) {
             if (!useCachedRuleTopDown(label, parentState)) {
                 final Span parentSpan = getStateForId(parentState);
 
@@ -156,11 +159,11 @@ public class WideStringAlgebra extends StringAlgebra {
         }
 
         @Override
-        public Set<Integer> getLabelsTopDown(int parentState) {
+        public IntIterable getLabelsTopDown(int parentState) {
             Span parentSpan = getStateForId(parentState);
 
             if (parentSpan.end == parentSpan.start + 1) {
-                Set<Integer> ret = new HashSet<Integer>();
+                IntSet ret = new IntOpenHashSet();
                 ret.add(words[parentSpan.start]);
                 return ret;
             } else {

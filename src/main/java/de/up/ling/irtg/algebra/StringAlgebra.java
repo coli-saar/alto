@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.Serializable;
@@ -41,13 +42,13 @@ public class StringAlgebra extends Algebra<List<String>> {
 
     public static final String CONCAT = "*";
     protected int concatSymbolId;
-    private Set<Integer> concatSet;
+    private IntSet concatSet;
     private Signature signature = new Signature();
 
     public StringAlgebra() {
         concatSymbolId = signature.addSymbol(CONCAT, 2);
 
-        concatSet = new HashSet<Integer>();
+        concatSet = new IntOpenHashSet();
         concatSet.add(concatSymbolId);
     }
 
@@ -184,7 +185,7 @@ public class StringAlgebra extends Algebra<List<String>> {
         }
 
         @Override
-        public Set<Rule> getRulesTopDown(int label, int parentState) {
+        public Iterable<Rule> getRulesTopDown(int label, int parentState) {
             if (!useCachedRuleTopDown(label, parentState)) {
                 Span parentSpan = getStateForId(parentState);
 
@@ -206,11 +207,11 @@ public class StringAlgebra extends Algebra<List<String>> {
         }
 
         @Override
-        public Set<Integer> getLabelsTopDown(int parentState) {
+        public IntIterable getLabelsTopDown(int parentState) {
             Span parentSpan = getStateForId(parentState);
 
             if (parentSpan.end == parentSpan.start + 1) {
-                Set<Integer> ret = new HashSet<Integer>();
+                IntSet ret = new IntOpenHashSet();
                 ret.add(words[parentSpan.start]);
                 return ret;
             } else {

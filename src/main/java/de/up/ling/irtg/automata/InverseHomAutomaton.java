@@ -130,7 +130,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 //    }
 
     @Override
-    public Set<Rule> getRulesTopDown(int label, int parentState) {
+    public Iterable<Rule> getRulesTopDown(int label, int parentState) {
         if (FAIL_STATE.equals(parentState)) {
             makeFailRulesExplicit(label);
         } else {

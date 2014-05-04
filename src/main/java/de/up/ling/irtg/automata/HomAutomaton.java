@@ -145,7 +145,7 @@ class HomAutomaton extends TreeAutomaton<Object> {
     }
 
     @Override
-    public Set<Rule> getRulesTopDown(int label, int parentState) {
+    public Iterable<Rule> getRulesTopDown(int label, int parentState) {
         makeAllRulesExplicit();
         return getRulesTopDownFromExplicit(label, parentState);
     }

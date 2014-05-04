@@ -19,6 +19,7 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
@@ -620,10 +621,10 @@ public class BkvBinarizer {
 
         stateLoop:
         for (Integer state : (List<Integer>) auto.getStatesInBottomUpOrder()) {
-            Collection<Integer> labelsForState = auto.getLabelsTopDown(state);
+            IntIterable labelsForState = auto.getLabelsTopDown(state);
 
             for (int label : labelsForState) {
-                for (Rule rule : (Set<Rule>) auto.getRulesTopDown(label, state)) {
+                for (Rule rule : (Iterable<Rule>) auto.getRulesTopDown(label, state)) {
                     String labelString = auto.getSignature().resolveSymbolId(label);
                     IntSet s = new IntOpenHashSet();
 

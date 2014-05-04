@@ -236,7 +236,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     }
 
     @Override
-    public Set<Rule> getRulesTopDown(int label, int parentState) {
+    public Iterable<Rule> getRulesTopDown(int label, int parentState) {
         makeAllRulesExplicit();
 
         assert useCachedRuleTopDown(label, parentState);
