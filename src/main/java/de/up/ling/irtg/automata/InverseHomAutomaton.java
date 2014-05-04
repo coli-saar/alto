@@ -5,8 +5,10 @@ import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Interner;
+import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
@@ -28,7 +30,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
     private Set<Integer> computedLabels;
 //    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
-    private Function<HomomorphismSymbol,Integer> remappingHomSymbolToIntFunction;
+    private FunctionToInt<HomomorphismSymbol> remappingHomSymbolToIntFunction;
     private IntSet provisionalStateSet;
 
     public InverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
@@ -38,8 +40,8 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         this.hom = hom;
         
         labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
-        remappingHomSymbolToIntFunction = new Function<HomomorphismSymbol, Integer>() {
-            public Integer apply(HomomorphismSymbol f) {
+        remappingHomSymbolToIntFunction = new FunctionToInt<HomomorphismSymbol>() {
+            public int applyInt(HomomorphismSymbol f) {
                 return labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().apply(f)];
             }
         };
@@ -87,9 +89,9 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
             Set<Rule> ret = new HashSet<Rule>();
             
             // run RHS automaton on given child states
-            Set<Integer> resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new Function<Tree<HomomorphismSymbol>, Integer>() {
+            IntIterable resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new FunctionToInt<Tree<HomomorphismSymbol>>() {
                 @Override
-                public Integer apply(Tree<HomomorphismSymbol> f) {
+                public int applyInt(Tree<HomomorphismSymbol> f) {
                     if (f.getLabel().isVariable()) {
                         int child = childStates[f.getLabel().getValue()]; // -> i-th child state (= this state ID)
                         
@@ -109,7 +111,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
                 }
             });
 
-            if (resultStates.isEmpty()) {
+            if (! resultStates.iterator().hasNext()) {
                 // no successful runs found, add rule with FAIL parent
                 // TODO weight??
                 Rule rule = createRule(failStateId, label, childStates, 1);

@@ -12,6 +12,7 @@ import java.io.*
 import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.up.ling.tree.*
+import it.unimi.dsi.fastutil.ints.*
 import de.up.ling.irtg.*
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.algebra.*
@@ -143,49 +144,6 @@ class TreeAutomatonTest{
         assertEquals(pre, pre.asConcreteTreeAutomaton());
     }
     
-    
-    @Test
-    public void testRun() {
-        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a");
-        
-        Tree t = pt("f(a,a)");
-        assertEquals(new HashSet(["p1"]), new HashSet(auto2.run(t)));
-
-        Tree ta = pt("a");
-        assertEquals(new HashSet(["p2","p3"]), new HashSet(auto2.run(ta)));
-    }
-    
-    @Test
-    public void testRunWeights() {
-        setAutomaton("p1! -> f(p2,p3)\n p2 -> a [0.4]\n p3 -> a [0.6]");
-        Tree t = pt("f(a,a)");
-        
-        assert Math.abs(0.24 - auto.getWeight(t)) < 0.001;
-    }    
-    
-    @Test
-    public void testRunWeightsSumAtRoot() {
-        setAutomaton("p1! -> f(p2,p3) \n p1! -> f(p2,p2) \n p2 -> a  [0.4]\n p3 -> a [0.6]");
-        Tree t = pt("f(a,a)");
-        
-        assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
-    }
-    
-    @Test
-    public void testRunWeightsSumInMiddle() {
-        setAutomaton("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a  [0.6]");
-        Tree t = pt("g(f(a,a))");
-        
-        assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
-    }
-
-    @Test
-    public void testRunWeightsNotInLanguage() {
-        setAutomaton("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a [0.6]");
-        Tree t = pt("f(a,a)");
-        
-        assert Math.abs(auto.getWeight(t)) < 0.001;
-    }
 
     
     @Test
@@ -527,6 +485,56 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assert pa(auto).isBottomUpDeterministic() == gold;
     }
     
+    
+    private Set iterableToSet(Iterable it) {
+        Set ret = new HashSet();
+        Iterables.addAll(ret, it);
+        return ret;
+    }
+    
+    @Test
+    public void testRun() {
+        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a");
+        
+        Tree t = pt("f(a,a)");
+        assertEquals(new HashSet(["p1"]), iterableToSet(auto2.run(t)));
+
+        Tree ta = pt("a");
+        assertEquals(new HashSet(["p2","p3"]), iterableToSet(auto2.run(ta)));
+    }
+    
+    @Test
+    public void testRunWeights() {
+        setAutomaton("p1! -> f(p2,p3)\n p2 -> a [0.4]\n p3 -> a [0.6]");
+        Tree t = pt("f(a,a)");
+        
+        assert Math.abs(0.24 - auto.getWeight(t)) < 0.001;
+    }    
+    
+    @Test
+    public void testRunWeightsSumAtRoot() {
+        setAutomaton("p1! -> f(p2,p3) \n p1! -> f(p2,p2) \n p2 -> a  [0.4]\n p3 -> a [0.6]");
+        Tree t = pt("f(a,a)");
+        
+        assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
+    }
+    
+    @Test
+    public void testRunWeightsSumInMiddle() {
+        setAutomaton("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a  [0.6]");
+        Tree t = pt("g(f(a,a))");
+        
+        assert Math.abs(0.4 - auto.getWeight(t)) < 0.001;
+    }
+
+    @Test
+    public void testRunWeightsNotInLanguage() {
+        setAutomaton("p0! -> g(p1) \n p1 -> f(p2,p3) \n p1 -> f(p2,p2) \n p2 -> a [0.4]\n p3 -> a [0.6]");
+        Tree t = pt("f(a,a)");
+        
+        assert Math.abs(auto.getWeight(t)) < 0.001;
+    }
+    
     @Test
     public void testRun1() {
         _testRun("p1! -> f(p2,p3) \n p2 -> a\n p3 -> a",  "f(a,a)", ["p1"]); // nondet
@@ -544,7 +552,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     
     private void _testRun(String auto, String tree, List gold) {
         TreeAutomaton a = pa(auto);
-        assert new HashSet(a.run(pt(tree))).equals(new HashSet(gold));
+        assert iterableToSet(a.run(pt(tree))).equals(new HashSet(gold));
     }
     
     

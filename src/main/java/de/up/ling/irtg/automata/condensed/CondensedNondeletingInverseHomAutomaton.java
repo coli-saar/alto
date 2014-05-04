@@ -4,11 +4,11 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import com.google.common.base.Function;
 import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -55,8 +55,8 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         this.stateInterner = rhsAutomaton.getStateInterner();
         finalStates.addAll(rhsAutomaton.getFinalStates());
         
-        Function<Tree<HomomorphismSymbol>, Integer> RETURN_ZERO = new Function<Tree<HomomorphismSymbol>, Integer>() {
-            public Integer apply(Tree<HomomorphismSymbol> f) {
+        FunctionToInt<Tree<HomomorphismSymbol>> RETURN_ZERO = new FunctionToInt<Tree<HomomorphismSymbol>>() {
+            public int applyInt(Tree<HomomorphismSymbol> f) {
                 return 0;
             }
         };
@@ -70,7 +70,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
           
             if (rhs.getMaximumArity() == 0) {                
                 // iterate over all states that can be reached buttom-up from the the rhs.
-                for (Integer state : rhsAutomaton.run(rhs, HomomorphismSymbol.getHomSymbolToIntFunction(), RETURN_ZERO)) {
+                for (int state : rhsAutomaton.run(rhs, HomomorphismSymbol.getHomSymbolToIntFunction(), RETURN_ZERO)) {
 
                     // save the labelSetID in the signature of this automaton
 //                    int newLabelSetID = this.addLabelSetID(hom.getLabelSetByLabelSetID(labelSetID)); // AK

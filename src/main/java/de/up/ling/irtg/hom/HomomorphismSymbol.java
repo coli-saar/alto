@@ -6,6 +6,7 @@ package de.up.ling.irtg.hom;
 
 import com.google.common.base.Function;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.List;
@@ -174,14 +175,14 @@ public class HomomorphismSymbol {
         return (isVariable() ? "?" : "") + value;
     }
 
-    private static class HomSymbolToInt implements Function<HomomorphismSymbol, Integer> {
-        public Integer apply(HomomorphismSymbol f) {
+    private static class HomSymbolToInt extends FunctionToInt<HomomorphismSymbol> {
+        public int applyInt(HomomorphismSymbol f) {
             return f.getValue();
         }
     }
-    private static Function<HomomorphismSymbol, Integer> HOM_SYMBOL_TO_INT = new HomSymbolToInt();
+    private static FunctionToInt<HomomorphismSymbol> HOM_SYMBOL_TO_INT = new HomSymbolToInt();
 
-    public static Function<HomomorphismSymbol, Integer> getHomSymbolToIntFunction() {
+    public static FunctionToInt<HomomorphismSymbol> getHomSymbolToIntFunction() {
         return HOM_SYMBOL_TO_INT;
     }
 

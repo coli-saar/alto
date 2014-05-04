@@ -9,18 +9,15 @@ import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Interner;
+import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.Int2IntArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenCustomHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,7 +40,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
     private Homomorphism hom;
 //    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
-    private Function<HomomorphismSymbol,Integer> remappingHomSymbolToIntFunction;
+    private FunctionToInt<HomomorphismSymbol> remappingHomSymbolToIntFunction;
     private Int2ObjectMap<Int2ObjectMap<Set<Rule>>> termIDCache;    // termid -> hash(childstates) -> rules
     private Int2ObjectMap<Int2ObjectMap<Set<Rule>>> parentToTermID;
     
@@ -55,8 +52,8 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
         
         labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
         
-        remappingHomSymbolToIntFunction = new Function<HomomorphismSymbol, Integer>() {
-            public Integer apply(HomomorphismSymbol f) {
+        remappingHomSymbolToIntFunction = new FunctionToInt<HomomorphismSymbol>() {
+            public int applyInt(HomomorphismSymbol f) {
                 return labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().apply(f)];
             }
         };
@@ -199,9 +196,9 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
         } else {
             Set<Rule> ret = new HashSet<Rule>();
 
-            Set<Integer> resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new Function<Tree<HomomorphismSymbol>, Integer>() {
+            IntIterable resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new FunctionToInt<Tree<HomomorphismSymbol>>() {
                 @Override
-                public Integer apply(Tree<HomomorphismSymbol> f) {
+                public int applyInt(Tree<HomomorphismSymbol> f) {
                     if (f.getLabel().isVariable()) {                      // variable ?i
                         int child = childStates[f.getLabel().getValue()]; // -> i-th child state (= this state ID)
                         return child;                                     // = rhsAuto state ID
