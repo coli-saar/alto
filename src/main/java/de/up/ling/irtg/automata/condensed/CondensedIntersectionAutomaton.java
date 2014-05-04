@@ -97,6 +97,8 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     public void makeAllRulesExplicitCondensedCKY() {
         if (!isExplicit) {
             isExplicit = true;
+            getStateInterner().setTrustingMode(true);
+            
             ckyTimestamp[0] = System.nanoTime();
 
 //            int[] oldLabelRemap = labelRemap;

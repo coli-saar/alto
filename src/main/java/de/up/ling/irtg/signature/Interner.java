@@ -11,7 +11,9 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,32 +22,60 @@ import java.util.Set;
  * @author koller
  */
 public class Interner<E> implements Serializable, Cloneable {
+
     protected Object2IntMap<E> objectToInt;
     protected Int2ObjectMap<E> intToObject;
+    protected List<E> uncachedObjects;
     int nextIndex;
+    private boolean trustingMode;
+    private int firstIndexForUncachedObjects;
 
     public Interner() {
         objectToInt = new Object2IntOpenHashMap<E>();
         intToObject = new Int2ObjectOpenHashMap<E>();
+        uncachedObjects = new ArrayList<E>();
         nextIndex = 1;
+        firstIndexForUncachedObjects = 1;
+        trustingMode = false;
     }
 
     public void clear() {
         objectToInt.clear();
         intToObject.clear();
+        uncachedObjects.clear();
         nextIndex = 1;
+        firstIndexForUncachedObjects = 1;
     }
 
     public int addObject(E object) {
-        int ret = objectToInt.getInt(object);
-
-        if (ret == 0) {
-            ret = nextIndex++;
-            objectToInt.put(object, ret);
+        if (trustingMode) {
+            int ret = nextIndex++;
+            uncachedObjects.add(object);
             intToObject.put(ret, object);
-        }
+            return ret;
+        } else {
+            int ret = objectToInt.getInt(object);
 
-        return ret;
+            if (ret == 0) {
+                ret = nextIndex++;
+                objectToInt.put(object, ret);
+                intToObject.put(ret, object);
+            }
+
+            return ret;
+        }
+    }
+
+    private void processUncachedObjects() {
+        if (trustingMode) {
+            // if we're not in trusting mode, there will be no uncached objects
+            
+            for (int i = 0; i < uncachedObjects.size(); i++) {
+                objectToInt.put(uncachedObjects.get(i), i + firstIndexForUncachedObjects);
+            }
+
+            firstIndexForUncachedObjects = nextIndex;
+        }
     }
 
     public int addObjectWithIndex(int index, E object) {
@@ -60,6 +90,7 @@ public class Interner<E> implements Serializable, Cloneable {
     }
 
     public int resolveObject(E object) {
+        processUncachedObjects();
         return objectToInt.getInt(object);
     }
 
@@ -76,10 +107,12 @@ public class Interner<E> implements Serializable, Cloneable {
     }
 
     public boolean isKnownObject(E object) {
+        processUncachedObjects();
         return objectToInt.containsKey(object);
     }
 
     public Set<E> getKnownObjects() {
+        processUncachedObjects();
         return objectToInt.keySet();
     }
 
@@ -88,6 +121,7 @@ public class Interner<E> implements Serializable, Cloneable {
     }
 
     public Map<E, Integer> getSymbolTable() {
+        processUncachedObjects();
         return objectToInt;
     }
 
@@ -99,6 +133,8 @@ public class Interner<E> implements Serializable, Cloneable {
      * will be 0.
      */
     public int[] remap(Interner<E> other) {
+        processUncachedObjects();
+
         int[] ret = new int[nextIndex];
 
         for (int i = 1; i < nextIndex; i++) {
@@ -130,5 +166,27 @@ public class Interner<E> implements Serializable, Cloneable {
     @Override
     public String toString() {
         return intToObject.toString();
+    }
+
+    public boolean isTrustingMode() {
+        return trustingMode;
+    }
+
+    /**
+     * Switches the interner to "trusting mode". In trusting mode, the interner
+     * trusts the caller to never try to intern the same object twice. This can
+     * be faster than if every objects is checked for equality to earlier
+     * objects, but if the same object is added to the interner in trusting
+     * mode twice, there will be two objects with the same ID. By default,
+     * interners start in trusting mode = false.
+     *
+     * @param trustingMode
+     */
+    public void setTrustingMode(boolean trustingMode) {
+        if (!trustingMode) {
+            processUncachedObjects();
+        }
+
+        this.trustingMode = trustingMode;
     }
 }

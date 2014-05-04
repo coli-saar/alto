@@ -1699,76 +1699,76 @@ public abstract class TreeAutomaton<State> implements Serializable {
             throw new UnsupportedOperationException("Not supported yet.");
         }
     }
-    
-    private static class ListCartesianIterator<E> implements Iterator<List<E>> {
-
-        private List<List<E>> lists;
-        private int N;
-        private int[] lengths;
-        private int[] indices;
-        private ArrayList<E> ret;
-        private boolean first = true;
-        private boolean empty = false;
-
-        public ListCartesianIterator(List<List<E>> lists) {
-            this.lists = lists;
-
-            N = lists.size();
-            lengths = new int[N];
-            indices = new int[N];
-            ret = new ArrayList<E>(N);
-
-            for (int i = 0; i < N; i++) {
-                lengths[i] = lists.get(i).size();
-                indices[i] = 0;
-
-                if (lists.get(i).isEmpty()) {
-                    empty = true;
-                    break;
-                } else {
-                    ret.add(lists.get(i).get(0));
-                }
-            }
-        }
-
-        public boolean hasNext() {
-            if (empty) {
-                return false;
-            }
-
-            for (int i = 0; i < N; i++) {
-                if (indices[i] < lengths[i] - 1) {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-        public List<E> next() {
-            if (first) {
-                first = false;
-                return ret;
-            } else {
-                for (int i = 0; i < N; i++) {
-                    if (indices[i] < lengths[i] - 1) {
-                        indices[i]++;
-                        ret.set(i, lists.get(i).get(indices[i]));
-                        return ret;
-                    } else {
-                        indices[i] = 0;
-                        ret.set(i, lists.get(i).get(indices[i]));
-                    }
-                }
-
-                return null;
-            }
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-    }
+//    
+//    private static class ListCartesianIterator<E> implements Iterator<List<E>> {
+//
+//        private List<List<E>> lists;
+//        private int N;
+//        private int[] lengths;
+//        private int[] indices;
+//        private ArrayList<E> ret;
+//        private boolean first = true;
+//        private boolean empty = false;
+//
+//        public ListCartesianIterator(List<List<E>> lists) {
+//            this.lists = lists;
+//
+//            N = lists.size();
+//            lengths = new int[N];
+//            indices = new int[N];
+//            ret = new ArrayList<E>(N);
+//
+//            for (int i = 0; i < N; i++) {
+//                lengths[i] = lists.get(i).size();
+//                indices[i] = 0;
+//
+//                if (lists.get(i).isEmpty()) {
+//                    empty = true;
+//                    break;
+//                } else {
+//                    ret.add(lists.get(i).get(0));
+//                }
+//            }
+//        }
+//
+//        public boolean hasNext() {
+//            if (empty) {
+//                return false;
+//            }
+//
+//            for (int i = 0; i < N; i++) {
+//                if (indices[i] < lengths[i] - 1) {
+//                    return true;
+//                }
+//            }
+//
+//            return false;
+//        }
+//
+//        public List<E> next() {
+//            if (first) {
+//                first = false;
+//                return ret;
+//            } else {
+//                for (int i = 0; i < N; i++) {
+//                    if (indices[i] < lengths[i] - 1) {
+//                        indices[i]++;
+//                        ret.set(i, lists.get(i).get(indices[i]));
+//                        return ret;
+//                    } else {
+//                        indices[i] = 0;
+//                        ret.set(i, lists.get(i).get(indices[i]));
+//                    }
+//                }
+//
+//                return null;
+//            }
+//        }
+//
+//        public void remove() {
+//            throw new UnsupportedOperationException("Not supported yet.");
+//        }
+//    }
 
     /**
      * Computes the weight of the tree, given the (weighted) tree automaton. The
