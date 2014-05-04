@@ -213,23 +213,13 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     }
 
     private void collectStatePairs(IntSet leftStates, IntSet rightStates, IntSet pairStates) {
-        List<Collection> stateSets = new ArrayList<Collection>();
-        stateSets.add(leftStates);
-        stateSets.add(rightStates);
+        for (int leftState : leftStates) {
+            for (int rightState : rightStates) {
+                int state = stateMapping.get(leftState, rightState);
 
-//        System.err.println("known states: " + stateInterner.getKnownObjects());
-        CartesianIterator<Integer> it = new CartesianIterator(stateSets);
-        while (it.hasNext()) {
-            List<Integer> states = it.next();
-
-            Pair<LeftState, RightState> statePair = new Pair(left.getStateForId(states.get(0)), right.getStateForId(states.get(1)));
-//            System.err.println("consider pair for final state: " + statePair);
-
-            int state = stateInterner.resolveObject(statePair);
-
-            if (state != 0) {
-//                System.err.println(" -> state pair exists");
-                pairStates.add(state);
+                if (state != 0) {
+                    pairStates.add(state);
+                }
             }
         }
     }
@@ -252,11 +242,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
-//    @Override
-//    public Set<Integer> getAllStates() {
-//        makeAllRulesExplicit();
-//        return super.getAllStates();
-//    }
+    
     private static class IntInt2IntMap {
 
         private final Int2ObjectMap<Int2IntMap> map;
@@ -367,12 +353,11 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
                     if (result.getFinalStates().isEmpty()) {
                         System.err.println("\n**** EMPTY ****\n");
-                    } 
+                    }
 //                    else {
 //                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
 //                    }
-                    
-                    
+
                     // try to trigger gc
                     result = null;
                     System.gc();
