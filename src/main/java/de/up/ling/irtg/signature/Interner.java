@@ -70,10 +70,13 @@ public class Interner<E> implements Serializable, Cloneable {
         if (trustingMode) {
             // if we're not in trusting mode, there will be no uncached objects
             
+//            System.err.println("caching " + uncachedObjects.size() + " uncached objects");
+            
             for (int i = 0; i < uncachedObjects.size(); i++) {
                 objectToInt.put(uncachedObjects.get(i), i + firstIndexForUncachedObjects);
             }
 
+            uncachedObjects.clear();
             firstIndexForUncachedObjects = nextIndex;
         }
     }

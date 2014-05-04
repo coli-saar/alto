@@ -23,6 +23,7 @@ import java.util.List;
  * @author koller
  */
 public class IntTrie<E> implements Serializable {
+
     private Int2ObjectMap<IntTrie<E>> nextStep;
     private E value;
 //    private Set<E> allValues; // only has meaningful content at top-level
@@ -43,22 +44,21 @@ public class IntTrie<E> implements Serializable {
     }
 
     /**
-     * Returns the previously known entry, or null if an entry
-     * for this key was not known.
-     * 
+     * Returns the previously known entry, or null if an entry for this key was
+     * not known.
+     *
      * @param key
      * @param value
-     * @return 
+     * @return
      */
     public E put(int[] key, E value) {
         E ret = put(0, key, value);
-        
+
 //        if( ret != null ) {
 //            allValues.remove(ret);
 //        }
 //        
 //        allValues.add(value);
-        
         return ret;
     }
 
@@ -108,54 +108,43 @@ public class IntTrie<E> implements Serializable {
             IntSet keysHere = keySets.get(depth);
 
             if (keysHere != null) {
-                IntSet nextStepKeys = nextStep.keySet();
-                
-                IntSet iteratingSet;
-                IntSet containsSet;
-                
-                if( keysHere.size() < nextStepKeys.size() ) {
-                    iteratingSet = keysHere;
-                    containsSet = nextStepKeys;
+                int nextStepSize = nextStep.size();
+
+                if (keysHere.size() < nextStepSize) {
+                    for (int key : keysHere) {
+                        IntTrie<E> next = nextStep.get(key);
+
+                        if (next != null) {
+                            next.foreachValueForKeySets(depth + 1, keySets, fn);
+                        }
+                    }
                 } else {
-                    iteratingSet = nextStepKeys;
-                    containsSet = keysHere;
-                }
-                
-                for( int key : iteratingSet ) {
-                    if( containsSet.contains(key)) {
-                        nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
+                    for( int key : nextStep.keySet() ) {
+                        if( keysHere.contains(key)) {
+                            nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
+                        }
                     }
                 }
-                
-                
-//                
-//                for (int key : keysHere) {
-//                    IntTrie<E> next = nextStep.get(key);
-//
-//                    if (next != null) {
-//                        next.foreachValueForKeySets(depth + 1, keySets, fn);
-//                    }
-//                }
             }
         }
     }
 
-    
     public static interface EntryVisitor<E> {
+
         public void visit(IntList keys, E value);
     }
-    
+
     public void foreach(EntryVisitor<E> visitor) {
         IntList keys = new IntArrayList();
         foreach(keys, visitor);
     }
-    
+
     private void foreach(IntList keys, EntryVisitor<E> visitor) {
-        if( value != null ) {
+        if (value != null) {
             visitor.visit(keys, value);
         }
 
-        for( int next : nextStep.keySet() ) {
+        for (int next : nextStep.keySet()) {
             int size = keys.size();
             keys.add(next);
             nextStep.get(next).foreach(keys, visitor);
@@ -165,58 +154,58 @@ public class IntTrie<E> implements Serializable {
 
     public Collection<E> getValues() {
         final List<E> allValues = new ArrayList<E>();
-        
+
         foreach(new EntryVisitor<E>() {
             public void visit(IntList keys, E value) {
                 allValues.add(value);
             }
         });
-        
+
         return allValues;
     }
 
     @Override
     public String toString() {
         final StringBuilder buf = new StringBuilder();
-        
+
         foreach(new EntryVisitor<E>() {
             public void visit(IntList keys, E value) {
                 buf.append(keys + " -> " + value + "\n");
             }
         });
-        
+
         return buf.toString();
     }
-    
+
     public void printStatistics() {
         Int2IntMap totalKeysPerDepth = new Int2IntOpenHashMap();
         Int2IntMap totalNodesPerDepth = new Int2IntOpenHashMap();
         Int2IntMap maxKeysPerDepth = new Int2IntOpenHashMap();
         collectStatistics(0, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth);
-        
-        for( int depth : totalKeysPerDepth.keySet() ) {
+
+        for (int depth : totalKeysPerDepth.keySet()) {
             System.err.println("depth " + depth + ": " + totalNodesPerDepth.get(depth) + " nodes");
             System.err.println("max keys: " + maxKeysPerDepth.get(depth));
-            System.err.println("avg keys: " + ((double) totalKeysPerDepth.get(depth))/totalNodesPerDepth.get(depth) + "\n");
+            System.err.println("avg keys: " + ((double) totalKeysPerDepth.get(depth)) / totalNodesPerDepth.get(depth) + "\n");
         }
     }
-    
+
     private void collectStatistics(int depth, Int2IntMap totalKeysPerDepth, Int2IntMap totalNodesPerDepth, Int2IntMap maxKeysPerDepth) {
         int x = totalKeysPerDepth.get(depth);
         x += nextStep.keySet().size();
         totalKeysPerDepth.put(depth, x);
-        
+
         x = totalNodesPerDepth.get(depth);
         x++;
         totalNodesPerDepth.put(depth, x);
-        
+
         x = maxKeysPerDepth.get(depth);
-        if( nextStep.keySet().size() > x ) {
+        if (nextStep.keySet().size() > x) {
             maxKeysPerDepth.put(depth, nextStep.keySet().size());
         }
-        
-        for( int key : nextStep.keySet() ) {
-            nextStep.get(key).collectStatistics(depth+1, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth);
+
+        for (int key : nextStep.keySet()) {
+            nextStep.get(key).collectStatistics(depth + 1, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth);
         }
     }
 }
