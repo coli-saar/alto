@@ -35,6 +35,13 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.*;
 
+
+/*
+TODO: 
+- collectStatePairs: remove CartesianIterator, use IntCartesianIterator to avoid boxing
+*/
+
+
 /**
  *
  * @author koller
@@ -190,7 +197,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     }
 
     @Override
-    public Set<Integer> getFinalStates() {
+    public IntSet getFinalStates() {
         if (finalStates == null) {
 //            System.err.println("compute final states");
             getAllStates(); // initialize data structure for addState
@@ -204,7 +211,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         return finalStates;
     }
 
-    private void collectStatePairs(Collection<Integer> leftStates, Collection<Integer> rightStates, Collection<Integer> pairStates) {
+    private void collectStatePairs(IntSet leftStates, IntSet rightStates, IntSet pairStates) {
         List<Collection> stateSets = new ArrayList<Collection>();
         stateSets.add(leftStates);
         stateSets.add(rightStates);
@@ -244,11 +251,11 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
-    @Override
-    public Set<Integer> getAllStates() {
-        makeAllRulesExplicit();
-        return super.getAllStates();
-    }
+//    @Override
+//    public Set<Integer> getAllStates() {
+//        makeAllRulesExplicit();
+//        return super.getAllStates();
+//    }
 
     private static class IntInt2IntMap {
 

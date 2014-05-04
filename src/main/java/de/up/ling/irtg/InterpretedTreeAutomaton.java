@@ -568,7 +568,7 @@ public class InterpretedTreeAutomaton {
             }
 
             double likelihoodHere = 0;
-            for (Object finalState : parse.getFinalStates()) {
+            for (int finalState : parse.getFinalStates()) {
                 likelihoodHere += inside.get(finalState);
             }
 

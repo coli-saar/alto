@@ -8,6 +8,7 @@ import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 //    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
     private Function<HomomorphismSymbol,Integer> remappingHomSymbolToIntFunction;
+    private IntSet provisionalStateSet;
 
     public InverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
@@ -66,6 +68,14 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 //        }
         
         failStateId = addState(FAIL_STATE);
+        
+        // Record a provisional set of states, which is sure to be a
+        // superset of all the states that are used in the invhom automaton.
+        // This is necessary to avoid calling getAllStates in getRulesTopDown
+        // (i.e. at a time before the automaton has been made explicit).
+        provisionalStateSet = new IntOpenHashSet();
+        provisionalStateSet.addAll(rhsAutomaton.getAllStates());
+        provisionalStateSet.add(failStateId);
     }
     
     @Override
@@ -147,7 +157,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         List<Set<Integer>> listOfStateSets = new ArrayList<Set<Integer>>();
 
         for (int i = 0; i < arity; i++) {
-            listOfStateSets.add(getAllStates());
+            listOfStateSets.add(provisionalStateSet);
         }
 
         CartesianIterator<Integer> it = new CartesianIterator<Integer>(listOfStateSets);
@@ -213,7 +223,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
                     } else {
                         // for variables that didn't occur in the homomorphic image,
                         // we can set arbitrary states
-                        optionsForThisChild.addAll(getAllStates());
+                        optionsForThisChild.addAll(provisionalStateSet);
                     }
 
                     optionsForEachChild.add(optionsForThisChild);

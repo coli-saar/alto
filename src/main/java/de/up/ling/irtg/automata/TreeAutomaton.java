@@ -34,11 +34,13 @@ import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -255,7 +257,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * Finds automaton rules top-down for a given parent state and label. The
      * method returns a collection of rules that can be used to assign states to
      * the children. The parent label is a numeric symbol ID, which represents a
-     * terminal symbol according to the automaton's signature.
+     * terminal symbol according to the automaton's signature.<p>
+     * 
+     * Note that not every method of TreeAutomaton is safely available in your
+     * implementation of getRulesTopDown. Most notably, you can't use the default
+     * implementation of {@link #getAllStates() }, because that method makes all
+     * rules of the automaton explicit and calls {@link #getRulesTopDown(int, int) }
+     * in the process, leading to an infinite recursion.
      *
      * @param labelId
      * @param parentState
@@ -307,8 +315,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * automaton has top-down transition rules parentState -> f(...). The set
      * returned by this method may contain symbol IDs for which such a
      * transition does not actually exist; it is only guaranteed that all
-     * symbols for which transitions exist are also in the set. The default
-     * implementation in TreeAutomaton returns all label IDs in the signature.
+     * symbols for which transitions exist are also in the set. <p>
+     * 
+     * The default implementation in TreeAutomaton distinguishes two cases.
+     * If the automaton is fully explicit, the method returns those labels
+     * for which the parent has (explicit) rules. Otherwise, the method returns
+     * all label IDs in the signature.<p>
+     * 
      * Subclasses (especially lazy automata) may replace this with more specific
      * implementations.
      *
@@ -372,8 +385,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     /**
      * Returns the IDs of the final states of the automaton.
+     * @return 
      */
-    public Set<Integer> getFinalStates() {
+    public IntSet getFinalStates() {
         return finalStates;
     }
 
@@ -383,8 +397,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * returning, to the extent that it is necessary to list all states. This
      * may be slow.
      *
+     * @return 
      */
-    public Set<Integer> getAllStates() {
+    public IntSet getAllStates() {
+        makeAllRulesExplicit();
         return allStates;
     }
 
@@ -656,6 +672,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * The implementation of this method accesses rules via
      * {@link #getRulesTopDown(int) }.
+     * 
+     * @return 
      */
     public Iterator<Rule> getRuleIterator() {
         return Iterators.concat(new RuleIterator(this));
@@ -1063,14 +1081,16 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
-            Set<Integer> everAddedStates = new HashSet<Integer>();
-            Queue<Integer> agenda = new LinkedList<Integer>();
-
-            agenda.addAll(getFinalStates());
-            everAddedStates.addAll(getFinalStates());
+            IntSet everAddedStates = new IntOpenHashSet();
+            IntPriorityQueue agenda = new IntArrayFIFOQueue();
+            
+            for( int finalState : getFinalStates() ) {
+                agenda.enqueue(finalState);
+                everAddedStates.add(finalState);
+            }
 
             while (!agenda.isEmpty()) {
-                int state = agenda.remove();
+                int state = agenda.dequeue();
 
                 for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
                     Iterable<Rule> rules = getRulesTopDown(label, state);
@@ -1081,7 +1101,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         for (int child : rule.getChildren()) {
                             if (!everAddedStates.contains(child)) {
                                 everAddedStates.add(child);
-                                agenda.offer(child);
+                                agenda.enqueue(child);
                             }
                         }
                     }

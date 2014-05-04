@@ -273,8 +273,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             ckyTimestamp[1] = System.nanoTime();
 
             // Perform a DFS in the right automaton to find all partner states
-            Set<Integer> visited = new HashSet<Integer>();
-            for (Integer q : right.getFinalStates()) {
+            IntSet visited = new IntOpenHashSet();
+            for (int q : right.getFinalStates()) {
                 ckyDfsForStatesInBottomUpOrderIterator(q, visited, partners2);
 //                ckyDfsForStatesInBottomUpOrderGuava(q, visited, partners);
 //                ckyDfsForStatesInBottomUpOrder(q, visited, partners);
@@ -499,7 +499,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     }
 
     @Override
-    public Set<Integer> getFinalStates() {
+    public IntSet getFinalStates() {
         if (finalStates == null) {
             getAllStates(); // initialize data structure for addState
             finalStates = new IntOpenHashSet();
@@ -594,11 +594,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
-    @Override
-    public Set<Integer> getAllStates() {
-        makeAllRulesExplicit();
-        return super.getAllStates();
-    }
+//    @Override
+//    public Set<Integer> getAllStates() {
+//        makeAllRulesExplicit();
+//        return super.getAllStates();
+//    }
 
     /**
      * ************* Early-style intersection *************

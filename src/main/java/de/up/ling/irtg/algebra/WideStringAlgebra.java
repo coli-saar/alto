@@ -60,8 +60,8 @@ public class WideStringAlgebra extends StringAlgebra {
         }
 
         @Override
-        public Set<Integer> getAllStates() {
-            Set<Integer> ret = new HashSet<Integer>();
+        public IntSet getAllStates() {
+            IntSet ret = new IntOpenHashSet();
 
             for (int i = 0; i < words.length; i++) {
                 for (int k = i + 1; k <= words.length; k++) {
