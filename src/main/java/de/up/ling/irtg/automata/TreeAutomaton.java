@@ -2417,15 +2417,34 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * Prints some statistics about this automaton.
      */
     public void analyze() {
+        long numRules = 0;
+        IntSet states = new IntOpenHashSet();
+        IntSet labels = new IntOpenHashSet();
+        
         SortedMultiset<Integer> counts = TreeMultiset.create();
+        
         for (Rule rule : getRuleSet()) {
             counts.add(rule.getArity());
+        
+            numRules++;
+            
+            states.add(rule.getParent());
+            for( int child : rule.getChildren() ) {
+                states.add(child);
+            }
+            
+            labels.add(rule.getLabel());            
         }
+        
+        System.err.println(states.size() + " states, " + numRules + " rules, " + labels.size() + " labels\n");
 
         System.err.println("Counts of rule arities:");
         for (Integer arity : counts.elementSet()) {
             System.err.println(String.format("%3d %d", arity, counts.count(arity)));
         }
+        
+        System.err.println("\nTrie statistics:");
+        explicitRulesBottomUp.printStatistics();
     }
 
     protected Rule createRule(int parent, int label, int[] children, double weight) {

@@ -353,6 +353,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
                 while ((sentence = br.readLine()) != null) {
                     ++sentences;
+                    System.err.println("Sentence #" + sentences);
                     System.err.println("Current sentence: " + sentence);
                     updateBenchmark(timestamp, 2, useCPUTime, benchmarkBean);
 

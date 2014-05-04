@@ -6,6 +6,8 @@
 package de.up.ling.irtg.automata;
 
 import com.google.common.base.Function;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -163,5 +165,37 @@ public class IntTrie<E> implements Serializable {
         });
         
         return buf.toString();
+    }
+    
+    public void printStatistics() {
+        Int2IntMap totalKeysPerDepth = new Int2IntOpenHashMap();
+        Int2IntMap totalNodesPerDepth = new Int2IntOpenHashMap();
+        Int2IntMap maxKeysPerDepth = new Int2IntOpenHashMap();
+        collectStatistics(0, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth);
+        
+        for( int depth : totalKeysPerDepth.keySet() ) {
+            System.err.println("depth " + depth + ": " + totalNodesPerDepth.get(depth) + " nodes");
+            System.err.println("max keys: " + maxKeysPerDepth.get(depth));
+            System.err.println("avg keys: " + ((double) totalKeysPerDepth.get(depth))/totalNodesPerDepth.get(depth) + "\n");
+        }
+    }
+    
+    private void collectStatistics(int depth, Int2IntMap totalKeysPerDepth, Int2IntMap totalNodesPerDepth, Int2IntMap maxKeysPerDepth) {
+        int x = totalKeysPerDepth.get(depth);
+        x += nextStep.keySet().size();
+        totalKeysPerDepth.put(depth, x);
+        
+        x = totalNodesPerDepth.get(depth);
+        x++;
+        totalNodesPerDepth.put(depth, x);
+        
+        x = maxKeysPerDepth.get(depth);
+        if( nextStep.keySet().size() > x ) {
+            maxKeysPerDepth.put(depth, nextStep.keySet().size());
+        }
+        
+        for( int key : nextStep.keySet() ) {
+            nextStep.get(key).collectStatistics(depth+1, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth);
+        }
     }
 }
