@@ -108,13 +108,34 @@ public class IntTrie<E> implements Serializable {
             IntSet keysHere = keySets.get(depth);
 
             if (keysHere != null) {
-                for (int key : keysHere) {
-                    IntTrie<E> next = nextStep.get(key);
-
-                    if (next != null) {
-                        next.foreachValueForKeySets(depth + 1, keySets, fn);
+                IntSet nextStepKeys = nextStep.keySet();
+                
+                IntSet iteratingSet;
+                IntSet containsSet;
+                
+                if( keysHere.size() < nextStepKeys.size() ) {
+                    iteratingSet = keysHere;
+                    containsSet = nextStepKeys;
+                } else {
+                    iteratingSet = nextStepKeys;
+                    containsSet = keysHere;
+                }
+                
+                for( int key : iteratingSet ) {
+                    if( containsSet.contains(key)) {
+                        nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
                     }
                 }
+                
+                
+//                
+//                for (int key : keysHere) {
+//                    IntTrie<E> next = nextStep.get(key);
+//
+//                    if (next != null) {
+//                        next.foreachValueForKeySets(depth + 1, keySets, fn);
+//                    }
+//                }
             }
         }
     }
