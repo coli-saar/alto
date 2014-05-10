@@ -19,6 +19,7 @@ import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
@@ -1247,9 +1248,19 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ret.makeAllRulesExplicit();
         return ret;
     }
+    
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectViterbi(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedViterbiIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
+        ret.makeAllRulesExplicit();
+        return ret;
+    }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
         return intersectCondensed(other, new IdentitySignatureMapper(signature));
+    }
+    
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectViterbi(CondensedTreeAutomaton<OtherState> other) {
+        return intersectViterbi(other, new IdentitySignatureMapper(signature));
     }
 
     /**
