@@ -5,14 +5,12 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.base.Function;
-import org.jgrapht.Graph;
-import org.jgrapht.experimental.equivalence.EquivalenceComparator;
 
 /**
  *
  * @author koller
  */
-class GraphEdge {
+public class GraphEdge {
     private GraphNode source;
     private GraphNode target;
     private String label;

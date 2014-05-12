@@ -244,7 +244,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @param chart the automaton to set the rule weights for
      */
     private void setWeightsOnChart(TreeAutomaton chart) {
-        Set<Rule> ruleSet = (Set<Rule>) chart.getRuleSet();
+        Iterable<Rule> ruleSet = chart.getRuleSet();
 
         if (features != null) {
             for (Rule rule : ruleSet) {
@@ -452,7 +452,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     sum2 += Math.log(insideS);
 
                     // compute parts of the gradient
-                    Set<Rule> ruleSet = (Set<Rule>) chart.getRuleSet();
+                    Iterable<Rule> ruleSet = chart.getRuleSet();
                     for (Rule r : ruleSet) {
                         double expect_r; // E(r)
                         Double outVal = outside.get(r.getParent());

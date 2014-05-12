@@ -1,4 +1,4 @@
-scala -J-server -cp target/irtg-1.0-SNAPSHOT.jar  -Yrepl-sync -i init.scala 
+scala -J-server -cp target/irtg-1.1-SNAPSHOT.jar  -Yrepl-sync -i init.scala 
 
 
 

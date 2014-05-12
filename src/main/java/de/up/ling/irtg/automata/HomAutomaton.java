@@ -49,7 +49,7 @@ class HomAutomaton extends TreeAutomaton<Object> {
     @Override
     public void makeAllRulesExplicit() {
         if (!isExplicit) {
-            Set<Rule> baseRuleSet = base.getRuleSet();
+            Iterable<Rule> baseRuleSet = base.getRuleSet();
             SetMultimap<Integer, Integer> chainRules = HashMultimap.create();  // maps base state IDs to sets of base state IDs
             final Set<Integer> labels = new HashSet<Integer>();
 

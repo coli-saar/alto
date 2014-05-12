@@ -6,6 +6,7 @@ package de.up.ling.irtg.automata;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import de.saar.basic.Agenda;
@@ -77,7 +78,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
             for (Rule leftRule : left.getRuleSet()) {
                 if (leftRule.getArity() == 0) {
-                    Set<Rule> preterminalRulesForLabel = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), noRightChildren);
+                    Iterable<Rule> preterminalRulesForLabel = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), noRightChildren);
 
 //                    System.err.println("left rule: " + leftRule.toString() + " = " + leftRule.toString(left));
 //                    System.err.println("right partners: " + preterminalRulesForLabel);
@@ -126,11 +127,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                         List<Integer> partnersHere = it.next();
 //                        System.err.println("right partners: " + partnersHere);
 
-                        Set<Rule> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
+                        Iterable<Rule> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
 //                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
 
-
-                        if (rightRules.isEmpty()) {
+                        if (!rightRules.iterator().hasNext()) {
                             unsuccessful++;
                         }
 

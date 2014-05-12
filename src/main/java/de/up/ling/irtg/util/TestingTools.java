@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.util;
 
+import com.google.common.collect.Iterables;
 import de.saar.basic.StringOrVariable;
 import de.saar.chorus.term.Term;
 import de.saar.chorus.term.parser.TermParser;
@@ -17,6 +18,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.StringReader;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,6 +94,9 @@ public class TestingTools {
             childStates[i] = auto.getIdForState(children.get(i));
         }
         
-        return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), childStates);
+        Set<Rule> ret = new HashSet<Rule>();
+        Iterables.addAll(ret, auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), childStates));
+        
+        return ret;
     }
 }

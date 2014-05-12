@@ -5,6 +5,7 @@
 package de.up.ling.irtg.gui;
 
 import com.bric.window.WindowMenu;
+import com.google.common.collect.Iterables;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.ProgressListener;
@@ -113,7 +114,9 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void fillEntries(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
         IntSet allStates = new IntOpenHashSet();
 
-        rulesInOrder = new ArrayList<Rule>(automaton.getRuleSet());
+        rulesInOrder = new ArrayList<Rule>();
+        Iterables.addAll(rulesInOrder, automaton.getRuleSet());
+        
         maxRuleRank = 0;
 
         for (Rule rule : rulesInOrder) {
@@ -212,6 +215,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miLoadMaxentWeights = new javax.swing.JMenuItem();
         miShowMaxentWeights = new javax.swing.JMenuItem();
         miTrainMaxent = new javax.swing.JMenuItem();
+        jSeparator5 = new javax.swing.JPopupMenu.Separator();
+        jMenuItem1 = new javax.swing.JMenuItem();
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -395,6 +400,15 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miMaxent.add(miTrainMaxent);
 
         jMenu4.add(miMaxent);
+        jMenu4.add(jSeparator5);
+
+        jMenuItem1.setText("Compute decomposition automaton ...");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        jMenu4.add(jMenuItem1);
 
         jMenuBar2.add(jMenu4);
 
@@ -647,7 +661,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 new Thread() {
                     @Override
                     public void run() {
-                        final ProgressBarDialog pb = new ProgressBarDialog("Binarizing IRTG", irtg.getAutomaton().getRuleSet().size(), JTreeAutomaton.this, false);
+                        int max = (numRules < Integer.MAX_VALUE) ? ((int) numRules) : Integer.MAX_VALUE;
+                        final ProgressBarDialog pb = new ProgressBarDialog("Binarizing IRTG", max, JTreeAutomaton.this, false);
                         pb.setVisible(true);
 
                         ProgressListener listener = new ProgressListener() {
@@ -687,11 +702,17 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
         GuiMain.closeAllWindows();
     }//GEN-LAST:event_miCloseAllWindowsActionPerformed
+
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        GuiMain.showDecompositionDialog(this);
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar2;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
@@ -699,6 +720,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JPopupMenu.Separator jSeparator4;
+    private javax.swing.JPopupMenu.Separator jSeparator5;
     private javax.swing.JTable jTable1;
     private javax.swing.JMenuItem miBinarize;
     private javax.swing.JMenuItem miCloseAllWindows;
