@@ -44,7 +44,7 @@ import java.util.Set;
  *
  * @author koller
  */
-// (Nikos: subset_i is used for underspecification)
+
 public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";
@@ -176,7 +176,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     protected Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) throws NoModelException {
         Set<List<String>> ret = null;
         
-        if( atomicInterpretations == null ) {
+        if( getAtomicInterpretations() == null ) {
             throw new NoModelException("SetAlgebra has no atomic interpretations yet.");
         }
 
@@ -191,7 +191,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         } else if (label.equals(TOP)) {
             ret = allIndividualsAsTuples;
         } else {
-            ret = atomicInterpretations.get(label);
+            ret = getAtomicInterpretations().get(label);
         }
         
         return ret;
@@ -280,6 +280,13 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
             throw new ParserException(ex);
         }
 
+    }
+
+    /**
+     * @return the atomicInterpretations
+     */
+    public Map<String, Set<List<String>>> getAtomicInterpretations() {
+        return atomicInterpretations;
     }
     
     
