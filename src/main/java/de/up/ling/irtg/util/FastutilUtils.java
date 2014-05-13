@@ -6,9 +6,9 @@
 package de.up.ling.irtg.util;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.List;
@@ -41,6 +41,20 @@ public class FastutilUtils {
             visitor.accept(it.nextInt());
         }
     }
+    
+    /**
+     * An optimized implementation of {@link #forEach(it.unimi.dsi.fastutil.ints.IntIterable, java.util.function.IntConsumer) }
+     * for lists. The method assumes an array-based implementation of lists, in which
+     * {@link IntList#get(int) } is fast.
+     * 
+     * @param list
+     * @param visitor 
+     */
+    public static void forEach(IntList list, IntConsumer visitor) {
+        for( int i = 0; i < list.size(); i++ ) {
+            visitor.accept(list.getInt(i));
+        }
+    }
 
     /**
      * Iterates over all tuples of elements in the given int iterables. In other
@@ -71,7 +85,7 @@ public class FastutilUtils {
             if (depth == iterables.size()) {
                 fn.accept(values);
             } else {
-                iterables.get(depth).forEach(value -> {
+                FastutilUtils.forEach(iterables.get(depth), value -> {
                     values[depth] = value;
                     forEach(depth + 1, values, fn);
                 });

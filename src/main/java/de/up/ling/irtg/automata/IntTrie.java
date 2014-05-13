@@ -130,13 +130,22 @@ public class IntTrie<E> implements Serializable {
             }
         }
     }
+    
+    public void foreach(Consumer<E> fn) {
+        if( value != null ) {
+            fn.accept(value);
+        }
+        
+        nextStep.values().forEach(next -> {
+           next.foreach(fn);
+        });
+    }
 
     public static interface EntryVisitor<E> {
-
         public void visit(IntList keys, E value);
     }
 
-    public void foreach(EntryVisitor<E> visitor) {
+    public void foreachWithKeys(EntryVisitor<E> visitor) {
         IntList keys = new IntArrayList();
         foreach(keys, visitor);
     }
@@ -146,21 +155,26 @@ public class IntTrie<E> implements Serializable {
             visitor.visit(keys, value);
         }
 
-        for (int next : nextStep.keySet()) {
+        FastutilUtils.foreachFastEntry(nextStep, (key, value) -> {
             int size = keys.size();
-            keys.add(next);
-            nextStep.get(next).foreach(keys, visitor);
+            keys.add(key);
+            value.foreach(keys, visitor);
             keys.remove(size);
-        }
+        });
+
+//        for (int next : nextStep.keySet()) {
+//            int size = keys.size();
+//            keys.add(next);
+//            nextStep.get(next).foreach(keys, visitor);
+//            keys.remove(size);
+//        }
     }
 
     public Collection<E> getValues() {
         final List<E> allValues = new ArrayList<E>();
 
-        foreach(new EntryVisitor<E>() {
-            public void visit(IntList keys, E value) {
-                allValues.add(value);
-            }
+        foreachWithKeys((keys, value) -> {
+            allValues.add(value);
         });
 
         return allValues;
@@ -170,10 +184,8 @@ public class IntTrie<E> implements Serializable {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
 
-        foreach(new EntryVisitor<E>() {
-            public void visit(IntList keys, E value) {
-                buf.append(keys + " -> " + value + "\n");
-            }
+        foreachWithKeys((keys, value) -> {
+            buf.append(keys + " -> " + value + "\n");
         });
 
         return buf.toString();

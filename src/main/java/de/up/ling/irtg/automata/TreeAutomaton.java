@@ -512,7 +512,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             rulesForRhsState = new Int2ObjectOpenHashMap<List<Iterable<Rule>>>();
             final BitSet visitedInEntry = new BitSet(getStateInterner().getNextIndex());
 
-            explicitRulesBottomUp.foreach(new IntTrie.EntryVisitor<Int2ObjectMap<Set<Rule>>>() {
+            explicitRulesBottomUp.foreachWithKeys(new IntTrie.EntryVisitor<Int2ObjectMap<Set<Rule>>>() {
 
                 public void visit(IntList keys, Int2ObjectMap<Set<Rule>> value) {
                     visitedInEntry.clear();
@@ -636,10 +636,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
 
         makeAllRulesExplicit();
-
-        for (Int2ObjectMap<Set<Rule>> entry : explicitRulesBottomUp.getValues()) {
+        
+        explicitRulesBottomUp.foreach(entry -> {
             ruleSets.addAll(entry.values());
-        }
+        });
+
+//        for (Int2ObjectMap<Set<Rule>> entry : explicitRulesBottomUp.getValues()) {
+//            ruleSets.addAll(entry.values());
+//        }
 
         return Iterables.concat(ruleSets);
 
