@@ -4,8 +4,6 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import com.google.common.base.Function;
-import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.AntlrIrtgBuilder;
 import de.up.ling.irtg.Interpretation;
@@ -36,6 +34,7 @@ import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.*;
+import java.util.function.Consumer;
 
 
 /*
@@ -266,7 +265,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
 
         return getRulesTopDownFromExplicit(label, parentState);
     }
-
+    
     private static class IntInt2IntMap {
 
         private final Int2ObjectMap<Int2IntMap> map;

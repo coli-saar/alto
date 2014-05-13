@@ -3,16 +3,21 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package de.up.ling.irtg.util;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
+import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
 /**
  * Utilities for making life with fastutils more convenient.
- * 
+ *
  * @author koller
  */
 public class FastutilUtils {
@@ -20,19 +25,118 @@ public class FastutilUtils {
 //        public void visit(int value);
 //    }
 //    
+
     /**
-     * Iterates over the elements of the IntIterable. This avoids the boxing+unboxing
-     * that is entailed by the usual for/colon iteration idiom, while being only
-     * a little more verbose in code.
-     * 
+     * Iterates over the elements of the IntIterable. This avoids the
+     * boxing+unboxing that is entailed by the usual for/colon iteration idiom,
+     * while being only a little more verbose in code.
+     *
      * @param iter
-     * @param visitor 
+     * @param visitor
      */
     public static void forEach(IntIterable iter, IntConsumer visitor) {
         IntIterator it = iter.iterator();
-        
-        while( it.hasNext() ) {
+
+        while (it.hasNext()) {
             visitor.accept(it.nextInt());
         }
     }
+
+    /**
+     * Iterates over all tuples of elements in the given int iterables. In other
+     * words, fn is called for each element of the Cartesian product of the
+     * iterables. The consumer fn is passed this tuple in an array which is
+     * reused in each call for efficiency.
+     *
+     * @param iterables
+     * @param fn
+     */
+    public static void forEachIntCartesian(List<IntIterable> iterables, Consumer<int[]> fn) {
+        new IntCartesianForeach(iterables).forEach(fn);
+    }
+
+    private static class IntCartesianForeach {
+
+        private final List<IntIterable> iterables;
+
+        public IntCartesianForeach(List<IntIterable> iterables) {
+            this.iterables = iterables;
+        }
+
+        public void forEach(Consumer<int[]> fn) {
+            forEach(0, new int[iterables.size()], fn);
+        }
+
+        private void forEach(int depth, int[] values, Consumer<int[]> fn) {
+            if (depth == iterables.size()) {
+                fn.accept(values);
+            } else {
+                iterables.get(depth).forEach(value -> {
+                    values[depth] = value;
+                    forEach(depth + 1, values, fn);
+                });
+            }
+        }
+    }
+
+    /**
+     * Iterates over all tuples of elements in the given iterables. In other
+     * words, fn is called for each element of the Cartesian product of the
+     * iterables. The consumer fn is passed this tuple in an array which is
+     * reused in each call for efficiency.
+     *
+     * @param <E>
+     * @param iterables
+     * @param fn
+     */
+    public static <E> void forEachCartesian(List<Iterable<E>> iterables, Consumer<E[]> fn) {
+        new CartesianForeach<>(iterables).forEach(fn);
+    }
+
+    private static class CartesianForeach<E> {
+
+        private final List<Iterable<E>> iterables;
+
+        public CartesianForeach(List<Iterable<E>> iterables) {
+            this.iterables = iterables;
+        }
+
+        public void forEach(Consumer<E[]> fn) {
+            forEach(0, (E[]) new Object[iterables.size()], fn);
+        }
+
+        private void forEach(int depth, E[] values, Consumer<E[]> fn) {
+            if (depth == iterables.size()) {
+                fn.accept(values);
+            } else {
+                iterables.get(depth).forEach(value -> {
+                    values[depth] = value;
+                    forEach(depth + 1, values, fn);
+                });
+            }
+        }
+    }
+
+    public static interface Int2ObjectEntryConsumer<E> {
+        public void accept(int key, E value);
+    }
+
+    /**
+     * Iterates over all entries in an Int2ObjectMap using the fast
+     * iterator over its key-entry pairs. 
+     * 
+     * @param <E>
+     * @param map
+     * @param fn 
+     */
+    public static <E> void foreachFastEntry(Int2ObjectMap<E> map, Int2ObjectEntryConsumer<E> fn) {
+        ObjectSet<Int2ObjectMap.Entry<E>> entrySet = map.int2ObjectEntrySet();
+        ObjectIterator<Int2ObjectMap.Entry<E>> it = ((Int2ObjectMap.FastEntrySet<E>) entrySet).fastIterator();
+
+        while (it.hasNext()) {
+            Int2ObjectMap.Entry<E> entry = it.next();
+            fn.accept(entry.getIntKey(), entry.getValue());
+        }
+    }
+
 }
