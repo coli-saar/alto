@@ -8,6 +8,7 @@ package de.up.ling.irtg.util;
 
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import java.util.function.IntConsumer;
 
 /**
  * Utilities for making life with fastutils more convenient.
@@ -15,10 +16,10 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
  * @author koller
  */
 public class FastutilUtils {
-    public static interface IntVisitor {
-        public void visit(int value);
-    }
-    
+//    public static interface IntVisitor {
+//        public void visit(int value);
+//    }
+//    
     /**
      * Iterates over the elements of the IntIterable. This avoids the boxing+unboxing
      * that is entailed by the usual for/colon iteration idiom, while being only
@@ -27,11 +28,11 @@ public class FastutilUtils {
      * @param iter
      * @param visitor 
      */
-    public static void foreachIntIterable(IntIterable iter, IntVisitor visitor) {
+    public static void forEach(IntIterable iter, IntConsumer visitor) {
         IntIterator it = iter.iterator();
         
         while( it.hasNext() ) {
-            visitor.visit(it.nextInt());
+            visitor.accept(it.nextInt());
         }
     }
 }

@@ -18,6 +18,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  *
@@ -96,14 +97,14 @@ public class IntTrie<E> implements Serializable {
         }
     }
 
-    public void foreachValueForKeySets(List<IntSet> keySets, Function<E, Void> fn) {
+    public void foreachValueForKeySets(List<IntSet> keySets, Consumer<E> fn) {
         foreachValueForKeySets(0, keySets, fn);
     }
 
-    private void foreachValueForKeySets(final int depth, final List<IntSet> keySets, final Function<E, Void> fn) {
+    private void foreachValueForKeySets(final int depth, final List<IntSet> keySets, final Consumer<E> fn) {
         if (depth == keySets.size()) {
             if (value != null) {
-                fn.apply(value);
+                fn.accept(value);
             }
         } else {
             final IntSet keysHere = keySets.get(depth);
@@ -112,37 +113,19 @@ public class IntTrie<E> implements Serializable {
                 int nextStepSize = nextStep.size();
 
                 if (keysHere.size() < nextStepSize) {
-                    FastutilUtils.foreachIntIterable(keysHere, new FastutilUtils.IntVisitor() {
-                        public void visit(int key) {
-                            IntTrie<E> next = nextStep.get(key);
+                    FastutilUtils.forEach(keysHere, key -> {
+                        IntTrie<E> next = nextStep.get(key);
 
-                            if (next != null) {
-                                next.foreachValueForKeySets(depth + 1, keySets, fn);
-                            }
+                        if (next != null) {
+                            next.foreachValueForKeySets(depth + 1, keySets, fn);
                         }
                     });
-
-//                    for (int key : keysHere) {
-//                        IntTrie<E> next = nextStep.get(key);
-//
-//                        if (next != null) {
-//                            next.foreachValueForKeySets(depth + 1, keySets, fn);
-//                        }
-//                    }
                 } else {
-                    FastutilUtils.foreachIntIterable(nextStep.keySet(), new FastutilUtils.IntVisitor() {
-                        public void visit(int key) {
-                            if (keysHere.contains(key)) {
-                                nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
-                            }
+                    FastutilUtils.forEach(nextStep.keySet(), key -> {
+                        if (keysHere.contains(key)) {
+                            nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
                         }
                     });
-
-//                    for (int key : nextStep.keySet()) {
-//                        if (keysHere.contains(key)) {
-//                            nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
-//                        }
-//                    }
                 }
             }
         }

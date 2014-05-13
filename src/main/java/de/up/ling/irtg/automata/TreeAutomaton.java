@@ -56,6 +56,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /*
  TODO:
@@ -222,7 +223,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return Iterables.concat(ruleSets);
     }
 
-    public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Function<Rule, Void> fn) {
+    public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {
         throw new UnsupportedOperationException("only implemented for concrete tree automata");
 //        for (int labelId : labelIds) {
 //            if (signature.getArity(labelId) == childStateSets.size()) {

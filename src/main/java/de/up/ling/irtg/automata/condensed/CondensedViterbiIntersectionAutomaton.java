@@ -58,7 +58,6 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
     private final Int2DoubleMap viterbiStateMap; ///< Maps a state from this automaton to a probability
     private final Int2ObjectMap<Rule> viterbiRuleMap; ///< Maps a state to its best rule
 
-
     private final IntInt2IntMap stateMapping;
 //    private final List<Pair<Integer,Integer>> outputStates;
 //    private int nextOutputStateId;
@@ -76,10 +75,10 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
         finalStates = null;
 
         stateMapping = new IntInt2IntMap();
-        
+
         viterbiStateMap = new Int2DoubleOpenHashMap();
         viterbiStateMap.defaultReturnValue(0.0); // if a state is not in this map, return 0
-        
+
         viterbiRuleMap = new Int2ObjectOpenHashMap<>();
 //        outputStates = new ArrayList<Pair<Integer, Integer>>();
 //        outputStates.add(null);
@@ -120,12 +119,9 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
             for (int q : right.getFinalStates()) {
                 ckyDfsForStatesInBottomUpOrder(q, visited, partners);
             }
-            
+
             // Viterbi: Store all rules.
-            viterbiRuleMap.values().stream().forEach((r) -> {
-                storeRule(r);
-            });
-            
+            viterbiRuleMap.values().forEach(this::storeRule);
 
             // force recomputation of final states
             finalStates = null;
@@ -161,55 +157,37 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
                     remappedChildren.add(partners.get(rightChildren[i]));
                 }
 
-                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, new Function<Rule, Void>() {
-                    @Override
-                    public Void apply(final Rule leftRule) {
-                        Rule rule = combineRules(leftRule, rightRule);
-                        
-                        // -- Viterbi                        // Check, if this state has been seen before
-                        int newState = rule.getParent();
-                        double ruleWeight = rule.getWeight();
-                        
-                        int[] children = rule.getChildren();
-                        double childWeight = 0.0;
-                        
-                        // multiply the weight of all childs of the rule
-                        for (int i = 0; i < children.length; i++) {
-                            childWeight *= viterbiStateMap.get(children[i]);
-                        }
-                        
-                        // write in maps
-                        if (viterbiStateMap.containsKey(newState)) {
-                            // old state
-                            // now check, if this rule is better or worse than the existing one
+                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
+                    Rule rule = combineRules(leftRule, rightRule);
 
-                            if (viterbiStateMap.get(newState) < ruleWeight * childWeight) {
-                                // current rule is better!
-                                viterbiRuleMap.put(newState, rule);
-                                viterbiStateMap.put(newState, ruleWeight * childWeight);
-                            }
-                            
-                        } else {
-                            // new state
-                            viterbiRuleMap.put(newState, rule);
-                            viterbiStateMap.put(newState, ruleWeight * childWeight);   
-                        }
-                        
-                        // -- Viterbi
+                    // -- Viterbi                        // Check, if this state has been seen before
+                    int newState = rule.getParent();
+                    double ruleWeight = rule.getWeight();
 
-                        IntSet knownPartners = partners.get(rightRule.getParent());
+                    int[] children = rule.getChildren();
+                    double childWeight = 1.0;
 
-                        if (knownPartners == null) {
-                            knownPartners = new IntOpenHashSet();
-                            partners.put(rightRule.getParent(), knownPartners);
-                        }
-
-                        knownPartners.add(leftRule.getParent());
-
-                        return null;
+                    // multiply the weight of all childs of the rule
+                    for (int i = 0; i < children.length; i++) {
+                        childWeight *= viterbiStateMap.get(children[i]);
                     }
-                });
 
+                    if (viterbiStateMap.get(newState) < ruleWeight * childWeight) {
+                        // current rule is new, or better!
+                        viterbiRuleMap.put(newState, rule);
+                        viterbiStateMap.put(newState, ruleWeight * childWeight);
+                    }
+
+                    // -- Viterbi
+                    IntSet knownPartners = partners.get(rightRule.getParent());
+
+                    if (knownPartners == null) {
+                        knownPartners = new IntOpenHashSet();
+                        partners.put(rightRule.getParent(), knownPartners);
+                    }
+
+                    knownPartners.add(leftRule.getParent());
+                });
             }
         }
     }
@@ -289,7 +267,6 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
-    
     private static class IntInt2IntMap {
 
         private final Int2ObjectMap<Int2IntMap> map;

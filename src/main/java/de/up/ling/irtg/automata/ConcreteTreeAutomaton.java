@@ -10,9 +10,9 @@ import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.BitSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  *
@@ -21,7 +21,6 @@ import java.util.Set;
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 
 //    private IntTrie<Int2ObjectMap<Set<Rule>>> ruleTrie = null;
-
     public ConcreteTreeAutomaton() {
         super(new Signature());
         isExplicit = true;
@@ -56,36 +55,19 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public boolean isBottomUpDeterministic() {
         return explicitIsBottomUpDeterministic;
     }
-    
-    @Override
-    public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Function<Rule, Void> fn) {
-        explicitRulesBottomUp.foreachValueForKeySets(childStateSets, new Function<Int2ObjectMap<Set<Rule>>, Void>() {
-            public Void apply(final Int2ObjectMap<Set<Rule>> ruleMap) {
-                // TODO: This is optimized for the PCFG case, where the label sets are typically much
-                // larger than the sets of rules with the same child states. Adapt IntTrie iteration/contains
-                // trick here to iterate over smaller set. Take special care to remap in the right direction.
-                
-                FastutilUtils.foreachIntIterable(ruleMap.keySet(), new FastutilUtils.IntVisitor() {
-                    public void visit(int label) {
-                        if( labelIds.contains(signatureMapper.remapForward(label))) {
-                        for (Rule rule : ruleMap.get(label)) {
-                            fn.apply(rule);
-                        }
-                    }
-                    }
-                });
-                
-//                
-//                for (int label : ruleMap.keySet()) {
-//                    if( labelIds.contains(signatureMapper.remapForward(label))) {
-//                        for (Rule rule : ruleMap.get(label)) {
-//                            fn.apply(rule);
-//                        }
-//                    }
-//                }
 
-                return null;
-            }
+    @Override
+    public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Consumer<Rule> fn) {
+        explicitRulesBottomUp.foreachValueForKeySets(childStateSets, ruleMap -> {
+            // TODO: This is optimized for the PCFG case, where the label sets are typically much
+            // larger than the sets of rules with the same child states. Adapt IntTrie iteration/contains
+            // trick here to iterate over smaller set. Take special care to remap in the right direction.
+
+            FastutilUtils.forEach(ruleMap.keySet(), label -> {
+                if (labelIds.contains(signatureMapper.remapForward(label))) {
+                    ruleMap.get(label).forEach(fn);
+                }
+            });
         });
     }
 }
