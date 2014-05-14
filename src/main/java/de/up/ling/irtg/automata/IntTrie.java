@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import com.google.common.base.Function;
 import de.up.ling.irtg.util.FastutilUtils;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -14,10 +13,12 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  *
@@ -96,14 +97,14 @@ public class IntTrie<E> implements Serializable {
         }
     }
 
-    public void foreachValueForKeySets(List<IntSet> keySets, Function<E, Void> fn) {
+    public void foreachValueForKeySets(List<IntSet> keySets, Consumer<E> fn) {
         foreachValueForKeySets(0, keySets, fn);
     }
 
-    private void foreachValueForKeySets(final int depth, final List<IntSet> keySets, final Function<E, Void> fn) {
+    private void foreachValueForKeySets(final int depth, final List<IntSet> keySets, final Consumer<E> fn) {
         if (depth == keySets.size()) {
             if (value != null) {
-                fn.apply(value);
+                fn.accept(value);
             }
         } else {
             final IntSet keysHere = keySets.get(depth);
@@ -112,48 +113,39 @@ public class IntTrie<E> implements Serializable {
                 int nextStepSize = nextStep.size();
 
                 if (keysHere.size() < nextStepSize) {
-                    FastutilUtils.foreachIntIterable(keysHere, new FastutilUtils.IntVisitor() {
-                        public void visit(int key) {
-                            IntTrie<E> next = nextStep.get(key);
+                    FastutilUtils.forEach(keysHere, key -> {
+                        IntTrie<E> next = nextStep.get(key);
 
-                            if (next != null) {
-                                next.foreachValueForKeySets(depth + 1, keySets, fn);
-                            }
+                        if (next != null) {
+                            next.foreachValueForKeySets(depth + 1, keySets, fn);
                         }
                     });
-
-//                    for (int key : keysHere) {
-//                        IntTrie<E> next = nextStep.get(key);
-//
-//                        if (next != null) {
-//                            next.foreachValueForKeySets(depth + 1, keySets, fn);
-//                        }
-//                    }
                 } else {
-                    FastutilUtils.foreachIntIterable(nextStep.keySet(), new FastutilUtils.IntVisitor() {
-                        public void visit(int key) {
-                            if (keysHere.contains(key)) {
-                                nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
-                            }
+                    FastutilUtils.forEach(nextStep.keySet(), key -> {
+                        if (keysHere.contains(key)) {
+                            nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
                         }
                     });
-
-//                    for (int key : nextStep.keySet()) {
-//                        if (keysHere.contains(key)) {
-//                            nextStep.get(key).foreachValueForKeySets(depth + 1, keySets, fn);
-//                        }
-//                    }
                 }
             }
         }
     }
+    
+    public void foreach(Consumer<E> fn) {
+        if( value != null ) {
+            fn.accept(value);
+        }
+        
+        nextStep.values().forEach(next -> {
+           next.foreach(fn);
+        });
+    }
 
     public static interface EntryVisitor<E> {
-
         public void visit(IntList keys, E value);
     }
 
-    public void foreach(EntryVisitor<E> visitor) {
+    public void foreachWithKeys(EntryVisitor<E> visitor) {
         IntList keys = new IntArrayList();
         foreach(keys, visitor);
     }
@@ -163,21 +155,26 @@ public class IntTrie<E> implements Serializable {
             visitor.visit(keys, value);
         }
 
-        for (int next : nextStep.keySet()) {
+        FastutilUtils.foreachFastEntry(nextStep, (key, value) -> {
             int size = keys.size();
-            keys.add(next);
-            nextStep.get(next).foreach(keys, visitor);
+            keys.add(key);
+            value.foreach(keys, visitor);
             keys.remove(size);
-        }
+        });
+
+//        for (int next : nextStep.keySet()) {
+//            int size = keys.size();
+//            keys.add(next);
+//            nextStep.get(next).foreach(keys, visitor);
+//            keys.remove(size);
+//        }
     }
 
     public Collection<E> getValues() {
         final List<E> allValues = new ArrayList<E>();
 
-        foreach(new EntryVisitor<E>() {
-            public void visit(IntList keys, E value) {
-                allValues.add(value);
-            }
+        foreachWithKeys((keys, value) -> {
+            allValues.add(value);
         });
 
         return allValues;
@@ -187,10 +184,8 @@ public class IntTrie<E> implements Serializable {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
 
-        foreach(new EntryVisitor<E>() {
-            public void visit(IntList keys, E value) {
-                buf.append(keys + " -> " + value + "\n");
-            }
+        foreachWithKeys((keys, value) -> {
+            buf.append(keys + " -> " + value + "\n");
         });
 
         return buf.toString();
