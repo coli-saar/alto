@@ -55,8 +55,8 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
 //    private Int2IntMap stateToRightState;
     private long[] ckyTimestamp = new long[10];
     private final SignatureMapper leftToRightSignatureMapper;
-    private final Int2DoubleMap viterbiStateMap; ///< Maps a state from this automaton to a probability
-    private final Int2ObjectMap<Rule> viterbiRuleMap; ///< Maps a state to its best rule
+    private final Int2DoubleMap viterbiStateMap;        ///< Maps a state from this automaton to a probability
+    private final Int2ObjectMap<Rule> viterbiRuleMap;   ///< Maps a state to its best rule
 
 
     private final IntInt2IntMap stateMapping;
@@ -122,10 +122,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
             }
             
             // Viterbi: Store all rules.
-            viterbiRuleMap.values().stream().forEach((r) -> {
-                storeRule(r);
-            });
-            
+            viterbiRuleMap.values().forEach(this::storeRule);
 
             // force recomputation of final states
             finalStates = null;
@@ -166,7 +163,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
                     public Void apply(final Rule leftRule) {
                         Rule rule = combineRules(leftRule, rightRule);
                         
-                        // -- Viterbi                        // Check, if this state has been seen before
+                        // -- Viterbi
                         int newState = rule.getParent();
                         double ruleWeight = rule.getWeight();
                         
@@ -179,22 +176,11 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
                         }
                         
                         // write in maps
-                        if (viterbiStateMap.containsKey(newState)) {
-                            // old state
-                            // now check, if this rule is better or worse than the existing one
-
-                            if (viterbiStateMap.get(newState) < ruleWeight * childWeight) {
-                                // current rule is better!
-                                viterbiRuleMap.put(newState, rule);
-                                viterbiStateMap.put(newState, ruleWeight * childWeight);
-                            }
-                            
-                        } else {
-                            // new state
+                        if (viterbiStateMap.get(newState) < ruleWeight * childWeight) {
+                            // current rule is better!
                             viterbiRuleMap.put(newState, rule);
-                            viterbiStateMap.put(newState, ruleWeight * childWeight);   
+                            viterbiStateMap.put(newState, ruleWeight * childWeight);
                         }
-                        
                         // -- Viterbi
 
                         IntSet knownPartners = partners.get(rightRule.getParent());
