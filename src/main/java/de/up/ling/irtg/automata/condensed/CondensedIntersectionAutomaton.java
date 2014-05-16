@@ -13,9 +13,7 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
-import de.up.ling.irtg.util.ArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import de.up.ling.irtg.util.IntInt2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -232,40 +230,6 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
-    private static class IntInt2IntMap {
-        private final Int2ObjectMap<Int2IntMap> map;
-
-        public IntInt2IntMap() {
-            map = new ArrayMap<>();
-        }
-
-        public int get(int x, int y) {
-            Int2IntMap m = map.get(x);
-
-            if (m == null) {
-                return 0;
-            } else {
-                return m.get(y);
-            }
-        }
-
-        public void put(int x, int y, int value) {
-            Int2IntMap m = map.get(x);
-
-            if (m == null) {
-                m = new Int2IntOpenHashMap();
-                map.put(x, m);
-            }
-
-            m.put(y, value);
-        }
-
-        private void printStats() {
-            if (map instanceof ArrayMap) {
-                System.err.println("arraymap stats: " + ((ArrayMap) map).getStatistics());
-            }
-        }
-    }
 
     /**
      * Arg1: IRTG Grammar Arg2: List of Sentences Arg3: Interpretation to parse

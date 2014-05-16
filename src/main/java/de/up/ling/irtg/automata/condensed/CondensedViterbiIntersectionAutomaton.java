@@ -13,11 +13,11 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.ArrayInt2DoubleMap;
 import de.up.ling.irtg.util.ArrayMap;
+import de.up.ling.irtg.util.IntInt2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -75,10 +75,11 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
 
         stateMapping = new IntInt2IntMap();
 
-        viterbiStateMap = new Int2DoubleOpenHashMap();
+//        viterbiStateMap = new Int2DoubleOpenHashMap();
+        viterbiStateMap = new ArrayInt2DoubleMap();
         viterbiStateMap.defaultReturnValue(0.0); // if a state is not in this map, return 0
 
-        viterbiRuleMap = new Int2ObjectOpenHashMap<>();
+        viterbiRuleMap = new ArrayMap<>();
 //        outputStates = new ArrayList<Pair<Integer, Integer>>();
 //        outputStates.add(null);
 //        nextOutputStateId = 1;
@@ -137,7 +138,6 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
                 }
                 System.err.println("Intersection automaton CKY:\n" + toString() + "\n~~~~~~~~~~~~~~~~~~");
             }
-//            labelRemap = oldLabelRemap;
         }
     }
 
@@ -268,35 +268,6 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
     }
     
     
-    private static class IntInt2IntMap {
-
-        private final Int2ObjectMap<Int2IntMap> map;
-
-        public IntInt2IntMap() {
-            map = new ArrayMap<Int2IntMap>();
-        }
-
-        public int get(int x, int y) {
-            Int2IntMap m = map.get(x);
-
-            if (m == null) {
-                return 0;
-            } else {
-                return m.get(y);
-            }
-        }
-
-        public void put(int x, int y, int value) {
-            Int2IntMap m = map.get(x);
-
-            if (m == null) {
-                m = new Int2IntOpenHashMap();
-                map.put(x, m);
-            }
-
-            m.put(y, value);
-        }
-    }
 
     /**
      * Arg1: IRTG Grammar Arg2: List of Sentences Arg3: Interpretation to parse
@@ -364,7 +335,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
 
                 while ((sentence = br.readLine()) != null) {
                     ++sentences;
-                    System.err.println("Sentence #" + sentences);
+                    System.err.println("\nSentence #" + sentences);
                     System.err.println("Current sentence: " + sentence);
                     updateBenchmark(timestamp, 2, useCPUTime, benchmarkBean);
 
@@ -383,12 +354,12 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
                     if (result.getFinalStates().isEmpty()) {
                         System.err.println("\n**** EMPTY ****\n");
                     }
-                    else {
-                        long start = System.nanoTime();
-                        System.err.println(result.viterbi());
-                        long end = System.nanoTime();
-                        System.err.println("-> Viterbi " + (end-start)/1000000 + "ms");
-                    }
+//                    else {
+//                        long start = System.nanoTime();
+//                        System.err.println(result.viterbi());
+//                        long end = System.nanoTime();
+//                        System.err.println("-> Viterbi " + (end-start)/1000000 + "ms");
+//                    }
 
                     // try to trigger gc
                     result = null;
