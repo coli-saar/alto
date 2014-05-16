@@ -6,11 +6,12 @@
 package de.up.ling.irtg.util;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import java.io.Serializable;
 
 /**
  *
  * @author koller
  */
-public interface MapFactory {
+public interface MapFactory extends Serializable {
     public Int2ObjectMap createMap(int depth);
 }
