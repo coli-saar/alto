@@ -18,10 +18,10 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -422,26 +422,27 @@ public class Homomorphism {
         return true;
     }
 
-    private Lazy<Boolean> nondeleting = new Lazy<Boolean>() {
+    private Lazy<Boolean> nondeleting = new Lazy(new Supplier<Boolean>() {
         @Override
-        protected Boolean evaluate() {
+        public Boolean get() {
             for (int label : labelToLabelSet.keySet()) {
-                Tree<HomomorphismSymbol> rhs = get(label);
-                Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
-                for (HomomorphismSymbol l : rhs.getLeafLabels()) {
-                    if (l.isVariable()) {
-                        variables.add(l);
-                    }
-                }
-
-                if (variables.size() < srcSignature.getArity((int) label)) {
-                    return false;
+            Tree<HomomorphismSymbol> rhs = Homomorphism.this.get(label);
+            Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
+            for (HomomorphismSymbol l : rhs.getLeafLabels()) {
+                if (l.isVariable()) {
+                    variables.add(l);
                 }
             }
 
-            return true;
+            if (variables.size() < srcSignature.getArity((int) label)) {
+                return false;
+            }
         }
-    };
+
+        return true;
+        }
+    
+    });
 
     public boolean isNonDeleting() {
         return nondeleting.getValue();

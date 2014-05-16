@@ -73,7 +73,7 @@ public class WideStringAlgebra extends StringAlgebra {
         }
 
         @Override
-        public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
+        public Iterable<Rule> getRulesBottomUp(int label, int[] childStates) {
             if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {

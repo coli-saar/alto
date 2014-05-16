@@ -4,8 +4,6 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import com.google.common.base.Function;
-import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.AntlrIrtgBuilder;
 import de.up.ling.irtg.Interpretation;
@@ -145,8 +143,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                     remappedChildren.add(partners.get(rightChildren[i]));
                 }
 
-                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, new Function<Rule, Void>() {
-                    public Void apply(final Rule leftRule) {
+                left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
 
@@ -158,10 +155,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                         }
 
                         knownPartners.add(leftRule.getParent());
-
-                        return null;
-                    }
-                });
+                    });
 
             }
         }
@@ -225,7 +219,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     }
 
     @Override
-    public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
+    public Iterable<Rule> getRulesBottomUp(int label, int[] childStates) {
         makeAllRulesExplicit();
 
         assert useCachedRuleBottomUp(label, childStates);
@@ -351,21 +345,24 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
                     updateBenchmark(timestamp, 3, useCPUTime, benchmarkBean);
 
+                    System.err.println("-> Chart " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
+                    out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
+                    out.flush();
+
                     if (result.getFinalStates().isEmpty()) {
                         System.err.println("\n**** EMPTY ****\n");
                     }
-//                    else {
-//                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
-//                    }
+                    else {
+                        long start = System.nanoTime();
+                        System.err.println(result.viterbi());
+                        long end = System.nanoTime();
+                        System.err.println("-> Viterbi " + (end-start)/1000000 + "ms");
+                    }
 
                     // try to trigger gc
                     result = null;
                     System.gc();
 
-                    System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
-                    out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
-
-                    out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;
                 }
                 out.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");

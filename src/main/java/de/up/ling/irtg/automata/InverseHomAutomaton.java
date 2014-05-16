@@ -81,7 +81,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
     }
     
     @Override
-    public Set<Rule> getRulesBottomUp(int label, final int[] childStates) {
+    public Iterable<Rule> getRulesBottomUp(int label, final int[] childStates) {
         // lazy bottom-up computation of bottom-up rules
         if (useCachedRuleBottomUp(label, childStates)) {
             return getRulesBottomUpFromExplicit(label, childStates);

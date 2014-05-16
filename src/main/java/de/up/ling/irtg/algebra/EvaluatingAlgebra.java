@@ -110,7 +110,7 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
         }
 
         @Override
-        public Set<Rule> getRulesBottomUp(int labelId, int[] childStates) {
+        public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
             if (useCachedRuleBottomUp(labelId, childStates)) {
                 return getRulesBottomUpFromExplicit(labelId, childStates);
             } else {

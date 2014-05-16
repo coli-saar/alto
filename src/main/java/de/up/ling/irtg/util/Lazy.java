@@ -6,24 +6,30 @@
 
 package de.up.ling.irtg.util;
 
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.function.Supplier;
+
 /**
  *
  * @author koller
  */
-public abstract class Lazy<E> {
-    private E value;
+public class Lazy<E> implements Serializable {
+    private transient E value;
     private boolean dirty;
+    private final Supplier<E> supplier;
 
-    public Lazy() {
+    public Lazy(Supplier<E> supplier) {
         value = null;
         dirty = true;
+        this.supplier = supplier;
     }
     
-    abstract protected E evaluate();
+//    abstract protected E evaluate();
     
     public E getValue() {
         if( dirty ) {
-            value = evaluate();
+            value = supplier.get();
             dirty = false;
         }
         
@@ -32,5 +38,12 @@ public abstract class Lazy<E> {
     
     public void setDirty() {
         dirty = true;
-    }    
+    }
+    
+    // for deserialization
+    private void readObject(java.io.ObjectInputStream stream) throws IOException, ClassNotFoundException {
+         stream.defaultReadObject();
+         dirty = true;
+    }
 }
+

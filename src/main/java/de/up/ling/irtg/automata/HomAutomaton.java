@@ -12,7 +12,6 @@ import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -140,7 +139,7 @@ class HomAutomaton extends TreeAutomaton<Object> {
     }
 
     @Override
-    public Set<Rule> getRulesBottomUp(int label, int[] childStates) {
+    public Iterable<Rule> getRulesBottomUp(int label, int[] childStates) {
         makeAllRulesExplicit();
         return getRulesBottomUpFromExplicit(label, childStates);
     }

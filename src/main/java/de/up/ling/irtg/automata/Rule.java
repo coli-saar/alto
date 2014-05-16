@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.util.Lazy;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -26,6 +27,7 @@ public class Rule implements Serializable {
     private int[] children;
     private double weight;
     private Object extra;
+    private int hashcode = -1;
 
     Rule(int parent, int label, int[] children, double weight) {
         this.parent = parent;
@@ -128,14 +130,22 @@ public class Rule implements Serializable {
         }
         return ret;
     }
-
-    @Override
-    public int hashCode() {
+    
+    private int computeHashCode() {
         int hash = 7;
         hash = 73 * hash + this.parent;
         hash = 73 * hash + this.label;
         hash = 73 * hash + Arrays.hashCode(this.children);
         return hash;
+    }
+
+    @Override
+    public int hashCode() {
+        if( hashcode == -1 ) {
+            hashcode = computeHashCode();
+        }
+        
+        return hashcode;
     }
 
     /**
