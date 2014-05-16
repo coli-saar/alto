@@ -333,7 +333,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
                 while ((sentence = br.readLine()) != null) {
                     ++sentences;
-                    System.err.println("Sentence #" + sentences);
+                    System.err.println("\nSentence #" + sentences);
                     System.err.println("Current sentence: " + sentence);
                     updateBenchmark(timestamp, 2, useCPUTime, benchmarkBean);
 
@@ -345,19 +345,19 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
 
                     updateBenchmark(timestamp, 3, useCPUTime, benchmarkBean);
 
-                    System.err.println("-> Chart " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
+                    System.err.println("-> Chart " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms");
                     out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
                     out.flush();
 
                     if (result.getFinalStates().isEmpty()) {
-                        System.err.println("\n**** EMPTY ****\n");
+                        System.err.println("**** EMPTY ****\n");
                     }
-                    else {
-                        long start = System.nanoTime();
-                        System.err.println(result.viterbi());
-                        long end = System.nanoTime();
-                        System.err.println("-> Viterbi " + (end-start)/1000000 + "ms");
-                    }
+//                    else {
+//                        long start = System.nanoTime();
+//                        System.err.println(result.viterbi());
+//                        long end = System.nanoTime();
+//                        System.err.println("-> Viterbi " + (end-start)/1000000 + "ms");
+//                    }
 
                     // try to trigger gc
                     result = null;

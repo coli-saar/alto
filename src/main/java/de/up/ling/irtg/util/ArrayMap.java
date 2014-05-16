@@ -31,9 +31,13 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
     }
 
     private void growList(int minNewCapacity) {
-        capacity *= 2;
         if (minNewCapacity > capacity) {
-            capacity = minNewCapacity;
+            capacity *= 2;
+            if (minNewCapacity > capacity) {
+                capacity = minNewCapacity;
+            }
+
+//            System.err.println("grow capacity to " + capacity);
         }
 
         values.ensureCapacity(capacity);
@@ -48,6 +52,7 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
      */
     private void ensureSize(int targetIndex) {
         if (values.size() <= targetIndex) {
+//            System.err.println("grow list to " + targetIndex);
             growList(targetIndex);
             for (int i = values.size(); i <= targetIndex; i++) {
                 values.add(null);

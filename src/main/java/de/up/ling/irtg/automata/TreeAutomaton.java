@@ -29,6 +29,7 @@ import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -113,7 +114,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     public TreeAutomaton(Signature signature) {
         explicitRulesBottomUp = new IntTrie<Int2ObjectMap<Set<Rule>>>();
-        explicitRulesTopDown = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
+//        explicitRulesTopDown = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
+        explicitRulesTopDown = new ArrayMap<Int2ObjectMap<Set<Rule>>>();
         unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
         unprocessedUpdatesForTopDown = new ArrayList<Rule>();
         unprocessedUpdatesForBottomUp = new ArrayList<>();
