@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.ArrayList;
+import java.util.function.IntConsumer;
 
 /**
  *
@@ -28,6 +29,14 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
 
     public ArrayMap() {
         values = new ArrayList<>(capacity);
+    }
+    
+    public String getStatistics() {
+        StringBuilder buf = new StringBuilder();
+        
+        buf.append("size/arraysize=" + ((double) size)/arraySize());
+        
+        return buf.toString();
     }
 
     private void growList(int minNewCapacity) {
@@ -134,28 +143,39 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
         }
     }
 
-    @Override
-    public IntSet keySet() {
-        return new AbstractIntSet() {
-            @Override
-            public boolean contains(int k) {
-                if (k < 0 || k >= arraySize()) {
-                    return false;
-                } else {
-                    return values.get(k) != null;
+    private class KeySet extends AbstractIntSet implements IntForEach {
+        @Override
+        public boolean contains(int k) {
+            if (k < 0 || k >= arraySize()) {
+                return false;
+            } else {
+                return values.get(k) != null;
+            }
+        }
+
+        @Override
+        public IntIterator iterator() {
+            return new KeyIterator();
+        }
+
+        @Override
+        public int size() {
+            return ArrayMap.this.size();
+        }
+
+        @Override
+        public void forEach(IntConsumer consumer) {
+            for (int i = 0; i < values.size(); i++) {
+                if (values.get(i) != null) {
+                    consumer.accept(i);
                 }
             }
+        }
+    }
 
-            @Override
-            public IntIterator iterator() {
-                return new KeyIterator();
-            }
-
-            @Override
-            public int size() {
-                return ArrayMap.this.size();
-            }
-        };
+    @Override
+    public IntSet keySet() {
+        return new KeySet();
     }
 
     @Override

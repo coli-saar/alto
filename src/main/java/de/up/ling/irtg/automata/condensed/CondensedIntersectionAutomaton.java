@@ -13,6 +13,7 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.ArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -44,17 +45,16 @@ import java.util.*;
  */
 public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
 
-    private TreeAutomaton<LeftState> left;
-    private CondensedTreeAutomaton<RightState> right;
+    private final TreeAutomaton<LeftState> left;
+    private final CondensedTreeAutomaton<RightState> right;
     private static final boolean DEBUG = false;
-//    private Int2IntMap stateToLeftState;
-//    private Int2IntMap stateToRightState;
     private long[] ckyTimestamp = new long[10];
     private final SignatureMapper leftToRightSignatureMapper;
 
-    private final IntInt2IntMap stateMapping;
-//    private final List<Pair<Integer,Integer>> outputStates;
-//    private int nextOutputStateId;
+    private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
+    // (index first by right state, then by left state because almost all right states
+    // receive corresponding left states, but not vice versa. This keeps outer map very dense,
+    // and makes it suitable for a fast ArrayMap)
 
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
         super(left.getSignature()); // TODO = should intersect this with the (remapped) right signature
@@ -64,14 +64,9 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         this.left = left;
         this.right = right;
 
-//        stateToLeftState = new Int2IntOpenHashMap();
-//        stateToRightState = new Int2IntOpenHashMap();
         finalStates = null;
 
         stateMapping = new IntInt2IntMap();
-//        outputStates = new ArrayList<Pair<Integer, Integer>>();
-//        outputStates.add(null);
-//        nextOutputStateId = 1;
     }
 
     /**
@@ -144,18 +139,18 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
                 }
 
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
-                        Rule rule = combineRules(leftRule, rightRule);
-                        storeRule(rule);
+                    Rule rule = combineRules(leftRule, rightRule);
+                    storeRule(rule);
 
-                        IntSet knownPartners = partners.get(rightRule.getParent());
+                    IntSet knownPartners = partners.get(rightRule.getParent());
 
-                        if (knownPartners == null) {
-                            knownPartners = new IntOpenHashSet();
-                            partners.put(rightRule.getParent(), knownPartners);
-                        }
+                    if (knownPartners == null) {
+                        knownPartners = new IntOpenHashSet();
+                        partners.put(rightRule.getParent(), knownPartners);
+                    }
 
-                        knownPartners.add(leftRule.getParent());
-                    });
+                    knownPartners.add(leftRule.getParent());
+                });
 
             }
         }
@@ -166,14 +161,15 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     public void makeAllRulesExplicit() {
         makeAllRulesExplicitCondensedCKY();
 
+//        stateMapping.printStats();
     }
 
     private int addStatePair(int leftState, int rightState) {
-        int ret = stateMapping.get(leftState, rightState);
+        int ret = stateMapping.get(rightState, leftState);
 
         if (ret == 0) {
             ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
-            stateMapping.put(leftState, rightState, ret);
+            stateMapping.put(rightState, leftState, ret);
         }
 
         return ret;
@@ -209,7 +205,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
     private void collectStatePairs(IntSet leftStates, IntSet rightStates, IntSet pairStates) {
         for (int leftState : leftStates) {
             for (int rightState : rightStates) {
-                int state = stateMapping.get(leftState, rightState);
+                int state = stateMapping.get(rightState, leftState);
 
                 if (state != 0) {
                     pairStates.add(state);
@@ -236,13 +232,11 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
-    
     private static class IntInt2IntMap {
-
         private final Int2ObjectMap<Int2IntMap> map;
 
         public IntInt2IntMap() {
-            map = new Int2ObjectOpenHashMap<Int2IntMap>();
+            map = new ArrayMap<>();
         }
 
         public int get(int x, int y) {
@@ -264,6 +258,12 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
             }
 
             m.put(y, value);
+        }
+
+        private void printStats() {
+            if (map instanceof ArrayMap) {
+                System.err.println("arraymap stats: " + ((ArrayMap) map).getStatistics());
+            }
         }
     }
 
@@ -308,6 +308,8 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends TreeA
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();
 
         updateBenchmark(timestamp, 1, useCPUTime, benchmarkBean);
+        
+//        irtg.getAutomaton().analyze();
 
         System.err.println(" Done in " + ((timestamp[1] - timestamp[0]) / 1000000) + "ms");
         try {

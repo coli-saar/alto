@@ -55,6 +55,10 @@ public class FastutilUtils {
             visitor.accept(list.getInt(i));
         }
     }
+    
+    public static void forEach(IntForEach iterable, IntConsumer visitor) {
+        iterable.forEach(visitor);
+    }
 
     /**
      * Iterates over all tuples of elements in the given int iterables. In other

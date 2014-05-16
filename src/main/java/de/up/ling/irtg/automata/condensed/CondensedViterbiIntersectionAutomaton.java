@@ -13,6 +13,7 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.ArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -34,7 +35,6 @@ import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.*;
-import java.util.function.Consumer;
 
 
 /*
@@ -200,11 +200,11 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
     }
 
     private int addStatePair(int leftState, int rightState) {
-        int ret = stateMapping.get(leftState, rightState);
+        int ret = stateMapping.get(rightState, leftState);
 
         if (ret == 0) {
             ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
-            stateMapping.put(leftState, rightState, ret);
+            stateMapping.put(rightState, leftState, ret);
         }
 
         return ret;
@@ -240,7 +240,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
     private void collectStatePairs(IntSet leftStates, IntSet rightStates, IntSet pairStates) {
         for (int leftState : leftStates) {
             for (int rightState : rightStates) {
-                int state = stateMapping.get(leftState, rightState);
+                int state = stateMapping.get(rightState, leftState);
 
                 if (state != 0) {
                     pairStates.add(state);
@@ -273,7 +273,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
         private final Int2ObjectMap<Int2IntMap> map;
 
         public IntInt2IntMap() {
-            map = new Int2ObjectOpenHashMap<Int2IntMap>();
+            map = new ArrayMap<Int2IntMap>();
         }
 
         public int get(int x, int y) {
@@ -375,22 +375,25 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
                     TreeAutomaton<String> result = irtg.getAutomaton().intersectViterbi(inv);
 
                     updateBenchmark(timestamp, 3, useCPUTime, benchmarkBean);
+                    
+                    System.err.println("-> Chart " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms");
+                    out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
+                    out.flush();
 
                     if (result.getFinalStates().isEmpty()) {
                         System.err.println("\n**** EMPTY ****\n");
                     }
-//                    else {
-//                        System.err.println("\nViterbi:\n" + result.viterbi() + "\n");
-//                    }
+                    else {
+                        long start = System.nanoTime();
+                        System.err.println(result.viterbi());
+                        long end = System.nanoTime();
+                        System.err.println("-> Viterbi " + (end-start)/1000000 + "ms");
+                    }
 
                     // try to trigger gc
                     result = null;
                     System.gc();
 
-                    System.err.println("Done in " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms \n");
-                    out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
-
-                    out.flush();
                     times += (timestamp[3] - timestamp[2]) / 1000000;
                 }
                 out.write("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n Parsed " + sentences + " sentences in " + times + "ms. \n");

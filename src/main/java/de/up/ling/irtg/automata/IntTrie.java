@@ -5,7 +5,9 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FastutilUtils;
+import de.up.ling.irtg.util.MapFactory;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -13,7 +15,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,25 +26,27 @@ import java.util.function.Consumer;
  * @author koller
  */
 public class IntTrie<E> implements Serializable {
-
     private Int2ObjectMap<IntTrie<E>> nextStep;
     private E value;
-//    private Set<E> allValues; // only has meaningful content at top-level
+    private final MapFactory factory;
 
-    private IntTrie(boolean toplevel) {
-        nextStep = new Int2ObjectOpenHashMap<IntTrie<E>>();
+    private IntTrie(int depth, MapFactory factory) {
+        this.factory = factory;
+        nextStep = (Int2ObjectMap) factory.createMap(depth);
         value = null;
+    }
 
-//        if (toplevel) {
-//            allValues = new HashSet<E>();
-//        } else {
-//            allValues = null;
-//        }
+    public IntTrie(MapFactory factory) {
+        this(0, factory);
     }
 
     public IntTrie() {
-        this(true);
+        this(alwaysHashMapFactory);
     }
+
+    
+
+    private static final MapFactory alwaysHashMapFactory = depth -> new Int2ObjectOpenHashMap<>();
 
     /**
      * Returns the previously known entry, or null if an entry for this key was
@@ -64,19 +67,19 @@ public class IntTrie<E> implements Serializable {
         return ret;
     }
 
-    private E put(int index, int[] key, E value) {
-        if (index == key.length) {
+    private E put(int depth, int[] key, E value) {
+        if (depth == key.length) {
             E ret = this.value;
             this.value = value;
             return ret;
         } else {
-            IntTrie<E> next = nextStep.get(key[index]);
+            IntTrie<E> next = nextStep.get(key[depth]);
             if (next == null) {
-                next = new IntTrie<E>(false);
-                nextStep.put(key[index], next);
+                next = new IntTrie<E>(depth + 1, factory);
+                nextStep.put(key[depth], next);
             }
 
-            return next.put(index + 1, key, value);
+            return next.put(depth + 1, key, value);
         }
     }
 
@@ -130,18 +133,19 @@ public class IntTrie<E> implements Serializable {
             }
         }
     }
-    
+
     public void foreach(Consumer<E> fn) {
-        if( value != null ) {
+        if (value != null) {
             fn.accept(value);
         }
-        
+
         nextStep.values().forEach(next -> {
-           next.foreach(fn);
+            next.foreach(fn);
         });
     }
 
     public static interface EntryVisitor<E> {
+
         public void visit(IntList keys, E value);
     }
 
@@ -201,6 +205,10 @@ public class IntTrie<E> implements Serializable {
             System.err.println("depth " + depth + ": " + totalNodesPerDepth.get(depth) + " nodes");
             System.err.println("max keys: " + maxKeysPerDepth.get(depth));
             System.err.println("avg keys: " + ((double) totalKeysPerDepth.get(depth)) / totalNodesPerDepth.get(depth) + "\n");
+        }
+        
+        if( nextStep instanceof ArrayMap ) {
+            System.err.println("uses ArrayMap with density " + ((ArrayMap) nextStep).getStatistics());
         }
     }
 

@@ -31,6 +31,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FunctionToInt;
+import de.up.ling.irtg.util.MapFactory;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
@@ -113,9 +114,19 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected Interner<State> stateInterner;
 
     public TreeAutomaton(Signature signature) {
+//        MapFactory factory = depth -> {
+//           if( depth == 0 ) {
+//               return new ArrayMap<IntTrie>();
+//           } else {
+//               return new Int2ObjectOpenHashMap<IntTrie>();
+//           }
+//        };
+                
         explicitRulesBottomUp = new IntTrie<Int2ObjectMap<Set<Rule>>>();
-//        explicitRulesTopDown = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
+        
         explicitRulesTopDown = new ArrayMap<Int2ObjectMap<Set<Rule>>>();
+        
+        
         unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
         unprocessedUpdatesForTopDown = new ArrayList<Rule>();
         unprocessedUpdatesForBottomUp = new ArrayList<>();
@@ -1203,15 +1214,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
             return false;
         }
-
-//        SetMultimap<Integer, Rule> topdown = explicitRulesTopDown.get(label);
-//        if (isExplicit) {
-//            return true;
-//        } else if (topdown == null) {
-//            return false;
-//        } else {
-//            return topdown.containsKey(parent);
-//        }
     }
 
     /**
