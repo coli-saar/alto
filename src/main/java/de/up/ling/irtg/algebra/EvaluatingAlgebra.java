@@ -101,7 +101,7 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
         return signature;
     }
 
-    private class EvaluatingDecompositionAutomaton extends TreeAutomaton<E> {
+    protected class EvaluatingDecompositionAutomaton extends TreeAutomaton<E> {
 
         public EvaluatingDecompositionAutomaton(E finalElement) {
             super(EvaluatingAlgebra.this.getSignature());

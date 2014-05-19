@@ -6,8 +6,12 @@ package de.up.ling.irtg.algebra;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Sets;
+import de.saar.basic.CartesianIterator;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
@@ -32,7 +36,8 @@ import java.util.Set;
  * universe).</li>
  * <li>uniq_a(A) returns the set A (a subset of the universe) itself if A = {a};
  * otherwise it returns the empty set.</li>
- * <li>member_i(R,S) returns the set S if S is a subset of R; otherwise it returns the empty set. </li> 
+ * <li>member_i(R,S) returns the set S if S is a subset of R; otherwise it
+ * returns the empty set. </li>
  * <li>T returns the universe.</li>
  * </ul>
  *
@@ -45,6 +50,7 @@ import java.util.Set;
  */
 // (Nikos: subset_i is used for underspecification)
 public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
+
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";
     private static final String UNIQ = "uniq_";
@@ -52,14 +58,18 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     private static final String TOP = "T";
     private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ, MEMBER};
     private Map<String, Set<List<String>>> atomicInterpretations;
+    private int maxArity;
     private Set<String> allIndividuals;
     private Set<List<String>> allIndividualsAsTuples;
+    private IntSet allStates;
 
     public SetAlgebra() {
         this.atomicInterpretations = null;
+        maxArity = 0;
 
         allIndividuals = new HashSet<String>();
         allIndividualsAsTuples = new HashSet<List<String>>();
+        allStates = null;
     }
 
     public SetAlgebra(Map<String, Set<List<String>>> atomicInterpretations) {
@@ -73,37 +83,65 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         return true;
     }
 
-    
     /**
-     * Writes the interpretations of the atomic concepts to the given
-     * Writer. This method should encode into a Json string, but is not
-     * yet implemented.
-     * 
-     * @see #readOptions(java.io.Reader) 
+     * Writes the interpretations of the atomic concepts to the given Writer.
+     * This method should encode into a Json string, but is not yet implemented.
+     *
+     * @see #readOptions(java.io.Reader)
      * @param optionWriter
-     * @throws Exception 
+     * @throws Exception
      */
     @Override
     public void writeOptions(Writer optionWriter) throws Exception {
         throw new UnsupportedOperationException("Not implemented yet.");
     }
-    
-    
-    
+
+    @Override
+    public TreeAutomaton decompose(Set<List<String>> value) {
+        return new EvaluatingDecompositionAutomaton(value) {
+            @Override
+            public IntSet getAllStates() {
+                if (allStates == null) {
+                    allStates = new IntOpenHashSet();
+                    
+                    // states = are all subsets of U^0, U^1, ..., U^maxarity
+                    
+                    for( int i = 0; i < maxArity; i++ ) {
+                        List<Set<String>> manySets = new ArrayList<>();
+                        
+                        for( int j = 0; j < i; j++ ) {
+                            manySets.add(allIndividuals);
+                        }
+                        
+                        Set<List<String>> cartesian = Sets.cartesianProduct(manySets);
+                        Set<Set<List<String>>> powerSet = Sets.powerSet(cartesian);
+                        
+                        for( Set<List<String>> set : powerSet ) {
+                            int state = addState(set);
+                            allStates.add(state);
+                        }
+                    }
+                }
+                
+                return allStates;
+            }
+        };
+    }
 
     /**
-     * Reads the options from a Json string representation.
-     * The options for the SetAlgebra consist in a specification of the
-     * universe and the interpretations of the atomic concepts.
-     * For instance, the following string says that "sleep" is a binary
-     * relation with the single element (e,r1), whereas "rabbit" is a
-     * unary relation containing the elements r1 and r2.<p>
-     * 
-     * {"sleep": [["e", "r1"]], "rabbit": [["r1"], ["r2"]], "white": [["r1"], ["b"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }
-     * 
-     * 
+     * Reads the options from a Json string representation. The options for the
+     * SetAlgebra consist in a specification of the universe and the
+     * interpretations of the atomic concepts. For instance, the following
+     * string says that "sleep" is a binary relation with the single element
+     * (e,r1), whereas "rabbit" is a unary relation containing the elements r1
+     * and r2.<p>
+     *
+     * {"sleep": [["e", "r1"]], "rabbit": [["r1"], ["r2"]], "white": [["r1"],
+     * ["b"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }
+     *
+     *
      * @param optionReader
-     * @throws Exception 
+     * @throws Exception
      */
     @Override
     public void readOptions(Reader optionReader) throws Exception {
@@ -155,6 +193,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
 
     public final void setAtomicInterpretations(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
+        maxArity = 0;
 
         allIndividuals.clear();
         allIndividualsAsTuples.clear();
@@ -162,6 +201,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         for (Set<List<String>> sls : atomicInterpretations.values()) {
             for (List<String> ls : sls) {
                 allIndividuals.addAll(ls);
+                maxArity = Math.max(maxArity, ls.size());
 
                 for (String x : ls) {
                     List<String> tuple = new ArrayList<String>();
@@ -172,10 +212,17 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         }
     }
 
+    /**
+     * @return the atomicInterpretations
+     */
+    public Map<String, Set<List<String>>> getAtomicInterpretations() {
+        return atomicInterpretations;
+    }
+
     protected Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) throws NoModelException {
         Set<List<String>> ret = null;
-        
-        if( atomicInterpretations == null ) {
+
+        if (atomicInterpretations == null) {
             throw new NoModelException("SetAlgebra has no atomic interpretations yet.");
         }
 
@@ -192,7 +239,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         } else {
             ret = atomicInterpretations.get(label);
         }
-        
+
         return ret;
     }
 
@@ -231,25 +278,27 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     }
 
     /**
-     * returns the smallSet, if it's a subset of the bigSet. Otherwise returns the empty set.
+     * returns the smallSet, if it's a subset of the bigSet. Otherwise returns
+     * the empty set.
+     *
      * @param bigSet
      * @param smallSet
      * @param pos
-     * @return 
+     * @return
      */
     private Set<List<String>> member(Set<List<String>> tupleSet, String value) {
         List<String> memberValue = new ArrayList<String>();
         memberValue.add(value);
-        
+
         Set<List<String>> ret = new HashSet<List<String>>();
-        
+
         if (tupleSet.contains(memberValue)) {
             ret.add(memberValue);
         }
-        
+
         return ret;
     }
-    
+
     private Set<List<String>> uniq(Set<List<String>> tupleSet, String value) {
         List<String> uniqArg = new ArrayList<String>();
 
@@ -286,10 +335,9 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         }
 
     }
-    
-    
-    
+
     public static class NoModelException extends RuntimeException {
+
         public NoModelException() {
         }
 
@@ -308,7 +356,6 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
 //        public NoModelException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
 //            super(message, cause, enableSuppression, writableStackTrace);
 //        }
-
         @Override
         public String toString() {
             return "NoModelException: " + getMessage();
