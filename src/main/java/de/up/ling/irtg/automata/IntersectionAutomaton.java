@@ -19,6 +19,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.util.IntInt2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -53,6 +54,11 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private Int2IntMap stateToRightState;
     private long[] ckyTimestamp = new long[10];
 
+    private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
+    // (index first by right state, then by left state because almost all right states
+    // receive corresponding left states, but not vice versa. This keeps outer map very dense,
+    // and makes it suitable for a fast ArrayMap)
+
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
 
@@ -66,6 +72,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
         finalStates = null;
 //        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
+
+        stateMapping = new IntInt2IntMap();
     }
 
     /**
@@ -90,7 +98,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             visited.add(q);
             for (int label : right.getLabelsTopDown(q)) {
                 for (Rule rightRule : right.getRulesTopDown(label, q)) {
-
 
                     // seperate between rules for terminals (arity == 0) and other rules
                     ckyTimestamp[4] += System.nanoTime();
@@ -144,7 +151,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 for (Rule rightRule : right.getRulesTopDown(label, q)) {
 
 //                    System.err.println("consider rightrule: " + rightRule.toString(right));
-
                     // seperate between rules for terminals (arity == 0) and other rules
                     ckyTimestamp[4] += System.nanoTime();
                     if (rightRule.getArity() == 0) {
@@ -195,7 +201,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
                 for (Rule rightRule : right.getRulesTopDown(label, q)) {
 
 //                    System.err.println("consider rightrule: " + rightRule.toString(right));
-
                     // seperate between rules for terminals (arity == 0) and other rules
                     ckyTimestamp[4] += System.nanoTime();
                     if (rightRule.getArity() == 0) {
@@ -227,7 +232,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
                         if (partners.containsKey(rhs1) && partners.containsKey(rhs2)) {
                             IntIterator it1 = partners.get(rhs1).iterator();
-
 
                             int[] childStates = new int[2];
                             // The first symbol
@@ -377,6 +381,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         if (!isExplicit) {
             isExplicit = true;
 
+            getStateInterner().setTrustingMode(true);
+
             ListMultimap<Integer, Rule> rulesByChildState = left.getRuleByChildStateMap();  // int = left state ID
             Queue<Integer> agenda = new LinkedList<Integer>();
             Set<Integer> seenStates = new HashSet<Integer>();
@@ -394,7 +400,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //                    for (Rule pr : preterminalRulesForLabel) {
 //                        System.err.println("  - " + pr.toString(right));
 //                    }
-
                     for (Rule rightRule : preterminalRulesForLabel) {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
@@ -406,10 +411,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
             }
 
 //            System.err.println("after preterminals, agenda: " + getStatesFromIds(agenda));
-
 //            System.err.println("after init: " + explicitRules.size());
 //            System.err.println(explicitRulesToString());
-
             // compute rules and states bottom-up
             long unsuccessful = 0;
             long iterations = 0;
@@ -419,7 +422,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
 //                System.err.println("pop: " + state);
 //                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
-
                 for (Rule leftRule : possibleRules) {
 //                    System.err.println("consider leftrule: " + leftRule.toString(left));
 
@@ -472,18 +474,36 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
 //            System.err.println("after run: " + explicitRules.size());
 //            System.err.println(toString());
-
-
+            getStateInterner().setTrustingMode(false);
         }
     }
 
     private int addStatePair(int leftState, int rightState) {
-        int ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
+//        System.err.println("make state pair for " + left.getStateForId(leftState) + " and " + right.getStateForId(rightState));
 
-        stateToLeftState.put(ret, leftState);
-        stateToRightState.put(ret, rightState);
+        int ret = stateMapping.get(rightState, leftState);
+
+        if (ret == 0) {
+            ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
+            stateMapping.put(rightState, leftState, ret);
+//            System.err.println("   -> " + ret + " (new)");
+
+            stateToLeftState.put(ret, leftState);
+            stateToRightState.put(ret, rightState);
+
+        } else {
+//            System.err.println("   -> " + ret + " (cached)");
+        }
 
         return ret;
+
+//        
+//        int ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
+//
+//        stateToLeftState.put(ret, leftState);
+//        stateToRightState.put(ret, rightState);
+//
+//        return ret;
     }
 
     private Rule combineRules(Rule leftRule, Rule rightRule) {
@@ -590,7 +610,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //                }
 //            }
 //        }
-
         return getRulesTopDownFromExplicit(label, parentState);
     }
 
@@ -599,7 +618,6 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //        makeAllRulesExplicit();
 //        return super.getAllStates();
 //    }
-
     /**
      * ************* Early-style intersection *************
      */
