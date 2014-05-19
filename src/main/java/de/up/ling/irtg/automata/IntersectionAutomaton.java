@@ -53,6 +53,7 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
     private Int2IntMap stateToLeftState;
     private Int2IntMap stateToRightState;
     private long[] ckyTimestamp = new long[10];
+    private StateDiscoveryListener stateDiscoveryListener;
 
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
     // (index first by right state, then by left state because almost all right states
@@ -74,6 +75,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //        allStates = new HashMap<Pair<LeftState, RightState>, Pair<LeftState, RightState>>();
 
         stateMapping = new IntInt2IntMap();
+    }
+    
+    public void setStateDiscoveryListener(StateDiscoveryListener listener) {
+        this.stateDiscoveryListener = listener;
     }
 
     /**
@@ -493,6 +498,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 
             stateToLeftState.put(ret, leftState);
             stateToRightState.put(ret, rightState);
+            
+            if( stateDiscoveryListener != null ) {
+                stateDiscoveryListener.accept(ret);
+            }
 
         } else {
 //            System.err.println("   -> " + ret + " (cached)");
@@ -901,6 +910,10 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
         } catch (Exception ex) {
             System.out.println("Error while writing to file:" + ex.getMessage());
         }
+    }
 
+    @FunctionalInterface
+    public static interface StateDiscoveryListener {
+        public void accept(int state);
     }
 }

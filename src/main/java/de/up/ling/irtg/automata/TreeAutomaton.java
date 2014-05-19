@@ -1936,7 +1936,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             visitor.visit(q, rulesTopDown);
         }
     }
-
+    
     public <E> Int2ObjectMap<E> evaluateInSemiring2(final Semiring<E> semiring, final RuleEvaluator<E> evaluator) {
         final Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<E>();
 
@@ -1999,25 +1999,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
-    /**
-     * Evaluates all states of the automaton bottom-up in a semiring. The
-     * evaluation of a state is the semiring sum of semiring zero plus the
-     * evaluations of all rules in which it is the parent. The evaluation of a
-     * rule is the semiring product of the evaluations of its child states,
-     * times the evaluation of the rule itself. The evaluation of a rule is
-     * determined by the RuleEvaluator argument. This method only works if the
-     * automaton is acyclic, so states can be processed in a well-defined
-     * bottom-up order. Only reachable states are assigned a value.
-     *
-     * @param <E>
-     * @param semiring
-     * @param evaluator
-     * @return a map assigning values in the semiring to all reachable states.
-     */
-    public <E> Map<Integer, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator) {
+    public <E> Map<Integer, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator, List<Integer> statesInOrder) {
         Map<Integer, E> ret = new HashMap<Integer, E>();
 
-        for (int s : getStatesInBottomUpOrder()) {
+        for (int s : statesInOrder) {
             E accu = semiring.zero();
 
             for (int label : getLabelsTopDown(s)) {
@@ -2048,6 +2033,25 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         return ret;
+    }
+    
+    /**
+     * Evaluates all states of the automaton bottom-up in a semiring. The
+     * evaluation of a state is the semiring sum of semiring zero plus the
+     * evaluations of all rules in which it is the parent. The evaluation of a
+     * rule is the semiring product of the evaluations of its child states,
+     * times the evaluation of the rule itself. The evaluation of a rule is
+     * determined by the RuleEvaluator argument. This method only works if the
+     * automaton is acyclic, so states can be processed in a well-defined
+     * bottom-up order. Only reachable states are assigned a value.
+     *
+     * @param <E>
+     * @param semiring
+     * @param evaluator
+     * @return a map assigning values in the semiring to all reachable states.
+     */
+    public <E> Map<Integer, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator) {
+        return evaluateInSemiring(semiring, evaluator, getStatesInBottomUpOrder());
     }
 
     /**
