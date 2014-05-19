@@ -2032,6 +2032,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                             } else {
                                 // if a child state hasn't been evaluated yet, this means that it
                                 // is not reachable bottom-up, and therefore shouldn't be counted here
+//                                System.err.println("** unevaluated children: " + getStateForId(child) + " in " + rule.toString(this));
                                 valueThisRule = null;
                             }
                         }
