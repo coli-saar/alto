@@ -7,9 +7,9 @@ package de.up.ling.irtg.algebra;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
-import de.saar.basic.CartesianIterator;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.util.Lazy;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.Reader;
@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * An algebra of sets. The elements of this algebra are relations (of arbitrary
@@ -61,7 +62,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     private int maxArity;
     private Set<String> allIndividuals;
     private Set<List<String>> allIndividualsAsTuples;
-    private IntSet allStates;
+    private Lazy<IntSet> allStates = null;
 
     public SetAlgebra() {
         this.atomicInterpretations = null;
@@ -103,26 +104,25 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
             public IntSet getAllStates() {
                 if (allStates == null) {
                     allStates = new IntOpenHashSet();
-                    
+
                     // states = are all subsets of U^0, U^1, ..., U^maxarity
-                    
-                    for( int i = 0; i < maxArity; i++ ) {
+                    for (int i = 0; i < maxArity; i++) {
                         List<Set<String>> manySets = new ArrayList<>();
-                        
-                        for( int j = 0; j < i; j++ ) {
+
+                        for (int j = 0; j < i; j++) {
                             manySets.add(allIndividuals);
                         }
-                        
+
                         Set<List<String>> cartesian = Sets.cartesianProduct(manySets);
                         Set<Set<List<String>>> powerSet = Sets.powerSet(cartesian);
-                        
-                        for( Set<List<String>> set : powerSet ) {
+
+                        for (Set<List<String>> set : powerSet) {
                             int state = addState(set);
                             allStates.add(state);
                         }
                     }
                 }
-                
+
                 return allStates;
             }
         };
@@ -194,6 +194,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     public final void setAtomicInterpretations(Map<String, Set<List<String>>> atomicInterpretations) {
         this.atomicInterpretations = atomicInterpretations;
         maxArity = 0;
+        allStates = null;
 
         allIndividuals.clear();
         allIndividualsAsTuples.clear();

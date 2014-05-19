@@ -476,8 +476,8 @@ class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<Le
 //            System.err.println(toString());
             getStateInterner().setTrustingMode(false);
             
-            getFinalStates();
-            System.err.println(this);
+//            getFinalStates();
+//            System.err.println(this);
         }
     }
 
