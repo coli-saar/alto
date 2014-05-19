@@ -36,9 +36,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
 
     @Override
     protected void collectOutputRule(Rule outputRule) {
-        // Check, if this state has been seen before
         int newState = outputRule.getParent();
-
         int[] children = outputRule.getChildren();
         double childWeight = outputRule.getWeight();
 
@@ -48,7 +46,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
         }
 
         if (viterbiStateMap.get(newState) < childWeight) {
-            // current rule is new, or better!
+            // current rule is new, or better than old rule
             viterbiRuleMap.put(newState, outputRule);
             viterbiStateMap.put(newState, childWeight);
         }
