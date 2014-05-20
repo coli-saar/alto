@@ -43,7 +43,7 @@ import java.util.*;
  *
  * @author koller
  */
-class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
+public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
 
     private TreeAutomaton<LeftState> left;
     private TreeAutomaton<RightState> right;
