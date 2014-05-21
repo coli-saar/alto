@@ -268,9 +268,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         String interpretation = args[2];
         String outputFile = args[3];
         String comments = args[4];
+        long totalChartTime = 0;
+        long totalViterbiTime = 0;
 
         // initialize CPU-time benchmarking
-        long[] timestamp = new long[4];
+        long[] timestamp = new long[10];
         ThreadMXBean benchmarkBean = ManagementFactory.getThreadMXBean();
         boolean useCPUTime = benchmarkBean.isCurrentThreadCpuTimeSupported();
         if (useCPUTime) {
@@ -327,17 +329,21 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
                     updateBenchmark(timestamp, 3, useCPUTime, benchmarkBean);
 
-                    System.err.println("-> Chart " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms");
+                    long thisChartTime = (timestamp[3] - timestamp[2]);
+                    totalChartTime += thisChartTime;
+                    System.err.println("-> Chart " + (thisChartTime / 1000000) + "ms, cumulative " + totalChartTime/1000000 + "ms");
                     out.write("Parsed \n" + sentence + "\nIn " + ((timestamp[3] - timestamp[2]) / 1000000) + "ms.\n\n");
                     out.flush();
 
                     if (result.getFinalStates().isEmpty()) {
                         System.err.println("**** EMPTY ****\n");
                     } else if(showViterbiTrees) {
-                        long start = System.nanoTime();
                         System.err.println(result.viterbi());
-                        long end = System.nanoTime();
-                        System.err.println("-> Viterbi " + (end-start)/1000000 + "ms");
+                        updateBenchmark(timestamp, 4, useCPUTime, benchmarkBean);
+                        long thisViterbiTime = timestamp[4]-timestamp[3];
+                        totalViterbiTime += thisViterbiTime;
+                        
+                        System.err.println("-> Viterbi " + thisViterbiTime/1000000 + "ms, cumulative " + totalViterbiTime/1000000 + "ms");
                     }
 
                     // try to trigger gc

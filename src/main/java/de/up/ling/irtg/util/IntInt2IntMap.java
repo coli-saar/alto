@@ -8,6 +8,7 @@ package de.up.ling.irtg.util;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
 
 /**
  *
@@ -22,6 +23,7 @@ public class IntInt2IntMap {
     }
 
     public int get(int x, int y) {
+
         Int2IntMap m = map.get(x);
 
         if (m == null) {
@@ -47,4 +49,22 @@ public class IntInt2IntMap {
             System.err.println("arraymap stats: " + ((ArrayMap) map).getStatistics());
         }
     }
+
+    /**
+     * Marco suggested an implementation of an (int, int) -> int map which
+     * encodes (int, int) as long and uses a long -> int hash map. If the outer
+     * ArrayMap in the implementation above is dense, this is actually a
+     * _slower_ implementation, but in case we ever need it again, here's the
+     * code for it:
+     *
+     * private final Long2IntMap map; map = new Long2IntOpenHashMap();
+     *
+     * return map.get(compose(x, y));
+     *
+     * map.put(compose(x,y), value);
+     *
+     * private static long compose(int hi, int lo) { return (((long) hi) << 32)
+     * + (lo & 0xFFFFFFFFL); }
+     *
+     */
 }
