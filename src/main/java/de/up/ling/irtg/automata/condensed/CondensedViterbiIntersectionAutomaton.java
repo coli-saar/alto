@@ -17,8 +17,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
  - collectStatePairs: remove CartesianIterator, use IntCartesianIterator to avoid boxing
  */
 /**
- *
+ * Intersecting two automatons, but saving only the one best path.
  * @author koller
+ * @param <LeftState>
+ * @param <RightState>
  */
 public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extends GenericCondensedIntersectionAutomaton<LeftState, RightState> {
 
@@ -35,6 +37,8 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
     }
 
     @Override
+    // Add all rules, when the algorithm is finished, so we can be sure,
+    // to enter only the best rules.
     protected void collectOutputRule(Rule outputRule) {
         int newState = outputRule.getParent();
         int[] children = outputRule.getChildren();

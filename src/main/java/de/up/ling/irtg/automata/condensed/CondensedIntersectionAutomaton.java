@@ -13,8 +13,11 @@ import de.up.ling.irtg.signature.SignatureMapper;
  - collectStatePairs: remove CartesianIterator, use IntCartesianIterator to avoid boxing
  */
 /**
- *
+ * Intersecting two automatons using a CKY-algorithm.
+ * See GenericCondensedIntersectionAutomaton for further details about this class.
  * @author koller
+ * @param <LeftState>
+ * @param <RightState>
  */
 public class CondensedIntersectionAutomaton<LeftState, RightState> extends GenericCondensedIntersectionAutomaton<LeftState, RightState> {
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
