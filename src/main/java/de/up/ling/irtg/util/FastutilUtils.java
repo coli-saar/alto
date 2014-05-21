@@ -69,15 +69,15 @@ public class FastutilUtils {
      * @param iterables
      * @param fn
      */
-    public static void forEachIntCartesian(List<IntIterable> iterables, Consumer<int[]> fn) {
+    public static void forEachIntCartesian(List<? extends IntIterable> iterables, Consumer<int[]> fn) {
         new IntCartesianForeach(iterables).forEach(fn);
     }
 
     private static class IntCartesianForeach {
 
-        private final List<IntIterable> iterables;
+        private final List<? extends IntIterable> iterables;
 
-        public IntCartesianForeach(List<IntIterable> iterables) {
+        public IntCartesianForeach(List<? extends IntIterable> iterables) {
             this.iterables = iterables;
         }
 

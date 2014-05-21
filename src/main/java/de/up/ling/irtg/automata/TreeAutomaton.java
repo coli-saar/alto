@@ -31,6 +31,7 @@ import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -237,20 +238,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return Iterables.concat(ruleSets);
     }
 
+    // TODO Test this function
     public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {
-        throw new UnsupportedOperationException("only implemented for concrete tree automata");
-//        for (int labelId : labelIds) {
-//            if (signature.getArity(labelId) == childStateSets.size()) {
-//
-//                final CartesianIterator<Integer> it = new CartesianIterator<Integer>(childStateSets);
-//                while (it.hasNext()) {
-//                    List<Integer> childStates = it.next();
-//                    for (Rule rule : getRulesBottomUp(labelRemap[labelId], childStates)) {
-//                        fn.apply(rule);
-//                    }
-//                }
-//            }
-//        }
+        labelIds.forEach(labelId -> { 
+            if (signature.getArity(labelId) == childStateSets.size()) {
+                FastutilUtils.forEachIntCartesian(childStateSets, childStates -> {
+                    getRulesBottomUp(signatureMapper.remapForward(labelId), childStates).forEach(fn);
+                });
+            } 
+        });
     }
 
     protected static int[] intListToArray(List<Integer> ints) {
