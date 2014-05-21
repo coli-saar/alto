@@ -5,36 +5,46 @@
  */
 package de.up.ling.irtg.util;
 
-import it.unimi.dsi.fastutil.ints.AbstractInt2ObjectMap;
+import it.unimi.dsi.fastutil.ints.AbstractInt2DoubleMap;
+import it.unimi.dsi.fastutil.ints.AbstractInt2IntMap;
 import it.unimi.dsi.fastutil.ints.AbstractIntIterator;
 import it.unimi.dsi.fastutil.ints.AbstractIntSet;
+import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.AbstractObjectIterator;
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import java.util.ArrayList;
+import java.util.StringJoiner;
 import java.util.function.IntConsumer;
 
 /**
  *
  * @author koller
  */
-public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
-    private final ArrayList<E> values;
+public class ArrayInt2IntMap extends AbstractInt2IntMap {
+
+    private final IntArrayList values;
     private int capacity = 100;
     private int size = 0;                  // # actual elements in map
+    private int defaultReturnValue = 0;
 
-    public ArrayMap() {
-        values = new ArrayList<>(capacity);
+    public ArrayInt2IntMap() {
+        values = new IntArrayList();
     }
-    
+
+    public void defaultReturnValue(int x) {
+        this.defaultReturnValue = x;
+    }
+
     public String getStatistics() {
         StringBuilder buf = new StringBuilder();
-        
-        buf.append("size/arraysize=" + ((double) size)/arraySize());
-        
+
+        buf.append("size/arraysize=" + ((double) size) / arraySize());
+
         return buf.toString();
     }
 
@@ -54,7 +64,7 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
     /**
      * Ensures that the backing array list contains at least targetIndex+1
      * elements (so a get(targetIndex) will be successful). Newly added elements
-     * will be filled with null.
+     * will be filled with the default return value.
      *
      * @param targetIndex
      */
@@ -63,7 +73,7 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
 //            System.err.println("grow list to " + targetIndex);
             growList(targetIndex);
             for (int i = values.size(); i <= targetIndex; i++) {
-                values.add(null);
+                values.add(defaultReturnValue);
             }
         }
 
@@ -71,9 +81,9 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
     }
 
     @Override
-    public E get(int i) {
+    public int get(int i) {
         if (i >= values.size()) {
-            return null;
+            return defaultReturnValue;
         } else {
             return values.get(i);
         }
@@ -81,17 +91,17 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
 
     @Override
     public boolean containsKey(int k) {
-        return k < values.size() && values.get(k) != null;
+        return k < values.size() && values.get(k) != defaultReturnValue;
     }
 
     @Override
-    public E put(int key, E value) {
+    public int put(int key, int value) {
         ensureSize(key);
 
-        E ret = values.get(key);
+        int ret = values.get(key);
         values.set(key, value);
 
-        if (ret == null) {
+        if (ret == defaultReturnValue) {
             size++;
         }
 
@@ -102,7 +112,7 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
     public int size() {
         return size;
     }
-    
+
     @Override
     public void clear() {
         values.clear();
@@ -115,7 +125,7 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
 
     private class KeyIterator extends AbstractIntIterator {
 
-        private final int arraySize = ArrayMap.this.arraySize();
+        private final int arraySize = ArrayInt2IntMap.this.arraySize();
         private int pos = 0;
 
         // Invariant: pos is either == arraySize, or the next position
@@ -127,7 +137,7 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
         // This method steps the position further to ensure the
         // invariant is met again.
         private void skipToNextNonNullElement() {
-            while (pos < arraySize && values.get(pos) == null) {
+            while (pos < arraySize && values.get(pos) == defaultReturnValue) {
                 pos++;
             }
         }
@@ -149,12 +159,13 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
     }
 
     private class KeySet extends AbstractIntSet implements IntForEach {
+
         @Override
         public boolean contains(int k) {
             if (k < 0 || k >= arraySize()) {
                 return false;
             } else {
-                return values.get(k) != null;
+                return values.get(k) != defaultReturnValue;
             }
         }
 
@@ -165,13 +176,13 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
 
         @Override
         public int size() {
-            return ArrayMap.this.size();
+            return ArrayInt2IntMap.this.size();
         }
 
         @Override
         public void forEach(IntConsumer consumer) {
             for (int i = 0; i < values.size(); i++) {
-                if (values.get(i) != null) {
+                if (values.get(i) != defaultReturnValue) {
                     consumer.accept(i);
                 }
             }
@@ -184,11 +195,11 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
     }
 
     @Override
-    public ObjectSet<Entry<E>> int2ObjectEntrySet() {
-        return new AbstractObjectSet<Entry<E>>() {
+    public ObjectSet<Int2IntMap.Entry> int2IntEntrySet() {
+        return new AbstractObjectSet<Int2IntMap.Entry>() {
             @Override
-            public ObjectIterator<Entry<E>> iterator() {
-                return new AbstractObjectIterator<Entry<E>>() {
+            public ObjectIterator<Int2IntMap.Entry> iterator() {
+                return new AbstractObjectIterator<Int2IntMap.Entry>() {
                     IntIterator keyIt = new KeyIterator();
 
                     @Override
@@ -197,17 +208,17 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
                     }
 
                     @Override
-                    public Entry<E> next() {
+                    public Int2IntMap.Entry next() {
                         int key = keyIt.nextInt();
-                        E value = values.get(key);
-                        return new BasicEntry<>(key, value);
+                        int value = values.getInt(key);
+                        return new AbstractInt2IntMap.BasicEntry(key, value);
                     }
                 };
             }
 
             @Override
             public int size() {
-                return ArrayMap.this.size();
+                return ArrayInt2IntMap.this.size();
             }
         };
     }

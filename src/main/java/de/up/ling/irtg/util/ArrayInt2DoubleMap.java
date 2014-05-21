@@ -89,7 +89,7 @@ public class ArrayInt2DoubleMap extends AbstractInt2DoubleMap {
 
     @Override
     public boolean containsKey(int k) {
-        return k < values.size() && values.get(k) != null;
+        return k < values.size() && values.get(k) != defaultReturnValue;
     }
 
     @Override
@@ -128,7 +128,7 @@ public class ArrayInt2DoubleMap extends AbstractInt2DoubleMap {
         // This method steps the position further to ensure the
         // invariant is met again.
         private void skipToNextNonNullElement() {
-            while (pos < arraySize && values.get(pos) == null) {
+            while (pos < arraySize && values.get(pos) == defaultReturnValue) {
                 pos++;
             }
         }
@@ -155,7 +155,7 @@ public class ArrayInt2DoubleMap extends AbstractInt2DoubleMap {
             if (k < 0 || k >= arraySize()) {
                 return false;
             } else {
-                return values.get(k) != null;
+                return values.get(k) != defaultReturnValue;
             }
         }
 
@@ -172,7 +172,7 @@ public class ArrayInt2DoubleMap extends AbstractInt2DoubleMap {
         @Override
         public void forEach(IntConsumer consumer) {
             for (int i = 0; i < values.size(); i++) {
-                if (values.get(i) != null) {
+                if (values.get(i) != defaultReturnValue) {
                     consumer.accept(i);
                 }
             }

@@ -8,18 +8,24 @@ package de.up.ling.irtg.util;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import java.io.Serializable;
+import java.util.StringJoiner;
 
 /**
  *
  * @author koller
  */
-public class IntInt2IntMap {
-
+public class IntInt2IntMap implements Serializable {
     private final Int2ObjectMap<Int2IntMap> map;
+    private int defaultReturnValue;
 
     public IntInt2IntMap() {
         map = new ArrayMap<>();
+        defaultReturnValue = 0;
+    }
+    
+    public void setDefaultReturnValue(int val) {
+        defaultReturnValue = val;
     }
 
     public int get(int x, int y) {
@@ -27,10 +33,14 @@ public class IntInt2IntMap {
         Int2IntMap m = map.get(x);
 
         if (m == null) {
-            return 0;
+            return defaultReturnValue;
         } else {
             return m.get(y);
         }
+    }
+    
+    public Int2IntMap get(int x) {
+        return map.get(x);
     }
 
     public void put(int x, int y, int value) {
@@ -38,10 +48,15 @@ public class IntInt2IntMap {
 
         if (m == null) {
             m = new Int2IntOpenHashMap();
+            m.defaultReturnValue(defaultReturnValue);
             map.put(x, m);
         }
 
         m.put(y, value);
+    }
+    
+    public void clear() {
+        map.clear();
     }
 
     public void printStats() {
@@ -49,6 +64,21 @@ public class IntInt2IntMap {
             System.err.println("arraymap stats: " + ((ArrayMap) map).getStatistics());
         }
     }
+
+    @Override
+    public String toString() {
+        StringJoiner buf = new StringJoiner(", ");
+        
+        for( int x : map.keySet() ) {
+            for( int y : map.get(x).keySet() ) {
+                buf.add(x + "," + y + " -> " + get(x,y));
+            }
+        }
+        
+        return "{" + buf.toString() + "}";
+    }
+    
+    
 
     /**
      * Marco suggested an implementation of an (int, int) -> int map which
