@@ -35,11 +35,7 @@ public class TopDownRuleIndex implements Serializable {
     public void add(Rule rule) {
         unprocessedUpdatesForTopDown.add(rule);
     }
-
-//    protected Int2ObjectMap<Int2ObjectMap<Collection<Rule>>> getExplicitRulesTopDown() {
-//        processNewTopDownRules();
-//        return (Int2ObjectMap) explicitRulesTopDown;
-//    }
+    
     private void processNewTopDownRules() {
         if (!unprocessedUpdatesForTopDown.isEmpty()) {
             unprocessedUpdatesForTopDown.forEach(rule -> {
