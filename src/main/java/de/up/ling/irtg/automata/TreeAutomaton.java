@@ -20,6 +20,8 @@ import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
+import de.up.ling.irtg.automata.index.MapTopDownIndex;
+import de.up.ling.irtg.automata.index.TopDownRuleIndex;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
@@ -29,7 +31,6 @@ import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
-import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -42,7 +43,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -122,7 +122,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 
         explicitRulesBottomUp = new IntTrie<Int2ObjectMap<Set<Rule>>>();
         
-        explicitRulesTopDown = new TopDownRuleIndex();
+        explicitRulesTopDown = new MapTopDownIndex();
         
         
         unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();

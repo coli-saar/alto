@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.automata;
+package de.up.ling.irtg.automata.index;
 
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.IntInt2IntMap;
@@ -19,14 +20,13 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
  *
  * @author koller
  */
-public class TopDownRuleIndex implements Serializable {
+public class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
 
     private final List<Rule> rules;
     private boolean dirty;
@@ -39,7 +39,7 @@ public class TopDownRuleIndex implements Serializable {
     private static final Comparator<Rule> RULE_COMPARATOR1 = Comparator.comparingInt(rule -> rule.getParent());
     private static final Comparator<Rule> RULE_COMPARATOR = RULE_COMPARATOR1.thenComparingInt(rule -> rule.getLabel());
 
-    public TopDownRuleIndex() {
+    public ArrayTopDownIndex() {
         rules = new ArrayList<>();
         dirty = true;
 
@@ -50,6 +50,7 @@ public class TopDownRuleIndex implements Serializable {
         parentLabelStartIndex.setDefaultReturnValue(-1);
     }
 
+    @Override
     public void add(Rule rule) {
         rules.add(rule);
         dirty = true;
@@ -130,8 +131,8 @@ public class TopDownRuleIndex implements Serializable {
 
     private class RuleUntilIterable implements Iterable<Rule> {
 
-        private int start;
-        private int originalSize;
+        private final int start;
+        private final int originalSize;
         private Predicate<Rule> endTest;
 
         public RuleUntilIterable(int start, Predicate<Rule> endTest) {
@@ -168,6 +169,7 @@ public class TopDownRuleIndex implements Serializable {
 
     }
 
+    @Override
     public Iterable<Rule> getRules(final int parentState) {
         processNewTopDownRules();
 
@@ -183,6 +185,7 @@ public class TopDownRuleIndex implements Serializable {
         }
     }
 
+    @Override
     public IntIterable getLabelsTopDown(int parentState) {
         processNewTopDownRules();
 
@@ -195,6 +198,12 @@ public class TopDownRuleIndex implements Serializable {
         }
     }
 
+    /**
+     *
+     * @param labelId
+     * @param parentState
+     * @return
+     */
     public Iterable<Rule> getRules(final int labelId, final int parentState) {
         processNewTopDownRules();
 
@@ -210,7 +219,13 @@ public class TopDownRuleIndex implements Serializable {
         }
     }
 
-    boolean useCachedRule(int label, int parent) {
+    /**
+     *
+     * @param label
+     * @param parent
+     * @return
+     */
+    public boolean useCachedRule(int label, int parent) {
         processNewTopDownRules();
 
         return parentLabelStartIndex.get(parent, label) >= 0;
