@@ -9,6 +9,8 @@ import org.junit.*
 import java.util.*
 import java.io.*
 import static org.junit.Assert.*
+import de.saar.basic.Pair
+import de.up.ling.irtg.automata.Rule
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser
 import de.up.ling.irtg.automata.TreeAutomatonParser
 import de.up.ling.irtg.automata.TreeAutomaton
@@ -70,6 +72,24 @@ class CondensedTreeAutomatonTest {
     
     private CondensedTreeAutomaton parseTA(String s) {
         return ConcreteCondensedTreeAutomaton.fromTreeAutomaton(TreeAutomatonParser.parse(new StringReader(s)));
+    }
+    
+    static Pair p(Object a, Object b) {
+        return new Pair(a,b);
+    }
+    
+    static Rule rs(parent, String[] label, children, CondensedTreeAutomaton automaton) {
+        return automaton.createRule(parent, label, children, 1);
+    }
+    
+    static String[] sarr(String s) {
+        String[] ret = new String[1];
+        ret[0] = s;
+        return ret;
+    }
+    
+    static Set<Rule> rbu(String label, List children, CondensedTreeAutomaton auto) {
+        return auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(label), children.collect { auto.getIdForState(it)});
     }
 
 }

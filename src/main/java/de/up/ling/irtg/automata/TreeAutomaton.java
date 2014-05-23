@@ -138,7 +138,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         stateInterner = new Interner<State>();
 
     }
-
+    
     /**
      * Returns the numeric ID for the given state. If the automaton does not
      * have a state of the given name, the method returns 0.
@@ -1165,7 +1165,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
-        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper, true);
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
         ret.makeAllRulesExplicit();
         return ret;
     }
