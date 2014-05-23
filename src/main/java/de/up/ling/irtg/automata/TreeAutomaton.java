@@ -238,7 +238,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return Iterables.concat(ruleSets);
     }
 
-    // TODO Test this function
+    // TODO Test this function!
     public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {
         labelIds.forEach(labelId -> { 
             if (signature.getArity(labelId) == childStateSets.size()) {
@@ -1165,7 +1165,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
-        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper, true);
         ret.makeAllRulesExplicit();
         return ret;
     }
@@ -1177,11 +1177,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
-        return intersectCondensed(other, new IdentitySignatureMapper(signature));
+        return intersectCondensed(other, new SignatureMapper(signature, other.getSignature()));
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectViterbi(CondensedTreeAutomaton<OtherState> other) {
-        return intersectViterbi(other, new IdentitySignatureMapper(signature));
+        return intersectCondensed(other, new SignatureMapper(signature, other.getSignature()));
     }
 
     /**
@@ -1388,6 +1388,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 return 0;
             }
         });
+    }
+
+    private Exception UnsupportedOperationException(String not_tested_yet) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     private static class IntegerIdentity extends FunctionToInt<Integer> {

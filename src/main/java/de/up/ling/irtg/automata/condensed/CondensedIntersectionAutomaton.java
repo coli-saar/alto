@@ -23,6 +23,11 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends Gener
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
         super(left, right, sigMapper);
     }
+    
+    public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper, boolean debug) {
+        super(left, right, sigMapper);
+        this.DEBUG = debug;
+    }
 
     @Override
     protected void collectOutputRule(Rule outputRule) {

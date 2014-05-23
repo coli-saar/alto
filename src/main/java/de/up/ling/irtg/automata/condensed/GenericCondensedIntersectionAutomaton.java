@@ -36,6 +36,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Creating a new automaton by intersecting a normal TreeAutomaton (left) 
@@ -58,7 +60,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     
     private final TreeAutomaton<LeftState> left;
     private final CondensedTreeAutomaton<RightState> right;
-    private static final boolean DEBUG = false;
+    boolean DEBUG = false;
     private final SignatureMapper leftToRightSignatureMapper;
 
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
@@ -78,7 +80,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         super(left.getSignature()); // TODO = should intersect this with the (remapped) right signature
 
         this.leftToRightSignatureMapper = sigMapper;
-
+        
         this.left = left;
         this.right = right;
 
@@ -86,7 +88,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
         stateMapping = new IntInt2IntMap();
     }
-
+    
     // Intersecting the two automatons using a CKY algorithm
     @Override
     public void makeAllRulesExplicit() {
@@ -112,7 +114,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             finalStates = null;
 
             if (DEBUG) {
-                System.err.println("CKY runtime: " + (System.nanoTime() - t1) + "ms");
+                System.err.println("CKY runtime: " + (System.nanoTime() - t1) / 1000000 + "ms");
                 System.err.println("Intersection automaton CKY:\n" + toString() + "\n~~~~~~~~~~~~~~~~~~");
             }
         }
@@ -126,8 +128,14 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
      */
     private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, final Int2ObjectMap<IntSet> partners) {
         if (!visited.contains(q)) {
+            if (DEBUG) {
+                System.err.println("StateRight: " + q);
+            }
             visited.add(q);
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
+                if (DEBUG) {
+                    System.err.println("Right rule: " + rightRule.toString(right));
+                }
                 int[] rightChildren = rightRule.getChildren();
                 List<IntSet> remappedChildren = new ArrayList<IntSet>();
 
@@ -144,7 +152,10 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                     // create a new rule
                     Rule rule = combineRules(leftRule, rightRule);
-                    
+                    if (DEBUG) {
+                        System.err.println("Left rule: " + leftRule.toString(left));
+                        System.err.println("Combined rule: " + rule.toString(this));
+                    }
                     // transfer rule to staging area for output rules
                     collectOutputRule(rule);
 
