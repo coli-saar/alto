@@ -60,7 +60,7 @@ class InterpretedTreeAutomatonTest {
 
     @Test
     public void testDecode() {
-        InterpretedTreeAutomaton irtg = pi(new StringReader(SCFG_STR));
+        InterpretedTreeAutomaton irtg = pi(SCFG_STR)
         Map inputs = ["german":"hans betrachtet die frau mit dem fernrohr"]
         Set decoded = irtg.decode("english", inputs);
 
@@ -79,7 +79,7 @@ S -> r2
  [i] a
        ''';
 
-        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(grammarstring)
 
         String string = "a a a";
         List words = irtg.parseString("i", string);
@@ -93,7 +93,7 @@ S -> r2
     }
 
     private InterpretedTreeAutomaton trainEM(String grammar, String data ) {
-        InterpretedTreeAutomaton irtg = pi(new StringReader(grammar));
+        InterpretedTreeAutomaton irtg = pi(grammar)
         irtg.normalizeRuleWeights();
         Corpus corpus = irtg.readCorpus(new StringReader(data));
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -108,7 +108,7 @@ S -> r2
     }
    
     private InterpretedTreeAutomaton trainVB(String grammar, String data, int iterations, double threshold) {
-        InterpretedTreeAutomaton irtg = pi(new StringReader(grammar));
+        InterpretedTreeAutomaton irtg = pi(grammar)
         irtg.normalizeRuleWeights();
         Corpus corpus = irtg.readCorpus(new StringReader(data));
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -194,7 +194,7 @@ S -> r2
 
     @Test
     public void testParseAnnotatedCorpus() {
-        InterpretedTreeAutomaton irtg = pi(new StringReader(CFG_STR));
+        InterpretedTreeAutomaton irtg = pi(CFG_STR)
         Corpus pco = Corpus.readCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
 
         assertEquals(3, pco.getNumberOfInstances());
@@ -207,7 +207,7 @@ S -> r2
 
     @Test
     public void testML() {
-        InterpretedTreeAutomaton irtg = pi(new StringReader(CFG_STR));
+        InterpretedTreeAutomaton irtg = pi(CFG_STR)
         Corpus ac = Corpus.readCorpus(new StringReader(PCFG_MLTRAIN_STR), irtg);
         irtg.trainML(ac);
 
@@ -243,7 +243,7 @@ S -> r2
     }
 
     private static InterpretedTreeAutomaton iparse(String s) {
-        return pi(new StringReader(s));
+        return pi(s)
     }
 
     private static final String CFG_STR = """

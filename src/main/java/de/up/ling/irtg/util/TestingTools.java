@@ -8,7 +8,6 @@ import com.google.common.collect.Iterables;
 import de.saar.basic.StringOrVariable;
 import de.saar.chorus.term.Term;
 import de.saar.chorus.term.parser.TermParser;
-import de.up.ling.irtg.AntlrIrtgBuilder;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ParseException;
 import de.up.ling.irtg.automata.Rule;
@@ -16,13 +15,14 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomatonParser;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser;
+import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.IOException;
-import java.io.Reader;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.List;
@@ -57,11 +57,11 @@ public class TestingTools {
         return TreeAutomatonParser.parse(new StringReader(s));
     }
     
-    public static InterpretedTreeAutomaton pi(String s) throws IOException, AntlrIrtgBuilder.ParseException {
-        return InterpretedTreeAutomaton.read(new StringReader(s));
+    public static InterpretedTreeAutomaton pi(String s) throws IOException, de.up.ling.irtg.codec.ParseException {
+        return new IrtgInputCodec().read(s);
     }
     
-    public static InterpretedTreeAutomaton pi(Reader r) throws IOException, AntlrIrtgBuilder.ParseException {
+    public static InterpretedTreeAutomaton pi(InputStream r) throws IOException, de.up.ling.irtg.codec.ParseException {
         return InterpretedTreeAutomaton.read(r);
     }
 

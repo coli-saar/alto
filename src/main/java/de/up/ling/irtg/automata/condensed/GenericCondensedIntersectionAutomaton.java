@@ -36,8 +36,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Creating a new automaton by intersecting a normal TreeAutomaton (left) 
@@ -257,7 +255,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
      * @throws ParserException
      * @throws AntlrIrtgBuilder.ParseException
      */
-    public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, ParseException, IOException, ParserException, AntlrIrtgBuilder.ParseException {
+    public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.codec.ParseException {
         if (args.length != 5) {
             System.err.println("1. IRTG\n"
                     + "2. Sentences\n"
@@ -287,7 +285,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
         updateBenchmark(timestamp, 0, useCPUTime, benchmarkBean);
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileReader(new File(irtgFilename)));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(new File(irtgFilename)));
         Interpretation interp = irtg.getInterpretation(interpretation);
         Homomorphism hom = interp.getHomomorphism();
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();

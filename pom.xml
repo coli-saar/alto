@@ -321,6 +321,7 @@
 	  <xmlOutput>true</xmlOutput>
 	</configuration>
       </plugin>
+
     </plugins>
 
     <pluginManagement>

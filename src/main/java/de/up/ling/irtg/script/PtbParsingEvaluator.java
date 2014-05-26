@@ -5,11 +5,11 @@
 package de.up.ling.irtg.script;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.signature.Signature;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +24,7 @@ public class PtbParsingEvaluator {
         String grammarFilename = args[0];
         String corpusFilename = args[1];
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileReader(grammarFilename));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarFilename));
 //        Homomorphism hom = irtg.getInterpretation("i").getHomomorphism();
         Signature sig = irtg.getAutomaton().getSignature();
         Corpus corpus = irtg.readCorpus(new FileReader(corpusFilename));

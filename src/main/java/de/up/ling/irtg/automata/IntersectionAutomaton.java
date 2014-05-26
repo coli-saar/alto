@@ -841,7 +841,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      *
      * @param args
      */
-    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, ParserException, AntlrIrtgBuilder.ParseException {
+    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, de.up.ling.irtg.codec.ParseException {
         if (args.length != 5) {
             System.err.println("1. IRTG\n"
                     + "2. Sentences\n"
@@ -861,7 +861,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         System.err.print("Reading the IRTG...");
         timestamp[0] = System.nanoTime();
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileReader(new File(irtgFilename)));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(new File(irtgFilename)));
         Interpretation interp = irtg.getInterpretation(interpretation);
         Homomorphism hom = interp.getHomomorphism();
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();

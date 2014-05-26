@@ -7,17 +7,17 @@ package de.up.ling.irtg.gui;
 import com.bric.window.WindowList;
 import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomatonParser;
+import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import java.awt.Component;
-import java.awt.Frame;
 import java.awt.Window;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -367,7 +367,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         try {
             if (file != null) {
                 long start = System.nanoTime();
-                irtg = InterpretedTreeAutomaton.read(new FileReader(file));
+                irtg = new IrtgInputCodec().read(new FileInputStream(file));
                 log("Loaded IRTG from " + file.getName() + ", " + formatTimeSince(start));
             }
         } catch (Exception e) {

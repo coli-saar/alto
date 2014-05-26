@@ -64,7 +64,7 @@ D -> r4
 
        ''';
         
-        InterpretedTreeAutomaton irtg = pi(new StringReader(grammarstring));
+        InterpretedTreeAutomaton irtg = pi(grammarstring);
         List words = irtg.parseString("i", "a a a a b");
 
         TreeAutomaton chart = irtg.parseInputObjects(["i": words]);

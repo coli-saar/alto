@@ -8,6 +8,7 @@ package de.up.ling.irtg;
 import de.up.ling.irtg.IrtgParser.IrtgContext;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
@@ -208,22 +209,4 @@ public class AntlrIrtgBuilder {
         return con;
     }
 
-    public static class ParseException extends Exception {
-
-        public ParseException() {
-        }
-
-        public ParseException(String message) {
-            super(message);
-        }
-
-        public ParseException(String message, Throwable cause) {
-            super(message, cause);
-        }
-
-        public ParseException(Throwable cause) {
-            super(cause);
-        }
-
-    }
 }

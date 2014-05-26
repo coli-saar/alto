@@ -15,6 +15,8 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.RegularSeed;
+import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
@@ -31,11 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.atn.PredictionMode;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.commons.math3.special.Gamma;
 
 /**
@@ -758,25 +755,7 @@ public class InterpretedTreeAutomaton {
         return true;
     }
 
-    public static InterpretedTreeAutomaton read(Reader r) throws IOException, AntlrIrtgBuilder.ParseException {
-        IrtgLexer l = new IrtgLexer(new ANTLRInputStream(r));
-        IrtgParser p = new IrtgParser(new CommonTokenStream(l));
-        p.setErrorHandler(new BailErrorStrategy());
-        p.getInterpreter().setPredictionMode(PredictionMode.SLL);
-
-        try {
-            long t1 = System.nanoTime();
-            IrtgParser.IrtgContext result = p.irtg();
-            long t2 = System.nanoTime();
-            InterpretedTreeAutomaton irtg = new AntlrIrtgBuilder().build(result);
-            long t3 = System.nanoTime();
-
-            System.err.println("parsing: " + (t2 - t1) / 1000000 + "ms / construction: " + (t3 - t2) / 1000000 + "ms");
-
-            return irtg;
-        } catch (ParseCancellationException e) {
-            throw new AntlrIrtgBuilder.ParseException(e.getCause());
-
-        }
+    public static InterpretedTreeAutomaton read(InputStream r) throws IOException, ParseException {
+        return new IrtgInputCodec().read(r);
     }
 }
