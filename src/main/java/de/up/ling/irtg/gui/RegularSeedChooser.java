@@ -6,10 +6,8 @@ package de.up.ling.irtg.gui;
 
 import com.google.common.collect.Iterators;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.binarization.RegularSeed;
-import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;

@@ -7,7 +7,6 @@
 package de.up.ling.irtg.automata.condensed;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.AntlrIrtgBuilder;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
@@ -28,7 +27,6 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;

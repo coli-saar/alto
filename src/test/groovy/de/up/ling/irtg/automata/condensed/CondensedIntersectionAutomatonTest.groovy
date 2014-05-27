@@ -20,7 +20,6 @@ import de.up.ling.irtg.signature.IdentitySignatureMapper
 import de.up.ling.irtg.corpus.*
 import static de.up.ling.irtg.util.TestingTools.*;
 import de.up.ling.irtg.InterpretedTreeAutomaton
-import de.up.ling.irtg.IrtgParser;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomatonTest
 

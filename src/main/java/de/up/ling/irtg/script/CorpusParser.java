@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.script;
 
-import de.up.ling.irtg.AntlrIrtgBuilder;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.corpus.Charts;

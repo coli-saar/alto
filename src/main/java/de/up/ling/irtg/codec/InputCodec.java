@@ -42,7 +42,7 @@ public abstract class InputCodec<E> {
         return ret;
     }
     
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         List<InputCodec<InterpretedTreeAutomaton>> irtgCodecs = InputCodec.getInputCodecs(InterpretedTreeAutomaton.class);
         for( InputCodec i : irtgCodecs ) {
             System.err.println(i.getMetadata());
