@@ -1,3 +1,4 @@
 de.up.ling.irtg.codec.IrtgInputCodec
 de.up.ling.irtg.codec.PcfgIrtgInputCodec
 de.up.ling.irtg.codec.TreeAutomatonInputCodec
+de.up.ling.irtg.codec.BottomUpTreeAutomatonInputCodec

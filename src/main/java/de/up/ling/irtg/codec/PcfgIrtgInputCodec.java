@@ -19,10 +19,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 /**
  * An input codec for context-free grammars, with or without rule probabilities.
@@ -56,7 +55,7 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     public InterpretedTreeAutomaton read(InputStream is) throws ParseException, IOException {
         PcfgAsIrtgLexer l = new PcfgAsIrtgLexer(new ANTLRInputStream(is));
         PcfgAsIrtgParser p = new PcfgAsIrtgParser(new CommonTokenStream(l));
-        p.setErrorHandler(new BailErrorStrategy());
+        p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         try {
@@ -71,7 +70,7 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(auto);
             irtg.addInterpretation("string", new Interpretation(algebra, hom));
             return irtg;
-        } catch (ParseCancellationException e) {
+        } catch (RecognitionException e) {
             throw new ParseException(e.getCause());
         }
     }

@@ -23,10 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 /**
  *
@@ -43,16 +42,17 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     public InterpretedTreeAutomaton read(InputStream is) throws IOException, ParseException {        
         IrtgLexer l = new IrtgLexer(new ANTLRInputStream(is));
         IrtgParser p = new IrtgParser(new CommonTokenStream(l));
-        p.setErrorHandler(new BailErrorStrategy());
+        p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         try {
             IrtgParser.IrtgContext result = p.irtg();
             InterpretedTreeAutomaton irtg = build(result);
             return irtg;
-        } catch (ParseCancellationException e) {
+        } catch(ParseException e) {
+            throw e;
+        } catch (RecognitionException e) {
             throw new ParseException(e.getCause());
-
         }
     }
     

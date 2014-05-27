@@ -12,8 +12,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 
@@ -30,7 +30,7 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
     public TreeAutomaton read(InputStream is) throws ParseException, IOException {
         TreeAutomatonLexer l = new TreeAutomatonLexer(new ANTLRInputStream(is));
         TreeAutomatonParser p = new TreeAutomatonParser(new CommonTokenStream(l));
-        p.setErrorHandler(new BailErrorStrategy());
+        p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         try {
@@ -41,9 +41,8 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
             }
 
             return automaton;
-        } catch (ParseCancellationException e) {
+        } catch (RecognitionException e) {
             throw new ParseException(e.getCause());
-
         }
     }
 
