@@ -58,7 +58,7 @@ class BottomUpTreeAutomatonInputCodecTest {
 """;
     
     private static final String random_fta = """
-    # TASL
+    ## TASL
 # Final states
 q7
 # Transitions
