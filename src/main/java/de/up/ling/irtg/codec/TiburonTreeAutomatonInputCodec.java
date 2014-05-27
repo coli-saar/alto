@@ -19,9 +19,25 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 /**
- *
+ * A codec for reading weighted tree automata in the format used by
+ * the Tiburon toolkit (http://www.isi.edu/licensed-sw/tiburon/).
+ * The rules have the following form:
+ * <code>q -> NP(x1 x2)  # 0.8</code>
+ * 
+ * where q, x1, and x2 are states and NP is a terminal symbol. The
+ * rules may be assigned weights by an optional annotation like "# 0.8".
+ * Final states are defined by listing them before the first rule.
+ * Anything from a percent sign (%) to the end of the line is a
+ * comment, and therefore ignored.<p>
+ * 
+ * Tiburon allows rules like "q -> S(subj was prednom)", where subj
+ * and prednom are states, but "was" is a terminal symbol. These rules
+ * are automatically split into smaller rules "q -> S(subj,_q_1,prednom)"
+ * and "_q_1 -> was" in the tree automaton.
+ * 
  * @author koller
  */
+@CodecMetadata(name = "tiburon", extension = "rtg", type = TreeAutomaton.class)
 public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
     private int gensymNext = 1;
@@ -128,7 +144,6 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
     }
 
     private static class RawRule {
-
         String lhs;
         List<String> rhs;
         String label;
