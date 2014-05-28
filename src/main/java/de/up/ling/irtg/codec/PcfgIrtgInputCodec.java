@@ -46,7 +46,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * 
  * @author koller
  */
-@CodecMetadata(name = "pcfg", extension = "cfg", type = InterpretedTreeAutomaton.class)
+@CodecMetadata(name = "pcfg", description = "Probabilistic context-free grammars", extension = "cfg", type = InterpretedTreeAutomaton.class)
 public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     private int nextGensym = 1;

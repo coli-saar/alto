@@ -15,13 +15,12 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 
 /**
  *
  * @author koller
  */
-@CodecMetadata(name = "rtg", extension = "rtg", type = TreeAutomaton.class)
+@CodecMetadata(name = "auto", description = "Tree automata", extension = "auto", type = TreeAutomaton.class)
 public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
 
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();

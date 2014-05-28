@@ -37,10 +37,10 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * 
  * @author koller
  */
-@CodecMetadata(name = "tiburon", extension = "rtg", type = TreeAutomaton.class)
+@CodecMetadata(name = "tiburon", description = "Top-down tree automata (Tiburon style)", extension = "rtg", type = TreeAutomaton.class)
 public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
-    private int gensymNext = 1;
+    private CodecUtilities util = new CodecUtilities();
 
     @Override
     public TreeAutomaton read(InputStream is) throws ParseException, IOException {
@@ -64,7 +64,7 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
             }
             
             for( RawRule rule : rawRules ) {
-                List<String> children = introduceAnonymousStates(automaton, rule.rhs, states);
+                List<String> children = util.introduceAnonymousStates(automaton, rule.rhs, states);
                 automaton.addRule(automaton.createRule(rule.lhs, rule.label, children));
             }
 
@@ -72,26 +72,6 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
         } catch (RecognitionException e) {
             throw new ParseException(e.getCause());
         }
-    }
-    
-    private List<String> introduceAnonymousStates(ConcreteTreeAutomaton<String> auto, List<String> children, Set<String> states) {
-        List<String> ret = new ArrayList<>();
-        
-        for( String s : children ) {
-            if( states.contains(s) ) {
-                ret.add(s);
-            } else {
-                String newState = gensym("_q_");
-                auto.addRule(auto.createRule(newState, s, new ArrayList<>()));
-                ret.add(newState);
-            }
-        }
-            
-        return ret;
-    }
-    
-    private String gensym(String prefix) {
-        return prefix + (gensymNext++);
     }
 
     private String autoRule(TiburonTreeAutomatonParser.Auto_ruleContext auto_rule, List<RawRule> rawRules, Set<String> states) {

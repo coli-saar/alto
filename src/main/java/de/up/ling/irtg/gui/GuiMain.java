@@ -9,11 +9,13 @@ import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomatonParser;
+import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
+import de.up.ling.irtg.util.Util;
 import java.awt.Component;
 import java.awt.Window;
 import java.io.File;
@@ -23,6 +25,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
@@ -44,6 +48,7 @@ import org.simplericity.macify.eawt.DefaultApplication;
  * @author koller
  */
 public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
+
     private static File previousDirectory;
     private static GuiMain app;
     private static ExecutorService executorService = Executors.newFixedThreadPool(1);
@@ -63,7 +68,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public static GuiMain getApplication() {
         return app;
     }
-    
+
     public static boolean isMac() {
         return new DefaultApplication().isMac();
     }
@@ -201,14 +206,14 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public static void showDecompositionDialog(java.awt.Frame parent) {
         new DecompositionDialog(parent, true).setVisible(true);
     }
-    
+
     public static void quit() {
         System.exit(0);
     }
-    
+
     public static void closeAllWindows() {
-        for( Window window : WindowList.getWindows(false, false) ) {
-            if( ! (window instanceof GuiMain) ) {
+        for (Window window : WindowList.getWindows(false, false)) {
+            if (!(window instanceof GuiMain)) {
                 window.setVisible(false);
             }
         }
@@ -268,29 +273,29 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         return null;
     }
-    
+
     private static String stripExtension(String filename) {
         Pattern p = Pattern.compile("(.*)\\.[^.]*");
         Matcher m = p.matcher(filename);
-        
-        if( m.matches()) {
+
+        if (m.matches()) {
             return m.group(1);
         } else {
             return filename;
         }
     }
-    
+
     public static void loadMaxentWeights(final MaximumEntropyIrtg irtg, final JFrame parent) {
         final File file = chooseFile("Open maxent weights", new FileNameExtensionFilter("Maxent weights (*.txt)", "txt"), parent);
-        
+
         try {
-            if( file != null ) {
+            if (file != null) {
                 long start = System.nanoTime();
                 irtg.readWeights(new FileReader(file));
-                
+
                 log("Read maximum entropy weights from " + file.getName() + ", " + formatTimeSince(start));
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             showError(parent, "An error occurred while reading the maxent weights file " + file.getName() + ": " + e.getMessage());
         }
     }
@@ -345,9 +350,18 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     private static File chooseFile(String title, FileFilter filter, Component parent) {
+        List<FileFilter> f = new ArrayList<>();
+        f.add(filter);
+        return chooseFile(title, f, parent);
+    }
+
+    private static File chooseFile(String title, List<FileFilter> filters, Component parent) {
         JFileChooser fc = new JFileChooser(previousDirectory);
         fc.setDialogTitle(title);
-        fc.setFileFilter(filter);
+
+        for (FileFilter f : filters) {
+            fc.addChoosableFileFilter(f);
+        }
 
         int returnVal = fc.showOpenDialog(parent);
 
@@ -360,23 +374,83 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    public static boolean loadIrtg(Component parent) {
-        File file = chooseFile("Open IRTG", new FileNameExtensionFilter("IRTG grammars (*.irtg)", "irtg"), parent);
-        InterpretedTreeAutomaton irtg = null;
+    private static class InputCodecFileFilter extends FileFilter {
+
+        private InputCodec ic;
+
+        public InputCodecFileFilter(InputCodec ic) {
+            this.ic = ic;
+        }
+
+        @Override
+        public boolean accept(File f) {
+            return f.getName().endsWith(ic.getMetadata().extension()) || f.isDirectory();
+        }
+
+        @Override
+        public String getDescription() {
+            return ic.getMetadata().description() + " (*." + ic.getMetadata().extension() + ")";
+        }
+
+    }
+
+    private static class LoadingResult<T> {
+
+        T object;
+        File filename;
+        String readingTime;
+
+        public LoadingResult(T object, File filename, String readingTime) {
+            this.object = object;
+            this.filename = filename;
+            this.readingTime = readingTime;
+        }
+
+    }
+
+    private static <T> LoadingResult<T> loadObject(Class<T> objectClass, String objectDescription, Component parent) {
+        List<FileFilter> filters = new ArrayList<>();
+
+        for (InputCodec ic : InputCodec.getInputCodecs(objectClass)) {
+            filters.add(new InputCodecFileFilter(ic));
+        }
+
+        File file = chooseFile("Open " + objectDescription, filters, parent);
 
         try {
             if (file != null) {
                 long start = System.nanoTime();
-                irtg = new IrtgInputCodec().read(new FileInputStream(file));
-                log("Loaded IRTG from " + file.getName() + ", " + formatTimeSince(start));
+
+                String ext = Util.getFilenameExtension(file.getName());
+                InputCodec<T> codec = InputCodec.getInputCodecByExtension(ext);
+
+                if (codec == null) {
+                    showError(parent, "Could not identify input codec for file extension '" + ext + "'");
+                } else if (codec.getMetadata().type() != objectClass) {
+                    showError(parent, "The codec '" + codec.getMetadata().name() + "' is not suitable for reading a" + objectDescription + ".");
+                } else {
+                    T obj = codec.read(new FileInputStream(file));
+                    String time = formatTimeSince(start);
+                    return new LoadingResult<>(obj, file, time);
+                }
             }
         } catch (Exception e) {
             showError(parent, "An error occurred while attempting to parse " + file.getName() + ": " + e.getMessage());
         }
 
-        if (irtg != null) {
+        return null;
+    }
+
+    public static boolean loadIrtg(Component parent) {
+        LoadingResult<InterpretedTreeAutomaton> result = loadObject(InterpretedTreeAutomaton.class, "IRTG", parent);
+
+        if (result != null) {
+            log("Loaded IRTG from " + result.filename.getName() + ", " + result.readingTime);
+
+            InterpretedTreeAutomaton irtg = result.object;
+
             JTreeAutomaton jta = new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg));
-            jta.setTitle("IRTG grammar: " + file.getName());
+            jta.setTitle("IRTG grammar: " + result.filename.getName());
             jta.setIrtg(irtg);
             jta.setParsingEnabled(true);
             jta.pack();
@@ -394,43 +468,35 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public static String formatTimeSince(long start) {
         long end = System.nanoTime();
         if (end - start < 1000) {
-            return (end-start) + " ns";
-        } else if( end-start < 1000000 ) {
-            return (end-start)/1000 + " \u03bcs";
-        } else if( end-start < 1000000000 ) {
-            return (end-start)/1000000 + " ms";
+            return (end - start) + " ns";
+        } else if (end - start < 1000000) {
+            return (end - start) / 1000 + " \u03bcs";
+        } else if (end - start < 1000000000) {
+            return (end - start) / 1000000 + " ms";
         } else {
             StringBuffer buf = new StringBuffer();
-            long diff = end-start;
-            
-            if( diff > 60000000000L ) {
-                buf.append(diff/60000000000L + "m ");
+            long diff = end - start;
+
+            if (diff > 60000000000L) {
+                buf.append(diff / 60000000000L + "m ");
             }
-            
+
             diff %= 60000000000L;
-            
-            buf.append(String.format("%d.%03ds", diff/1000000000, (diff%1000000000)/1000000));
+
+            buf.append(String.format("%d.%03ds", diff / 1000000000, (diff % 1000000000) / 1000000));
             return buf.toString();
         }
     }
 
     public static boolean loadAutomaton(Component parent) {
-        File file = chooseFile("Open tree automaton", new FileNameExtensionFilter("Tree automata (*.auto)", "auto"), parent);
-        TreeAutomaton auto = null;
+        LoadingResult<TreeAutomaton> result = loadObject(TreeAutomaton.class, "tree automaton", parent);
 
-        try {
-            if (file != null) {
-                long start = System.nanoTime();
-                auto = TreeAutomatonParser.parse(new FileReader(file));
-                log("Loaded automaton from " + file.getName() + ", " + formatTimeSince(start));
-            }
-        } catch (Exception e) {
-            showError(parent, "An error occurred while attempting to parse " + file.getName() + ": " + e.getMessage());
-        }
-
-        if (auto != null) {
+        if (result != null) {
+            log("Loaded tree automaton from " + result.filename.getName() + ", " + result.readingTime);
+            TreeAutomaton auto = result.object;
+            
             JTreeAutomaton jta = new JTreeAutomaton(auto, null);
-            jta.setTitle("Tree automaton: " + file.getName());
+            jta.setTitle("Tree automaton: " + result.filename.getName());
             jta.pack();
             jta.setVisible(true);
             return true;
@@ -459,7 +525,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public static void main(String args[]) throws Exception {
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
-        
+
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
         final GuiMain guiMain = new GuiMain();

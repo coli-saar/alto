@@ -41,7 +41,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * 
  * @author koller
  */
-@CodecMetadata(name="bu-fta", extension = "fta", type = TreeAutomaton.class)
+@CodecMetadata(name="bu-fta", description="Bottom-up tree automata (Hanneforth style)", extension = "fta", type = TreeAutomaton.class)
 public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
 
