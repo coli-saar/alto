@@ -1177,11 +1177,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
-        return intersectCondensed(other, new SignatureMapper(signature, other.getSignature()));
+        return intersectCondensed(other, new IdentitySignatureMapper(signature));
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectViterbi(CondensedTreeAutomaton<OtherState> other) {
-        return intersectCondensed(other, new SignatureMapper(signature, other.getSignature()));
+        return intersectViterbi(other, new IdentitySignatureMapper(signature));
     }
 
     /**
