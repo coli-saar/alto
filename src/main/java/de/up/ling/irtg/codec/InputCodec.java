@@ -11,7 +11,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
@@ -19,6 +21,9 @@ import java.util.ServiceLoader;
  * @author koller
  */
 public abstract class InputCodec<E> {
+    private static Map<String,InputCodec> codecByName = null;
+    private static Map<String,InputCodec> codecByExtension = null;
+    
     public abstract E read(InputStream is) throws ParseException, IOException;
     
     public E read(String s) throws ParseException, IOException {
@@ -29,17 +34,42 @@ public abstract class InputCodec<E> {
         return (CodecMetadata) getClass().getAnnotation(CodecMetadata.class);
     }
     
+    private static Iterable<InputCodec> getAllInputCodecs() {
+        return ServiceLoader.load(InputCodec.class);
+    }
+    
     public static <T> List<InputCodec<T>> getInputCodecs(Class<T> forClass) {
         List<InputCodec<T>> ret = new ArrayList<>();
         
-        ServiceLoader<InputCodec> serviceLoader = ServiceLoader.load(InputCodec.class);
-        for( InputCodec codec : serviceLoader ) {            
+        for( InputCodec codec : getAllInputCodecs() ) {            
             if( forClass.isAssignableFrom(codec.getMetadata().type()) ) {
                 ret.add(codec);
             }
         }
         
         return ret;
+    }
+    
+    public static InputCodec getInputCodecByName(String name) {
+        if( codecByName == null ) {
+            codecByName = new HashMap<>();
+            for( InputCodec ic : getAllInputCodecs() ) {
+                codecByName.put(ic.getMetadata().name(), ic);
+            }
+        }
+        
+        return codecByName.get(name);
+    }
+    
+    public static InputCodec getInputCodecByExtension(String extension) {
+        if( codecByExtension == null ) {
+            codecByExtension = new HashMap<>();
+            for( InputCodec ic : getAllInputCodecs() ) {
+                codecByExtension.put(ic.getMetadata().extension(), ic);
+            }
+        }
+        
+        return codecByExtension.get(extension);
     }
     
     public static void main(String[] args) throws Exception {
