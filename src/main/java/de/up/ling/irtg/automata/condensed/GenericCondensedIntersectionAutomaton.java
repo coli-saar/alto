@@ -13,9 +13,11 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.IntInt2IntMap;
+import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -282,8 +284,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         System.err.print("Reading the IRTG...");
 
         updateBenchmark(timestamp, 0, useCPUTime, benchmarkBean);
-
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(new File(irtgFilename)));
+        
+        InputCodec<InterpretedTreeAutomaton> codec = InputCodec.getInputCodecByExtension(Util.getFilenameExtension(irtgFilename));
+        InterpretedTreeAutomaton irtg = codec.read(new FileInputStream(new File(irtgFilename)));
         Interpretation interp = irtg.getInterpretation(interpretation);
         Homomorphism hom = interp.getHomomorphism();
         Algebra alg = irtg.getInterpretation(interpretation).getAlgebra();

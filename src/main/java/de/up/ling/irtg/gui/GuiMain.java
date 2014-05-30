@@ -8,9 +8,8 @@ import com.bric.window.WindowList;
 import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomatonParser;
 import de.up.ling.irtg.codec.InputCodec;
-import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
@@ -29,11 +28,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -180,15 +183,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        if (loadIrtg(this)) {
-//            setVisible(false);
-        }
+        loadIrtg(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
-        if (loadAutomaton(this)) {
-//            setVisible(false);
-        }
+        loadAutomaton(this);
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
@@ -408,43 +407,65 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
     }
 
-    private static <T> LoadingResult<T> loadObject(Class<T> objectClass, String objectDescription, Component parent) {
+    private static <T> void loadObject(Class<T> objectClass, String objectDescription, Component parent, Consumer<LoadingResult<T>> andThen) {
         List<FileFilter> filters = new ArrayList<>();
 
         for (InputCodec ic : InputCodec.getInputCodecs(objectClass)) {
             filters.add(new InputCodecFileFilter(ic));
         }
 
-        File file = chooseFile("Open " + objectDescription, filters, parent);
+        final File file = chooseFile("Open " + objectDescription, filters, parent);
 
         try {
             if (file != null) {
                 long start = System.nanoTime();
 
                 String ext = Util.getFilenameExtension(file.getName());
-                InputCodec<T> codec = InputCodec.getInputCodecByExtension(ext);
+                final InputCodec<T> codec = InputCodec.getInputCodecByExtension(ext);
 
                 if (codec == null) {
                     showError(parent, "Could not identify input codec for file extension '" + ext + "'");
                 } else if (codec.getMetadata().type() != objectClass) {
                     showError(parent, "The codec '" + codec.getMetadata().name() + "' is not suitable for reading a" + objectDescription + ".");
                 } else {
-                    T obj = codec.read(new FileInputStream(file));
-                    String time = formatTimeSince(start);
-                    return new LoadingResult<>(obj, file, time);
+                    codec.showProgressDialog(app);
+
+                    System.err.println("0");
+                    
+                    new Thread(() -> {
+                        try {
+                            System.err.println("1");
+                            T obj = codec.read(new FileInputStream(file));
+                            System.err.println("2");
+                            SwingUtilities.invokeLater(() -> {
+                                codec.hideProgressDialog();
+                            });
+
+                            System.err.println("3");
+                            if (obj != null) {
+                                String time = formatTimeSince(start);
+                                System.err.println("4");
+                                andThen.accept(new LoadingResult<>(obj, file, time));
+                            }
+                        } catch (Exception ex) {
+                            Logger.getLogger(GuiMain.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    }).start();
+
+//                    T obj = codec.read(new FileInputStream(file));
+//                    codec.hideProgressDialog();
+//                    String time = formatTimeSince(start);
+//                    return new LoadingResult<>(obj, file, time);
                 }
             }
         } catch (Exception e) {
             showError(parent, "An error occurred while attempting to parse " + file.getName() + ": " + e.getMessage());
         }
-
-        return null;
     }
 
-    public static boolean loadIrtg(Component parent) {
-        LoadingResult<InterpretedTreeAutomaton> result = loadObject(InterpretedTreeAutomaton.class, "IRTG", parent);
-
-        if (result != null) {
+    public static void loadIrtg(Component parent) {
+        loadObject(InterpretedTreeAutomaton.class, "IRTG", parent, result -> {
             log("Loaded IRTG from " + result.filename.getName() + ", " + result.readingTime);
 
             InterpretedTreeAutomaton irtg = result.object;
@@ -455,10 +476,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             jta.setParsingEnabled(true);
             jta.pack();
             jta.setVisible(true);
-            return true;
-        }
-
-        return false;
+        });
     }
 
     static public void showError(Component parent, String error) {
@@ -488,21 +506,16 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    public static boolean loadAutomaton(Component parent) {
-        LoadingResult<TreeAutomaton> result = loadObject(TreeAutomaton.class, "tree automaton", parent);
-
-        if (result != null) {
+    public static void loadAutomaton(Component parent) {
+        loadObject(TreeAutomaton.class, "tree automaton", parent, result -> {
             log("Loaded tree automaton from " + result.filename.getName() + ", " + result.readingTime);
             TreeAutomaton auto = result.object;
-            
+
             JTreeAutomaton jta = new JTreeAutomaton(auto, null);
             jta.setTitle("Tree automaton: " + result.filename.getName());
             jta.pack();
             jta.setVisible(true);
-            return true;
-        }
-
-        return false;
+        });
     }
 
     public static void log(final String log) {

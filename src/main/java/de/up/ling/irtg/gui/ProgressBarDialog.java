@@ -4,6 +4,8 @@
  */
 package de.up.ling.irtg.gui;
 
+import javax.swing.JProgressBar;
+
 /**
  *
  * @author koller
@@ -33,6 +35,12 @@ public class ProgressBarDialog extends javax.swing.JDialog {
         progressBar.setValue(value);
         progressBar.setString(value + "/" + maximumValue);
     }
+
+    public JProgressBar getProgressBar() {
+        return progressBar;
+    }
+    
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
