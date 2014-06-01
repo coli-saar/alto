@@ -8,14 +8,13 @@ import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
-import static de.up.ling.irtg.gui.GuiMain.formatTimeSince;
 import static de.up.ling.irtg.gui.GuiMain.log;
+import static de.up.ling.irtg.util.Util.formatTimeSince;
 import de.up.ling.tree.Tree;
 import java.awt.Component;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import javax.swing.JComponent;
 
 /**
  *

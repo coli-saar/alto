@@ -40,4 +40,29 @@ public class Util {
         
         return extension;
     }
+    
+    public static String formatTime(long timeInNs) {
+        if (timeInNs < 1000) {
+            return timeInNs + " ns";
+        } else if (timeInNs < 1000000) {
+            return timeInNs / 1000 + " \u03bcs";
+        } else if (timeInNs < 1000000000) {
+            return timeInNs / 1000000 + " ms";
+        } else {
+            StringBuffer buf = new StringBuffer();
+
+            if (timeInNs > 60000000000L) {
+                buf.append(timeInNs / 60000000000L + "m ");
+            }
+
+            timeInNs %= 60000000000L;
+
+            buf.append(String.format("%d.%03ds", timeInNs / 1000000000, (timeInNs % 1000000000) / 1000000));
+            return buf.toString();
+        }
+    }
+    
+    public static String formatTimeSince(long start) {
+        return formatTime(System.nanoTime()-start);
+    }
 }

@@ -14,6 +14,7 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
+import de.up.ling.irtg.util.ValueAndTimeConsumer;
 import de.up.ling.irtg.util.ProgressBarWorker;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.irtg.util.Util;
@@ -258,7 +259,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             if (file != null) {
                 long start = System.nanoTime();
                 Corpus corpus = irtg.readCorpus(new FileReader(file));
-                log("Read annotated corpus from " + file.getName() + ", " + formatTimeSince(start));
+                log("Read annotated corpus from " + file.getName() + ", " + Util.formatTimeSince(start));
 
                 if (!corpus.isAnnotated()) {
                     showError(parent, "The file " + file.getName() + " is not an annotated corpus.");
@@ -293,7 +294,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 long start = System.nanoTime();
                 irtg.readWeights(new FileReader(file));
 
-                log("Read maximum entropy weights from " + file.getName() + ", " + formatTimeSince(start));
+                log("Read maximum entropy weights from " + file.getName() + ", " + Util.formatTimeSince(start));
             }
         } catch (Exception e) {
             showError(parent, "An error occurred while reading the maxent weights file " + file.getName() + ": " + e.getMessage());
@@ -309,7 +310,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             if (file != null) {
                 long start = System.nanoTime();
                 final Corpus corpus = irtg.readCorpus(new FileReader(file));
-                log("Read unannotated corpus from " + file.getName() + ", " + formatTimeSince(start));
+                log("Read unannotated corpus from " + file.getName() + ", " + Util.formatTimeSince(start));
 
                 File chartsFile = chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);
 
@@ -322,7 +323,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                     pb.setVisible(true);
                     start = System.nanoTime();
                     Charts.computeCharts(corpus, irtg, fos, pb);
-                    log("Wrote parse charts to " + chartsFile + ", " + formatTimeSince(start));
+                    log("Wrote parse charts to " + chartsFile + ", " + Util.formatTimeSince(start));
                     pb.setVisible(false);
                 }
 
@@ -398,16 +399,16 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         T object;
         File filename;
-        String readingTime;
+//        String readingTime;
 
-        public LoadingResult(T object, File filename, String readingTime) {
+        public LoadingResult(T object, File filename) {
             this.object = object;
             this.filename = filename;
-            this.readingTime = readingTime;
+//            this.readingTime = readingTime;
         }
     }
 
-    private static <T> void loadObject(Class<T> objectClass, String objectDescription, Component parent, Consumer<LoadingResult<T>> andThen) {
+    private static <T> void loadObject(Class<T> objectClass, String objectDescription, Component parent, ValueAndTimeConsumer<LoadingResult<T>> andThen) {
         List<FileFilter> filters = new ArrayList<>();
 
         for (InputCodec ic : InputCodec.getInputCodecs(objectClass)) {
@@ -430,13 +431,13 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 } else {
                     String title = "Reading " + codec.getMetadata().description() + " ...";
                     ProgressBarWorker<LoadingResult<T>> worker = listener -> {
-                        long start = System.nanoTime();
+//                        long start = System.nanoTime();
 
                         try {
                             codec.setProgressListener(listener);
                             T result = codec.read(new FileInputStream(file));
-                            String time = formatTimeSince(start);
-                            return new LoadingResult<>(result, file, time);
+//                            String time = formatTimeSince(start);
+                            return new LoadingResult<>(result, file);
                         } catch (Exception ex) {
                             Logger.getLogger(GuiMain.class.getName()).log(Level.SEVERE, null, ex);
                             return null;
@@ -481,8 +482,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void loadIrtg(Component parent) {
-        loadObject(InterpretedTreeAutomaton.class, "IRTG", parent, result -> {
-            log("Loaded IRTG from " + result.filename.getName() + ", " + result.readingTime);
+        loadObject(InterpretedTreeAutomaton.class, "IRTG", parent, (result, time) -> {
+            log("Loaded IRTG from " + result.filename.getName() + ", " + Util.formatTime(time));
 
             InterpretedTreeAutomaton irtg = result.object;
 
@@ -499,32 +500,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
-    public static String formatTimeSince(long start) {
-        long end = System.nanoTime();
-        if (end - start < 1000) {
-            return (end - start) + " ns";
-        } else if (end - start < 1000000) {
-            return (end - start) / 1000 + " \u03bcs";
-        } else if (end - start < 1000000000) {
-            return (end - start) / 1000000 + " ms";
-        } else {
-            StringBuffer buf = new StringBuffer();
-            long diff = end - start;
-
-            if (diff > 60000000000L) {
-                buf.append(diff / 60000000000L + "m ");
-            }
-
-            diff %= 60000000000L;
-
-            buf.append(String.format("%d.%03ds", diff / 1000000000, (diff % 1000000000) / 1000000));
-            return buf.toString();
-        }
-    }
+    
 
     public static void loadAutomaton(Component parent) {
-        loadObject(TreeAutomaton.class, "tree automaton", parent, result -> {
-            log("Loaded tree automaton from " + result.filename.getName() + ", " + result.readingTime);
+        loadObject(TreeAutomaton.class, "tree automaton", parent, (result,time) -> {
+            log("Loaded tree automaton from " + result.filename.getName() + ", " + Util.formatTime(time));
             TreeAutomaton auto = result.object;
 
             JTreeAutomaton jta = new JTreeAutomaton(auto, null);

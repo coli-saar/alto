@@ -5,16 +5,17 @@
 package de.up.ling.irtg.binarization;
 
 import com.google.common.base.Function;
+import com.google.common.collect.Iterables;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.ProgressListener;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -65,6 +66,8 @@ public class BkvBinarizer {
         Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
         List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
         TreeAutomaton rtg = irtg.getAutomaton();
+        int numRules = Iterables.size(irtg.getAutomaton().getRuleSet());
+        int max = (numRules < Integer.MAX_VALUE) ? ((int) numRules) : Integer.MAX_VALUE;
 
         // initialize output homs
         for (String interp : interpretationNames) {
@@ -111,7 +114,8 @@ public class BkvBinarizer {
             }
 
             if (listener != null) {
-                listener.update(ruleNumber++, 0);
+                listener.accept(ruleNumber, max, null); //"Binarized " + ruleNumber + "/" + max + " rules");
+                ruleNumber++;
             }
         }
 

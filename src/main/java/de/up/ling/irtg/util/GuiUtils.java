@@ -15,7 +15,7 @@ import javax.swing.SwingUtilities;
  *
  * @author koller
  */
-public class GuiUtils {
+public class GuiUtils {    
     /**
      * Execute this on the EDT.
      *
@@ -26,7 +26,7 @@ public class GuiUtils {
      * @param worker
      * @param andThen
      */
-    public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, Consumer<E> andThen) {
+    public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, ValueAndTimeConsumer<E> andThen) {
         final ProgressBarDialog progressBar = new ProgressBarDialog(description, 10000, parent, false);
         final JProgressBar bar = progressBar.getProgressBar();
         progressBar.getProgressBar().setStringPainted(true);
@@ -38,22 +38,27 @@ public class GuiUtils {
                 bar.setValue(currentValue);
 
                 if (string == null) {
-                    bar.setStringPainted(false);
+                    if( maxValue == 0 ) {
+                        bar.setString("");
+                    } else {
+                        bar.setString(currentValue*100/maxValue + "%");
+                    }
                 } else {
-                    bar.setStringPainted(true);
                     bar.setString(string);
                 }
             });
         };
 
         new Thread(() -> {
+            long start = System.nanoTime();
             final E result = worker.compute(listener);
+            final long time = System.nanoTime() - start;
 
             SwingUtilities.invokeLater(() -> {
                 progressBar.setVisible(false);
 
                 if (result != null) {
-                    andThen.accept(result);
+                    andThen.accept(result, time);
                 }
             });
         }).start();
