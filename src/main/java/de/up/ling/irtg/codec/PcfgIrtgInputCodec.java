@@ -71,8 +71,8 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             irtg.addInterpretation("string", new Interpretation(algebra, hom));
             return irtg;
         } catch (RecognitionException e) {
-            throw new ParseException(e.getCause());
-        }
+            throw new ParseException(e.getMessage());
+        } 
     }
 
     private void pcfg(PcfgAsIrtgParser.PcfgContext pcfg, ConcreteTreeAutomaton<String> auto, Homomorphism hom) {

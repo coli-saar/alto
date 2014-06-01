@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.gui;
+package de.up.ling.irtg.util;
 
 import javax.swing.JProgressBar;
 
@@ -10,13 +10,13 @@ import javax.swing.JProgressBar;
  *
  * @author koller
  */
-public class ProgressBarDialog extends javax.swing.JDialog {
+class ProgressBarDialog extends javax.swing.JDialog {
     private int maximumValue;
 
     /**
      * Creates new form ProgressBarDialog
      */
-    public ProgressBarDialog(String title, int maximumValue, java.awt.Frame parent, boolean modal) {
+    public ProgressBarDialog(String title, java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
         
@@ -25,15 +25,10 @@ public class ProgressBarDialog extends javax.swing.JDialog {
         setTitle(title);
         label.setText(title + " ...");
         
-        progressBar.setMaximum(maximumValue);
+        progressBar.setMaximum(1);
         progressBar.setValue(0);
-        progressBar.setString("0/" + maximumValue);
+//        progressBar.setString("0/" + maximumValue);
         progressBar.setIndeterminate(false);
-    }
-    
-    public void update(int value) {
-        progressBar.setValue(value);
-        progressBar.setString(value + "/" + maximumValue);
     }
 
     public JProgressBar getProgressBar() {

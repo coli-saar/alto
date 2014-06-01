@@ -69,7 +69,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
     protected void reportUnwantedToken(Parser parser) {
         Token t = parser.getCurrentToken();
         IntervalSet expecting = getExpectedTokens(parser);
-        String msg = getTokenPosition(t) + ": unwanted token: " + expecting.toString(parser.getTokenNames()) + " at " + getTokenErrorDisplay(t);
+        String msg = getTokenPosition(t) + ": expected token " + expecting.toString(parser.getTokenNames()) + ", but got " + getTokenErrorDisplay(t) + ".";
         throw new RecognitionException(msg, parser, parser.getInputStream(), parser.getContext());
     }
 

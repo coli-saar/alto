@@ -16,12 +16,14 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.codec.IrtgParser;
 import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.*;
@@ -586,7 +588,8 @@ public class InterpretedTreeAutomaton {
             logLikelihood += Math.log(likelihoodHere);
 
             if (listener != null) {
-                listener.update(iteration, i);
+                listener.accept(i+1, parses.size(), null);
+//                listener.update(iteration, i);
             }
         }
 

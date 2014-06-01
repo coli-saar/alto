@@ -8,7 +8,6 @@ import com.bric.window.WindowMenu;
 import com.google.common.collect.Iterables;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.ProgressListener;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -17,6 +16,7 @@ import de.up.ling.irtg.corpus.Corpus;
 import static de.up.ling.irtg.gui.GuiMain.log;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
+import static de.up.ling.irtg.util.GuiUtils.showError;
 import de.up.ling.irtg.util.Util;
 import static de.up.ling.irtg.util.Util.formatTimeSince;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -28,7 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.JTable;
-import javax.swing.SwingUtilities;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
@@ -490,9 +489,9 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                             chart = irtg.parse(inputs);
                             log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
                         } catch (ParserException ex) {
-                            GuiMain.showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
+                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
                         } catch (Exception ex) {
-                            GuiMain.showError(JTreeAutomaton.this, ex.getMessage());
+                            showError(JTreeAutomaton.this, ex.getMessage());
                         }
 
                         if (chart != null) {
@@ -528,66 +527,31 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miTrainEMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainEMActionPerformed
         final Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
 
-        new Thread() {
-            @Override
-            public void run() {
-                if (corpus != null) {
-                    final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
-                    pb.setLabelText("Performing EM training ...");
-                    pb.setVisible(true);
-
-                    long start = System.nanoTime();
-                    try {
-                        irtg.trainEM(corpus, new ProgressBarTrainingIterationListener(pb));
-                    } finally {
-                        pb.setVisible(false);
-                    }
-
-                    GuiMain.log("Performed EM training, " + Util.formatTimeSince(start));
+        GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing EM training ...",
+                listener -> {
+                    irtg.trainEM(corpus, listener);
+                    return null;
+                },
+                (result, time) -> {
+                    GuiMain.log("Performed EM training, " + Util.formatTime(time));
                     updateWeights();
-                }
-            }
-        }.start();
+                });
     }//GEN-LAST:event_miTrainEMActionPerformed
 
     private void miTrainVBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainVBActionPerformed
         final Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
 
-        new Thread() {
-            @Override
-            public void run() {
-                if (corpus != null) {
-                    final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
-                    pb.setLabelText("Performing VB training ...");
-                    pb.setVisible(true);
-
-                    long start = System.nanoTime();
-                    try {
-                        irtg.trainVB(corpus, new ProgressBarTrainingIterationListener(pb));
-                    } finally {
-                        pb.setVisible(false);
-                    }
-
-                    GuiMain.log("Performed VB training, " + Util.formatTimeSince(start));
+        GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing VB training ...",
+                listener -> {
+                    irtg.trainVB(corpus, listener);
+                    return null;
+                },
+                (result, time) -> {
+                    GuiMain.log("Performed VB training, " + Util.formatTime(time));
                     updateWeights();
-                }
-            }
-        }.start();
+                });
 
     }//GEN-LAST:event_miTrainVBActionPerformed
-
-    private static class ProgressBarTrainingIterationListener implements ProgressListener {
-
-        private ChartComputationProgressBar pb;
-
-        public ProgressBarTrainingIterationListener(ChartComputationProgressBar pb) {
-            this.pb = pb;
-        }
-
-        public void update(int iterationNumber, int instanceNumber) {
-            pb.update(instanceNumber, null, null);
-        }
-    }
 
     private void miLoadMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadMaxentWeightsActionPerformed
         if (irtg instanceof MaximumEntropyIrtg) {
@@ -605,30 +569,16 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         if (irtg instanceof MaximumEntropyIrtg) {
             final Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, miMaxent);
 
-            new Thread() {
-                @Override
-                public void run() {
-                    if (corpus != null) {
-                        final ChartComputationProgressBar pb = new ChartComputationProgressBar(GuiMain.getApplication(), false, corpus.getNumberOfInstances());
-                        pb.setLabelText("Performing Maximum Entropy training ...");
-                        pb.setVisible(true);
-
-                        long start = System.nanoTime();
-
-                        try {
-                            ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, new ProgressBarTrainingIterationListener(pb));
-                        } finally {
-                            pb.setVisible(false);
-                        }
-
-                        GuiMain.log("Trained maxent model, " + Util.formatTimeSince(start));
-
+            GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing Maximum Entropy training ...",
+                    listener -> {
+                        ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, listener);
+                        return null;
+                    },
+                    (result, time) -> {
+                        GuiMain.log("Trained maxent model, " + Util.formatTime(time));
                         miShowMaxentWeights.setEnabled(true);
-
                         miShowMaxentWeightsActionPerformed(null);
-                    }
-                }
-            }.start();
+                    });
         }
     }//GEN-LAST:event_miTrainMaxentActionPerformed
 
@@ -663,24 +613,22 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
             if (rsc.getSelectedAlgebras() != null) {
                 GuiUtils.withProgressBar(JTreeAutomaton.this, "Binarizing IRTG", "Binarizing IRTG",
-                                listener -> {
-                                    BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
-                                    InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
-                                    return binarized;
-                                },
-                                (binarized,time) -> {
-                                    GuiMain.log("Binarized IRTG, " + Util.formatTime(time));
+                        listener -> {
+                            BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
+                            InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
+                            return binarized;
+                        },
+                        (binarized, time) -> {
+                            GuiMain.log("Binarized IRTG, " + Util.formatTime(time));
 
-                                    JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
-                                    jta.setTitle("Binarization of " + getTitle());
-                                    jta.setIrtg(binarized);
-                                    jta.setParsingEnabled(true);
-                                    jta.pack();
-                                    jta.setVisible(true);
-                                });
-                
-                
-                
+                            JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
+                            jta.setTitle("Binarization of " + getTitle());
+                            jta.setIrtg(binarized);
+                            jta.setParsingEnabled(true);
+                            jta.pack();
+                            jta.setVisible(true);
+                        });
+
 //                new Thread() {
 //                    @Override
 //                    public void run() {
@@ -703,7 +651,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 //                                    jta.pack();
 //                                    jta.setVisible(true);
 //                                });
-
 //                        final ProgressBarDialog pb = new ProgressBarDialog("Binarizing IRTG", max, JTreeAutomaton.this, false);
 //                        pb.setVisible(true);
 //

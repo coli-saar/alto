@@ -5,6 +5,7 @@
 package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
+import static de.up.ling.irtg.util.GuiUtils.showError;
 import de.up.ling.irtg.util.Util;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
@@ -50,7 +51,7 @@ public class MaxentWeightsFrame extends JTableDialog<JTreeAutomaton.FtWeight> {
                 ((MaximumEntropyIrtg) irtg).writeWeights(new FileWriter(file));
                 GuiMain.log("Saved maxent weights, " + Util.formatTimeSince(start));
             } catch (IOException e) {
-                GuiMain.showError(this, "An error occurred while saving the maxent weights to " + file.getName() + ": " + e.getMessage());
+                showError(this, "An error occurred while saving the maxent weights to " + file.getName() + ": " + e.getMessage());
             }
         }
     }

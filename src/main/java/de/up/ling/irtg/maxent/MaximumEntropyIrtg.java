@@ -3,11 +3,11 @@ package de.up.ling.irtg.maxent;
 import cc.mallet.optimize.LimitedMemoryBFGS;
 import cc.mallet.optimize.Optimizable;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.ProgressListener;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
+import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import java.io.*;
 import java.util.HashMap;
@@ -487,7 +487,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     }
 
                     if( listener != null ) {
-                        listener.update(iteration, instanceNum++);
+                        listener.accept(instanceNum++, n, null);                        
+//                        listener.update(iteration, instanceNum++);
                     }
                 }
 

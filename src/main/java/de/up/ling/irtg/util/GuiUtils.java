@@ -5,9 +5,9 @@
  */
 package de.up.ling.irtg.util;
 
-import de.up.ling.irtg.gui.ProgressBarDialog;
+import java.awt.Component;
 import java.awt.Frame;
-import java.util.function.Consumer;
+import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
 
@@ -15,7 +15,8 @@ import javax.swing.SwingUtilities;
  *
  * @author koller
  */
-public class GuiUtils {    
+public class GuiUtils {
+
     /**
      * Execute this on the EDT.
      *
@@ -27,7 +28,7 @@ public class GuiUtils {
      * @param andThen
      */
     public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, ValueAndTimeConsumer<E> andThen) {
-        final ProgressBarDialog progressBar = new ProgressBarDialog(description, 10000, parent, false);
+        final ProgressBarDialog progressBar = new ProgressBarDialog(description, parent, false);
         final JProgressBar bar = progressBar.getProgressBar();
         progressBar.getProgressBar().setStringPainted(true);
         progressBar.setVisible(true);
@@ -38,10 +39,10 @@ public class GuiUtils {
                 bar.setValue(currentValue);
 
                 if (string == null) {
-                    if( maxValue == 0 ) {
+                    if (maxValue == 0) {
                         bar.setString("");
                     } else {
-                        bar.setString(currentValue*100/maxValue + "%");
+                        bar.setString(currentValue * 100 / maxValue + "%");
                     }
                 } else {
                     bar.setString(string);
@@ -51,16 +52,25 @@ public class GuiUtils {
 
         new Thread(() -> {
             long start = System.nanoTime();
-            final E result = worker.compute(listener);
-            final long time = System.nanoTime() - start;
 
-            SwingUtilities.invokeLater(() -> {
-                progressBar.setVisible(false);
+            try {
+                final E result = worker.compute(listener);
+                final long time = System.nanoTime() - start;
 
-                if (result != null) {
+                SwingUtilities.invokeLater(() -> {
                     andThen.accept(result, time);
-                }
-            });
+                });
+            } catch (Exception e) {
+                showError(parent, e.getClass().getSimpleName() + ": " + e.getMessage());
+            } finally {
+                progressBar.setVisible(false);
+            }
         }).start();
+    }
+
+    static public void showError(Component parent, String error) {
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
+        });
     }
 }

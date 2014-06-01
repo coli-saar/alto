@@ -52,7 +52,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         } catch(ParseException e) {
             throw e;
         } catch (RecognitionException e) {
-            throw new ParseException(e.getCause());
+            throw new ParseException(e.getMessage());
         }
     }
     

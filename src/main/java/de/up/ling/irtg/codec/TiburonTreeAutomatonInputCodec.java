@@ -70,7 +70,7 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
 
             return automaton;
         } catch (RecognitionException e) {
-            throw new ParseException(e.getCause());
+            throw new ParseException(e.getMessage());
         }
     }
 

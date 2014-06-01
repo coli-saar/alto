@@ -14,9 +14,9 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
+import static de.up.ling.irtg.util.GuiUtils.showError;
 import de.up.ling.irtg.util.ValueAndTimeConsumer;
 import de.up.ling.irtg.util.ProgressBarWorker;
-import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.irtg.util.Util;
 import java.awt.Component;
 import java.awt.Window;
@@ -31,14 +31,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -419,8 +417,6 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         try {
             if (file != null) {
-//                long start = System.nanoTime();
-
                 String ext = Util.getFilenameExtension(file.getName());
                 final InputCodec<T> codec = InputCodec.getInputCodecByExtension(ext);
 
@@ -431,49 +427,17 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 } else {
                     String title = "Reading " + codec.getMetadata().description() + " ...";
                     ProgressBarWorker<LoadingResult<T>> worker = listener -> {
-//                        long start = System.nanoTime();
-
-                        try {
-                            codec.setProgressListener(listener);
-                            T result = codec.read(new FileInputStream(file));
-//                            String time = formatTimeSince(start);
-                            return new LoadingResult<>(result, file);
-                        } catch (Exception ex) {
-                            Logger.getLogger(GuiMain.class.getName()).log(Level.SEVERE, null, ex);
-                            return null;
+                        codec.setProgressListener(listener);
+                        T result = codec.read(new FileInputStream(file));
+                        
+                        if( result == null ) {
+                            throw new Exception("Error while reading from file " + file.getName());
                         }
+                        
+                        return new LoadingResult<>(result, file);
                     };
 
                     GuiUtils.withProgressBar(app, title, title, worker, andThen);
-
-//                    codec.showProgressDialog(app);
-//
-//                    System.err.println("0");
-//
-//                    new Thread(() -> {
-//                        try {
-//                            System.err.println("1");
-//                            T obj = codec.read(new FileInputStream(file));
-//                            System.err.println("2");
-//                            SwingUtilities.invokeLater(() -> {
-//                                codec.hideProgressDialog();
-//                            });
-//
-//                            System.err.println("3");
-//                            if (obj != null) {
-//                                String time = formatTimeSince(start);
-//                                System.err.println("4");
-//                                andThen.accept(new LoadingResult<>(obj, file, time));
-//                            }
-//                        } catch (Exception ex) {
-//                            Logger.getLogger(GuiMain.class.getName()).log(Level.SEVERE, null, ex);
-//                        }
-//
-//                    }).start();
-//                    T obj = codec.read(new FileInputStream(file));
-//                    codec.hideProgressDialog();
-//                    String time = formatTimeSince(start);
-//                    return new LoadingResult<>(obj, file, time);
                 }
             }
         } catch (Exception e) {
@@ -496,14 +460,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         });
     }
 
-    static public void showError(Component parent, String error) {
-        JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-    
-
     public static void loadAutomaton(Component parent) {
-        loadObject(TreeAutomaton.class, "tree automaton", parent, (result,time) -> {
+        loadObject(TreeAutomaton.class, "tree automaton", parent, (result, time) -> {
             log("Loaded tree automaton from " + result.filename.getName() + ", " + Util.formatTime(time));
             TreeAutomaton auto = result.object;
 
