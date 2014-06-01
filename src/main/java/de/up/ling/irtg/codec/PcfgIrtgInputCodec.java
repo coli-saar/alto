@@ -84,7 +84,7 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         int numRules = pcfg.pcfg_rule().size();
         int ruleIndex = 1;
         for (PcfgAsIrtgParser.Pcfg_ruleContext ruleContext : pcfg.pcfg_rule()) {
-            updateProgressDialog(ruleIndex, numRules, "Processing rules: " + (ruleIndex++) + "/" + numRules);
+            notifyProgressListener(ruleIndex, numRules, "Processing rules: " + (ruleIndex++) + "/" + numRules);
             rule(ruleContext, rawRules, nonterminals);
         }
 
@@ -92,7 +92,7 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         numRules = rawRules.size();
         ruleIndex = 1;
         for (RawRule rule : rawRules) {
-            updateProgressDialog(ruleIndex, numRules, "Creating rules: " + (ruleIndex++) + "/" + numRules);
+            notifyProgressListener(ruleIndex, numRules, "Creating rules: " + (ruleIndex++) + "/" + numRules);
             List<String> homLeaves = new ArrayList<>();
             List<String> rhsNonterminals = new ArrayList();
             int i = 1;
