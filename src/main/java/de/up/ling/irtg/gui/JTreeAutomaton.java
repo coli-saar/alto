@@ -628,57 +628,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                             jta.pack();
                             jta.setVisible(true);
                         });
-
-//                new Thread() {
-//                    @Override
-//                    public void run() {
-//                        int max = (numRules < Integer.MAX_VALUE) ? ((int) numRules) : Integer.MAX_VALUE;
-//
-//                        GuiUtils.withProgressBar(JTreeAutomaton.this, "Binarizing IRTG", "Binarizing IRTG",
-//                                listener -> {
-//                                    BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
-//                                    InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
-//                                    return binarized;
-//                                },
-//                                presult -> {
-//                                    InterpretedTreeAutomaton binarized = presult.result;
-//                                    GuiMain.log("Binarized IRTG, " + Util.formatTime(presult.time));
-//
-//                                    JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
-//                                    jta.setTitle("Binarization of " + getTitle());
-//                                    jta.setIrtg(binarized);
-//                                    jta.setParsingEnabled(true);
-//                                    jta.pack();
-//                                    jta.setVisible(true);
-//                                });
-//                        final ProgressBarDialog pb = new ProgressBarDialog("Binarizing IRTG", max, JTreeAutomaton.this, false);
-//                        pb.setVisible(true);
-//
-//                        ProgressListener listener = new ProgressListener() {
-//                            public void update(int iterationNumber, int instanceNumber) {
-//                                pb.update(iterationNumber);
-//                            }
-//                        };
-//
-//                        long startTime = System.nanoTime();
-//                        BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
-//                        final InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
-//                        GuiMain.log("Binarized IRTG, " + Util.formatTimeSince(startTime));
-//
-//                        SwingUtilities.invokeLater(new Runnable() {
-//                            public void run() {
-//                                pb.setVisible(false);
-//
-//                                JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
-//                                jta.setTitle("Binarization of " + getTitle());
-//                                jta.setIrtg(binarized);
-//                                jta.setParsingEnabled(true);
-//                                jta.pack();
-//                                jta.setVisible(true);
-//                            }
-//                        });
-//                    }
-//                }.start();
             }
         }
 

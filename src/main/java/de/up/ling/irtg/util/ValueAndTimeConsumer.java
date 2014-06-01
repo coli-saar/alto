@@ -10,6 +10,7 @@ package de.up.ling.irtg.util;
  *
  * @author koller
  */
+@FunctionalInterface
 public interface ValueAndTimeConsumer<E> {
     public void accept(E result, long time);    
 }

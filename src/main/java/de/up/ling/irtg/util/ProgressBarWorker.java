@@ -10,6 +10,7 @@ package de.up.ling.irtg.util;
  *
  * @author koller
  */
+@FunctionalInterface
 public interface ProgressBarWorker<E> {
     public E compute(ProgressListener dialog) throws Exception;    
 }
