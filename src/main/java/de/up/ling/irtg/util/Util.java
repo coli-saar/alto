@@ -7,8 +7,10 @@ package de.up.ling.irtg.util;
 
 import de.up.ling.tree.Tree;
 import java.util.List;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -32,6 +34,23 @@ public class Util {
         }
     }
 
+    public static Tree<String> makeTreeWithArities(Tree<String> tree) {
+        if (tree.getChildren().isEmpty()) {
+            if (tree.getLabel().startsWith("?")) {
+                return tree;
+            } else {
+                return Tree.create(tree.getLabel() + "_0");
+            }
+        } else {
+            List<Tree<String>> mappedChildren = mapList(tree.getChildren(), Util::makeTreeWithArities);
+            return Tree.create(tree.getLabel() + "_" + mappedChildren.size(), mappedChildren);
+        }
+    }
+
+    public static <I, O> List<O> mapList(List<I> values, Function<I, O> fn) {
+        return values.stream().map(fn).collect(Collectors.toList());
+    }
+
     public static String getFilenameExtension(String fileName) {
         String extension = "";
 
@@ -39,10 +58,10 @@ public class Util {
         if (i > 0) {
             extension = fileName.substring(i + 1);
         }
-        
+
         return extension;
     }
-    
+
     public static String stripExtension(String filename) {
         Pattern p = Pattern.compile("(.*)\\.[^.]*");
         Matcher m = p.matcher(filename);
@@ -53,7 +72,7 @@ public class Util {
             return filename;
         }
     }
-    
+
     public static String formatTime(long timeInNs) {
         if (timeInNs < 1000) {
             return timeInNs + " ns";
@@ -74,8 +93,8 @@ public class Util {
             return buf.toString();
         }
     }
-    
+
     public static String formatTimeSince(long start) {
-        return formatTime(System.nanoTime()-start);
+        return formatTime(System.nanoTime() - start);
     }
 }

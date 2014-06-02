@@ -8,9 +8,11 @@ package de.up.ling.irtg.codec;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.algebra.TreeWithAritiesAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.Util;
+import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,20 +64,23 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             PcfgAsIrtgParser.PcfgContext result = p.pcfg();
 
             ConcreteTreeAutomaton<String> auto = new ConcreteTreeAutomaton<>();
-            StringAlgebra algebra = new StringAlgebra();
-            Homomorphism hom = new Homomorphism(auto.getSignature(), algebra.getSignature());
+            StringAlgebra stringAlgebra = new StringAlgebra();
+            Homomorphism stringHom = new Homomorphism(auto.getSignature(), stringAlgebra.getSignature());
+            TreeWithAritiesAlgebra treeAlgebra = new TreeWithAritiesAlgebra();
+            Homomorphism treeHom = new Homomorphism(auto.getSignature(), treeAlgebra.getSignature());
 
-            pcfg(result, auto, hom);
+            pcfg(result, auto, stringHom, treeHom);
 
             InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(auto);
-            irtg.addInterpretation("string", new Interpretation(algebra, hom));
+            irtg.addInterpretation("string", new Interpretation(stringAlgebra, stringHom));
+            irtg.addInterpretation("tree", new Interpretation(treeAlgebra, treeHom));
             return irtg;
         } catch (RecognitionException e) {
             throw new ParseException(e.getMessage());
         } 
     }
 
-    private void pcfg(PcfgAsIrtgParser.PcfgContext pcfg, ConcreteTreeAutomaton<String> auto, Homomorphism hom) {
+    private void pcfg(PcfgAsIrtgParser.PcfgContext pcfg, ConcreteTreeAutomaton<String> auto, Homomorphism stringHom, Homomorphism treeHom) {
         String startsym = name(pcfg.startsymbol().name());
         Set<String> nonterminals = new HashSet<>();
         List<RawRule> rawRules = new ArrayList<>();
@@ -108,7 +113,8 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
             String terminal = gensym("r");
             auto.addRule(auto.createRule(rule.lhs, terminal, rhsNonterminals, rule.weight));
-            hom.add(terminal, Util.makeBinaryTree("*", homLeaves));
+            stringHom.add(terminal, Util.makeBinaryTree("*", homLeaves));
+            treeHom.add(terminal, Util.makeTreeWithArities(Tree.create(rule.lhs, Util.mapList(homLeaves, Tree::create))));
         }
 
         auto.addFinalState(auto.addState(startsym));
