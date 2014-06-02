@@ -525,32 +525,31 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }//GEN-LAST:event_miTrainMLActionPerformed
 
     private void miTrainEMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainEMActionPerformed
-        final Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
-
-        GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing EM training ...",
-                listener -> {
-                    irtg.trainEM(corpus, listener);
-                    return null;
-                },
-                (result, time) -> {
-                    GuiMain.log("Performed EM training, " + Util.formatTime(time));
-                    updateWeights();
-                });
+        GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
+            GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing EM training ...",
+                    listener -> {
+                        irtg.trainEM(corpus, listener);
+                        return null;
+                    },
+                    (result, time) -> {
+                        GuiMain.log("Performed EM training, " + Util.formatTime(time));
+                        updateWeights();
+                    });
+        });
     }//GEN-LAST:event_miTrainEMActionPerformed
 
     private void miTrainVBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainVBActionPerformed
-        final Corpus corpus = GuiMain.loadUnannotatedCorpus(irtg, JTreeAutomaton.this);
-
-        GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing VB training ...",
-                listener -> {
-                    irtg.trainVB(corpus, listener);
-                    return null;
-                },
-                (result, time) -> {
-                    GuiMain.log("Performed VB training, " + Util.formatTime(time));
-                    updateWeights();
-                });
-
+        GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
+            GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing VB training ...",
+                    listener -> {
+                        irtg.trainVB(corpus, listener);
+                        return null;
+                    },
+                    (result, time) -> {
+                        GuiMain.log("Performed VB training, " + Util.formatTime(time));
+                        updateWeights();
+                    });
+        });
     }//GEN-LAST:event_miTrainVBActionPerformed
 
     private void miLoadMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadMaxentWeightsActionPerformed

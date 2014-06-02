@@ -18,6 +18,7 @@ import static de.up.ling.irtg.util.GuiUtils.showError;
 import de.up.ling.irtg.util.ValueAndTimeConsumer;
 import de.up.ling.irtg.util.ProgressBarWorker;
 import de.up.ling.irtg.util.Util;
+import static de.up.ling.irtg.util.Util.stripExtension;
 import java.awt.Component;
 import java.awt.Window;
 import java.io.File;
@@ -25,16 +26,13 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.function.Consumer;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
@@ -273,17 +271,6 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         return null;
     }
 
-    private static String stripExtension(String filename) {
-        Pattern p = Pattern.compile("(.*)\\.[^.]*");
-        Matcher m = p.matcher(filename);
-
-        if (m.matches()) {
-            return m.group(1);
-        } else {
-            return filename;
-        }
-    }
-
     public static void loadMaxentWeights(final MaximumEntropyIrtg irtg, final JFrame parent) {
         final File file = chooseFile("Open maxent weights", new FileNameExtensionFilter("Maxent weights (*.txt)", "txt"), parent);
 
@@ -299,53 +286,40 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    public static Corpus loadUnannotatedCorpus(final InterpretedTreeAutomaton irtg, final JFrame parent) {
+    public static void withLoadedUnannotatedCorpus(final InterpretedTreeAutomaton irtg, final JFrame parent, final Consumer<Corpus> andThen) {
         final File file = chooseFile("Open unannotated corpus", new FileNameExtensionFilter("Unannotated corpora (*.txt)", "txt"), parent);
-        ChartComputationProgressBar pb = null;
-        FileOutputStream fos = null;
 
-        try {
-            if (file != null) {
+        if (file != null) {
+            try {
                 long start = System.nanoTime();
                 final Corpus corpus = irtg.readCorpus(new FileReader(file));
                 log("Read unannotated corpus from " + file.getName() + ", " + Util.formatTimeSince(start));
 
                 File chartsFile = chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);
 
-                // if user didn't select precomputed charts, compute them now
-                if (chartsFile == null) {
-                    chartsFile = new File(file.getParent(), stripExtension(file.getName()) + "-charts.zip");
-                    fos = new FileOutputStream(chartsFile);
-
-                    pb = new ChartComputationProgressBar(parent, false, corpus.getNumberOfInstances());
-                    pb.setVisible(true);
-                    start = System.nanoTime();
-                    Charts.computeCharts(corpus, irtg, fos, pb);
-                    log("Wrote parse charts to " + chartsFile + ", " + Util.formatTimeSince(start));
-                    pb.setVisible(false);
+                if (chartsFile != null) {
+                    Charts charts = new Charts(new FileInputStreamSupplier(chartsFile));
+                    corpus.attachCharts(charts);
+                    andThen.accept(corpus);
+                } else {
+                    GuiUtils.withProgressBar(parent, "Chart computation", "Computing charts ...",
+                            listener -> {
+                                File f = new File(file.getParent(), stripExtension(file.getName()) + "-charts.zip");
+                                OutputStream fos = new FileOutputStream(f);
+                                Charts.computeCharts(corpus, irtg, fos, listener);
+                                return f;
+                            },
+                            (f, time) -> {
+                                log("Wrote parse charts to " + f + ", " + Util.formatTime(time));
+                                Charts charts = new Charts(new FileInputStreamSupplier(f));
+                                corpus.attachCharts(charts);
+                                andThen.accept(corpus);
+                            });
                 }
-
-                Charts charts = new Charts(new FileInputStreamSupplier(chartsFile));
-                corpus.attachCharts(charts);
-
-                return corpus;
-            }
-        } catch (Exception e) {
-            if (pb != null) {
-                pb.setVisible(false);
-            }
-
-            showError(parent, "An error occurred while reading the corpus " + file.getName() + ": " + e.getMessage());
-        } finally {
-            if (fos != null) {
-                try {
-                    fos.close();
-                } catch (IOException ex) {
-                }
+            } catch (Exception e) {
+                showError(parent, "An error occurred while reading the corpus " + file.getName() + ": " + e.getMessage());
             }
         }
-
-        return null;
     }
 
     private static File chooseFile(String title, FileFilter filter, Component parent) {
@@ -394,19 +368,16 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     private static class LoadingResult<T> {
-
         T object;
         File filename;
-//        String readingTime;
 
         public LoadingResult(T object, File filename) {
             this.object = object;
             this.filename = filename;
-//            this.readingTime = readingTime;
         }
     }
 
-    private static <T> void loadObject(Class<T> objectClass, String objectDescription, Component parent, ValueAndTimeConsumer<LoadingResult<T>> andThen) {
+    private static <T> void withLoadedObject(Class<T> objectClass, String objectDescription, Component parent, ValueAndTimeConsumer<LoadingResult<T>> andThen) {
         List<FileFilter> filters = new ArrayList<>();
 
         for (InputCodec ic : InputCodec.getInputCodecs(objectClass)) {
@@ -429,11 +400,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                     ProgressBarWorker<LoadingResult<T>> worker = listener -> {
                         codec.setProgressListener(listener);
                         T result = codec.read(new FileInputStream(file));
-                        
-                        if( result == null ) {
+
+                        if (result == null) {
                             throw new Exception("Error while reading from file " + file.getName());
                         }
-                        
+
                         return new LoadingResult<>(result, file);
                     };
 
@@ -446,7 +417,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void loadIrtg(Component parent) {
-        loadObject(InterpretedTreeAutomaton.class, "IRTG", parent, (result, time) -> {
+        withLoadedObject(InterpretedTreeAutomaton.class, "IRTG", parent, (result, time) -> {
             log("Loaded IRTG from " + result.filename.getName() + ", " + Util.formatTime(time));
 
             InterpretedTreeAutomaton irtg = result.object;
@@ -461,7 +432,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void loadAutomaton(Component parent) {
-        loadObject(TreeAutomaton.class, "tree automaton", parent, (result, time) -> {
+        withLoadedObject(TreeAutomaton.class, "tree automaton", parent, (result, time) -> {
             log("Loaded tree automaton from " + result.filename.getName() + ", " + Util.formatTime(time));
             TreeAutomaton auto = result.object;
 

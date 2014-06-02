@@ -7,6 +7,8 @@ package de.up.ling.irtg.util;
 
 import de.up.ling.tree.Tree;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -39,6 +41,17 @@ public class Util {
         }
         
         return extension;
+    }
+    
+    public static String stripExtension(String filename) {
+        Pattern p = Pattern.compile("(.*)\\.[^.]*");
+        Matcher m = p.matcher(filename);
+
+        if (m.matches()) {
+            return m.group(1);
+        } else {
+            return filename;
+        }
     }
     
     public static String formatTime(long timeInNs) {
