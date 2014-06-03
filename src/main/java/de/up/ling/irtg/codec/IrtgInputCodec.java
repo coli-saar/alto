@@ -66,12 +66,17 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 featureDecl(c);
             }
 
+            int numRules = context.irtg_rule().size();
+            int i = 1;
             for (IrtgParser.Irtg_ruleContext c : context.irtg_rule()) {
                 String label = autoRule(c.auto_rule());
 
                 for (IrtgParser.Hom_ruleContext hc : c.hom_rule()) {
                     homRule(label, hc);
                 }
+                
+                notifyProgressListener(i, numRules, "Read " + i + "/" + numRules + " rules");
+                i++;
             }
 
             InterpretedTreeAutomaton ret = features.isEmpty() ? new InterpretedTreeAutomaton(automaton) : new MaximumEntropyIrtg(automaton, features);
