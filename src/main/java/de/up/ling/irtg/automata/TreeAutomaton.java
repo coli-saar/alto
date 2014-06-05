@@ -99,13 +99,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     private IntTrie<Int2ObjectMap<Set<Rule>>> explicitRulesBottomUp;        // children -> label -> set(rules)
     private List<Rule> unprocessedUpdatesForBottomUp;
-    
+
     private TopDownRuleIndex explicitRulesTopDown;
 
     protected IntSet finalStates;                                             // final states, subset of allStates
     protected IntSet allStates;                                                 // subset of stateInterner.keySet() that actually occurs in this automaton; allows for sharing interners across automata to preserve state IDs
     protected boolean isExplicit;
     private Int2ObjectMap<List<Iterable<Rule>>> rulesForRhsState;             // state -> all rules that have this state as child
+
     protected Signature signature;
     private Predicate<Rule> filter = null;
     protected List<Rule> unprocessedUpdatesForRulesForRhsState;
@@ -120,12 +121,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //               return new Int2ObjectOpenHashMap<IntTrie>();
 //           }
 //        };
-                
+
         explicitRulesBottomUp = new IntTrie<Int2ObjectMap<Set<Rule>>>();
-        
+
         explicitRulesTopDown = new MapTopDownIndex();
-        
-        
+
         unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
         unprocessedUpdatesForBottomUp = new ArrayList<>();
 
@@ -138,7 +138,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         stateInterner = new Interner<State>();
 
     }
-    
+
     /**
      * Returns the numeric ID for the given state. If the automaton does not
      * have a state of the given name, the method returns 0.
@@ -240,12 +240,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     // TODO Test this function!
     public void foreachRuleBottomUpForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {
-        labelIds.forEach(labelId -> { 
+        labelIds.forEach(labelId -> {
             if (signature.getArity(labelId) == childStateSets.size()) {
                 FastutilUtils.forEachIntCartesian(childStateSets, childStates -> {
                     getRulesBottomUp(signatureMapper.remapForward(labelId), childStates).forEach(fn);
                 });
-            } 
+            }
         });
     }
 
@@ -424,7 +424,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     protected void storeRule(Rule rule) {
         // adding states unnecessary, was done in creating Rule object
-        
+
         // Both for bottom-up and for top-down indexing, we only store rules
         // in a to-do list for efficiency reasons. They are transferred to the
         // proper data structures by processNewTopDownRules and processNewBottomUpRules.
@@ -436,13 +436,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
         rulesForRhsState = null;
     }
 
-    
 //
 //    protected Int2ObjectMap<Int2ObjectMap<Collection<Rule>>> getExplicitRulesTopDown() {
 //        processNewTopDownRules();
 //        return (Int2ObjectMap) explicitRulesTopDown;
 //    }
-
     private void processNewBottomUpRules() {
         if (!unprocessedUpdatesForBottomUp.isEmpty()) {
             unprocessedUpdatesForBottomUp.forEach(rule -> {
@@ -452,11 +450,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     explicitIsBottomUpDeterministic = false;
                 }
             });
-            
+
             unprocessedUpdatesForBottomUp.clear();
         }
     }
-    
+
     protected IntTrie<Int2ObjectMap<Collection<Rule>>> getExplicitRulesBottomUp() {
         processNewBottomUpRules();
         return (IntTrie) explicitRulesBottomUp;
@@ -578,6 +576,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected Iterable<Rule> getRulesTopDownFromExplicit(int labelId, int parentState) {
         return explicitRulesTopDown.getRules(labelId, parentState);
     }
+    
+    public Iterable<Rule> getRulesForRhsState(int rhsState) {
+        processNewRulesForRhs();
+        
+        List<Iterable<Rule>> val = rulesForRhsState.get(rhsState);
+        if( val == null ) {
+            return Collections.EMPTY_LIST;
+        } else {
+            return Iterables.concat(val);
+        }    
+    }
 
     /**
      * Returns the set of all rules of this automaton. This is done by
@@ -595,7 +604,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         getExplicitRulesBottomUp().foreach(entry -> {
             ruleSets.addAll(entry.values());
         });
-        
+
         return Iterables.concat(ruleSets);
     }
 
@@ -1010,7 +1019,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return new UniversalAutomaton(getSignature()).intersect(this).toString();
     }
 
-    
     /**
      * Computes all rules in this automaton and stores them in the cache. This
      * only makes a difference for lazy automata, in which rules are only
@@ -1862,7 +1870,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             visitor.visit(q, rulesTopDown);
         }
     }
-    
+
     public <E> Int2ObjectMap<E> evaluateInSemiring2(final Semiring<E> semiring, final RuleEvaluator<E> evaluator) {
         final Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<E>();
 
@@ -1960,7 +1968,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
-    
+
     /**
      * Evaluates all states of the automaton bottom-up in a semiring. The
      * evaluation of a state is the semiring sum of semiring zero plus the
