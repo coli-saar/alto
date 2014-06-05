@@ -16,6 +16,7 @@ import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.automata.condensed.CondensedBottomUpIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
@@ -1176,6 +1177,16 @@ public abstract class TreeAutomaton<State> implements Serializable {
         TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
         ret.makeAllRulesExplicit();
         return ret;
+    }
+    
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensedBottomUp(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedBottomUpIntersectionAutomaton<>(this, other, signatureMapper);
+        ret.makeAllRulesExplicit();
+        return ret;
+    }
+    
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensedBottomUp(CondensedTreeAutomaton<OtherState> other) {
+        return intersectCondensedBottomUp(other, new IdentitySignatureMapper(signature));
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectViterbi(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {

@@ -70,7 +70,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     abstract protected void addAllOutputRules();
     
     @FunctionalInterface
-    protected static interface IntersectionCall {
+    public static interface IntersectionCall {
         public TreeAutomaton intersect(TreeAutomaton left, CondensedTreeAutomaton right);
     }
     

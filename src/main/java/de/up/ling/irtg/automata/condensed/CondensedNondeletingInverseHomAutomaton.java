@@ -159,7 +159,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     
     // Reverse function of getLabelSetID. Shold be used by a CondensedRule Object.
     @Override
-    protected IntSet getLabelsForID(int labelSetID) {
+    public IntSet getLabelsForID(int labelSetID) {
         return hom.getLabelSetByLabelSetID(labelSetID);
     }
 
