@@ -24,6 +24,7 @@ import java.util.ArrayList;
  *
  * @author koller
  */
+@CodecMetadata(name = "template-irtg", description = "Template IRTG", extension = "tirtg", type = TemplateInterpretedTreeAutomaton.class)
 public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAutomaton> {
 
     private TemplateInterpretedTreeAutomaton tirtg;
