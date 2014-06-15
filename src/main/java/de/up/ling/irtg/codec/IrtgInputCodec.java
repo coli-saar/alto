@@ -22,8 +22,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
@@ -153,18 +155,26 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         hom.add(label, rhs);
     }
-
+    
     private List<String> statelist(IrtgParser.State_listContext rule_args) {
-        List<String> ret = new ArrayList<String>();
-
-        if (rule_args != null) {
-            for (IrtgParser.StateContext sc : rule_args.state()) {
-                ret.add(state(sc));
-            }
-        }
-
-        return ret;
+        return CodecUtilities.processList(rule_args, lc -> lc.state(), this::state);
     }
+    
+    
+//    public static <I,O> List<O> processList()
+    
+//
+//    private List<String> statelist(IrtgParser.State_listContext rule_args) {
+//        List<String> ret = new ArrayList<String>();
+//
+//        if (rule_args != null) {
+//            for (IrtgParser.StateContext sc : rule_args.state()) {
+//                ret.add(state(sc));
+//            }
+//        }
+//
+//        return ret;
+//    }
 
     private Tree<String> term(IrtgParser.TermContext t) {
         if (t instanceof IrtgParser.VARIABLE_TERMContext) {

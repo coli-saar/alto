@@ -4,11 +4,9 @@
  */
 package de.up.ling.irtg.algebra;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Lazy;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -16,13 +14,10 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 /**
  * An algebra of sets. The elements of this algebra are relations (of arbitrary
@@ -58,18 +53,22 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     private static final String MEMBER = "member_";
     private static final String TOP = "T";
     private static final String[] SPECIAL_STRINGS = {PROJECT, INTERSECT, UNIQ, MEMBER};
-    private Map<String, Set<List<String>>> atomicInterpretations;
-    private int maxArity;
-    private Set<String> allIndividuals;
-    private Set<List<String>> allIndividualsAsTuples;
+    
+    private FirstOrderModel model;
+    
+//    private Map<String, Set<List<String>>> atomicInterpretations;
+//    private int maxArity;
+//    private Set<String> allIndividuals;
+//    private Set<List<String>> allIndividualsAsTuples;
     private Lazy<IntSet> allStates = null;
 
     public SetAlgebra() {
-        this.atomicInterpretations = null;
-        maxArity = 0;
-
-        allIndividuals = new HashSet<String>();
-        allIndividualsAsTuples = new HashSet<List<String>>();
+        this.model = null;
+//        this.atomicInterpretations = null;
+//        maxArity = 0;
+//
+//        allIndividuals = new HashSet<String>();
+//        allIndividualsAsTuples = new HashSet<List<String>>();
         allStates = null;
     }
 
@@ -106,11 +105,11 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
                     allStates = new IntOpenHashSet();
 
                     // states = are all subsets of U^0, U^1, ..., U^maxarity
-                    for (int i = 0; i < maxArity; i++) {
+                    for (int i = 0; i < model.getMaxArity(); i++) {
                         List<Set<String>> manySets = new ArrayList<>();
 
                         for (int j = 0; j < i; j++) {
-                            manySets.add(allIndividuals);
+                            manySets.add(model.getUniverse());
                         }
 
                         Set<List<String>> cartesian = Sets.cartesianProduct(manySets);
@@ -145,86 +144,26 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
      */
     @Override
     public void readOptions(Reader optionReader) throws Exception {
-        String optionString = StringTools.slurp(optionReader);
-        Map<String, Set<List<String>>> atomicInterpretations = new HashMap<String, Set<List<String>>>();
-
-        if (!optionString.trim().equals("")) {
-
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readValue(optionString, JsonNode.class);
-
-            if (!root.isObject()) {
-                throw new Exception("Invalid universe description: should be a map");
-            } else {
-                Iterator<String> preds = root.fieldNames();
-
-                while (preds.hasNext()) {
-                    String pred = preds.next();
-                    Set<List<String>> tuples = new HashSet<List<String>>();
-                    JsonNode child = root.get(pred);
-
-                    if (!child.isArray()) {
-                        throw new Exception("Invalid universe description: Entry '" + pred + "' should be a list.");
-                    } else {
-                        int childIndex = 0;
-                        for (JsonNode tuple : child) {
-                            List<String> tupleElements = new ArrayList<String>();
-                            childIndex++;
-
-                            if (!tuple.isArray()) {
-                                throw new Exception("Invalid universe description: tuple " + childIndex + " under '" + pred + "' should be a list.");
-                            } else {
-                                for (JsonNode tupleEl : tuple) {
-                                    tupleElements.add(tupleEl.textValue());
-                                }
-                            }
-
-                            tuples.add(tupleElements);
-                        }
-                    }
-
-                    atomicInterpretations.put(pred, tuples);
-                }
-            }
-        }
-
-        setAtomicInterpretations(atomicInterpretations);
+        model = FirstOrderModel.read(optionReader);
     }
 
     public final void setAtomicInterpretations(Map<String, Set<List<String>>> atomicInterpretations) {
-        this.atomicInterpretations = atomicInterpretations;
-        maxArity = 0;
+        model.setAtomicInterpretations(atomicInterpretations);
         allStates = null;
-
-        allIndividuals.clear();
-        allIndividualsAsTuples.clear();
-
-        for (Set<List<String>> sls : atomicInterpretations.values()) {
-            for (List<String> ls : sls) {
-                allIndividuals.addAll(ls);
-                maxArity = Math.max(maxArity, ls.size());
-
-                for (String x : ls) {
-                    List<String> tuple = new ArrayList<String>();
-                    tuple.add(x);
-                    allIndividualsAsTuples.add(tuple);
-                }
-            }
-        }
     }
 
     /**
      * @return the atomicInterpretations
      */
-    public Map<String, Set<List<String>>> getAtomicInterpretations() {
-        return atomicInterpretations;
-    }
+//    public Map<String, Set<List<String>>> getAtomicInterpretations() {
+//        return atomicInterpretations;
+//    }
 
     protected Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) throws NoModelException {
         Set<List<String>> ret = null;
 
-        if (atomicInterpretations == null) {
-            throw new NoModelException("SetAlgebra has no atomic interpretations yet.");
+        if (model == null) {
+            throw new NoModelException("SetAlgebra has no model yet.");
         }
 
         if (label.startsWith(PROJECT)) {
@@ -236,9 +175,9 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
         } else if (label.startsWith(MEMBER)) {
             ret = member(childrenValues.get(0), arg(label));
         } else if (label.equals(TOP)) {
-            ret = allIndividualsAsTuples;
+            ret = model.getUniverseAsTuples();
         } else {
-            ret = atomicInterpretations.get(label);
+            ret = model.getInterpretation(label);
         }
 
         return ret;

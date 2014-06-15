@@ -6,10 +6,16 @@
 
 package de.up.ling.irtg.codec;
 
+import static de.up.ling.irtg.algebra.TagTreeAlgebra.C;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.util.Util;
+import de.up.ling.tree.Tree;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 
 /**
@@ -53,5 +59,36 @@ public class CodecUtilities {
     
     public String gensym(String prefix) {
         return prefix + (gensymNext++);
+    }
+    
+    public static <I,C extends ParserRuleContext, O> List<O> processList(C context, Function<C,List<I>> extractList, Function<I,O> map) {
+        List<O> ret = new ArrayList<>();
+        
+        if( context != null ) {
+            for( I x : extractList.apply(context)) {
+                ret.add(map.apply(x));
+            }
+        }
+        
+        return ret;
+    }
+    
+    public static <C extends ParserRuleContext> double weight(C weight, Function<C,String> extractStr) {
+        if( weight == null ) {
+            return 1;
+        } else {
+            return Double.parseDouble(CodecUtilities.stripOuterChars(extractStr.apply(weight)));
+        }
+    }
+    
+    public static <O, C extends ParserRuleContext> Tree<O> processTree(C context, Function<C,O> label, Function<C, List<C>> children) {
+        List<C> cChildren = children.apply(context);
+        List<Tree<O>> retChildren = Collections.EMPTY_LIST;
+        
+        if( cChildren != null ) {
+            retChildren = Util.mapList(children.apply(context), x -> processTree(x, label, children));
+        }
+         
+        return Tree.create(label.apply(context), retChildren);
     }
 }

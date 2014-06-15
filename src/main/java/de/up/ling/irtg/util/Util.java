@@ -97,4 +97,13 @@ public class Util {
     public static String formatTimeSince(long start) {
         return formatTime(System.nanoTime() - start);
     }
+    
+    public static interface BottomUpTreeVisitor<L,V> {
+        public V combine(Tree<L> node, List<V> childValues);
+    }
+    
+    public static <L,V> V dfs(Tree<L> tree, BottomUpTreeVisitor<L,V> visitor) {
+        List<V> childValues = mapList(tree.getChildren(), u -> dfs(u, visitor));
+        return visitor.combine(tree, childValues);
+    }
 }
