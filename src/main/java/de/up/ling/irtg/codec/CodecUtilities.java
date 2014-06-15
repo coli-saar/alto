@@ -8,9 +8,12 @@ package de.up.ling.irtg.codec;
 
 import static de.up.ling.irtg.algebra.TagTreeAlgebra.C;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -91,4 +94,15 @@ public class CodecUtilities {
          
         return Tree.create(label.apply(context), retChildren);
     }
+    
+    public static Constructor<FeatureFunction> findFeatureConstructor(String className, int n) throws ClassNotFoundException, NoSuchMethodException {
+        Class<FeatureFunction> cl = (Class<FeatureFunction>) Class.forName(className);
+
+        Class[] args = new Class[n];
+        Arrays.fill(args, String.class);
+
+        Constructor<FeatureFunction> con = cl.getConstructor(args);
+        return con;
+    }
+
 }

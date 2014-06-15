@@ -10,6 +10,7 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import static de.up.ling.irtg.codec.CodecUtilities.findFeatureConstructor;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
@@ -22,10 +23,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
@@ -159,22 +158,6 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private List<String> statelist(IrtgParser.State_listContext rule_args) {
         return CodecUtilities.processList(rule_args, lc -> lc.state(), this::state);
     }
-    
-    
-//    public static <I,O> List<O> processList()
-    
-//
-//    private List<String> statelist(IrtgParser.State_listContext rule_args) {
-//        List<String> ret = new ArrayList<String>();
-//
-//        if (rule_args != null) {
-//            for (IrtgParser.StateContext sc : rule_args.state()) {
-//                ret.add(state(sc));
-//            }
-//        }
-//
-//        return ret;
-//    }
 
     private Tree<String> term(IrtgParser.TermContext t) {
         if (t instanceof IrtgParser.VARIABLE_TERMContext) {
@@ -219,14 +202,5 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
-    private static Constructor<FeatureFunction> findFeatureConstructor(String className, int n) throws ClassNotFoundException, NoSuchMethodException {
-        Class<FeatureFunction> cl = (Class<FeatureFunction>) Class.forName(className);
-
-        Class[] args = new Class[n];
-        Arrays.fill(args, String.class);
-
-        Constructor<FeatureFunction> con = cl.getConstructor(args);
-        return con;
-    }
-
+    
 }

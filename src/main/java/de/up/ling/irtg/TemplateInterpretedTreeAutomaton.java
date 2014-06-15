@@ -5,18 +5,19 @@
  */
 package de.up.ling.irtg;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ListMultimap;
 import de.saar.basic.CartesianIterator;
-import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import static de.up.ling.irtg.codec.CodecUtilities.findFeatureConstructor;
+import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.maxent.FeatureFunction;
+import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
-import de.up.ling.tree.TreeVisitor;
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,28 +31,32 @@ import java.util.Set;
 public class TemplateInterpretedTreeAutomaton {
 
     private List<TemplateRule> ruleTemplates;
-//    private ListMultimap<String, Pair<String, Tree<String>>> homTemplates;
     private Map<String, String> algebraClasses;
+    private List<FeatureDeclaration> features;
 
     public TemplateInterpretedTreeAutomaton() {
         ruleTemplates = new ArrayList<>();
-//        homTemplates = ArrayListMultimap.create();
         algebraClasses = new HashMap<>();
+        features = new ArrayList<FeatureDeclaration>();
     }
 
     public void addRuleTemplate(TemplateRule trule) {
         ruleTemplates.add(trule);
     }
 
-//    public void addHomTemplate(String interpretation, String label, Tree<String> rhs) {
-//        homTemplates.put(interpretation, new Pair(label, rhs));
-//    }
+    public void addFeatureDeclaration(String id, String featureClass, List<String> arguments) {
+        FeatureDeclaration decl = new FeatureDeclaration();
+        decl.id = id;
+        decl.featureClass = featureClass;
+        decl.arguments = arguments;
+        features.add(decl);
+    }
 
     public void addAlgebraClass(String interpretation, String className) {
         algebraClasses.put(interpretation, className);
     }
 
-    public InterpretedTreeAutomaton instantiate(FirstOrderModel model) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+    public InterpretedTreeAutomaton instantiate(FirstOrderModel model) throws ClassNotFoundException, InstantiationException, IllegalAccessException, ParseException {
         ConcreteTreeAutomaton<String> auto = new ConcreteTreeAutomaton<>();
         Map<String, Interpretation> interps = new HashMap<>();
 
@@ -73,21 +78,15 @@ public class TemplateInterpretedTreeAutomaton {
                 if (trule.lhsIsFinal) {
                     auto.addFinalState(rule.getParent());
                 }
-                
-                for( String interp : trule.hom.keySet() ) {
+
+                for (String interp : trule.hom.keySet()) {
                     interps.get(interp).getHomomorphism().add(label, instantiateTerm(trule.hom.get(interp), variableAssignment));
                 }
-
-//                for (String interp : homTemplates.keySet()) {
-//                    for (Pair<String, Tree<String>> homPair : homTemplates.get(interp)) {
-//                        interps.get(interp).getHomomorphism().add(homPair.left, homPair.right);
-//                    }
-//                }
             });
         }
 
         // combine into IRTG
-        InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(auto);
+        InterpretedTreeAutomaton irtg = features.isEmpty() ? new InterpretedTreeAutomaton(auto) : new MaximumEntropyIrtg(auto, makeFeatureMap(features));
         irtg.addAllInterpretations(interps);
 
         return irtg;
@@ -131,16 +130,37 @@ public class TemplateInterpretedTreeAutomaton {
         return ret;
     }
 
-    private Tree<String> instantiateTerm(Tree<String> term, Map<String,String> variableAssignment) {
+    private Tree<String> instantiateTerm(Tree<String> term, Map<String, String> variableAssignment) {
         return Util.dfs(term, (node, children) -> Tree.create(instantiate(node.getLabel(), variableAssignment), children));
+    }
+
+    private Map<String, FeatureFunction> makeFeatureMap(List<FeatureDeclaration> features) throws ParseException {
+        Map<String, FeatureFunction> ret = new HashMap<>();
+
+        for (FeatureDeclaration ft : features) {
+            try {
+                Constructor<FeatureFunction> con = findFeatureConstructor(ft.featureClass, ft.arguments.size());
+
+                String[] args = new String[ft.arguments.size()];
+                ft.arguments.toArray(args);
+
+                FeatureFunction feature = con.newInstance(args);
+                ret.put(ft.id, feature);
+            } catch (Exception e) {
+                throw new ParseException("Could not instantiate FeatureFunction class " + ft.featureClass + " for feature " + ft.id + ": " + e.toString());
+            }
+        }
+
+        return ret;
     }
 
     private static interface RuleConsumer {
 
-        void accept(String parent, String label, List<String> children, double weight, Map<String,String> variableAssignment);
+        void accept(String parent, String label, List<String> children, double weight, Map<String, String> variableAssignment);
     }
 
     public static class TemplateRule {
+
         public List<String> variables;
         public Guard guard;
         public String lhs;
@@ -148,7 +168,7 @@ public class TemplateInterpretedTreeAutomaton {
         public boolean lhsIsFinal;
         public double weight;
         public List<String> rhs;
-        public Map<String,Tree<String>> hom;
+        public Map<String, Tree<String>> hom;
 
         public TemplateRule() {
             variables = new ArrayList<>();
@@ -238,6 +258,13 @@ public class TemplateInterpretedTreeAutomaton {
         public String toString() {
             return "T";
         }
+    }
+
+    private static class FeatureDeclaration {
+
+        public String id;
+        public String featureClass;
+        public List<String> arguments;
     }
 
     @Override

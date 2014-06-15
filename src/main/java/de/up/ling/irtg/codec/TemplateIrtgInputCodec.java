@@ -56,6 +56,13 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
             tirtg.addAlgebraClass(id, classname);
         }
 
+        for (Feature_declContext c : context.feature_decl()) {
+            String id = c.name(0).getText();
+            String classname = c.name(1).getText();
+            List<String> arguments = CodecUtilities.processList(c, x -> x.state_list().state(), x -> name(x.name()));
+            tirtg.addFeatureDeclaration(id, classname, arguments);
+        }
+
         int numRules = context.template_irtg_rule().size();
         int i = 1;
         for (TemplateIrtgParser.Template_irtg_ruleContext c : context.template_irtg_rule()) {
@@ -67,7 +74,7 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
             } else if (c.irtg_rule() != null) {
                 processRule(c.irtg_rule(), trule);
             }
-            
+
             tirtg.addRuleTemplate(trule);
 
             notifyProgressListener(i, numRules, "Read " + i + "/" + numRules + " rules");
@@ -86,16 +93,16 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
     private void processRule(TemplateIrtgParser.Irtg_ruleContext irtgRule, TemplateInterpretedTreeAutomaton.TemplateRule trule) {
         // process automaton rule
         Auto_ruleContext autoRule = irtgRule.auto_rule();
-        
+
         trule.lhs = name(autoRule.state().name());
         trule.rhs = Util.mapList(autoRule.state_list().state(), x -> name(x.name()));
         trule.label = name(autoRule.name());
-        
-        if( autoRule.state().FIN_MARK() != null ) {
+
+        if (autoRule.state().FIN_MARK() != null) {
             trule.lhsIsFinal = true;
         }
-        
-        if( autoRule.weight() != null ) {
+
+        if (autoRule.weight() != null) {
             trule.weight = CodecUtilities.weight(autoRule.weight(), x -> x.getText());
         }
 
@@ -106,7 +113,6 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
             trule.hom.put(interp, rhs);
         }
     }
-    
 
     private static void processGuard(TemplateIrtgParser.GuardContext guard, TemplateInterpretedTreeAutomaton.TemplateRule trule) throws ParseException {
         List<String> variables = CodecUtilities.processList(guard.name_list(), nl -> nl.name(), TemplateIrtgInputCodec::name);
