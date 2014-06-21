@@ -11,6 +11,7 @@ import de.up.ling.irtg.automata._
 import de.up.ling.irtg.hom._
 import de.up.ling.irtg.signature._
 import de.up.ling.irtg.corpus._
+import de.up.ling.irtg.codec._
 import de.up.ling.tree._
 import de.saar.basic._
 import de.up.ling.irtg.util.TestingTools._

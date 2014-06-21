@@ -23,7 +23,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 @CodecMetadata(name = "auto", description = "Tree automata", extension = "auto", type = TreeAutomaton.class)
 public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
 
-    private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
+    private ConcreteTreeAutomaton<String> automaton = null;
 
     @Override
     public TreeAutomaton read(InputStream is) throws ParseException, IOException {
@@ -31,6 +31,8 @@ public class TreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
         TreeAutomatonParser p = new TreeAutomatonParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
+        
+        automaton = new ConcreteTreeAutomaton<>();
 
         try {
             TreeAutomatonParser.FtaContext result = p.fta();

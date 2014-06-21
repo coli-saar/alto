@@ -48,6 +48,8 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
         TiburonTreeAutomatonParser p = new TiburonTreeAutomatonParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
+        
+        automaton = new ConcreteTreeAutomaton<String>();
 
         try {
             TiburonTreeAutomatonParser.FtaContext result = p.fta();

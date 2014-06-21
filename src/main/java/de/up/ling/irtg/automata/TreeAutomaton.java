@@ -59,6 +59,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -858,6 +859,51 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         return ret;
+    }
+    
+    /**
+     * Generates a random tree from the language of this tree automaton.
+     * The probability of a tree is the product of the probabilities of the
+     * rules that were used to build it. The probability for the rule A -> f(B1,...,Bn)
+     * is the weight of that rule, divided by the sum of all weights for rules
+     * with left-hand side A. If the automaton has multiple final states,
+     * one of these is chosen with uniform probability.
+     * 
+     * @return 
+     */
+    public Tree<String> getRandomTree() {
+        Random rnd = new Random();
+        int finalState = getFinalStates().toIntArray()[rnd.nextInt(getFinalStates().size())];
+        return getRandomTree(finalState, rnd);
+    }
+    
+    private Tree<String> getRandomTree(int state, Random rnd) {
+        List<Rule> rulesHere = new ArrayList<>();
+        double totalWeight = 0;
+        
+        for( Rule r : getRulesTopDown(state)) {
+            rulesHere.add(r);
+            totalWeight += r.getWeight();
+        }
+        
+        double selectWeight = rnd.nextDouble() * totalWeight;
+        double cumulativeWeight = 0;
+        
+        for( int i = 0; i < rulesHere.size(); i++ ) {
+            Rule rule = rulesHere.get(i);
+            cumulativeWeight += rule.getWeight();
+            
+            if( cumulativeWeight >= selectWeight ) {
+                List<Tree<String>> subtrees = new ArrayList<>();
+                for( int j = 0; j < rule.getArity(); j++ ) {
+                    subtrees.add(getRandomTree(rule.getChildren()[j], rnd));
+                }
+                return Tree.create(rule.getLabel(this), subtrees);
+            }
+        }
+        
+        // should be unreachable
+        return null;
     }
 
     /**

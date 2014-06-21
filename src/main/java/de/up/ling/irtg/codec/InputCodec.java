@@ -7,7 +7,9 @@ package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.util.ProgressListener;
+import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -30,6 +32,11 @@ public abstract class InputCodec<E> {
 
     public E read(String s) throws ParseException, IOException {
         return read(new ByteArrayInputStream(s.getBytes()));
+    }
+    
+    public static Object readFromFile(String filename) throws ParseException, IOException {
+        InputCodec codec = getInputCodecByExtension(Util.getFilenameExtension(filename));
+        return codec.read(new FileInputStream(filename));
     }
 
     public CodecMetadata getMetadata() {

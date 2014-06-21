@@ -45,6 +45,11 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         IrtgParser p = new IrtgParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
+        
+        automaton = new ConcreteTreeAutomaton<String>();
+        homomorphisms = new HashMap<String, Homomorphism>();
+        interpretations = new HashMap<String, Interpretation>();
+        features = new HashMap<String, FeatureFunction>();
 
         try {
             IrtgParser.IrtgContext result = p.irtg();

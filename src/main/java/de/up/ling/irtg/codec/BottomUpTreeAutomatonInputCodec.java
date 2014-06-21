@@ -51,6 +51,8 @@ public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
         BottomUpTreeAutomatonParser p = new BottomUpTreeAutomatonParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
+        
+        automaton = new ConcreteTreeAutomaton<String>();
 
         try {
             BottomUpTreeAutomatonParser.FtaContext result = p.fta();
