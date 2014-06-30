@@ -7,16 +7,20 @@ package de.up.ling.irtg.gui;
 import com.bric.window.WindowList;
 import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
+import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.GuiUtils;
 import static de.up.ling.irtg.util.GuiUtils.showError;
 import de.up.ling.irtg.util.ValueAndTimeConsumer;
 import de.up.ling.irtg.util.ProgressBarWorker;
+import de.up.ling.irtg.util.TextInputDialog;
 import de.up.ling.irtg.util.Util;
 import static de.up.ling.irtg.util.Util.stripExtension;
 import java.awt.Component;
@@ -28,11 +32,14 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
@@ -89,6 +96,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuItem6 = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         jMenuItem4 = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
@@ -123,6 +131,14 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             }
         });
         jMenu1.add(jMenuItem2);
+
+        jMenuItem6.setText("Load Template IRTG ...");
+        jMenuItem6.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem6ActionPerformed(evt);
+            }
+        });
+        jMenu1.add(jMenuItem6);
         jMenu1.add(jSeparator1);
 
         jMenuItem4.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
@@ -199,6 +215,10 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
         showDecompositionDialog(this);
     }//GEN-LAST:event_jMenuItem5ActionPerformed
+
+    private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed
+        loadTemplateIrtg(this);
+    }//GEN-LAST:event_jMenuItem6ActionPerformed
 
     public static void showDecompositionDialog(java.awt.Frame parent) {
         new DecompositionDialog(parent, true).setVisible(true);
@@ -368,6 +388,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     private static class LoadingResult<T> {
+
         T object;
         File filename;
 
@@ -414,6 +435,34 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         } catch (Exception e) {
             showError(parent, "An error occurred while attempting to parse " + file.getName() + ": " + e.getMessage());
         }
+    }
+
+    public static void loadTemplateIrtg(Component parent) {
+        withLoadedObject(TemplateInterpretedTreeAutomaton.class, "Template IRTG", parent, (result, time) -> {
+            log("Loaded Template IRTG from " + result.filename.getName() + ", " + Util.formatTime(time));
+
+            TemplateInterpretedTreeAutomaton tirtg = result.object;
+
+            String modelStr = TextInputDialog.display("Enter model", "Please enter the model over which the Template IRTG should be instantiated:", app);
+            if (modelStr != null) {
+                CpuTimeStopwatch sw = new CpuTimeStopwatch();
+                sw.record(0);
+                try {
+                    InterpretedTreeAutomaton irtg = tirtg.instantiate(FirstOrderModel.read(new StringReader(modelStr)));
+                    sw.record(1);
+                    log("Instantiated Template IRTG in " + Util.formatTime(sw.getTimeBefore(1)));
+
+                    JTreeAutomaton jta = new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg));
+                    jta.setTitle("Instance of template IRTG from " + result.filename.getName());
+                    jta.setIrtg(irtg);
+                    jta.setParsingEnabled(true);
+                    jta.pack();
+                    jta.setVisible(true);
+                } catch (Exception ex) {
+                    showError(parent, "An error occurred while instantiating the Template IRTG: " + ex.getMessage());
+                }
+            }
+        });
     }
 
     public static void loadIrtg(Component parent) {
@@ -489,6 +538,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
+    private javax.swing.JMenuItem jMenuItem6;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JTextArea log;
