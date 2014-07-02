@@ -155,7 +155,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     // sometimes pass, sometimes fail. :)
     @Test
     public void testBinarize() {
-        Logging.get().setLevel(Level.OFF);
+        Logging.get().setLevel(Level.ALL);
         Logging.setConsoleHandler();
         
         Logging.get().info("YYY");
@@ -175,6 +175,8 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
         assertBinaryGrammar(binarized)
+        
+        Logging.get().finer("binarized grammar:\n" + binarized)
         
         List bcd =  ["b", "c", "d"] //p(binarized, "left", "b c d")
         List dabc = ["d", "a", "b", "c"]  //p(binarized, "right", "d a b c")

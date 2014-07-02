@@ -67,6 +67,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         // Get only the labelsetIDs that we actual need according to the given automaton.
         Logging.get().fine("all rhs auto labels: " + rhsAutomaton.getAllLabels());
         Logging.get().fine(" rhs auto sig: " + rhsAutomaton.getSignature());
+        Logging.get().fine(" hom/condensed: " + hom.toStringCondensed());
         
         validLabelSetIDs = hom.getLabelsetIDsForTgtSymbols(rhsAutomaton.getAllLabels());
         

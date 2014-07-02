@@ -4,6 +4,8 @@
  */
 package de.up.ling.irtg.hom;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.signature.Signature;
@@ -14,6 +16,8 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -45,6 +49,8 @@ public class Homomorphism {
 
     private final Int2IntMap tgtIDToSrcID;    // maps an int that resolves to an string in the tgt signature
     // to an int, that resolves to the coresponding string in the src signature
+    
+    private final ListMultimap<Integer, IntSet> srcSymbolToRhsSymbols;
 
     private SignatureMapper signatureMapper;
 
@@ -58,6 +64,7 @@ public class Homomorphism {
         labelSetList = new ArrayList<IntSet>();
 
         tgtIDToSrcID = new Int2IntOpenHashMap();
+        srcSymbolToRhsSymbols = ArrayListMultimap.create();
 
         terms.add(null);
         labelSetList.add(null); // dummies to ensure that IDs start at 1 (so 0 can be used for "not found")
@@ -71,7 +78,7 @@ public class Homomorphism {
     }
 
     public void add(int label, Tree<HomomorphismSymbol> mapping) {
-        int termID;
+        int labelSetID;
 
         labelSetsDirty = true;
 
@@ -81,27 +88,42 @@ public class Homomorphism {
                 System.err.println("-> " + mapping + " is already known.");
             }
 
-            termID = termToId.get(mapping);  // get existing termID
-            addToLabelSet(label, termID);           // put the current label in the labelSet for this term.
-            labelToLabelSet.put(label, termID);     // Add the mapping from the label to the corresponding labelSet
+            labelSetID = termToId.get(mapping);  // get existing termID
+            addToLabelSet(label, labelSetID);           // put the current label in the labelSet for this term.
+            labelToLabelSet.put(label, labelSetID);     // Add the mapping from the label to the corresponding labelSet
         } else {
             // This is the first time we see the term 'mapping'
 
             terms.add(mapping);      // Create an ID for the term from the term interner
 
-            termID = createNewLabelSet(label);      // Create a new labelSet and the ID for it
-            termToId.put(mapping, termID);
+            labelSetID = createNewLabelSet(label);      // Create a new labelSet and the ID for it
+            termToId.put(mapping, labelSetID);
 
-            labelToLabelSet.put(label, termID);     // Map the used label to its labelSetID
+            labelToLabelSet.put(label, labelSetID);     // Map the used label to its labelSetID
         }
 
         // Save a link between the label of the current Tree to the ID in the target signature
-        int tgtID = HomomorphismSymbol.getHomSymbolToIntFunction().applyInt(mapping.getLabel());
-        tgtIDToSrcID.put(tgtID, termID);
-        
         // TODO!!! How do we know the original entry is not overwritten
         // by a different RHS term with the same root symbol?
+//        int tgtID = HomomorphismSymbol.getHomSymbolToIntFunction().applyInt(mapping.getLabel());
+//        tgtIDToSrcID.put(tgtID, labelSetID);
+    
+        IntSet allSymbols = new IntOpenHashSet();
+        collectAllSymbols(mapping, allSymbols);
+        srcSymbolToRhsSymbols.put(labelSetID, allSymbols);
+        // TODO - this might be inefficient, use better data structure
     }
+    
+    private void collectAllSymbols(Tree<HomomorphismSymbol> tree, IntSet allSymbols) {
+        if( tree.getLabel().isConstant() ) {
+            allSymbols.add(tree.getLabel().getValue());
+        }
+        
+        for( Tree<HomomorphismSymbol> sub : tree.getChildren() ) {
+            collectAllSymbols(sub, allSymbols);
+        }
+    }
+    
 
     private IntSet getLabelSet(int labelSetID) {
         IntSet ret = labelSetList.get(labelSetID);
@@ -227,14 +249,24 @@ public class Homomorphism {
         Logging.get().fine("src sig: " + getSourceSignature());
         Logging.get().fine("labelset IDs: " + labelSetList);
         
-        for (int tgtSymbol : tgtSymbols) {
-            ret.add(tgtIDToSrcID.get(tgtSymbol));
-        }
+//        for (int tgtSymbol : tgtSymbols) {
+//            ret.add(tgtIDToSrcID.get(tgtSymbol));
+//        }
+//        
+//        // labelSetIDs start at 1. If ret contains a 0, then that was
+//        // because one of the tgtSymbols was not mentioned in any RHS
+//        // of the homomorphism, and it should thus be removed.
+//        ret.remove(0);
         
-        // labelSetIDs start at 1. If ret contains a 0, then that was
-        // because one of the tgtSymbols was not mentioned in any RHS
-        // of the homomorphism, and it should thus be removed.
-        ret.remove(0);
+        outer:
+        for( int srcSymbol : srcSymbolToRhsSymbols.keySet() ) {
+            for( IntSet tgtSymSet : srcSymbolToRhsSymbols.get(srcSymbol)) {
+                if( tgtSymbols.containsAll(tgtSymSet)) {
+                    ret.add(srcSymbol);
+                    continue outer;
+                }
+            }
+        }
 
         return ret;
     }
