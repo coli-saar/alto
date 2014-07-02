@@ -63,7 +63,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     private Lazy<IntSet> allStates = null;
 
     public SetAlgebra() {
-        this.model = null;
+        this.model = new FirstOrderModel();
 //        this.atomicInterpretations = null;
 //        maxArity = 0;
 //
@@ -155,9 +155,9 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
     /**
      * @return the atomicInterpretations
      */
-//    public Map<String, Set<List<String>>> getAtomicInterpretations() {
-//        return atomicInterpretations;
-//    }
+    public Map<String, Set<List<String>>> getAtomicInterpretations() {
+        return model.getAtomicInterpretations();
+    }
 
     protected Set<List<String>> evaluate(String label, List<Set<List<String>>> childrenValues) throws NoModelException {
         Set<List<String>> ret = null;
