@@ -47,7 +47,7 @@ public class Homomorphism {
     private Object2IntMap<IntSet> labelSetToLabelID;  // maps a label set to its ID; only computed by need
     private boolean labelSetsDirty;                   // is current value of labelSetToLabelID valid?
 
-    private final Int2IntMap tgtIDToSrcID;    // maps an int that resolves to an string in the tgt signature
+//    private final Int2IntMap tgtIDToSrcID;    // maps an int that resolves to an string in the tgt signature
     // to an int, that resolves to the coresponding string in the src signature
     
     private final ListMultimap<Integer, IntSet> srcSymbolToRhsSymbols;
@@ -63,7 +63,7 @@ public class Homomorphism {
         labelToLabelSet = new Int2IntOpenHashMap();
         labelSetList = new ArrayList<IntSet>();
 
-        tgtIDToSrcID = new Int2IntOpenHashMap();
+//        tgtIDToSrcID = new Int2IntOpenHashMap();
         srcSymbolToRhsSymbols = ArrayListMultimap.create();
 
         terms.add(null);

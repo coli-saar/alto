@@ -54,7 +54,7 @@ class BkvBinarizerTest {
     
     @Test
     public void testStep4() {
-//        TreeAutomaton<String> binarizationsForVartree(TreeAutomaton<String> binarizations, Tree<String> commonVariableTree, Int2ObjectMap<IntSet> var) {
+        //        TreeAutomaton<String> binarizationsForVartree(TreeAutomaton<String> binarizations, Tree<String> commonVariableTree, Int2ObjectMap<IntSet> var) {
         TreeAutomaton binarizations = pa("q03! -> f(q01, q13)\n q03 -> f(q02, q23)\n q02 -> f(q01,q12)\n q13 -> f(q12, q23)\n q01 -> '?1'\n q12 -> '?2'\n q23 -> '?3'")
         Int2ObjectMap<IntSet> var = BkvBinarizer.computeVar(binarizations);
         Tree<String> vt = pt("f('0', g('1', '2'))");
@@ -116,7 +116,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
             ["inx0V-sleep_br0": "@('?2', VP1(@('?1',V0(sleep))))",
              "inx0V-sleep_br1": "S2('?1','?2')",
              "inx0V-sleep_br2": "@('?2','?1')"],
-        false)
+            false)
     }
     
     
@@ -154,12 +154,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     // Thus in case of bugs in the addRuleToHomomorphism, the test case might
     // sometimes pass, sometimes fail. :)
     @Test
-    public void testBinarize() {
-        Logging.get().setLevel(Level.ALL);
-        Logging.setConsoleHandler();
-        
-        Logging.get().info("YYY");
-        
+    public void testBinarize() {        
         InterpretedTreeAutomaton irtg = pi(BIN_IRTG);
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
@@ -176,15 +171,11 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
         assertBinaryGrammar(binarized)
         
-        Logging.get().finer("binarized grammar:\n" + binarized)
-        
         List bcd =  ["b", "c", "d"] //p(binarized, "left", "b c d")
         List dabc = ["d", "a", "b", "c"]  //p(binarized, "right", "d a b c")
         
-        assertDecoding(binarized, ["left": bcd, "right": dabc], "left", 2.0)    
-        System.err.println("oooo")
+        assertDecoding(binarized, ["left": bcd, "right": dabc], "left", 2.0)
         assertDecoding(binarized, ["left": bcd, "right": dabc], "right", 2.0)
-        System.err.println("pppp")
     }
     
     private Object p(InterpretedTreeAutomaton irtg, String interpretation, String value) {
@@ -244,8 +235,12 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         InterpretedTreeAutomaton b = bin.binarize(irtg, ["string": sa, "tree":ta])
     }
     
-    @Test
+//    @Test
     public void testBinarizeTree() {
+        Logging.get().setLevel(Level.OFF);
+        Logging.setConsoleHandler();
+
+        Logging.get().info("XXX")
         InterpretedTreeAutomaton irtg = pi(SYNC_IRTG);
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
@@ -270,7 +265,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     }
     
     // test grammar from ACL-13 paper
-   private static final String BIN_IRTG = """
+    private static final String BIN_IRTG = """
 interpretation left: de.up.ling.irtg.algebra.WideStringAlgebra
 interpretation right: de.up.ling.irtg.algebra.WideStringAlgebra
 
@@ -292,7 +287,7 @@ D -> r4
    """;
 
     
-   private static final String BIN_CONSTANT = """
+    private static final String BIN_CONSTANT = """
 interpretation left: de.up.ling.irtg.algebra.WideStringAlgebra
 
 A! -> r1 [2]
