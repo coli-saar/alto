@@ -237,7 +237,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     
 //    @Test
     public void testBinarizeTree() {
-        Logging.get().setLevel(Level.OFF);
+        Logging.get().setLevel(Level.ALL);
         Logging.setConsoleHandler();
 
         Logging.get().info("XXX")
@@ -256,6 +256,8 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
         assertBinaryGrammar(binarized)
+        
+        Logging.get().finest("Binarized grammar:\n" + binarized)
         
         List leftObj = ["a", "b", "c"] 
         Object rightObj = pt("f(d, a, g(c), b)")

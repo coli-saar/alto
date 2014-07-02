@@ -244,10 +244,10 @@ public class Homomorphism {
     public IntSet getLabelsetIDsForTgtSymbols(IntSet tgtSymbols) {
         IntSet ret = new IntOpenHashSet();
         
-        Logging.get().fine("tgt->src: " + tgtIDToSrcID);
-        Logging.get().fine("tgt sig: " + getTargetSignature());
-        Logging.get().fine("src sig: " + getSourceSignature());
-        Logging.get().fine("labelset IDs: " + labelSetList);
+//        Logging.get().fine("tgt->src: " + tgtIDToSrcID);
+//        Logging.get().fine("tgt sig: " + getTargetSignature());
+//        Logging.get().fine("src sig: " + getSourceSignature());
+//        Logging.get().fine("labelset IDs: " + labelSetList);
         
 //        for (int tgtSymbol : tgtSymbols) {
 //            ret.add(tgtIDToSrcID.get(tgtSymbol));
