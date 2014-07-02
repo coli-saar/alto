@@ -157,11 +157,11 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         unprocessedUpdatesForCRulesForRhsState.add(rule);
     }
 
-    abstract public Set<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates);
+    abstract public Iterable<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates);
 
-    abstract public Set<CondensedRule> getCondensedRulesTopDown(IntSet labelId, int parentState);
+    abstract public Iterable<CondensedRule> getCondensedRulesTopDown(IntSet labelId, int parentState);
 
-    protected Set<CondensedRule> getCondensedRuleBottomUpFromExplicit(IntSet labelIds, int[] childStates) {
+    protected Iterable<CondensedRule> getCondensedRuleBottomUpFromExplicit(IntSet labelIds, int[] childStates) {
         makeAllRulesCondensedExplicit();
         return ruleTrie.get(childStates, getLabelSetID(labelIds));
     }

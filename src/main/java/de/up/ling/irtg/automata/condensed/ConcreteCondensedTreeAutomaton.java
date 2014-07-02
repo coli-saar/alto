@@ -66,7 +66,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
     }
     
     @Override
-    public Set<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates) {
+    public Iterable<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates) {
         return getCondensedRuleBottomUpFromExplicit(labelId, childStates);
     }
 

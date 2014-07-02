@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import com.google.common.base.Function;
 import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
@@ -183,7 +182,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 //        unprocessedUpdatesForRulesForRhsState.add(rule);
         super.storeRule(rule);
     }
-
+    
     @Override
     public Set<Rule> getRulesBottomUp(int label, final int[] childStates) {
         if (debug) {
@@ -221,6 +220,13 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
             return ret;
         }
     }
+
+    @Override
+    public boolean supportsBottomUpQueries() {
+        return rhsAutomaton.supportsBottomUpQueries();
+    }
+    
+    
 
     private boolean useCachedRuleTopDownWithTermID(int termID, int parentState) {
         Int2ObjectMap<Set<Rule>> termIDToRules = parentToTermID.get(parentState);
@@ -264,6 +270,13 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
             return ret;
         }
     }
+
+    @Override
+    public boolean supportsTopDownQueries() {
+        return rhsAutomaton.supportsTopDownQueries(); 
+    }
+    
+    
     
     /*
     // note that this breaks the invariant that the state IDs in the interner

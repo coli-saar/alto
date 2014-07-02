@@ -4,14 +4,11 @@
  */
 package de.up.ling.irtg.automata;
 
-import com.google.common.base.Function;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
 /**

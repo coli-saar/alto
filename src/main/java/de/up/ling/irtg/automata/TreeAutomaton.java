@@ -1202,7 +1202,25 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return an automaton representing the intersected language.
      */
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(TreeAutomaton<OtherState> other) {
-        return intersectBottomUp(other);
+        return intersect(other, new IdentitySignatureMapper(signature));
+    }
+    
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(TreeAutomaton<OtherState> other, SignatureMapper mapper) {
+        if( other instanceof CondensedTreeAutomaton ) {
+            CondensedTreeAutomaton cOther = (CondensedTreeAutomaton) other;
+            
+            if( other.supportsTopDownQueries() ) {
+                return intersectCondensed(cOther, mapper);
+            } else {
+                return intersectCondensedBottomUp(cOther, mapper);
+            }
+        } else {
+            if( other.supportsBottomUpQueries() ) {
+                return intersectBottomUp(other);
+            } else {
+                throw new UnsupportedOperationException("Intersection with a non-condensed automaton requires bottom-up queries.");
+            }
+        }
     }
 
     /**
@@ -2579,6 +2597,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public Interner getStateInterner() {
         return stateInterner;
+    }
+    
+    public boolean supportsTopDownQueries() {
+        return true;
+    }
+    
+    public boolean supportsBottomUpQueries() {
+        return true;
     }
 }
 /**

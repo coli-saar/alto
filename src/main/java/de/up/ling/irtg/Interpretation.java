@@ -37,7 +37,18 @@ public class Interpretation<E> {
     }
     
     public TreeAutomaton parse(E object) {
-        return algebra.decompose(object).inverseHomomorphism(hom);
+        TreeAutomaton decompositionAutomaton = algebra.decompose(object);
+        
+        // It is much preferable to return a condensed automaton for the
+        // inverse homomorphism, if that is possible. However, the current
+        // implementation of CondensedNondeletingInverseHomAutomaton uses
+        // top-down queries to the decomp automaton, so this can only be
+        // used if that automaton actually supports such queries.
+        if( decompositionAutomaton.supportsTopDownQueries() ) {
+            return decompositionAutomaton.inverseCondensedHomomorphism(hom);
+        } else {
+            return decompositionAutomaton.inverseHomomorphism(hom);
+        }
     }
     
     public CondensedTreeAutomaton parseToCondensed(E object) {

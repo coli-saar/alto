@@ -15,7 +15,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -299,7 +298,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     }
 
     @Override
-    public Set<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates) {
+    public Iterable<CondensedRule> getCondensedRulesBottomUp(IntSet labelId, int[] childStates) {
         return getCondensedRuleBottomUpFromExplicit(labelId, childStates);
     }
 
@@ -307,6 +306,14 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     public Set<CondensedRule> getCondensedRulesTopDown(IntSet labelId, int parentState) {
         return getCondensedRulesTopDownFromExplicit(labelId, parentState);
     }
-    
-    
+
+    @Override
+    public boolean supportsBottomUpQueries() {
+        return rhsAutomaton.supportsTopDownQueries();
+    }
+
+    @Override
+    public boolean supportsTopDownQueries() {
+        return rhsAutomaton.supportsTopDownQueries();
+    }
 }

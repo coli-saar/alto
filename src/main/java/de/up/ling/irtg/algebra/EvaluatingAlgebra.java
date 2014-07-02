@@ -151,6 +151,11 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
         }
 
         @Override
+        public boolean supportsTopDownQueries() {
+            return false;
+        }
+
+        @Override
         public boolean isBottomUpDeterministic() {
             return true;
         }
