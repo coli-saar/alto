@@ -72,7 +72,8 @@ public class BkvBinarizer {
         // initialize output homs
         for (String interp : interpretationNames) {
             Homomorphism oldHom = irtg.getInterpretations().get(interp).getHomomorphism();
-            binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), oldHom.getTargetSignature()));
+//            binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), oldHom.getTargetSignature()));
+            binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), newAlgebras.get(interp).getSignature()));
         }
 
         int ruleNumber = 1;

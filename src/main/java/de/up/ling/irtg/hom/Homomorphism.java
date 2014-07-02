@@ -96,8 +96,11 @@ public class Homomorphism {
         }
 
         // Save a link between the label of the current Tree to the ID in the target signature
-        int tgtID = HomomorphismSymbol.getHomSymbolToIntFunction().apply(mapping.getLabel());
+        int tgtID = HomomorphismSymbol.getHomSymbolToIntFunction().applyInt(mapping.getLabel());
         tgtIDToSrcID.put(tgtID, termID);
+        
+        // TODO!!! How do we know the original entry is not overwritten
+        // by a different RHS term with the same root symbol?
     }
 
     private IntSet getLabelSet(int labelSetID) {
@@ -218,9 +221,20 @@ public class Homomorphism {
 
     public IntSet getLabelsetIDsForTgtSymbols(IntSet tgtSymbols) {
         IntSet ret = new IntOpenHashSet();
+        
+        Logging.get().fine("tgt->src: " + tgtIDToSrcID);
+        Logging.get().fine("tgt sig: " + getTargetSignature());
+        Logging.get().fine("src sig: " + getSourceSignature());
+        Logging.get().fine("labelset IDs: " + labelSetList);
+        
         for (int tgtSymbol : tgtSymbols) {
             ret.add(tgtIDToSrcID.get(tgtSymbol));
         }
+        
+        // labelSetIDs start at 1. If ret contains a 0, then that was
+        // because one of the tgtSymbols was not mentioned in any RHS
+        // of the homomorphism, and it should thus be removed.
+        ret.remove(0);
 
         return ret;
     }
@@ -302,10 +316,8 @@ public class Homomorphism {
     public String toStringCondensed() {
         StringBuilder buf = new StringBuilder();
         buf.append("Labelsets mapped to terms in Homomorphism:\n");
-        Logging.get().fine("labelSetList: ");
-        Logging.get().fine("  -> "+ labelSetList);
         
-        for (int labelSetID = 0; labelSetID < labelSetList.size(); labelSetID++) {
+        for (int labelSetID = 1; labelSetID < labelSetList.size(); labelSetID++) {
             StringBuilder labelSetStrings = new StringBuilder();
             labelSetStrings.append("{");
             for (int label : getLabelSetByLabelSetID(labelSetID)) {

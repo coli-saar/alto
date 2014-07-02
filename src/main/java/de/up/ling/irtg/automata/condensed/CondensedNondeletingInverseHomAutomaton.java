@@ -65,18 +65,18 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         };
         
         // Get only the labelsetIDs that we actual need according to the given automaton.
+        Logging.get().fine("all rhs auto labels: " + rhsAutomaton.getAllLabels());
+        Logging.get().fine(" rhs auto sig: " + rhsAutomaton.getSignature());
+        
         validLabelSetIDs = hom.getLabelsetIDsForTgtSymbols(rhsAutomaton.getAllLabels());
+        
+        Logging.get().fine("valid lsid: " + validLabelSetIDs);
+        
         stateToNewLabelSetIDs = new Int2ObjectOpenHashMap<IntSet>();
-        // Seperate between labelsetIDs that stand for symbols, wich resolve into trees with an arity of 0 and others.
+        
+        // Separate between labelsetIDs that stand for symbols, wich resolve into trees with an arity of 0 and others.
         for (int labelSetID : validLabelSetIDs) {
             Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
-            
-            if( rhs == null ) {
-                Logging.get().fine("Null rhs, hom=" + hom);
-                Logging.get().fine("hom/con=" + hom.toStringCondensed());
-                Logging.get().fine("lsid=" + labelSetID);
-                Logging.get().fine("hom(lsid)=" + hom.getLabelSetByLabelSetID(labelSetID));
-            }
           
             if (rhs.getMaximumArity() == 0) {                
                 // iterate over all states that can be reached buttom-up from the the rhs.

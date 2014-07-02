@@ -214,6 +214,8 @@ public class InterpretedTreeAutomaton {
             Logging.get().finest("Input parse: " + interpParse);
             
             ret = ret.intersect(interpParse);
+            
+            Logging.get().finest("Intersect: " + ret);
         }
 
         return ret.reduceTopDown();

@@ -93,7 +93,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         Logging.get().finest("Right signature: " + right.getSignature());
         
         Logging.get().finest("Left automaton:\n" + left);
-        Logging.get().finest("Right (condensed) automaton:\n" + right);
+        Logging.get().finest("Right (condensed) automaton:\n" + right.toStringCondensed());
     }
     
     // Intersecting the two automatons using a CKY algorithm
