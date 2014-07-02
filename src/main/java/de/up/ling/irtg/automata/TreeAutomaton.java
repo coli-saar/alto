@@ -34,6 +34,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.FunctionToInt;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
@@ -1210,12 +1211,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
             CondensedTreeAutomaton cOther = (CondensedTreeAutomaton) other;
             
             if( other.supportsTopDownQueries() ) {
+                Logging.get().fine("Using condensed intersection.");
                 return intersectCondensed(cOther, mapper);
             } else {
+                Logging.get().fine("Using condensed bottom-up intersection.");
                 return intersectCondensedBottomUp(cOther, mapper);
             }
         } else {
             if( other.supportsBottomUpQueries() ) {
+                Logging.get().fine("Using old-style bottom-up intersection.");
                 return intersectBottomUp(other);
             } else {
                 throw new UnsupportedOperationException("Intersection with a non-condensed automaton requires bottom-up queries.");

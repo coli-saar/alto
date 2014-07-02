@@ -18,6 +18,7 @@ import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.GuiUtils;
 import static de.up.ling.irtg.util.GuiUtils.showError;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ValueAndTimeConsumer;
 import de.up.ling.irtg.util.ProgressBarWorker;
 import de.up.ling.irtg.util.TextInputDialog;
@@ -38,8 +39,9 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
+import java.util.logging.Handler;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.logging.LogRecord;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.UIManager;
@@ -522,6 +524,28 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         application.addApplicationListener(guiMain);
         application.addPreferencesMenuItem();
         application.setEnabledPreferencesMenu(false);
+
+        // set up logging
+        Logging.setUp();
+        Logging.get().setLevel(Level.ALL);
+        
+        Logging.setHandler(new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                String str = getFormatter().format(record);
+                guiMain.log(str);
+            }
+
+            @Override
+            public void flush() {
+            }
+
+            @Override
+            public void close() throws SecurityException {
+            }
+        });
+        
+        Logging.get().info("hallo");
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {

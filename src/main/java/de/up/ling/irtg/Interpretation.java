@@ -9,6 +9,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 
 /**
@@ -45,8 +46,10 @@ public class Interpretation<E> {
         // top-down queries to the decomp automaton, so this can only be
         // used if that automaton actually supports such queries.
         if( decompositionAutomaton.supportsTopDownQueries() ) {
+            Logging.get().fine("Using condensed inverse hom automaton.");
             return decompositionAutomaton.inverseCondensedHomomorphism(hom);
         } else {
+            Logging.get().fine("Using explicit inverse hom automaton.");
             return decompositionAutomaton.inverseHomomorphism(hom);
         }
     }

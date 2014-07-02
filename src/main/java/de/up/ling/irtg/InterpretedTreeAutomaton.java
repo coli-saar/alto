@@ -12,7 +12,6 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.IrtgInputCodec;
@@ -59,7 +58,7 @@ public class InterpretedTreeAutomaton {
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;
-
+    
     /**
      * Constructs a new IRTG with the given derivation tree automaton.
      *
