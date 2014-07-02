@@ -9,6 +9,7 @@ import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.Lazy;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -301,6 +302,9 @@ public class Homomorphism {
     public String toStringCondensed() {
         StringBuilder buf = new StringBuilder();
         buf.append("Labelsets mapped to terms in Homomorphism:\n");
+        Logging.get().fine("labelSetList: ");
+        Logging.get().fine("  -> "+ labelSetList);
+        
         for (int labelSetID = 0; labelSetID < labelSetList.size(); labelSetID++) {
             StringBuilder labelSetStrings = new StringBuilder();
             labelSetStrings.append("{");

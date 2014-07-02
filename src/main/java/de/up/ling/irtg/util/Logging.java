@@ -18,44 +18,53 @@ import java.util.logging.Logger;
  * @author koller
  */
 public class Logging {
+
     private static Logger logger = null;
 
     /**
      * * Set up logging **
      */
     public static void setUp() {
-        LogManager logman = LogManager.getLogManager();
-        logger = Logger.getLogger(Logging.class.getName());
-        logger.setLevel(Level.OFF);
-        logger.setUseParentHandlers(false);
-    }
-    
-    public static Logger get() {
-        if( logger == null ) {
-            setUp();
+        if (logger == null) {
+            logger = Logger.getLogger(Logging.class.getName());
+            logger.setLevel(Level.OFF);
+            logger.setUseParentHandlers(false);
         }
-        
+    }
+
+    public static Logger get() {
+        setUp();
         return logger;
     }
-    
+
+    /**
+     * The level of the handler is set to the current level of the logger.
+     * Thus it is probably good practice to set the logger level first,
+     * and then set the handler.
+     * 
+     * @param handler 
+     */
     public static void setHandler(Handler handler) {
-        for( Handler h : logger.getHandlers() ) {
-            System.err.println("remove: " + h);
+        setUp();
+
+        for (Handler h : logger.getHandlers()) {
             logger.removeHandler(h);
         }
-        
+
         handler.setFormatter(new MyFormatter());
         logger.addHandler(handler);
+        handler.setLevel(logger.getLevel());
     }
-    
+
     public static void setConsoleHandler() {
         setHandler(new ConsoleHandler());
     }
 
     private static class MyFormatter extends Formatter {
+
         @Override
         public String format(LogRecord record) {
-            return record.getMessage();
+            return record.getMessage() + "\n";
         }
     }
 }

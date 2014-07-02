@@ -49,8 +49,9 @@ class InterpretedTreeAutomatonTest {
 
         List words = irtg.parseString("string", string);
 
-
+        System.err.println("XXX")
         TreeAutomaton chart = irtg.parseInputObjects(["string": words]);
+        System.err.println(chart)
         chart.makeAllRulesExplicit();
 
         assertEquals(new HashSet([pt("s(john,vp(watches,np(the,n(woman,pp(with,np(the,telescope))))))"),

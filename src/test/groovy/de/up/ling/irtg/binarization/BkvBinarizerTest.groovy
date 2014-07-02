@@ -17,10 +17,13 @@ import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.algebra.*
 import de.up.ling.irtg.signature.*
+import de.up.ling.irtg.util.*
+import java.util.logging.*
 import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
 import static de.up.ling.irtg.util.TestingTools.*;
 import it.unimi.dsi.fastutil.ints.*;
+
 
 /**
  *
@@ -152,6 +155,11 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     // sometimes pass, sometimes fail. :)
     @Test
     public void testBinarize() {
+        Logging.get().setLevel(Level.ALL);
+        Logging.setConsoleHandler();
+        
+        Logging.get().info("YYY");
+        
         InterpretedTreeAutomaton irtg = pi(BIN_IRTG);
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()

@@ -31,7 +31,7 @@ class TemplateInterpretedTreeAutomatonTest {
     public void testParse() {
         InputCodec<TemplateInterpretedTreeAutomaton> codec = new TemplateIrtgInputCodec();
         TemplateInterpretedTreeAutomaton tirtg = codec.read(TIRTG);
-        System.out.println(tirtg)
+//        System.out.println(tirtg)
     }
     
     @Test
@@ -41,7 +41,7 @@ class TemplateInterpretedTreeAutomatonTest {
         
         FirstOrderModel model = FirstOrderModel.read(new StringReader(MODEL));
         
-        System.out.println(tirtg.instantiate(model))
+//        System.out.println(tirtg.instantiate(model))
     }
     
     

@@ -22,6 +22,7 @@ import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -198,13 +199,20 @@ public class InterpretedTreeAutomaton {
      * @return
      */
     public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
+        Logging.get().fine("parseInputObjects: " + inputs);
+        
         TreeAutomaton ret = automaton;
 
         for (String interpName : inputs.keySet()) {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
+            
+            Logging.get().fine("Input: " + input);
 
             TreeAutomaton interpParse = interp.parse(input);
+            
+            Logging.get().finest("Input parse: " + interpParse);
+            
             ret = ret.intersect(interpParse);
         }
 

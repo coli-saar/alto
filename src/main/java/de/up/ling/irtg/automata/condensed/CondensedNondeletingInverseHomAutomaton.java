@@ -9,6 +9,7 @@ import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.FunctionToInt;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -50,6 +51,8 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         this.hom = hom;
         isCondensedExplicit = false;
         
+        rhsAutomaton.makeAllRulesExplicit();
+        
         labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
         
         this.stateInterner = rhsAutomaton.getStateInterner();
@@ -67,6 +70,13 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         // Seperate between labelsetIDs that stand for symbols, wich resolve into trees with an arity of 0 and others.
         for (int labelSetID : validLabelSetIDs) {
             Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
+            
+            if( rhs == null ) {
+                Logging.get().fine("Null rhs, hom=" + hom);
+                Logging.get().fine("hom/con=" + hom.toStringCondensed());
+                Logging.get().fine("lsid=" + labelSetID);
+                Logging.get().fine("hom(lsid)=" + hom.getLabelSetByLabelSetID(labelSetID));
+            }
           
             if (rhs.getMaximumArity() == 0) {                
                 // iterate over all states that can be reached buttom-up from the the rhs.
@@ -162,10 +172,11 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         return hom.getLabelSetByLabelSetID(labelSetID);
     }
 
+    @Override
     public void makeAllRulesCondensedExplicit() {
         if (!isCondensedExplicit) {
             
-            System.err.println("*** EXPLICIT ");
+//            System.err.println("*** EXPLICIT ");
             
 //            System.err.println("This  Signature:   \n" + getSignature().toString());
 //            System.err.println("Rhs  Signature:   \n" + rhsAutomaton.getSignature().toString());
