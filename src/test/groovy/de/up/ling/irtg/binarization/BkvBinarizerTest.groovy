@@ -153,9 +153,9 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     // Some of these are harder to synchronize with the homomorphism than others.
     // Thus in case of bugs in the addRuleToHomomorphism, the test case might
     // sometimes pass, sometimes fail. :)
-//    @Test
+    @Test
     public void testBinarize() {
-        Logging.get().setLevel(Level.NONE);
+        Logging.get().setLevel(Level.OFF);
         Logging.setConsoleHandler();
         
         Logging.get().info("YYY");
@@ -242,7 +242,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         InterpretedTreeAutomaton b = bin.binarize(irtg, ["string": sa, "tree":ta])
     }
     
-//    @Test
+    @Test
     public void testBinarizeTree() {
         InterpretedTreeAutomaton irtg = pi(SYNC_IRTG);
         
