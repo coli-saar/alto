@@ -32,8 +32,8 @@ import java.util.Set;
  * universe).</li>
  * <li>uniq_a(A) returns the set A (a subset of the universe) itself if A = {a};
  * otherwise it returns the empty set.</li>
- * <li>member_i(R,S) returns the set S if S is a subset of R; otherwise it
- * returns the empty set. </li>
+ * <li>member_a(A) returns the set {{a}} if {a} belongs to A;
+ * otherwise it returns the empty set.</li> 
  * <li>T returns the universe.</li>
  * </ul>
  *
@@ -44,7 +44,7 @@ import java.util.Set;
  *
  * @author koller
  */
-// (Nikos: subset_i is used for underspecification)
+
 public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
 
     private static final String PROJECT = "project_";
@@ -228,6 +228,7 @@ public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
      */
     private Set<List<String>> member(Set<List<String>> tupleSet, String value) {
         List<String> memberValue = new ArrayList<String>();
+        
         memberValue.add(value);
 
         Set<List<String>> ret = new HashSet<List<String>>();
