@@ -296,6 +296,14 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
 
         return ret;
     }
+    
+    /**
+     * Returns a string representation of this condensed automaton with
+     * all the individual rules spelled out.
+     */
+    public String toStringFull() {
+        return super.toString();
+    }
 
     /**
      * Returns a graphic representation of this Automaton that shows the actual
@@ -303,7 +311,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
      *
      * @return
      */
-    public String toStringCondensed() {
+    public String toString() {
         StringBuilder buf = new StringBuilder();
         for (CondensedRule cr : getCondensedRuleSet()) {
             buf.append(cr.toString(this)).append("\n");

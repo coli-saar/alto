@@ -16,8 +16,6 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
@@ -49,7 +47,6 @@ public class Homomorphism {
 
 //    private final Int2IntMap tgtIDToSrcID;    // maps an int that resolves to an string in the tgt signature
     // to an int, that resolves to the coresponding string in the src signature
-    
     private final ListMultimap<Integer, IntSet> srcSymbolToRhsSymbols;
 
     private SignatureMapper signatureMapper;
@@ -107,23 +104,21 @@ public class Homomorphism {
         // by a different RHS term with the same root symbol?
 //        int tgtID = HomomorphismSymbol.getHomSymbolToIntFunction().applyInt(mapping.getLabel());
 //        tgtIDToSrcID.put(tgtID, labelSetID);
-    
         IntSet allSymbols = new IntOpenHashSet();
         collectAllSymbols(mapping, allSymbols);
         srcSymbolToRhsSymbols.put(labelSetID, allSymbols);
         // TODO - this might be inefficient, use better data structure
     }
-    
+
     private void collectAllSymbols(Tree<HomomorphismSymbol> tree, IntSet allSymbols) {
-        if( tree.getLabel().isConstant() ) {
+        if (tree.getLabel().isConstant()) {
             allSymbols.add(tree.getLabel().getValue());
         }
-        
-        for( Tree<HomomorphismSymbol> sub : tree.getChildren() ) {
+
+        for (Tree<HomomorphismSymbol> sub : tree.getChildren()) {
             collectAllSymbols(sub, allSymbols);
         }
     }
-    
 
     private IntSet getLabelSet(int labelSetID) {
         IntSet ret = labelSetList.get(labelSetID);
@@ -243,12 +238,11 @@ public class Homomorphism {
 
     public IntSet getLabelsetIDsForTgtSymbols(IntSet tgtSymbols) {
         IntSet ret = new IntOpenHashSet();
-        
+
 //        Logging.get().fine("tgt->src: " + tgtIDToSrcID);
-//        Logging.get().fine("tgt sig: " + getTargetSignature());
-//        Logging.get().fine("src sig: " + getSourceSignature());
-//        Logging.get().fine("labelset IDs: " + labelSetList);
-        
+        Logging.get().fine("tgt sig: " + getTargetSignature());
+        Logging.get().fine("src sig: " + getSourceSignature());
+        Logging.get().fine("labelset IDs: " + labelSetList);
 //        for (int tgtSymbol : tgtSymbols) {
 //            ret.add(tgtIDToSrcID.get(tgtSymbol));
 //        }
@@ -257,13 +251,19 @@ public class Homomorphism {
 //        // because one of the tgtSymbols was not mentioned in any RHS
 //        // of the homomorphism, and it should thus be removed.
 //        ret.remove(0);
-        
+        Logging.get().fine("gLT, tgt = " + tgtSymbols);
+
         outer:
-        for( int srcSymbol : srcSymbolToRhsSymbols.keySet() ) {
-            for( IntSet tgtSymSet : srcSymbolToRhsSymbols.get(srcSymbol)) {
-                if( tgtSymbols.containsAll(tgtSymSet)) {
+        for (int srcSymbol : srcSymbolToRhsSymbols.keySet()) {
+            Logging.get().fine("  consider " + srcSymbol + " = " + srcSignature.resolveSymbolId(srcSymbol) + "; srcsym=" + srcSymbolToRhsSymbols.get(srcSymbol));
+
+            for (IntSet tgtSymSet : srcSymbolToRhsSymbols.get(srcSymbol)) {
+                if (tgtSymbols.containsAll(tgtSymSet)) {
+                    Logging.get().fine("  " + tgtSymSet + " contained in " + tgtSymSet);
                     ret.add(srcSymbol);
                     continue outer;
+                } else {
+                    Logging.get().fine("  " + tgtSymSet + " not contained in " + tgtSymbols);
                 }
             }
         }
@@ -348,10 +348,11 @@ public class Homomorphism {
     public String toStringCondensed() {
         StringBuilder buf = new StringBuilder();
         buf.append("Labelsets mapped to terms in Homomorphism:\n");
-        
+
         for (int labelSetID = 1; labelSetID < labelSetList.size(); labelSetID++) {
             StringBuilder labelSetStrings = new StringBuilder();
-            labelSetStrings.append("{");
+            labelSetStrings.append(labelSetID);
+            labelSetStrings.append(":{");
             for (int label : getLabelSetByLabelSetID(labelSetID)) {
                 labelSetStrings.append(srcSignature.resolveSymbolId(label)).append(",");
             }
@@ -474,22 +475,22 @@ public class Homomorphism {
         @Override
         public Boolean get() {
             for (int label : labelToLabelSet.keySet()) {
-            Tree<HomomorphismSymbol> rhs = Homomorphism.this.get(label);
-            Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
-            for (HomomorphismSymbol l : rhs.getLeafLabels()) {
-                if (l.isVariable()) {
-                    variables.add(l);
+                Tree<HomomorphismSymbol> rhs = Homomorphism.this.get(label);
+                Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
+                for (HomomorphismSymbol l : rhs.getLeafLabels()) {
+                    if (l.isVariable()) {
+                        variables.add(l);
+                    }
+                }
+
+                if (variables.size() < srcSignature.getArity((int) label)) {
+                    return false;
                 }
             }
 
-            if (variables.size() < srcSignature.getArity((int) label)) {
-                return false;
-            }
+            return true;
         }
 
-        return true;
-        }
-    
     });
 
     public boolean isNonDeleting() {

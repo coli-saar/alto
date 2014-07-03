@@ -211,7 +211,7 @@ public class InterpretedTreeAutomaton {
 
             TreeAutomaton interpParse = interp.parse(input);
             
-            Logging.get().finest("Input parse: " + interpParse);
+            Logging.get().finest("invhom(decomp): " + interpParse);
             
             ret = ret.intersect(interpParse);
             

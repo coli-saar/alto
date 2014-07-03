@@ -30,6 +30,14 @@ public class Signature implements Serializable {
         arities = new Int2IntOpenHashMap();
     }
     
+    public SignatureMapper getMapperTo(Signature other) {
+        if( equals(other)) {
+            return new IdentitySignatureMapper(this);
+        } else {
+            return new SignatureMapper(this, other);
+        }
+    }
+    
     public void clear() {
         interner.clear();
     }

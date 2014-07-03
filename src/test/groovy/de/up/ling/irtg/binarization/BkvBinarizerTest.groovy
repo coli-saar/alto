@@ -235,7 +235,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         InterpretedTreeAutomaton b = bin.binarize(irtg, ["string": sa, "tree":ta])
     }
     
-//    @Test
+    @Test
     public void testBinarizeTree() {
         Logging.get().setLevel(Level.ALL);
         Logging.setConsoleHandler();

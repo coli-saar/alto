@@ -8,6 +8,8 @@ import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
@@ -36,7 +38,8 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 
     private TreeAutomaton<State> rhsAutomaton;
     private Homomorphism hom;
-    private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
+    private SignatureMapper labelsRemap;
+//    private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
     private IntSet labelSetsWithVariables;  // stores all the other labelsets
     private IntSet validLabelSetIDs;
     private Int2ObjectMap<IntSet> stateToNewLabelSetIDs; // maps a parentstate that derives no children to the coresponding labelsetids
@@ -53,7 +56,9 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         
         rhsAutomaton.makeAllRulesExplicit();
         
-        labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
+        labelsRemap = hom.getTargetSignature().getMapperTo(rhsAutomaton.getSignature());
+        
+//        labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
         
         this.stateInterner = rhsAutomaton.getStateInterner();
         finalStates.addAll(rhsAutomaton.getFinalStates());
@@ -69,7 +74,10 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         Logging.get().fine(" rhs auto sig: " + rhsAutomaton.getSignature());
         Logging.get().fine(" hom/condensed: " + hom.toStringCondensed());
         
-        validLabelSetIDs = hom.getLabelsetIDsForTgtSymbols(rhsAutomaton.getAllLabels());
+        IntSet allRemappedLabels = new IntOpenHashSet();
+        FastutilUtils.forEach(rhsAutomaton.getAllLabels(), x -> allRemappedLabels.add(labelsRemap.remapBackward(x))); // map automaton symbol IDs to homomorphism symbol IDs
+        
+        validLabelSetIDs = hom.getLabelsetIDsForTgtSymbols(allRemappedLabels);
         
         Logging.get().fine("valid lsid: " + validLabelSetIDs);
         
@@ -224,7 +232,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 
         switch (rhs.getLabel().getType()) {
             case CONSTANT:
-                for (Rule rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap[rhs.getLabel().getValue()], state)) {
+                for (Rule rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap.remapForward(rhs.getLabel().getValue()), state)) {
                     List<Set<List<Integer>>> childrenSubstitutions = new ArrayList<Set<List<Integer>>>(); // len = #children
 
                     for (int i = 0; i < rhsRule.getArity(); i++) {
