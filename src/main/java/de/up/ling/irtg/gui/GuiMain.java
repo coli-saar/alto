@@ -500,7 +500,12 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 synchronized (x) {
-                    x.log.setText(x.log.getText() + "\n" + log);
+                    String oldLog = x.log.getText();
+                    if( ! oldLog.endsWith("\n")) {
+                        oldLog = oldLog + "\n";
+                    }
+                    
+                    x.log.setText(oldLog + log);
                     Document d = x.log.getDocument();
                     x.log.select(d.getLength(), d.getLength());
                 }
@@ -544,8 +549,6 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             public void close() throws SecurityException {
             }
         });
-        
-        Logging.get().info("hallo");
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
