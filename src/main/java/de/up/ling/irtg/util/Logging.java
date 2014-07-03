@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.util;
 
+import java.util.function.Supplier;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;

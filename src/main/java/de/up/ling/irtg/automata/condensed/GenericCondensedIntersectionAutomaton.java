@@ -17,7 +17,6 @@ import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.IntInt2IntMap;
-import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -89,11 +88,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         
         right.makeAllRulesCondensedExplicit();
         
-        Logging.get().finest("Left signature: " + left.getSignature());
-        Logging.get().finest("Right signature: " + right.getSignature());
-        
-        Logging.get().finest("Left automaton:\n" + left);
-        Logging.get().finest("Right (condensed) automaton:\n" + right);
+//        Logging.get().finest("Left signature: " + left.getSignature());
+//        Logging.get().finest("Right signature: " + right.getSignature());
+//        
+//        Logging.get().finest("Left automaton:\n" + left);
+//        Logging.get().finest("Right (condensed) automaton:\n" + right);
     }
     
     // Intersecting the two automatons using a CKY algorithm

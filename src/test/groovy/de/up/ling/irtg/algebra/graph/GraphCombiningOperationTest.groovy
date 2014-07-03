@@ -132,14 +132,14 @@ class GraphCombiningOperationTest {
         GraphCombiningOperation gco2 = IsiAmrParser.parseOperation(new StringReader("\\x, y (x :ARG0 y)"));
         GraphCombiningOperation gco3 = IsiAmrParser.parseOperation(new StringReader("\\x (x / boy)"));
         
-        System.err.println(gco1)
-        System.err.println(gco2)
-        System.err.println(gco3)
+//        System.err.println(gco1)
+//        System.err.println(gco2)
+//        System.err.println(gco3)
         
         LambdaGraph result = gco1.evaluate([gco2.evaluate([]), gco3.evaluate([])])
         LambdaGraph g = IsiAmrParser.parse(new StringReader("\\x, y (x / boy :ARG0 y)"));
         
-        System.err.println(result)
+//        System.err.println(result)
         
         assertIsomorphic(g, result)
     }

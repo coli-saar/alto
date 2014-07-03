@@ -199,7 +199,7 @@ public class InterpretedTreeAutomaton {
      * @return
      */
     public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
-        Logging.get().fine("parseInputObjects: " + inputs);
+//        Logging.get().fine(() -> "parseInputObjects: " + inputs);
         
         TreeAutomaton ret = automaton;
 
@@ -207,15 +207,15 @@ public class InterpretedTreeAutomaton {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
             
-            Logging.get().fine("Input: " + input);
+//            Logging.get().fine(() -> "Input: " + input);
 
             TreeAutomaton interpParse = interp.parse(input);
             
-            Logging.get().finest("invhom(decomp): " + interpParse);
+//            Logging.get().finest(() -> "invhom(decomp): " + interpParse);
             
             ret = ret.intersect(interpParse);
             
-            Logging.get().finest("Intersect: " + ret);
+//            Logging.get().finest(() -> ("Intersect: " + ret));
         }
 
         return ret.reduceTopDown();

@@ -46,11 +46,11 @@ public class Interpretation<E> {
         // top-down queries to the decomp automaton, so this can only be
         // used if that automaton actually supports such queries.
         if( decompositionAutomaton.supportsTopDownQueries() ) {
-            Logging.get().fine("Using condensed inverse hom automaton.");
-            Logging.get().finest("Decomp automaton:\n" + decompositionAutomaton);
+            Logging.get().info(() -> "Using condensed inverse hom automaton.");
+//            Logging.get().finest("Decomp automaton:\n" + decompositionAutomaton);
             return decompositionAutomaton.inverseCondensedHomomorphism(hom);
         } else {
-            Logging.get().fine("Using explicit inverse hom automaton.");
+            Logging.get().info(() -> "Using non-condensed inverse hom automaton.");
             return decompositionAutomaton.inverseHomomorphism(hom);
         }
     }

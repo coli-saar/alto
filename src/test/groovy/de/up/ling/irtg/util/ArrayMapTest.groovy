@@ -119,7 +119,6 @@ class ArrayMapTest {
         
         assertEquals(["hallo", "foo", "bar"], values)
         
-        System.out.println(map)
     }
     
     @Test

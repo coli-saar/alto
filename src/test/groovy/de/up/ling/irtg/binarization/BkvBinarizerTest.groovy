@@ -188,8 +188,8 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         TreeAutomaton chart = irtg.parseInputObjects(inp)
         
-        Logging.get().fine("Chart:\n" + chart)
-        Logging.get().fine("Language:\n" + chart.language())
+//        Logging.get().fine("Chart:\n" + chart)
+//        Logging.get().fine("Language:\n" + chart.language())
         
         
         assert ! chart.language().isEmpty()
@@ -237,10 +237,9 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     
     @Test
     public void testBinarizeTree() {
-        Logging.get().setLevel(Level.ALL);
-        Logging.setConsoleHandler();
+//        Logging.get().setLevel(Level.ALL);
+//        Logging.setConsoleHandler();
 
-        Logging.get().info("XXX")
         InterpretedTreeAutomaton irtg = pi(SYNC_IRTG);
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
@@ -256,8 +255,6 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         
         InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
         assertBinaryGrammar(binarized)
-        
-        Logging.get().finest("Binarized grammar:\n" + binarized)
         
         List leftObj = ["a", "b", "c"] 
         Object rightObj = pt("f(d, a, g(c), b)")
