@@ -10,8 +10,6 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
-import de.up.ling.irtg.util.FunctionToInt;
-import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -61,11 +59,6 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         this.stateInterner = rhsAutomaton.getStateInterner();
         finalStates.addAll(rhsAutomaton.getFinalStates());
 
-        FunctionToInt<Tree<HomomorphismSymbol>> RETURN_ZERO = new FunctionToInt<Tree<HomomorphismSymbol>>() {
-            public int applyInt(Tree<HomomorphismSymbol> f) {
-                return 0;
-            }
-        };
 
 //        Logging.get().fine("all rhs auto labels: " + rhsAutomaton.getAllLabels());
 //        Logging.get().fine(" rhs auto sig: " + rhsAutomaton.getSignature());
@@ -85,7 +78,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
             Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
 
             if (rhs.getMaximumArity() == 0) {
-                for (int state : rhsAutomaton.run(rhs, HomomorphismSymbol.getRemappingSymbolToIntFunction(labelsRemap), RETURN_ZERO)) {
+                for (int state : rhsAutomaton.run(rhs, HomomorphismSymbol.getRemappingSymbolToIntFunction(labelsRemap), x -> 0)) {
                     if (statesToNullaryLabelSets.containsKey(state)) {
                         statesToNullaryLabelSets.get(state).add(labelSetID);
                     } else {

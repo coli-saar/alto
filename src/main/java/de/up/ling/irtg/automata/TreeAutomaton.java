@@ -33,7 +33,6 @@ import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
-import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -63,6 +62,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.ToIntFunction;
 
 /*
  TODO:
@@ -1469,25 +1469,22 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public IntIterable runRaw(final Tree<Integer> tree) {
-        return run(tree, INTEGER_IDENTITY, new FunctionToInt<Tree<Integer>>() {
-            @Override
-            public int applyInt(Tree<Integer> f) {
-                return 0;
-            }
-        });
+        return run(tree, INTEGER_IDENTITY, t -> 0);
     }
 
-    private Exception UnsupportedOperationException(String not_tested_yet) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+//    private Exception UnsupportedOperationException(String not_tested_yet) {
+//        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+//    }
 
-    private static class IntegerIdentity extends FunctionToInt<Integer> {
-
-        public int applyInt(Integer f) {
-            return f;
-        }
-    }
-    private static final IntegerIdentity INTEGER_IDENTITY = new IntegerIdentity();
+//    private static class IntegerIdentity extends FunctionToInt<Integer> {
+//
+//        public int applyInt(Integer f) {
+//            return f;
+//        }
+//    }
+    
+    
+    private static final ToIntFunction<Integer> INTEGER_IDENTITY = f -> f;
 
     /**
      * Runs the automaton bottom-up on the given tree, using functions that
@@ -1514,7 +1511,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param subst
      * @return
      */
-    public <TreeLabels> IntIterable run(final Tree<TreeLabels> node, final FunctionToInt<TreeLabels> labelIdSource, final FunctionToInt<Tree<TreeLabels>> subst) {
+    public <TreeLabels> IntIterable run(final Tree<TreeLabels> node, final ToIntFunction<TreeLabels> labelIdSource, final ToIntFunction<Tree<TreeLabels>> subst) {
         if (isBottomUpDeterministic()) {
             int result = runDeterministic(node, labelIdSource, subst);
 
@@ -1535,9 +1532,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    private <TreeLabels> int runDeterministic(final Tree<TreeLabels> node, final FunctionToInt<TreeLabels> labelIdSource, final FunctionToInt<Tree<TreeLabels>> subst) {
+    private <TreeLabels> int runDeterministic(final Tree<TreeLabels> node, final ToIntFunction<TreeLabels> labelIdSource, final ToIntFunction<Tree<TreeLabels>> subst) {
         TreeLabels f = node.getLabel();
-        int substState = subst.applyInt(node);
+        int substState = subst.applyAsInt(node);
 
         if (substState != 0) {
             return substState;
@@ -1553,7 +1550,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 }
             }
 
-            Iterable<Rule> rules = getRulesBottomUp(labelIdSource.applyInt(f), childStates);
+            Iterable<Rule> rules = getRulesBottomUp(labelIdSource.applyAsInt(f), childStates);
             Iterator<Rule> it = rules.iterator();
 
             if (it.hasNext()) {
@@ -1564,8 +1561,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    private <TreeLabels> void runD1(TreeLabels f, final FunctionToInt<TreeLabels> labelIdSource, IntList states) {
-        for (Rule rule : getRulesBottomUp(labelIdSource.applyInt(f), new int[0])) {
+    private <TreeLabels> void runD1(TreeLabels f, final ToIntFunction<TreeLabels> labelIdSource, IntList states) {
+        for (Rule rule : getRulesBottomUp(labelIdSource.applyAsInt(f), new int[0])) {
             states.add(rule.getParent());
         }
     }
@@ -1575,7 +1572,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         OK, EMPTY, NON_SINGLETON
     };
 
-    private <TreeLabels> D1aResult runD1a(Tree<TreeLabels> node, final FunctionToInt<TreeLabels> labelIdSource, final FunctionToInt<Tree<TreeLabels>> subst, List<IntList> stateSetsPerChild) {
+    private <TreeLabels> D1aResult runD1a(Tree<TreeLabels> node, final ToIntFunction<TreeLabels> labelIdSource, final ToIntFunction<Tree<TreeLabels>> subst, List<IntList> stateSetsPerChild) {
         D1aResult ret = null;
 
         for (int i = 0; i < node.getChildren().size(); i++) {
@@ -1598,34 +1595,34 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    private <TreeLabels> void runD1Singleton(TreeLabels f, final FunctionToInt<TreeLabels> labelIdSource, IntList states, List<IntList> stateSetsPerChild) {
+    private <TreeLabels> void runD1Singleton(TreeLabels f, final ToIntFunction<TreeLabels> labelIdSource, IntList states, List<IntList> stateSetsPerChild) {
         int[] children = new int[stateSetsPerChild.size()];
 
         for (int i = 0; i < stateSetsPerChild.size(); i++) {
             children[i] = stateSetsPerChild.get(i).get(0);
         }
-        for (Rule rule : getRulesBottomUp(labelIdSource.applyInt(f), children)) {
+        for (Rule rule : getRulesBottomUp(labelIdSource.applyAsInt(f), children)) {
             states.add(rule.getParent());
         }
     }
 
-    private <TreeLabels> void runD2Nonsing(TreeLabels f, final FunctionToInt<TreeLabels> labelIdSource, IntList states, List<IntList> stateSetsPerChild) {
+    private <TreeLabels> void runD2Nonsing(TreeLabels f, final ToIntFunction<TreeLabels> labelIdSource, IntList states, List<IntList> stateSetsPerChild) {
         IntListCartesianIterator it = new IntListCartesianIterator(stateSetsPerChild);
 //        int iterations = 0;
 
         while (it.hasNext()) {
 //            iterations++;
-            for (Rule rule : getRulesBottomUp(labelIdSource.applyInt(f), it.next())) {
+            for (Rule rule : getRulesBottomUp(labelIdSource.applyAsInt(f), it.next())) {
                 states.add(rule.getParent());
             }
         }
     }
 
     @SuppressWarnings("empty-statement")
-    private <TreeLabels> IntList runDirectly(final Tree<TreeLabels> node, final FunctionToInt<TreeLabels> labelIdSource, final FunctionToInt<Tree<TreeLabels>> subst) {
+    private <TreeLabels> IntList runDirectly(final Tree<TreeLabels> node, final ToIntFunction<TreeLabels> labelIdSource, final ToIntFunction<Tree<TreeLabels>> subst) {
         TreeLabels f = node.getLabel();
         IntList states = new IntArrayList();
-        int substState = subst.applyInt(node);
+        int substState = subst.applyAsInt(node);
 
         if (substState != 0) {
             states.add(substState);

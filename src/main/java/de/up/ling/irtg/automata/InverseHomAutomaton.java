@@ -1,11 +1,9 @@
 package de.up.ling.irtg.automata;
 
-import com.google.common.base.Function;
 import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Interner;
-import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.IntIterable;
@@ -17,12 +15,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.ToIntFunction;
 
 /**
  *
  * @author koller
  */
 class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
+
     public static String FAIL_STATE = "q_FAIL_";
     private int failStateId;
     private TreeAutomaton<State> rhsAutomaton;
@@ -30,7 +30,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
     private Set<Integer> computedLabels;
 //    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
-    private FunctionToInt<HomomorphismSymbol> remappingHomSymbolToIntFunction;
+    private ToIntFunction<HomomorphismSymbol> remappingHomSymbolToIntFunction;
     private IntSet provisionalStateSet;
 
     public InverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
@@ -38,25 +38,19 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 
         this.rhsAutomaton = rhsAutomaton;
         this.hom = hom;
-        
+
         labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
-        remappingHomSymbolToIntFunction = new FunctionToInt<HomomorphismSymbol>() {
-            public int applyInt(HomomorphismSymbol f) {
-                return labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().apply(f)];
-            }
-        };
-        
+        remappingHomSymbolToIntFunction = f -> labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().applyAsInt(f)]; // TODO replace by sig mapper
+
         computedLabels = new HashSet<Integer>();
 //        rhsState = new HashMap<String, State>();
-        
-        
+
         this.stateInterner = (Interner) rhsAutomaton.stateInterner;
         this.allStates = new IntOpenHashSet(rhsAutomaton.getAllStates());
-        
+
 //        for( int i = 1; i < rhsAutomaton.stateInterner.getNextIndex(); i++ ) {
 //            stateInterner.addObject(rhsAutomaton.stateInterner.resolveId(i).toString());
 //        }
-        
         finalStates.addAll(rhsAutomaton.getFinalStates());
 
 //        for (State fin : rhsAutomaton.getFinalStates()) {
@@ -68,9 +62,8 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 //            String normalized = addState(s.toString());
 //            rhsState.put(normalized, s);
 //        }
-        
         failStateId = addState(FAIL_STATE);
-        
+
         // Record a provisional set of states, which is sure to be a
         // superset of all the states that are used in the invhom automaton.
         // This is necessary to avoid calling getAllStates in getRulesTopDown
@@ -79,7 +72,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         provisionalStateSet.addAll(rhsAutomaton.getAllStates());
         provisionalStateSet.add(failStateId);
     }
-    
+
     @Override
     public Iterable<Rule> getRulesBottomUp(int label, final int[] childStates) {
         // lazy bottom-up computation of bottom-up rules
@@ -87,31 +80,28 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
             Set<Rule> ret = new HashSet<Rule>();
-            
+
             // run RHS automaton on given child states
-            IntIterable resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, new FunctionToInt<Tree<HomomorphismSymbol>>() {
-                @Override
-                public int applyInt(Tree<HomomorphismSymbol> f) {
-                    if (f.getLabel().isVariable()) {
-                        int child = childStates[f.getLabel().getValue()]; // -> i-th child state (= this state ID)
-                        
-                        if( child == failStateId ) {
-                            // Hom is requesting the value of a variable, but the state we
-                            // got passed bottom-up is FAIL. In this case, the run of the automaton
-                            // on the hom image should fail as well. We do this in a slightly hacky
-                            // way by simply leaving the variable in place and hoping that things like
-                            // "?x1" are not terminal symbols of the automaton.
-                            return 0;
-                        } else {
-                            return child;
-                        }
-                    } else {
+            IntIterable resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, tree -> {
+                if (tree.getLabel().isVariable()) {
+                    int child = childStates[tree.getLabel().getValue()]; // -> i-th child state (= this state ID)
+
+                    if (child == failStateId) {
+                        // Hom is requesting the value of a variable, but the state we
+                        // got passed bottom-up is FAIL. In this case, the run of the automaton
+                        // on the hom image should fail as well. We do this in a slightly hacky
+                        // way by simply leaving the variable in place and hoping that things like
+                        // "?x1" are not terminal symbols of the automaton.
                         return 0;
+                    } else {
+                        return child;
                     }
+                } else {
+                    return 0;
                 }
             });
 
-            if (! resultStates.iterator().hasNext()) {
+            if (!resultStates.iterator().hasNext()) {
                 // no successful runs found, add rule with FAIL parent
                 // TODO weight??
                 Rule rule = createRule(failStateId, label, childStates, 1);
@@ -140,7 +130,6 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 //
 //        return false;
 //    }
-
     @Override
     public Iterable<Rule> getRulesTopDown(int label, int parentState) {
         if (FAIL_STATE.equals(parentState)) {
@@ -200,7 +189,7 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 
                             Iterable<Rule> rules = rhsAutomaton.getRulesBottomUp(labelsRemap[node.getLabel().getValue()], childStates);
 
-                            if( rules.iterator().hasNext() ) {
+                            if (rules.iterator().hasNext()) {
                                 Map<HomomorphismSymbol, Integer> subst = mergeSubstitutions(childSubsts);
                                 for (Rule r : rules) {
                                     ret.add(new Item(r.getParent(), subst));
@@ -240,7 +229,6 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 
             computedLabels.add(label);
 
-
         }
     }
 
@@ -249,8 +237,8 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         return rhsAutomaton.isBottomUpDeterministic();
     }
 
-
     private class Item {
+
         public int state;
         public Map<HomomorphismSymbol, Integer> substitution;
 
@@ -290,16 +278,16 @@ class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
     }
 
     public static boolean isFailedRule(Rule rule, TreeAutomaton auto) {
-        if( auto.getStateForId(rule.getParent()).toString().contains(InverseHomAutomaton.FAIL_STATE) ) {
+        if (auto.getStateForId(rule.getParent()).toString().contains(InverseHomAutomaton.FAIL_STATE)) {
             return true;
         }
-        
-        for( int child : rule.getChildren() ) {
-            if( auto.getStateForId(child).toString().contains(InverseHomAutomaton.FAIL_STATE)) {
+
+        for (int child : rule.getChildren()) {
+            if (auto.getStateForId(child).toString().contains(InverseHomAutomaton.FAIL_STATE)) {
                 return true;
             }
         }
-        
+
         return false;
     }
 }

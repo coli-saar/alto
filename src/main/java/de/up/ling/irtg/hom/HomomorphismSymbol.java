@@ -6,10 +6,10 @@ package de.up.ling.irtg.hom;
 
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
-import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.List;
+import java.util.function.ToIntFunction;
 import java.util.regex.Pattern;
 
 /**
@@ -175,14 +175,10 @@ public class HomomorphismSymbol {
         return (isVariable() ? "?" : "") + value;
     }
 
-    private static class HomSymbolToInt extends FunctionToInt<HomomorphismSymbol> {
-        public int applyInt(HomomorphismSymbol f) {
-            return f.getValue();
-        }
-    }
-    private static FunctionToInt<HomomorphismSymbol> HOM_SYMBOL_TO_INT = new HomSymbolToInt();
+    
+    private static ToIntFunction<HomomorphismSymbol> HOM_SYMBOL_TO_INT = x -> x.getValue();
 
-    public static FunctionToInt<HomomorphismSymbol> getHomSymbolToIntFunction() {
+    public static ToIntFunction<HomomorphismSymbol> getHomSymbolToIntFunction() {
         return HOM_SYMBOL_TO_INT;
     }
     
@@ -192,14 +188,9 @@ public class HomomorphismSymbol {
      * the symbol ID of the automaton signature to which the symbol ID in the HomomorphismSymbol
      * corresponds.
     */
-    public static FunctionToInt<HomomorphismSymbol> getRemappingSymbolToIntFunction(SignatureMapper mapper) {
-        return new FunctionToInt<HomomorphismSymbol>() {
-            @Override
-            public int applyInt(HomomorphismSymbol f) {
-                return mapper.remapForward(f.getValue());
-            }
-        };
-    }
+    public static ToIntFunction<HomomorphismSymbol> getRemappingSymbolToIntFunction(final SignatureMapper mapper) {
+        return f -> mapper.remapForward(f.getValue());
+    };
     
     @Override
     public int hashCode() {
