@@ -5,8 +5,6 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import com.google.common.collect.Iterables;
-import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.IntSetInterner;
@@ -14,11 +12,9 @@ import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
-import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;

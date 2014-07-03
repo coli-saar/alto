@@ -6,10 +6,12 @@ package de.up.ling.irtg.signature;
 
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntCollection;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,6 +58,12 @@ public class Signature implements Serializable {
     
     public String resolveSymbolId(int id) {
         return interner.resolveId(id);
+    }
+    
+    public Collection<String> resolveSymbolIDs(IntCollection ids) {
+        List<String> ret = new ArrayList<>();
+        FastutilUtils.forEach(ids, id -> ret.add(resolveSymbolId(id)));
+        return ret;
     }
     
     public int getIdForSymbol(String symbol) {

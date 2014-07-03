@@ -4,8 +4,8 @@
  */
 package de.up.ling.irtg.hom;
 
-import com.google.common.base.Function;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FunctionToInt;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -185,7 +185,22 @@ public class HomomorphismSymbol {
     public static FunctionToInt<HomomorphismSymbol> getHomSymbolToIntFunction() {
         return HOM_SYMBOL_TO_INT;
     }
-
+    
+    /**
+     * This is for running an automaton on the RHS of a homomorphism. "mapper" maps
+     * the hom target signature to the automaton signature. The function returns
+     * the symbol ID of the automaton signature to which the symbol ID in the HomomorphismSymbol
+     * corresponds.
+    */
+    public static FunctionToInt<HomomorphismSymbol> getRemappingSymbolToIntFunction(SignatureMapper mapper) {
+        return new FunctionToInt<HomomorphismSymbol>() {
+            @Override
+            public int applyInt(HomomorphismSymbol f) {
+                return mapper.remapForward(f.getValue());
+            }
+        };
+    }
+    
     @Override
     public int hashCode() {
         int hash = 5;

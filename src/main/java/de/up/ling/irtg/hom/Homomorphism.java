@@ -251,19 +251,19 @@ public class Homomorphism {
 //        // because one of the tgtSymbols was not mentioned in any RHS
 //        // of the homomorphism, and it should thus be removed.
 //        ret.remove(0);
-        Logging.get().fine("gLT, tgt = " + tgtSymbols);
+//        Logging.get().fine("gLT, tgt = " + tgtSymbols);
 
         outer:
         for (int srcSymbol : srcSymbolToRhsSymbols.keySet()) {
-            Logging.get().fine("  consider " + srcSymbol + " = " + srcSignature.resolveSymbolId(srcSymbol) + "; srcsym=" + srcSymbolToRhsSymbols.get(srcSymbol));
+//            Logging.get().fine("  consider " + srcSymbol + " = " + srcSignature.resolveSymbolId(srcSymbol) + "; srcsym=" + srcSymbolToRhsSymbols.get(srcSymbol));
 
             for (IntSet tgtSymSet : srcSymbolToRhsSymbols.get(srcSymbol)) {
                 if (tgtSymbols.containsAll(tgtSymSet)) {
-                    Logging.get().fine("  " + tgtSymSet + " contained in " + tgtSymSet);
+//                    Logging.get().fine("  " + tgtSymSet + " contained in " + tgtSymbols);
                     ret.add(srcSymbol);
                     continue outer;
                 } else {
-                    Logging.get().fine("  " + tgtSymSet + " not contained in " + tgtSymbols);
+//                    Logging.get().fine("  " + tgtSymSet + " not contained in " + tgtSymbols);
                 }
             }
         }
