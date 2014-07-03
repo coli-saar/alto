@@ -93,7 +93,7 @@ public abstract class Algebra<E> {
      * of this external data using this method. See {@link SetAlgebra}
      * for an example.
      * 
-     * @param optionString 
+     * @param optionReader
      */
     public void readOptions(Reader optionReader) throws Exception {
         

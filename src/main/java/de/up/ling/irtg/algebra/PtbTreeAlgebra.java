@@ -79,7 +79,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * i.e. removes the effects of the transformation process (artificial nodes, relabeling, ...)
      * 
      * @param tree the tree, e.g., generated from chart
-     * @return Tree<String> the evaluated tree
+     * @return the evaluated tree
      */
     @Override
     public Tree<String> evaluate(final Tree<String> tree) {
@@ -122,7 +122,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * the tree with rules in the grammar
      * 
      * @param value the tree
-     * @return TreeAutomaton the automaton for the binarized and relabeled
+     * @return the automaton for the binarized and relabeled
      * tree <tt>value</tt>
      */
     @Override
@@ -139,7 +139,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * Parses PTB-formatted string
      *
      * @param representation the string containing the data
-     * @return Tree<String> containing the parsed PTB-tree
+     * @return the parsed PTB-tree
      * @throws ParserException if an error occurs on parsing the input
      */
     @Override
@@ -169,7 +169,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * Parses PTB-formatted trees from reader
      *
      * @param reader the reader containing the data
-     * @return Tree<String> containing the parsed PTB-tree
+     * @return the parsed PTB-tree
      * @throws IOException if an error occurs on reading chars from <tt>reader</tt>
      */
     public Tree<String> parseFromReader(final Reader reader) throws IOException {
@@ -239,7 +239,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * Parses PTB-formatted trees from reader
      *
      * @param reader the reader containing the data
-     * @returns Tree<String> containing the parsed PTB-tree
+     * @returnsthe parsed PTB-tree
      * @throws IOException if an error occurs on reading chars from <tt>reader</tt>
      */
     private String stripPosTag(StringBuffer buf) {
@@ -259,7 +259,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * Parses PTB-formatted trees from reader
      *
      * @param reader the reader containing the data
-     * @returns Tree<String> containing the parsed PTB-tree
+     * @returns the parsed PTB-tree
      * @throws IOException if an error occurs on reading chars from <tt>reader</tt>
      */
     private Tree<String> parseTree(final Reader reader) throws IOException {
@@ -361,7 +361,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      * and re-labels the nodes
      *
      * @param tree the PTB tree
-     * @return Tree<String> the binarized tree
+     * @return the binarized tree
      */
     public Tree<String> binarizeAndRelabel(final Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
@@ -409,7 +409,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      *
      * @param children the list of children trees 
      * @param index the current position in the list <tt>children</tt>
-     * @return List<Tree<String>> the binarized list
+     * @return the binarized list
      */
     public Tree<String> binarize(final List<Tree<String>> children, final int index) {
         List<Tree<String>> newChildren = new ArrayList<Tree<String>>();
@@ -433,7 +433,7 @@ public class PtbTreeAlgebra extends TreeAlgebra {
      *
      * @param labels the list of trees 
      * @param index the from where on the root labels will be concatenated
-     * @return String the concatenated labels
+     * @return  the concatenated labels
      */
     public String concatLabels(final List<Tree<String>> trees, final int index) {
         StringBuilder ret = new StringBuilder();

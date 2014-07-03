@@ -14,6 +14,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.RegularSeed;
+import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.IrtgParser;
 import de.up.ling.irtg.codec.ParseException;
@@ -22,7 +23,6 @@ import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -47,8 +47,8 @@ import org.apache.commons.math3.special.Gamma;
  * In this implementation of IRTGs, M is given as an object of class
  * {@link TreeAutomaton}, which is passed to the constructor as an argument.
  * Each interpretation is added by name, and is represented as an object of
- * class {@link Interpretation}. IRTGs are typically read from readers (e.g.
- * from files) using {@link IrtgParser#parse(java.io.Reader)}, rather than being
+ * class {@link Interpretation}. IRTGs are typically read from input streams
+ * (e.g. from files) by using an {@link InputCodec}, rather than being
  * constructed programmatically.
  *
  *
@@ -113,7 +113,6 @@ public class InterpretedTreeAutomaton {
      *
      * @param interp
      * @return
-     * @throws IOException
      */
     public Interpretation getInterpretation(String interp) {
         return interpretations.get(interp);

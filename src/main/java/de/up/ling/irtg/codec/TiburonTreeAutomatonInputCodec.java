@@ -22,7 +22,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * A codec for reading weighted tree automata in the format used by
  * the Tiburon toolkit (http://www.isi.edu/licensed-sw/tiburon/).
  * The rules have the following form:
- * <code>q -> NP(x1 x2)  # 0.8</code>
+ * <pre>q -> NP(x1 x2)  # 0.8</pre>
  * 
  * where q, x1, and x2 are states and NP is a terminal symbol. The
  * rules may be assigned weights by an optional annotation like "# 0.8".
@@ -30,10 +30,10 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * Anything from a percent sign (%) to the end of the line is a
  * comment, and therefore ignored.<p>
  * 
- * Tiburon allows rules like "q -> S(subj was prednom)", where subj
+ * Tiburon allows rules like "q -&gt; S(subj was prednom)", where subj
  * and prednom are states, but "was" is a terminal symbol. These rules
- * are automatically split into smaller rules "q -> S(subj,_q_1,prednom)"
- * and "_q_1 -> was" in the tree automaton.
+ * are automatically split into smaller rules "q -&gt; S(subj,_q_1,prednom)"
+ * and "_q_1 -&gt; was" in the tree automaton.
  * 
  * @author koller
  */

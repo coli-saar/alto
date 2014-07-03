@@ -25,7 +25,7 @@ import java.util.Set;
  * operations:
  *
  * <ul>
- * <li>project_i(R) projects its argument R (a k-place relation with k >= i) to
+ * <li> project_i(R) projects its argument R (a k-place relation with k >= i) to
  * the set of i-th elements of this relation.</li>
  * <li>intersect_i(R,F) returns the set of all tuples of R (a k-place relation
  * with k >= i) whose i-th element is a member of F (a subset of the

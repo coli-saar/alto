@@ -19,13 +19,11 @@ import javax.swing.JPopupMenu;
 
 /**
  * A popup menu that copies a string representation of a Swing component to the
- * clipboard. Use {@link #setTextSource(de.up.ling.irtg.gui.popup.PopupTextSource)
- * }
- * to tell the menu how to obtain the text that is to be copied to the
  * clipboard. Use {@link #addAsMouseListener(javax.swing.JComponent) }
  * to add a mouse listener to the component which will open the popup menu on
  * right-click.
  *
+ * TODO: Explain how to use this in more detail!
  *
  * @author koller
  */
