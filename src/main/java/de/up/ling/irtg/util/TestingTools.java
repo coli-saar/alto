@@ -18,13 +18,14 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.maxent.FeatureFunction;
+import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -119,5 +120,13 @@ public class TestingTools {
     
     public static CondensedTreeAutomaton pac(String s) throws ParseException, de.up.ling.irtg.automata.condensed.ParseException {
         return CondensedTreeAutomatonParser.parse(new StringReader(s));
+    }
+    
+    public static FeatureFunction makeTestFeature(final String x) {
+        return new FeatureFunction<String>() {
+            public double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg) {
+                return Double.parseDouble(x);
+            }
+        };
     }
 }

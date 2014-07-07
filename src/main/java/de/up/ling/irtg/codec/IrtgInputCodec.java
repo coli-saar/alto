@@ -17,11 +17,14 @@ import de.up.ling.tree.Tree;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
@@ -150,14 +153,22 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         try {
             Method meth = CodecUtilities.findStaticFeatureFactory(classname, methodname, arguments.size());
 
-            String[] args = new String[arguments.size()];
+            Object[] args = new String[arguments.size()];
             arguments.toArray(args);
 
             FeatureFunction feature = (FeatureFunction) meth.invoke(null, args);
             features.put(id, feature);
-        } catch (Exception e) {
-            throw new ParseException("Could not instantiate FeatureFunction class " + classname + " for feature " + id + ": " + e.toString());
-        }
+        } catch (ClassNotFoundException e) {
+            throw new ParseException("Could not find feature factory class " + classname + " for feature " + id + ": " + e.toString());
+        } catch (NoSuchMethodException e) {
+            throw new ParseException("Could not find feature factory method " + methodname + " in class " + classname + " for feature " + id + ": " + e.toString());
+        } catch (IllegalAccessException e) {
+            throw new ParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
+        } catch (IllegalArgumentException e) {
+            throw new ParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
+        } catch (InvocationTargetException e) {
+            throw new ParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
+        } 
     }
 
     private String autoRule(IrtgParser.Auto_ruleContext auto_rule) {

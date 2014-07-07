@@ -42,7 +42,8 @@ template_irtg       : interpretation_decl+ feature_decl* template_irtg_rule+;
 
 interpretation_decl: INTERPRETATION name ':' name;
 
-feature_decl: FEATURE name ':' name state_list;
+feature_decl: FEATURE name ':' name state_list #CONSTRUCTOR_FEATURE
+            | FEATURE name ':' name ':' ':' name state_list #STATIC_FEATURE;
 
 template_irtg_rule : irtg_rule | guarded_irtg_rule;
 

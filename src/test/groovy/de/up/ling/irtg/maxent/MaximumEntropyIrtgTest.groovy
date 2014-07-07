@@ -84,6 +84,26 @@ class MaximumEntropyIrtgTest {
         assert (fWeights[0] < fWeights[1]), "weights are not optimized";
     }
     
+    @Test
+    public void testParseStaticMethod() {
+        MaximumEntropyIrtg irtg = (MaximumEntropyIrtg) pi(STATIC_MIRTG_STR);
+        FeatureFunction ff = irtg.getFeatureFunction("f1");
+        assertEquals(0.1, ff.evaluate(null, null, null), 0.01);
+    }
+    
+    
+    
+    private static final String STATIC_MIRTG_STR = """\n\
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+feature f1: de.up.ling.irtg.util.TestingTools::makeTestFeature('0.1')
+
+S! -> r1(NP,VP)
+  [i] *(?1,?2)
+\n\
+""";
+    
+    
     private static final String CFG_STR = """
 interpretation i: de.up.ling.irtg.algebra.StringAlgebra
 
