@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import static de.up.ling.irtg.codec.CodecUtilities.findFeatureConstructor;
+import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.maxent.FeatureFunction;
@@ -43,11 +44,20 @@ public class TemplateInterpretedTreeAutomaton {
     public void addRuleTemplate(TemplateRule trule) {
         ruleTemplates.add(trule);
     }
+    
+    public void addConstructorFeatureDeclaration(String id, String featureClass, List<String> arguments) {
+        addFeatureDeclaration(id, featureClass, null, arguments);
+    }
+    
+    public void addStaticFeatureDeclaration(String id, String featureClass, String featureMethod, List<String> arguments) {
+        addFeatureDeclaration(id, featureClass, featureMethod, arguments);
+    }
 
-    public void addFeatureDeclaration(String id, String featureClass, List<String> arguments) {
+    private void addFeatureDeclaration(String id, String featureClass, String featureMethod, List<String> arguments) {
         FeatureDeclaration decl = new FeatureDeclaration();
         decl.id = id;
         decl.featureClass = featureClass;
+        decl.featureMethod = featureMethod;
         decl.arguments = arguments;
         features.add(decl);
     }
@@ -138,16 +148,10 @@ public class TemplateInterpretedTreeAutomaton {
         Map<String, FeatureFunction> ret = new HashMap<>();
 
         for (FeatureDeclaration ft : features) {
-            try {
-                Constructor<FeatureFunction> con = findFeatureConstructor(ft.featureClass, ft.arguments.size());
-
-                String[] args = new String[ft.arguments.size()];
-                ft.arguments.toArray(args);
-
-                FeatureFunction feature = con.newInstance(args);
-                ret.put(ft.id, feature);
-            } catch (Exception e) {
-                throw new ParseException("Could not instantiate FeatureFunction class " + ft.featureClass + " for feature " + ft.id + ": " + e.toString());
+            if( ft.featureMethod != null ) {
+                IrtgInputCodec.addStaticFeature(ft.id, ft.featureClass, ft.featureMethod, ft.arguments, ret);
+            } else {
+                IrtgInputCodec.addConstructorFeature(ft.id, ft.featureClass, ft.arguments, ret);
             }
         }
 
@@ -261,9 +265,9 @@ public class TemplateInterpretedTreeAutomaton {
     }
 
     private static class FeatureDeclaration {
-
         public String id;
         public String featureClass;
+        public String featureMethod;    // null = constructor feature; method name = static factory feature
         public List<String> arguments;
     }
 

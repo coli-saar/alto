@@ -17,6 +17,7 @@ import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.up.ling.irtg.algebra.*;
 import de.up.ling.irtg.hom.*;
+import de.up.ling.irtg.maxent.MaximumEntropyIrtg
 import de.up.ling.irtg.util.FirstOrderModel
 import de.up.ling.irtg.corpus.*
 import static de.up.ling.irtg.util.TestingTools.*;
@@ -41,10 +42,19 @@ class TemplateInterpretedTreeAutomatonTest {
         
         FirstOrderModel model = FirstOrderModel.read(new StringReader(MODEL));
         
-//        System.out.println(tirtg.instantiate(model))
+        tirtg.instantiate(model)
     }
     
-    
+    @Test
+    public void testMaxent() {
+        InputCodec<TemplateInterpretedTreeAutomaton> codec = new TemplateIrtgInputCodec();
+        TemplateInterpretedTreeAutomaton tirtg = codec.read(MAXENT_TIRTG);
+        
+        FirstOrderModel model = FirstOrderModel.read(new StringReader(MODEL));
+        MaximumEntropyIrtg mirtg = (MaximumEntropyIrtg) tirtg.instantiate(model)
+        
+        assertEquals(0.1, mirtg.getFeatureFunction("f1").evaluate(null, null, null), 0.01)
+    }
     
     private final static String MODEL = '''{"sleep": [["e", "r1"]], "takefrom": [["e2", "r1", "h"]], "rabbit": [["r1"], ["r2"]], "white": [["r1"], ["b"]], "brown": [["r2"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }''';
     
@@ -65,5 +75,17 @@ A -> f(B,C)\n\
 
 
     ''';
+    
+    private final static String MAXENT_TIRTG = """\n\
+
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+feature f1: de.up.ling.irtg.util.TestingTools::makeTestFeature('0.1')
+
+S! -> r1(NP,VP)
+  [i] *(?1,?2)
+
+
+    """;
 }
 

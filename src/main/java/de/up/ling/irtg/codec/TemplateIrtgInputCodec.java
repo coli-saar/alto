@@ -57,10 +57,7 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
         }
 
         for (Feature_declContext c : context.feature_decl()) {
-            String id = c.name(0).getText();
-            String classname = c.name(1).getText();
-            List<String> arguments = CodecUtilities.processList(c, x -> x.state_list().state(), x -> name(x.name()));
-            tirtg.addFeatureDeclaration(id, classname, arguments);
+            processFeature(c);
         }
 
         int numRules = context.template_irtg_rule().size();
@@ -79,6 +76,23 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
 
             notifyProgressListener(i, numRules, "Read " + i + "/" + numRules + " rules");
             i++;
+        }
+    }
+    
+    private void processFeature(TemplateIrtgParser.Feature_declContext co) {
+        if( co instanceof TemplateIrtgParser.CONSTRUCTOR_FEATUREContext ) {
+            TemplateIrtgParser.CONSTRUCTOR_FEATUREContext c = (TemplateIrtgParser.CONSTRUCTOR_FEATUREContext) co;
+            String id = c.name(0).getText();
+            String classname = c.name(1).getText();
+            List<String> arguments = CodecUtilities.processList(c, x -> x.state_list().state(), x -> name(x.name()));
+            tirtg.addConstructorFeatureDeclaration(id, classname, arguments);
+        } else if( co instanceof TemplateIrtgParser.STATIC_FEATUREContext ) {
+            TemplateIrtgParser.STATIC_FEATUREContext c = (STATIC_FEATUREContext) co;
+            String id = c.name(0).getText();
+            String classname = c.name(1).getText();
+            String methodname = c.name(2).getText();
+            List<String> arguments = CodecUtilities.processList(c, x -> x.state_list().state(), x -> name(x.name()));
+            tirtg.addStaticFeatureDeclaration(id, classname, methodname, arguments);
         }
     }
 

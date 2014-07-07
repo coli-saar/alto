@@ -6,12 +6,12 @@
 
 package de.up.ling.irtg.codec;
 
-import static de.up.ling.irtg.algebra.TagTreeAlgebra.C;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -103,6 +103,15 @@ public class CodecUtilities {
 
         Constructor<FeatureFunction> con = cl.getConstructor(args);
         return con;
+    }
+    
+    public static Method findStaticFeatureFactory(String className, String methodName, int n) throws ClassNotFoundException, NoSuchMethodException {
+        Class cl = (Class) Class.forName(className);
+        
+        Class[] args = new Class[n];
+        Arrays.fill(args, String.class);
+        
+        return cl.getMethod(methodName, args);
     }
 
 }
