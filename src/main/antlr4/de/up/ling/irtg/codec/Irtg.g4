@@ -38,7 +38,8 @@ irtg       : interpretation_decl+ feature_decl* irtg_rule+;
 
 interpretation_decl: INTERPRETATION name ':' name;
 
-feature_decl: FEATURE name ':' name state_list;
+feature_decl: FEATURE name ':' name state_list #CONSTRUCTOR_FEATURE
+            | FEATURE name ':' name ':' ':' name state_list #STATIC_FEATURE;
 
 irtg_rule  : auto_rule hom_rule*;
 
