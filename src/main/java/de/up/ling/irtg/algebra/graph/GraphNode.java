@@ -4,7 +4,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import com.google.common.base.Function;
+import java.util.function.Function;
 import org.jgrapht.Graph;
 import org.jgrapht.experimental.equivalence.EquivalenceComparator;
 
@@ -36,26 +36,28 @@ public class GraphNode {
     public String repr() {
         return name + ":" + (label == null ? "<null>" : label);
     }
-    public static Function<GraphNode, String> reprF =
-            new Function<GraphNode, String>() {
-        public String apply(GraphNode f) {
-            return f.repr();
-        }
-    };
+    public static Function<GraphNode, String> reprF = f -> f.repr();
     
-    public static final Function<GraphNode, String> nameF =
-            new Function<GraphNode, String>() {
-        public String apply(GraphNode f) {
-            return f.getName();
-        }
-    };
     
-    public static final Function<GraphNode, String> labelF =
-            new Function<GraphNode, String>() {
-        public String apply(GraphNode f) {
-            return (f.getLabel() == null) ? ("(" + f.getName() + ")") : f.getLabel();
-        }
-    };
+//            new Function<GraphNode, String>() {
+//        public String apply(GraphNode f) {
+//            return f.repr();
+//        }
+//    };
+    
+    public static final Function<GraphNode, String> nameF = f -> f.getName();
+//            new Function<GraphNode, String>() {
+//        public String apply(GraphNode f) {
+//            return f.getName();
+//        }
+//    };
+    
+    public static final Function<GraphNode, String> labelF = f -> f.getLabel();
+//            new Function<GraphNode, String>() {
+//        public String apply(GraphNode f) {
+//            return (f.getLabel() == null) ? ("(" + f.getName() + ")") : f.getLabel();
+//        }
+//    };
 
     @Override
     public String toString() {

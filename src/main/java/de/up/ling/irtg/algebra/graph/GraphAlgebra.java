@@ -27,7 +27,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<LambdaGraph> {
         GraphCombiningOperation ret = operations.get(opDescription);
 
         if (ret == null) {
-            ret = IsiAmrParser.parseOperation(new StringReader(opDescription));
+//XXX            ret = IsiAmrParser.parseOperation(new StringReader(opDescription));
+            ret = null;
             getSignature().addSymbol(opDescription, arity);
             operations.put(opDescription, ret);
         }
@@ -53,7 +54,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<LambdaGraph> {
     @Override
     public LambdaGraph parseString(String representation) throws ParserException {
         try {
-            return IsiAmrParser.parse(new StringReader(representation));
+            throw new ParseException();
+//XXX            return IsiAmrParser.parse(new StringReader(representation));
         } catch (ParseException ex) {
             throw new ParserException(ex);
         }

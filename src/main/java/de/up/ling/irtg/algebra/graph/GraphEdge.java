@@ -4,7 +4,8 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import com.google.common.base.Function;
+import java.util.function.Function;
+
 
 /**
  *

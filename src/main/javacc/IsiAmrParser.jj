@@ -21,34 +21,18 @@ import org.jgrapht.graph.*;
 import de.up.ling.tree.*;
 import static de.up.ling.irtg.algebra.graph.GraphCombiningOperation.*;
 
-/**
- * Parser for sets of strings and sets of tuples of strings,
- * e.g. "{a, b, c}" or "{(a,b), (c,d)}".
- * @author Alexander Koller
- */
 public class IsiAmrParser {
-    private LambdaGraph graph = null;
+    private SGraph graph = null;
 
-	public static LambdaGraph parse(Reader reader) throws ParseException {
+	public static SGraph parse(Reader reader) throws ParseException {
 		IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
 
                 parser.ReInit(reader);
 
-                parser.graph = new LambdaGraph();
+                parser.graph = new SGraph();
 
                 parser.graph();
 		return parser.graph;
-	}
-
-        public static GraphCombiningOperation parseOperation(Reader reader) throws ParseException {
-		IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
-
-                parser.ReInit(reader);
-
-                parser.graph = new LambdaGraph();
-
-                Tree<OpNode> ops = parser.operation();
-		return new GraphCombiningOperation(ops);
 	}
 
 }
@@ -65,14 +49,14 @@ TOKEN :
     <DOUBLE_QUOTED_TOKEN: "\"" (~["\""])* "\"">
 }
 
-Tree<OpNode> operation() :
-{
-    Tree<OpNode> graphOp;
-    Tree<OpNode> ret;
-}{
-    graph() { graphOp = Tree.create(opGraph(graph)); }
-    ret = applyList(graphOp) { return ret; }
-}
+//Tree<OpNode> operation() :
+//{
+//    Tree<OpNode> graphOp;/
+//    Tree<OpNode> ret;
+//}{
+//    graph() { graphOp = Tree.create(opGraph(graph)); }
+//    ret = applyList(graphOp) { return ret; }
+//}
 
 Tree<OpNode> applyList(Tree<OpNode> term) :
 {
@@ -94,14 +78,14 @@ void graph() :
     String name;
     List<String> vars = new ArrayList<String>();
 }{
-    ("\\" name=token() { vars.add(name); graph.addNode(name, null);  }
-          ("," name=token() {vars.add(name); graph.addNode(name, null); })*    )?
-    g = node() {
-      for( String v : vars ) {
-        GraphNode n = graph.getNode(v);
-        graph.addVariable(n);
-      }
-    }
+//    ("\\" name=token() { vars.add(name); graph.addNode(name, null);  }
+//          ("," name=token() {vars.add(name); graph.addNode(name, null); })*    )?
+    g = node()
+//      for( String v : vars ) {
+//        GraphNode n = graph.getNode(v);
+//        graph.addVariable(n);
+//      }
+//    }
 }
 
 
@@ -111,11 +95,15 @@ GraphNode node() :
   String nodename;
   String nodelabel = null;
   String edgelabel;
+  String source = null;
   GraphNode edgeTarget;  
 }
 {
-  "(" (nodename=token() ("/" nodelabel=token())?  {
+  "(" (nodename=token() ("<" source=token() ">")? ("/" nodelabel=token())?  {
          u = graph.addNode(nodename, nodelabel);
+         if( source != null ) {
+             graph.addSource(source, nodename);
+         }
        })?
       (edgelabel=edge()  edgeTarget=node() {
          graph.addEdge(u, edgeTarget, edgelabel);

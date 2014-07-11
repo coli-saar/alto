@@ -106,4 +106,14 @@ public class Util {
         List<V> childValues = mapList(tree.getChildren(), u -> dfs(u, visitor));
         return visitor.combine(tree, childValues);
     }
+    
+    public static <E,F> com.google.common.base.Function<E,F> gfun(Function<E,F> javafun) {
+        return new com.google.common.base.Function<E,F>() {
+            @Override
+            public F apply(E x) {
+                return javafun.apply(x);
+            }
+            
+        };
+    }
 }

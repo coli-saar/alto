@@ -69,7 +69,8 @@ public class AmrbankReader extends DefaultHandler {
                 try {
                     // TODO - #17 uses node name i before node i/i is declared
 //                    System.err.println("||" + x + "||");
-                    LambdaGraph lg = IsiAmrParser.parse(new StringReader(x));
+//XXX                    LambdaGraph lg = IsiAmrParser.parse(new StringReader(x));
+                    LambdaGraph lg = null;
                     System.out.println(lg.toIsiAmrString());
                 } catch (Exception ex) {
                     System.err.println("Exception while parsing " + id + ": " + ex);

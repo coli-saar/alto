@@ -4,11 +4,11 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import com.jgraph.layout.JGraphFacade;
 import com.jgraph.layout.JGraphLayout;
 import com.jgraph.layout.hierarchical.JGraphHierarchicalLayout;
+import static de.up.ling.irtg.util.Util.gfun;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -59,8 +60,8 @@ public class LambdaGraph {
 
     public GraphNode addNode(String name, String label) {
         GraphNode u = nameToNode.get(name);
-        
-        if( u != null ) {
+
+        if (u != null) {
             if (label != null) {
                 nameToNode.get(name).setLabel(label);
             }
@@ -70,7 +71,7 @@ public class LambdaGraph {
             nameToNode.put(name, u);
             hasCachedHashcode = false;
         }
-        
+
         return u;
     }
 
@@ -157,7 +158,7 @@ public class LambdaGraph {
     List<String> mapNodeNames(List<String> nodes) {
         List<String> ret = new ArrayList<String>();
 
-        Iterables.addAll(ret, Iterables.transform(nodes, renameNodeF()));
+        Iterables.addAll(ret, Iterables.transform(nodes, gfun(renameNodeF())));
 
         return ret;
     }
@@ -230,9 +231,9 @@ public class LambdaGraph {
 
     @Override
     public String toString() {
-        String varpart = Iterables.transform(variables, GraphNode.nameF).toString();
-        String nodepart = Iterables.transform(graph.vertexSet(), GraphNode.reprF).toString();
-        String edgepart = Iterables.transform(graph.edgeSet(), GraphEdge.reprF).toString();
+        String varpart = Iterables.transform(variables, gfun(GraphNode.nameF)).toString();
+        String nodepart = Iterables.transform(graph.vertexSet(), gfun(GraphNode.reprF)).toString();
+        String edgepart = Iterables.transform(graph.edgeSet(), gfun(GraphEdge.reprF)).toString();
 
         return varpart + " -> " + nodepart + edgepart;
     }
@@ -353,12 +354,12 @@ public class LambdaGraph {
     }
 
     public boolean isIsomorphic(LambdaGraph other) {
-        GraphIsomorphismInspector iso =
-                AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
-                getGraph(),
-                other.getGraph(),
-                new GraphNode.NodeLabelEquivalenceComparator(),
-                null);
+        GraphIsomorphismInspector iso
+                = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
+                        getGraph(),
+                        other.getGraph(),
+                        new GraphNode.NodeLabelEquivalenceComparator(),
+                        null);
 
         if (!iso.isIsomorphic()) {
             return false;
@@ -367,11 +368,14 @@ public class LambdaGraph {
                 final IsomorphismRelation<GraphNode, GraphEdge> ir = (IsomorphismRelation<GraphNode, GraphEdge>) iso.next();
                 List<GraphNode> rewrittenVariables = new ArrayList<GraphNode>();
 
-                Iterables.addAll(rewrittenVariables, Iterables.transform(variables, new Function<GraphNode, GraphNode>() {
-                    public GraphNode apply(GraphNode f) {
-                        return ir.getVertexCorrespondence(f, true);
-                    }
-                }));
+                Iterables.addAll(rewrittenVariables, Iterables.transform(variables, gfun(f -> ir.getVertexCorrespondence(f, true))));
+                        
+//                        
+//                        new Function<GraphNode, GraphNode>() {
+//                    public GraphNode apply(GraphNode f) {
+//                        return ir.getVertexCorrespondence(f, true);
+//                    }
+//                }));
 
                 if (rewrittenVariables.equals(other.variables)) {
                     return true;

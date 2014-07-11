@@ -27,6 +27,7 @@ class Util {
      }
     
     public static LambdaGraph pg(String s) throws ParseException {
-        return IsiAmrParser.parse(new StringReader(s));
+        return null;
+//        return IsiAmrParser.parse(new StringReader(s));
     }
 }
