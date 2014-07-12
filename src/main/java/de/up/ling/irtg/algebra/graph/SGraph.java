@@ -94,10 +94,9 @@ public class SGraph {
         }
 
 //        assert sourceToNodename.keySet().containsAll(other.sourceToNodename.keySet()) : "undefined source when merging " + this + " with " + other;
-        
         // map node names of "other" to node names of "this" with same source
         // (if the same source node exists in both s-graphs)
-        Map<String, String> nodeRenaming = new HashMap<>(); 
+        Map<String, String> nodeRenaming = new HashMap<>();
         for (String source : other.sourceToNodename.keySet()) {
             if (this.sourceToNodename.containsKey(source)) {
                 nodeRenaming.put(other.sourceToNodename.get(source), this.sourceToNodename.get(source));
@@ -106,7 +105,7 @@ public class SGraph {
 
         SGraph ret = new SGraph();
         copyInto(ret);
-        other.copyInto(ret, nodeRenaming::get);
+        other.copyInto(ret, renamingF(nodeRenaming));
 
         // if "other" has source names that "this" does not,
         // then quietly forget these
@@ -134,6 +133,17 @@ public class SGraph {
         return ret;
     }
 
+    private static Function<String, String> renamingF(final Map<String, String> renamingMap) {
+        return nodename -> {
+            String mapped = renamingMap.get(nodename);
+            if (mapped == null) {
+                return nodename;
+            } else {
+                return mapped;
+            }
+        };
+    }
+
     public SGraph withFreshNodenames() {
         Map<String, String> renaming = new HashMap<>();
 
@@ -142,8 +152,8 @@ public class SGraph {
         }
 
         SGraph ret = new SGraph();
-        copyInto(ret, renaming::get);
-
+        copyInto(ret, renamingF(renaming));
+        
         return ret;
     }
 

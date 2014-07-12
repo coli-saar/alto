@@ -98,5 +98,13 @@ class SGraphTest {
         
         assertEquals(gold, combined)
     }
+    
+    @Test
+    public void testMerge3() {
+        SGraph g1 = pg("(u_15<root> :ARG0 (u_16<obj>) :ARG1 (u_17<xcomp>))")
+        SGraph g2 = pg("(u_11<xcomp> / want-01  :ARG0 (u_12<subj> / boy)  :ARG1 (u_13<vcomp> / go-01  :ARG0 (u_14<obj> / girl))  :dummy (u_14))")
+
+        g1.merge(g2)
+    }
 }
 

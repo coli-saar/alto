@@ -22,6 +22,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             if (label == null) {
                 return null;
             } else if (label.equals("merge")) {
+                System.err.println("trying to merge " + childrenValues.get(0) + " with " + childrenValues.get(1));
                 return childrenValues.get(0).merge(childrenValues.get(1));
             } else if (label.startsWith("r_")) {
                 String[] parts = label.split("_");
