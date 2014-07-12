@@ -7,7 +7,6 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import java.io.StringReader;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JComponent;
@@ -17,14 +16,6 @@ import javax.swing.JComponent;
  * @author koller
  */
 public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
-
-    private Map<String, GraphCombiningOperation> operations;
-
-    public GraphAlgebra() {
-        operations = new HashMap<String, GraphCombiningOperation>();
-    }
-
-    
     @Override
     protected SGraph evaluate(String label, List<SGraph> childrenValues) {
         try {

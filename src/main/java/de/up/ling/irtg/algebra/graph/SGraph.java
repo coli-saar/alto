@@ -10,6 +10,7 @@ import static de.up.ling.irtg.util.TestingTools.pt;
 import static de.up.ling.irtg.util.Util.gfun;
 import de.up.ling.tree.Tree;
 import java.io.StringReader;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -17,6 +18,9 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
+import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
+import org.jgrapht.experimental.isomorphism.IsomorphismRelation;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 /**
@@ -67,8 +71,16 @@ public class SGraph {
         sourceToNodename.put(sourceName, nodename);
     }
     
+    public String getSource(String sourceName) {
+        return sourceToNodename.get(sourceName);
+    }
+    
     public GraphNode getNode(String name) {
         return nameToNode.get(name);
+    }
+    
+    public Collection<String> getAllNodeNames() {
+        return nameToNode.keySet();
     }
 
     public boolean containsNode(String name) {
@@ -229,43 +241,65 @@ public class SGraph {
         return sourceToNodename + nodepart + edgepart;
     }
     
-    public static void main(String[] args) throws ParseException {
-        SGraph want = IsiAmrParser.parse(new StringReader("(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))"));
-        SGraph boy = IsiAmrParser.parse(new StringReader("(x<root> / boy)"));
-        SGraph go = IsiAmrParser.parse(new StringReader("(g<root> / go-01  :ARG0 (s<subj>))"));
-        
-//        System.out.println(want);        
-//        System.out.println(want.withFreshNodenames());
-//        System.out.println(want.renameSource("root", "foo"));
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
 
-        System.err.println("go: " + go);
-        System.err.println("go f: " + go.withFreshNodenames());
-        System.err.println("go: " + go.withFreshNodenames().renameSource("root", "vcomp").renameSource("subj", "subj"));
-        System.err.println("boy: " + boy.withFreshNodenames().renameSource("root", "subj"));
-        
-        
-        SGraph combined = want.withFreshNodenames().merge(go.withFreshNodenames().renameSource("root", "vcomp").renameSource("subj", "subj"))
-                    .merge(boy.withFreshNodenames().renameSource("root", "subj"));
-        
-        System.err.println("com " + combined);
-        
-//        SGraphDrawer.draw(combined, "SGraph");
-        
-        
-        
-        GraphAlgebra alg = new GraphAlgebra();
-        
-        Tree<String> term;
-        
-        term = pt("merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj('(x<root> / boy)'))");
-        System.err.println("eval1: " + alg.evaluate(term));
-        
-        
-        term = pt("merge(merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj('(x<root> / boy)')), r_vcomp(r_subj_subj('(g<root> / go-01  :ARG0 (s<subj>))')))");
-        term.draw();
-        
-        SGraph c = alg.evaluate(term);
-        System.err.println(c);
-        SGraphDrawer.draw(c, "c");
+        final SGraph other = (SGraph) obj;
+
+        return isIsomorphic(other);
     }
+    
+    public boolean isIsomorphic(SGraph other) {
+        GraphIsomorphismInspector iso
+                = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
+                        getGraph(),
+                        other.getGraph(),
+                        new GraphNode.NodeLabelEquivalenceComparator(),
+                        null);
+
+        if (!iso.isIsomorphic()) {
+            return false;
+        } else {
+            while (iso.hasNext()) {
+                final IsomorphismRelation<GraphNode, GraphEdge> ir = (IsomorphismRelation<GraphNode, GraphEdge>) iso.next();
+                
+                Map<String,String> rewrittenSources = new HashMap<>(sourceToNodename);
+                rewrittenSources.replaceAll((k,v) -> ir.getVertexCorrespondence(getNode(v), true).getName());
+                
+                if (rewrittenSources.equals(other.sourceToNodename)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+    
+    /*
+    @Override
+    public int hashCode() {
+        if (hasCachedHashcode) {
+            return cachedHashcode;
+        } else {
+            cachedHashcode = 17 * variables.size();
+
+            for (GraphEdge edge : graph.edgeSet()) {
+                int x = edge.getSource().getLabel() == null ? 29 : 5 * edge.getSource().getLabel().hashCode();
+                int y = edge.getLabel() == null ? 31 : 7 * edge.getLabel().hashCode();
+                int z = edge.getTarget().getLabel() == null ? 41 : 11 * edge.getTarget().getLabel().hashCode();
+                cachedHashcode += x + y + z;  // this needs to be equal for different orders in which the edges are enumerated
+            }
+
+            hasCachedHashcode = true;
+            return cachedHashcode;
+        }
+    }
+    */
+    
 }

@@ -5,8 +5,8 @@
 package de.up.ling.irtg.script;
 
 import de.up.ling.irtg.algebra.graph.IsiAmrParser;
-import de.up.ling.irtg.algebra.graph.LambdaGraph;
 import de.up.ling.irtg.algebra.graph.ParseException;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -69,8 +69,7 @@ public class AmrbankReader extends DefaultHandler {
                 try {
                     // TODO - #17 uses node name i before node i/i is declared
 //                    System.err.println("||" + x + "||");
-//XXX                    LambdaGraph lg = IsiAmrParser.parse(new StringReader(x));
-                    LambdaGraph lg = null;
+                    SGraph lg = IsiAmrParser.parse(new StringReader(x));
                     System.out.println(lg.toIsiAmrString());
                 } catch (Exception ex) {
                     System.err.println("Exception while parsing " + id + ": " + ex);

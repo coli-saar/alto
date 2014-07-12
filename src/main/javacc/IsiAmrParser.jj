@@ -19,7 +19,6 @@ import java.io.*;
 import org.jgrapht.*;
 import org.jgrapht.graph.*;
 import de.up.ling.tree.*;
-import static de.up.ling.irtg.algebra.graph.GraphCombiningOperation.*;
 
 public class IsiAmrParser {
     private SGraph graph = null;
@@ -44,32 +43,7 @@ TOKEN :
 {
     <NAME: ((["a"-"z", "A"-"Z", "-", "_", "0"-"9", "."])+ )> |
     <EDGE: [":"] (~[" ", "\t", "\n"])*> |
-    <VAR:  ["?"] ((["0"-"9"])+)> |
-    <APPLY: "+" ([" ", "\t", "\r", "\n"])* "apply"> |
     <DOUBLE_QUOTED_TOKEN: "\"" (~["\""])* "\"">
-}
-
-//Tree<OpNode> operation() :
-//{
-//    Tree<OpNode> graphOp;/
-//    Tree<OpNode> ret;
-//}{
-//    graph() { graphOp = Tree.create(opGraph(graph)); }
-//    ret = applyList(graphOp) { return ret; }
-//}
-
-Tree<OpNode> applyList(Tree<OpNode> term) :
-{
-    int varnum;
-    String t;
-    List<String> args = new ArrayList<String>();
-}{
-    ("+" varnum = var()  ("(" (t = token() { args.add(t); }  ("," t = token() { args.add(t); })*)? ")")?
-      {
-        term = Tree.create(opCombine(args), new Tree[] { term, Tree.create(opVar(varnum)) });
-        args = new ArrayList<String>();
-      }
-    )* { return term; }
 }
 
 void graph() :
@@ -132,11 +106,4 @@ String edge() :
     Token tok;
 }{
     tok = <EDGE> { return tok.image.substring(1); }
-}
-
-int var() :
-{
-    Token tok;
-}{
-    tok = <VAR> { return Integer.parseInt(tok.image.substring(1)) - 1; }
 }

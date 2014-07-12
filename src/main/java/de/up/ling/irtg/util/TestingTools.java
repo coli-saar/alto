@@ -9,6 +9,8 @@ import de.saar.basic.StringOrVariable;
 import de.saar.chorus.term.Term;
 import de.saar.chorus.term.parser.TermParser;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.graph.IsiAmrParser;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.ParseException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -65,6 +67,10 @@ public class TestingTools {
     
     public static InterpretedTreeAutomaton pi(InputStream r) throws IOException, de.up.ling.irtg.codec.ParseException {
         return InterpretedTreeAutomaton.read(r);
+    }
+    
+    public static SGraph pg(String s) throws de.up.ling.irtg.algebra.graph.ParseException {
+        return IsiAmrParser.parse(new StringReader(s));
     }
 
     public static Homomorphism hom(Map<String, String> mappings, Signature sourceSignature) {
