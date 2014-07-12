@@ -6,7 +6,9 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Iterables;
+import static de.up.ling.irtg.util.TestingTools.pt;
 import static de.up.ling.irtg.util.Util.gfun;
+import de.up.ling.tree.Tree;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,6 +81,8 @@ public class SGraph {
             throw new UnsupportedOperationException("Graphs are not disjoint");
         }
         
+        assert sourceToNodename.keySet().containsAll(other.sourceToNodename.keySet());
+        
         Map<String,String> nodeRenaming = new HashMap<>(); // maps node names of other to node names of this with same source
         for( String source : other.sourceToNodename.keySet() ) {
             assert this.sourceToNodename.containsKey(source);
@@ -95,6 +99,10 @@ public class SGraph {
     public SGraph renameSource(String oldName, String newName) {
         if( ! sourceToNodename.containsKey(oldName)) {
             throw new UnsupportedOperationException("Graph has no node for source " + oldName);
+        }
+        
+        if( oldName.equals(newName)) {
+            return this;
         }
         
         // TODO - old graph and nodename table could be safely shared
@@ -241,6 +249,23 @@ public class SGraph {
         
         System.err.println("com " + combined);
         
-        SGraphDrawer.draw(combined, "SGraph");
+//        SGraphDrawer.draw(combined, "SGraph");
+        
+        
+        
+        GraphAlgebra alg = new GraphAlgebra();
+        
+        Tree<String> term;
+        
+        term = pt("merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj('(x<root> / boy)'))");
+        System.err.println("eval1: " + alg.evaluate(term));
+        
+        
+        term = pt("merge(merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj('(x<root> / boy)')), r_vcomp(r_subj_subj('(g<root> / go-01  :ARG0 (s<subj>))')))");
+        term.draw();
+        
+        SGraph c = alg.evaluate(term);
+        System.err.println(c);
+        SGraphDrawer.draw(c, "c");
     }
 }

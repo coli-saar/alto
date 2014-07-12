@@ -16,64 +16,65 @@ import javax.swing.JComponent;
  *
  * @author koller
  */
-public class GraphAlgebra extends EvaluatingAlgebra<LambdaGraph> {
+public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
+
     private Map<String, GraphCombiningOperation> operations;
 
     public GraphAlgebra() {
         operations = new HashMap<String, GraphCombiningOperation>();
     }
 
-    protected GraphCombiningOperation op(String opDescription, int arity) throws ParseException {
-        GraphCombiningOperation ret = operations.get(opDescription);
-
-        if (ret == null) {
-//XXX            ret = IsiAmrParser.parseOperation(new StringReader(opDescription));
-            ret = null;
-            getSignature().addSymbol(opDescription, arity);
-            operations.put(opDescription, ret);
-        }
-
-        return ret;
-    }
-
+    
     @Override
-    protected LambdaGraph evaluate(String label, List<LambdaGraph> childrenValues) {
+    protected SGraph evaluate(String label, List<SGraph> childrenValues) {
         try {
-            GraphCombiningOperation op = op(label, childrenValues.size());
-            return op.evaluate(childrenValues);
+            if (label == null) {
+                return null;
+            } else if (label.equals("merge")) {
+                return childrenValues.get(0).merge(childrenValues.get(1));
+            } else if (label.startsWith("r_")) {
+                String[] parts = label.split("_");
+                
+                if( parts.length == 2 ) {
+                    parts = new String[] { "r", "root", parts[1] };
+                }
+                
+                return childrenValues.get(0).renameSource(parts[1], parts[2]);
+            } else {
+                SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
+                return sgraph.withFreshNodenames();
+            }
         } catch (ParseException ex) {
             throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
         }
     }
 
     @Override
-    protected boolean isValidValue(LambdaGraph value) {
+    protected boolean isValidValue(SGraph value) {
         return true;
     }
 
     @Override
-    public LambdaGraph parseString(String representation) throws ParserException {
+    public SGraph parseString(String representation) throws ParserException {
         try {
-            throw new ParseException();
-//XXX            return IsiAmrParser.parse(new StringReader(representation));
+            return IsiAmrParser.parse(new StringReader(representation));
         } catch (ParseException ex) {
             throw new ParserException(ex);
         }
     }
 
     @Override
-    public JComponent visualize(LambdaGraph graph) {
-        return graph.makeComponent();
+    public JComponent visualize(SGraph graph) {
+        return SGraphDrawer.makeComponent(graph);
     }
 
     @Override
-    public Map<String, String> getRepresentations(LambdaGraph object) {
-        Map<String,String> ret = super.getRepresentations(object);
-        
+    public Map<String, String> getRepresentations(SGraph object) {
+        Map<String, String> ret = super.getRepresentations(object);
+
         ret.put("ISI-style AMR", object.toIsiAmrString());
-        
+
         return ret;
     }
-    
-    
+
 }

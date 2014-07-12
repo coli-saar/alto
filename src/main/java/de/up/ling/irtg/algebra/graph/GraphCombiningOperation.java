@@ -6,6 +6,7 @@ package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import static de.up.ling.irtg.util.Util.gfun;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.util.List;
@@ -52,7 +53,7 @@ public class GraphCombiningOperation {
                             return null;
                         }
                         
-                        List<String> renamedArgs = Lists.newArrayList(Iterables.transform(args, fun.renameNodeF()));
+                        List<String> renamedArgs = Lists.newArrayList(Iterables.transform(args, gfun(fun.renameNodeF())));
                         LambdaGraph arg = childrenValues.get(1).apply(renamedArgs);
                         ret = fun.merge(arg);
                         break;
