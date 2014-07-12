@@ -147,12 +147,17 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
 
         @Override
         public Set<Rule> getRulesTopDown(int label, int parentState) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException("Decomposition automata of evaluating algebras do not support top-down queries.");
         }
 
         @Override
         public boolean supportsTopDownQueries() {
             return false;
+        }
+
+        @Override
+        public boolean supportsBottomUpQueries() {
+            return true;
         }
 
         @Override

@@ -16,7 +16,6 @@ import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
-import de.up.ling.irtg.codec.IrtgParser;
 import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;

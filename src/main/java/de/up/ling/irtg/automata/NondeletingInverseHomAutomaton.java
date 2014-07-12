@@ -14,6 +14,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -53,30 +54,21 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
         remappingHomSymbolToIntFunction = f -> labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().applyAsInt(f)]; // TODO replace by sig mapper
 
         this.stateInterner = (Interner) rhsAutomaton.stateInterner;
-        allStates = new IntOpenHashSet(rhsAutomaton.getAllStates());
 
-        // copying interner of rhsAutomaton is pointless at this point,
-        // because rhsAutomaton may be lazy        
-//        for( int i = 1; i < rhsAutomaton.stateInterner.getNextIndex(); i++ ) {
-//            stateInterner.addObject(rhsAutomaton.stateInterner.resolveId(i).toString());
-//        }
         assert hom.isNonDeleting();
 
-//        rhsState = new HashMap<String, State>();
         finalStates.addAll(rhsAutomaton.getFinalStates());
 
-//        for (State fin : rhsAutomaton.getFinalStates()) {
-//            finalStates.add(fin.toString());
-//        }
-        // _must_ do this here to cache mapping from strings to rhs states
-        // (I think no longer necessary)
-//        for (State s : rhsAutomaton.getAllStates()) {
-//            String normalized = addState(s.toString());
-//            rhsState.put(normalized, s);
-//        }
         termIDCache = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
         parentToTermID = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
     }
+
+    @Override
+    public IntSet getAllStates() {
+        return rhsAutomaton.getAllStates();
+    }
+    
+    
 
     public Set<Rule> getRulesBottomUpFromExplicitWithTermID(int termID, int[] childStates) {
         int childHash = Arrays.hashCode(childStates);

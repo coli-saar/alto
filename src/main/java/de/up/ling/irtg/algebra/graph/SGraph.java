@@ -28,6 +28,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * @author koller
  */
 public class SGraph {
+
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;
@@ -41,8 +42,8 @@ public class SGraph {
 
     public GraphNode addNode(String name, String label) {
         GraphNode u = nameToNode.get(name);
-        
-        if( u != null ) {
+
+        if (u != null) {
             if (label != null) {
                 nameToNode.get(name).setLabel(label);
             }
@@ -51,7 +52,7 @@ public class SGraph {
             graph.addVertex(u);
             nameToNode.put(name, u);
         }
-        
+
         return u;
     }
 
@@ -66,19 +67,19 @@ public class SGraph {
         e.setLabel(label);
         return e;
     }
-    
+
     public void addSource(String sourceName, String nodename) {
         sourceToNodename.put(sourceName, nodename);
     }
-    
+
     public String getSource(String sourceName) {
         return sourceToNodename.get(sourceName);
     }
-    
+
     public GraphNode getNode(String name) {
         return nameToNode.get(name);
     }
-    
+
     public Collection<String> getAllNodeNames() {
         return nameToNode.keySet();
     }
@@ -86,102 +87,109 @@ public class SGraph {
     public boolean containsNode(String name) {
         return nameToNode.containsKey(name);
     }
-    
-    
+
     public SGraph merge(SGraph other) {
-        if( nameToNode.keySet().stream().anyMatch(other.nameToNode::containsKey) ) {
+        if (nameToNode.keySet().stream().anyMatch(other.nameToNode::containsKey)) {
             throw new UnsupportedOperationException("Graphs are not disjoint");
         }
+
+//        assert sourceToNodename.keySet().containsAll(other.sourceToNodename.keySet()) : "undefined source when merging " + this + " with " + other;
         
-        assert sourceToNodename.keySet().containsAll(other.sourceToNodename.keySet());
-        
-        Map<String,String> nodeRenaming = new HashMap<>(); // maps node names of other to node names of this with same source
-        for( String source : other.sourceToNodename.keySet() ) {
-            assert this.sourceToNodename.containsKey(source);
-            nodeRenaming.put(other.sourceToNodename.get(source), this.sourceToNodename.get(source));
+        // map node names of "other" to node names of "this" with same source
+        // (if the same source node exists in both s-graphs)
+        Map<String, String> nodeRenaming = new HashMap<>(); 
+        for (String source : other.sourceToNodename.keySet()) {
+            if (this.sourceToNodename.containsKey(source)) {
+                nodeRenaming.put(other.sourceToNodename.get(source), this.sourceToNodename.get(source));
+            }
         }
-        
+
         SGraph ret = new SGraph();
         copyInto(ret);
         other.copyInto(ret, nodeRenaming::get);
-        
+
+        // if "other" has source names that "this" does not,
+        // then quietly forget these
+        ret.sourceToNodename = this.sourceToNodename;
+
         return ret;
     }
-    
+
     public SGraph renameSource(String oldName, String newName) {
-        if( ! sourceToNodename.containsKey(oldName)) {
+        if (!sourceToNodename.containsKey(oldName)) {
             throw new UnsupportedOperationException("Graph has no node for source " + oldName);
         }
-        
-        if( oldName.equals(newName)) {
+
+        if (oldName.equals(newName)) {
             return this;
         }
-        
+
         // TODO - old graph and nodename table could be safely shared
-        SGraph ret = new SGraph();        
+        SGraph ret = new SGraph();
         copyInto(ret);
-        
+
         String nodenameForSource = ret.sourceToNodename.remove(oldName);
         ret.sourceToNodename.put(newName, nodenameForSource);
-        
+
         return ret;
     }
-    
+
     public SGraph withFreshNodenames() {
-        Map<String,String> renaming = new HashMap<>();
-        
-        for( String nodename : nameToNode.keySet() ) {
+        Map<String, String> renaming = new HashMap<>();
+
+        for (String nodename : nameToNode.keySet()) {
             renaming.put(nodename, gensym("u"));
         }
-        
+
         SGraph ret = new SGraph();
         copyInto(ret, renaming::get);
-        
+
         return ret;
     }
-    
+
     private void copyInto(SGraph into) {
-        copyInto(into, x -> { return x; });
+        copyInto(into, x -> {
+            return x;
+        });
     }
-    
-    private void copyInto(SGraph into, Function<String,String> nodeRenaming) {
-        for( String nodename : nameToNode.keySet() ) {
+
+    private void copyInto(SGraph into, Function<String, String> nodeRenaming) {
+        for (String nodename : nameToNode.keySet()) {
             into.addNode(nodeRenaming.apply(nodename), nameToNode.get(nodename).getLabel());
         }
-        
-        for( GraphEdge edge : graph.edgeSet() ) {
-            into.addEdge(into.getNode(nodeRenaming.apply(edge.getSource().getName())), 
-                         into.getNode(nodeRenaming.apply(edge.getTarget().getName())),
-                         edge.getLabel());
+
+        for (GraphEdge edge : graph.edgeSet()) {
+//            System.err.println("copy: " + edge);
+            into.addEdge(into.getNode(nodeRenaming.apply(edge.getSource().getName())),
+                    into.getNode(nodeRenaming.apply(edge.getTarget().getName())),
+                    edge.getLabel());
         }
-        
-        for( String source : sourceToNodename.keySet() ) {
+
+        for (String source : sourceToNodename.keySet()) {
             into.addSource(source, nodeRenaming.apply(sourceToNodename.get(source)));
         }
     }
-    
 
     public DirectedGraph<GraphNode, GraphEdge> getGraph() {
         return graph;
     }
-    
+
     public String getSourceLabel(String nodename) {
-        for( String source : sourceToNodename.keySet() ) {
-            if( sourceToNodename.get(source).equals(nodename) ) {
+        for (String source : sourceToNodename.keySet()) {
+            if (sourceToNodename.get(source).equals(nodename)) {
                 return "<" + source + ">";
             }
         }
-        
+
         return "";
     }
-    
+
     private static String gensym(String prefix) {
         return prefix + "_" + (nextGensym++);
     }
-    
-    
+
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[-a-zA-z0-9]+");
-    
+
     private static String p(String s) {
         if (TOKEN_PATTERN.matcher(s).matches()) {
             return s;
@@ -189,7 +197,7 @@ public class SGraph {
             return "\"" + s + "\"";
         }
     }
-    
+
     private void toAmrVisit(GraphNode u, Set<GraphNode> visitedNodes, StringBuilder ret) {
         if (visitedNodes.contains(u)) {
             ret.append(u.getName());
@@ -200,7 +208,7 @@ public class SGraph {
 
             if (!u.getName().startsWith("_")) { // suppress anonymous nodes
                 ret.append("(");
-                ret.append(p(u.getName()));                
+                ret.append(p(u.getName()));
                 nameShown = true;
             }
 
@@ -237,10 +245,10 @@ public class SGraph {
 //        return sourceToNodename + toIsiAmrString();
         String nodepart = Iterables.transform(graph.vertexSet(), gfun(GraphNode.reprF)).toString();
         String edgepart = Iterables.transform(graph.edgeSet(), gfun(GraphEdge.reprF)).toString();
-        
+
         return sourceToNodename + nodepart + edgepart;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -254,7 +262,7 @@ public class SGraph {
 
         return isIsomorphic(other);
     }
-    
+
     public boolean isIsomorphic(SGraph other) {
         GraphIsomorphismInspector iso
                 = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
@@ -268,10 +276,10 @@ public class SGraph {
         } else {
             while (iso.hasNext()) {
                 final IsomorphismRelation<GraphNode, GraphEdge> ir = (IsomorphismRelation<GraphNode, GraphEdge>) iso.next();
-                
-                Map<String,String> rewrittenSources = new HashMap<>(sourceToNodename);
-                rewrittenSources.replaceAll((k,v) -> ir.getVertexCorrespondence(getNode(v), true).getName());
-                
+
+                Map<String, String> rewrittenSources = new HashMap<>(sourceToNodename);
+                rewrittenSources.replaceAll((k, v) -> ir.getVertexCorrespondence(getNode(v), true).getName());
+
                 if (rewrittenSources.equals(other.sourceToNodename)) {
                     return true;
                 }
@@ -280,26 +288,25 @@ public class SGraph {
             return false;
         }
     }
-    
+
     /*
-    @Override
-    public int hashCode() {
-        if (hasCachedHashcode) {
-            return cachedHashcode;
-        } else {
-            cachedHashcode = 17 * variables.size();
+     @Override
+     public int hashCode() {
+     if (hasCachedHashcode) {
+     return cachedHashcode;
+     } else {
+     cachedHashcode = 17 * variables.size();
 
-            for (GraphEdge edge : graph.edgeSet()) {
-                int x = edge.getSource().getLabel() == null ? 29 : 5 * edge.getSource().getLabel().hashCode();
-                int y = edge.getLabel() == null ? 31 : 7 * edge.getLabel().hashCode();
-                int z = edge.getTarget().getLabel() == null ? 41 : 11 * edge.getTarget().getLabel().hashCode();
-                cachedHashcode += x + y + z;  // this needs to be equal for different orders in which the edges are enumerated
-            }
+     for (GraphEdge edge : graph.edgeSet()) {
+     int x = edge.getSource().getLabel() == null ? 29 : 5 * edge.getSource().getLabel().hashCode();
+     int y = edge.getLabel() == null ? 31 : 7 * edge.getLabel().hashCode();
+     int z = edge.getTarget().getLabel() == null ? 41 : 11 * edge.getTarget().getLabel().hashCode();
+     cachedHashcode += x + y + z;  // this needs to be equal for different orders in which the edges are enumerated
+     }
 
-            hasCachedHashcode = true;
-            return cachedHashcode;
-        }
-    }
-    */
-    
+     hasCachedHashcode = true;
+     return cachedHashcode;
+     }
+     }
+     */
 }
