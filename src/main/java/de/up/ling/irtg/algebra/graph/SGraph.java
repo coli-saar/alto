@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Iterables;
 import de.up.ling.irtg.util.Logging;
 import static de.up.ling.irtg.util.Util.gfun;
@@ -29,7 +31,7 @@ public class SGraph {
 
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
-    private Map<String, String> sourceToNodename;
+    private BiMap<String, String> sourceToNodename;
     private static long nextGensym = 1;
     private boolean hasCachedHashcode;
     private int cachedHashcode;
@@ -37,7 +39,7 @@ public class SGraph {
     public SGraph() {
         graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
         nameToNode = new HashMap<String, GraphNode>();
-        sourceToNodename = new HashMap<>();
+        sourceToNodename = HashBiMap.create();
         hasCachedHashcode = false;
     }
 
@@ -257,13 +259,61 @@ public class SGraph {
         return buf.toString();
     }
 
+    private void appendFullRepr(GraphNode node, Set<String> visitedNodes, StringBuilder buf) {
+        buf.append(node.getName());
+
+        if (!visitedNodes.contains(node.getName())) {
+            if (sourceToNodename.inverse().containsKey(node.getName())) {
+                buf.append("<" + sourceToNodename.inverse().get(node.getName()) + ">");
+            }
+
+            if (node.getLabel() != null) {
+                buf.append("/" + node.getLabel());
+            }
+
+            visitedNodes.add(node.getName());
+        }
+    }
+
     @Override
     public String toString() {
-//        return sourceToNodename + toIsiAmrString();
-        String nodepart = Iterables.transform(graph.vertexSet(), gfun(GraphNode.reprF)).toString();
-        String edgepart = Iterables.transform(graph.edgeSet(), gfun(GraphEdge.reprF)).toString();
+        StringBuilder buf = new StringBuilder();
+        Set<String> visitedNodes = new HashSet<>();
 
-        return sourceToNodename + nodepart + edgepart;
+        buf.append("[");
+        for (GraphEdge edge : graph.edgeSet()) {
+            if (!visitedNodes.isEmpty()) {
+                buf.append("; ");
+            }
+
+            appendFullRepr(edge.getSource(), visitedNodes, buf);
+            buf.append(" -" + edge.getLabel() + "-> ");
+            appendFullRepr(edge.getTarget(), visitedNodes, buf);
+        }
+
+        for (GraphNode node : graph.vertexSet() ) {
+            String nodename = node.getName();
+            
+            if (!visitedNodes.contains(nodename)) {
+                if (!visitedNodes.isEmpty()) {
+                    buf.append("; ");
+                }
+                
+                appendFullRepr(node, visitedNodes, buf);
+            }
+        }
+
+        buf.append("]");
+
+        return buf.toString();
+
+//        
+//        
+////        return sourceToNodename + toIsiAmrString();
+//        String nodepart = Iterables.transform(graph.vertexSet(), gfun(GraphNode.reprF)).toString();
+//        String edgepart = Iterables.transform(graph.edgeSet(), gfun(GraphEdge.reprF)).toString();
+//
+//        return sourceToNodename + nodepart + edgepart;
     }
 
     @Override

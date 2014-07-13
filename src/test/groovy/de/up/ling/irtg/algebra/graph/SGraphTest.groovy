@@ -122,5 +122,11 @@ class SGraphTest {
         assert g1.equals(g2) : "not equals"
         assert g1.hashCode() == g2.hashCode() : "different hashcodes"
     }
+    
+    @Test
+    public void testToString() {
+        SGraph g1 = pg("(x<root> / boy)")
+        assertThat(g1.toString(), is("[x<root>/boy]"))
+    }
 }
 
