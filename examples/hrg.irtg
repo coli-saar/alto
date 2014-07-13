@@ -3,7 +3,11 @@
 
    Try parsing this sentence: "the boy wants to go"
 
-   And parsing this graph: (w / want-01  :ARG0 (b / boy)  :ARG1 (g / go-01 :ARG0 b))
+   And parsing this graph: 
+   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))
+   (w / want-01  :ARG0 (b / boy)  :ARG1 (g / go-01 :ARG0 b))
+
+   [w<root>/want-01 -ARG0-> b<subj>/boy; w -ARG1-> g<vcomp>/go-01 -ARG0-> b]
 
    The grammar can translate the sentence "the boy wants the girl to believe that the boy likes the girl",
    which is modeled after Chiang et al., ACL 2012, Figure 2. A crucial difference is that our grammar
@@ -21,34 +25,37 @@
 interpretation string: de.up.ling.irtg.algebra.StringAlgebra
 interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 
-S! -> want2(NP, VP)
-[string] *(?1, *(wants, *(to, ?2)))
-[graph]  "(w / want-01  :ARG0 (b)  :ARG1 (g)) + ?1(b) + ?2(g, b)" (?1, ?2)
+Start! -> top(S)
+[string] ?1
+[graph]  merge("()", ?1)
 
-S! -> want3(NP, NP, VP)
+S -> want2(NP, VP)
+[string] *(?1, *(wants, *(to, ?2)))
+[graph]  merge(merge("(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))", r_subj(?1)), r_vcomp(r_subj_subj(?2)))
+
+S -> want3(NP, NP, VP)
 [string] *(?1, *(wants, *(?2, *(to, ?3))))
-[graph]  "(w / want-01  :ARG0 (subj)  :ARG1 (vcomp)  :dummy (obj)) + ?1(subj) + ?2(obj) + ?3(vcomp, obj)"(?1, ?2, ?3)
+[graph] merge(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>)  :dummy (x<obj>))", r_subj(?1)), r_obj(?2)), r_vcomp(r_subj_obj(?3)))
 
 NP -> boy
 [string] *(the, boy)
-[graph]  "\x (x / boy)"
+[graph]  "(x<root> / boy)"
 
 NP -> girl
 [string] *(the, girl)
-[graph]  "\x (x / girl)"
+[graph]  "(x<root> / girl)"
 
 VP -> believe(S)
 [string] *(believe, *(that, ?1))
-[graph]  "\vcomp, obj  (vcomp / believe-01  :ARG0 (obj)  :ARG1 (xcomp)) + ?1(xcomp)"(?1)
+[graph]  merge("(u<root> / believe-01  :ARG0 (v<obj>)  :ARG1 (w<xcomp>))", r_xcomp(?1))
 
 S -> likes(NP,NP)
 [string] *(?1, *(likes, ?2))
-[graph]  "\x ( x / like-01  :ARG0 (subj)  :ARG1 (obj) ) + ?1(subj) + ?2(obj)"(?1, ?2)
-
+[graph]  merge(merge("(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_subj(?1)), r_obj(?2))
 
 VP -> go
 [string] go
-[graph]  "\x, y (x / go-01  :ARG0 (y))"
+[graph]  "(g<root> / go-01  :ARG0 (s<subj>))"
 
 
 
