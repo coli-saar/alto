@@ -60,11 +60,11 @@ class SGraphTest {
         assertEquals(gold, g1.merge(g2))
     }
     
-    @Test(expected=UnsupportedOperationException.class)
+    @Test
     public void testMergeNotDisjoint() {
         SGraph g1 = pg("(w / want-01  :ARG0 (b)  :ARG1 (g))")
         SGraph g2 = pg("(b :ARG0 (g))")
-        g1.merge(g2)
+        assertThat(g1.merge(g2), nullValue())
     }
     
     @Test
@@ -100,11 +100,18 @@ class SGraphTest {
     }
     
     @Test
-    public void testMerge3() {
+    public void testMergeExtraSourcesInArgument() {
         SGraph g1 = pg("(u_15<root> :ARG0 (u_16<obj>) :ARG1 (u_17<xcomp>))")
-        SGraph g2 = pg("(u_11<xcomp> / want-01  :ARG0 (u_12<subj> / boy)  :ARG1 (u_13<vcomp> / go-01  :ARG0 (u_14<obj> / girl))  :dummy (u_14))")
-
-        g1.merge(g2)
+        SGraph g2 = pg("(u_11<xcomp> / want-01  :ARG0 (u_12<subj> / boy)  :ARG1 (u_13<vcomp> / go-01  :ARG0 (u_14<obj> / girl)))")
+        SGraph gold = pg("(u_15<root>  :ARG0 (u_16<obj> / girl)  :ARG1 (u_17<xcomp> / want-01  :ARG0 (u_12 / boy) :ARG1 (u_13 / go-01 :ARG0 (u_16))))")
+        
+        assertThat(g1.merge(g2), is(gold));        
+    }
+    
+    @Test
+    public void testMergeRenamingUnknownSource() {
+        SGraph g1 = pg("(u_15<root> :ARG0 (u_16<obj>) :ARG1 (u_17<xcomp>))")
+        assertThat(g1.renameSource("foo", "bar"), nullValue())
     }
 }
 

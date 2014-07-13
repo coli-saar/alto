@@ -6,6 +6,7 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Iterables;
+import de.up.ling.irtg.util.Logging;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import static de.up.ling.irtg.util.Util.gfun;
 import de.up.ling.tree.Tree;
@@ -90,7 +91,8 @@ public class SGraph {
 
     public SGraph merge(SGraph other) {
         if (nameToNode.keySet().stream().anyMatch(other.nameToNode::containsKey)) {
-            throw new UnsupportedOperationException("Graphs are not disjoint");
+            Logging.get().warning(() -> "merge: graphs are not disjoint: " + this + ", " + other);
+            return null;
         }
 
 //        assert sourceToNodename.keySet().containsAll(other.sourceToNodename.keySet()) : "undefined source when merging " + this + " with " + other;
@@ -116,7 +118,8 @@ public class SGraph {
 
     public SGraph renameSource(String oldName, String newName) {
         if (!sourceToNodename.containsKey(oldName)) {
-            throw new UnsupportedOperationException("Graph has no node for source " + oldName);
+            Logging.get().warning(() -> "renameSource(" + oldName + "," + newName + "): old source does not exist in graph " + this);
+            return null;
         }
 
         if (oldName.equals(newName)) {
