@@ -28,6 +28,7 @@ interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 Start! -> top(S)
 [string] ?1
 [graph]  merge("()", ?1)
+/* this deletes all sources from ?1 */
 
 S -> want2(NP, VP)
 [string] *(?1, *(wants, *(to, ?2)))
@@ -35,7 +36,10 @@ S -> want2(NP, VP)
 
 S -> want3(NP, NP, VP)
 [string] *(?1, *(wants, *(?2, *(to, ?3))))
-[graph] merge(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>)  :dummy (x<obj>))", r_subj(?1)), r_obj(?2)), r_vcomp(r_subj_obj(?3)))
+[graph] merge(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>)  :dummy (x<obj>))", 
+                          r_subj(?1)), 
+                    r_obj(?2)), 
+              r_vcomp(r_subj_obj(?3)))
 
 NP -> boy
 [string] *(the, boy)
@@ -45,11 +49,12 @@ NP -> girl
 [string] *(the, girl)
 [graph]  "(x<root> / girl)"
 
+// every VP has a "subj" source at which the subject is inserted
 VP -> believe(S)
 [string] *(believe, *(that, ?1))
-[graph]  merge("(u<root> / believe-01  :ARG0 (v<obj>)  :ARG1 (w<xcomp>))", r_xcomp(?1))
+[graph]  merge("(u<root> / believe-01  :ARG0 (v<subj>)  :ARG1 (w<xcomp>))", r_xcomp(f_root(?1)))
 
-S -> likes(NP,NP)
+S! -> likes(NP,NP)
 [string] *(?1, *(likes, ?2))
 [graph]  merge(merge("(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_subj(?1)), r_obj(?2))
 

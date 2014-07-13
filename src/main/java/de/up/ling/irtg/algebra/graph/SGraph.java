@@ -7,9 +7,7 @@ package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Iterables;
 import de.up.ling.irtg.util.Logging;
-import static de.up.ling.irtg.util.Util.gfun;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -139,6 +137,16 @@ public class SGraph {
         String nodenameForSource = ret.sourceToNodename.remove(oldName);
         ret.sourceToNodename.put(newName, nodenameForSource);
 
+        return ret;
+    }
+    
+    public SGraph forgetSourcesExcept(Set<String> retainedSources) {
+        // TODO - old graph and nodename table could be safely shared
+        SGraph ret = new SGraph();
+        copyInto(ret);
+        
+        ret.sourceToNodename.keySet().retainAll(retainedSources);
+        
         return ret;
     }
 

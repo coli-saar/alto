@@ -7,8 +7,11 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import java.io.StringReader;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.swing.JComponent;
 
 /**
@@ -31,6 +34,16 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 }
                 
                 return childrenValues.get(0).renameSource(parts[1], parts[2]);
+            } else if( label.equals("f")) {
+                return childrenValues.get(0).forgetSourcesExcept(Collections.EMPTY_SET);
+            } else if( label.startsWith("f_")) {
+                String[] parts = label.split("_");
+                Set<String> retainedSources = new HashSet<>();
+                for( int i = 1; i < parts.length; i++ ) {
+                    retainedSources.add(parts[i]);
+                }
+                
+                return childrenValues.get(0).forgetSourcesExcept(retainedSources);
             } else {
                 SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
                 return sgraph.withFreshNodenames();
