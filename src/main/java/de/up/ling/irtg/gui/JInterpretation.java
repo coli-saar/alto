@@ -21,6 +21,7 @@ import javax.swing.ToolTipManager;
  * @author koller
  */
 public class JInterpretation extends JDerivationDisplayable {
+
     private Interpretation interp;
 
     /**
@@ -30,7 +31,6 @@ public class JInterpretation extends JDerivationDisplayable {
         this.interp = interp;
 
         initComponents();
-
 
     }
 
@@ -48,11 +48,15 @@ public class JInterpretation extends JDerivationDisplayable {
     @Override
     public void setDerivationTree(Tree<String> derivationTree) {
         final Tree<String> term = interp.getHomomorphism().apply(derivationTree);
+        final Algebra alg = interp.getAlgebra();
 
         termPanel.removeAll();
-        JComponent treePanel = sp(new TreePanel(term));
+        TreePanel<String> rawTreePanel = new TreePanel(term);
+        rawTreePanel.setTooltipSource(t -> alg.evaluate(t).toString());
+        JComponent treePanel = sp(rawTreePanel);
+
         termPanel.add(treePanel);
-        
+
         PopupMenu.create("text", term.toString()).addAsMouseListener(treePanel);
 
         valuePanel.removeAll();
@@ -60,10 +64,9 @@ public class JInterpretation extends JDerivationDisplayable {
         JComponent valueComponent = null;
 
         try {
-            Algebra alg = interp.getAlgebra();
             final Object value = alg.evaluate(term);
             valueComponent = alg.visualize(value);
-            
+
             new PopupMenu(alg.getRepresentations(value)).addAsMouseListener(valueComponent);
         } catch (Exception e) {
             valueComponent = makeErrorComponent(e);
