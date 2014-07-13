@@ -44,6 +44,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -521,6 +522,9 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        
+        // tooltips stay visible forever
+        ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
 
         final GuiMain guiMain = new GuiMain();
         GuiMain.app = guiMain;
