@@ -7,10 +7,7 @@ package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Iterables;
 import de.up.ling.irtg.util.Logging;
-import static de.up.ling.irtg.util.TestingTools.pt;
 import static de.up.ling.irtg.util.Util.gfun;
-import de.up.ling.tree.Tree;
-import java.io.StringReader;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -34,11 +31,14 @@ public class SGraph {
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;
     private static long nextGensym = 1;
+    private boolean hasCachedHashcode;
+    private int cachedHashcode;
 
     public SGraph() {
         graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
         nameToNode = new HashMap<String, GraphNode>();
         sourceToNodename = new HashMap<>();
+        hasCachedHashcode = false;
     }
 
     public GraphNode addNode(String name, String label) {
@@ -54,23 +54,27 @@ public class SGraph {
             nameToNode.put(name, u);
         }
 
+        hasCachedHashcode = false;
         return u;
     }
 
     public GraphNode addAnonymousNode(String label) {
         GraphNode u = new GraphNode(gensym("_u"), label);
         graph.addVertex(u);
+        hasCachedHashcode = false;
         return u;
     }
 
     public GraphEdge addEdge(GraphNode src, GraphNode tgt, String label) {
         GraphEdge e = graph.addEdge(src, tgt);
         e.setLabel(label);
+        hasCachedHashcode = false;
         return e;
     }
 
     public void addSource(String sourceName, String nodename) {
         sourceToNodename.put(sourceName, nodename);
+        hasCachedHashcode = false;
     }
 
     public String getSource(String sourceName) {
@@ -91,7 +95,7 @@ public class SGraph {
 
     public SGraph merge(SGraph other) {
         if (nameToNode.keySet().stream().anyMatch(other.nameToNode::containsKey)) {
-            Logging.get().warning(() -> "merge: graphs are not disjoint: " + this + ", " + other);
+            Logging.get().fine(() -> "merge: graphs are not disjoint: " + this + ", " + other);
             return null;
         }
 
@@ -118,7 +122,7 @@ public class SGraph {
 
     public SGraph renameSource(String oldName, String newName) {
         if (!sourceToNodename.containsKey(oldName)) {
-            Logging.get().warning(() -> "renameSource(" + oldName + "," + newName + "): old source does not exist in graph " + this);
+            Logging.get().fine(() -> "renameSource(" + oldName + "," + newName + "): old source does not exist in graph " + this);
             return null;
         }
 
@@ -156,7 +160,7 @@ public class SGraph {
 
         SGraph ret = new SGraph();
         copyInto(ret, renamingF(renaming));
-        
+
         return ret;
     }
 
@@ -302,24 +306,24 @@ public class SGraph {
         }
     }
 
-    /*
-     @Override
-     public int hashCode() {
-     if (hasCachedHashcode) {
-     return cachedHashcode;
-     } else {
-     cachedHashcode = 17 * variables.size();
+    @Override
+    public int hashCode() {
+        if (hasCachedHashcode) {
+            return cachedHashcode;
+        } else {
+            // compare only source names, because names of the actual
+            // nodes may be different 
+            cachedHashcode = 17 * sourceToNodename.keySet().hashCode();
 
-     for (GraphEdge edge : graph.edgeSet()) {
-     int x = edge.getSource().getLabel() == null ? 29 : 5 * edge.getSource().getLabel().hashCode();
-     int y = edge.getLabel() == null ? 31 : 7 * edge.getLabel().hashCode();
-     int z = edge.getTarget().getLabel() == null ? 41 : 11 * edge.getTarget().getLabel().hashCode();
-     cachedHashcode += x + y + z;  // this needs to be equal for different orders in which the edges are enumerated
-     }
+            for (GraphEdge edge : graph.edgeSet()) {
+                int x = edge.getSource().getLabel() == null ? 29 : 5 * edge.getSource().getLabel().hashCode();
+                int y = edge.getLabel() == null ? 31 : 7 * edge.getLabel().hashCode();
+                int z = edge.getTarget().getLabel() == null ? 41 : 11 * edge.getTarget().getLabel().hashCode();
+                cachedHashcode += x + y + z;  // this needs to be equal for different orders in which the edges are enumerated
+            }
 
-     hasCachedHashcode = true;
-     return cachedHashcode;
-     }
-     }
-     */
+            hasCachedHashcode = true;
+            return cachedHashcode;
+        }
+    }
 }

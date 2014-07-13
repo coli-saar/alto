@@ -113,5 +113,14 @@ class SGraphTest {
         SGraph g1 = pg("(u_15<root> :ARG0 (u_16<obj>) :ARG1 (u_17<xcomp>))")
         assertThat(g1.renameSource("foo", "bar"), nullValue())
     }
+    
+    @Test
+    public void testEqualsHashcode() {
+        SGraph g1 = pg("   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))")
+        SGraph g2 = pg("(u_42<root> / want-01  :ARG0 (u_41<subj> / boy)  :ARG1 (u_43<vcomp> / go-01 :ARG0 u_41))")
+        
+        assert g1.equals(g2) : "not equals"
+        assert g1.hashCode() == g2.hashCode() : "different hashcodes"
+    }
 }
 

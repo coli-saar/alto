@@ -532,7 +532,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         // set up logging
         Logging.setUp();
-        Logging.get().setLevel(Level.ALL);
+        Logging.get().setLevel(Level.INFO);
         
         Logging.setHandler(new Handler() {
             @Override
