@@ -5,15 +5,21 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.util.Logging;
+import de.up.ling.irtg.util.Util;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.jgrapht.DirectedGraph;
@@ -31,6 +37,7 @@ public class SGraph {
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private BiMap<String, String> sourceToNodename;
+    private ListMultimap<String, String> labelToNodename;
     private static long nextGensym = 1;
     private boolean hasCachedHashcode;
     private int cachedHashcode;
@@ -353,6 +360,57 @@ public class SGraph {
         return isIsomorphic(other);
     }
 
+    public boolean isIdentical(SGraph other) {
+        if (!nameToNode.keySet().equals(other.nameToNode.keySet())) {
+            return false;
+        } else if (graph.edgeSet().size() != other.graph.edgeSet().size()) {
+            return false;
+        } else if (!sourceToNodename.equals(other.sourceToNodename)) {
+            return false;
+        } else {
+            for (String nodename : nameToNode.keySet()) {
+                GraphNode nodeHere = nameToNode.get(nodename);
+                GraphNode nodeOther = other.nameToNode.get(nodename);
+
+                if (nodeOther == null) {
+                    return false;
+                } else if (nodeHere.getLabel() == null) {
+                    if (nodeOther.getLabel() != null) {
+                        return false;
+                    }
+                } else if (!nodeHere.getLabel().equals(nodeOther.getLabel())) {
+                    return false;
+                }
+            }
+
+            for (GraphEdge edge : graph.edgeSet()) {
+                GraphEdge edgeInOther = other.findEdge(edge, x -> x);
+                if (edgeInOther == null) {
+                    return false;
+                } else if (edge.getLabel() == null && edgeInOther.getLabel() != null) {
+                    return false;
+                } else if (!edge.getLabel().equals(edgeInOther.getLabel())) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private GraphEdge findEdge(GraphEdge originalEdge, Function<String, String> nodeRenaming) {
+        String remappedSrc = nodeRenaming.apply(originalEdge.getSource().getName());
+        String remappedTgt = nodeRenaming.apply(originalEdge.getTarget().getName());
+        GraphNode src = getNode(remappedSrc);
+        GraphNode tgt = getNode(remappedTgt);
+
+        if (src == null || tgt == null) {
+            return null;
+        } else {
+            return graph.getEdge(src, tgt);
+        }
+    }
+
     public boolean overlapsOnlyInSources(SGraph other) {
         Sets.SetView<String> sharedNodeNames = Sets.intersection(nameToNode.keySet(), other.nameToNode.keySet());
 
@@ -369,6 +427,123 @@ public class SGraph {
         }
 
         return true;
+    }
+
+    public boolean containsAsSubgraph(DirectedGraph<GraphNode, GraphEdge> subgraph, Map<String, String> nodeRenaming) {
+        // check that all nodes in subgraph exist in supergraph,
+        // and labels are the same
+        for (GraphNode u : subgraph.vertexSet()) {
+            String remappedNodename = nodeRenaming.get(u.getName());
+            GraphNode uInSuper = getNode(remappedNodename);
+
+            if (uInSuper == null) {
+                return false;
+            } else if (u.getLabel() != null && !u.getLabel().equals(uInSuper.getLabel())) {
+                return false;
+            }
+        }
+
+        // check that all edges in subgraph exist in supergraph,
+        // and labels are the same
+        for (GraphEdge e : subgraph.edgeSet()) {
+            String remappedSrc = nodeRenaming.get(e.getSource().getName());
+            String remappedTgt = nodeRenaming.get(e.getTarget().getName());
+            GraphNode src = getNode(remappedSrc);
+            GraphNode tgt = getNode(remappedTgt);
+
+            if (src == null || tgt == null) {
+                return false;
+            } else {
+                GraphEdge eInSuper = getGraph().getEdge(src, tgt);
+
+                if (eInSuper == null) {
+                    return false;
+                } else if (e.getLabel() != null && !e.getLabel().equals(eInSuper.getLabel())) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void ensureNodeIndices() {
+        if (labelToNodename == null) {
+            labelToNodename = ArrayListMultimap.create();
+
+            for (GraphNode u : graph.vertexSet()) {
+                if (u.getLabel() != null) {
+                    labelToNodename.put(u.getLabel(), u.getName());
+                }
+            }
+        }
+    }
+
+    public List<SGraph> getMatchingSubgraphs(SGraph subgraph) {
+        final List<SGraph> ret = new ArrayList<>();
+        foreachMatchingSubgraph(subgraph, s -> ret.add(s));
+        return ret;
+    }
+
+    public void foreachMatchingSubgraph(SGraph subgraph, Consumer<SGraph> fn) {
+        Map<String, Set<String>> possibleNodeRenamings = new HashMap<>();
+
+        ensureNodeIndices();
+
+        // initialize node renamings with all nodes that have the same label
+        for (String nodename : subgraph.getAllNodeNames()) {
+            GraphNode node = subgraph.getNode(nodename);
+            String nodelabel = node.getLabel();
+            Set<String> possibleRenamingsHere = null;
+
+            if (nodelabel == null) {
+                possibleRenamingsHere = Util.mapSet(graph.vertexSet(), x -> x.getName());
+            } else {
+                List<String> possibleNodenames = labelToNodename.get(nodelabel);
+                possibleRenamingsHere = new HashSet<String>(possibleNodenames);
+            }
+
+            // filter out node renamings that don't have correct adjacent edge labels
+            for (GraphEdge e : subgraph.graph.outgoingEdgesOf(node)) {
+                possibleRenamingsHere.removeIf(renamedNodeName
+                        -> !getGraph().outgoingEdgesOf(getNode(renamedNodeName))
+                        .stream()
+                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
+                );
+            }
+
+            for (GraphEdge e : subgraph.graph.incomingEdgesOf(node)) {
+                possibleRenamingsHere.removeIf(renamedNodeName
+                        -> !getGraph().incomingEdgesOf(getNode(renamedNodeName))
+                        .stream()
+                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
+                );
+            }
+
+            possibleNodeRenamings.put(nodename, possibleRenamingsHere);
+        }
+
+        // iterate over all combinations
+        List<String> nodesInOrder = new ArrayList<>(possibleNodeRenamings.keySet());
+        _foreachMatchingSubgraph(nodesInOrder, 0, possibleNodeRenamings, new HashMap<String, String>(), subgraph, fn);
+    }
+
+    private void _foreachMatchingSubgraph(List<String> nodes, int pos, Map<String, Set<String>> possibleRenamings, Map<String, String> selectedRenaming, SGraph subgraph, Consumer<SGraph> fn) {
+        if (pos == nodes.size()) {
+            // check that this is actually a subgraph
+            if (containsAsSubgraph(subgraph.getGraph(), selectedRenaming)) {
+                // construct renamed subgraph
+                SGraph renamed = new SGraph();
+                subgraph.copyInto(renamed, selectedRenaming::get);
+                fn.accept(renamed);
+            }
+        } else {
+            String nodeHere = nodes.get(pos);
+            possibleRenamings.get(nodeHere).forEach(renamingHere -> {
+                selectedRenaming.put(nodeHere, renamingHere);
+                _foreachMatchingSubgraph(nodes, pos + 1, possibleRenamings, selectedRenaming, subgraph, fn);
+            });
+        }
     }
 
     public boolean isIsomorphic(SGraph other) {

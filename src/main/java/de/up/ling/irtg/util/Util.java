@@ -7,6 +7,7 @@ package de.up.ling.irtg.util;
 
 import de.up.ling.tree.Tree;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,6 +50,10 @@ public class Util {
 
     public static <I, O> List<O> mapList(List<I> values, Function<I, O> fn) {
         return values.stream().map(fn).collect(Collectors.toList());
+    }
+    
+    public static <I, O> Set<O> mapSet(Set<I> values, Function<I, O> fn) {
+        return values.stream().map(fn).collect(Collectors.toSet());
     }
 
     public static String getFilenameExtension(String fileName) {

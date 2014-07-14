@@ -128,5 +128,53 @@ class SGraphTest {
         SGraph g1 = pg("(x<root> / boy)")
         assertThat(g1.toString(), is("[x<root>/boy]"))
     }
+    
+    @Test
+    public void testIdentical() {
+        SGraph g1 = pg("   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))")
+        SGraph g2 = pg("   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))")
+        
+        assert g1.isIdentical(g2)
+        assert g2.isIdentical(g1)
+    }
+    
+    @Test
+    public void testNotIdentical() {
+        SGraph g1 = pg("   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))")
+        
+        SGraph g2 = pg("   (ww<root> / want-01  :ARG0 (bb<subj> / boy)  :ARG1 (gg<vcomp> / go-01 :ARG0 bb))")
+        assert ! g1.isIdentical(g2)
+        assert ! g2.isIdentical(g1)
+        
+        SGraph g3 = pg("   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 ))")
+        assert ! g1.isIdentical(g3)
+        assert ! g3.isIdentical(g1)
+        
+        SGraph g4 = pg("   (w<root>   :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))")
+        assert ! g1.isIdentical(g4)
+        assert ! g4.isIdentical(g1)
+    }
+    
+    @Test
+    public void testMatchingSubgraphsOneLabeledNode() {
+        SGraph g1 = pg("   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))")
+        SGraph g2 = pg("(w<root> / boy)")
+        List<SGraph> matches = g1.getMatchingSubgraphs(g2);
+        
+        assert matches.size() == 1
+        assert matches.get(0).isIdentical(pg("(b<root>/boy)"))
+    }
+    
+    @Test
+    public void testMatchingSubgraphsOneEdge() {
+        SGraph g1 = pg("   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))")
+        SGraph g2 = pg("(u<1> :ARG0 (v<2>))")
+        List<SGraph> matches = g1.getMatchingSubgraphs(g2);
+        
+        assert matches.size() == 2
+        
+        assert matches.get(0).isIdentical(pg("(w<1> :ARG0 (b<2>))")) || matches.get(0).isIdentical(pg("(g<1> :ARG0 (b<2>))"))
+        assert matches.get(1).isIdentical(pg("(w<1> :ARG0 (b<2>))")) || matches.get(1).isIdentical(pg("(g<1> :ARG0 (b<2>))"))
+    }
 }
 
