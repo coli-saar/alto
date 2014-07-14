@@ -10,6 +10,7 @@ package de.up.ling.irtg.algebra.graph
 import org.junit.*
 import java.util.*
 import java.io.*
+import java.util.logging.Level;
 import de.up.ling.irtg.automata.*
 import static org.junit.Assert.*
 import static org.hamcrest.CoreMatchers.*;
@@ -18,6 +19,7 @@ import de.up.ling.tree.*;
 import de.up.ling.irtg.algebra.*;
 import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
+import de.up.ling.irtg.util.*
 import de.up.ling.irtg.*
 
 import org.jgrapht.*;

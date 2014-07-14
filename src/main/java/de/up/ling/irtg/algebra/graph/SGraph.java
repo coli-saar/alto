@@ -7,6 +7,7 @@ package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.Sets;
 import de.up.ling.irtg.util.Logging;
 import java.util.Collection;
 import java.util.HashMap;
@@ -94,7 +95,7 @@ public class SGraph {
     }
 
     public SGraph merge(SGraph other) {
-        if (nameToNode.keySet().stream().anyMatch(other.nameToNode::containsKey)) {
+        if (!overlapsOnlyInSources(other)) {
             Logging.get().fine(() -> "merge: graphs are not disjoint: " + this + ", " + other);
             return null;
         }
@@ -130,23 +131,31 @@ public class SGraph {
             return this;
         }
 
-        // TODO - old graph and nodename table could be safely shared
+        // make fast, shallow copy of sgraph; this is okay if this sgraph
+        // is not modified after making the copy
         SGraph ret = new SGraph();
-        copyInto(ret);
+        shallowCopyInto(ret);
 
+        // rename the source
+        ret.sourceToNodename = HashBiMap.create(sourceToNodename.size());
+        ret.sourceToNodename.putAll(sourceToNodename);
         String nodenameForSource = ret.sourceToNodename.remove(oldName);
         ret.sourceToNodename.put(newName, nodenameForSource);
 
         return ret;
     }
-    
+
     public SGraph forgetSourcesExcept(Set<String> retainedSources) {
-        // TODO - old graph and nodename table could be safely shared
+        // make fast, shallow copy of sgraph; this is okay if this sgraph
+        // is not modified after making the copy
         SGraph ret = new SGraph();
-        copyInto(ret);
-        
+        shallowCopyInto(ret);
+
+        // forget the other sources
+        ret.sourceToNodename = HashBiMap.create(sourceToNodename.size());
+        ret.sourceToNodename.putAll(sourceToNodename);
         ret.sourceToNodename.keySet().retainAll(retainedSources);
-        
+
         return ret;
     }
 
@@ -172,6 +181,12 @@ public class SGraph {
         copyInto(ret, renamingF(renaming));
 
         return ret;
+    }
+
+    private void shallowCopyInto(SGraph into) {
+        into.graph = graph;
+        into.nameToNode = nameToNode;
+        into.sourceToNodename = sourceToNodename;
     }
 
     private void copyInto(SGraph into) {
@@ -299,14 +314,14 @@ public class SGraph {
             appendFullRepr(edge.getTarget(), visitedNodes, buf);
         }
 
-        for (GraphNode node : graph.vertexSet() ) {
+        for (GraphNode node : graph.vertexSet()) {
             String nodename = node.getName();
-            
+
             if (!visitedNodes.contains(nodename)) {
                 if (!visitedNodes.isEmpty()) {
                     buf.append("; ");
                 }
-                
+
                 appendFullRepr(node, visitedNodes, buf);
             }
         }
@@ -336,6 +351,24 @@ public class SGraph {
         final SGraph other = (SGraph) obj;
 
         return isIsomorphic(other);
+    }
+
+    public boolean overlapsOnlyInSources(SGraph other) {
+        Sets.SetView<String> sharedNodeNames = Sets.intersection(nameToNode.keySet(), other.nameToNode.keySet());
+
+        for (String u : sharedNodeNames) {
+            // u is a node name that exists in both s-graphs
+            String thisSource = sourceToNodename.inverse().get(u);
+            String otherSource = other.sourceToNodename.inverse().get(u);
+
+            // in this case, u must be the node for the same source name
+            // in both graphs
+            if (thisSource == null || otherSource == null || !thisSource.equals(otherSource)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public boolean isIsomorphic(SGraph other) {
