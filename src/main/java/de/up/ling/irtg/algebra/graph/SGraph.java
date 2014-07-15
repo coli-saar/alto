@@ -6,9 +6,9 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.util.Logging;
@@ -39,7 +39,7 @@ public class SGraph {
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;
-    private ListMultimap<String, String> nodenameToSources;
+    private SetMultimap<String, String> nodenameToSources;
     private ListMultimap<String, String> labelToNodename;
     private static long nextGensym = 1;
     private boolean hasCachedHashcode;
@@ -49,7 +49,7 @@ public class SGraph {
         graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
         nameToNode = new HashMap<String, GraphNode>();
         sourceToNodename = new HashMap<>();
-        nodenameToSources = ArrayListMultimap.create();
+        nodenameToSources = HashMultimap.create();
         hasCachedHashcode = false;
     }
 
@@ -112,7 +112,6 @@ public class SGraph {
             return null;
         }
 
-//        assert sourceToNodename.keySet().containsAll(other.sourceToNodename.keySet()) : "undefined source when merging " + this + " with " + other;
         // map node names of "other" to node names of "this" with same source
         // (if the same source node exists in both s-graphs)
         Map<String, String> nodeRenaming = new HashMap<>();
@@ -128,7 +127,9 @@ public class SGraph {
 
         // if "other" has source names that "this" does not,
         // then quietly forget these
-        ret.sourceToNodename = this.sourceToNodename;
+        // --> actually, don't do this
+//        ret.sourceToNodename = this.sourceToNodename;
+//        ret.nodenameToSources = this.nodenameToSources;
 
         return ret;
     }
@@ -149,10 +150,14 @@ public class SGraph {
         shallowCopyInto(ret);
 
         // rename the source
-        ret.sourceToNodename = HashBiMap.create(sourceToNodename.size());
+        ret.sourceToNodename = new HashMap<>();
         ret.sourceToNodename.putAll(sourceToNodename);
         String nodenameForSource = ret.sourceToNodename.remove(oldName);
         ret.sourceToNodename.put(newName, nodenameForSource);
+        
+        ret.nodenameToSources = HashMultimap.create(nodenameToSources);
+        ret.nodenameToSources.remove(nodenameForSource, oldName);
+        ret.nodenameToSources.put(nodenameForSource, newName);
 
         return ret;
     }
@@ -164,9 +169,14 @@ public class SGraph {
         shallowCopyInto(ret);
 
         // forget the other sources
-        ret.sourceToNodename = HashBiMap.create(sourceToNodename.size());
+        ret.sourceToNodename = new HashMap<>();
         ret.sourceToNodename.putAll(sourceToNodename);
         ret.sourceToNodename.keySet().retainAll(retainedSources);
+        
+        ret.nodenameToSources = HashMultimap.create(nodenameToSources);
+        for( String nodename : ret.nodenameToSources.keySet() ) {
+            ret.nodenameToSources.get(nodename).retainAll(retainedSources);
+        }
 
         return ret;
     }
@@ -199,6 +209,7 @@ public class SGraph {
         into.graph = graph;
         into.nameToNode = nameToNode;
         into.sourceToNodename = sourceToNodename;
+        into.nodenameToSources = nodenameToSources;
     }
 
     private void copyInto(SGraph into) {
@@ -213,7 +224,6 @@ public class SGraph {
         }
 
         for (GraphEdge edge : graph.edgeSet()) {
-//            System.err.println("copy: " + edge);
             into.addEdge(into.getNode(nodeRenaming.apply(edge.getSource().getName())),
                     into.getNode(nodeRenaming.apply(edge.getTarget().getName())),
                     edge.getLabel());
@@ -229,13 +239,7 @@ public class SGraph {
     }
 
     public String getSourceLabel(String nodename) {
-        for (String source : sourceToNodename.keySet()) {
-            if (sourceToNodename.get(source).equals(nodename)) {
-                return "<" + source + ">";
-            }
-        }
-
-        return "";
+        return "<" + StringTools.join(nodenameToSources.get(nodename), ",") + ">";
     }
 
     private static String gensym(String prefix) {
@@ -341,14 +345,6 @@ public class SGraph {
         buf.append("]");
 
         return buf.toString();
-
-//        
-//        
-////        return sourceToNodename + toIsiAmrString();
-//        String nodepart = Iterables.transform(graph.vertexSet(), gfun(GraphNode.reprF)).toString();
-//        String edgepart = Iterables.transform(graph.edgeSet(), gfun(GraphEdge.reprF)).toString();
-//
-//        return sourceToNodename + nodepart + edgepart;
     }
 
     @Override
@@ -421,8 +417,8 @@ public class SGraph {
 
         for (String u : sharedNodeNames) {
             // u is a node name that exists in both s-graphs
-            List<String> thisSource = nodenameToSources.get(u);
-            List<String> otherSource = nodenameToSources.get(u);
+            Set<String> thisSource = nodenameToSources.get(u);
+            Set<String> otherSource = nodenameToSources.get(u);
 
             // in this case, there must be some source s such that
             // u is the s-node in both graphs

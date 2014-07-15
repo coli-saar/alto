@@ -103,7 +103,8 @@ class SGraphTest {
     public void testMergeExtraSourcesInArgument() {
         SGraph g1 = pg("(u_15<root> :ARG0 (u_16<obj>) :ARG1 (u_17<xcomp>))")
         SGraph g2 = pg("(u_11<xcomp> / want-01  :ARG0 (u_12<subj> / boy)  :ARG1 (u_13<vcomp> / go-01  :ARG0 (u_14<obj> / girl)))")
-        SGraph gold = pg("(u_15<root>  :ARG0 (u_16<obj> / girl)  :ARG1 (u_17<xcomp> / want-01  :ARG0 (u_12 / boy) :ARG1 (u_13 / go-01 :ARG0 (u_16))))")
+        SGraph gold = pg("(u_15<root>  :ARG0 (u_16<obj> / girl)  :ARG1 (u_17<xcomp> / want-01  :ARG0 (u_12<subj> / boy) :ARG1 (u_13<vcomp> / go-01 :ARG0 (u_16))))")
+        // u12  u13
         
         assertThat(g1.merge(g2), is(gold));        
     }
