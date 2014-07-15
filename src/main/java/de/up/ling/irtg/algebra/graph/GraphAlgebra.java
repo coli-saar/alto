@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import java.io.StringReader;
@@ -35,12 +36,21 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 
                 return childrenValues.get(0).renameSource(parts[1], parts[2]);
             } else if( label.equals("f")) {
+                // forget all sources
                 return childrenValues.get(0).forgetSourcesExcept(Collections.EMPTY_SET);
-            } else if( label.startsWith("f_")) {
+            } else if( label.equals("fr")) {
+                // forget all sources, except "root"
+                return childrenValues.get(0).forgetSourcesExcept(Collections.singleton("root"));
+            } else if( label.startsWith("fe_") || label.startsWith("f_")) {
+                // forget all sources, except ...
                 String[] parts = label.split("_");
                 Set<String> retainedSources = new HashSet<>();
                 for( int i = 1; i < parts.length; i++ ) {
                     retainedSources.add(parts[i]);
+                }
+                
+                if( label.startsWith("f_")) {
+                    retainedSources = Sets.difference(childrenValues.get(0).getAllSources(), retainedSources);
                 }
                 
                 return childrenValues.get(0).forgetSourcesExcept(retainedSources);

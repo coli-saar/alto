@@ -73,4 +73,11 @@ public class GuiUtils {
             JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
         });
     }
+    
+    static public void showError(Component parent, Exception error) {
+        SwingUtilities.invokeLater(() -> {
+            JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
+            error.printStackTrace(System.err);
+        });
+    }
 }

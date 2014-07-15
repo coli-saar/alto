@@ -5,22 +5,22 @@ interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 
 S! -> want2(NP, VP)
 [string] *(?1, *(wants, *(to, ?2)))
-[graph]  merge(merge("(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))", r_subj(?1)), r_vcomp(r_subj_subj(?2)))
+[graph]  f_subj_vcomp(merge(merge("(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))", r_subj(?1)), r_vcomp(r_subj_subj(?2))))
 
 S -> want3(NP, NP, VP)
 [string] *(?1, *(wants, *(?2, *(to, ?3))))
-[graph] merge(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>)  :dummy (x<obj>))", 
+[graph] f_subj_obj_vcomp(merge(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>)  :dummy (x<obj>))", 
                           r_subj(?1)), 
                     r_obj(?2)), 
-              r_vcomp(r_subj_obj(?3)))
+              r_vcomp(r_subj_obj(?3))))
 
 VP -> like(NP)
 [string] *(like, ?1)
-[graph] merge("(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_obj(?1))
+[graph] f_obj(merge("(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_obj(?1)))
 
 S -> likes(NP,NP)
 [string] *(?1, *(likes, ?2))
-[graph]  merge(merge("(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_subj(?1)), r_obj(?2))
+[graph]  f_subj_obj(merge(merge("(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_subj(?1)), r_obj(?2)))
 
 NP -> bill
 [string] bill
@@ -35,3 +35,19 @@ NP -> girl
 [graph]  "(x<root> / girl)"
 
 
+
+
+/*
+bill wants the girl to like him
+
+(u91<root> / want-01
+  :ARG0 (u92<coref1> / bill)
+  :ARG1 (u93 / like-01
+          :ARG0 (u94 / girl)
+	  :ARG1 u92)
+  :dummy u94)
+
+
+
+[u_91<root>/want-01 -ARG0-> u_92<coref1>/bill; u_91 -ARG1-> u_93/like-01; u_91 -dummy-> u_94/girl; u_93 -ARG0-> u_94; u_93 -ARG1-> u_92]
+*/

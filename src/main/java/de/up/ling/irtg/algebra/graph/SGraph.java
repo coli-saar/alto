@@ -79,8 +79,17 @@ public class SGraph {
 
     public GraphEdge addEdge(GraphNode src, GraphNode tgt, String label) {
         GraphEdge e = graph.addEdge(src, tgt);
-        e.setLabel(label);
-        hasCachedHashcode = false;
+
+        // TODO: figure out what causes e to be null, and
+        // adjust parsing algorithm to make sure this is never attempted
+        if (e == null) {
+//            System.err.println("addEdge null: " + src.repr() + " -" + label + "-> " + tgt.repr());
+//            System.err.println("graph was: " + this);
+        } else {
+            e.setLabel(label);
+            hasCachedHashcode = false;
+        }
+
         return e;
     }
 
@@ -123,15 +132,15 @@ public class SGraph {
 
         SGraph ret = new SGraph();
         copyInto(ret);
-        other.copyInto(ret, renamingF(nodeRenaming));
+        boolean ok = other.copyInto(ret, renamingF(nodeRenaming));
+
+        return ok ? ret : null;
 
         // if "other" has source names that "this" does not,
         // then quietly forget these
         // --> actually, don't do this
 //        ret.sourceToNodename = this.sourceToNodename;
 //        ret.nodenameToSources = this.nodenameToSources;
-
-        return ret;
     }
 
     public SGraph renameSource(String oldName, String newName) {
@@ -154,7 +163,7 @@ public class SGraph {
         ret.sourceToNodename.putAll(sourceToNodename);
         String nodenameForSource = ret.sourceToNodename.remove(oldName);
         ret.sourceToNodename.put(newName, nodenameForSource);
-        
+
         ret.nodenameToSources = HashMultimap.create(nodenameToSources);
         ret.nodenameToSources.remove(nodenameForSource, oldName);
         ret.nodenameToSources.put(nodenameForSource, newName);
@@ -172,13 +181,21 @@ public class SGraph {
         ret.sourceToNodename = new HashMap<>();
         ret.sourceToNodename.putAll(sourceToNodename);
         ret.sourceToNodename.keySet().retainAll(retainedSources);
-        
+
         ret.nodenameToSources = HashMultimap.create(nodenameToSources);
-        for( String nodename : ret.nodenameToSources.keySet() ) {
-            ret.nodenameToSources.get(nodename).retainAll(retainedSources);
+        for (String nodename : nodenameToSources.keySet()) {
+            Set<String> sourcesHere = ret.nodenameToSources.get(nodename);
+            sourcesHere.retainAll(retainedSources);
+            if (sourcesHere.isEmpty()) {
+                ret.nodenameToSources.removeAll(nodename);
+            }
         }
 
         return ret;
+    }
+
+    public Set<String> getAllSources() {
+        return sourceToNodename.keySet();
     }
 
     private static Function<String, String> renamingF(final Map<String, String> renamingMap) {
@@ -218,20 +235,27 @@ public class SGraph {
         });
     }
 
-    private void copyInto(SGraph into, Function<String, String> nodeRenaming) {
+    private boolean copyInto(SGraph into, Function<String, String> nodeRenaming) {
         for (String nodename : nameToNode.keySet()) {
             into.addNode(nodeRenaming.apply(nodename), nameToNode.get(nodename).getLabel());
         }
 
         for (GraphEdge edge : graph.edgeSet()) {
-            into.addEdge(into.getNode(nodeRenaming.apply(edge.getSource().getName())),
+            GraphEdge newEdge = into.addEdge(into.getNode(nodeRenaming.apply(edge.getSource().getName())),
                     into.getNode(nodeRenaming.apply(edge.getTarget().getName())),
                     edge.getLabel());
+
+            if (newEdge == null) {
+                // e.g. because an edge already existed between the two nodes
+                return false;
+            }
         }
 
         for (String source : sourceToNodename.keySet()) {
             into.addSource(source, nodeRenaming.apply(sourceToNodename.get(source)));
         }
+
+        return true;
     }
 
     public DirectedGraph<GraphNode, GraphEdge> getGraph() {
