@@ -1,0 +1,39 @@
+/*
+D T , resident engineer for VDOT ,
+*/
+
+
+interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+NP! -> r1(NP, NP)
+[string] *(*(*(?1, ","), ?2), ",")
+[graph]  merge(?1, ?2)
+
+NP -> r2(NP, PP)
+[string] *(?1, ?2)
+[graph]  merge(?1, ?2)
+
+NP -> r3(NN, NN)
+[string] *(?1, ?2)
+[graph]  merge(?1, ?2)
+
+PP -> r4(NP)
+[string] *(for, ?1)
+[graph]  f_npobj(merge("(a / work-for  :ARG0 (b<root>)  :ARG1 (c<npobj>))", r_npobj(?1)))
+
+NP -> r5
+[string] *("D", "T")
+[graph]  "(a<root> / person  :ARG0 (b / name  :ARG0 (c / D)  :ARG1 (d / T)))"
+
+NP -> r6
+[string] VDOT
+[graph]  "(a<root> / gov-org  :ARG0 (b / name  :ARG0 (c / VDOT)))"
+
+NN -> r7
+[string] resident
+[graph]  "(a / resident  :ARG0 (b<root>))"
+
+NN -> r8
+[string] engineer
+[graph]  "(a / engineer  :ARG0 (b<root>))"

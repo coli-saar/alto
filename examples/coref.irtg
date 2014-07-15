@@ -47,7 +47,4 @@ bill wants the girl to like him
 	  :ARG1 u92)
   :dummy u94)
 
-
-
-[u_91<root>/want-01 -ARG0-> u_92<coref1>/bill; u_91 -ARG1-> u_93/like-01; u_91 -dummy-> u_94/girl; u_93 -ARG0-> u_94; u_93 -ARG1-> u_92]
 */
