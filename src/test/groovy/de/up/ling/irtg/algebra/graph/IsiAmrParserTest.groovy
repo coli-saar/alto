@@ -67,10 +67,25 @@ class IsiAmrParserTest {
     public void testVars() {
         SGraph graph = IsiAmrParser.parse(new StringReader(AMR5));
         
-        assertEquals("w", graph.getSource("root"));
-        assertEquals("b", graph.getSource("subj"));
+        assertEquals("w", graph.getNodeForSource("root"));
+        assertEquals("b", graph.getNodeForSource("subj"));
     }
     
+    @Test
+    public void testMultiSource() {
+        SGraph graph = IsiAmrParser.parse(new StringReader(AMR6));
+        
+        assertEquals("w", graph.getNodeForSource("root"));
+        assertEquals("w", graph.getNodeForSource("coref1"));
+        assertEquals("b", graph.getNodeForSource("subj"));
+    }
+    
+    private static final String AMR6 = """
+   (w<root, coref1> / want-01
+  :ARG0 (b<subj> / boy)
+  :ARG1 (g / go-01
+          :ARG0 b))
+""";
     
     private static final String AMR5 = """
    (w<root> / want-01

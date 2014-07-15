@@ -5,15 +5,15 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -79,12 +79,14 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
                 
                 return sing(children[0].forgetSourcesExcept(retainedSources), labelId, childStates);
             } else {
-                // XXX TODO XXX
-                // enumerate all isomorphic embeddings into complete graph,
-                // and rename sources to the names in complete graph
+                List<Rule> rules = new ArrayList<Rule>();                
                 SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
-//                return sgraph.withFreshNodenames();
-                return null;
+                
+                completeGraph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+                    rules.add(makeRule(matchedSubgraph, labelId, childStates));
+                });
+                
+                return rules;
             }
         } catch (ParseException ex) {
             throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());

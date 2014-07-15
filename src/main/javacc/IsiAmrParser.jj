@@ -52,14 +52,7 @@ void graph() :
     String name;
     List<String> vars = new ArrayList<String>();
 }{
-//    ("\\" name=token() { vars.add(name); graph.addNode(name, null);  }
-//          ("," name=token() {vars.add(name); graph.addNode(name, null); })*    )?
     g = node()
-//      for( String v : vars ) {
-//        GraphNode n = graph.getNode(v);
-//        graph.addVariable(n);
-//      }
-//    }
 }
 
 
@@ -69,14 +62,16 @@ GraphNode node() :
   String nodename;
   String nodelabel = null;
   String edgelabel;
-  String source = null;
+  List<String> sources = null;
   GraphNode edgeTarget;  
 }
 {
-  "(" (nodename=token() ("<" source=token() ">")? ("/" nodelabel=token())?  {
+  "(" (nodename=token() ("<" sources=tokenList() ">")? ("/" nodelabel=token())?  {
          u = graph.addNode(nodename, nodelabel);
-         if( source != null ) {
-             graph.addSource(source, nodename);
+         if( sources != null ) {
+             for( String source : sources ) {
+               graph.addSource(source, nodename);
+             }
          }
        })?
       (edgelabel=edge()  edgeTarget=node() {
@@ -90,6 +85,16 @@ GraphNode node() :
         return graph.addAnonymousNode(nodename);
        }
    }
+}
+
+
+List<String> tokenList() :
+{
+  List<String> ret = new ArrayList<String>();
+  String x;
+}
+{
+   (x = token() { ret.add(x); } ("," x = token() { ret.add(x); })*  ) { return ret; }
 }
 
 String token() :

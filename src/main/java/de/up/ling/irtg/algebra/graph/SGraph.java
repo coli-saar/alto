@@ -10,10 +10,12 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Sets;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -36,7 +38,8 @@ public class SGraph {
 
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
-    private BiMap<String, String> sourceToNodename;
+    private Map<String, String> sourceToNodename;
+    private ListMultimap<String, String> nodenameToSources;
     private ListMultimap<String, String> labelToNodename;
     private static long nextGensym = 1;
     private boolean hasCachedHashcode;
@@ -45,7 +48,8 @@ public class SGraph {
     public SGraph() {
         graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
         nameToNode = new HashMap<String, GraphNode>();
-        sourceToNodename = HashBiMap.create();
+        sourceToNodename = new HashMap<>();
+        nodenameToSources = ArrayListMultimap.create();
         hasCachedHashcode = false;
     }
 
@@ -82,10 +86,11 @@ public class SGraph {
 
     public void addSource(String sourceName, String nodename) {
         sourceToNodename.put(sourceName, nodename);
+        nodenameToSources.put(nodename, sourceName);
         hasCachedHashcode = false;
     }
 
-    public String getSource(String sourceName) {
+    public String getNodeForSource(String sourceName) {
         return sourceToNodename.get(sourceName);
     }
 
@@ -293,8 +298,8 @@ public class SGraph {
         buf.append(node.getName());
 
         if (!visitedNodes.contains(node.getName())) {
-            if (sourceToNodename.inverse().containsKey(node.getName())) {
-                buf.append("<" + sourceToNodename.inverse().get(node.getName()) + ">");
+            if (nodenameToSources.containsKey(node.getName())) {
+                buf.append("<" + StringTools.join(nodenameToSources.get(node.getName()), ",") + ">");
             }
 
             if (node.getLabel() != null) {
@@ -416,12 +421,13 @@ public class SGraph {
 
         for (String u : sharedNodeNames) {
             // u is a node name that exists in both s-graphs
-            String thisSource = sourceToNodename.inverse().get(u);
-            String otherSource = other.sourceToNodename.inverse().get(u);
+            List<String> thisSource = nodenameToSources.get(u);
+            List<String> otherSource = nodenameToSources.get(u);
 
-            // in this case, u must be the node for the same source name
+            // in this case, there must be some source s such that
+            // u is the s-node in both graphs
             // in both graphs
-            if (thisSource == null || otherSource == null || !thisSource.equals(otherSource)) {
+            if (thisSource == null || otherSource == null || Collections.disjoint(thisSource, otherSource)) {
                 return false;
             }
         }
