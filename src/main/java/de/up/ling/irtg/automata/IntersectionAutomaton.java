@@ -422,7 +422,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             while (!agenda.isEmpty()) {
                 
                 List<Integer> agCopy = new ArrayList<>(agenda);
-                System.err.println("agenda: " + Util.mapList(agCopy, x -> getStateForId(x)));
+//                System.err.println("agenda: " + Util.mapList(agCopy, x -> getStateForId(x)));
                 
                 int state = agenda.remove();
                 List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
