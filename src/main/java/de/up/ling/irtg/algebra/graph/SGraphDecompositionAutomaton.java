@@ -5,7 +5,10 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Sets;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -36,9 +39,9 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
         super(signature);
 
         this.algebra = algebra;
-        
+
         storedRules = new IntTrie<>();
-        
+
         this.completeGraph = completeGraph;
         int x = addState(completeGraph);
         finalStates.add(x);
@@ -57,15 +60,15 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
 //        System.err.println("-> make rule, parent= " + parent);
         return sing(makeRule(parent, labelId, childStates));
     }
-    
-    private Iterable<Rule> memoize(Iterable<Rule> rules, int labelId, int[] childStates) {        
+
+    private Iterable<Rule> memoize(Iterable<Rule> rules, int labelId, int[] childStates) {
         Int2ObjectMap<Iterable<Rule>> rulesHere = storedRules.get(childStates);
-        
-        if( rulesHere == null ) {
+
+        if (rulesHere == null) {
             rulesHere = new Int2ObjectOpenHashMap<>();
             storedRules.put(childStates, rulesHere);
         }
-        
+
         rulesHere.put(labelId, rules);
         return rules;
     }
@@ -73,16 +76,15 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
         Int2ObjectMap<Iterable<Rule>> rulesHere = storedRules.get(childStates);
-        
+
         // check stored rules
-        if( rulesHere != null ) {
+        if (rulesHere != null) {
             Iterable<Rule> rules = rulesHere.get(labelId);
-            if( rules != null ) {
+            if (rules != null) {
                 return rules;
             }
         }
-        
-        
+
         String label = signature.resolveSymbolId(labelId);
         List<SGraph> children = Arrays.stream(childStates).mapToObj(q -> getStateForId(q)).collect(Collectors.toList());
 
@@ -109,6 +111,28 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
                     || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
                     || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
                     || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
+
+                SGraph arg = children.get(0);
+                
+                // check whether forgetting a source would create an edge between
+                // a source-less node and the outside of the subgraph
+                Iterable<String> forgottenSources = GraphAlgebra.getForgottenSources(label, arg);
+                for (String src : forgottenSources) {
+                    GraphNode node = arg.getNode(arg.getNodeForSource(src));
+                    
+                    for( GraphEdge edge : arg.getGraph().incomingEdgesOf(node) ) {
+                        if( arg.getNode(edge.getSource().getName()) == null ) {
+                            return memoize(Collections.EMPTY_LIST, labelId, childStates); 
+                        }
+                    }
+                    
+                    for( GraphEdge edge : arg.getGraph().outgoingEdgesOf(node) ) {
+                        if( arg.getNode(edge.getTarget().getName()) == null ) {
+                            return memoize(Collections.EMPTY_LIST, labelId, childStates); 
+                        }
+                    }
+                }
+
                 // delegate source-renaming operations to the algebra
                 SGraph result = algebra.evaluate(label, children);
 

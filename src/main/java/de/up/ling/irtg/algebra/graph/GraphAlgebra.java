@@ -9,6 +9,8 @@ import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -21,6 +23,7 @@ import javax.swing.JComponent;
  * @author koller
  */
 public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
+
     // operation symbols of this algebra
     public static final String OP_MERGE = "merge";
     public static final String OP_RENAME = "r_";
@@ -33,7 +36,32 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public TreeAutomaton decompose(SGraph value) {
         return new SGraphDecompositionAutomaton(value, this, getSignature());
     }
-    
+
+    public static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {
+        if ( opString.startsWith(OP_FORGET) || opString.startsWith(OP_FORGET_EXCEPT)) {
+            String[] parts = opString.split("_");
+            Set<String> sources = new HashSet<>();
+
+            for (int i = 1; i < parts.length; i++) {
+                sources.add(parts[i]);
+            }
+
+            if (opString.startsWith(OP_FORGET_EXCEPT)) {
+                sources = Sets.difference(sgraph.getAllSources(), sources);
+            }
+
+            return sources;
+        } else if (opString.equals(OP_FORGET_ALL)) {
+            return sgraph.getAllSources();
+        } else if( opString.equals(OP_FORGET_ALL_BUT_ROOT)) {
+            Set<String> sources = new HashSet<>(sgraph.getAllSources());
+            sources.remove("root");
+            return sources;
+        } else {
+            return Collections.EMPTY_LIST;
+        }
+    }
+
     @Override
     public SGraph evaluate(String label, List<SGraph> childrenValues) {
         try {
@@ -43,30 +71,30 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return childrenValues.get(0).merge(childrenValues.get(1));
             } else if (label.startsWith(OP_RENAME)) {
                 String[] parts = label.split("_");
-                
-                if( parts.length == 2 ) {
-                    parts = new String[] { "r", "root", parts[1] };
+
+                if (parts.length == 2) {
+                    parts = new String[]{"r", "root", parts[1]};
                 }
-                
+
                 return childrenValues.get(0).renameSource(parts[1], parts[2]);
-            } else if( label.equals(OP_FORGET_ALL)) {
+            } else if (label.equals(OP_FORGET_ALL)) {
                 // forget all sources
                 return childrenValues.get(0).forgetSourcesExcept(Collections.EMPTY_SET);
-            } else if( label.equals(OP_FORGET_ALL_BUT_ROOT)) {
+            } else if (label.equals(OP_FORGET_ALL_BUT_ROOT)) {
                 // forget all sources, except "root"
                 return childrenValues.get(0).forgetSourcesExcept(Collections.singleton("root"));
-            } else if( label.startsWith(OP_FORGET_EXCEPT) || label.startsWith(OP_FORGET)) {
+            } else if (label.startsWith(OP_FORGET_EXCEPT) || label.startsWith(OP_FORGET)) {
                 // forget all sources, except ...
                 String[] parts = label.split("_");
                 Set<String> retainedSources = new HashSet<>();
-                for( int i = 1; i < parts.length; i++ ) {
+                for (int i = 1; i < parts.length; i++) {
                     retainedSources.add(parts[i]);
                 }
-                
-                if( label.startsWith(OP_FORGET)) {
+
+                if (label.startsWith(OP_FORGET)) {
                     retainedSources = Sets.difference(childrenValues.get(0).getAllSources(), retainedSources);
                 }
-                
+
                 return childrenValues.get(0).forgetSourcesExcept(retainedSources);
             } else {
                 SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
