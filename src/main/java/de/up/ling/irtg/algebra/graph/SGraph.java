@@ -35,7 +35,6 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * @author koller
  */
 public class SGraph {
-
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;
@@ -44,6 +43,7 @@ public class SGraph {
     private static long nextGensym = 1;
     private boolean hasCachedHashcode;
     private int cachedHashcode;
+    private boolean equalsMeansIsomorphy;
 
     public SGraph() {
         graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
@@ -51,6 +51,7 @@ public class SGraph {
         sourceToNodename = new HashMap<>();
         nodenameToSources = HashMultimap.create();
         hasCachedHashcode = false;
+        equalsMeansIsomorphy = true;
     }
 
     public GraphNode addNode(String name, String label) {
@@ -371,6 +372,12 @@ public class SGraph {
         return buf.toString();
     }
 
+    public void setEqualsMeansIsomorphy(boolean equalsMeansIsomorphy) {
+        this.equalsMeansIsomorphy = equalsMeansIsomorphy;
+    }
+    
+    
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -379,10 +386,17 @@ public class SGraph {
         if (getClass() != obj.getClass()) {
             return false;
         }
+        if (this == obj) {
+            return true;
+        }
 
         final SGraph other = (SGraph) obj;
-
-        return isIsomorphic(other);
+        
+        if( equalsMeansIsomorphy ) {
+            return isIsomorphic(other);
+        } else {
+            return isIdentical(other);
+        }
     }
 
     public boolean isIdentical(SGraph other) {
@@ -448,6 +462,18 @@ public class SGraph {
             // u is the s-node in both graphs
             // in both graphs
             if (thisSource == null || otherSource == null || Collections.disjoint(thisSource, otherSource)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public boolean nodenamesForSourcesAgree(SGraph other) {
+        Sets.SetView<String> sharedSources = Sets.intersection(sourceToNodename.keySet(), other.sourceToNodename.keySet());
+
+        for (String source : sharedSources) {
+            if (!sourceToNodename.get(source).equals(other.sourceToNodename.get(source))) {
                 return false;
             }
         }
@@ -612,6 +638,10 @@ public class SGraph {
                 int y = edge.getLabel() == null ? 31 : 7 * edge.getLabel().hashCode();
                 int z = edge.getTarget().getLabel() == null ? 41 : 11 * edge.getTarget().getLabel().hashCode();
                 cachedHashcode += x + y + z;  // this needs to be equal for different orders in which the edges are enumerated
+            }
+
+            for (GraphNode node : graph.vertexSet()) {
+                cachedHashcode += (node.getLabel() == null) ? 53 : 13 * node.getLabel().hashCode();
             }
 
             hasCachedHashcode = true;

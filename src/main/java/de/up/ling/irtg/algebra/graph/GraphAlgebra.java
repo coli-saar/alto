@@ -7,6 +7,7 @@ package de.up.ling.irtg.algebra.graph;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashSet;
@@ -20,14 +21,27 @@ import javax.swing.JComponent;
  * @author koller
  */
 public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
+    // operation symbols of this algebra
+    public static final String OP_MERGE = "merge";
+    public static final String OP_RENAME = "r_";
+    public static final String OP_FORGET_ALL = "f";
+    public static final String OP_FORGET_ALL_BUT_ROOT = "fr";
+    public static final String OP_FORGET_EXCEPT = "fe_";
+    public static final String OP_FORGET = "f_";
+
     @Override
-    protected SGraph evaluate(String label, List<SGraph> childrenValues) {
+    public TreeAutomaton decompose(SGraph value) {
+        return new SGraphDecompositionAutomaton(value, this, getSignature());
+    }
+    
+    @Override
+    public SGraph evaluate(String label, List<SGraph> childrenValues) {
         try {
             if (label == null) {
                 return null;
-            } else if (label.equals("merge")) {
+            } else if (label.equals(OP_MERGE)) {
                 return childrenValues.get(0).merge(childrenValues.get(1));
-            } else if (label.startsWith("r_")) {
+            } else if (label.startsWith(OP_RENAME)) {
                 String[] parts = label.split("_");
                 
                 if( parts.length == 2 ) {
@@ -35,13 +49,13 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 }
                 
                 return childrenValues.get(0).renameSource(parts[1], parts[2]);
-            } else if( label.equals("f")) {
+            } else if( label.equals(OP_FORGET_ALL)) {
                 // forget all sources
                 return childrenValues.get(0).forgetSourcesExcept(Collections.EMPTY_SET);
-            } else if( label.equals("fr")) {
+            } else if( label.equals(OP_FORGET_ALL_BUT_ROOT)) {
                 // forget all sources, except "root"
                 return childrenValues.get(0).forgetSourcesExcept(Collections.singleton("root"));
-            } else if( label.startsWith("fe_") || label.startsWith("f_")) {
+            } else if( label.startsWith(OP_FORGET_EXCEPT) || label.startsWith(OP_FORGET)) {
                 // forget all sources, except ...
                 String[] parts = label.split("_");
                 Set<String> retainedSources = new HashSet<>();
@@ -49,7 +63,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                     retainedSources.add(parts[i]);
                 }
                 
-                if( label.startsWith("f_")) {
+                if( label.startsWith(OP_FORGET)) {
                     retainedSources = Sets.difference(childrenValues.get(0).getAllSources(), retainedSources);
                 }
                 

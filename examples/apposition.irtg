@@ -20,15 +20,16 @@ NP -> r3(NN, NN)
 
 PP -> r4(NP)
 [string] *(for, ?1)
-[graph]  f_npobj(merge("(a / work-for  :ARG0 (b<root>)  :ARG1 (c<npobj>))", r_npobj(?1)))
+[graph]  f_npobj(merge("(a<root>  :poss (b<npobj>))", r_npobj(?1)))
+/* f_npobj(merge("(a / work-for  :ARG0 (b<root>)  :ARG1 (c<npobj>))", r_npobj(?1))) */
 
 NP -> r5
 [string] *("D", "T")
-[graph]  "(a<root> / person  :ARG0 (b / name  :ARG0 (c / D)  :ARG1 (d / T)))"
+[graph]  "(a<root> / person  :name (b / name  :op1 (c / D)  :op2 (d / T)))"
 
 NP -> r6
 [string] VDOT
-[graph]  "(a<root> / gov-org  :ARG0 (b / name  :ARG0 (c / VDOT)))"
+[graph]  "(a<root> / gov-org  :name (b / name  :op1 (c / VDOT)))"
 
 NN -> r7
 [string] resident

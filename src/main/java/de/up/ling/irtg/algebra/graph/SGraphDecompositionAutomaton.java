@@ -15,77 +15,94 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  *
  * @author koller
  */
 public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
+    private GraphAlgebra algebra;
     private SGraph completeGraph;
 
-    SGraphDecompositionAutomaton(SGraph completeGraph, Signature signature) {
+    SGraphDecompositionAutomaton(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(signature);
 
+        this.algebra = algebra;
         this.completeGraph = completeGraph;
         int x = addState(completeGraph);
         finalStates.add(x);
     }
-    
+
     private Rule makeRule(SGraph parent, int labelId, int[] childStates) {
         int parentState = addState(parent);
         return createRule(parentState, labelId, childStates, 1);
     }
-    
+
     private static <E> Iterable<E> sing(E object) {
         return Collections.singletonList(object);
     }
-    
+
     private Iterable<Rule> sing(SGraph parent, int labelId, int[] childStates) {
+        System.err.println("-> make rule, parent= " + parent);
         return sing(makeRule(parent, labelId, childStates));
     }
 
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
         String label = signature.resolveSymbolId(labelId);
-        SGraph[] children = (SGraph[]) Arrays.stream(childStates).mapToObj(q -> getStateForId(labelId)).toArray();
+        List<SGraph> children = Arrays.stream(childStates).mapToObj(q -> getStateForId(q)).collect(Collectors.toList());
+
+        System.err.println("grbu: " + label + children);
 
         try {
             if (label == null) {
                 return Collections.EMPTY_LIST;
-            } else if (label.equals("merge")) {
-                if( ! children[0].overlapsOnlyInSources(children[1])) {
+            } else if (label.equals(GraphAlgebra.OP_MERGE)) {
+                if (!children.get(0).overlapsOnlyInSources(children.get(1)) || !children.get(0).nodenamesForSourcesAgree(children.get(1))) {
                     return Collections.EMPTY_LIST;
                 } else {
-                    return sing(children[0].merge(children[1]), labelId, childStates);
-                }                
-            } else if (label.startsWith("r_")) {
-                String[] parts = label.split("_");
-                
-                if( parts.length == 2 ) {
-                    parts = new String[] { "r", "root", parts[1] };
+                    SGraph result = children.get(0).merge(children.get(1));
+
+                    if (result == null) {
+                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
+                        return Collections.EMPTY_LIST;
+                    } else {
+                        result.setEqualsMeansIsomorphy(false);
+                        return sing(result, labelId, childStates);
+                    }
                 }
+            } else if( label.startsWith(GraphAlgebra.OP_RENAME) ||
+                       label.startsWith(GraphAlgebra.OP_FORGET) ||
+                       label.startsWith(GraphAlgebra.OP_FORGET_ALL) ||
+                       label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT) ||
+                       label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT) ) {
+                // delegate source-renaming operations to the algebra
+                SGraph result = algebra.evaluate(label, children);
                 
-                // this should be ok
-                return sing(children[0].renameSource(parts[1], parts[2]), labelId, childStates);
-            } else if( label.equals("f")) {
-                // this should be ok
-                return sing(children[0].forgetSourcesExcept(Collections.EMPTY_SET));
-            } else if( label.startsWith("f_")) {
-                String[] parts = label.split("_");
-                Set<String> retainedSources = new HashSet<>();
-                for( int i = 1; i < parts.length; i++ ) {
-                    retainedSources.add(parts[i]);
+                if (result == null) {
+                    System.err.println(label + " returned null: " + children.get(0));
+                    return Collections.EMPTY_LIST;
+                } else {
+                    result.setEqualsMeansIsomorphy(false);
+                    return sing(result, labelId, childStates);
                 }
-                
-                return sing(children[0].forgetSourcesExcept(retainedSources), labelId, childStates);
             } else {
-                List<Rule> rules = new ArrayList<Rule>();                
+                List<Rule> rules = new ArrayList<Rule>();
                 SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
-                
+
+                if (sgraph == null) {
+                    System.err.println("Unparsable operation: " + label);
+                    return Collections.EMPTY_LIST;
+                }
+
+                System.err.println(" - looking for matches of " + sgraph + " in " + completeGraph);
                 completeGraph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
+                    matchedSubgraph.setEqualsMeansIsomorphy(false);
                     rules.add(makeRule(matchedSubgraph, labelId, childStates));
                 });
-                
+
                 return rules;
             }
         } catch (ParseException ex) {

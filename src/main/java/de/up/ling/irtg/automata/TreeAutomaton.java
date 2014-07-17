@@ -1211,15 +1211,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
             CondensedTreeAutomaton cOther = (CondensedTreeAutomaton) other;
             
             if( other.supportsTopDownQueries() ) {
-                Logging.get().fine("Using condensed intersection.");
+                Logging.get().info("Using condensed intersection.");
                 return intersectCondensed(cOther, mapper);
             } else {
-                Logging.get().fine("Using condensed bottom-up intersection.");
+                Logging.get().info("Using condensed bottom-up intersection.");
                 return intersectCondensedBottomUp(cOther, mapper);
             }
         } else {
             if( other.supportsBottomUpQueries() ) {
-                Logging.get().fine("Using old-style bottom-up intersection.");
+                Logging.get().info("Using old-style bottom-up intersection.");
                 return intersectBottomUp(other);
             } else {
                 throw new UnsupportedOperationException("Intersection with a non-condensed automaton requires bottom-up queries.");

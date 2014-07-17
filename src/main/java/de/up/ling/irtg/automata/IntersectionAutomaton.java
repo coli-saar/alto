@@ -18,6 +18,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.IntInt2IntMap;
+import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -419,6 +420,10 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             long unsuccessful = 0;
             long iterations = 0;
             while (!agenda.isEmpty()) {
+                
+                List<Integer> agCopy = new ArrayList<>(agenda);
+                System.err.println("agenda: " + Util.mapList(agCopy, x -> getStateForId(x)));
+                
                 int state = agenda.remove();
                 List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
 
