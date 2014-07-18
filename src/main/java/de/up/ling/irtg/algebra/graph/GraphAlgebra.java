@@ -9,8 +9,6 @@ import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;

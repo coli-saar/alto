@@ -13,7 +13,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,10 +56,13 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 
         assert hom.isNonDeleting();
 
-        finalStates.addAll(rhsAutomaton.getFinalStates());
-
         termIDCache = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
         parentToTermID = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<Rule>>>();
+    }
+
+    @Override
+    public IntSet getFinalStates() {
+        return rhsAutomaton.getFinalStates();
     }
 
     @Override

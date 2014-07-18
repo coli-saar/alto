@@ -411,11 +411,24 @@ public class SGraph {
     }
 
     public boolean isIdentical(SGraph other) {
-        if (!nameToNode.keySet().equals(other.nameToNode.keySet())) {
-            return false;
-        } else if (graph.edgeSet().size() != other.graph.edgeSet().size()) {
+        if( this == other ) {
+            return true;
+        } else if( ! isIdenticalExceptSources(other)) {
             return false;
         } else if (!sourceToNodename.equals(other.sourceToNodename)) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+    
+    
+    boolean isIdenticalExceptSources(SGraph other) {
+        if( this == other ) {
+            return true;
+        } else if (!nameToNode.keySet().equals(other.nameToNode.keySet())) {
+            return false;
+        } else if (graph.edgeSet().size() != other.graph.edgeSet().size()) {
             return false;
         } else {
             for (String nodename : nameToNode.keySet()) {
@@ -668,4 +681,5 @@ public class SGraph {
             return commonSources;
         }
     }
+
 }

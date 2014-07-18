@@ -58,7 +58,7 @@ class GraphAlgebraTest {
         InterpretedTreeAutomaton irtg = pi(HRG);
         TreeAutomaton chart = irtg.parse(["graph":"(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))"])
         
-        assertEquals(new HashSet([pt("top(want2(boy,go))")]), chart.language())
+        assertEquals(new HashSet([pt("want2(boy,go)")]), chart.language())
     }
     
     @Test
@@ -68,6 +68,14 @@ class GraphAlgebraTest {
         
         assertEquals(new HashSet([pt("want3(bill, girl, like(bill))"), pt("want3(bill, girl, like(him))"), pt("want3(him, girl, like(bill))")]),
                      chart.language())
+    }
+    
+    @Test
+    public void testParseGraphWithoutSources() {
+        InterpretedTreeAutomaton irtg = pi(HRG);
+        TreeAutomaton chart = irtg.parse(["graph":"(w / want-01  :ARG0 (b / boy)  :ARG1 (g / go-01 :ARG0 b))"])
+        
+        assertEquals(new HashSet([pt("want2(boy,go)")]), chart.language())
     }
     
     public static String COREF="""
@@ -113,12 +121,7 @@ NP -> girl
 interpretation string: de.up.ling.irtg.algebra.StringAlgebra
 interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 
-Start! -> top(S)
-[string] ?1
-[graph]  merge('()', ?1)
-/* this deletes all sources from ?1 */
-
-S -> want2(NP, VP)
+S! -> want2(NP, VP)
 [string] *(?1, *(wants, *(to, ?2)))
 [graph]  merge(merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj(?1)), r_vcomp(r_subj_subj(?2)))
 

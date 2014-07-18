@@ -1,3 +1,21 @@
+/* A synchronous grammar that translates between strings and
+   semantic representations, represented as graphs.
+
+   This grammar uses a source <coref1> to implement anaphoric coreference.
+   This idea arose in the discussions of the Johns Hopkins workshop on AMRs
+   in Prague (July 2014; Chiang, Drewes, Gildea, Koller, Lopez, Satta).
+
+   Try parsing this sentence: "bill wants the girl to like him"
+
+   And try parsing this graph:
+   (u91 / want-01
+     :ARG0 (u92 / bill)
+     :ARG1 (u93 / like-01
+          :ARG0 (u94 / girl)
+	  :ARG1 u92))
+*/
+
+
 
 interpretation string: de.up.ling.irtg.algebra.StringAlgebra
 interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
@@ -5,14 +23,16 @@ interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 
 S! -> want2(NP, VP)
 [string] *(?1, *(wants, *(to, ?2)))
-[graph]  f_subj_vcomp(merge(merge("(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))", r_subj(?1)), r_vcomp(r_subj_subj(?2))))
+[graph]  f_subj_vcomp(merge(merge("(u<root> / want-01  :ARG0 (b<subj>) :ARG1 (g<vcomp>))", 
+                                  r_subj(?1)), 
+                            r_vcomp(r_subj_subj(?2))))
 
 S -> want3(NP, NP, VP)
 [string] *(?1, *(wants, *(?2, *(to, ?3))))
-[graph] f_subj_obj_vcomp(merge(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>)  :dummy (x<obj>))", 
-                          r_subj(?1)), 
-                    r_obj(?2)), 
-              r_vcomp(r_subj_obj(?3))))
+[graph] f_subj_obj_vcomp(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>) )", 
+                                     r_subj(?1)),
+                               merge(r_obj(?2),
+                                     r_vcomp(r_subj_obj(?3)))))
 
 VP -> like(NP)
 [string] *(like, ?1)
@@ -38,13 +58,19 @@ NP -> girl
 
 
 /*
-bill wants the girl to like him
+
 
 (u91<root> / want-01
   :ARG0 (u92<coref1> / bill)
   :ARG1 (u93 / like-01
           :ARG0 (u94 / girl)
-	  :ARG1 u92)
-  :dummy u94)
+	  :ARG1 u92))
+
+(u91 / want-01
+  :ARG0 (u92 / bill)
+  :ARG1 (u93 / like-01
+          :ARG0 (u94 / girl)
+	  :ARG1 u92))
+
 
 */

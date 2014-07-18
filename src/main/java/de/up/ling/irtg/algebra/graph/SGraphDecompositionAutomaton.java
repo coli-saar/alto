@@ -6,13 +6,12 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.io.FileInputStream;
@@ -62,6 +61,7 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
     }
 
     private Iterable<Rule> memoize(Iterable<Rule> rules, int labelId, int[] childStates) {
+        // memoize rule
         Int2ObjectMap<Iterable<Rule>> rulesHere = storedRules.get(childStates);
 
         if (rulesHere == null) {
@@ -70,6 +70,16 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
         }
 
         rulesHere.put(labelId, rules);
+        
+        // add final state if needed
+        for( Rule rule : rules ) {
+            SGraph parent = getStateForId(rule.getParent());
+            
+            if( parent.isIdenticalExceptSources(completeGraph)) {
+                finalStates.add(rule.getParent());
+            }
+        }
+        
         return rules;
     }
 

@@ -4,20 +4,17 @@
    Try parsing this sentence: "the boy wants to go"
 
    And parsing this graph: 
-   (w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))
    (w / want-01  :ARG0 (b / boy)  :ARG1 (g / go-01 :ARG0 b))
 
-   [w<root>/want-01 -ARG0-> b<subj>/boy; w -ARG1-> g<vcomp>/go-01 -ARG0-> b]
 
-   The grammar can translate the sentence "the boy wants the girl to believe that the boy likes the girl",
-   which is modeled after Chiang et al., ACL 2012, Figure 2. A crucial difference is that our grammar
-   does not attempt to map the pronouns in Chiang et al.'s example to the same nodes as "the boy"
-   and "the girl", because this can't be done compositionally anyway. Note also that "want3" introduces
-   a node for the agent of the object-control verb; it is connected to
-   the w node using a "dummy" edge.
+   The grammar can translate the sentence "the boy wants the girl to believe that 
+   the boy likes the girl", which is modeled after Chiang et al., ACL 2012, Figure 2. 
+   A crucial difference is that our grammar does not attempt to map the pronouns
+   in Chiang et al.'s example to the same nodes as "the boy" and "the girl".
 
    For the reverse direction, try parsing the following graph:
-   (w_5 / want-01  :ARG0 (subj_6 / boy)  :ARG1 (vcomp_7 / believe-01  :ARG0 (obj_8 / girl)  :ARG1 (xcomp_6_3 / like-01  :ARG0 (subj_5_2_4 / boy)  :ARG1 (obj_6_3_5 / girl)))  :dummy obj_8)
+   (w_5 / want-01  :ARG0 (subj_6 / boy)  :ARG1 (vcomp_7 / believe-01  :ARG0 (obj_8 / girl)  :ARG1 (xcomp_6_3 / like-01  :ARG0 (subj_5_2_4 / boy)  :ARG1 (obj_6_3_5 / girl))))
+
 */
 
 
@@ -25,21 +22,19 @@
 interpretation string: de.up.ling.irtg.algebra.StringAlgebra
 interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 
-Start! -> top(S)
-[string] ?1
-[graph]  merge("()", ?1)
-/* this deletes all sources from ?1 */
-
-S -> want2(NP, VP)
+S! -> want2(NP, VP)
 [string] *(?1, *(wants, *(to, ?2)))
 [graph]  merge(merge("(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))", r_subj(?1)), r_vcomp(r_subj_subj(?2)))
 
 S -> want3(NP, NP, VP)
 [string] *(?1, *(wants, *(?2, *(to, ?3))))
-[graph] merge(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>)  :dummy (x<obj>))", 
-                          r_subj(?1)), 
-                    r_obj(?2)), 
-              r_vcomp(r_subj_obj(?3)))
+[graph] merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>))",
+                    r_subj(?1)),
+              merge(r_obj(?2), r_vcomp(r_subj_obj(?3))))
+// NB: it is important to merge ?2 and ?3 first, because the source <obj>
+// is undefined in the first graph, so merging them yields a graph with two
+// connected components; but the parser will not generate unconnected graphs.
+
 
 NP -> boy
 [string] *(the, boy)
@@ -52,7 +47,7 @@ NP -> girl
 // every VP has a "subj" source at which the subject is inserted
 VP -> believe(S)
 [string] *(believe, *(that, ?1))
-[graph]  merge("(u<root> / believe-01  :ARG0 (v<subj>)  :ARG1 (w<xcomp>))", r_xcomp(f_root(?1)))
+[graph]  merge("(u<root> / believe-01  :ARG0 (v<subj>)  :ARG1 (w<xcomp>))", r_xcomp(fr(?1)))
 
 S! -> likes(NP,NP)
 [string] *(?1, *(likes, ?2))
