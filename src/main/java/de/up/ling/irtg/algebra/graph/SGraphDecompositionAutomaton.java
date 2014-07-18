@@ -88,14 +88,13 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
         String label = signature.resolveSymbolId(labelId);
         List<SGraph> children = Arrays.stream(childStates).mapToObj(q -> getStateForId(q)).collect(Collectors.toList());
 
-        // TODO:
-        // - check that merge only produces connected subgraphs
-//        System.err.println("grbu: " + label + children);
         try {
             if (label == null) {
                 return Collections.EMPTY_LIST;
             } else if (label.equals(GraphAlgebra.OP_MERGE)) {
-                if (!children.get(0).overlapsOnlyInSources(children.get(1)) || !children.get(0).nodenamesForSourcesAgree(children.get(1))) {
+                if (!children.get(0).overlapsOnlyInSources(children.get(1)) 
+                        || !children.get(0).nodenamesForSourcesAgree(children.get(1)) 
+                        || !children.get(0).hasCommonSource(children.get(1))) { // ensure result is connected
                     return memoize(Collections.EMPTY_LIST, labelId, childStates);
                 } else {
                     SGraph result = children.get(0).merge(children.get(1));
@@ -117,7 +116,8 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
                 SGraph arg = children.get(0);
 
                 // check whether forgetting a source would create an edge between
-                // a source-less node and the outside of the subgraph
+                // a source-less node and the outside of the subgraph; such subgraphs
+                // can never be completed (thanks to Frank Drewes for this tip)
                 Iterable<String> forgottenSources = GraphAlgebra.getForgottenSources(label, arg);
                 Iterable<String> forgottenSourceNodes = Iterables.transform(forgottenSources, x -> arg.getNodeForSource(x));
 

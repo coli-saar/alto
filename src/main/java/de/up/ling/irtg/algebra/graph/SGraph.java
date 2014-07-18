@@ -35,6 +35,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * @author koller
  */
 public class SGraph {
+
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;
@@ -198,11 +199,11 @@ public class SGraph {
     public Set<String> getAllSources() {
         return sourceToNodename.keySet();
     }
-    
+
     public Iterable<String> getAllSourceNodenames() {
         return nodenameToSources.keySet();
     }
-    
+
     public Iterable<String> getAllNonSourceNodenames() {
         return Sets.difference(nameToNode.keySet(), nodenameToSources.keySet());
     }
@@ -270,7 +271,7 @@ public class SGraph {
     public DirectedGraph<GraphNode, GraphEdge> getGraph() {
         return graph;
     }
-    
+
     public boolean isSourceNode(String nodename) {
         return nodenameToSources.containsKey(nodename);
     }
@@ -387,8 +388,6 @@ public class SGraph {
     public void setEqualsMeansIsomorphy(boolean equalsMeansIsomorphy) {
         this.equalsMeansIsomorphy = equalsMeansIsomorphy;
     }
-    
-    
 
     @Override
     public boolean equals(Object obj) {
@@ -403,8 +402,8 @@ public class SGraph {
         }
 
         final SGraph other = (SGraph) obj;
-        
-        if( equalsMeansIsomorphy ) {
+
+        if (equalsMeansIsomorphy) {
             return isIsomorphic(other);
         } else {
             return isIdentical(other);
@@ -658,6 +657,15 @@ public class SGraph {
 
             hasCachedHashcode = true;
             return cachedHashcode;
+        }
+    }
+
+    public boolean hasCommonSource(SGraph other) {
+        if (getGraph().vertexSet().isEmpty() || other.getGraph().vertexSet().isEmpty()) {
+            return true;
+        } else {
+            boolean commonSources = !Collections.disjoint(sourceToNodename.keySet(), other.sourceToNodename.keySet());
+            return commonSources;
         }
     }
 }
