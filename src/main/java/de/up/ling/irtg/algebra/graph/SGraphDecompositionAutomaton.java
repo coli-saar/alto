@@ -88,6 +88,8 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
         String label = signature.resolveSymbolId(labelId);
         List<SGraph> children = Arrays.stream(childStates).mapToObj(q -> getStateForId(q)).collect(Collectors.toList());
 
+        // TODO:
+        // - check that merge only produces connected subgraphs
 //        System.err.println("grbu: " + label + children);
         try {
             if (label == null) {
@@ -113,24 +115,14 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
                     || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
 
                 SGraph arg = children.get(0);
-                
+
                 // check whether forgetting a source would create an edge between
                 // a source-less node and the outside of the subgraph
                 Iterable<String> forgottenSources = GraphAlgebra.getForgottenSources(label, arg);
-                for (String src : forgottenSources) {
-                    GraphNode node = arg.getNode(arg.getNodeForSource(src));
-                    
-                    for( GraphEdge edge : arg.getGraph().incomingEdgesOf(node) ) {
-                        if( arg.getNode(edge.getSource().getName()) == null ) {
-                            return memoize(Collections.EMPTY_LIST, labelId, childStates); 
-                        }
-                    }
-                    
-                    for( GraphEdge edge : arg.getGraph().outgoingEdgesOf(node) ) {
-                        if( arg.getNode(edge.getTarget().getName()) == null ) {
-                            return memoize(Collections.EMPTY_LIST, labelId, childStates); 
-                        }
-                    }
+                Iterable<String> forgottenSourceNodes = Iterables.transform(forgottenSources, x -> arg.getNodeForSource(x));
+
+                if (hasCrossingEdgesFromNodes(forgottenSourceNodes, arg)) {
+                    return memoize(Collections.EMPTY_LIST, labelId, childStates);
                 }
 
                 // delegate source-renaming operations to the algebra
@@ -155,8 +147,12 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
 //                System.err.println(" - looking for matches of " + sgraph + " in " + completeGraph);
                 completeGraph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
-                    matchedSubgraph.setEqualsMeansIsomorphy(false);
-                    rules.add(makeRule(matchedSubgraph, labelId, childStates));
+                    if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
+                        matchedSubgraph.setEqualsMeansIsomorphy(false);
+                        rules.add(makeRule(matchedSubgraph, labelId, childStates));
+                    } else {
+//                        System.err.println("match " + matchedSubgraph + " has crossing edges from nodes");
+                    }
                 });
 
                 return memoize(rules, labelId, childStates);
@@ -164,6 +160,29 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
         } catch (ParseException ex) {
             throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
         }
+    }
+
+    private boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
+        for (String nodename : nodenames) {
+            if (!subgraph.isSourceNode(nodename)) {
+
+                GraphNode node = completeGraph.getNode(nodename);
+
+                for (GraphEdge edge : completeGraph.getGraph().incomingEdgesOf(node)) {
+                    if (subgraph.getNode(edge.getSource().getName()) == null) {
+                        return true;
+                    }
+                }
+
+                for (GraphEdge edge : completeGraph.getGraph().outgoingEdgesOf(node)) {
+                    if (subgraph.getNode(edge.getTarget().getName()) == null) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
     }
 
     @Override
@@ -186,15 +205,15 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
         return true;
     }
 
-//    public static void main(String[] args) throws Exception {
-//        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/coref.irtg"));
-//        Map<String, String> input = new HashMap<String, String>();
-//        input.put("graph", "(u91<root> / want-01    :ARG0 (u92<coref1> / bill)  :ARG1 (u93 / like-01      :ARG0 (u94 / girl)  	  :ARG1 u92)   :dummy u94)");
-//        for (int i = 0; i < 10; i++) {
-//            long start = System.nanoTime();
-//            TreeAutomaton chart = irtg.parse(input);
-//            System.err.println((System.nanoTime()-start)/1000000);
-//        }
-//
-//    }
+    public static void main(String[] args) throws Exception {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/coref.irtg"));
+        Map<String, String> input = new HashMap<String, String>();
+        input.put("graph", "(u91<root> / want-01    :ARG0 (u92<coref1> / bill)  :ARG1 (u93 / like-01      :ARG0 (u94 / girl)  	  :ARG1 u92)   :dummy u94)");
+        for (int i = 0; i < 10; i++) {
+            long start = System.nanoTime();
+            TreeAutomaton chart = irtg.parse(input);
+            System.err.println((System.nanoTime() - start) / 1000000);
+        }
+
+    }
 }

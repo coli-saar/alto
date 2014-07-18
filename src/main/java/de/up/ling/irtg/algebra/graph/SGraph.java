@@ -198,6 +198,14 @@ public class SGraph {
     public Set<String> getAllSources() {
         return sourceToNodename.keySet();
     }
+    
+    public Iterable<String> getAllSourceNodenames() {
+        return nodenameToSources.keySet();
+    }
+    
+    public Iterable<String> getAllNonSourceNodenames() {
+        return Sets.difference(nameToNode.keySet(), nodenameToSources.keySet());
+    }
 
     private static Function<String, String> renamingF(final Map<String, String> renamingMap) {
         return nodename -> {
@@ -261,6 +269,10 @@ public class SGraph {
 
     public DirectedGraph<GraphNode, GraphEdge> getGraph() {
         return graph;
+    }
+    
+    public boolean isSourceNode(String nodename) {
+        return nodenameToSources.containsKey(nodename);
     }
 
     public String getSourceLabel(String nodename) {
