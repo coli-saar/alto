@@ -12,9 +12,9 @@ import de.up.ling.irtg.automata.TreeAutomaton;
  *
  * @author koller
  */
-public abstract class FeatureFunction<State> {
+public abstract class FeatureFunction<State, V> {
     // "automaton" is the tree automaton to which the "rule" belongs
-    public abstract double evaluate(Rule rule, TreeAutomaton<State> automaton, MaximumEntropyIrtg irtg);
+    public abstract V evaluate(Rule rule, TreeAutomaton<State> automaton, MaximumEntropyIrtg irtg);
 
     @Override
     public String toString() {

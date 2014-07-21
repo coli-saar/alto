@@ -7,7 +7,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
  *
  * @author Danilo Baumgarten
  */
-public class ChildOfFeature extends FeatureFunction<String> {
+public class ChildOfFeature extends FeatureFunction<String, Double> {
     private String parentLabel;
     private String childLabel;
 
@@ -25,7 +25,7 @@ public class ChildOfFeature extends FeatureFunction<String> {
     }
 
     @Override
-    public double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg){
+    public Double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg){
         String pLabel = getLabelFor(automaton.getStateForId(rule.getParent()));
         
         if (pLabel.equals(parentLabel)) {

@@ -129,8 +129,8 @@ public class TestingTools {
     }
     
     public static FeatureFunction makeTestFeature(final String x) {
-        return new FeatureFunction<String>() {
-            public double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg) {
+        return new FeatureFunction<String,Double>() {
+            public Double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg) {
                 return Double.parseDouble(x);
             }
         };

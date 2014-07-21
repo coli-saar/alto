@@ -212,7 +212,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         double[] values = new double[getNumFeatures()];
         
         for( int i = 0; i < getNumFeatures(); i++ ) {
-            values[i] = features[i].evaluate(rule, auto, this);
+            values[i] = (double) features[i].evaluate(rule, auto, this);
         }
         
         rule.setExtra(values);

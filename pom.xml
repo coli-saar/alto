@@ -21,7 +21,7 @@
     <dependency>
       <groupId>de.saar.coli</groupId>
       <artifactId>basics</artifactId>
-      <version>[1.2.31,)</version>
+      <version>1.2.31</version>
     </dependency>
 
     <dependency>
@@ -377,31 +377,6 @@
       <id>tcl-external</id>
       <name>TCL external libraries</name>
       <url>http://www.ling.uni-potsdam.de/tcl/maven2/external</url>
-      <releases>
-	<enabled>true</enabled>
-      </releases>
-      <snapshots>
-	<enabled>true</enabled>
-      </snapshots>
-    </repository>
-
-    
-    <repository>
-      <id>external</id>
-      <name>ECL external libraries</name>
-      <url>http://www.coli.uni-saarland.de/projects/ecl/maven2/external</url>
-      <releases>
-	<enabled>true</enabled>
-      </releases>
-      <snapshots>
-	<enabled>true</enabled>
-      </snapshots>
-    </repository>
-
-    <repository>
-      <id>ecl-releases</id>
-      <name>ECL releases</name>
-      <url>http://www.coli.uni-saarland.de/projects/ecl/maven2/releases</url>
       <releases>
 	<enabled>true</enabled>
       </releases>

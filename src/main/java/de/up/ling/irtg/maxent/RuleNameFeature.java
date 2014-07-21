@@ -14,7 +14,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
  * 
  * @author koller
  */
-public class RuleNameFeature extends FeatureFunction<String> {
+public class RuleNameFeature extends FeatureFunction<String, Double> {
     private String x;
 
     public RuleNameFeature(String x) {
@@ -26,7 +26,7 @@ public class RuleNameFeature extends FeatureFunction<String> {
     }
 
     @Override
-    public double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg) {
+    public Double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg) {
         if( x.equals(rule.getLabel(irtg.getAutomaton())) ) {
             return 1.0;
         } else {
