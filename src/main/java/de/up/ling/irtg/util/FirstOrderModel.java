@@ -26,6 +26,7 @@ public class FirstOrderModel {
     private int maxArity;
     private Set<String> allIndividuals;
     private Set<List<String>> allIndividualsAsTuples;
+    public static final String TOP = "T";
 
     public FirstOrderModel() {
         atomicInterpretations = new HashMap<>();
@@ -49,7 +50,15 @@ public class FirstOrderModel {
     }
     
     public Set<List<String>> getInterpretation(String predicate) {
-        return atomicInterpretations.get(predicate);
+        if (predicate.equals(TOP)) {
+            return allIndividualsAsTuples;
+        }
+        else if (! atomicInterpretations.containsKey(predicate)) {
+            return new HashSet<>();
+        }
+        else {
+            return atomicInterpretations.get(predicate);
+        }
     }
 
     /**
