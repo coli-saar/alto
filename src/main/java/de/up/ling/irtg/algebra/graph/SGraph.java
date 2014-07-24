@@ -35,7 +35,6 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * @author koller
  */
 public class SGraph {
-
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;
@@ -53,6 +52,20 @@ public class SGraph {
         nodenameToSources = HashMultimap.create();
         hasCachedHashcode = false;
         equalsMeansIsomorphy = true;
+    }
+
+    public SGraph(DirectedGraph<GraphNode, GraphEdge> graph) {
+        this.graph = graph;
+
+        sourceToNodename = new HashMap<>();
+        nodenameToSources = HashMultimap.create();
+        hasCachedHashcode = false;
+        equalsMeansIsomorphy = true;
+
+        nameToNode = new HashMap<>();
+        for (GraphNode u : graph.vertexSet()) {
+            nameToNode.put(u.getName(), u);
+        }
     }
 
     public GraphNode addNode(String name, String label) {
@@ -252,8 +265,8 @@ public class SGraph {
 
         for (GraphEdge edge : graph.edgeSet()) {
             GraphEdge newEdge = into.addEdge(into.getNode(nodeRenaming.apply(edge.getSource().getName())),
-                    into.getNode(nodeRenaming.apply(edge.getTarget().getName())),
-                    edge.getLabel());
+                                             into.getNode(nodeRenaming.apply(edge.getTarget().getName())),
+                                             edge.getLabel());
 
             if (newEdge == null) {
                 // e.g. because an edge already existed between the two nodes
@@ -411,9 +424,9 @@ public class SGraph {
     }
 
     public boolean isIdentical(SGraph other) {
-        if( this == other ) {
+        if (this == other) {
             return true;
-        } else if( ! isIdenticalExceptSources(other)) {
+        } else if (!isIdenticalExceptSources(other)) {
             return false;
         } else if (!sourceToNodename.equals(other.sourceToNodename)) {
             return false;
@@ -421,10 +434,9 @@ public class SGraph {
             return true;
         }
     }
-    
-    
+
     boolean isIdenticalExceptSources(SGraph other) {
-        if( this == other ) {
+        if (this == other) {
             return true;
         } else if (!nameToNode.keySet().equals(other.nameToNode.keySet())) {
             return false;
