@@ -154,8 +154,8 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
      * @throws NoFeaturesException if no features are present
      */
     public FeatureFunction getFeatureFunction(int index) {
-        if (features != null && index < features.length) {
-            return features[index];
+        if (getFeatures() != null && index < getFeatures().length) {
+            return getFeatures()[index];
         } else {
             return null;
         }
@@ -212,7 +212,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         double[] values = new double[getNumFeatures()];
         
         for( int i = 0; i < getNumFeatures(); i++ ) {
-            values[i] = (double) features[i].evaluate(rule, auto, this);
+            values[i] = (double) getFeatures()[i].evaluate(rule, auto, this);
         }
         
         rule.setExtra(values);
@@ -246,7 +246,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
     private void setWeightsOnChart(TreeAutomaton chart) {
         Iterable<Rule> ruleSet = chart.getRuleSet();
 
-        if (features != null) {
+        if (getFeatures() != null) {
             for (Rule rule : ruleSet) {
                 rule.setWeight(Math.exp(getRuleScore(rule, chart)));
             }
@@ -354,12 +354,19 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                 ret.append("feature ");
                 ret.append(featureNames.get(i));
                 ret.append(": ");
-                ret.append(features[i].toString());
+                ret.append(getFeatures()[i].toString());
                 ret.append("\n");
             }
         }
 
         return ret.toString();
+    }
+
+    /**
+     * @return the features
+     */
+    public FeatureFunction[] getFeatures() {
+        return features;
     }
     
     
