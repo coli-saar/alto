@@ -34,6 +34,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
+import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
@@ -47,8 +48,10 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -464,9 +467,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * Returns false if a rule with this label and these children was already
-     * known. That is: when q -> f(q1,...,qn) is added, the method returns true;
-     * when subsequently q' -> f(q1,...,qn) is added, the method returns false.
+     * Returns false if adding this rule makes the automaton bottom-up
+     * nondeterministic. That is: when q -> f(q1,...,qn) is added, the method returns true;
+     * when subsequently q' -> f(q1,...,qn) is added, with q != q', the method returns false.
+     * (However, adding q -> f(q1,...,qn) for a second time does not actually
+     * change the set of rules; in this case, the method returns true.)
      *
      * @param rule
      * @return
@@ -483,13 +488,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
         Set<Rule> knownRules = knownRuleMap.get(rule.getLabel());
 
         if (knownRules == null) {
+            // no rules known at all for this RHS => always return true
             knownRules = new HashSet<Rule>();
             knownRuleMap.put(rule.getLabel(), knownRules);
+            knownRules.add(rule);
         } else {
-            ret = false;
+            // some rules were known for this RHS => return false if the new rule is new
+            ret = ! knownRules.add(rule);  // add returns true iff rule is new
         }
-
-        knownRules.add(rule);
 
         return ret;
     }
@@ -2607,84 +2613,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public boolean supportsBottomUpQueries() {
         return true;
     }
+    
+    public TreeAutomaton<Set<State>> determinize() {
+        return new Determinizer<>(this).determinize();
+    }
 }
-/**
- * * for profiling of languageIterator:
- *
- * public static void main(String[] args) throws Exception { LambdaTerm geo =
- * LambdaTermParser.parse(new StringReader("(population:i (capital:c (argmax $1
- * (and (state:t $1) (loc:t mississippi_river:r $1)) (size:i $1))))"));
- * LambdaTermAlgebra alg = new LambdaTermAlgebra();
- * BottomUpAutomaton<LambdaTerm> auto = alg.decompose(geo);
- *
- * long start = System.currentTimeMillis(); for (Tree<String> t :
- * auto.languageIterable()) { } long end = System.currentTimeMillis();
- * System.err.println("done in " + (end - start)); }
- */
 
-/*
- private <TreeLabels> Set<State> runUsingDfs(final Tree<TreeLabels> tree, final Function<Tree<TreeLabels>, State> subst) {
- final Set<State> ret = (Set<State>) tree.dfs(new TreeVisitor<TreeLabels, Void, Set<State>>() {
- @Override
- public Set<State> combine(Tree<TreeLabels> node, List<Set<State>> childrenValues) {
- TreeLabels f = node.getLabel();
- Set<State> states = new HashSet<State>();
- State substState = subst.apply(node);
-
- if (substState != null) {
- states.add(substState);
- } else if (childrenValues.isEmpty()) {
- for (Rule<State> rule : getRulesBottomUp(f.toString(), new ArrayList<State>())) {
- states.add(rule.getParent());
- }
- } else {
- boolean someChildEmpty = false;
- boolean allChildrenSingleton = true;
-
- for (int i = 0; i < childrenValues.size(); i++) {
- switch (childrenValues.get(i).size()) {
- case 0:
- someChildEmpty = true;
- allChildrenSingleton = false;
- break;
- case 1:
- break;
- default:
- allChildrenSingleton = false;
- }
- }
-
- if (!someChildEmpty) {
- if (allChildrenSingleton) {
- List<State> children = new ArrayList<State>(childrenValues.size());
- for (int i = 0; i < childrenValues.size(); i++) {
- children.add(childrenValues.get(i).iterator().next());
- }
- for (Rule<State> rule : getRulesBottomUp(f.toString(), children)) {
- states.add(rule.getParent());
- }
- } else {
- CartesianIterator<State> it = new CartesianIterator<State>(childrenValues);
-
- while (it.hasNext()) {
- for (Rule<State> rule : getRulesBottomUp(f.toString(), it.next())) {
- states.add(rule.getParent());
- }
- }
-
- }
- }
- }
-
- if (debug) {
- System.err.println("\n" + node + ":");
- System.err.println("   " + childrenValues + " -> " + states);
- }
-
- return states;
- }
- });
-
- return ret;
- }
- */

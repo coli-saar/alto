@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.List;
@@ -155,6 +156,24 @@ public class FastutilUtils {
             Int2ObjectMap.Entry<E> entry = it.next();
             fn.accept(entry.getIntKey(), entry.getValue());
         }
+    }
+    
+    public static boolean isDisjoint(IntSet s1, IntSet s2) {
+        if( s1.size() > s2.size() ) {
+            for( int x : s2 ) {
+                if( s1.contains(x)) {
+                    return false;
+                }
+            }
+        } else {
+            for( int x : s1 ) {
+                if( s2.contains(x)) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
     }
 
 }

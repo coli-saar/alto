@@ -16,12 +16,13 @@ import java.util.function.Consumer;
  * @author koller
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
-
-//    private IntTrie<Int2ObjectMap<Set<Rule>>> ruleTrie = null;
     public ConcreteTreeAutomaton() {
-        super(new Signature());
+        this(new Signature());
+    }
+
+    public ConcreteTreeAutomaton(Signature signature) {
+        super(signature);
         isExplicit = true;
-//        ruleTrie = new IntTrie<Int2ObjectMap<Set<Rule>>>();
     }
 
     @Override

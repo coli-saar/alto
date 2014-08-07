@@ -28,13 +28,14 @@ class PatternMatchingInvhomAutomatonTest {
         Signature s = sig(["f":2, "g":2, "a":0, "b":0])
         ConcreteTreeAutomaton auto = new ConcreteTreeAutomaton()
         PatternMatchingInvhomAutomaton.addToPatternMatchingAutomaton(pth("f(g(a,?1),?2)", s), "q", auto, s)
-        System.err.println(auto)
+//        System.err.println(auto.toString() + "\n\n")
       
         assert auto.accepts(pt("f(g(a,b),a)"))
         assert auto.accepts(pt("f(g(a,f(b,a)),g(a,b))"))
         assert auto.accepts(pt("g(a,f(g(a,b),a))"))
         assert ! auto.accepts(pt("f(g(b,a),a)"))
         assert ! auto.accepts(pt("a"))
+        
     }
 
     private static final String MATCH1 = '''
