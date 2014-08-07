@@ -76,8 +76,6 @@ public class Determinizer<State> {
             List<Integer> newStateAsSingleton = Collections.singletonList(newState);
 
             for (int ar = 1; ar <= maxArity; ar++) {           // arity of rule
-                final int[] aRhsNewStates = new int[ar];
-
                 for (int myPos = 0; myPos < ar; myPos++) {     // position of newState in arity list
                     final int _myPos = myPos;
                     List<List<Integer>> childLists = Util.makeList(ar, i -> i == _myPos ? newStateAsSingleton : allNewStates);
@@ -86,7 +84,7 @@ public class Determinizer<State> {
                     while (it.hasNext()) {
                         List<Integer> rhsNewStates = it.next();           // list of states in new automaton
                         lookupStateLists(rhsNewStates, rhsStateLists);    // list of state-sets in old automaton
-                        copyToArray(rhsNewStates, aRhsNewStates);
+                        final int[] aRhsNewStates = makeArray(rhsNewStates);
 
                         // collect mappings f -> {q1, ..., qn} for all rules qi -> f(RHS)
                         final Int2ObjectMap<IntSet> labelsToParents = new Int2ObjectOpenHashMap<>();
@@ -120,10 +118,12 @@ public class Determinizer<State> {
         return ret;
     }
 
-    private static void copyToArray(List<Integer> values, int[] ret) {
+    private static int[] makeArray(List<Integer> values) {
+        int[] ret = new int[values.size()];
         for (int i = 0; i < values.size(); i++) {
             ret[i] = values.get(i);
         }
+        return ret;
     }
 
     private void lookupStateLists(List<Integer> newStates, List<IntSet> ret) {
