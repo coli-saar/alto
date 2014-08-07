@@ -34,7 +34,6 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
-import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
@@ -48,10 +47,8 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
-import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
-import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -1926,7 +1923,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     @FunctionalInterface
     public static interface BottomUpStateVisitor {
-
         public void visit(int state, Iterable<Rule> rulesTopDown);
     }
 
@@ -2614,8 +2610,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return true;
     }
     
+    public TreeAutomaton<Set<State>> determinize(List<IntSet> newStateToOldStateSet) {
+        return new Determinizer<>(this).determinize(newStateToOldStateSet);
+    }
+    
     public TreeAutomaton<Set<State>> determinize() {
-        return new Determinizer<>(this).determinize();
+        return determinize(null);
     }
 }
 

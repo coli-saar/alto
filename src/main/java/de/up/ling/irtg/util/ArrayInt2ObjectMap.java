@@ -6,35 +6,31 @@
 package de.up.ling.irtg.util;
 
 import it.unimi.dsi.fastutil.ints.AbstractInt2IntMap;
+import it.unimi.dsi.fastutil.ints.AbstractInt2ObjectMap;
 import it.unimi.dsi.fastutil.ints.AbstractIntIterator;
 import it.unimi.dsi.fastutil.ints.AbstractIntSet;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.AbstractObjectIterator;
 import it.unimi.dsi.fastutil.objects.AbstractObjectSet;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import java.util.ArrayList;
 import java.util.function.IntConsumer;
 
 /**
  *
  * @author koller
  */
-public class ArrayInt2IntMap extends AbstractInt2IntMap {
-
-    private final IntArrayList values;
+public class ArrayInt2ObjectMap<E> extends AbstractInt2ObjectMap<E> {
+    private final ArrayList<E> values;
     private int capacity = 100;
     private int size = 0;                  // # actual elements in map
-    private int defaultReturnValue = 0;
 
-    public ArrayInt2IntMap() {
-        values = new IntArrayList();
-    }
-
-    public void defaultReturnValue(int x) {
-        this.defaultReturnValue = x;
+    public ArrayInt2ObjectMap() {
+        values = new ArrayList<>();
     }
 
     public String getStatistics() {
@@ -70,7 +66,7 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
 //            System.err.println("grow list to " + targetIndex);
             growList(targetIndex);
             for (int i = values.size(); i <= targetIndex; i++) {
-                values.add(defaultReturnValue);
+                values.add(null);
             }
         }
 
@@ -78,9 +74,9 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
     }
 
     @Override
-    public int get(int i) {
+    public E get(int i) {
         if (i >= values.size()) {
-            return defaultReturnValue;
+            return null;
         } else {
             return values.get(i);
         }
@@ -88,17 +84,17 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
 
     @Override
     public boolean containsKey(int k) {
-        return k < values.size() && values.get(k) != defaultReturnValue;
+        return k < values.size() && values.get(k) != null;
     }
 
     @Override
-    public int put(int key, int value) {
+    public E put(int key, E value) {
         ensureSize(key);
 
-        int ret = values.get(key);
+        E ret = values.get(key);
         values.set(key, value);
 
-        if (ret == defaultReturnValue) {
+        if (ret == null) {
             size++;
         }
 
@@ -121,8 +117,7 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
     }
 
     private class KeyIterator extends AbstractIntIterator {
-
-        private final int arraySize = ArrayInt2IntMap.this.arraySize();
+        private final int arraySize = ArrayInt2ObjectMap.this.arraySize();
         private int pos = 0;
 
         // Invariant: pos is either == arraySize, or the next position
@@ -134,7 +129,7 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
         // This method steps the position further to ensure the
         // invariant is met again.
         private void skipToNextNonNullElement() {
-            while (pos < arraySize && values.get(pos) == defaultReturnValue) {
+            while (pos < arraySize && values.get(pos) == null) {
                 pos++;
             }
         }
@@ -162,7 +157,7 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
             if (k < 0 || k >= arraySize()) {
                 return false;
             } else {
-                return values.get(k) != defaultReturnValue;
+                return values.get(k) != null;
             }
         }
 
@@ -173,13 +168,13 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
 
         @Override
         public int size() {
-            return ArrayInt2IntMap.this.size();
+            return ArrayInt2ObjectMap.this.size();
         }
 
         @Override
         public void forEach(IntConsumer consumer) {
             for (int i = 0; i < values.size(); i++) {
-                if (values.get(i) != defaultReturnValue) {
+                if (values.get(i) != null) {
                     consumer.accept(i);
                 }
             }
@@ -192,11 +187,11 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
     }
 
     @Override
-    public ObjectSet<Int2IntMap.Entry> int2IntEntrySet() {
-        return new AbstractObjectSet<Int2IntMap.Entry>() {
+    public ObjectSet<Entry<E>> int2ObjectEntrySet() {
+        return new AbstractObjectSet<Entry<E>>() {
             @Override
-            public ObjectIterator<Int2IntMap.Entry> iterator() {
-                return new AbstractObjectIterator<Int2IntMap.Entry>() {
+            public ObjectIterator<Entry<E>> iterator() {
+                return new AbstractObjectIterator<Entry<E>>() {
                     IntIterator keyIt = new KeyIterator();
 
                     @Override
@@ -205,17 +200,17 @@ public class ArrayInt2IntMap extends AbstractInt2IntMap {
                     }
 
                     @Override
-                    public Int2IntMap.Entry next() {
+                    public Entry<E> next() {
                         int key = keyIt.nextInt();
-                        int value = values.getInt(key);
-                        return new AbstractInt2IntMap.BasicEntry(key, value);
+                        E value = values.get(key);
+                        return new AbstractInt2ObjectMap.BasicEntry(key, value);
                     }
                 };
             }
 
             @Override
             public int size() {
-                return ArrayInt2IntMap.this.size();
+                return ArrayInt2ObjectMap.this.size();
             }
         };
     }

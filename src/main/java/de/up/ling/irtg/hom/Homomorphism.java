@@ -206,6 +206,11 @@ public class Homomorphism {
     public IntSet getLabelSetForLabel(int label) {
         return getLabelSet(labelToLabelSet.get(label));
     }
+    
+    // valid label set IDs: 1 .. maxLabelSetID (inclusive)
+    public int getMaxLabelSetID() {
+        return labelSetList.size()-1;
+    }
 
     /**
      * Returns the value h(label). The label is resolved according to the

@@ -20,6 +20,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Queue;
@@ -44,8 +45,8 @@ public class Determinizer<State> {
         ism = new IdentitySignatureMapper(originalAutomaton.getSignature());
         allStateLists.add(null); // to ensure allStateLists.get(newState) == states represented by newState
     }
-
-    public TreeAutomaton<Set<State>> determinize() {
+    
+    public TreeAutomaton<Set<State>> determinize(List<IntSet> newStateToOldStateSet) {
         ConcreteTreeAutomaton<Set<State>> ret = new ConcreteTreeAutomaton<>(originalAutomaton.getSignature());
         Queue<Integer> stateSetAgenda = new ArrayDeque<>();
         int maxArity = 0;
@@ -73,19 +74,18 @@ public class Determinizer<State> {
         // iterate over agenda
         while (!stateSetAgenda.isEmpty()) {
             int newState = stateSetAgenda.remove();
-            List<Integer> newStateAsSingleton = Collections.singletonList(newState);
+            
+            IntList newStateAsSingleton = new IntArrayList();
+            newStateAsSingleton.add(newState);
 
             for (int ar = 1; ar <= maxArity; ar++) {           // arity of rule
                 for (int myPos = 0; myPos < ar; myPos++) {     // position of newState in arity list
                     final int _myPos = myPos;
-                    List<List<Integer>> childLists = Util.makeList(ar, i -> i == _myPos ? newStateAsSingleton : allNewStates);
+                    List<IntList> childLists = Util.makeList(ar, i -> i == _myPos ? newStateAsSingleton : allNewStates);
 
-                    CartesianIterator<Integer> it = new CartesianIterator<>(childLists);
-                    while (it.hasNext()) {
-                        List<Integer> rhsNewStates = it.next();           // list of states in new automaton
-                        lookupStateLists(rhsNewStates, rhsStateLists);    // list of state-sets in old automaton
-                        final int[] aRhsNewStates = makeArray(rhsNewStates);
-
+                    FastutilUtils.forEachIntCartesian(childLists, aRhsNewStates -> {
+                        lookupStateLists(aRhsNewStates, rhsStateLists);    // list of state-sets in old automaton
+                        
                         // collect mappings f -> {q1, ..., qn} for all rules qi -> f(RHS)
                         final Int2ObjectMap<IntSet> labelsToParents = new Int2ObjectOpenHashMap<>();
                         originalAutomaton.foreachRuleBottomUpForSets(allSymbolIds, rhsStateLists, ism, rule -> {
@@ -101,7 +101,7 @@ public class Determinizer<State> {
                         // create rules for all the LHSs we found
                         FastutilUtils.forEach(labelsToParents.keySet(), label -> {
                             int parent = getNewState(labelsToParents.get(label), ret);
-                            ret.addRule(new Rule(parent, label, aRhsNewStates, 1));
+                            ret.addRule(new Rule(parent, label, aRhsNewStates.clone(), 1));
 
                             // NB this may add the same rule multiple times, with the "newState"
                             // in different child positions
@@ -110,25 +110,24 @@ public class Determinizer<State> {
                                 previouslyIterated.add(parent);
                             }
                         });
-                    }
+                        
+                    });
                 }
             }
         }
-
-        return ret;
-    }
-
-    private static int[] makeArray(List<Integer> values) {
-        int[] ret = new int[values.size()];
-        for (int i = 0; i < values.size(); i++) {
-            ret[i] = values.get(i);
+        
+        if( newStateToOldStateSet != null ) {
+            newStateToOldStateSet.clear();
+            newStateToOldStateSet.addAll(allStateLists);
         }
+
+        ret.stateInterner.setTrustingMode(false);
         return ret;
     }
 
-    private void lookupStateLists(List<Integer> newStates, List<IntSet> ret) {
+    private void lookupStateLists(int[] newStates, List<IntSet> ret) {
         ret.clear();
-        newStates.forEach(q -> ret.add(allStateLists.get(q)));
+        Arrays.stream(newStates).forEach(q -> ret.add(allStateLists.get(q)));
     }
 
     private int getNewState(IntSet states, TreeAutomaton<Set<State>> auto) {
