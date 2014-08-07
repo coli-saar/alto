@@ -49,7 +49,7 @@ public class Determinizer<State> {
         ConcreteTreeAutomaton<Set<State>> ret = new ConcreteTreeAutomaton<>(originalAutomaton.getSignature());
         Queue<Integer> stateSetAgenda = new ArrayDeque<>();
         int maxArity = 0;
-        List<IntSet> childListsHere = new ArrayList<>();
+        List<IntSet> rhsStateLists = new ArrayList<>();
         IntSet previouslyIterated = new IntOpenHashSet();
 
         ret.stateInterner.setTrustingMode(true);
@@ -73,45 +73,40 @@ public class Determinizer<State> {
         // iterate over agenda
         while (!stateSetAgenda.isEmpty()) {
             int newState = stateSetAgenda.remove();
+            List<Integer> newStateAsSingleton = Collections.singletonList(newState);
 
-            for (int ar = 1; ar <= maxArity; ar++) {
-                for (int myPos = 0; myPos < ar; myPos++) {
-                    List<List<Integer>> childLists = new ArrayList<>();
+            for (int ar = 1; ar <= maxArity; ar++) {           // arity of rule
+                final int[] aRhsNewStates = new int[ar];
 
-                    for (int i = 0; i < ar; i++) {
-                        if (i == myPos) {
-                            childLists.add(Collections.singletonList(newState));
-                        } else {
-                            childLists.add(allNewStates);
-                        }
-                    }
+                for (int myPos = 0; myPos < ar; myPos++) {     // position of newState in arity list
+                    final int _myPos = myPos;
+                    List<List<Integer>> childLists = Util.makeList(ar, i -> i == _myPos ? newStateAsSingleton : allNewStates);
 
                     CartesianIterator<Integer> it = new CartesianIterator<>(childLists);
                     while (it.hasNext()) {
-                        List<Integer> childStatesHere = it.next();
-                        lookupStateLists(childStatesHere, childListsHere);
+                        List<Integer> rhsNewStates = it.next();           // list of states in new automaton
+                        lookupStateLists(rhsNewStates, rhsStateLists);    // list of state-sets in old automaton
+                        copyToArray(rhsNewStates, aRhsNewStates);
 
+                        // collect mappings f -> {q1, ..., qn} for all rules qi -> f(RHS)
                         final Int2ObjectMap<IntSet> labelsToParents = new Int2ObjectOpenHashMap<>();
-
-                        originalAutomaton.foreachRuleBottomUpForSets(allSymbolIds, childListsHere, ism, rule -> {
+                        originalAutomaton.foreachRuleBottomUpForSets(allSymbolIds, rhsStateLists, ism, rule -> {
                             IntSet parents = labelsToParents.get(rule.getLabel());
-
                             if (parents == null) {
                                 parents = new IntOpenHashSet();
                             }
 
                             parents.add(rule.getParent());
-
                             labelsToParents.put(rule.getLabel(), parents);
                         });
 
+                        // create rules for all the LHSs we found
                         FastutilUtils.forEach(labelsToParents.keySet(), label -> {
                             int parent = getNewState(labelsToParents.get(label), ret);
-                            ret.addRule(new Rule(parent, label, makeArray(childStatesHere), 1));
-                            
+                            ret.addRule(new Rule(parent, label, aRhsNewStates, 1));
+
                             // NB this may add the same rule multiple times, with the "newState"
                             // in different child positions
-
                             if (!previouslyIterated.contains(parent)) {
                                 stateSetAgenda.offer(parent);
                                 previouslyIterated.add(parent);
@@ -125,12 +120,10 @@ public class Determinizer<State> {
         return ret;
     }
 
-    private static int[] makeArray(List<Integer> values) {
-        int[] ret = new int[values.size()];
+    private static void copyToArray(List<Integer> values, int[] ret) {
         for (int i = 0; i < values.size(); i++) {
             ret[i] = values.get(i);
         }
-        return ret;
     }
 
     private void lookupStateLists(List<Integer> newStates, List<IntSet> ret) {
