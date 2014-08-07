@@ -7,24 +7,37 @@ import static org.junit.Assert.*
 import de.saar.basic.Pair
 import de.up.ling.irtg.automata.Rule
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser
-import de.up.ling.irtg.automata.TreeAutomatonParser
-import de.up.ling.irtg.automata.TreeAutomaton
+import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.signature.Signature
 import static de.up.ling.irtg.util.TestingTools.*;
 
 
 class PatternMatchingInvhomAutomatonTest {
-  @Test
-  public void testMatchingAuto() {
-    TreeAutomaton match = pa(MATCH1)
-    assert match.accepts(pt("f(g(a,b),a)"))
-    assert match.accepts(pt("f(g(a,f(b,a)),g(a,b))"))
-    assert match.accepts(pt("g(a,f(g(a,b),a))"))
-    assert ! match.accepts(pt("f(g(b,a),a)"))
-    assert ! match.accepts(pt("a"))
-  }
+    @Test
+    public void testMatchingAuto() {
+        TreeAutomaton match = pa(MATCH1)
+        assert match.accepts(pt("f(g(a,b),a)"))
+        assert match.accepts(pt("f(g(a,f(b,a)),g(a,b))"))
+        assert match.accepts(pt("g(a,f(g(a,b),a))"))
+        assert ! match.accepts(pt("f(g(b,a),a)"))
+        assert ! match.accepts(pt("a"))
+    }
 
-  private static final String MATCH1 = '''
+    @Test
+    public void testComputeMatchingAuto() {
+        Signature s = sig(["f":2, "g":2, "a":0, "b":0])
+        ConcreteTreeAutomaton auto = new ConcreteTreeAutomaton()
+        PatternMatchingInvhomAutomaton.addToPatternMatchingAutomaton(pth("f(g(a,?1),?2)", s), "q", auto, s)
+        System.err.println(auto)
+      
+        assert auto.accepts(pt("f(g(a,b),a)"))
+        assert auto.accepts(pt("f(g(a,f(b,a)),g(a,b))"))
+        assert auto.accepts(pt("g(a,f(g(a,b),a))"))
+        assert ! auto.accepts(pt("f(g(b,a),a)"))
+        assert ! auto.accepts(pt("a"))
+    }
+
+    private static final String MATCH1 = '''
 q1! -> f(q0, q1)
 q1  -> f(q1, q0)
 q1  -> g(q0, q1)
