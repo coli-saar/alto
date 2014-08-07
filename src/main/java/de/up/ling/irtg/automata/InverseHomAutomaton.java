@@ -21,7 +21,7 @@ import java.util.function.ToIntFunction;
  *
  * @author koller
  */
-class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
+public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 
     public static String FAIL_STATE = "q_FAIL_";
     private int failStateId;
