@@ -7,11 +7,13 @@ package de.up.ling.irtg.automata.condensed;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.Logging;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Set;
+import java.util.logging.Level;
 
 /**
  *
@@ -21,7 +23,12 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
     
     public ConcreteCondensedTreeAutomaton() {
         super(new Signature());
-//        isExplicit = true;
+        
+        // Do NOT set isExplicit to true here! This means that all the condensed
+        // rules have been spelled out explicitly as uncondensed rules, which is
+        // something we want to avoid.
+        
+        isCondensedExplicit = true;
     }
     
     /**
@@ -46,8 +53,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
 //        
 //        System.err.println("condensed as ordinary automaton: \n" + ret);
 //        
-        assert ret.equals(origin);
-        
+Logging.get().setLevel(Level.ALL);
         return ret;
     }
     

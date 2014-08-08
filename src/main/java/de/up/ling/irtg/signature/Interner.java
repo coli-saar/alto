@@ -6,8 +6,12 @@ package de.up.ling.irtg.signature;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
+import de.up.ling.irtg.util.FastutilUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
@@ -123,6 +127,12 @@ public class Interner<E> implements Serializable, Cloneable {
         processUncachedObjects();
         return objectToInt.keySet();
     }
+    
+    public IntSet getKnownIds() {
+        // no need to processUncachedObjects:
+        // intToObject is always filled directly
+        return intToObject.keySet();
+    }
 
     public int getNextIndex() {
         return nextIndex;
@@ -164,11 +174,25 @@ public class Interner<E> implements Serializable, Cloneable {
     public Object clone() {
         Interner<E> ret = new Interner<E>();
 
+        processUncachedObjects();
         ret.intToObject.putAll(intToObject);
         ret.objectToInt.putAll(objectToInt);
         ret.nextIndex = nextIndex;
 
         return ret;
+    }
+    
+    public void retainOnly(IntSet retainedIds) {
+        processUncachedObjects();
+        
+        IntList toRemove = new IntArrayList();
+        toRemove.addAll(intToObject.keySet());
+        toRemove.removeAll(retainedIds);
+        
+        FastutilUtils.forEach(toRemove, rem -> {
+           E object = intToObject.remove(rem);
+           objectToInt.remove(object);
+        });
     }
 
     @Override

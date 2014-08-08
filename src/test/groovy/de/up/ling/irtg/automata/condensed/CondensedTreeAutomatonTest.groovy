@@ -15,6 +15,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser
 import de.up.ling.irtg.automata.TreeAutomatonParser
 import de.up.ling.irtg.automata.TreeAutomaton
 import de.up.ling.irtg.signature.Signature
+import de.up.ling.irtg.util.Logging
 
 /**
  *
@@ -38,7 +39,9 @@ class CondensedTreeAutomatonTest {
     @Test
     public void testTAtoCTA() {
 //        System.out.println("\nCTA from TA:")
-        CondensedTreeAutomaton automaton = parseTA("q! -> f(q2) q! -> g(q2) q2! -> a");
+        TreeAutomaton automaton = TreeAutomatonParser.parse(new StringReader("q! -> f(q2) q! -> g(q2) q2! -> a"));
+        CondensedTreeAutomaton condensed = ConcreteCondensedTreeAutomaton.fromTreeAutomaton(automaton)
+        assertEquals(automaton, condensed)
 //        System.out.println("toString BottomUp:\n" + automaton.toStringBottomUp());
 //        System.out.println("toString TopDown:\n" + automaton.toString());
 //        System.out.println("toString Language:\n" + automaton.language());

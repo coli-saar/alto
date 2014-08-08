@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import cc.mallet.util.FileUtils;
 import com.google.common.collect.Iterables;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
@@ -14,6 +13,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
@@ -167,11 +167,10 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     }
 
     private class CondensedInvhomAutomaton extends ConcreteCondensedTreeAutomaton<State> {
-
         public CondensedInvhomAutomaton(TreeAutomaton<State> rhs) {
-            stateInterner = rhs.getStateInterner();
             signature = hom.getSourceSignature();
             finalStates = rhs.getFinalStates();
+            stateInterner = rhs.getStateInterner();
         }
 
         // Returns the ID for a labelset, but does not add it! Returns 0 if it is not 
@@ -387,7 +386,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             CondensedTreeAutomaton invhom = f.invhom(decomp);
             w2.record(1);
 
-            TreeAutomaton chart = irtg.getAutomaton().intersectCondensed(invhom);
+            TreeAutomaton chart = new CondensedViterbiIntersectionAutomaton(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(invhom.getSignature()));
 
             w2.record(2);
             

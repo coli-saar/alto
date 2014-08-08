@@ -63,6 +63,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
+import java.util.stream.Collectors;
 
 /*
  TODO:
@@ -106,7 +107,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     private TopDownRuleIndex explicitRulesTopDown;
 
     protected IntSet finalStates;                                             // final states, subset of allStates
-    protected IntSet allStates;                                                 // subset of stateInterner.keySet() that actually occurs in this automaton; allows for sharing interners across automata to preserve state IDs
+    protected IntSet allStates;        // TODO - remove these!                                        // subset of stateInterner.keySet() that actually occurs in this automaton; allows for sharing interners across automata to preserve state IDs
     protected boolean isExplicit;
     private Int2ObjectMap<List<Iterable<Rule>>> rulesForRhsState;             // state -> all rules that have this state as child
 
@@ -176,7 +177,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     protected int addState(State state) {
         int ret = stateInterner.addObject(state);
-        allStates.add(ret);
+//        allStates.add(ret);
         return ret;
     }
 
@@ -406,7 +407,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public IntSet getAllStates() {
         makeAllRulesExplicit();
-        return allStates;
+//        return allStates;
+        return stateInterner.getKnownIds();
     }
 
     protected void addFinalState(int state) {
@@ -955,6 +957,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof TreeAutomaton)) {
+//            System.err.println("not equals, other object is not TreeAutomaton");
             return false;
         }
 
@@ -966,42 +969,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
         Iterable<Rule> otherAllRules = other.getRuleSet();
 
         return ruleSetsEqual(allRules, otherAllRules, labelRemap, stateRemap, other);
-
-//
-//        Map<Integer, Map<int[], Set<Rule>>> allRules = getAllRules();
-//        Map<Integer, Map<int[], Set<Rule>>> otherAllRules = other.getAllRules();
-//
-//        if (allRules.size() != otherAllRules.size()) {
-//            return false;
-//        }
-//
-//        for (int f : allRules.keySet()) {
-//            if (labelRemap[f] == 0) {
-//                return false;
-//            }
-//
-//            if (allRules.get(f).size() != otherAllRules.get(labelRemap[f]).size()) {
-//                return false;
-//            }
-//
-//            for (int[] children : allRules.get(f).keySet()) {
-//                int[] childrenOther = Interner.remapArray(children, stateRemap);
-//
-//                Iterable<Rule> rules = getRulesBottomUp(f, children);
-//                Iterable<Rule> otherRules = other.getRulesBottomUp(labelRemap[f], childrenOther);
-//
-//                if (!ruleSetsEqual(rules, otherRules, labelRemap, stateRemap, other)) {
-//                    return false;
-//                }
-//            }
-//        }
-//
-//        return true;
     }
 
     // this is slow
     private boolean ruleSetsEqual(Iterable<Rule> r1, Iterable<Rule> r2, int[] labelRemap, int[] stateRemap, TreeAutomaton other) {
         if (Iterables.size(r1) != Iterables.size(r2)) {
+//            System.err.println("not equals, different number of rules");
             return false;
         }
 
@@ -1021,12 +994,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
 
             if (found == null) {
+//                System.err.println("not equals, rule " + r.toString(this) + " does not exist in other automaton");
                 return false;
             } else {
                 tmp.remove(found);
             }
         }
 
+//        if( ! tmp.isEmpty() ) {
+//            System.err.println("not equals, leftover rules: " + tmp.stream().map(r -> r.toString(this)).collect(Collectors.toList()));
+//        }
+        
         return tmp.isEmpty();
     }
 
@@ -1877,11 +1855,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public TreeAutomaton<State> reduceTopDown() {
-        Set<Integer> reachableStates = getReachableStates();
+        IntSet reachableStates = getReachableStates();
         ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
 
         ret.signature = this.signature;
-        ret.stateInterner = stateInterner;
+        ret.stateInterner = (Interner) stateInterner.clone();
 
         // copy all rules that only contain productive states
         for (Rule rule : getRuleSet()) {
@@ -1905,7 +1883,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ret.finalStates.retainAll(reachableStates);
 
         // copy set of reachable states
-        ret.allStates = new IntOpenHashSet(reachableStates);
+//        ret.allStates = new IntOpenHashSet(reachableStates);
+        ret.stateInterner.retainOnly(reachableStates);
 
         return ret;
     }
@@ -1917,8 +1896,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
-    public Set<Integer> getReachableStates() {
-        return new HashSet<Integer>(getStatesInBottomUpOrder());
+    public IntSet getReachableStates() {
+        return new IntOpenHashSet(getStatesInBottomUpOrder());
     }
 
     @FunctionalInterface
