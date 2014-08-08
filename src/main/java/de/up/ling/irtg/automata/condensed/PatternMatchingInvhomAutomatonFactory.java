@@ -5,7 +5,10 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
+import cc.mallet.util.FileUtils;
 import com.google.common.collect.Iterables;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -23,6 +26,9 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,6 +41,7 @@ import java.util.stream.Collectors;
  * @author koller
  */
 public class PatternMatchingInvhomAutomatonFactory<State> {
+
     private TreeAutomaton<Set<String>> matcher;
     private ConcreteTreeAutomaton<String> nondetMatcher;
     private Homomorphism hom;
@@ -80,11 +87,10 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         sw.record(0);
 
         for (int labelSetID = 1; labelSetID <= hom.getMaxLabelSetID(); labelSetID++) {
-            System.err.println("adding rules for label set " + hom.getSourceSignature().resolveSymbolIDs(hom.getLabelSetByLabelSetID(labelSetID)));
             String prefix = "q" + labelSetID;
             String matchingStartState = prefix + "/";
 
-            addToPatternMatchingAutomaton(hom.getByLabelSetID(labelSetID), prefix, nondetMatcher, hom.getTargetSignature());
+            addToPatternMatchingAutomaton(hom.getByLabelSetID(labelSetID), prefix, nondetMatcher, hom.getTargetSignature(), false);
 
             int matchingStartStateId = nondetMatcher.getIdForState(matchingStartState);
             startStateIdToLabelSetID.put(matchingStartStateId, labelSetID);
@@ -101,9 +107,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
         sw.printMilliseconds("add rules", "determinize");
 
-        for (int parent : matcherParentToChildren.keySet()) {
-            System.err.println(nondetMatcher.getStateForId(parent) + " -> " + Arrays.stream(matcherParentToChildren.get(parent)).mapToObj(nondetMatcher::getStateForId).collect(Collectors.toList()));
-        }
+//        for (int parent : matcherParentToChildren.keySet()) {
+//            System.err.println(nondetMatcher.getStateForId(parent) + " -> " + Arrays.stream(matcherParentToChildren.get(parent)).mapToObj(nondetMatcher::getStateForId).collect(Collectors.toList()));
+//        }
     }
 
     private void recordMatcherStates(String matcherState, Tree<HomomorphismSymbol> term, TreeAutomaton<String> nondetMatcher) {
@@ -125,10 +131,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         SignatureMapper mapper = rhs.getSignature().getMapperTo(matcher.getSignature());
         Int2ObjectMap<IntSet> decorations = decorateStatesWithMatcher(rhs, mapper);
 
-        for (int rhsState : decorations.keySet()) {
-            System.err.println("dec " + rhs.getStateForId(rhsState) + ": " + Util.mapSet(decorations.get(rhsState), nondetMatcher::getStateForId));
-        }
-
+//        for (int rhsState : decorations.keySet()) {
+//            System.err.println("dec " + rhs.getStateForId(rhsState) + ": " + Util.mapSet(decorations.get(rhsState), nondetMatcher::getStateForId));
+//        }
         FastutilUtils.forEach(decorations.keySet(), rhsState -> {
             IntSet decorationHere = decorations.get(rhsState);
 
@@ -147,7 +152,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                     } else {
                         int[] childStates = new int[numVariables];
 
-                    // todo - case without variables
+                        // todo - case without variables
                         forAllMatches(matcherState, rhsState, term, rightmostVariableForLabelSetID[labelSetID], childStates, rhs, decorations, cs -> {
 //                        System.err.println("match! " + Arrays.stream(cs).mapToObj(rhs::getStateForId).collect(Collectors.toList()));
                             ret.addRule(new CondensedRule(rhsState, labelSetID, cs.clone(), 1));
@@ -162,6 +167,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     }
 
     private class CondensedInvhomAutomaton extends ConcreteCondensedTreeAutomaton<State> {
+
         public CondensedInvhomAutomaton(TreeAutomaton<State> rhs) {
             stateInterner = rhs.getStateInterner();
             signature = hom.getSourceSignature();
@@ -231,31 +237,58 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
     private Int2ObjectMap<IntSet> decorateStatesWithMatcher(TreeAutomaton<State> rhs, SignatureMapper rhsToMatcherMapper) {
         final Int2ObjectMap<IntSet> ret = new ArrayInt2ObjectMap<>();
+        final Int2ObjectMap<IntSet> matcherStates = new ArrayInt2ObjectMap<>();
 
         rhs.foreachStateInBottomUpOrder((state, rules) -> {
             final IntSet matcherStatesHere = new IntOpenHashSet();
+            final IntSet retStatesHere = new IntOpenHashSet();
 
             rules.forEach(rule -> {
-                List<IntSet> possibleChildStates = Arrays.stream(rule.getChildren()).mapToObj(ret::get).collect(Collectors.toList());
+                List<IntSet> possibleChildStates = Arrays.stream(rule.getChildren()).mapToObj(matcherStates::get).collect(Collectors.toList());
                 assert possibleChildStates.stream().allMatch(x -> x != null);
 
                 FastutilUtils.forEachIntCartesian(possibleChildStates, children -> {
                     for (Rule matcherRule : matcher.getRulesBottomUp(rhsToMatcherMapper.remapForward(rule.getLabel()), children)) {
                         // should be 0 or 1 rules, but almost doesn't matter
-                        matcherStatesHere.addAll(detMatcherStatesToNondet.get(matcherRule.getParent())); // change this back for nondet automaton
+                        matcherStatesHere.add(matcherRule.getParent());
+                        retStatesHere.addAll(detMatcherStatesToNondet.get(matcherRule.getParent())); // change this back for nondet automaton
                     }
                 });
             });
 
-            ret.put(state, matcherStatesHere);
+            matcherStates.put(state, matcherStatesHere);
+            ret.put(state, retStatesHere);
         });
 
         return ret;
     }
 
+//    private Int2ObjectMap<IntSet> decorateStatesWithMatcher(TreeAutomaton<State> rhs, SignatureMapper rhsToMatcherMapper) {
+//        final Int2ObjectMap<IntSet> ret = new ArrayInt2ObjectMap<>();
+//
+//        rhs.foreachStateInBottomUpOrder((state, rules) -> {
+//            final IntSet matcherStatesHere = new IntOpenHashSet();
+//
+//            rules.forEach(rule -> {
+//                List<IntSet> possibleChildStates = Arrays.stream(rule.getChildren()).mapToObj(ret::get).collect(Collectors.toList());
+//                assert possibleChildStates.stream().allMatch(x -> x != null);
+//
+//                FastutilUtils.forEachIntCartesian(possibleChildStates, children -> {
+//                    for (Rule matcherRule : matcher.getRulesBottomUp(rhsToMatcherMapper.remapForward(rule.getLabel()), children)) {
+//                        // should be 0 or 1 rules, but almost doesn't matter
+//                        matcherStatesHere.addAll(detMatcherStatesToNondet.get(matcherRule.getParent())); // change this back for nondet automaton
+//                    }
+//                });
+//            });
+//
+//            ret.put(state, matcherStatesHere);
+//        });
+//
+//        return ret;
+//    }
 //    private Int2ObjectMap<IntSet> computeReverseMapping
     // caveat: signature(auto) != signature
-    public static void addToPatternMatchingAutomaton(Tree<HomomorphismSymbol> rhs, String prefix, final ConcreteTreeAutomaton<String> auto, Signature signature) {
+    public static void addToPatternMatchingAutomaton(Tree<HomomorphismSymbol> rhs, String prefix, final ConcreteTreeAutomaton<String> auto, Signature signature, boolean includeOutsideTransitions) {
         String qf = prefix + "f";
         String q0 = prefix;
         String qmatch = prefix + "/";
@@ -272,13 +305,15 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             for (int q1pos = 0; q1pos < arity; q1pos++) {
                 final int _q1pos = q1pos; // for access from lambda expr
 
-//                // path from root to match
-//                List<String> children = Util.makeList(arity, i -> i == _q1pos ? qf : q0);
-//                auto.addRule(auto.createRule(qf, sym, children));
-//
-//                // transition into matching tree
-//                children = Util.makeList(arity, i -> i == _q1pos ? qmatch : q0);
-//                auto.addRule(auto.createRule(qf, sym, children));
+                if (includeOutsideTransitions) {
+                    // path from root to match
+                    List<String> children = Util.makeList(arity, i -> i == _q1pos ? qf : q0);
+                    auto.addRule(auto.createRule(qf, sym, children));
+
+                    // transition into matching tree
+                    children = Util.makeList(arity, i -> i == _q1pos ? qmatch : q0);
+                    auto.addRule(auto.createRule(qf, sym, children));
+                }
             }
 
             // transitioning out of variable nodes
@@ -314,5 +349,56 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         for (int i = 0; i < rhs.getChildren().size(); i++) {
             addMatcherTransitions(rhs.getChildren().get(i), parent + (i + 1), auto, signature);
         }
+    }
+
+    public static void main(String[] args) throws Exception {
+        CpuTimeStopwatch sw = new CpuTimeStopwatch();
+        sw.record(0);
+
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
+        Homomorphism hom = irtg.getInterpretation("string").getHomomorphism();
+        Algebra<List<String>> alg = irtg.getInterpretation("string").getAlgebra();
+
+        sw.record(1);
+
+        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom);
+        f.computeMatcherFromHomomorphism();
+
+        sw.record(2);
+        sw.printMilliseconds("load", "prepare");
+
+        int numSent = 0;
+        BufferedReader buf = new BufferedReader(new FileReader(args[1]));
+        do {
+            String line = buf.readLine();
+
+            if (line == null) {
+                break;
+            }
+
+            List<String> sent = alg.parseString(line);
+            TreeAutomaton decomp = alg.decompose(sent);
+
+            System.err.println("\n" + (numSent + 1) + " - " + sent.size() + " words");
+
+            CpuTimeStopwatch w2 = new CpuTimeStopwatch();
+            w2.record(0);
+
+            CondensedTreeAutomaton invhom = f.invhom(decomp);
+            w2.record(1);
+
+            TreeAutomaton chart = irtg.getAutomaton().intersectCondensed(invhom);
+
+            w2.record(2);
+            
+            System.err.println(chart.viterbi());
+            
+            w2.record(3);
+
+            w2.printMilliseconds("invhom", "intersect", "viterbi");
+
+            numSent++;
+        } while (true);
+
     }
 }

@@ -31,7 +31,7 @@ class PatternMatchingInvhomAutomatonTest {
     public void testComputeMatchingAuto() {
         Signature s = sig(["f":2, "g":2, "a":0, "b":0])
         ConcreteTreeAutomaton auto = new ConcreteTreeAutomaton()
-        PatternMatchingInvhomAutomatonFactory.addToPatternMatchingAutomaton(pth("f(g(a,?1),?2)", s), "q", auto, s)
+        PatternMatchingInvhomAutomatonFactory.addToPatternMatchingAutomaton(pth("f(g(a,?1),?2)", s), "q", auto, s, true)
       
         assert auto.accepts(pt("f(g(a,b),a)"))
         assert auto.accepts(pt("f(g(a,f(b,a)),g(a,b))"))
@@ -50,8 +50,6 @@ class PatternMatchingInvhomAutomatonTest {
         List input = alg.parseString("john watches the woman with the telescope")
         TreeAutomaton decomp = alg.decompose(input)
         
-        System.err.println(decomp)
-        
         CpuTimeStopwatch sw = new CpuTimeStopwatch()
         sw.record(0)
         
@@ -60,7 +58,11 @@ class PatternMatchingInvhomAutomatonTest {
         sw.record(1)
         sw.printMilliseconds("invhom")
         
-        System.err.println(invhom.toString())
+        assert invhom.accepts(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
+        assert invhom.accepts(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
+        assert ! invhom.accepts(pt("r1(r2,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
+        
+//        System.err.println(invhom.toString())
     }
     
     
