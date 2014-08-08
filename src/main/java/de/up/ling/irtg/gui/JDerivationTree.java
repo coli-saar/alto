@@ -4,9 +4,12 @@
  */
 package de.up.ling.irtg.gui;
 
+import de.up.ling.irtg.codec.TikzQtreeOutputCodec;
+import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
+import java.io.IOException;
 import javax.swing.JScrollPane;
 
 /**
@@ -28,7 +31,18 @@ public class JDerivationTree extends JDerivationDisplayable {
         jsp.setBackground(Color.white);
         add(jsp);
         
-        PopupMenu.create("text", derivationTree.toString()).addAsMouseListener(jsp);
+        String tikz;
+        
+        try {
+            tikz = new TikzQtreeOutputCodec().asString(derivationTree);
+        } catch(IOException e) {
+            GuiUtils.showError(this, e);
+            tikz = "(error)";
+        }
+        
+        PopupMenu.create("text", derivationTree.toString(),
+                         "tikz-qtree", tikz)
+                 .addAsMouseListener(jsp);
     }
 
     /**

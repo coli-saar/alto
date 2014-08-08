@@ -387,6 +387,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             w2.record(1);
 
             TreeAutomaton chart = new CondensedViterbiIntersectionAutomaton(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(invhom.getSignature()));
+            chart.makeAllRulesExplicit();
 
             w2.record(2);
             

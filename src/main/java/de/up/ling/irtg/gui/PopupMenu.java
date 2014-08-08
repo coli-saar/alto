@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.gui;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -11,8 +12,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import javax.swing.JComponent;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
@@ -36,6 +38,7 @@ public class PopupMenu extends JPopupMenu implements ActionListener {
         this.labels = labels;
 
         for (String key : labels.keySet()) {
+            System.err.println("add mi: " + key);
             JMenuItem mi = new JMenuItem("Copy as " + key);
             mi.setActionCommand(key);
             mi.addActionListener(this);
@@ -43,9 +46,21 @@ public class PopupMenu extends JPopupMenu implements ActionListener {
             add(mi);
         }
     }
+    
+    public static PopupMenu create(List<String> labelArray) {
+        SortedMap<String, String> labels = new Object2ObjectRBTreeMap<>();
+
+        for (int i = 0; i < labelArray.size(); i += 2) {
+            labels.put(labelArray.get(i), labelArray.get(i + 1));
+        }
+        
+        System.err.println("labels: " + labels);
+
+        return new PopupMenu(labels);
+    }
 
     public static PopupMenu create(String... labelArray) {
-        Map<String, String> labels = new HashMap<String, String>();
+        SortedMap<String, String> labels = new Object2ObjectRBTreeMap<>();
 
         for (int i = 0; i < labelArray.length; i += 2) {
             labels.put(labelArray[i], labelArray[i + 1]);

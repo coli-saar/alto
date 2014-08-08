@@ -7,10 +7,15 @@ package de.up.ling.irtg.gui;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.codec.OutputCodec;
+import de.up.ling.irtg.codec.TikzQtreeOutputCodec;
+import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -50,15 +55,28 @@ public class JInterpretation extends JDerivationDisplayable {
         final Tree<String> term = interp.getHomomorphism().apply(derivationTree);
         final Algebra alg = interp.getAlgebra();
 
+        // term panel
         termPanel.removeAll();
         TreePanel<String> rawTreePanel = new TreePanel(term);
         rawTreePanel.setTooltipSource(t -> alg.evaluate(t).toString());
         JComponent treePanel = sp(rawTreePanel);
-
         termPanel.add(treePanel);
 
-        PopupMenu.create("text", term.toString()).addAsMouseListener(treePanel);
+        String tikz;
 
+        try {
+            tikz = new TikzQtreeOutputCodec().asString(term);
+        } catch (IOException e) {
+            GuiUtils.showError(this, e);
+            tikz = "(error)";
+        }
+
+        PopupMenu.create("text", term.toString(),
+                "tikz-qtree", tikz)
+                .addAsMouseListener(rawTreePanel);
+
+        
+        // value panel
         valuePanel.removeAll();
 
         JComponent valueComponent = null;
@@ -67,7 +85,12 @@ public class JInterpretation extends JDerivationDisplayable {
             final Object value = alg.evaluate(term);
             valueComponent = alg.visualize(value);
 
-            new PopupMenu(alg.getRepresentations(value)).addAsMouseListener(valueComponent);
+            Map<String, String> popupEntries = alg.getRepresentations(value);
+            for (OutputCodec codec : OutputCodec.getInputCodecs(value.getClass())) {
+                popupEntries.put(codec.getMetadata().description(), codec.asString(value));
+            }
+
+            new PopupMenu(popupEntries).addAsMouseListener(valueComponent);
         } catch (Exception e) {
             valueComponent = makeErrorComponent(e);
         }

@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
 public @interface CodecMetadata {
 	String name();
         String description();
-	String extension();
+	String extension() default "";
         Class type();
 	boolean experimental() default false;
 }
