@@ -38,7 +38,6 @@ public class PopupMenu extends JPopupMenu implements ActionListener {
         this.labels = labels;
 
         for (String key : labels.keySet()) {
-            System.err.println("add mi: " + key);
             JMenuItem mi = new JMenuItem("Copy as " + key);
             mi.setActionCommand(key);
             mi.addActionListener(this);
