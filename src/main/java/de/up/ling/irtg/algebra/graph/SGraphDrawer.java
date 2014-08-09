@@ -107,7 +107,7 @@ public class SGraphDrawer {
                                     edge -> edge.getLabel());
 
         JGraph jgraph = new JGraph(adapter);
-
+        
         JGraphFacade facade = new JGraphFacade(jgraph);
         JGraphLayout layout = new JGraphHierarchicalLayout();
         layout.run(facade);

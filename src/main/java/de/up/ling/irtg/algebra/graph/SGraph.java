@@ -292,6 +292,10 @@ public class SGraph {
     public String getSourceLabel(String nodename) {
         return "<" + StringTools.join(nodenameToSources.get(nodename), ",") + ">";
     }
+    
+    public Collection<String> getSourcesAtNode(String nodename) {
+        return nodenameToSources.get(nodename);
+    }
 
     private static String gensym(String prefix) {
         return prefix + "_" + (nextGensym++);
