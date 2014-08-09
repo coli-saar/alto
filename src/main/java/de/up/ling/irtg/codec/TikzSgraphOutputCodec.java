@@ -26,15 +26,17 @@ public class TikzSgraphOutputCodec extends OutputCodec<SGraph> {
     public void write(SGraph sgraph, OutputStream ostream) throws IOException {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
         w.println("\\begin{tikzpicture}");
-        w.println(" \\begin{scope} [layered layout, level sep=1.5cm]");
+        w.println(" \\begin{scope} [layered layout, level sep=1.5cm, sibling sep=1cm, rounded corners]");
         w.println(" \\graph {");
         
         for( GraphNode u : sgraph.getGraph().vertexSet() ) {
             //  u1/{want foo} [ssrc];
-            w.print("\n   ");
+            w.print("   ");
             writeNodeRepr(u, sgraph, w);
             w.println(";");
         }
+        
+        w.println();
 
         for (GraphNode u : sgraph.getGraph().vertexSet()) {
             for (GraphEdge e : sgraph.getGraph().outgoingEdgesOf(u)) {
@@ -48,11 +50,13 @@ public class TikzSgraphOutputCodec extends OutputCodec<SGraph> {
         w.println("  };");
         w.println(" \\end{scope}");
         
+        w.println();
+        
         for( String u : sgraph.getAllNodeNames() ) {
             if( sgraph.isSourceNode(u) ) {
                 // \node[sanno,above right=of u1] {\src{root}};
                 String srcString = StringTools.join(sgraph.getSourcesAtNode(u), ",");
-                w.println("  \\node[sanno, above right=of " + cleanup(u) + "] {\\src{" + srcString + "}};");
+                w.println(" \\node[sanno, above right=of " + cleanup(u) + "] {\\src{" + srcString + "}};");
             }
         }
 
