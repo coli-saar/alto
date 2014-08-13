@@ -55,22 +55,3 @@ NP -> girl
 [graph]  "(x<root> / girl)"
 
 
-
-
-/*
-
-
-(u91<root> / want-01
-  :ARG0 (u92<coref1> / bill)
-  :ARG1 (u93 / like-01
-          :ARG0 (u94 / girl)
-	  :ARG1 u92))
-
-(u91 / want-01
-  :ARG0 (u92 / bill)
-  :ARG1 (u93 / like-01
-          :ARG0 (u94 / girl)
-	  :ARG1 u92))
-
-
-*/

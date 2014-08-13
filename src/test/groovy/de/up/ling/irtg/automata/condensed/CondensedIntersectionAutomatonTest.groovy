@@ -128,6 +128,7 @@ Y -> r8(X,X)
         assertEquals(new HashSet(["q1,p1"]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it).toString() }));
     }
     
+    
     // not implemented yet
 //    @Test
 //    public void testInvHomNonlinearByIntersection() {
