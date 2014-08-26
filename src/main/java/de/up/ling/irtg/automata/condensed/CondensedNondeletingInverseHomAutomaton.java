@@ -78,7 +78,14 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
             Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
 
             if (rhs.getMaximumArity() == 0) {
+                // An arity of 0 does not necessarily mean, it is a terminal symbol, 
+                // because it would exclude rules like:
+                // S! -> r1(X)
+                //  [i] ?1
+
+                boolean isVariable = true;
                 for (int state : rhsAutomaton.run(rhs, HomomorphismSymbol.getRemappingSymbolToIntFunction(labelsRemap), x -> 0)) {
+                    isVariable = false;
                     if (statesToNullaryLabelSets.containsKey(state)) {
                         statesToNullaryLabelSets.get(state).add(labelSetID);
                     } else {
@@ -88,7 +95,9 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
                     }
                 }
 
-                labelSetsWithVariables.remove(labelSetID);
+                if (!isVariable) {
+                    labelSetsWithVariables.remove(labelSetID); // only remove, if it is not a variable
+                }
             }
         }
 
