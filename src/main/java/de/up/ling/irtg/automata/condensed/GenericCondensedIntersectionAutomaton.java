@@ -145,8 +145,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                     // go into the recursion first to obtain the topological order that is needed for the CKY algorithm
                     ckyDfsForStatesInBottomUpOrder(rightChildren[i], visited, partners);
 
-                    // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
-                    remappedChildren.add(partners.get(rightChildren[i]));
+                    // only add, if a partner state has been found.
+                    if (partners.containsKey(rightChildren[i])) {
+                        // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
+                        remappedChildren.add(partners.get(rightChildren[i]));
+                    }
                 }
 
                 // find all rules bottom-up in the left automaton that have the same (remapped) children as the right rule.
