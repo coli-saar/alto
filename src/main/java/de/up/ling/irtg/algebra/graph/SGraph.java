@@ -581,12 +581,17 @@ public class SGraph {
         Map<String, Set<String>> possibleNodeRenamings = new HashMap<>();
 
         ensureNodeIndices();
+        
+//        System.err.println("\nmatch complete graph: " + this);
+//        System.err.println("   - subgraph: " + subgraph);
 
         // initialize node renamings with all nodes that have the same label
         for (String nodename : subgraph.getAllNodeNames()) {
             GraphNode node = subgraph.getNode(nodename);
             String nodelabel = node.getLabel();
-            Set<String> possibleRenamingsHere = null;
+            Set<String> possibleRenamingsHere = null; // node names in "this" that nodename might correspond to
+            
+//            System.err.println("possible renamings for subgraph node " + nodename);
 
             if (nodelabel == null) {
                 possibleRenamingsHere = Util.mapSet(graph.vertexSet(), x -> x.getName());
@@ -594,6 +599,8 @@ public class SGraph {
                 List<String> possibleNodenames = labelToNodename.get(nodelabel);
                 possibleRenamingsHere = new HashSet<String>(possibleNodenames);
             }
+            
+//            System.err.println("- initial guess: " + possibleRenamingsHere);
 
             // filter out node renamings that don't have correct adjacent edge labels
             for (GraphEdge e : subgraph.graph.outgoingEdgesOf(node)) {
@@ -603,14 +610,17 @@ public class SGraph {
                         .anyMatch(re -> re.getLabel().equals(e.getLabel()))
                 );
             }
+            
+//            System.err.println("- after outgoing edge filter: " + possibleRenamingsHere);
 
             for (GraphEdge e : subgraph.graph.incomingEdgesOf(node)) {
-                possibleRenamingsHere.removeIf(renamedNodeName
-                        -> !getGraph().incomingEdgesOf(getNode(renamedNodeName))
+                possibleRenamingsHere.removeIf(renamedNodeName -> !getGraph().incomingEdgesOf(getNode(renamedNodeName))
                         .stream()
                         .anyMatch(re -> re.getLabel().equals(e.getLabel()))
                 );
             }
+            
+//            System.err.println("- after incoming edge filter: " + possibleRenamingsHere);
 
             possibleNodeRenamings.put(nodename, possibleRenamingsHere);
         }
