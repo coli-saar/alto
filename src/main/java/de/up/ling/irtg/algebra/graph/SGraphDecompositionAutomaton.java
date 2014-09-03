@@ -130,6 +130,11 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
                 // can never be completed (thanks to Frank Drewes for this tip)
                 Iterable<String> forgottenSources = GraphAlgebra.getForgottenSources(label, arg);
                 Iterable<String> forgottenSourceNodes = Iterables.transform(forgottenSources, x -> arg.getNodeForSource(x));
+                
+                // forget operation attempting to forget a source that does not exist in arg
+                if( Util.stream(forgottenSourceNodes).anyMatch(x -> x == null)) {
+                    return memoize(Collections.EMPTY_LIST, labelId, childStates);
+                }
 
                 if (hasCrossingEdgesFromNodes(forgottenSourceNodes, arg)) {
                     return memoize(Collections.EMPTY_LIST, labelId, childStates);
@@ -175,8 +180,15 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
     private boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
         for (String nodename : nodenames) {
             if (!subgraph.isSourceNode(nodename)) {
-
                 GraphNode node = completeGraph.getNode(nodename);
+                
+                if( ! completeGraph.getGraph().containsVertex(node) ) {
+                    System.err.println("*** TERRIBLE ERROR ***");
+                    System.err.println(" int graph: " + completeGraph);
+                    System.err.println("can't find node " + node);
+                    System.err.println(" - node name: " + nodename);
+                    assert false;
+                }
 
                 for (GraphEdge edge : completeGraph.getGraph().incomingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getSource().getName()) == null) {

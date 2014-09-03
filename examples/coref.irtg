@@ -5,7 +5,7 @@
    This idea arose in the discussions of the Johns Hopkins workshop on AMRs
    in Prague (July 2014; Chiang, Drewes, Gildea, Koller, Lopez, Satta).
 
-   Try parsing this sentence: "bill wants the girl to like him"
+   Try parsing this sentence: "bill_1 wants the girl to like him_1"
 
    And try parsing this graph:
    (u91 / want-01
@@ -23,35 +23,51 @@ interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
 
 S! -> want2(NP, VP)
 [string] *(?1, *(wants, *(to, ?2)))
-[graph]  f_subj_vcomp(merge(merge("(u<root> / want-01  :ARG0 (b<subj>) :ARG1 (g<vcomp>))", 
-                                  r_subj(?1)), 
-                            r_vcomp(r_subj_subj(?2))))
+[graph]  f_subj(f_vcomp(merge(merge("(u<root> / want  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))", r_subj(?1)), r_vcomp(?2))))
 
 S -> want3(NP, NP, VP)
 [string] *(?1, *(wants, *(?2, *(to, ?3))))
-[graph] f_subj_obj_vcomp(merge(merge("(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>) )", 
-                                     r_subj(?1)),
-                               merge(r_obj(?2),
-                                     r_vcomp(r_subj_obj(?3)))))
+[graph] f_subj(f_vcomp(merge(merge("(u<root> / want  :ARG0 (v<subj>)  :ARG1 (w<vcomp>))",
+                                 r_subj(?1)),
+                             f_obj(merge(r_obj(?2), r_vcomp(r_subj_obj(?3)))))))
+// NB: it is important to merge ?2 and ?3 first, because the source <obj>
+// is undefined in the first graph, so merging them yields a graph with two
+// connected components; but the parser will not generate unconnected graphs.
 
-VP -> like(NP)
-[string] *(like, ?1)
-[graph] f_obj(merge("(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_obj(?1)))
 
-S -> likes(NP,NP)
-[string] *(?1, *(likes, ?2))
-[graph]  f_subj_obj(merge(merge("(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_subj(?1)), r_obj(?2)))
-
-NP -> bill
-[string] bill
-[graph] "(b<root,coref1> / bill)"
-
-NP -> him
-[string] him
-[graph] "(b<root,coref1>)"
+NP -> boy
+[string] *(the, boy)
+[graph]  "(x<root> / boy)"
 
 NP -> girl
 [string] *(the, girl)
 [graph]  "(x<root> / girl)"
 
+// every VP has a "subj" source at which the subject is inserted
+VP -> believe(S)
+[string] *(believe, *(that, ?1))
+[graph]  f_xcomp(merge("(u<root> / believe  :ARG0 (v<subj>)  :ARG1 (w<xcomp>))", r_xcomp(?1)))
+
+S! -> likes(NP,NP)
+[string] *(?1, *(likes, ?2))
+[graph]  f_subj(f_obj(merge(merge("(u<root> / like  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_subj(?1)), r_obj(?2))))
+
+VP -> go
+[string] go
+[graph]  "(g<root> / go  :ARG0 (s<subj>))"
+
+
+
+VP -> like(NP)
+[string] *(like, ?1)
+[graph] f_obj(merge("(u<root> / like  :ARG0 (v<subj>)  :ARG1 (w<obj>))", r_obj(?1)))
+
+
+NP -> bill_1
+[string] bill_1
+[graph] "(b<root,coref1> / bill)"
+
+NP -> him_1
+[string] him_1
+[graph] "(b<root,coref1>)"
 
