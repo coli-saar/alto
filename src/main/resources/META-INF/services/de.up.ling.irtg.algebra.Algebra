@@ -1,8 +1,11 @@
 de.up.ling.irtg.algebra.BinarizingTreeAlgebra
 de.up.ling.irtg.algebra.BinarizingTreeWithAritiesAlgebra
-#de.up.ling.irtg.algebra.PtbTreeAlgebra
-#de.up.ling.irtg.algebra.SetAlgebra
+de.up.ling.irtg.algebra.PtbTreeAlgebra
+de.up.ling.irtg.algebra.SetAlgebra
 de.up.ling.irtg.algebra.StringAlgebra
-#de.up.ling.irtg.algebra.TagStringAlgebra
-#de.up.ling.irtg.algebra.TagTreeAlgebra
+de.up.ling.irtg.algebra.TagStringAlgebra
+de.up.ling.irtg.algebra.TagTreeAlgebra
+de.up.ling.irtg.algebra.TreeAlgebra
+de.up.ling.irtg.algebra.TreeWithAritiesAlgebra
 de.up.ling.irtg.algebra.WideStringAlgebra
+de.up.ling.irtg.algebra.graph.GraphAlgebra

@@ -67,6 +67,10 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
 //        new WindowMenu(this).get
         this.automaton = automaton;
+        
+        if( automaton.isEmpty() ) {
+            miShowLanguage.setEnabled(false);
+        }
 
         Vector<String> columnIdentifiers = new Vector<String>();
         columnIdentifiers.add("");
