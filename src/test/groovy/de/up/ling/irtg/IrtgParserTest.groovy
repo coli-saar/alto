@@ -185,5 +185,27 @@ P -> r12
         ''';
         InterpretedTreeAutomaton irtg = pi(grammarstring)
     }
+    
+    @Test(expected=de.up.ling.irtg.codec.ParseException.class)
+    public void testTooManyVariables0() {
+        String grammarstring = '''
+            interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+            Foo -> a
+            [i] bar(?1)
+        ''';
+        InterpretedTreeAutomaton irtg = pi(grammarstring)
+    }
+    
+    @Test(expected=de.up.ling.irtg.codec.ParseException.class)
+    public void testTooManyVariables2() {
+        String grammarstring = '''
+            interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+            Foo -> a(B,C)
+            [i] bar(?1, ?2, ?3)
+        ''';
+        InterpretedTreeAutomaton irtg = pi(grammarstring)
+    }
 }
 

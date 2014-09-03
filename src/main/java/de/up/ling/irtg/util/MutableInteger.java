@@ -31,4 +31,8 @@ public class MutableInteger {
     public int incValue() {
         return value++;
     }
+    
+    public void max(int value) {
+        this.value = Math.max(value, this.value);
+    }
 }

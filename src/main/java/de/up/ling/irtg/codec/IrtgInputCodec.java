@@ -9,10 +9,14 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import static de.up.ling.irtg.codec.CodecUtilities.findFeatureConstructor;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
+import de.up.ling.irtg.util.MutableInteger;
+import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,9 +63,6 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         } catch (ParseException e) {
             throw e;
         } catch (RecognitionException e) {
-//            System.err.println("rec exc: " + e);
-//            System.err.println("msg: " + e.getMessage());
-//            e.getCause().printStackTrace(System.err);
             throw new ParseException(e.getMessage());
         }
     }
@@ -79,10 +80,11 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             int numRules = context.irtg_rule().size();
             int i = 1;
             for (IrtgParser.Irtg_ruleContext c : context.irtg_rule()) {
-                String label = autoRule(c.auto_rule());
+                Rule rule = autoRule(c.auto_rule());
+                String label = rule.getLabel(automaton);
 
                 for (IrtgParser.Hom_ruleContext hc : c.hom_rule()) {
-                    homRule(label, hc);
+                    homRule(label, hc, rule.getArity());
                 }
 
                 notifyProgressListener(i, numRules, "Read " + i + "/" + numRules + " rules");
@@ -169,21 +171,22 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             throw new ParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
         } catch (InvocationTargetException e) {
             throw new ParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
-        } 
+        }
     }
 
-    private String autoRule(IrtgParser.Auto_ruleContext auto_rule) {
+    private Rule autoRule(IrtgParser.Auto_ruleContext auto_rule) {
         String parent = state(auto_rule.state());
         List<String> children = statelist(auto_rule.state_list());
         String label = name(auto_rule.name());
         double weight = weight(auto_rule.weight());
 
-        automaton.addRule(automaton.createRule(parent, label, children, weight));
+        Rule rule = automaton.createRule(parent, label, children, weight);
+        automaton.addRule(rule);
 
-        return label;
+        return rule;
     }
 
-    private void homRule(String label, IrtgParser.Hom_ruleContext hc) throws ParseException {
+    private void homRule(String label, IrtgParser.Hom_ruleContext hc, int ruleArity) throws ParseException {
         String interp = name(hc.name());
         Homomorphism hom = homomorphisms.get(interp);
         Tree<String> rhs = term(hc.term());
@@ -197,6 +200,18 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 throw new ParseException("Redefined value of interpretation '" + interp + "' for " + label + " as " + rhs + " (was: " + hom.get(label) + ")");
             }
         }
+
+        MutableInteger maxVariableIndex = new MutableInteger(-1);
+        Util.forEachNode(rhs, nodeLabel -> {
+            if (HomomorphismSymbol.isVariableSymbol(nodeLabel)) {
+                int index = HomomorphismSymbol.getVariableIndex(nodeLabel);
+                maxVariableIndex.max(index);
+            }
+        });
+
+        if (maxVariableIndex.getValue() >= ruleArity) {
+            throw new ParseException("Homomorphism value " + rhs + " contains " + (maxVariableIndex.getValue() + 1) + " variables, but should have at most " + ruleArity);
+        } 
 
         hom.add(label, rhs);
     }
