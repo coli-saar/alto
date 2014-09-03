@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package de.up.ling.irtg.codec;
 
 import org.antlr.v4.runtime.DefaultErrorStrategy;
@@ -12,6 +11,7 @@ import org.antlr.v4.runtime.InputMismatchException;
 import org.antlr.v4.runtime.NoViableAltException;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.misc.IntervalSet;
 
@@ -25,13 +25,11 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
     public void recover(Parser recognizer, RecognitionException e) {
         throw e;
     }
-    
-    
 
     @Override
     public void reportInputMismatch(Parser recognizer, InputMismatchException e) throws RecognitionException {
         String msg = getTokenPosition(e.getOffendingToken()) + ": mismatched input " + getTokenErrorDisplay(e.getOffendingToken());
-        msg += " expecting one of "+e.getExpectedTokens().toString(recognizer.getTokenNames());
+        msg += " expecting one of " + e.getExpectedTokens().toString(recognizer.getTokenNames());
         RecognitionException ex = new RecognitionException(msg, recognizer, recognizer.getInputStream(), recognizer.getContext());
         ex.initCause(e);
         throw ex;
@@ -42,7 +40,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
         beginErrorCondition(recognizer);
         Token t = recognizer.getCurrentToken();
         IntervalSet expecting = getExpectedTokens(recognizer);
-        String msg = getTokenPosition(t) + ": missing "+expecting.toString(recognizer.getTokenNames()) + " at " + getTokenErrorDisplay(t);
+        String msg = getTokenPosition(t) + ": missing " + expecting.toString(recognizer.getTokenNames()) + " at " + getTokenErrorDisplay(t);
         throw new RecognitionException(msg, recognizer, recognizer.getInputStream(), recognizer.getContext());
     }
 
@@ -56,12 +54,30 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
 
     @Override
     public void reportError(Parser parser, RecognitionException e) {
-//        System.err.println("report: " + e);
-//        e.printStackTrace(System.err);
-//        System.err.println("msg " + e.getMessage() );
-//        System.err.println("cause " + e.getCause());
-//        System.err.println("--");
-        throw e;
+        if (e.getMessage() != null) {
+            // if e already contained an error message, just pass it on
+            throw e;
+        } else {
+            // otherwise, construct a meaningful error message
+            Token tok = e.getOffendingToken();
+            StringBuilder buf = new StringBuilder();
+            buf.append("Line " + tok.getLine() + ":" + tok.getCharPositionInLine() + ": expected token {");
+            
+            boolean first = true;
+
+            for (int token : e.getExpectedTokens().toArray()) {
+                if( first ) {
+                    first = false;
+                } else {
+                    buf.append(", ");
+                }
+                buf.append(parser.getTokenNames()[token]);
+            }
+            
+            buf.append("}, but got '" + tok.getText() + "'.");
+
+            throw new ParseException(buf.toString());
+        }
     }
 
     @Override
@@ -83,6 +99,5 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
     private String getTokenPosition(Token t) {
         return "Line " + t.getLine() + ":" + t.getCharPositionInLine();
     }
-    
-    
+
 }
