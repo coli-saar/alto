@@ -59,6 +59,9 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         } catch (ParseException e) {
             throw e;
         } catch (RecognitionException e) {
+//            System.err.println("rec exc: " + e);
+//            System.err.println("msg: " + e.getMessage());
+//            e.getCause().printStackTrace(System.err);
             throw new ParseException(e.getMessage());
         }
     }

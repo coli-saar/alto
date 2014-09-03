@@ -488,10 +488,10 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                             long start = System.nanoTime();
                             chart = irtg.parse(inputs);
                             log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
-                        } catch (ParserException ex) {
-                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
+//                        } catch (ParserException ex) {
+//                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
                         } catch (Exception ex) {
-                            showError(JTreeAutomaton.this, ex);
+                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs, ex);
                         }
 
                         if (chart != null) {

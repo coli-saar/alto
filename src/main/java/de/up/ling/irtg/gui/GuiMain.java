@@ -265,7 +265,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 return true;
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while attempting to save automaton as" + file.getName() + ": " + e.getMessage());
+            showError(parent, "An error occurred while attempting to save automaton as" + file.getName(), e);
         }
 
         return false;
@@ -288,7 +288,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 return corpus;
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while reading the corpus " + file.getName() + ": " + e.getMessage());
+            showError(parent, "An error occurred while reading the corpus " + file.getName(), e);
         }
 
         return null;
@@ -305,7 +305,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 log("Read maximum entropy weights from " + file.getName() + ", " + Util.formatTimeSince(start));
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while reading the maxent weights file " + file.getName() + ": " + e.getMessage());
+            showError(parent, "An error occurred while reading the maxent weights file " + file.getName(), e);
         }
     }
 
@@ -340,7 +340,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                             });
                 }
             } catch (Exception e) {
-                showError(parent, "An error occurred while reading the corpus " + file.getName() + ": " + e.getMessage());
+                showError(parent, "An error occurred while reading the corpus " + file.getName(), e);
             }
         }
     }
@@ -436,7 +436,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 }
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while attempting to parse " + file.getName() + ": " + e.getMessage());
+            showError(parent, "An error occurred while attempting to parse " + file.getName(), e);
         }
     }
 
@@ -462,7 +462,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                     jta.pack();
                     jta.setVisible(true);
                 } catch (Exception ex) {
-                    showError(parent, "An error occurred while instantiating the Template IRTG: " + ex.getMessage());
+                    showError(parent, "An error occurred while instantiating the Template IRTG", ex);
                 }
             }
         });

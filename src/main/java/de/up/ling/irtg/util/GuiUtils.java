@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.util;
 
+import de.saar.basic.StringTools;
 import java.awt.Component;
 import java.awt.Frame;
 import javax.swing.JOptionPane;
@@ -60,8 +61,8 @@ public class GuiUtils {
                 SwingUtilities.invokeLater(() -> {
                     andThen.accept(result, time);
                 });
-            } catch (Exception e) {
-                showError(parent, e.getClass().getSimpleName() + ": " + e.getMessage());
+            } catch (Throwable e) {
+                showError(parent, description + " error", e);
             } finally {
                 progressBar.setVisible(false);
             }
@@ -73,11 +74,24 @@ public class GuiUtils {
             JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
         });
     }
-    
+
     static public void showError(Component parent, Exception error) {
+        showError(parent, "Error", error);
+    }
+
+    static public void showError(Component parent, String label, Throwable error) {
         SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
+            String s = label + ":\n" + error.getMessage() + "\n(" + error.getClass() + ")";
+            JOptionPane.showMessageDialog(parent, s, "Error", JOptionPane.ERROR_MESSAGE);
             error.printStackTrace(System.err);
+
         });
+
+        try {
+            throw new Exception();
+        } catch (Exception e) {
+            System.err.println("showError at: ");
+            e.printStackTrace(System.err);
+        }
     }
 }

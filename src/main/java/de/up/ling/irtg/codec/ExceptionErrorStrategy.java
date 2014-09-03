@@ -25,6 +25,8 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
     public void recover(Parser recognizer, RecognitionException e) {
         throw e;
     }
+    
+    
 
     @Override
     public void reportInputMismatch(Parser recognizer, InputMismatchException e) throws RecognitionException {
@@ -54,6 +56,11 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
 
     @Override
     public void reportError(Parser parser, RecognitionException e) {
+//        System.err.println("report: " + e);
+//        e.printStackTrace(System.err);
+//        System.err.println("msg " + e.getMessage() );
+//        System.err.println("cause " + e.getCause());
+//        System.err.println("--");
         throw e;
     }
 
