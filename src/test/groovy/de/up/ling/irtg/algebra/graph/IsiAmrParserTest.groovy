@@ -59,7 +59,9 @@ class IsiAmrParserTest {
     @Test
     public void testCyclic() {
         SGraph graph = IsiAmrParser.parse(new StringReader(AMR3));
-
+        assert ! new CycleDetector(graph.getGraph()).detectCycles();
+        
+        graph = IsiAmrParser.parse(new StringReader(AMR3_WITH_CYCLE));
         assert new CycleDetector(graph.getGraph()).detectCycles();
     }
     
@@ -80,6 +82,45 @@ class IsiAmrParserTest {
         assertEquals("b", graph.getNodeForSource("subj"));
     }
     
+    @Test
+    public void testAnonymousSources() {
+        SGraph graph = IsiAmrParser.parse(new StringReader(AMR_ANONYMOUS_SRC));
+        
+        assert graph.getNodeForSource("root") != null;
+        assertEquals(graph.getNodeForSource("root"), graph.getNodeForSource("coref1"));
+        
+        assertEquals("b", graph.getNodeForSource("subj"));
+        
+        assert graph.getNodeForSource("foo") != null;
+    }
+    
+    @Test
+    public void testNames() {
+        SGraph graph = IsiAmrParser.parse(new StringReader(AMR_NAMES_TEST));
+        
+        assertEquals("boy", graph.getNode("b").getLabel());
+        assert graph.getNode("c") == null;
+        
+        GraphNode g = graph.getNode("g");
+        boolean foundEdge = false;
+        for( GraphEdge e : graph.getGraph().outgoingEdgesOf(g) ) {
+            if( e.getLabel().equals("ARGx")) {
+                foundEdge = true;
+                assertEquals("c", e.getTarget().getLabel());
+            }
+        }
+        
+        assert foundEdge;
+    }
+    
+    private static final String AMR_ANONYMOUS_SRC = """
+   (<root, coref1> / want-01
+       :ARG0 (b<subj> / boy)
+       :ARGx <foo>
+       :ARG1 (g / go-01
+                 :ARG0 b))
+""";
+    
     private static final String AMR6 = """
    (w<root, coref1> / want-01
   :ARG0 (b<subj> / boy)
@@ -98,6 +139,14 @@ class IsiAmrParserTest {
   :ARG0 (b / boy)
   :ARG1 (g / go-01
           :ARG0 b))
+""";
+    
+    // intended: b/boy, g -ARG0-> b, g -ARGx-> _u123/c
+    public static final String AMR_NAMES_TEST = """(w / want-01
+        :ARG0 (b / boy)
+        :ARG1 (g / go-01
+                   :ARG0 b
+                   :ARGx c))
 """;
     
     public static final String AMR2 = """
@@ -122,10 +171,21 @@ class IsiAmrParserTest {
 
     """;
     
-    private static final String AMR3 = """
-    
+    // this is the original graph that the ISI people
+    // find "cyclic" (which it is if one assumes an
+    // ARG0-of edge from w to n)
+    private static final String AMR3 = """    
     (w / woman
    :ARG0-of (n / nominate-01
+               :ARG1 (b / boss
+                        :poss w)))
+                        """;
+    
+    // this graph is a linguistically meaningless but actually
+    // cyclic version of AMR3
+    private static final String AMR3_WITH_CYCLE = """    
+    (w / woman
+       :ARG0 (n / nominate-01
                :ARG1 (b / boss
                         :poss w)))
                         """;

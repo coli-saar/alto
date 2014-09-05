@@ -86,8 +86,10 @@ public class SGraph {
     }
 
     public GraphNode addAnonymousNode(String label) {
-        GraphNode u = new GraphNode(gensym("_u"), label);
+        String anonymousName = gensym("_u");
+        GraphNode u = new GraphNode(anonymousName, label);
         graph.addVertex(u);
+        nameToNode.put(anonymousName, u);
         hasCachedHashcode = false;
         return u;
     }
@@ -662,8 +664,26 @@ public class SGraph {
             while (iso.hasNext()) {
                 final IsomorphismRelation<GraphNode, GraphEdge> ir = (IsomorphismRelation<GraphNode, GraphEdge>) iso.next();
 
-                Map<String, String> rewrittenSources = new HashMap<>(sourceToNodename);
-                rewrittenSources.replaceAll((k, v) -> ir.getVertexCorrespondence(getNode(v), true).getName());
+//                System.err.println("iso: " + ir);
+//                System.err.println("this.s2n: " + sourceToNodename);
+//                System.err.println("this.n2n: " + nameToNode);
+//                System.err.println("other.s2n: " + other.sourceToNodename);
+                
+                
+                Map<String, String> rewrittenSources = new HashMap<>();                
+                for( String source : sourceToNodename.keySet() ) {
+//                    System.err.println(" - src " + source);
+//                    System.err.println(" - srcn " + getNode(sourceToNodename.get(source)));
+                    GraphNode newNode = ir.getVertexCorrespondence(getNode(sourceToNodename.get(source)), true);
+//                    System.err.println(" - newnode " + newNode);
+                    String newNodename = newNode.getName();
+//                    System.err.println(" - newnodename " + newNodename);
+                    rewrittenSources.put(source, newNodename);
+                }
+                
+                
+//                Map<String, String> rewrittenSources = new HashMap<>(sourceToNodename);
+//                rewrittenSources.replaceAll((k, v) -> ir.getVertexCorrespondence(getNode(v), true).getName());
 
                 if (rewrittenSources.equals(other.sourceToNodename)) {
                     return true;

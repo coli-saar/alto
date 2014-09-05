@@ -34,6 +34,21 @@ public class IsiAmrParser {
 		return parser.graph;
 	}
 
+        // a, b => return node with name a, label b
+        // a, null => return node with name a, label null
+        private GraphNode addNodeInBrackets(String nodename, String nodelabel) {
+          return graph.addNode(nodename, nodelabel);
+        }
+
+        // nodespec is known nodename => return node with that name
+        // otherwise => return anonymous node with that label
+        private GraphNode addNodeWithoutBrackets(String nodespec) {
+            if( nodespec != null && graph.containsNode(nodespec) ) {
+                return graph.getNode(nodespec);
+            } else {
+                return graph.addAnonymousNode(nodespec);
+            }
+       }
 }
 PARSER_END(IsiAmrParser)
 
@@ -66,25 +81,43 @@ GraphNode node() :
   GraphNode edgeTarget;  
 }
 {
-  "(" (nodename=token() ("<" sources=tokenList() ">")? ("/" nodelabel=token())?  {
-         u = graph.addNode(nodename, nodelabel);
-         if( sources != null ) {
+  "(" (  (nodename=token() ("<" sources=tokenList() ">")? ("/" nodelabel=token())?  {
+                  u = addNodeInBrackets(nodename, nodelabel);
+           })
+
+         | ("<" sources=tokenList() ">" ("/" nodelabel=token())? {
+                  u = graph.addAnonymousNode(nodelabel);  // this syntax always means new anonymous node
+           })
+      ) {
+       if( sources != null ) {
              for( String source : sources ) {
-               graph.addSource(source, nodename);
+               graph.addSource(source, u.getName());
              }
          }
-       })?
+      }
+
       (edgelabel=edge()  edgeTarget=node() {
-         graph.addEdge(u, edgeTarget, edgelabel);
+         if( edgelabel.endsWith("-of") ) {
+           // reverse edge direction if edge label ends in "-of"
+           edgelabel = edgelabel.substring(0, edgelabel.length()-3);
+           graph.addEdge(edgeTarget, u, edgelabel);
+         } else {
+           graph.addEdge(u, edgeTarget, edgelabel);
+         }
        })*
   ")" { return u; }
+
+  | "<" sources=tokenList() ">" {
+    u = graph.addAnonymousNode(null);  // anonymous, unlabeled node
+    for( String source : sources ) {
+        graph.addSource(source, u.getName());
+    }
+    return u;
+  }
+
   | nodename=token() { 
-       if( graph.containsNode(nodename) ) {
-        return graph.getNode(nodename);
-       } else {
-        return graph.addAnonymousNode(nodename);
-       }
-   }
+       return addNodeWithoutBrackets(nodename);
+  }
 }
 
 
