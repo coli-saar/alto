@@ -214,16 +214,36 @@
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-javadoc-plugin</artifactId>
-	<version>2.9</version>
+	<version>2.9.1</version>
 	<configuration>
 	  <excludePackageNames>de.up.ling.irtg.algebra.lambda:de.up.ling.irtg.maxent</excludePackageNames>
 
 	  <show>public</show>
-	  <links>
-	    <link>http://www.ling.uni-potsdam.de/tcl/basics/apidocs/</link>
-	    <link>http://docs.guava-libraries.googlecode.com/git-history/v12.0/javadoc</link>
-	  </links>
-	  <detectLinks>true</detectLinks>
+
+	  <!-- Ideally, one would like to use detectLinks and link
+	  elements; but for some reason that doesn't seem to work with
+	  Java 8. Replacing with offline links temporarily. -->
+
+	  <offlineLinks>
+	    <offlineLink>
+	      <url>http://fastutil.di.unimi.it/docs/</url>
+	      <location>http://fastutil.di.unimi.it/docs/</location>
+	    </offlineLink>
+	    <offlineLink>
+	      <url>https://irtg.ci.cloudbees.com/job/basics/javadoc/</url>
+	      <location>https://irtg.ci.cloudbees.com/job/basics/javadoc/</location>
+	    </offlineLink>
+	    <offlineLink>
+	      <url>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</url>
+	      <location>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</location>
+	    </offlineLink>
+	    <offlineLink>
+	      <url>http://docs.oracle.com/javase/8/docs/api/</url>
+	      <location>http://docs.oracle.com/javase/8/docs/api/</location>
+	    </offlineLink>
+	  </offlineLinks>
+
+	  <detectLinks>false</detectLinks>
 	</configuration>
       </plugin>
 
