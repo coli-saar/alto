@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashSet;
@@ -17,11 +18,37 @@ import java.util.Set;
 import javax.swing.JComponent;
 
 /**
- *
+ * The algebra of s-graphs. The values of this algebra are s-graphs,
+ * i.e. objects of class {@link SGraph} (which see). The algebra interprets
+ * the following operations (where G, G1, G2 are s-graphs):
+ * <ul>
+ *  <li>The operation <code>merge(G1,G2)</code>, <i>merges</i> the
+ *      two graphs using {@link SGraph#merge(de.up.ling.irtg.algebra.graph.SGraph) }.</li>
+ *  <li>The <i>forget</i> operation <code>f_a(G)</code> forgets the
+ *      a-source of G. The resulting s-graph is like G, except that
+ *      it does not have an a-source. The operation f_a_b forgets both
+ *      a and b.</li>
+ *  <li>The <i>forget-all</i> operation <code>f(G)</code> forgets
+ *      all sources of G.</li>
+ *  <li>The <i>forget-except</i> operation <code>fe_a(G)</code> forgets
+ *      all sources except a. The operation fe_a_b forgets all sources
+ *      except a and b.</li>
+ *  <li>The <i>forget-except-root</i> operation <code>fr(G)</code>
+ *      forgets all sources except for <code>root</code>. It is equivalent
+ *      to <code>fe_root</code>.</li>
+ *  <li>The <i>rename</i> operation <code>r_a_b(G)</code> renames
+ *      the a-source of G into b, using {@link SGraph#renameSource(java.lang.String, java.lang.String) }.
+ *      The operation <code>r_a</code> is an abbreviation for
+ *      <code>r_root_a</code>.</li>
+ * </ul>
+ * 
+ * Any other string is interpreted as a constant which denotes
+ * an s-graph. The strings are parsed using {@link #parseString(java.lang.String) },
+ * i.e. they are expected to be in the extended ISI AMR format syntax.
+ * 
  * @author koller
  */
 public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
-
     // operation symbols of this algebra
     public static final String OP_MERGE = "merge";
     public static final String OP_RENAME = "r_";
@@ -35,7 +62,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         return new SGraphDecompositionAutomaton(value, this, getSignature());
     }
 
-    public static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {
+    static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {
         if ( opString.startsWith(OP_FORGET) || opString.startsWith(OP_FORGET_EXCEPT)) {
             String[] parts = opString.split("_");
             Set<String> sources = new HashSet<>();
@@ -108,6 +135,13 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         return true;
     }
 
+    /**
+     * Parses a string into an s-graph, using {@link IsiAmrParser#parse(java.io.Reader) }.
+     * 
+     * @param representation
+     * @return
+     * @throws ParserException 
+     */
     @Override
     public SGraph parseString(String representation) throws ParserException {
         try {
@@ -117,6 +151,15 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         }
     }
 
+    /**
+     * Returns a Swing component that visualizes an object of this algebra.
+     * The graph is visualized using the <a href="http://www.jgraph.com/">JGraph</a>
+     * graph drawing library.
+     * 
+     * @see TikzSgraphOutputCodec
+     * @param graph
+     * @return 
+     */
     @Override
     public JComponent visualize(SGraph graph) {
         return SGraphDrawer.makeComponent(graph);

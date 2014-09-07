@@ -33,7 +33,10 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 /**
- *
+ * An input codec for IRTGs. See any file in the examples subdirectory
+ * with the extension "irtg"
+ * for an example of an IRTG in this format.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "irtg", description = "IRTG grammars", extension = "irtg", type = InterpretedTreeAutomaton.class)

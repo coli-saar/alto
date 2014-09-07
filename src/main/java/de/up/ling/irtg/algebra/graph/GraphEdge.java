@@ -8,7 +8,10 @@ import java.util.function.Function;
 
 
 /**
- *
+ * An edge of an s-graph. Each (directed) edge
+ * points from a source node to a target node, and
+ * may have an edge label.
+ * 
  * @author koller
  */
 public class GraphEdge {

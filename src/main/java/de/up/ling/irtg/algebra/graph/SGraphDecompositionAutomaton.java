@@ -25,7 +25,16 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- *
+ * A decomposition automaton for an s-graph using the
+ * {@link GraphAlgebra}. The states of the automaton are
+ * subgraphs of the s-graph that is being decomposed;
+ * the nodes of each subgraph are a subset of the nodes
+ * of the whole s-graph. 
+ * The automaton is implemented lazily,
+ * i.e. it only computes its rules when they are requested.
+ * It only supports bottom-up queries; top-down rule queries
+ * are not yet implemented.
+ * 
  * @author koller
  */
 public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
