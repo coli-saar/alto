@@ -9,16 +9,15 @@ import de.saar.basic.CartesianIterator;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import static de.up.ling.irtg.codec.CodecUtilities.findFeatureConstructor;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.ParseException;
+import de.up.ling.irtg.codec.TemplateIrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
-import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +25,30 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * A template IRTG. A template IRTG is an
+ * IRTG in which rules may additionally be prefixed by quantification
+ * over variables using the <code>foreach</code> keyword, like so:<p>
+ * 
+ * <pre>
+  foreach { x,y | left-of(x,y) and target(x) and distractor(y)}:
+  NP_$x -> leftof_$x(N_$x, NP_$y)
+  [sem] project_1(intersect_2(intersect_1(left-of, ?1), ?2))
+  [string] *(?1, *("left of", ?2))
+</pre>
+ * 
+ * A template IRTG can be instantiated to an ordinary IRTG
+ * based on the contents of a {@link FirstOrderModel} using the
+ * {@link #instantiate(de.up.ling.irtg.util.FirstOrderModel) } method.
+ * This will enumerate all values (a,b) for the variables (x,y)
+ * that satisfy all the conditions in the foreach clause,
+ * and will replace the occurrences of $x and $y in the IRTG
+ * rule by a and b respectively.<p>
+ * 
+ * Template IRTGs are only rarely constructed programmatically.
+ * The common use-case is to read a template IRTG from a file
+ * using {@link TemplateIrtgInputCodec}. Most methods in this
+ * class are meant to be called from that input codec.
+ * 
  * @author koller
  */
 public class TemplateInterpretedTreeAutomaton {
@@ -35,24 +57,50 @@ public class TemplateInterpretedTreeAutomaton {
     private Map<String, String> algebraClasses;
     private List<FeatureDeclaration> features;
 
+    /**
+     * Constructs an empty template IRTG.
+     */
     public TemplateInterpretedTreeAutomaton() {
         ruleTemplates = new ArrayList<>();
         algebraClasses = new HashMap<>();
         features = new ArrayList<FeatureDeclaration>();
     }
 
+    /**
+     * Adds a rule template to the template IRTG.
+     * 
+     * @param trule 
+     */
     public void addRuleTemplate(TemplateRule trule) {
         ruleTemplates.add(trule);
     }
     
+    /**
+     * Adds a declaration of a constructure feature to the
+     * template IRTG.
+     * 
+     * @param id
+     * @param featureClass
+     * @param arguments 
+     */
     public void addConstructorFeatureDeclaration(String id, String featureClass, List<String> arguments) {
         addFeatureDeclaration(id, featureClass, null, arguments);
     }
     
+    /**
+     * Adds a declaration of a static-method feature to
+     * the template IRTG.
+     * 
+     * @param id
+     * @param featureClass
+     * @param featureMethod
+     * @param arguments 
+     */
     public void addStaticFeatureDeclaration(String id, String featureClass, String featureMethod, List<String> arguments) {
         addFeatureDeclaration(id, featureClass, featureMethod, arguments);
     }
 
+    
     private void addFeatureDeclaration(String id, String featureClass, String featureMethod, List<String> arguments) {
         FeatureDeclaration decl = new FeatureDeclaration();
         decl.id = id;
@@ -62,10 +110,29 @@ public class TemplateInterpretedTreeAutomaton {
         features.add(decl);
     }
 
+    /**
+     * Declares an interpretation.
+     * 
+     * @param interpretation
+     * @param className 
+     */
     public void addAlgebraClass(String interpretation, String className) {
         algebraClasses.put(interpretation, className);
     }
 
+    /**
+     * Instantiates this template IRTG into a concrete IRTG.
+     * This is done by enumerating valid instances of each
+     * foreach-rule in the given first-order model (see the
+     * documentation for the class as a whole).
+     * 
+     * @param model
+     * @return
+     * @throws ClassNotFoundException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws ParseException 
+     */
     public InterpretedTreeAutomaton instantiate(FirstOrderModel model) throws ClassNotFoundException, InstantiationException, IllegalAccessException, ParseException {
         ConcreteTreeAutomaton<String> auto = new ConcreteTreeAutomaton<>();
         Map<String, Interpretation> interps = new HashMap<>();

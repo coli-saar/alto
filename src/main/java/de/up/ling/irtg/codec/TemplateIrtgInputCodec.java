@@ -16,12 +16,26 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 import static de.up.ling.irtg.codec.TemplateIrtgParser.*;
+import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 
 /**
- *
+ * An input codec for template IRTGs. A template IRTG is an
+ * IRTG in which rules may additionally be prefixed by quantification
+ * over variables using the <code>foreach</code> keyword, like so:<p>
+ * 
+ * <pre>
+  foreach { a,b | left-of(a,b) and target(a) and distractor(b)}:
+  NP_$a -> leftof_$a(N_$a, NP_$b)
+  [sem] project_1(intersect_2(intersect_1(left-of, ?1), ?2))
+  [string] *(?1, *("left of", ?2))
+</pre>
+ * 
+ * See {@link TemplateInterpretedTreeAutomaton} for details about
+ * what such rules mean.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "template-irtg", description = "Template IRTG", extension = "tirtg", type = TemplateInterpretedTreeAutomaton.class)

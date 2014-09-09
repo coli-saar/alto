@@ -7,7 +7,7 @@ package de.up.ling.irtg.algebra.graph;
 import org.jgrapht.EdgeFactory;
 
 /**
- *
+ * 
  * @author koller
  */
 class GraphEdgeFactory implements EdgeFactory<GraphNode, GraphEdge> {

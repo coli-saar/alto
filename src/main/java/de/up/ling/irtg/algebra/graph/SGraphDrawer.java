@@ -26,7 +26,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.ext.JGraphModelAdapter;
 
 /**
- *
+ * A tool for drawing an s-graph into a Swing component.
+ * 
  * @author koller
  */
 public class SGraphDrawer {
@@ -78,7 +79,7 @@ public class SGraphDrawer {
         }
     }
 
-    public static class MappingCellFactory<VV, EE, VU, EU> implements JGraphModelAdapter.CellFactory<VV, EE>, Serializable {
+    private static class MappingCellFactory<VV, EE, VU, EU> implements JGraphModelAdapter.CellFactory<VV, EE>, Serializable {
 
         private static final long serialVersionUID = 3690194343461861173L;
         private Function<VV, VU> nodeMapper;
@@ -100,6 +101,13 @@ public class SGraphDrawer {
         }
     }
 
+    /**
+     * Returns a Swing component that displays the
+     * given s-graph.
+     * 
+     * @param sgraph
+     * @return 
+     */
     public static JComponent makeComponent(SGraph sgraph) {
         JGraphModelAdapter<GraphNode, GraphEdge> adapter = 
                 new MyModelAdapter(sgraph.getGraph(), 
@@ -118,6 +126,13 @@ public class SGraphDrawer {
         return jgraph;
     }
 
+    /**
+     * Opens a new Swing window with the given title
+     * and draws the s-graph in it.
+     * 
+     * @param sgraph
+     * @param title 
+     */
     public static void draw(SGraph sgraph, String title) {
         JComponent jgraph = makeComponent(sgraph);
 

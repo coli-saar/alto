@@ -20,6 +20,9 @@ import org.jgrapht.*;
 import org.jgrapht.graph.*;
 import de.up.ling.tree.*;
 
+/**
+ * test
+ */
 public class IsiAmrParser {
     private SGraph graph = null;
 

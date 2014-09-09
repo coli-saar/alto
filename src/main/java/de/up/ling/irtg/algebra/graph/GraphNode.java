@@ -9,7 +9,9 @@ import org.jgrapht.Graph;
 import org.jgrapht.experimental.equivalence.EquivalenceComparator;
 
 /**
- *
+ * A node of an s-graph. Each node has a name, and
+ * may have a label. Unlabeled nodes have a label of <code>null</code>.
+ * 
  * @author koller
  */
 public class GraphNode {
