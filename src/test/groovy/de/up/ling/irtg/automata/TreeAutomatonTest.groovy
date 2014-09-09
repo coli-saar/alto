@@ -96,7 +96,20 @@ class TreeAutomatonTest{
         assertEquals(new HashSet([p("q2","p1")]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it)}));
     }
     
-    
+    @Test
+    public void testEqualsWithStringStates() {
+        TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
+        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
+        TreeAutomaton intersect = auto1.intersect(auto2);
+        
+        TreeAutomaton gold = parse("'q2,p1'! -> f('q1,p2', 'q1,p3')\n 'q1,p2' -> a\n 'q1,p3' -> a");
+        
+        assert ! gold.equals(intersect)
+        assert ! intersect.equals(gold)
+        
+        assert intersect.equalsWithStringStates(gold)
+        assert ! gold.equalsWithStringStates(intersect)
+    }
     
     @Test
     public void testIntersectionLanguage() {
