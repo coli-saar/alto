@@ -942,6 +942,36 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return filter.apply(rule);
         }
     }
+    
+    /**
+     * Compares two automata for equality. Two automata are equal if they have
+     * the same rules and the same final states. All label and state IDs are
+     * resolved to the actual labels and states for this comparison.<p>
+     * 
+     * This method differs from {@link #equals(java.lang.Object) } in that it assumes
+     * that the "other" tree automaton has states that are strings. It also maps
+     * the states of "this" automaton to their string representations, and takes
+     * a state of "this" and a state of "other" to be the same if they are
+     * the same string. This makes it possible to compare automata for equality
+     * even if they have different state classes. (The ordinary equals method
+     * will generally find such automata non-equals because it can't map the
+     * states to each other.)<p>
+     *
+     * The implementation of this method is currently very slow, and should only
+     * be used for small automata (e.g. in unit tests).
+     * 
+     * @param other
+     * @return 
+     */
+    public boolean equalsWithStringStates(TreeAutomaton<String> other) {
+        int[] stateRemap = stateInterner.remap(other.stateInterner, state -> state.toString());                  // stateId and stateRemap[stateId] are the same state
+        int[] labelRemap = getSignature().remap(other.getSignature());                       // labelId and labelRemap[labelId] are the same label
+
+        Iterable<Rule> allRules = getRuleSet();
+        Iterable<Rule> otherAllRules = other.getRuleSet();
+
+        return ruleSetsEqual(allRules, otherAllRules, labelRemap, stateRemap, other);
+    }
 
     /**
      * Compares two automata for equality. Two automata are equal if they have

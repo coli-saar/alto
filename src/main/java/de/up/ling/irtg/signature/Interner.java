@@ -142,6 +142,18 @@ public class Interner<E> implements Serializable, Cloneable {
         processUncachedObjects();
         return objectToInt;
     }
+    
+    public <O> int[] remap(Interner<O> other, Function<E,O> reprF) {
+        processUncachedObjects();
+
+        int[] ret = new int[nextIndex];
+
+        for (int i = 1; i < nextIndex; i++) {
+            ret[i] = other.resolveObject(reprF.apply(resolveId(i)));
+        }
+
+        return ret;
+    }
 
     /*
      * Returns an arrary x such that the symbol
@@ -151,15 +163,7 @@ public class Interner<E> implements Serializable, Cloneable {
      * will be 0.
      */
     public int[] remap(Interner<E> other) {
-        processUncachedObjects();
-
-        int[] ret = new int[nextIndex];
-
-        for (int i = 1; i < nextIndex; i++) {
-            ret[i] = other.resolveObject(resolveId(i));
-        }
-
-        return ret;
+        return remap(other, x -> x);
     }
 
     public static int[] remapArray(int[] ids, int[] remap) {
