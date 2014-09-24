@@ -5,7 +5,7 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Sets;
-import de.up.ling.irtg.algebra.EvaluatingAlgebra;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
@@ -48,7 +48,7 @@ import javax.swing.JComponent;
  * 
  * @author koller
  */
-public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
+public class GraphAlgebra extends Algebra<SGraph> {
     // operation symbols of this algebra
     public static final String OP_MERGE = "merge";
     public static final String OP_RENAME = "r_";

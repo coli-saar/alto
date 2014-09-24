@@ -1,0 +1,15 @@
+interpretation i: de.up.ling.irtg.algebra.LcfrsAlgebra
+
+
+S! -> loves(NP, NP, VPa)
+[i] *(proj_1(?1), *(proj_1(?3), *(loves, *(proj_1(?2), proj_2(?3)))))
+
+NP -> john
+[i] john
+
+NP -> mary
+[i] mary
+
+VPa -> pass
+[i] **(sometimes, passionately)
+

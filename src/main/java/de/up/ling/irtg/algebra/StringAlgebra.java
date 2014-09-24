@@ -4,10 +4,10 @@
  */
 package de.up.ling.irtg.algebra;
 
+import com.google.common.collect.Lists;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.IntIterable;
@@ -29,7 +29,8 @@ import javax.swing.JLabel;
  * which can be thought of as the words in a sentence. The algebra has a single
  * binary operation symbol, *, which evaluates to string concatenation. All
  * other strings are nullary symbols of this algebra; the string w evaluates to
- * the list [w].<p>
+ * the list [w]
+ * .<p>
  *
  * Notice that the algebra's signature is made aware of these nullary symbols
  * only when {@link StringAlgebra#parseString(java.lang.String) }
@@ -43,7 +44,7 @@ public class StringAlgebra extends Algebra<List<String>> {
     public static final String CONCAT = "*";
     protected int concatSymbolId;
     private IntSet concatSet;
-    private Signature signature = new Signature();
+//    private Signature signature = new Signature();
 
     public StringAlgebra() {
         concatSymbolId = signature.addSymbol(CONCAT, 2);
@@ -53,8 +54,20 @@ public class StringAlgebra extends Algebra<List<String>> {
     }
 
     @Override
+    protected List<String> evaluate(String label, List<List<String>> childrenValues) {
+        if (CONCAT.equals(label)) {
+            List<String> ret = new ArrayList<>();
+            ret.addAll(childrenValues.get(0));
+            ret.addAll(childrenValues.get(1));
+            return ret;
+        } else {
+            return Lists.newArrayList(label);
+        }
+    }
+
+    @Override
     public List<String> evaluate(Tree<String> t) {
-        final List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<String>();
 
         t.dfs(new TreeVisitor<String, Void, Void>() {
             @Override
@@ -86,10 +99,10 @@ public class StringAlgebra extends Algebra<List<String>> {
         return symbols;
     }
 
-    @Override
-    public Signature getSignature() {
-        return signature;
-    }
+//    @Override
+//    public Signature getSignature() {
+//        return signature;
+//    }
 
     @Override
     public JComponent visualize(List<String> object) {

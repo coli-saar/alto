@@ -45,7 +45,7 @@ import java.util.Set;
  * @author koller
  */
 
-public class SetAlgebra extends EvaluatingAlgebra<Set<List<String>>> {
+public class SetAlgebra extends Algebra<Set<List<String>>> {
 
     private static final String PROJECT = "project_";
     private static final String INTERSECT = "intersect_";

@@ -20,14 +20,15 @@ import javax.swing.JLabel;
 
 /**
  * A string algebra for TAG. The elements of this algebra are strings and string
- * pairs, represented as pairs of lists of strings. If the second element is null,
- * the first element represents a string of tokens as in the {@link StringAlgebra}.
- * If the second element is non-null, then the pair represents a non-contiguous
- * pair of substrings.
+ * pairs, represented as pairs of lists of strings. If the second element is
+ * null, the first element represents a string of tokens as in the
+ * {@link StringAlgebra}. If the second element is non-null, then the pair
+ * represents a non-contiguous pair of substrings.
  * <p>
- * 
- * This algebra defines the string-combining operations described in Koller and Kuhlmann 2012,
- * "Decomposing TAG Algorithms Using Simple Algebraizations", TAG+ Workshop. In particular:
+ *
+ * This algebra defines the string-combining operations described in Koller and
+ * Kuhlmann 2012, "Decomposing TAG Algorithms Using Simple Algebraizations",
+ * TAG+ Workshop. In particular:
  * <ul>
  * <li>*CONC11*(v,w) concatenates two strings into the string vw.</li>
  * <li>*CONC12*(v,(w1,w2)) concatenates a string and a string pair into the
@@ -39,20 +40,24 @@ import javax.swing.JLabel;
  * <li>*WRAP22*((v1,v2), (w1,w2)) wraps one string pair around another, yielding
  * the string pair (v1w1, w2v2).</li>
  * <li>*E* evaluates to the empty string.</li>
- * <li>*EE* evaluates to the string pair (e,e), where e is the empty string.</li>
+ * <li>*EE* evaluates to the string pair (e,e), where e is the empty
+ * string.</li>
  * <li>All other strings evaluate to themselves, as strings.</li>
  * </ul>
- * 
+ *
  * @author koller
  */
 public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> {
-    private Signature signature;
+
+//    private Signature signature;
     private Int2ObjectMap<Operation> namesToOperations = new Int2ObjectOpenHashMap<Operation>();
 
     public static enum Operation {
+
         //
         //
         // string + string -> string
+
         CONC11(new BinaryOperation("*CONC11*", 1, 1, 1) {
             @Override
             protected Pair<List<String>, List<String>> evaluate(Pair<List<String>, List<String>> first, Pair<List<String>, List<String>> second) {
@@ -162,7 +167,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                         for (int end = start; end <= parent.left.end; end++) {
                             ret.add(auto.createRule(parent, getName(),
                                     l2(p(s(parent.left.start, start), s(end, parent.left.end)),
-                                    p(s(start, end), null))));
+                                            p(s(start, end), null))));
                         }
                     }
                 }
@@ -196,7 +201,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                         for (int split2 = parent.right.start; split2 <= parent.right.end; split2++) {
                             ret.add(auto.createRule(parent, getName(),
                                     l2(p(s(parent.left.start, split1), s(split2, parent.right.end)),
-                                    p(s(split1, parent.left.end), s(parent.right.start, split2)))));
+                                            p(s(split1, parent.left.end), s(parent.right.start, split2)))));
                         }
                     }
                 }
@@ -216,111 +221,111 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         //
         // the string pair (epsilon, epsilon)
         EPSILON_EPSILON(null) {
-            @Override
-            Pair<List<String>, List<String>> evaluate(List<Pair<List<String>, List<String>>> children) {
-                if (!children.isEmpty()) {
-                    throw new UnsupportedOperationException("*EE* is a constant");
-                }
+                    @Override
+                    Pair<List<String>, List<String>> evaluate(List<Pair<List<String>, List<String>>> children) {
+                        if (!children.isEmpty()) {
+                            throw new UnsupportedOperationException("*EE* is a constant");
+                        }
 
-                return new Pair(new ArrayList<String>(), new ArrayList<String>());
-            }
+                        return new Pair(new ArrayList<String>(), new ArrayList<String>());
+                    }
 
-            @Override
-            Set<Rule> makeBottomUpRules(int[] children, int n, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
+                    @Override
+                    Set<Rule> makeBottomUpRules(int[] children, int n, TreeAutomaton<Pair<Span, Span>> auto) {
+                        Set<Rule> ret = new HashSet<Rule>();
 
-                if (children.length > 0) {
-                    return ret;
+                        if (children.length > 0) {
+                            return ret;
 //                    throw new UnsupportedOperationException("*EE* is a constant");
-                }
+                        }
 
-                for (int i = 0; i <= n; i++) {
-                    for (int j = i; j <= n; j++) {
-                        Pair parent = new Pair(new Span(i, i), new Span(j, j));
-                        ret.add(auto.createRule(parent, label(), getChildStates(children, auto)));
+                        for (int i = 0; i <= n; i++) {
+                            for (int j = i; j <= n; j++) {
+                                Pair parent = new Pair(new Span(i, i), new Span(j, j));
+                                ret.add(auto.createRule(parent, label(), getChildStates(children, auto)));
+                            }
+                        }
+
+                        return ret;
                     }
-                }
 
-                return ret;
-            }
+                    @Override
+                    Set<Rule> makeTopDownRules(int parentId, TreeAutomaton<Pair<Span, Span>> auto) {
+                        Set<Rule> ret = new HashSet<Rule>();
+                        Pair<Span, Span> parent = auto.getStateForId(parentId);
 
-            @Override
-            Set<Rule> makeTopDownRules(int parentId, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
-                Pair<Span,Span> parent = auto.getStateForId(parentId);
+                        if (_arity(parent) == 2) {
+                            if (parent.left.start == parent.left.end && parent.right.start == parent.right.end) {
+                                ret.add(auto.createRule(parent, label(), new Pair[]{}));
+                            }
+                        }
 
-                if (_arity(parent) == 2) {
-                    if (parent.left.start == parent.left.end && parent.right.start == parent.right.end) {
-                        ret.add(auto.createRule(parent, label(), new Pair[]{}));
+                        return ret;
                     }
-                }
 
-                return ret;
-            }
+                    @Override
+                    public String label() {
+                        return "*EE*";
+                    }
 
-            @Override
-            public String label() {
-                return "*EE*";
-            }
-
-            @Override
-            public int arity() {
-                return 2;
-            }
-        },
+                    @Override
+                    public int arity() {
+                        return 2;
+                    }
+                },
         //
         //
         // the empty string epsilon
         EPSILON(null) {
-            @Override
-            Pair<List<String>, List<String>> evaluate(List<Pair<List<String>, List<String>>> children) {
-                if (!children.isEmpty()) {
-                    throw new UnsupportedOperationException("*EE* is a constant");
-                }
+                    @Override
+                    Pair<List<String>, List<String>> evaluate(List<Pair<List<String>, List<String>>> children) {
+                        if (!children.isEmpty()) {
+                            throw new UnsupportedOperationException("*EE* is a constant");
+                        }
 
-                return new Pair(new ArrayList<String>(), null);
-            }
-
-            @Override
-            Set<Rule> makeBottomUpRules(int[] children, int n, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
-
-                if (children.length > 0) {
-                    return ret;
-                }
-
-                for (int i = 0; i <= n; i++) {
-                    Pair parent = new Pair(new Span(i, i), null);
-                    ret.add(auto.createRule(parent, label(), new Pair[] {}));
-                }
-
-                return ret;
-            }
-
-            @Override
-            Set<Rule> makeTopDownRules(int parentId, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
-                Pair<Span,Span> parent = auto.getStateForId(parentId);
-
-                if (_arity(parent) == 1) {
-                    if (parent.left.start == parent.left.end) {
-                        ret.add(auto.createRule(parent, label(), new Pair[]{}));
+                        return new Pair(new ArrayList<String>(), null);
                     }
-                }
 
-                return ret;
-            }
+                    @Override
+                    Set<Rule> makeBottomUpRules(int[] children, int n, TreeAutomaton<Pair<Span, Span>> auto) {
+                        Set<Rule> ret = new HashSet<Rule>();
 
-            @Override
-            public String label() {
-                return "*E*";
-            }
+                        if (children.length > 0) {
+                            return ret;
+                        }
 
-            @Override
-            public int arity() {
-                return 1;
-            }
-        };
+                        for (int i = 0; i <= n; i++) {
+                            Pair parent = new Pair(new Span(i, i), null);
+                            ret.add(auto.createRule(parent, label(), new Pair[]{}));
+                        }
+
+                        return ret;
+                    }
+
+                    @Override
+                    Set<Rule> makeTopDownRules(int parentId, TreeAutomaton<Pair<Span, Span>> auto) {
+                        Set<Rule> ret = new HashSet<Rule>();
+                        Pair<Span, Span> parent = auto.getStateForId(parentId);
+
+                        if (_arity(parent) == 1) {
+                            if (parent.left.start == parent.left.end) {
+                                ret.add(auto.createRule(parent, label(), new Pair[]{}));
+                            }
+                        }
+
+                        return ret;
+                    }
+
+                    @Override
+                    public String label() {
+                        return "*E*";
+                    }
+
+                    @Override
+                    public int arity() {
+                        return 1;
+                    }
+                };
         private final BinaryOperation binop;
 
         Operation(BinaryOperation binop) {
@@ -418,7 +423,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     }
 
     public TagStringAlgebra() {
-        signature = new Signature();
+//        signature = new Signature();
 
         createSymbol(Operation.CONC11);
         createSymbol(Operation.CONC12);
@@ -438,24 +443,37 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     }
 
     @Override
-    public Pair<List<String>, List<String>> evaluate(Tree<String> t) {
-        return t.dfs(new TreeVisitor<String, Void, Pair<List<String>, List<String>>>() {
-            @Override
-            public Pair<List<String>, List<String>> combine(Tree<String> node, List<Pair<List<String>, List<String>>> childrenValues) {
-                String label = node.getLabel();
-                int labelId = signature.getIdForSymbol(label);
+    protected Pair<List<String>, List<String>> evaluate(String label, List<Pair<List<String>, List<String>>> childrenValues) {
+        int labelId = signature.getIdForSymbol(label);
 
-                if (namesToOperations.containsKey(labelId)) {
-                    return namesToOperations.get(labelId).evaluate(childrenValues);
-                } else {
-                    List<String> l = new ArrayList<String>();
-                    l.add(label);
-                    return new Pair<List<String>, List<String>>(l, null);
-                }
-            }
-        });
-
+        if (namesToOperations.containsKey(labelId)) {
+            return namesToOperations.get(labelId).evaluate(childrenValues);
+        } else {
+            List<String> l = new ArrayList<String>();
+            l.add(label);
+            return new Pair<List<String>, List<String>>(l, null);
+        }
     }
+
+//    @Override
+//    public Pair<List<String>, List<String>> evaluate(Tree<String> t) {
+//        return t.dfs(new TreeVisitor<String, Void, Pair<List<String>, List<String>>>() {
+//            @Override
+//            public Pair<List<String>, List<String>> combine(Tree<String> node, List<Pair<List<String>, List<String>>> childrenValues) {
+//                String label = node.getLabel();
+//                int labelId = signature.getIdForSymbol(label);
+//
+//                if (namesToOperations.containsKey(labelId)) {
+//                    return namesToOperations.get(labelId).evaluate(childrenValues);
+//                } else {
+//                    List<String> l = new ArrayList<String>();
+//                    l.add(label);
+//                    return new Pair<List<String>, List<String>>(l, null);
+//                }
+//            }
+//        });
+//
+//    }
 
     @Override
     public TreeAutomaton decompose(Pair<List<String>, List<String>> value) {
@@ -476,20 +494,19 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
     @Override
     public JComponent visualize(Pair<List<String>, List<String>> object) {
-        if( object.right == null ) {
+        if (object.right == null) {
             return new JLabel(StringTools.join(object.left, " "));
         } else {
             return new JLabel("[" + StringTools.join(object.left, " ") + " / " + StringTools.join(object.right, " ") + "]");
         }
     }
-    
-    
 
     public static <E, F> int _arity(Pair<E, F> pair) {
         return pair.right == null ? 1 : 2;
     }
 
     public class TagDecompositionAutomaton extends TreeAutomaton<Pair<Span, Span>> {
+
         private int[] words;
 
         public TagDecompositionAutomaton(List<String> words) {
@@ -581,9 +598,9 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         }
     }
 
-    public Signature getSignature() {
-        return signature;
-    }
+//    public Signature getSignature() {
+//        return signature;
+//    }
 
     public int getSort(int name) {
         if (namesToOperations.containsKey(name)) {
@@ -596,6 +613,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     }
 
     private abstract static class BinaryOperation {
+
         private String name;
         private int arity1, arity2;
         private int arity;
@@ -679,7 +697,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         for (int i = 0; i < childStateIds.length; i++) {
             childStates[i] = auto.getStateForId(childStateIds[i]);
         }
-        
+
         return childStates;
     }
 }
