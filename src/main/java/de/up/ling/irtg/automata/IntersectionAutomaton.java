@@ -400,9 +400,9 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
 //                    System.err.println("left rule: " + leftRule.toString() + " = " + leftRule.toString(left));
 //                    System.err.println("right partners: " + preterminalRulesForLabel);
-//                    for (Rule pr : preterminalRulesForLabel) {
+                    for (Rule pr : preterminalRulesForLabel) {
 //                        System.err.println("  - " + pr.toString(right));
-//                    }
+                    }
                     for (Rule rightRule : preterminalRulesForLabel) {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
@@ -427,7 +427,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                 int state = agenda.remove();
                 List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
 
-//                System.err.println("pop: " + state);
+//               System.err.println("pop: " + state);
 //                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
                 for (Rule leftRule : possibleRules) {
 //                    System.err.println("consider leftrule: " + leftRule.toString(left));
@@ -446,7 +446,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                        System.err.println("right partners: " + partnersHere);
 
                         Iterable<Rule> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
-//                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
+//                        System.err.println("-> right rules: " + Rule.rulesToStrings(Sets.newHashSet(rightRules), right));
 
                         if (!rightRules.iterator().hasNext()) {
                             unsuccessful++;
@@ -483,7 +483,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //            System.err.println(toString());
             getStateInterner().setTrustingMode(false);
             
-//            getFinalStates();
+//           getFinalStates();
 //            System.err.println(this);
         }
     }
