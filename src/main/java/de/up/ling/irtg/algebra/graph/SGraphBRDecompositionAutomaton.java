@@ -380,10 +380,15 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                 Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(c), new int[]{}).iterator();
                 while (it.hasNext()) {
                     Rule rule = it.next();
-                    agenda.add(rule.getParent());//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
+                    int parent = rule.getParent();
+                    
+                    if (!agenda.contains(parent))
+                        agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
+                    
                     if (printSteps) {
                         System.out.println("Added constant " + getStateForId(rule.getParent()).toString(this));
                     }
+                    
                     if (makeRulesTopDown) {
                         addRuleTopDown(rule);
                     }
@@ -428,11 +433,9 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
             }
             
             for (String b : bisymbols) {
-                IntSet partners = mpFinder.getAllMergePartners(a);
-                //IntListIterator pIt = partners.listIterator();
+                IntList partners = mpFinder.getAllMergePartners(a);
                 
                 for (int d: partners) {
-                    //int d = pIt.nextInt();
                     nrMergeChecks++;
                     Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(b), new int[]{a, d}).iterator();
                     
@@ -493,6 +496,11 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         seen.addAll(Sets.newHashSet(agenda));
         for (int i = 0; i < agenda.size(); i++) {
             int a = agenda.get(i);
+            
+            if (finalStates.contains(a)) {
+                System.out.println("Found final state!  " + getStateForId(a).toString(this));//always print this, i guess
+            }
+            
             unisymbols.stream().map((u) -> getRulesBottomUp(signature.getIdForSymbol(u), new int[]{a}).iterator()).filter((it) -> (it.hasNext())).map((it) -> it.next()).map((rule) -> rule.getParent()).filter((newBR) -> (!seen.contains(newBR))).map((newBR) -> {
                 agenda.add(newBR);
                 return newBR;
@@ -500,7 +508,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                 seen.add(newBR);
             });
             bisymbols.stream().forEach((b) -> {
-                IntSet partners = mpFinder.getAllMergePartners(a);
+                IntList partners = mpFinder.getAllMergePartners(a);
                 for (int d : partners) {
                     Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(b), new int[]{a, d}).iterator();
 

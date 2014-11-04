@@ -277,29 +277,31 @@ public class BoundaryRepresentation {
         
         for (int source = 0; source < sourceToNodename.length; source++) {
             int vNr = sourceToNodename[source];
-            
-            boolean isCommonWithoutCommonSourcename = arrayContains(otherSourceToNodename, vNr);
-            
-            for (int otherSource = 0; otherSource < otherSourceToNodename.length; otherSource++) {
-                if (otherSourceToNodename[otherSource] == vNr) {
-                    int correspondingNode = sourceToNodename[otherSource];
-                    
-                    if (correspondingNode == vNr) {
-                            isCommonWithoutCommonSourcename = false;
+            if (vNr != -1){
+                boolean isCommonWithoutCommonSourcename = arrayContains(otherSourceToNodename, vNr);
+
+                for (int otherSource = 0; otherSource < otherSourceToNodename.length; otherSource++) {
+                    if (otherSourceToNodename[otherSource] == vNr) {
+                        int correspondingNode = sourceToNodename[otherSource];
+
+                        if (correspondingNode == vNr) {
+                                isCommonWithoutCommonSourcename = false;
+                        }
                     }
                 }
-            }
-            
-            /*for (String commonSourcename : Sets.intersection(sourceToNodename.keySet(), otherSourceToNodename.keySet()))//note that intersection is still only called once, see http://stackoverflow.com/questions/904582/java-foreach-efficiency
-             {
-             if (sourceToNodename.get(commonSourcename).equals(vName))
-             {
-             isCommonWithoutCommonSourcename = false;
-             }
-             }*/
-            
-            if (isCommonWithoutCommonSourcename) {
-                return false;
+
+
+                /*for (String commonSourcename : Sets.intersection(sourceToNodename.keySet(), otherSourceToNodename.keySet()))//note that intersection is still only called once, see http://stackoverflow.com/questions/904582/java-foreach-efficiency
+                 {
+                 if (sourceToNodename.get(commonSourcename).equals(vName))
+                 {
+                 isCommonWithoutCommonSourcename = false;
+                 }
+                 }*/
+
+                if (isCommonWithoutCommonSourcename) {
+                    return false;
+                }
             }
         }
         return true;

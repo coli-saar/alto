@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntList;
 
 /**
  *
@@ -39,6 +39,6 @@ public abstract class MergePartnerFinder {
 
     public abstract void insert(int rep);
             
-    public abstract IntSet getAllMergePartners(int rep);
+    public abstract IntList getAllMergePartners(int rep);
 
 }

@@ -4,9 +4,8 @@
  * and open the template in the editor.
  */
 package de.up.ling.irtg.algebra.graph;
-import com.google.common.collect.Sets;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 /**
  *
  * @author jonas
@@ -15,7 +14,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
 
     private final boolean isFinal;
     private final DynamicMergePartnerFinder[] children;
-    private final IntSet finalSet;//list is fine, since every subgraph gets sorted in at most once.
+    private final IntList finalSet;//list is fine, since every subgraph gets sorted in at most once.
     private final int sourceNr;
     private final int sourcesRemaining;
     private final int ALL;//give this name so its unlikely this is actually a name of a source
@@ -29,7 +28,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
             isFinal = true;
             sourceNr = -1;
             children = null;
-            finalSet = new IntOpenHashSet();
+            finalSet = new IntArrayList();
             ALL = -1;
             BOT = -1;
             sourcesRemaining = nrSources;
@@ -56,18 +55,17 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
     {
         if (isFinal)
         {
+            //if (finalSet.contains(rep))
+            //    System.out.println(rep + " already here!");
             finalSet.add(rep);
         }
         else
         {
             int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
-            if (vNr != -1)
-            {
+            if (vNr != -1){
                  insertInto(vNr, rep);
                  insertInto(ALL, rep);
-            }
-            else
-            {
+            } else{
                  insertInto(BOT, rep);
                  insertInto(ALL, rep);
             }
@@ -86,7 +84,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
     }
 
     @Override
-    public IntSet getAllMergePartners(int rep)
+    public IntList getAllMergePartners(int rep)
     {
         if (isFinal)
             return finalSet;
@@ -95,7 +93,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
             int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
             if (vNr != -1)
             {
-                 IntSet ret = new IntOpenHashSet();//list is fine, since the two lists we get bottom up are disjoint anyway.
+                 IntList ret = new IntArrayList();//list is fine, since the two lists we get bottom up are disjoint anyway.
                  if (!(children[vNr] == null))
                      ret.addAll(children[vNr].getAllMergePartners(rep));
                  if (!(children[BOT] == null))
@@ -114,7 +112,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
             else
             {
                 if ((children[ALL] == null))
-                    return new IntOpenHashSet();
+                    return new IntArrayList();
                 else
                  return children[ALL].getAllMergePartners(rep);
             }

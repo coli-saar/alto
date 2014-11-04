@@ -120,6 +120,10 @@ public class BRUtil {
     private static final String testString3 = "(p / picture :domain (i / it) :topic (b2 / boa :mod (c2 / constrictor) :ARG0-of (s / swallow-01 :ARG1 (a / animal))))";
     private static final String testString4 = "(bel / believe  :ARG0 (b / boy)  :ARG1 (w / want  :ARG0 (g / girl)  :ARG1 (l / like  :ARG0 g :ARG1 b)))";//the boy believes that the girl wants to like him.
     private static final String testString5 = "(bel1 / believe  :ARG0 (b / boy)  :ARG1 (w / want  :ARG0 (g / girl)  :ARG1 (bel2 / believe  :ARG0 b  :ARG1 (l / like  :ARG0 g :ARG1 b))))";//the boy believes that the girl wants him to believe that she likes him.
+    private static final String testString5sub1 = "(bel1 / believe  :ARG0 (b / boy)  :ARG1 (w / want  :ARG1 (bel2 / believe  :ARG0 b  )))";//the boy believes that the girl wants him to believe that she likes him.
+    private static final String testString5sub2 = "(bel1 / believe  :ARG0 (b / boy)  :ARG1 (w / want  :ARG1 (bel2 / believe )))";//the boy believes that the girl wants him to believe that she likes him.
+    private static final String testString5sub3 = "(bel1 / believe  :ARG0 (b / boy)  :ARG1 (w / want  :ARG0 (g / girl)  :ARG1 (bel2 / believe  :ARG0 b  :ARG1 (l / like  :ARG0 g))))";//the boy believes that the girl wants him to believe that she likes him.
+    private static final String testString5sub4 = "(bel1 / believe  :ARG0 (b / boy)  :ARG1 (w / want  ))";//the boy believes that the girl wants him to believe that she likes him.
     
     private static final String testStringBoy1 = "(w / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))";
     private static final String testStringBoy2 = "(w<root> / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))";//the boy wants to go
@@ -137,8 +141,9 @@ public class BRUtil {
         long stopTime;
         long elapsedTime;
         int repetitions = 10;
-        boolean doBenchmark = false;
-        boolean cleanVersion = false;
+        boolean doBenchmark = true;
+        boolean cleanVersion = true;
+        boolean showSteps = false;
         
         
         //activate this to create algebra from IRTG:
@@ -152,8 +157,8 @@ public class BRUtil {
         
         //activate this to automatically create algebra that has atomic subgraphs:
         
-        String input = testString5;
-        int nrSources = 4;
+        String input = testString3;
+        int nrSources = 3;
         GraphAlgebra alg = new GraphAlgebra();
         SGraph graph = alg.parseString(input);
         makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
@@ -173,7 +178,7 @@ public class BRUtil {
         if (cleanVersion)
             auto.iterateThroughRulesBottomUp1Clean(alg);
         else
-            auto.iterateThroughRulesBottomUp1(alg, false, true);
+            auto.iterateThroughRulesBottomUp1(alg, showSteps, true);
         
         
         if (doBenchmark){
@@ -186,7 +191,7 @@ public class BRUtil {
                 if (cleanVersion)
                     auto.iterateThroughRulesBottomUp1Clean(alg);
                 else
-                    auto.iterateThroughRulesBottomUp1(alg, false, true);
+                    auto.iterateThroughRulesBottomUp1(alg, showSteps, true);
             }
 
             stopTime = System.currentTimeMillis();
@@ -200,7 +205,7 @@ public class BRUtil {
                 if (cleanVersion)
                     auto.iterateThroughRulesBottomUp1Clean(alg);
                 else
-                    auto.iterateThroughRulesBottomUp1(alg, false, true);
+                    auto.iterateThroughRulesBottomUp1(alg, showSteps, true);
             }
 
             stopTime = System.currentTimeMillis();

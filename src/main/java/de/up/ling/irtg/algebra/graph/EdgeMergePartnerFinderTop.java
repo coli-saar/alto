@@ -4,8 +4,7 @@
  * and open the template in the editor.
  */
 package de.up.ling.irtg.algebra.graph;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 /**
  *
  * @author jonas
@@ -99,7 +98,7 @@ public class EdgeMergePartnerFinderTop extends MergePartnerFinder {
     }
 
     @Override
-    public IntSet getAllMergePartners(int rep)
+    public IntList getAllMergePartners(int rep)
     {
         return null;
         /*if (isFinal)

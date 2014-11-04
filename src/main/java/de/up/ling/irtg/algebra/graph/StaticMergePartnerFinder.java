@@ -6,8 +6,6 @@
 package de.up.ling.irtg.algebra.graph;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 /**Deprecated! Use DynamicMergePartherFinder instead
  *
  * 
@@ -18,7 +16,7 @@ public class StaticMergePartnerFinder extends MergePartnerFinder {
     
    private final boolean isFinal;
    private final StaticMergePartnerFinder[] children;
-   private final IntSet finalSet;
+   private final IntList finalSet;
    private final int sourceNr;
    private final int ALL;//give this name so its unlikely this is actually a name of a source
    private final int BOT;
@@ -31,7 +29,7 @@ public class StaticMergePartnerFinder extends MergePartnerFinder {
            isFinal = true;
            sourceNr = -1;
            children = null;
-           finalSet = new IntOpenHashSet();
+           finalSet = new IntArrayList();
            ALL = -1;
            BOT = -1;
        }
@@ -75,7 +73,7 @@ public class StaticMergePartnerFinder extends MergePartnerFinder {
    }
    
    @Override
-   public IntSet getAllMergePartners(int rep)
+   public IntList getAllMergePartners(int rep)
    {
        if (isFinal)
            return finalSet;
@@ -84,7 +82,7 @@ public class StaticMergePartnerFinder extends MergePartnerFinder {
            int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
            if (vNr != -1)
            {
-               IntSet ret = new IntOpenHashSet();
+               IntList ret = new IntArrayList();
                ret.addAll(children[vNr].getAllMergePartners(rep));
                ret.addAll(children[BOT].getAllMergePartners(rep));
                return ret;
