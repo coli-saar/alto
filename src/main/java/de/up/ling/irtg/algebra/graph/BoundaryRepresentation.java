@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import com.google.common.base.Function;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -32,10 +33,12 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
  *
  * @author jonas
  */
-public class BoundaryRepresentation {
+public class BoundaryRepresentation{
 
     private final Set<IntBasedEdge> inBoundaryEdges;
     private final int[] sourceToNodename;//nodes start with 0. Bottom/undefined is stored as -1.
+    public final int innerNodeCount;
+
 
     public BoundaryRepresentation(SGraph T, SGraphBRDecompositionAutomaton auto) {
         inBoundaryEdges = new HashSet();//make the size depend on d?
@@ -58,6 +61,7 @@ public class BoundaryRepresentation {
                 inBoundaryEdges.add(new IntBasedEdge(e, auto)); // always making new edges may be very storage inefficient. Better have one big set and get them from there!.
             }
         }
+        innerNodeCount = ((Collection<String>)T.getAllNonSourceNodenames()).size();
     }
 
     public BoundaryRepresentation(GraphEdge edge, String sourceSource, String targetSource, SGraphBRDecompositionAutomaton auto)//creates a BR for an sGraph with just this one edge. sourcename1 goes to the source of the edge, sourcename2 to the target
@@ -71,11 +75,13 @@ public class BoundaryRepresentation {
         sourceToNodename[auto.getIntForSource(sourceSource)] = auto.getIntForNode(edge.getSource().getName());
         sourceToNodename[auto.getIntForSource(targetSource)] = auto.getIntForNode(edge.getTarget().getName());
         inBoundaryEdges.add(new IntBasedEdge(edge, auto));
+        innerNodeCount = 0;
     }
 
-    public BoundaryRepresentation(Set<IntBasedEdge> inBoundaryEdges, int[] sourceToNodename) {
+    public BoundaryRepresentation(Set<IntBasedEdge> inBoundaryEdges, int[] sourceToNodename, int innerNodeCount) {
         this.inBoundaryEdges = new HashSet<>(inBoundaryEdges);//make copies in order to not modify old
         this.sourceToNodename = sourceToNodename.clone();//make copies in order to not modify old
+        this.innerNodeCount = innerNodeCount;
     }
 
     public SGraph getGraph(SGraph wholeGraph, SGraphBRDecompositionAutomaton auto) {
@@ -181,7 +187,7 @@ public class BoundaryRepresentation {
         for (int i = 0; i<sourceToNodename.length;i++){
             newSourceToNodename[i] = Math.max(sourceToNodename[i], other.getSourceToNodenameMap()[i]);
         }
-        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename);
+        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount+other.innerNodeCount);
     }
 
     public BoundaryRepresentation forget(int sourceToForget)//only call this if the source name may be forgotten!
@@ -191,7 +197,9 @@ public class BoundaryRepresentation {
         int vNr = sourceToNodename[sourceToForget];
         newSourceToNodename[sourceToForget] = -1;
         //now remove inBoundaryEdges where necessary
+        int nrNewInnerNodes = 0;
         if (!arrayContains(newSourceToNodename, vNr)) {
+            nrNewInnerNodes = 1;
             for (IntBasedEdge e : inBoundaryEdges)//this seems inefficient
             {
                 int otherNr = e.getOtherNode(vNr);
@@ -202,7 +210,7 @@ public class BoundaryRepresentation {
                 }
             }
         }
-        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename);
+        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount + nrNewInnerNodes);
     }
 
     public BoundaryRepresentation forgetSourcesExcept(Set<Integer> retainedSources) {
@@ -224,7 +232,7 @@ public class BoundaryRepresentation {
         int vNr = sourceToNodename[oldSource];
         newSourceToNodename[oldSource] = -1;
         newSourceToNodename[newSource] = vNr;
-        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename);
+        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount);
     }
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
@@ -519,5 +527,15 @@ public class BoundaryRepresentation {
     public int hashCode() {
         return new HashCodeBuilder(19, 43).append(inBoundaryEdges).append(sourceToNodename).toHashCode();
     }
+    
+    public int getSourceCount(){
+        int res = 0;
+        for (int source = 0; source < sourceToNodename.length; source ++){
+            if (sourceToNodename[source]!=-1)
+                res++;
+        }
+        return res;
+    }
 
+    
 }

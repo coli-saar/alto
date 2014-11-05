@@ -141,10 +141,11 @@ public class BRUtil {
         long stopTime;
         long elapsedTime;
         int repetitions = 10;
+        boolean onlyCheckAcceptance = true;
         boolean doBenchmark = true;
-        boolean cleanVersion = true;
+        boolean cleanVersion = false;
         boolean showSteps = false;
-        
+        boolean makeRulesTopDown = true;
         
         //activate this to create algebra from IRTG:
         
@@ -158,7 +159,7 @@ public class BRUtil {
         //activate this to automatically create algebra that has atomic subgraphs:
         
         String input = testString3;
-        int nrSources = 3;
+        int nrSources = 4;
         GraphAlgebra alg = new GraphAlgebra();
         SGraph graph = alg.parseString(input);
         makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
@@ -169,16 +170,13 @@ public class BRUtil {
       
       
       
-        SGraphBRDecompositionAutomaton auto;
+        
         
         
         startTime = System.currentTimeMillis();
         
-        auto = (SGraphBRDecompositionAutomaton)alg.decompose(graph);
-        if (cleanVersion)
-            auto.iterateThroughRulesBottomUp1Clean(alg);
-        else
-            auto.iterateThroughRulesBottomUp1(alg, showSteps, true);
+        
+        iterate(graph, alg, onlyCheckAcceptance, doBenchmark, cleanVersion, showSteps, makeRulesTopDown);
         
         
         if (doBenchmark){
@@ -187,11 +185,7 @@ public class BRUtil {
             startTime = System.currentTimeMillis();
             
             for (int i = 0; i<repetitions; i++){
-                auto = (SGraphBRDecompositionAutomaton)alg.decompose(graph);
-                if (cleanVersion)
-                    auto.iterateThroughRulesBottomUp1Clean(alg);
-                else
-                    auto.iterateThroughRulesBottomUp1(alg, showSteps, true);
+                iterate(graph, alg, onlyCheckAcceptance, doBenchmark, cleanVersion, showSteps, makeRulesTopDown);
             }
 
             stopTime = System.currentTimeMillis();
@@ -201,11 +195,7 @@ public class BRUtil {
             startTime = System.currentTimeMillis();
 
             for (int i = 0; i<repetitions; i++){
-                auto = (SGraphBRDecompositionAutomaton)alg.decompose(graph);
-                if (cleanVersion)
-                    auto.iterateThroughRulesBottomUp1Clean(alg);
-                else
-                    auto.iterateThroughRulesBottomUp1(alg, showSteps, true);
+                iterate(graph, alg, onlyCheckAcceptance, doBenchmark, cleanVersion, showSteps, makeRulesTopDown);
             }
 
             stopTime = System.currentTimeMillis();
@@ -223,6 +213,22 @@ public class BRUtil {
       
         //String res = auto.toStringBottomUp();
         //System.out.println(res);
+    }
+    
+    private static void iterate (SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean doBenchmark, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown)
+    {
+        SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton)alg.decompose(graph);
+        if (onlyCheckAcceptance){
+            if (auto.doesAccept(alg))
+                System.out.println("Accepted!");
+            else
+                System.out.println("Not accepted!");
+        } else{
+            if (cleanVersion)
+                auto.iterateThroughRulesBottomUp1Clean(alg);
+            else
+                auto.iterateThroughRulesBottomUp1(alg, showSteps, makeRulesTopDown);
+        }
     }
     
     

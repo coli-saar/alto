@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 /**
  *
  * @author jonas
@@ -100,8 +101,7 @@ public class EdgeMergePartnerFinderTop extends MergePartnerFinder {
     @Override
     public IntList getAllMergePartners(int rep)
     {
-        return null;
-        /*if (isFinal)
+        if (isFinal)
             return botMPF.getAllMergePartners(rep);
         else
         {
@@ -122,7 +122,7 @@ public class EdgeMergePartnerFinderTop extends MergePartnerFinder {
                 else
                  return children[ALL].getAllMergePartners(rep);
             }
-        }*/
+        }
     }
 
 }

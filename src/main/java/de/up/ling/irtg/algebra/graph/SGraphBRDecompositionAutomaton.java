@@ -33,9 +33,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntHeapPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 
 public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepresentation> {
 
@@ -51,7 +53,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
     private final Map<String, Integer> nodenameToInt;
     private final String[] intToSourcename;
     private final String[] intToNodename;
-
+    
     SGraphBRDecompositionAutomaton(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(signature);
 
@@ -93,7 +95,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         }
 
         mpFinder = new DynamicMergePartnerFinder(0, sources.size(), completeGraph.getAllNodeNames().size(), this);
-
+        
         //storedRules = new IntTrie<>();
         this.completeGraph = completeGraph;
         int x = addState(new BoundaryRepresentation(completeGraph, this));
@@ -275,7 +277,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         return true;
     }
 
-    public void iterateThroughRulesBottomUpNaive(GraphAlgebra alg, boolean printSteps) {
+    public void iterateThroughRulesBottomUpNaive(GraphAlgebra alg, boolean printSteps) {//old
         Map<String, Integer> symbols = signature.getSymbolsWithArities();
         Set<String> constants = new HashSet<String>();
         Set<String> unisymbols = new HashSet<String>();
@@ -351,39 +353,147 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
 
     public void iterateThroughRulesBottomUp1(GraphAlgebra alg, boolean printSteps, boolean makeRulesTopDown)//looks up potential merges with tree structure in MergePartnerFinder
     {
+        InitTuple iT = initAgenda(makeRulesTopDown, printSteps);
+        IntList agenda = iT.agenda;
+        IntSet seen = iT.seen;
+        int nrMergeChecks = 0;
+        int nrMerges = 0;
+        
+        
+        for (int i = 0; i < agenda.size(); i++) {
+            int a = agenda.get(i);
+            
+            if (printSteps) {
+                System.out.println("Checking " + getStateForId(a).toString(this));
+            }
+            
+            if (finalStates.contains(a)) {
+                System.out.println("Found final state!  " + getStateForId(a).toString(this));//always print this, i guess
+            }
+            
+            for (String u : iT.unisymbols) {
+                Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(u), new int[]{a}).iterator();
+                
+                addRuleResults(it, agenda, seen, -1, printSteps, makeRulesTopDown);
+                
+            }
+            
+            for (String b : iT.bisymbols) {
+                IntList partners = mpFinder.getAllMergePartners(a);
+                
+                for (int d: partners) {
+                    nrMergeChecks++;
+                    Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(b), new int[]{a, d}).iterator();
+                    
+                    nrMerges += addRuleResults(it, agenda, seen, d, printSteps, makeRulesTopDown);
+                }
+            }
+            
+            mpFinder.insert(a);
+        }
+        System.out.println("Number of Merge Checks: " + String.valueOf(nrMergeChecks));
+        System.out.println("Number of Merges: " + String.valueOf(nrMerges));
+    }
+    
+    
+
+    public void iterateThroughRulesBottomUp1Clean(GraphAlgebra alg)//looks up potential merges with tree structure in MergePartnerFinder
+    {
+        InitTuple iT = initAgenda(false, false);
+        IntList agenda = iT.agenda;
+        IntSet seen = iT.seen;
+       
+        for (int i = 0; i < agenda.size(); i++) {
+            int a = agenda.get(i);
+            
+            if (finalStates.contains(a)) {
+                System.out.println("Found final state!  " + getStateForId(a).toString(this));//always print this, i guess
+            }
+            
+            iT.unisymbols.stream().map((u) -> getRulesBottomUp(signature.getIdForSymbol(u), new int[]{a}).iterator()).forEach((it) -> {
+                addRuleResults(it, agenda, seen, -1, false, false);
+            });
+            
+            iT.bisymbols.stream().forEach((b) -> {
+                IntList partners = mpFinder.getAllMergePartners(a);
+                partners.stream().map((d) -> getRulesBottomUp(signature.getIdForSymbol(b), new int[]{a, d}).iterator()).forEach((it) -> {
+                    addRuleResults(it, agenda, seen, -1, false, false);
+                });
+            });
+            mpFinder.insert(a);
+        }
+    }
+    
+    
+    public boolean doesAccept(GraphAlgebra alg)
+    {
+        InitTuplePriority iT = initAgendaPriority(false, false);
+        IntPriorityQueue agenda = iT.agenda;
+        IntSet seen = iT.seen;
+        
+        
+        while (!agenda.isEmpty()) {
+            int a = agenda.dequeue();
+            
+            if (finalStates.contains(a)) {
+                return true;
+            }
+            
+            for (String u : iT.unisymbols) {
+                Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(u), new int[]{a}).iterator();
+                
+                addRuleResults(it, agenda, seen, -1, false, false);
+                
+            }
+            
+            for (String b : iT.bisymbols) {
+                IntList partners = mpFinder.getAllMergePartners(a);
+                
+                for (int d: partners) {
+                    Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(b), new int[]{a, d}).iterator();
+                    
+                    addRuleResults(it, agenda, seen, -1, false, false);
+                }
+            }
+            
+            mpFinder.insert(a);
+        }
+        return false;
+    }
+    
+    
+    private InitTuple initAgenda(boolean makeRulesTopDown, boolean printSteps)
+    {
+        InitTuple iT = new InitTuple();
         if (makeRulesTopDown) {
             rulesTopDown = new HashMap<>();
             constantAbbreviations = new HashMap<>();
         }
         Map<String, Integer> symbols = signature.getSymbolsWithArities();
-        Set<String> constants = new HashSet<>();
-        Set<String> unisymbols = new HashSet<>();
-        Set<String> bisymbols = new HashSet<>();
         int j = 0;
         for (String s : symbols.keySet()) {
             if (symbols.get(s) == 0) {
-                constants.add(s);
+                iT.constants.add(s);
                 if (makeRulesTopDown) {
                     constantAbbreviations.put(s, "C" + String.valueOf(j));
                     System.out.println("C" + String.valueOf(j) + " represents " + s);
                     j++;
                 }
             } else if (symbols.get(s) == 1) {
-                unisymbols.add(s);
+                iT.unisymbols.add(s);
             } else if (symbols.get(s) == 2) {
-                bisymbols.add(s);
+                iT.bisymbols.add(s);
             }
         }
-        IntList agenda = new IntArrayList();
-        for (String c : constants) {
+        for (String c : iT.constants) {
             try {
                 Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(c), new int[]{}).iterator();
                 while (it.hasNext()) {
                     Rule rule = it.next();
                     int parent = rule.getParent();
                     
-                    if (!agenda.contains(parent))
-                        agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
+                    if (!iT.agenda.contains(parent))
+                        iT.agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
                     
                     if (printSteps) {
                         System.out.println("Added constant " + getStateForId(rule.getParent()).toString(this));
@@ -397,136 +507,112 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
 
             }
         }
-        IntSet seen = new IntOpenHashSet();
-        seen.addAll(Sets.newHashSet(agenda));
-        int nrMergeChecks = 0;
-        int nrMerges = 0;
-        for (int i = 0; i < agenda.size(); i++) {
-            int a = agenda.get(i);
-            
-            if (printSteps) {
-                System.out.println("Checking " + getStateForId(a).toString(this));
+        iT.seen.addAll(Sets.newHashSet(iT.agenda));
+        return iT;
+    }
+    
+    private InitTuplePriority initAgendaPriority(boolean makeRulesTopDown, boolean printSteps)
+    {
+        InitTuplePriority iT = new InitTuplePriority(this);
+        if (makeRulesTopDown) {
+            rulesTopDown = new HashMap<>();
+            constantAbbreviations = new HashMap<>();
+        }
+        Map<String, Integer> symbols = signature.getSymbolsWithArities();
+        int j = 0;
+        for (String s : symbols.keySet()) {
+            if (symbols.get(s) == 0) {
+                iT.constants.add(s);
+                if (makeRulesTopDown) {
+                    constantAbbreviations.put(s, "C" + String.valueOf(j));
+                    System.out.println("C" + String.valueOf(j) + " represents " + s);
+                    j++;
+                }
+            } else if (symbols.get(s) == 1) {
+                iT.unisymbols.add(s);
+            } else if (symbols.get(s) == 2) {
+                iT.bisymbols.add(s);
             }
-            
-            if (finalStates.contains(a)) {
-                System.out.println("Found final state!  " + getStateForId(a).toString(this));//always print this, i guess
-            }
-            
-            for (String u : unisymbols) {
-                Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(u), new int[]{a}).iterator();
-                if (it.hasNext()) {
+        }
+        for (String c : iT.constants) {
+            try {
+                Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(c), new int[]{}).iterator();
+                while (it.hasNext()) {
                     Rule rule = it.next();
-                    int newBR = rule.getParent();
-                    if (!seen.contains(newBR)) {
-                        agenda.add(newBR);
-                        seen.add(newBR);
-                        if (printSteps) {
-                            System.out.println("Result of " + rule.getLabel(this) + " is: " + getStateForId(newBR).toString(this));
-                        }
+                    int parent = rule.getParent();
+                    
+                    if (!iT.seen.contains(parent))
+                    {
+                        iT.agenda.enqueue(parent);
+                        iT.seen.add(parent);
+                    }
+                    
+                    if (printSteps) {
+                        System.out.println("Added constant " + getStateForId(rule.getParent()).toString(this));
                     }
                     
                     if (makeRulesTopDown) {
                         addRuleTopDown(rule);
                     }
-
-                }
-            }
-            
-            for (String b : bisymbols) {
-                IntList partners = mpFinder.getAllMergePartners(a);
-                
-                for (int d: partners) {
-                    nrMergeChecks++;
-                    Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(b), new int[]{a, d}).iterator();
-                    
-                    if (it.hasNext()) {
-                        nrMerges++;
-                        Rule rule = it.next();
-                        int newBR = rule.getParent();
-                        
-                        if (!seen.contains(newBR)) {
-                            agenda.add(newBR);
-                            seen.add(newBR);
-                            if (printSteps) {
-                                System.out.println("Result of merge with " + getStateForId(d).toString(this) + " is: " + getStateForId(newBR).toString(this));
-                            }
-                        }
-                        
-                        if (makeRulesTopDown) {
-                            addRuleTopDown(rule);
-                        }
-                    }
-                }
-            }
-            mpFinder.insert(a);
-        }
-        System.out.println("Number of Merge Checks: " + String.valueOf(nrMergeChecks));
-        System.out.println("Number of Merges: " + String.valueOf(nrMerges));
-    }
-
-    public void iterateThroughRulesBottomUp1Clean(GraphAlgebra alg)//looks up potential merges with tree structure in MergePartnerFinder
-    {
-        Map<String, Integer> symbols = signature.getSymbolsWithArities();
-        Set<String> constants = new HashSet<>();
-        Set<String> unisymbols = new HashSet<>();
-        Set<String> bisymbols = new HashSet<>();
-        int j = 0;
-        symbols.keySet().stream().forEach((s) -> {
-            if (symbols.get(s) == 0) {
-                constants.add(s);
-            } else if (symbols.get(s) == 1) {
-                unisymbols.add(s);
-            } else if (symbols.get(s) == 2) {
-                bisymbols.add(s);
-            }
-        });
-        IntList agenda = new IntArrayList();
-        constants.stream().forEach((c) -> {
-            try {
-                Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(c), new int[]{}).iterator();
-                while (it.hasNext()) {
-                    Rule rule = it.next();
-                    agenda.add(rule.getParent());//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
                 }
             } catch (java.lang.Exception e) {
 
             }
-        });
-        IntSet seen = new IntOpenHashSet();
-        seen.addAll(Sets.newHashSet(agenda));
-        for (int i = 0; i < agenda.size(); i++) {
-            int a = agenda.get(i);
-            
-            if (finalStates.contains(a)) {
-                System.out.println("Found final state!  " + getStateForId(a).toString(this));//always print this, i guess
-            }
-            
-            unisymbols.stream().map((u) -> getRulesBottomUp(signature.getIdForSymbol(u), new int[]{a}).iterator()).filter((it) -> (it.hasNext())).map((it) -> it.next()).map((rule) -> rule.getParent()).filter((newBR) -> (!seen.contains(newBR))).map((newBR) -> {
-                agenda.add(newBR);
-                return newBR;
-            }).forEach((newBR) -> {
-                seen.add(newBR);
-            });
-            bisymbols.stream().forEach((b) -> {
-                IntList partners = mpFinder.getAllMergePartners(a);
-                for (int d : partners) {
-                    Iterator<Rule> it = getRulesBottomUp(signature.getIdForSymbol(b), new int[]{a, d}).iterator();
+        }
+        return iT;
+    }
+    
+    private int addRuleResults(Iterator<Rule> it, IntList agenda, IntSet seen, int partner, boolean printSteps, boolean makeRulesTopDown)
+    {
+        if (it.hasNext()) {
+            Rule rule = it.next();
+            int newBR = rule.getParent();
 
-                    if (it.hasNext()) {
-                        Rule rule = it.next();
-                        int newBR = rule.getParent();
-                        addBR(seen, agenda, newBR);
-                    }
-                }
-            });
-            mpFinder.insert(a);
+            addBR(seen, agenda, newBR, partner, printSteps);
+
+            if (makeRulesTopDown) {
+                addRuleTopDown(rule);
+            }
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    
+    private int addRuleResults(Iterator<Rule> it, IntPriorityQueue agenda, IntSet seen, int partner, boolean printSteps, boolean makeRulesTopDown)
+    {
+        if (it.hasNext()) {
+            Rule rule = it.next();
+            int newBR = rule.getParent();
+
+            addBR(seen, agenda, newBR, partner, printSteps);
+
+            if (makeRulesTopDown) {
+                addRuleTopDown(rule);
+            }
+            return 1;
+        } else {
+            return 0;
         }
     }
 
-    private void addBR(IntSet seen, IntList agenda, int newBR) {
+    private void addBR(IntSet seen, IntList agenda, int newBR, int partner, boolean printSteps) {
         if (!seen.contains(newBR)) {
             agenda.add(newBR);
             seen.add(newBR);
+            if (printSteps && partner >= 0) {
+                System.out.println("Result of merge with " + getStateForId(partner).toString(this) + " is: " + getStateForId(newBR).toString(this));
+            }
+        }
+    }
+    
+    private void addBR(IntSet seen, IntPriorityQueue agenda, int newBR, int partner, boolean printSteps) {
+        if (!seen.contains(newBR)) {
+            agenda.enqueue(newBR);
+            seen.add(newBR);
+            if (printSteps && partner >= 0) {
+                System.out.println("Result of merge with " + getStateForId(partner).toString(this) + " is: " + getStateForId(newBR).toString(this));
+            }
         }
     }
 
@@ -657,6 +743,25 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
 
     public int getNrSources() {
         return intToSourcename.length;
+    }
+    
+    private class InitTuple{
+        public IntList agenda = new IntArrayList();
+        public IntSet seen = new IntOpenHashSet();
+        public Set<String> constants = new HashSet<>();
+        public Set<String> unisymbols = new HashSet<>();
+        public Set<String> bisymbols = new HashSet<>();
+    }
+    
+    private class InitTuplePriority{
+        public IntPriorityQueue agenda = new IntHeapPriorityQueue();
+        public IntSet seen = new IntOpenHashSet();
+        public Set<String> constants = new HashSet<>();
+        public Set<String> unisymbols = new HashSet<>();
+        public Set<String> bisymbols = new HashSet<>();
+        public InitTuplePriority(SGraphBRDecompositionAutomaton auto){
+            agenda = new IntHeapPriorityQueue(new BRComparator(auto));
+        }
     }
 
 }
