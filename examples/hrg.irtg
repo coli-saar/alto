@@ -1,4 +1,4 @@
- A synchronous grammar that translates between strings and
+ /*A synchronous grammar that translates between strings and
    semantic representations, represented as graphs.
 
    Try parsing this sentence: "the boy wants to go"
