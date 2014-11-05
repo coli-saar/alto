@@ -55,7 +55,7 @@ public class BRUtil {
     public static void makeIncompleteDecompositionAlgebra(GraphAlgebra alg, SGraph graph, int nrSources) throws Exception//only add empty algebra!!
     {
         Signature sig = alg.getSignature();
-        Set<String> sources = new HashSet<String>();
+        Set<String> sources = new HashSet<>();
         for (int i = 0; i < nrSources; i++) {
             sources.add(String.valueOf(i));
         }
@@ -121,29 +121,35 @@ public class BRUtil {
     private static final String testStringSameLabel1 = "(w1<root> / want  :ARG0 (b / boy)  :ARG1 (w2 / want  :ARG0 b  :ARG1 (g / go :ARG0 b)))";
 
     public static void main(String[] args) throws Exception {
-        String input = testString6;
-        int nrSources = 4;
+        String input = testStringBoy5;
+        int nrSources = 3;
         int repetitions = 20;
         boolean onlyCheckAcceptance = true;
         boolean doBenchmark = true;
-        boolean cleanVersion = false;
+        boolean cleanVersion = true;
         boolean showSteps = false;
-        boolean makeRulesTopDown = true;
+        boolean makeRulesTopDown = false;
 
         long startTime = System.currentTimeMillis();
         long stopTime;
         long elapsedTime;
 
+        
         //activate this to create algebra from IRTG:
-        /*InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
         
          GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
-         SGraph graph = alg.parseString(testStringBoy5);*/
+         SGraph graph = alg.parseString(input);
+        
+        
         //activate this to automatically create algebra that has atomic subgraphs:
-        GraphAlgebra alg = new GraphAlgebra();
+        /*GraphAlgebra alg = new GraphAlgebra();
         SGraph graph = alg.parseString(input);
-        makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
+        makeIncompleteDecompositionAlgebra(alg, graph, nrSources);*/
 
+        
+        
+        
         stopTime = System.currentTimeMillis();
         elapsedTime = stopTime - startTime;
         System.out.println("Setup time for  GraphAlgebra is " + elapsedTime + "ms");
@@ -186,6 +192,7 @@ public class BRUtil {
     private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean doBenchmark, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
         SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decompose(graph);
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNrSources(), graph.getGraph().vertexSet().size());
+        
         if (onlyCheckAcceptance) {
             if (instr.doesAccept(alg)) {
                 System.out.println("Accepted!");

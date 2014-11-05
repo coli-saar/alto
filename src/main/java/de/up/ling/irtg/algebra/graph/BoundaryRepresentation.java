@@ -237,7 +237,7 @@ public class BoundaryRepresentation{
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
         return (commonNodesHaveCommonSourceNames(other)
-                //&& sourceNodesAgree(other)// always true!
+                && sourceNodesAgree(other)// always true with MPF!
                 && edgesDisjoint(other) //always true with edge-MPF!
                 && !hasSourcesInsideOther(pwsp, other)
                 && !other.hasSourcesInsideOther(pwsp, this));
