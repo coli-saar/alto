@@ -60,6 +60,11 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
     public String getAppendSymbol() {
         return appendSymbol;
     }
+    
+    @Override
+    protected E evaluate(String label, List<E> childrenValues) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
 
     @Override
     public E evaluate(Tree<String> t) {
@@ -179,8 +184,8 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
 //        return ret;
     }
 
-    @Override
-    public Signature getSignature() {
-        return signature;
-    }
+//    @Override
+//    public Signature getSignature() {
+//        return signature;
+//    }
 }

@@ -20,52 +20,66 @@ import java.util.Set;
 import javax.swing.JComponent;
 
 /**
- * An algebra for TAG derived trees. The elements of this algebra
- * are ranked trees; care must be taken that if two nodes have the
- * same label, then they must have the same number of children.<p>
- * 
- * This algebra defines the tree-combining operations described in Koller and Kuhlmann 2012,
- * "Decomposing TAG Algorithms Using Simple Algebraizations", TAG+ Workshop, which implement
- * the Engelfriet YIELD operation for higher-order tree substitution.
- * The symbols "@" and "*" from the paper are represented by the
- * binary operation "@" and the nullary operation "*" here. All other strings
- * represent the ordinary tree-combining operations, as in {@link TreeAlgebra}.
- * 
+ * An algebra for TAG derived trees. The elements of this algebra are ranked
+ * trees; care must be taken that if two nodes have the same label, then they
+ * must have the same number of children.<p>
+ *
+ * This algebra defines the tree-combining operations described in Koller and
+ * Kuhlmann 2012, "Decomposing TAG Algorithms Using Simple Algebraizations",
+ * TAG+ Workshop, which implement the Engelfriet YIELD operation for
+ * higher-order tree substitution. The symbols "@" and "*" from the paper are
+ * represented by the binary operation "@" and the nullary operation "*" here.
+ * All other strings represent the ordinary tree-combining operations, as in
+ * {@link TreeAlgebra}.
+ *
  * @author koller
  */
 public class TagTreeAlgebra extends Algebra<Tree<String>> {
+
     public static final String C = "@";
     public static final String P1 = "*";
-    
+
     private int _C;
     private int _P1;
-    
-    private Signature signature;
 
+//    private Signature signature;
     public TagTreeAlgebra() {
-        signature = new Signature();
+//        signature = new Signature();
         _C = signature.addSymbol(C, 2);
         _P1 = signature.addSymbol(P1, 0);
         // plus all tree labels with their own arities, see #parseString
     }
 
     @Override
-    public Tree<String> evaluate(final Tree<String> t) {
-        return t.dfs(new TreeVisitor<String, Void, Tree<String>>() {
-            @Override
-            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                if (node.getLabel().equals(C)) {
-                    return childrenValues.get(0).substitute(new Predicate<Tree<String>>() {
-                        public boolean apply(Tree<String> t) {
-                            return t.getLabel().equals(P1);
-                        }
-                    }, childrenValues.get(1));
-                } else {
-                    return Tree.create(node.getLabel(), childrenValues);
+    protected Tree<String> evaluate(String label, List<Tree<String>> childrenValues) {
+        if (label.equals(C)) {
+            return childrenValues.get(0).substitute(new Predicate<Tree<String>>() {
+                public boolean apply(Tree<String> t) {
+                    return t.getLabel().equals(P1);
                 }
-            }
-        });
+            }, childrenValues.get(1));
+        } else {
+            return Tree.create(label, childrenValues);
+        }
     }
+
+//    @Override
+//    public Tree<String> evaluate(final Tree<String> t) {
+//        return t.dfs(new TreeVisitor<String, Void, Tree<String>>() {
+//            @Override
+//            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
+//                if (node.getLabel().equals(C)) {
+//                    return childrenValues.get(0).substitute(new Predicate<Tree<String>>() {
+//                        public boolean apply(Tree<String> t) {
+//                            return t.getLabel().equals(P1);
+//                        }
+//                    }, childrenValues.get(1));
+//                } else {
+//                    return Tree.create(node.getLabel(), childrenValues);
+//                }
+//            }
+//        });
+//    }
 
     @Override
     public TreeAutomaton decompose(Tree<String> value) {
@@ -79,17 +93,17 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
         return ret;
     }
 
-    @Override
-    public Signature getSignature() {
-        return signature;
-    }
-
+//    @Override
+//    public Signature getSignature() {
+//        return signature;
+//    }
     @Override
     public JComponent visualize(Tree<String> object) {
         return new TreePanel(object);
     }
 
     private class YieldDecompositionAutomaton extends TreeAutomaton<Context> {
+
         private Tree<String> tree;
         private Collection<String> allPaths;
         private Collection<String> leafPaths;
@@ -123,14 +137,14 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
             if (labelId == _P1) {
                 if (childStateIds.length == 0) {
                     for (String p : allPaths) {
-                        ret.add(createRule(new Context(p, p), getSignature().resolveSymbolId(labelId), new Context[] {}));
+                        ret.add(createRule(new Context(p, p), getSignature().resolveSymbolId(labelId), new Context[]{}));
                     }
                 }
             } else if (labelId == _C) {
                 if (childStateIds.length == 2) {
                     Context child0 = getStateForId(childStateIds[0]);
                     Context child1 = getStateForId(childStateIds[1]);
-                    
+
                     if (child1.top.equals(child0.bottom)) {
                         ret.add(createRule(addState(new Context(child0.top, child1.bottom)), labelId, childStateIds, 1));
                     }
@@ -181,18 +195,18 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
 
             if (labelId == _P1) {
                 if (parent.top.equals(parent.bottom)) {
-                    ret.add(createRule(parentStateId, labelId, new int[] {}, 1));
+                    ret.add(createRule(parentStateId, labelId, new int[]{}, 1));
                 }
             } else if (labelId == _C) {
                 if (parent.isTree()) {
                     for (String bottom : tree.getAllPathsBelow(parent.top)) {
-                        ret.add(createRule(parentStateId, labelId, new int[] { addState(new Context(parent.top, bottom)), addState(new Context(bottom)) }, 1.0));
+                        ret.add(createRule(parentStateId, labelId, new int[]{addState(new Context(parent.top, bottom)), addState(new Context(bottom))}, 1.0));
                     }
                 } else {
                     if (parent.bottom.startsWith(parent.top)) {
                         for (int length = parent.top.length(); length <= parent.bottom.length(); length++) {
                             String cut = parent.bottom.substring(0, length);
-                            ret.add(createRule(parentStateId, labelId, new int[] { addState(new Context(parent.top, cut)), addState(new Context(cut, parent.bottom)) }, 1));
+                            ret.add(createRule(parentStateId, labelId, new int[]{addState(new Context(parent.top, cut)), addState(new Context(cut, parent.bottom))}, 1));
                         }
                     }
                 }
@@ -222,7 +236,6 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
                         }
                     }
 
-
                 }
             }
 
@@ -236,6 +249,7 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
     }
 
     private static class Context {
+
         public String top, bottom;
 
         public Context(String top, String bottom) {
@@ -283,5 +297,5 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
             return top + "/" + bottom;
         }
     }
-    
+
 }

@@ -10,6 +10,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import de.up.ling.tree.TreeParser;
+import java.util.List;
 import javax.swing.JComponent;
 
 /**
@@ -24,11 +25,16 @@ import javax.swing.JComponent;
  * @author koller
  */
 public class TreeAlgebra extends Algebra<Tree<String>> {
-    protected final Signature signature = new Signature();
+//    protected final Signature signature = new Signature();
 
     @Override
     public Tree<String> evaluate(Tree<String> t) {
         return t;
+    }
+    
+    @Override
+    protected Tree<String> evaluate(String label, List<Tree<String>> childrenValues) {
+        return Tree.create(label, childrenValues);
     }
 
     @Override
@@ -36,10 +42,10 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         return new SingletonAutomaton(value);
     }
 
-    @Override
-    public Signature getSignature() {
-        return signature;
-    }
+//    @Override
+//    public Signature getSignature() {
+//        return signature;
+//    }
 
     @Override
     public JComponent visualize(Tree<String> object) {

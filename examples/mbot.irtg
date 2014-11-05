@@ -1,0 +1,24 @@
+
+interpretation left: de.up.ling.irtg.algebra.TreeAlgebra
+interpretation right: de.up.ling.irtg.algebra.RightMbotAlgebra
+
+S! -> r1(NP, VP)
+[left]  s(?1, ?2)
+[right] s(proj_1(?1), proj_1(?2))
+
+NP -> r2
+[left]  np(john)
+[right] np(hans)
+
+NP -> r3
+[left]  np(mary)
+[right] np(maria)
+
+VP -> r4(V, NP)
+[left]  vp(?1, ?2)
+[right] vp(proj_1(?1), proj_1(?2), proj_2(?1))
+
+V -> r5
+[left]  v(saw)
+[right] **(aux(hat), part(gesehen))
+
