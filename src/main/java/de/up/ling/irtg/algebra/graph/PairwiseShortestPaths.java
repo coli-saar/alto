@@ -23,9 +23,7 @@ public class PairwiseShortestPaths {//this class computes (and stores) pairwise 
     
     public PairwiseShortestPaths(SGraph wholeGraph, SGraphBRDecompositionAutomaton auto)
     {
-        Collection<String> allNodeNames = wholeGraph.getAllNodeNames();
-        int n = allNodeNames.size();
-        graphSize = n;
+        graphSize = wholeGraph.getGraph().vertexSet().size();
         //find the pairwise shortest paths (-> Floyd-Warshall):
         FloydWarshall(wholeGraph, auto);
     }
@@ -63,8 +61,8 @@ public class PairwiseShortestPaths {//this class computes (and stores) pairwise 
                 }
                 else
                 {
-                    oldP[j][l] = n;//this is longer than any shortest path!
-                    oldP[l][j] = n;
+                    oldP[j][l] = n+1;//this is longer than any shortest path!
+                    oldP[l][j] = n+1;
                     //no edges assigned here.
                 }
             }

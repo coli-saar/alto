@@ -21,19 +21,25 @@ public class BRComparator implements IntComparator{
     public int compare (int rep1, int rep2){
         BoundaryRepresentation br1 = auto.getStateForId(rep1);
         BoundaryRepresentation br2 = auto.getStateForId(rep2);
-        if (br1.getSourceCount() > br2.getSourceCount()){
+        if (br1.sourceCount> br2.sourceCount){
             return 1;
-        } else if (br1.getSourceCount() > br2.getSourceCount()){
+        } else if (br1.sourceCount > br2.sourceCount){
             return -1;
-        } else { //then equal number of sources
-            if (br1.innerNodeCount > br2.innerNodeCount){
+        /*} else { //then equal number of sources
+            if (br1.largestSource < br2.largestSource){
                 return -1;
-            } else if (br1.innerNodeCount < br2.innerNodeCount){
-                return 1;
-            } else {
-                return rep1-rep2;
+            } else if (br1.largestSource > br2.largestSource){
+                return 1;*/
+            } else{
+                if (br1.innerNodeCount > br2.innerNodeCount){
+                    return -1;
+                } else if (br1.innerNodeCount < br2.innerNodeCount){
+                    return 1;
+                } else {
+                    return rep1-rep2;
+                }
             }
-        }
+     //   }
     }
     
     @Override

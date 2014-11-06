@@ -123,6 +123,7 @@ public class SGraphBRDecompAutoInstruments {
         for (int i = 0; i < agenda.size(); i++) {
             int a = agenda.get(i);
             
+            
             if (printSteps) {
                 System.out.println("Checking " + auto.getStateForId(a).toString(auto));
             }
@@ -193,7 +194,10 @@ public class SGraphBRDecompAutoInstruments {
         
         
         while (!agenda.isEmpty()) {
-            int a = agenda.dequeue();
+            int a = agenda.dequeueInt();
+            
+            
+            //auto.getStateForId(a).printSources();//for debugging/understanding
             
             if (auto.getFinalStates().contains(a)) {
                 return true;
@@ -201,6 +205,8 @@ public class SGraphBRDecompAutoInstruments {
             
             for (String u : iT.unisymbols) {
                 Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
+                
+                
                 
                 addRuleResults(it, agenda, seen, -1, false, false);
                 
@@ -345,6 +351,10 @@ public class SGraphBRDecompAutoInstruments {
             Rule rule = it.next();
             int newBR = rule.getParent();
 
+            
+            //if (rule.getLabel(auto).startsWith("f"))
+            //    System.out.println("Forget: "+rule.getLabel(auto));
+            
             addBR(seen, agenda, newBR, partner, printSteps);
 
             if (makeRulesTopDown) {

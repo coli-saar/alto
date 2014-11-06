@@ -79,6 +79,10 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
 
         pwsp = new PairwiseShortestPaths(completeGraph, this);
     }
+    
+    public int getNumberNodes(){
+        return completeGraph.getGraph().vertexSet().size();
+    }
 
     private Rule makeRule(BoundaryRepresentation parent, int labelId, int[] childStates) {
         int parentState = addState(parent);

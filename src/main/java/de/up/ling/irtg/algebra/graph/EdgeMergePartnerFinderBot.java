@@ -52,7 +52,7 @@ public class EdgeMergePartnerFinderBot extends MergePartnerFinder {
         else
         {
             BoundaryRepresentation br = auto.getStateForId(rep);//maybe also give this as argument?
-            boolean hasEdge = br.getInBoundaryEdges().contains(new IntBasedEdge(edgeSource, edgeTarget));
+            boolean hasEdge = br.getInBoundaryEdges().contains(edgeSource, edgeTarget);
             
             if (hasEdge){
                 if (children[HASEDGE] != null){
@@ -104,7 +104,7 @@ public class EdgeMergePartnerFinderBot extends MergePartnerFinder {
             return finalSet;
         else{
             BoundaryRepresentation br = auto.getStateForId(rep);//maybe also give this as argument?
-            boolean hasEdge = br.getInBoundaryEdges().contains(new IntBasedEdge(edgeSource, edgeTarget));
+            boolean hasEdge = br.getInBoundaryEdges().contains(edgeSource, edgeTarget);
             
             if (hasEdge){
                 if ((children[NOTHASEDGE] == null))

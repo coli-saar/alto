@@ -119,12 +119,15 @@ public class BRUtil {
     private static final String testStringBoy5 = "(bel1<root> / believe  :ARG0 (b / boy)  :ARG1 (w / want  :ARG0 (g / girl)  :ARG1 (bel2 / believe  :ARG0 b  :ARG1 (l / like  :ARG0 g :ARG1 b))))";//the boy believes that the girl wants him to believe that she likes him.
 
     private static final String testStringSameLabel1 = "(w1<root> / want  :ARG0 (b / boy)  :ARG1 (w2 / want  :ARG0 b  :ARG1 (g / go :ARG0 b)))";
+    private static final String TESTSET = "_testset_";
+    private static final String[] testset = new String[]{testString1, testString3, testString5sub1, testString5, testString6};
+    private static final int[] testSourceNrs = new int[]{2, 2, 3, 4, 3};
 
     public static void main(String[] args) throws Exception {
-        String input = testStringBoy5;
+        String input = testString6;
         int nrSources = 3;
-        int repetitions = 20;
-        boolean onlyCheckAcceptance = true;
+        int repetitions = 0;
+        boolean onlyCheckAcceptance = false;
         boolean doBenchmark = true;
         boolean cleanVersion = true;
         boolean showSteps = false;
@@ -134,53 +137,51 @@ public class BRUtil {
         long stopTime;
         long elapsedTime;
 
-        
-        //activate this to create algebra from IRTG:
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
-        
-         GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
-         SGraph graph = alg.parseString(input);
-        
-        
-        //activate this to automatically create algebra that has atomic subgraphs:
-        /*GraphAlgebra alg = new GraphAlgebra();
-        SGraph graph = alg.parseString(input);
-        makeIncompleteDecompositionAlgebra(alg, graph, nrSources);*/
+        if (input.equals(TESTSET)) {
+            runTest();
+        } else {
+            //activate this to create algebra from IRTG:
+            /*InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
 
-        
-        
-        
-        stopTime = System.currentTimeMillis();
-        elapsedTime = stopTime - startTime;
-        System.out.println("Setup time for  GraphAlgebra is " + elapsedTime + "ms");
-        startTime = System.currentTimeMillis();
+             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
+             SGraph graph = alg.parseString(input);*/
+            //activate this to automatically create algebra that has atomic subgraphs:
+            GraphAlgebra alg = new GraphAlgebra();
+            SGraph graph = alg.parseString(input);
+            makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
 
-        runIteration(graph, alg, onlyCheckAcceptance, doBenchmark, cleanVersion, showSteps, makeRulesTopDown);
-
-        if (doBenchmark) {
             stopTime = System.currentTimeMillis();
-            long elapsedTime0 = stopTime - startTime;
+            elapsedTime = stopTime - startTime;
+            System.out.println("Setup time for  GraphAlgebra is " + elapsedTime + "ms");
             startTime = System.currentTimeMillis();
 
-            for (int i = 0; i < repetitions; i++) {
-                runIteration(graph, alg, onlyCheckAcceptance, doBenchmark, cleanVersion, showSteps, makeRulesTopDown);
+            runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
+
+            if (doBenchmark) {
+                stopTime = System.currentTimeMillis();
+                long elapsedTime0 = stopTime - startTime;
+                startTime = System.currentTimeMillis();
+
+                for (int i = 0; i < repetitions; i++) {
+                    runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
+                }
+
+                stopTime = System.currentTimeMillis();
+                long elapsedTime1 = stopTime - startTime;
+
+                startTime = System.currentTimeMillis();
+
+                for (int i = 0; i < repetitions; i++) {
+                    runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
+                }
+
+                stopTime = System.currentTimeMillis();
+                long elapsedTime2 = stopTime - startTime;
+                System.out.println("Decomposition time for first run is " + elapsedTime0 + "ms");
+                System.out.println("Decomposition time for next " + repetitions + " is " + elapsedTime1 + "ms");
+                System.out.println("Decomposition time for further next " + repetitions + " is " + elapsedTime2 + "ms");
+
             }
-
-            stopTime = System.currentTimeMillis();
-            long elapsedTime1 = stopTime - startTime;
-
-            startTime = System.currentTimeMillis();
-
-            for (int i = 0; i < repetitions; i++) {
-                runIteration(graph, alg, onlyCheckAcceptance, doBenchmark, cleanVersion, showSteps, makeRulesTopDown);
-            }
-
-            stopTime = System.currentTimeMillis();
-            long elapsedTime2 = stopTime - startTime;
-            System.out.println("Decomposition time for first run is " + elapsedTime0 + "ms");
-            System.out.println("Decomposition time for next " + repetitions + " is " + elapsedTime1 + "ms");
-            System.out.println("Decomposition time for further next " + repetitions + " is " + elapsedTime2 + "ms");
-
         }
 
         //auto.printAllRulesTopDown();
@@ -189,10 +190,10 @@ public class BRUtil {
         //System.out.println(res);
     }
 
-    private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean doBenchmark, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
+    private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
         SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decompose(graph);
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNrSources(), graph.getGraph().vertexSet().size());
-        
+
         if (onlyCheckAcceptance) {
             if (instr.doesAccept(alg)) {
                 System.out.println("Accepted!");
@@ -204,6 +205,64 @@ public class BRUtil {
                 instr.iterateThroughRulesBottomUp1Clean(alg);
             } else {
                 instr.iterateThroughRulesBottomUp1(alg, showSteps, makeRulesTopDown);
+            }
+        }
+    }
+
+    private static void runTest() throws Exception {
+        int nrRepetitions = 10;
+        int warmupRepetitions = 5;
+        Set<Integer> noFullDecomposition = new HashSet<>();
+        noFullDecomposition.add(3);
+        noFullDecomposition.add(4);
+                
+        long startTime;
+        long stopTime;
+        long elapsedTime;
+        System.out.println("Starting test with "+nrRepetitions+" repetitions.");
+        
+        GraphAlgebra[] alg = new GraphAlgebra[testset.length];
+        SGraph[] graph = new SGraph[testset.length];
+        for (int i = 0; i < testset.length; i++) {
+            alg[i] = new GraphAlgebra();
+            graph[i] = alg[i].parseString(testset[i]);
+            makeIncompleteDecompositionAlgebra(alg[i], graph[i], testSourceNrs[i]);
+        }
+        
+        
+        //warmup
+        for (int i = 0; i < testset.length; i++) {
+            for (int j = 0; j<warmupRepetitions; j++){
+                runIteration(graph[i], alg[i], true, true, false, false);
+            }
+            if (!noFullDecomposition.contains(i)){
+                for (int j = 0; j<warmupRepetitions; j++){
+                    runIteration(graph[i], alg[i], false, true, false, false);
+                }
+            }
+        }
+        
+        
+        //actual test
+        for (int i = 0; i < testset.length; i++) {
+            
+            startTime = System.currentTimeMillis();
+            for (int j = 0; j<nrRepetitions; j++){
+                runIteration(graph[i], alg[i], true, true, false, false);
+            }
+            stopTime = System.currentTimeMillis();
+            elapsedTime = stopTime - startTime;
+            System.out.println("doesAccept for i="+i+"; Time ="+elapsedTime);
+            
+            
+            if (!noFullDecomposition.contains(i)){
+                startTime = System.currentTimeMillis();
+                for (int j = 0; j<nrRepetitions; j++){
+                    runIteration(graph[i], alg[i], false, true, false, false);
+                }
+                stopTime = System.currentTimeMillis();
+                elapsedTime = stopTime - startTime;
+                System.out.println("iterateThroughRules1 for i="+i+"; Time ="+elapsedTime);
             }
         }
     }
