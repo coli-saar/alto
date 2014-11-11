@@ -43,13 +43,13 @@ import java.util.*;
  */
 public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
 
-    private TreeAutomaton<LeftState> left;
-    private TreeAutomaton<RightState> right;
+    TreeAutomaton<LeftState> left;
+    TreeAutomaton<RightState> right;
     private static final boolean DEBUG = false;
     private static final boolean NOISY = false; // more detailed debugging
     private int[] labelRemap;
-    private Int2IntMap stateToLeftState;
-    private Int2IntMap stateToRightState;
+    Int2IntMap stateToLeftState;
+    Int2IntMap stateToRightState;
     private long[] ckyTimestamp = new long[10];
     private StateDiscoveryListener stateDiscoveryListener;
 
@@ -87,7 +87,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * @param leftLabelId
      * @return
      */
-    private int remapLabel(int leftLabelId) {
+    protected int remapLabel(int leftLabelId) {
         return labelRemap[leftLabelId];
     }
 
@@ -421,7 +421,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             long iterations = 0;
             while (!agenda.isEmpty()) {
                 
-                List<Integer> agCopy = new ArrayList<>(agenda);
+//                List<Integer> agCopy = new ArrayList<>(agenda);
 //                System.err.println("agenda: " + Util.mapList(agCopy, x -> getStateForId(x)));
                 
                 int state = agenda.remove();
@@ -488,7 +488,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         }
     }
 
-    private int addStatePair(int leftState, int rightState) {
+    protected int addStatePair(int leftState, int rightState) {
 //        System.err.println("make state pair for " + left.getStateForId(leftState) + " and " + right.getStateForId(rightState));
 
         int ret = stateMapping.get(rightState, leftState);
@@ -520,7 +520,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //        return ret;
     }
 
-    private Rule combineRules(Rule leftRule, Rule rightRule) {
+    protected Rule combineRules(Rule leftRule, Rule rightRule) {
         int[] childStates = new int[leftRule.getArity()];
 
         for (int i = 0; i < leftRule.getArity(); i++) {
