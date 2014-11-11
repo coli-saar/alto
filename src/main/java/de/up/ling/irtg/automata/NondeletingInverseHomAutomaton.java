@@ -9,13 +9,13 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -69,8 +69,6 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
     public IntSet getAllStates() {
         return rhsAutomaton.getAllStates();
     }
-    
-    
 
     public Set<Rule> getRulesBottomUpFromExplicitWithTermID(int termID, int[] childStates) {
         int childHash = Arrays.hashCode(childStates);
@@ -116,6 +114,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
         }
     }
 
+    /*
     @Override
     protected void storeRule(Rule rule) {
 //        if (useCachedRuleBottomUpWithTermID(hom.getTermID(rule.getLabel()), rule.getChildren())) {
@@ -169,17 +168,35 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
 //        unprocessedUpdatesForRulesForRhsState.add(rule);
         super.storeRule(rule);
     }
+    */
 
     @Override
-    public Set<Rule> getRulesBottomUp(int label, final int[] childStates) {
+    public Collection<Rule> getRulesBottomUp(int label, final int[] childStates) {
         if (debug) {
             System.err.println("Handling label " + label + " and CS : " + childStatesToString(childStates));
         }
+        
+        
+        
         // lazy bottom-up computation of bottom-up rules
         int termID = hom.getTermID(label);
-        if (useCachedRuleBottomUpWithTermID(termID, childStates)) {
-            return getRulesBottomUpFromExplicitWithTermID(termID, childStates);
-        } else {
+        
+        if( useCachedRuleBottomUp(label, childStates)) {
+            return getRulesBottomUpFromExplicit(label, childStates);
+        }
+        
+        
+        // TODO - this code caused multiple copies of the same rule to be generated,
+        // one for each label with the same termID. This is obviously wrong.
+        // That said, it would probably okay to only cache a single rule for
+        // each term ID, and then replace the labels by the requested label
+        // on the fly. We should do this sometime.
+        
+//        if (useCachedRuleBottomUpWithTermID(termID, childStates)) {
+//            return getRulesBottomUpFromExplicitWithTermID(termID, childStates);
+        
+        
+        else {
             Set<Rule> ret = new HashSet<Rule>();
 
             IntIterable resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, f -> {
@@ -197,7 +214,10 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
                 for (int newLabel : hom.getLabelSetForLabel(label)) {
                     Rule rule = createRule(r, newLabel, childStates, 1);
                     storeRule(rule);
-                    ret.add(rule);
+
+                    if (newLabel == label) {
+                        ret.add(rule);
+                    }
                 }
             }
 

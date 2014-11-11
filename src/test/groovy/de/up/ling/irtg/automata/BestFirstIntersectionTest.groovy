@@ -27,17 +27,25 @@ import de.up.ling.irtg.InterpretedTreeAutomaton
  */
 class BestFirstIntersectionTest {
     @Test
-    public void testParseIrtg() {
+    public void testParseIrtgOneReading() {
         InterpretedTreeAutomaton irtg = pi(IRTG)
         StringAlgebra alg = (StringAlgebra) irtg.getInterpretation("i").getAlgebra()
         Homomorphism hom = irtg.getInterpretation("i").getHomomorphism()
         
         List<String> words = alg.parseString("john watches the woman with the telescope")
-        TreeAutomaton decomp = alg.decompose(words).inverseHomomorphism(hom)
+        TreeAutomaton<StringAlgebra.Span> decomp = alg.decompose(words).inverseHomomorphism(hom)
         
         EdgeEvaluator eval = new EdgeEvaluator() {
             public double evaluate(int outputState, IntersectionAutomaton auto) {
-                return 0;
+                int rightState = auto.getRightState(outputState)
+                StringAlgebra.Span span = decomp.getStateForId(rightState)
+                
+                // prioritize the VP from 1-4, i.e. the VP-PP reading
+                if( span.start == 1 && span.end == 4 )  {
+                    return 100;
+                } else {
+                    return 0;
+                }
             }
         }
         
@@ -47,6 +55,44 @@ class BestFirstIntersectionTest {
         System.err.println(inter)
         
         assert inter.countTrees() == 1
+        assertEquals(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"), inter.viterbi())
+    }
+    
+    @Test
+    public void testParseIrtgOtherReading() {
+        InterpretedTreeAutomaton irtg = pi(IRTG)
+        StringAlgebra alg = (StringAlgebra) irtg.getInterpretation("i").getAlgebra()
+        Homomorphism hom = irtg.getInterpretation("i").getHomomorphism()
+        
+        List<String> words = alg.parseString("john watches the woman with the telescope")
+        TreeAutomaton<StringAlgebra.Span> decomp = alg.decompose(words).inverseHomomorphism(hom)
+        
+        EdgeEvaluator eval = new EdgeEvaluator() {
+            
+            public double evaluate(int outputState, IntersectionAutomaton auto) {
+                int rightState = auto.getRightState(outputState)
+                StringAlgebra.Span span = decomp.getStateForId(rightState)
+                
+                // prioritize the NP from 2-7, i.e. the N-PP reading
+                if( span.start == 2 && span.end == 7 )  {
+                    return 100;
+                // deprioritize both the VP from 1-4 and the PP from 4-7, otherwise the
+                // PP,4-7 can be popped off the agenda and used to combine with the VP,1-4.
+                } else if( (span.start == 1 && span.end == 4) || (span.start == 4 && span.end == 7)) {
+                    return -100;
+                } else {
+                    return 0;
+                }
+            }
+        }
+        
+        TreeAutomaton inter = new BestFirstIntersectionAutomaton(irtg.getAutomaton(), decomp, eval)
+        inter.makeAllRulesExplicit()
+        
+        System.err.println(inter)
+        
+        assert inter.countTrees() == 1
+        assertEquals(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"), inter.viterbi())
     }
     
     

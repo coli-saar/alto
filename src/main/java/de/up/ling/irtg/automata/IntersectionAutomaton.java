@@ -74,7 +74,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
         stateMapping = new IntInt2IntMap();
     }
-    
+
     public void setStateDiscoveryListener(StateDiscoveryListener listener) {
         this.stateDiscoveryListener = listener;
     }
@@ -90,40 +90,53 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     protected int remapLabel(int leftLabelId) {
         return labelRemap[leftLabelId];
     }
-    
+
     /**
-     * Returns the state in the left automaton for this outputState.
-     * The outputState is the int-ID of some state in the intersection
-     * automaton. It represents a pair (p,q) of a state p in the left
-     * automaton and a state q in the right automaton. This method
-     * returns the int-ID of p.
-     * 
+     * Returns the state in the left automaton for this outputState. The
+     * outputState is the int-ID of some state in the intersection automaton. It
+     * represents a pair (p,q) of a state p in the left automaton and a state q
+     * in the right automaton. This method returns the int-ID of p.
+     *
      * @param outputState
-     * @return 
+     * @return
      */
     public int getLeftState(int outputState) {
         return stateToLeftState.get(outputState);
     }
-    
+
     /**
-     * Returns the state in the right automaton for this outputState.
-     * The outputState is the int-ID of some state in the intersection
-     * automaton. It represents a pair (p,q) of a state p in the left
-     * automaton and a state q in the right automaton. This method
-     * returns the int-ID of q.
-     * 
+     * Returns the state in the right automaton for this outputState. The
+     * outputState is the int-ID of some state in the intersection automaton. It
+     * represents a pair (p,q) of a state p in the left automaton and a state q
+     * in the right automaton. This method returns the int-ID of q.
+     *
      * @param outputState
-     * @return 
+     * @return
      */
     public int getRightState(int outputState) {
         return stateToRightState.get(outputState);
     }
-    
+
     protected String ppstate(int outputState) {
         int leftState = getLeftState(outputState);
         int rightState = getRightState(outputState);
-        
+
         return outputState + "(" + leftState + "/" + left.getStateForId(leftState) + ", " + rightState + "/" + right.getStateForId(rightState) + ")";
+    }
+
+    protected String pprule(Rule rule) {
+        StringBuilder buf = new StringBuilder();
+
+        buf.append(ppstate(rule.getParent()));
+        buf.append(" -> ");
+        buf.append(getSignature().resolveSymbolId(rule.getLabel()));
+        buf.append("(");
+        for (int i = 0; i < rule.getArity(); i++) {
+            buf.append(ppstate(rule.getChildren()[i]));
+            buf.append(" ");
+        }
+        buf.append(")");
+        return buf.toString();
     }
 
     @Override
@@ -455,51 +468,60 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             long unsuccessful = 0;
             long iterations = 0;
             while (!agenda.isEmpty()) {
-                
-//                List<Integer> agCopy = new ArrayList<>(agenda);
-//                System.err.println("agenda: " + Util.mapList(agCopy, x -> getStateForId(x)));
-                
                 int state = agenda.remove();
+                int dequeuedLeftState = getLeftState(state);    // left component p of dequeued state
+                int dequeuedRightState = getRightState(state);  // right component q of dequeued state
+
                 List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
 
-//                System.err.println("pop: " + state);
-//                System.err.println("leftrules: " + Rule.rulesToStrings(possibleRules, left));
+                // iterate over all left rules in which p is a child
                 for (Rule leftRule : possibleRules) {
-//                    System.err.println("consider leftrule: " + leftRule.toString(left));
+                    // iterate over all child positions in which the rule has p
+                    for (int i = 0; i < leftRule.getArity(); i++) {
+                        if (leftRule.getChildren()[i] == dequeuedLeftState) {
+                            
+                            // Collect tuple (Q1, ..., Qn), where Qj is the set
+                            // of partner states of the j-th child of the leftRule.
+                            // The exception is that if j == i, i.e. we are looking
+                            // at the selected occurrence of p as a child in the rule,
+                            // we constrain Qj to {q}.
+                            List<Set<Integer>> partnerStates = new ArrayList<Set<Integer>>();
 
-                    List<Set<Integer>> partnerStates = new ArrayList<Set<Integer>>();
-                    for (int leftState : leftRule.getChildren()) {
-                        partnerStates.add(partners.get(leftState));
-                    }
+                            for (int j = 0; j < leftRule.getArity(); j++) {
+                                if (i == j) {
+                                    partnerStates.add(Collections.singleton(dequeuedRightState));
+                                } else {
+                                    partnerStates.add(partners.get(leftRule.getChildren()[j]));
+                                }
+                            }
+                            
+                            // iterate over state tuples Q1 x ... x Qn and look for right rules
+                            CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
+                            List<Integer> newStates = new ArrayList<Integer>();
+                            while (it.hasNext()) {
+                                iterations++;
 
-                    CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
-                    List<Integer> newStates = new ArrayList<Integer>();
-                    while (it.hasNext()) {
-                        iterations++;
+                                List<Integer> partnersHere = it.next();
+                                Iterable<Rule> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
 
-                        List<Integer> partnersHere = it.next();
-//                        System.err.println("right partners: " + partnersHere);
+                                if (!rightRules.iterator().hasNext()) {
+                                    unsuccessful++;
+                                }
 
-                        Iterable<Rule> rightRules = right.getRulesBottomUp(remapLabel(leftRule.getLabel()), partnersHere);
-//                        System.err.println("-> right rules: " + Rule.rulesToStrings(rightRules, right));
+                                for (Rule rightRule : rightRules) {
+                                    Rule rule = combineRules(leftRule, rightRule);
+                                    storeRule(rule);
 
-                        if (!rightRules.iterator().hasNext()) {
-                            unsuccessful++;
-                        }
-
-                        for (Rule rightRule : rightRules) {
-                            Rule rule = combineRules(leftRule, rightRule);
-//                            System.err.println("** add combined rule: " + rule.toString(this));
-                            storeRule(rule);
-
-                            if (seenStates.add(rule.getParent())) {
-                                newStates.add(rule.getParent());
+                                    if (seenStates.add(rule.getParent())) {
+                                        newStates.add(rule.getParent());
+                                    }
+                                }
+                            }
+                            for (int newState : newStates) {
+                                agenda.offer(newState);
+                                partners.put(stateToLeftState.get(newState), stateToRightState.get(newState));
                             }
                         }
-                    }
-                    for (int newState : newStates) {
-                        agenda.offer(newState);
-                        partners.put(stateToLeftState.get(newState), stateToRightState.get(newState));
                     }
                 }
             }
@@ -517,7 +539,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //            System.err.println("after run: " + explicitRules.size());
 //            System.err.println(toString());
             getStateInterner().setTrustingMode(false);
-            
+
 //            getFinalStates();
 //            System.err.println(this);
         }
@@ -535,8 +557,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
             stateToLeftState.put(ret, leftState);
             stateToRightState.put(ret, rightState);
-            
-            if( stateDiscoveryListener != null ) {
+
+            if (stateDiscoveryListener != null) {
                 stateDiscoveryListener.accept(ret);
             }
 
@@ -951,6 +973,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
     @FunctionalInterface
     public static interface StateDiscoveryListener {
+
         public void accept(int state);
     }
 }
