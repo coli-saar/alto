@@ -25,15 +25,11 @@ import java.util.Set;
  */
 public class BestFirstIntersectionAutomaton <LeftState, RightState> extends IntersectionAutomaton<LeftState, RightState> {
     private static final boolean DEBUG = false;
-    private EdgeEvaluator evaluator;
-    
-    @FunctionalInterface
-    public static interface EdgeEvaluator {
-        public double evaluate(int leftStateID, int rightStateID);
-    }
+    private final EdgeEvaluator evaluator;
     
     public BestFirstIntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right, EdgeEvaluator evaluator) {
         super(left, right);
+        this.evaluator = evaluator;
     }
     
     // TODO - this is super inefficient and should be improved!
@@ -41,8 +37,8 @@ public class BestFirstIntersectionAutomaton <LeftState, RightState> extends Inte
     private class EdgeEvaluatingIntComparator implements IntComparator {
         @Override
         public int compare(int outstate1, int outstate2) {
-            double eval1 = evaluator.evaluate(stateToLeftState.get(outstate1), stateToRightState.get(outstate2));
-            double eval2 = evaluator.evaluate(stateToLeftState.get(outstate2), stateToRightState.get(outstate2));
+            double eval1 = evaluator.evaluate(outstate1, BestFirstIntersectionAutomaton.this);
+            double eval2 = evaluator.evaluate(outstate2, BestFirstIntersectionAutomaton.this);
             return Double.compare(eval1, eval2);
         }
 
@@ -89,13 +85,14 @@ public class BestFirstIntersectionAutomaton <LeftState, RightState> extends Inte
                     for (Rule rightRule : preterminalRulesForLabel) {
                         Rule rule = combineRules(leftRule, rightRule);
                         storeRule(rule);
+                        evaluator.ruleAdded(rule);
+                        
                         agenda.enqueue(rule.getParent());
                         seenStates.add(rule.getParent());
                         partners.put(leftRule.getParent(), rightRule.getParent());
                     }
                 }
             }
-
             
             // compute rules and states bottom-up
             long unsuccessful = 0;
@@ -104,6 +101,10 @@ public class BestFirstIntersectionAutomaton <LeftState, RightState> extends Inte
             agendaLoop:
             while (!agenda.isEmpty()) {                
                 int state = agenda.dequeueInt();
+                
+                if( DEBUG ) {
+                    System.err.println("dequeued: " + ppstate(state));
+                }
                 
                 List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
 
@@ -130,6 +131,7 @@ public class BestFirstIntersectionAutomaton <LeftState, RightState> extends Inte
                         for (Rule rightRule : rightRules) {
                             Rule rule = combineRules(leftRule, rightRule);
                             storeRule(rule);
+                            evaluator.ruleAdded(rule);
                             
                             if( left.getFinalStates().contains(leftRule.getParent())
                                     && right.getFinalStates().contains(rightRule.getParent())) {

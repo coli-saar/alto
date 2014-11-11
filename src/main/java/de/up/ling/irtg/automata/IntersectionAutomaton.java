@@ -90,6 +90,41 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     protected int remapLabel(int leftLabelId) {
         return labelRemap[leftLabelId];
     }
+    
+    /**
+     * Returns the state in the left automaton for this outputState.
+     * The outputState is the int-ID of some state in the intersection
+     * automaton. It represents a pair (p,q) of a state p in the left
+     * automaton and a state q in the right automaton. This method
+     * returns the int-ID of p.
+     * 
+     * @param outputState
+     * @return 
+     */
+    public int getLeftState(int outputState) {
+        return stateToLeftState.get(outputState);
+    }
+    
+    /**
+     * Returns the state in the right automaton for this outputState.
+     * The outputState is the int-ID of some state in the intersection
+     * automaton. It represents a pair (p,q) of a state p in the left
+     * automaton and a state q in the right automaton. This method
+     * returns the int-ID of q.
+     * 
+     * @param outputState
+     * @return 
+     */
+    public int getRightState(int outputState) {
+        return stateToRightState.get(outputState);
+    }
+    
+    protected String ppstate(int outputState) {
+        int leftState = getLeftState(outputState);
+        int rightState = getRightState(outputState);
+        
+        return outputState + "(" + leftState + "/" + left.getStateForId(leftState) + ", " + rightState + "/" + right.getStateForId(rightState) + ")";
+    }
 
     @Override
     public boolean isBottomUpDeterministic() {
