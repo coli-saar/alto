@@ -5,10 +5,12 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Sets;
-import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
+import java.io.FileInputStream;
 import java.io.StringReader;
 import java.util.Collections;
 import java.util.HashSet;
@@ -48,7 +50,7 @@ import javax.swing.JComponent;
  * 
  * @author koller
  */
-public class GraphAlgebra extends Algebra<SGraph> {
+public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     // operation symbols of this algebra
     public static final String OP_MERGE = "merge";
     public static final String OP_RENAME = "r_";
@@ -59,7 +61,8 @@ public class GraphAlgebra extends Algebra<SGraph> {
 
     @Override
     public TreeAutomaton decompose(SGraph value) {
-        return new SGraphDecompositionAutomaton(value, this, getSignature());
+        //return new SGraphDecompositionAutomaton(value, this, getSignature());
+        return new SGraphBRDecompositionAutomaton(value, this, getSignature());
     }
 
     static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {
@@ -172,6 +175,21 @@ public class GraphAlgebra extends Algebra<SGraph> {
         ret.put("ISI-style AMR", object.toIsiAmrString());
 
         return ret;
+    }
+    
+    public static void main(String[] args ) throws Exception {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
+        
+        GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
+        SGraph graph = alg.parseString("(w / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))");
+        
+        System.out.println(graph);
+        
+        TreeAutomaton auto = alg.decompose(graph);
+        
+        System.out.println(auto.getSignature());
+        
+        System.out.println(auto.toStringBottomUp());
     }
 
 }
