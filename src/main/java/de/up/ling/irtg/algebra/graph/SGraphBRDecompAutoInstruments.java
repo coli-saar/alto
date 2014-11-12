@@ -152,7 +152,7 @@ public class SGraphBRDecompAutoInstruments {
             
             mpFinder.insert(a);
         }
-        //mpFinder.print("MPF: ",0);
+        mpFinder.print("MPF: ",0);
         System.out.println("Number of Merge Checks: " + String.valueOf(nrMergeChecks));
         System.out.println("Number of Merges: " + String.valueOf(nrMerges));
         System.out.println("Number of Parses: " + String.valueOf(nrParses));

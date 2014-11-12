@@ -135,8 +135,8 @@ public class BRUtil {
         boolean showSteps = false;
         boolean makeRulesTopDown = false;
         Set<Integer> noFullDecomposition = new HashSet<>();
-        noFullDecomposition.add(3);
-        noFullDecomposition.add(4);
+        //noFullDecomposition.add(3);
+        //noFullDecomposition.add(4);
 
         long startTime = System.currentTimeMillis();
         long stopTime;

@@ -121,8 +121,8 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         } else {
             
             if (sourcesRemaining == 1) {
-                children[index] = new StorageMPF(auto);
-                //children[index] = new EdgeIntersectionMPF((hasAll || (index == ALL)), newVertices, auto);
+                //children[index] = new StorageMPF(auto);
+                children[index] = new EdgeIntersectionMPF((hasAll || (index == ALL)), newVertices, auto);
             } else {
                 children[index] = new DynamicMergePartnerFinder(sourceNr + 1, sourcesRemaining - 1, children.length - 2, auto, (hasAll || (index == ALL)), newVertices);
             }

@@ -30,11 +30,17 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
     private final Long2ObjectMap<BitSet> notHasEdge;
     private final long[] relevantEdges;
     private final SGraphBRDecompositionAutomaton auto;
+    private final IntList allBdryReps;
+    private final IntSet vertices;
+    private final boolean hasAll;
 
     public EdgeIntersectionMPF(boolean hasAll, IntSet vertices, SGraphBRDecompositionAutomaton auto) {
         this.auto = auto;
+        this.vertices = vertices;
+        this.hasAll = hasAll;
         localToGlobal = new IntArrayList();
         notHasEdge = new Long2ObjectOpenHashMap<>();
+        allBdryReps = new IntArrayList();
 
         if (hasAll) {
             relevantEdges = auto.getAllEdges();
@@ -45,6 +51,7 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
 
     @Override
     public void insert(int rep) {
+        allBdryReps.add(rep);
         int localIndex = localToGlobal.size();
         localToGlobal.add(rep);
         LongBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
@@ -58,29 +65,40 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
                     BitSet newBitSet = new BitSet();
                     newBitSet.set(localIndex);
                     notHasEdge.put(iLong, newBitSet);
+                    if (notHasEdge.get(iLong).isEmpty()){
+                        System.out.println("Error!");
+                    }
                 }
             }
         }
+        //debugCheckBitSets();
+        
     }
+  
 
     @Override
     public IntList getAllMergePartners(int rep) {
         LongBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
         LongBasedEdgeSet relevantInBdryEdges = new LongBasedEdgeSet();
+        
         for (long d : relevantEdges){
             if (inBEdges.contains(d)){
                 relevantInBdryEdges.add(d);
             }
         }
+        
         if (relevantInBdryEdges.isEmpty()) {
             return getAll();//should never happen in this implementation though.
         } else {
             List<BitSet> relevantSets = relevantInBdryEdges.getCorrespondingBitSets(notHasEdge);
 
             if (relevantSets.isEmpty()) {
-                return new IntArrayList();
+                IntList res = new IntArrayList();
+                //debugCheckBitSets();
+                //debugFindMissingBRs(rep, res);
+                return res;
             } else {
-                BitSet intersection = relevantSets.get(0);
+                BitSet intersection = (BitSet)relevantSets.get(0).clone();
                 for (int i = 1; i < relevantSets.size(); i++) {
                     intersection.and(relevantSets.get(i));
                 }
@@ -90,7 +108,28 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
                         res.add(localToGlobal.get(i));
                     }
                 }
+                //debugCheckBitSets();
+                //debugFindMissingBRs(rep, res);
                 return res;
+            }
+        }
+    }
+    
+    private void debugFindMissingBRs(int rep, IntList found){
+        BoundaryRepresentation bdryRep = auto.getStateForId(rep);
+        for (int i : allBdryReps){
+            BoundaryRepresentation iBdryRep = auto.getStateForId(i);
+            if (!found.contains(i)&&bdryRep.edgesDisjoint(iBdryRep)){
+                System.out.println("diff found: " + iBdryRep.toString(auto));
+            }
+        }
+    }
+    
+      
+    private void debugCheckBitSets(){
+        for (BitSet bitset : notHasEdge.values()){
+            if (bitset.isEmpty()){
+                System.out.println("Error!");
             }
         }
     }
@@ -98,6 +137,7 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
     private IntList getAll() {
         ObjectCollection<BitSet> relevantSets = notHasEdge.values();
         if (relevantSets.isEmpty()) {
+        //debugCheckBitSets();
             return new IntArrayList();
         } else {
             Iterator<BitSet> it = relevantSets.iterator();
@@ -111,6 +151,7 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
                     res.add(localToGlobal.get(i));
                 }
             }
+        //debugCheckBitSets();
             return res;
         }
     }
@@ -133,6 +174,7 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
             content.append("(" + String.valueOf(NumbersCombine.getFirst(l)) + ", " + String.valueOf(NumbersCombine.getSecond(l)) + "), ");
         }
         System.out.println(indenter.toString() + prefix + content);
+        //debugCheckBitSets();
     }
 
 }
