@@ -83,7 +83,7 @@ public class GuiUtils {
         SwingUtilities.invokeLater(() -> {
             String s = label + ":\n" + error.getMessage() + "\n(" + error.getClass() + ")";
             JOptionPane.showMessageDialog(parent, s, "Error", JOptionPane.ERROR_MESSAGE);
-//            error.printStackTrace(System.err);
+            error.printStackTrace(System.err);
 
         });
 

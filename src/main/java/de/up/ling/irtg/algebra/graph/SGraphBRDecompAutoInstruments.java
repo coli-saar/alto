@@ -55,7 +55,7 @@ public class SGraphBRDecompAutoInstruments {
         List<BoundaryRepresentation> agenda = new ArrayList<>();
         for (String c : constants) {
             try {
-                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
                 while (it.hasNext()) {
                     BoundaryRepresentation newBR = auto.getStateForId(it.next().getParent());
                     agenda.add(newBR);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
@@ -80,7 +80,7 @@ public class SGraphBRDecompAutoInstruments {
                 System.out.println("Found final state!  " + a.toString());//always print auto, i guess
             }
             for (String u : unisymbols) {
-                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{auto.getIdForState(a)}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{auto.getIdForState(a)}).iterator();
                 if (it.hasNext()) {
                     Rule rule = it.next();
                     BoundaryRepresentation newBR = auto.getStateForId(rule.getParent());
@@ -95,7 +95,7 @@ public class SGraphBRDecompAutoInstruments {
             }
             for (String b : bisymbols) {
                 for (BoundaryRepresentation d : done) {
-                    Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{auto.getIdForState(a), auto.getIdForState(d)}).iterator();
+                    Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{auto.getIdForState(a), auto.getIdForState(d)}).iterator();
                     if (it.hasNext()) {
                         BoundaryRepresentation newBR = auto.getStateForId(it.next().getParent());
                         if (!seen.contains(newBR)) {
@@ -133,7 +133,7 @@ public class SGraphBRDecompAutoInstruments {
             }
             
             for (String u : iT.unisymbols) {
-                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
                 
                 addRuleResults(it, agenda, seen, -1, printSteps, makeRulesTopDown);
                 
@@ -144,7 +144,7 @@ public class SGraphBRDecompAutoInstruments {
                 
                 for (int d: partners) {
                     nrMergeChecks++;
-                    Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
+                    Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
                     
                     nrMerges += addRuleResults(it, agenda, seen, d, printSteps, makeRulesTopDown);
                 }
@@ -174,13 +174,13 @@ public class SGraphBRDecompAutoInstruments {
             //    nrParses++;
             //}
             
-            iT.unisymbols.stream().map((u) -> auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator()).forEach((it) -> {
+            iT.unisymbols.stream().map((u) -> auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator()).forEach((it) -> {
                 addRuleResults(it, agenda, seen, -1, false, false);
             });
             
             iT.bisymbols.stream().forEach((b) -> {
                 IntList partners = mpFinder.getAllMergePartners(a);
-                partners.stream().map((d) -> auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator()).forEach((it) -> {
+                partners.stream().map((d) -> auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator()).forEach((it) -> {
                     addRuleResults(it, agenda, seen, -1, false, false);
                 });
             });
@@ -208,7 +208,7 @@ public class SGraphBRDecompAutoInstruments {
             }
             
             for (String u : iT.unisymbols) {
-                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
                 
                 
                 
@@ -220,7 +220,7 @@ public class SGraphBRDecompAutoInstruments {
                 IntList partners = mpFinder.getAllMergePartners(a);
                 
                 for (int d: partners) {
-                    Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
+                    Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
                     
                     addRuleResults(it, agenda, seen, -1, false, false);
                 }
@@ -258,7 +258,7 @@ public class SGraphBRDecompAutoInstruments {
         }
         for (String c : iT.constants) {
             try {
-                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
                 while (it.hasNext()) {
                     Rule rule = it.next();
                     int parent = rule.getParent();
@@ -307,7 +307,7 @@ public class SGraphBRDecompAutoInstruments {
         }
         for (String c : iT.constants) {
             try {
-                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
                 while (it.hasNext()) {
                     Rule rule = it.next();
                     int parent = rule.getParent();

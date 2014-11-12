@@ -118,19 +118,22 @@ public class BoundaryRepresentation{
         SGraph T = new SGraph();
         DirectedGraph<GraphNode, GraphEdge> g = wholeGraph.getGraph();
         List<String> activeNodes = new ArrayList<>();
+        
         for (int source = 0; source < sourceToNodename.length; source++) {
             int node = sourceToNodename[source];
             if (node >= 0){
                 String nodeName = auto.getNodeForInt(node);
                 T.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, auto));
+                T.addSource(auto.getSourceForInt(source), nodeName);
                 activeNodes.add(nodeName);
             }
         }
+        
         for (int i = 0; i < activeNodes.size(); i++) {
             String vName = activeNodes.get(i);
             GraphNode v = wholeGraph.getNode(vName);
             boolean isSource = isSource(vName, auto);
-            for (GraphEdge e : g.edgesOf(v)) {
+            for (GraphEdge e : g.edgeSet()) {
                 if (!isSource || isInBoundary(e, auto)) {
                     GraphNode target = e.getTarget();
                     GraphNode source = e.getSource();
@@ -138,14 +141,14 @@ public class BoundaryRepresentation{
                         if (!T.containsNode(target.getName())) {
                             T.addNode(target.getName(), target.getLabel());
                             activeNodes.add(target.getName());
-                            T.addEdge(source, target, e.getLabel());
                         }
+                        T.addEdge(source, target, e.getLabel());
                     } else if (target == v && !(source == v)) {
                         if (!T.containsNode(source.getName())) {
                             T.addNode(source.getName(), source.getLabel());
                             activeNodes.add(source.getName());
-                            T.addEdge(source, target, e.getLabel());
                         }
+                        T.addEdge(source, target, e.getLabel());
                     }
                 }
             }
@@ -195,7 +198,7 @@ public class BoundaryRepresentation{
         if ((!isSource) || inBoundaryEdges.contains(auto.getIntForNode(nodeName), auto.getIntForNode(nodeName))) {
             return v.getLabel();
         } else {
-            return null;
+            return "";
         }
     }
 
@@ -264,7 +267,17 @@ public class BoundaryRepresentation{
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
         return (commonNodesHaveCommonSourceNames(other)
-                //&& hasCommonSourceNode(other)
+                && hasCommonSourceNode(other)
+                && sourceNodesAgree(other)// always true with MPF!
+                && edgesDisjoint(other) //always true with edge-MPF!
+                && !hasSourcesInsideOther(pwsp, other)
+                && !other.hasSourcesInsideOther(pwsp, this));
+    }
+    
+    
+    public boolean isMergeableMPF(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
+        return (commonNodesHaveCommonSourceNames(other)
+                //&& hasCommonSourceNode(other)// always true with current MPF!
                 //&& sourceNodesAgree(other)// always true with MPF!
                 && edgesDisjoint(other) //always true with edge-MPF!
                 && !hasSourcesInsideOther(pwsp, other)

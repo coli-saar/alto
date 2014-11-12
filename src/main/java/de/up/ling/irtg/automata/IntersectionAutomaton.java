@@ -15,6 +15,8 @@ import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
+import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.IntInt2IntMap;
@@ -471,6 +473,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                 int state = agenda.remove();
                 int dequeuedLeftState = getLeftState(state);    // left component p of dequeued state
                 int dequeuedRightState = getRightState(state);  // right component q of dequeued state
+                
+                System.out.println(right.getStateForId(dequeuedRightState));
 
                 List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
 
