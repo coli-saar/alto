@@ -30,6 +30,7 @@ public class SGraphBRDecompAutoInstruments {
     private final SGraphBRDecompositionAutomaton auto;
     private final MergePartnerFinder mpFinder;
     private Map<String, String> constantAbbreviations;
+    private int nrParses;
     
     public SGraphBRDecompAutoInstruments(SGraphBRDecompositionAutomaton auto, int sourceCount, int nodeCount){
         this.auto = auto;
@@ -119,7 +120,6 @@ public class SGraphBRDecompAutoInstruments {
         int nrMergeChecks = 0;
         int nrMerges = 0;
         
-        
         for (int i = 0; i < agenda.size(); i++) {
             int a = agenda.get(i);
             
@@ -129,7 +129,7 @@ public class SGraphBRDecompAutoInstruments {
             }
             
             if (auto.getFinalStates().contains(a)) {
-                System.out.println("Found final state!  " + auto.getStateForId(a).toString(auto));//always print auto, i guess
+                System.out.println("Found final state!  " + auto.getStateForId(a).toString(auto));//always print this, i guess
             }
             
             for (String u : iT.unisymbols) {
@@ -152,8 +152,10 @@ public class SGraphBRDecompAutoInstruments {
             
             mpFinder.insert(a);
         }
+        //mpFinder.print("MPF: ",0);
         System.out.println("Number of Merge Checks: " + String.valueOf(nrMergeChecks));
         System.out.println("Number of Merges: " + String.valueOf(nrMerges));
+        System.out.println("Number of Parses: " + String.valueOf(nrParses));
     }
     
     
@@ -167,9 +169,10 @@ public class SGraphBRDecompAutoInstruments {
         for (int i = 0; i < agenda.size(); i++) {
             int a = agenda.get(i);
             
-            if (auto.getFinalStates().contains(a)) {
-                System.out.println("Found final state!  " + auto.getStateForId(a).toString(auto));//always print auto, i guess
-            }
+            //if (auto.getFinalStates().contains(a)) {
+                //System.out.println("Found final state!  " + auto.getStateForId(a).toString(auto));//always print this, i guess
+            //    nrParses++;
+            //}
             
             iT.unisymbols.stream().map((u) -> auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator()).forEach((it) -> {
                 addRuleResults(it, agenda, seen, -1, false, false);
@@ -183,6 +186,7 @@ public class SGraphBRDecompAutoInstruments {
             });
             mpFinder.insert(a);
         }
+        System.out.println("Number of Parses: " + String.valueOf(nrParses));
     }
     
     
@@ -230,6 +234,7 @@ public class SGraphBRDecompAutoInstruments {
     
     private InitTuple initAgenda(boolean makeRulesTopDown, boolean printSteps)
     {
+        nrParses = 0;
         InitTuple iT = new InitTuple();
         if (makeRulesTopDown) {
             auto.rulesTopDown = new HashMap<>();
@@ -333,6 +338,8 @@ public class SGraphBRDecompAutoInstruments {
         if (it.hasNext()) {
             Rule rule = it.next();
             int newBR = rule.getParent();
+            if (auto.getFinalStates().contains(newBR))
+                nrParses++;
 
             addBR(seen, agenda, newBR, partner, printSteps);
 
@@ -367,14 +374,18 @@ public class SGraphBRDecompAutoInstruments {
     }
 
     private void addBR(IntSet seen, IntList agenda, int newBR, int partner, boolean printSteps) {
+        
+        if (printSteps && partner >= 0) {
+            System.out.println("Result of merge with " + auto.getStateForId(partner).toString(auto) + " is: " + auto.getStateForId(newBR).toString(auto));
+        }
+        
         if (!seen.contains(newBR)) {
             agenda.add(newBR);
             seen.add(newBR);
-            if (printSteps && partner >= 0) {
-                System.out.println("Result of merge with " + auto.getStateForId(partner).toString(auto) + " is: " + auto.getStateForId(newBR).toString(auto));
-            }
         }
+        
     }
+    
     
     private void addBR(IntSet seen, IntPriorityQueue agenda, int newBR, int partner, boolean printSteps) {
         if (!seen.contains(newBR)) {

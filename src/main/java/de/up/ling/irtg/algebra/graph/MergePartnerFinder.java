@@ -40,5 +40,7 @@ public abstract class MergePartnerFinder {
     public abstract void insert(int rep);
             
     public abstract IntList getAllMergePartners(int rep);
+    
+    public abstract void print(String prefix, int indent);
 
 }

@@ -264,8 +264,8 @@ public class BoundaryRepresentation{
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
         return (commonNodesHaveCommonSourceNames(other)
-                && hasCommonSourceNode(other)
-                && sourceNodesAgree(other)// always true with MPF!
+                //&& hasCommonSourceNode(other)
+                //&& sourceNodesAgree(other)// always true with MPF!
                 && edgesDisjoint(other) //always true with edge-MPF!
                 && !hasSourcesInsideOther(pwsp, other)
                 && !other.hasSourcesInsideOther(pwsp, this));
@@ -527,6 +527,11 @@ public class BoundaryRepresentation{
         inBoundaryEdges.appendAll(result, auto);
         result.append("]");
         return result.toString();
+    }
+    
+    @Override
+    public String toString(){
+        return inBoundaryEdges.toString();//careful, this loses information!
     }
 
     @Override

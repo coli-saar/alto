@@ -22,7 +22,7 @@ public class BRUtil {
     public static void makeCompleteDecompositionAlgebra(GraphAlgebra alg, SGraph graph, int nrSources) throws Exception//only add empty algebra!!
     {
         Signature sig = alg.getSignature();
-        Set<String> sources = new HashSet<String>();
+        Set<String> sources = new HashSet<>();
         for (int i = 0; i < nrSources; i++) {
             sources.add(String.valueOf(i));
         }
@@ -111,6 +111,8 @@ public class BRUtil {
             + "            :ARG1 i\n"
             + "            :ARG2 (t / temporal-quantity :quant 6\n"
             + "                  :unit (y / year))))";
+    
+    private static final String testStringChain = "(a / a :Z (b / b :Z (c / c :Z (d / d :Z (e / e)))))";
 
     private static final String testStringBoy1 = "(w / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))";
     private static final String testStringBoy2 = "(w<root> / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))";//the boy wants to go
@@ -124,21 +126,24 @@ public class BRUtil {
     private static final int[] testSourceNrs = new int[]{2, 2, 3, 4, 3};
 
     public static void main(String[] args) throws Exception {
-        String input = testString6;
+        String input = TESTSET;
         int nrSources = 3;
         int repetitions = 0;
         boolean onlyCheckAcceptance = false;
         boolean doBenchmark = true;
-        boolean cleanVersion = true;
+        boolean cleanVersion = false;
         boolean showSteps = false;
         boolean makeRulesTopDown = false;
+        Set<Integer> noFullDecomposition = new HashSet<>();
+        noFullDecomposition.add(3);
+        noFullDecomposition.add(4);
 
         long startTime = System.currentTimeMillis();
         long stopTime;
         long elapsedTime;
 
         if (input.equals(TESTSET)) {
-            runTest();
+            runTest(noFullDecomposition);
         } else {
             //activate this to create algebra from IRTG:
             /*InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
@@ -209,12 +214,9 @@ public class BRUtil {
         }
     }
 
-    private static void runTest() throws Exception {
+    private static void runTest(Set<Integer> noFullDecomposition) throws Exception {
         int nrRepetitions = 10;
         int warmupRepetitions = 5;
-        Set<Integer> noFullDecomposition = new HashSet<>();
-        noFullDecomposition.add(3);
-        noFullDecomposition.add(4);
                 
         long startTime;
         long stopTime;

@@ -9,6 +9,11 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.NumbersCombine;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.longs.LongIterator;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,11 +22,13 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 
 public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepresentation> {
 
     private final GraphAlgebra algebra;
     private final SGraph completeGraph;
+    private final LongSet allEdges;
     //private IntTrie<Int2ObjectMap<Iterable<Rule>>> storedRules;
     private final PairwiseShortestPaths pwsp;
     public Map<BoundaryRepresentation, Set<Rule>> rulesTopDown;
@@ -69,6 +76,14 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
             nodenameToInt.put(nodename, i);
             intToNodename[i] = nodename;
             i++;
+        }
+        
+        allEdges = new LongOpenHashSet();
+        completeGraph.getGraph().edgeSet().stream().forEach((edge) -> {
+            allEdges.add(NumbersCombine.combine(nodenameToInt.get(edge.getSource().getName()), nodenameToInt.get(edge.getTarget().getName())));
+        });
+        for (int j = 0; j<intToNodename.length; j++){
+            allEdges.add(NumbersCombine.combine(j, j));
         }
 
         
@@ -276,5 +291,25 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
     public int getNrSources() {
         return intToSourcename.length;
     }
+    
+    public long[] getAllIncidentEdges(IntSet vertices){
+        LongSet res = new LongOpenHashSet();
+        for (LongIterator it = allEdges.iterator(); it.hasNext();) {
+            long edge = it.nextLong();
+            if (vertices.contains(NumbersCombine.getFirst(edge))
+                    || vertices.contains(NumbersCombine.getSecond(edge))){
+                res.add(edge);
+            }
+        }
+        for (int i : vertices){
+            res.add(NumbersCombine.combine(i, i));
+        }
+        return res.toLongArray();
+    }
+    
+    public long[] getAllEdges(){
+        return allEdges.toLongArray();
+    }
+            
 
 }

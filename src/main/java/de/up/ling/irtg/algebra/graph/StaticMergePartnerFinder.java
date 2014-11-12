@@ -93,5 +93,10 @@ public class StaticMergePartnerFinder extends MergePartnerFinder {
            }
        }
    }
+
+    @Override
+    public void print(String prefix, int indent) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }

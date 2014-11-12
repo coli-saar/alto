@@ -6,8 +6,12 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.util.NumbersCombine;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.List;
 
 /**
  *
@@ -31,9 +35,17 @@ public class LongBasedEdgeSet {
     public void add(int source, int target) {
         edges.add(NumbersCombine.combine(source, target));
     }
+    
+    public void add(long edge) {
+        edges.add(edge);
+    }
 
     public boolean contains(int source, int target) {
         return edges.contains(NumbersCombine.combine(source, target));
+    }
+
+    public boolean contains(long edge) {
+        return edges.contains(edge);
     }
 
     public void remove(int source, int target) {
@@ -141,5 +153,35 @@ public class LongBasedEdgeSet {
     public int hashCode() {
         return edges.hashCode();
     }
-    //public boolean checkIterate(Fun)        
+    //public boolean checkIterate(Fun)
+
+    public List<BitSet> getCorrespondingBitSets(Long2ObjectMap<BitSet> map) {
+        List<BitSet> res = new ArrayList<>();
+        LongIterator it = edges.iterator();
+        while (it.hasNext()) {
+            BitSet current = map.get(it.nextLong());
+            if (current != null)
+                res.add(current);
+            else
+                return new ArrayList<>();
+        }
+        return res;
+    }
+    
+    @Override
+    public String toString(){
+        StringBuilder res = new StringBuilder();
+        res.append("[");
+        LongIterator it = edges.iterator();
+        while (it.hasNext()){
+            long next = it.next();
+            res.append("("+NumbersCombine.getFirst(next)+","+NumbersCombine.getSecond(next)+"), ");
+        }
+        res.append("]");
+        return res.toString();
+    }
+    
+    public boolean isEmpty(){
+        return edges.isEmpty();
+    }
 }
