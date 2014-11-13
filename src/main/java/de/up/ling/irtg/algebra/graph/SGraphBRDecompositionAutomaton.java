@@ -44,6 +44,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         super(signature);
 
         this.algebra = algebra;
+        //getStateInterner().setTrustingMode(true);
 
         //find all sources used in algebra:
         Set<String> sources = new HashSet<>();
@@ -112,7 +113,6 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         SGraph graph = parent.getGraph(completeGraph, this);
         System.out.println("sgraph: " + graph.toIsiAmrString());*/
         
-        
         int parentState = addState(parent);
         return createRule(parentState, labelId, childStates, 1);
     }
@@ -120,11 +120,12 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
     private static <E> Iterable<E> sing(E object) {
         return Collections.singletonList(object);
     }
-
+    
     private Iterable<Rule> sing(BoundaryRepresentation parent, int labelId, int[] childStates) {
 //        System.err.println("-> make rule, parent= " + parent);
         return sing(makeRule(parent, labelId, childStates));
     }
+
 
     private Iterable<Rule> memoize(Iterable<Rule> rules, int labelId, int[] childStates) {
         // memoize rule

@@ -474,7 +474,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                 int dequeuedLeftState = getLeftState(state);    // left component p of dequeued state
                 int dequeuedRightState = getRightState(state);  // right component q of dequeued state
                 
-                System.out.println(right.getStateForId(dequeuedRightState));
+                //System.out.println(right.getStateForId(dequeuedRightState));
 
                 List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
 

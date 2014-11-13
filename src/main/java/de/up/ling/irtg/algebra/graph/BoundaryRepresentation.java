@@ -119,6 +119,9 @@ public class BoundaryRepresentation{
         DirectedGraph<GraphNode, GraphEdge> g = wholeGraph.getGraph();
         List<String> activeNodes = new ArrayList<>();
         
+        if (sourcesAllBottom)
+            return wholeGraph;
+        
         for (int source = 0; source < sourceToNodename.length; source++) {
             int node = sourceToNodename[source];
             if (node >= 0){
@@ -279,7 +282,7 @@ public class BoundaryRepresentation{
         return (commonNodesHaveCommonSourceNames(other)
                 //&& hasCommonSourceNode(other)// always true with current MPF!
                 //&& sourceNodesAgree(other)// always true with MPF!
-                && edgesDisjoint(other) //always true with edge-MPF!
+                //&& edgesDisjoint(other) //always true with edge-MPF!
                 && !hasSourcesInsideOther(pwsp, other)
                 && !other.hasSourcesInsideOther(pwsp, this));
     }

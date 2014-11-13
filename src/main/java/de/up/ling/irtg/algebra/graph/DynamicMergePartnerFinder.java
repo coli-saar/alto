@@ -22,7 +22,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
     private final MergePartnerFinder[] children;
     private final int sourceNr;
     private final int sourcesRemaining;
-    private final int ALL;//give this name so its unlikely this is actually a name of a source
+    private final int ALL;
     private final int BOT;
     private final SGraphBRDecompositionAutomaton auto;
 
@@ -104,15 +104,14 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
             newVerticesALL.addAll(vertices);
             newVertices.add(vNr);
             insertInto(vNr, rep, newVertices);
-            if (sourcesRemaining  > 1 || vertices.size() != 0)
-                insertInto(ALL, rep, newVerticesALL);
+            if (sourcesRemaining  > 1 || vertices.size() != 0){
+                insertInto(ALL, rep, vertices);
+            }
         } else {
             if (sourcesRemaining  > 1 || vertices.size() != 0){
                 insertInto(BOT, rep, vertices);
-                insertInto(ALL, rep, vertices);
             }
         }
-        //}
     }
 
     private void insertInto(int index, int rep, IntSet newVertices) {
@@ -132,40 +131,27 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
 
     @Override
     public IntList getAllMergePartners(int rep) {
-        /*if (isFinal)
-         return finalSet;
-         else
-         {*/
         int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
+        IntList ret = new IntArrayList();//list is fine, since the two lists we get bottom up are disjoint anyway.
+        
+        
         if (vNr != -1) {
-            IntList ret = new IntArrayList();//list is fine, since the two lists we get bottom up are disjoint anyway.
             if (!(children[vNr] == null)) {
                 ret.addAll(children[vNr].getAllMergePartners(rep));
             }
-            if (!(children[BOT] == null)) {
-                ret.addAll(children[BOT].getAllMergePartners(rep));
-            }
-            //checkEquality(vNr, rep);
-            //checkEquality(BOT, rep);
-            /*if (children[BOT] != null && children[vNr]!= null)
-             {
-             IntSet set2 = children[BOT].getAllMergePartners(rep);
-             for (int i : children[vNr].getAllMergePartners(rep)){
-             if (set2.contains(i)){
-             System.out.println("overlap!");
-             }
-             }
-             }*/
-            return ret;
         } else {
-            if ((children[ALL] == null)) {
-                return new IntArrayList();
-            } else {
-                //checkEquality(ALL, rep);
-                return children[ALL].getAllMergePartners(rep);
+            if (children[ALL] != null) {
+                ret.addAll(children[ALL].getAllMergePartners(rep));
             }
         }
-        // }
+            
+            
+        if (!(children[BOT] == null)) {
+            ret.addAll(children[BOT].getAllMergePartners(rep));
+        }
+        
+        
+        return ret;
     }
     
     /*private void checkEquality(int index, int rep){

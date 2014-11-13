@@ -9,9 +9,14 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import java.io.FileInputStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -88,6 +93,80 @@ public class BRUtil {
         sig.addSymbol("merge", 2);
     }
 
+    public static void writeIncompleteDecompositionIRTG(GraphAlgebra alg, SGraph graph, int nrSources, PrintWriter writer) throws Exception//only add empty algebra!!
+    {
+        String terminal = "S!";
+        String nonterminal = "X";
+        String transition = " -> ";
+        String strGraph = "[graph] ";
+
+        writer.println(terminal + transition + "m( " + nonterminal + ", " + nonterminal + ")");
+        writer.println(strGraph + "merge" + "(?1, ?2)");
+        writer.println();
+
+        Signature sig = alg.getSignature();
+        Set<String> sources = new HashSet<>();
+        for (int i = 0; i < nrSources; i++) {
+            sources.add(String.valueOf(i));
+        }
+        for (String source1 : sources) {
+
+            sig.addSymbol("f_" + source1, 1);
+            writer.println(nonterminal + transition + "f" + source1 + "(" + nonterminal + ")");
+            writer.println(strGraph + "f_" + source1 + "(?1)");
+            writer.println();
+
+            for (String source2 : sources) {
+                if (!source2.equals(source1)) {
+                    String algString = "r_" + source1 + "_" + source2;
+                    sig.addSymbol(algString, 1);
+                    writer.println(nonterminal + transition + "r" + source1 + source2 + "(" + nonterminal + ")");
+                    writer.println(strGraph + algString + "(?1)");
+                    writer.println();
+                }
+            }
+        }
+
+        for (String vName : graph.getAllNodeNames()) {
+            String algString = "(" + vName + "<" + sources.iterator().next() + "> / " + graph.getNode(vName).getLabel() + ")";
+            sig.addSymbol(algString, 0);
+            writer.println(nonterminal + transition + vName + graph.getNode(vName).getLabel() + "CONST");
+            writer.println(strGraph + "\"" + algString + "\"");
+            writer.println();
+        }
+
+        for (String vName1 : graph.getAllNodeNames()) {
+            for (String vName2 : graph.getAllNodeNames()) {
+                if (!vName1.equals(vName2)) {
+                    GraphEdge e = graph.getGraph().getEdge(graph.getNode(vName1), graph.getNode(vName2));
+                    if (e != null) {
+                        String edgeLabel = e.getLabel();
+                        Iterator<String> it = sources.iterator();
+                        String s1 = it.next();
+                        String s2 = it.next();
+
+                        String algString = "(" + vName1 + "<" + s1 + "> :" + edgeLabel + " (" + vName2 + "<" + s2 + ">))";
+                        sig.addSymbol(algString, 0);
+                        writer.println(nonterminal + transition + vName1 + edgeLabel + vName2 + "CONST");
+                        writer.println(strGraph + "\"" + algString + "\"");
+                        writer.println();
+
+                        algString = "(" + vName1 + "<" + s2 + "> :" + edgeLabel + " (" + vName2 + "<" + s1 + ">))";
+                        sig.addSymbol(algString, 0);
+                        writer.println(nonterminal + transition + vName1 + edgeLabel + vName2 + "CONST2");
+                        writer.println(strGraph + "\"" + algString + "\"");
+                        writer.println();
+                    }
+                }
+            }
+        }
+        sig.addSymbol("merge", 2);
+
+        writer.println(nonterminal + transition + "m( " + nonterminal + ", " + nonterminal + ")");
+        writer.println(strGraph + "merge" + "(?1, ?2)");
+        writer.println();
+    }
+
     private static final String testString1 = "(a / gamma  :alpha (b / beta))";
     private static final String testString2
             = "(n / need-01\n"
@@ -111,7 +190,7 @@ public class BRUtil {
             + "            :ARG1 i\n"
             + "            :ARG2 (t / temporal-quantity :quant 6\n"
             + "                  :unit (y / year))))";
-    
+
     private static final String testStringChain = "(a / a :Z (b / b :Z (c / c :Z (d / d :Z (e / e)))))";
 
     private static final String testStringBoy1 = "(w / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))";
@@ -126,6 +205,34 @@ public class BRUtil {
     private static final int[] testSourceNrs = new int[]{2, 2, 3, 4, 3};
 
     public static void main(String[] args) throws Exception {
+        
+        boolean testIRTG = true;
+        if (testIRTG) {
+            InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/testString5sub1_3sources.irtg"));
+
+            for (int i = 0; i<1; i++){
+                //irtg.getInterpretation("graph");
+                Map<String, String> map = new HashMap<>();
+                map.put("graph", testString5sub1);
+
+               long startTime = System.currentTimeMillis();
+               
+               irtg.parse(map);
+               
+                long stopTime = System.currentTimeMillis();
+               long elapsedTime = stopTime - startTime;
+               System.out.println("IRTG parse time is " + elapsedTime + "ms");
+            }
+            return;
+        }
+        
+        boolean writeFile = false;
+        if (writeFile) {
+            writeFile();
+            return;
+        }
+        
+
         String input = TESTSET;
         int nrSources = 3;
         int repetitions = 0;
@@ -217,56 +324,72 @@ public class BRUtil {
     private static void runTest(Set<Integer> noFullDecomposition) throws Exception {
         int nrRepetitions = 10;
         int warmupRepetitions = 5;
-                
+        int doesAcceptSourcesCount = 4;
+
         long startTime;
         long stopTime;
         long elapsedTime;
-        System.out.println("Starting test with "+nrRepetitions+" repetitions.");
-        
+        System.out.println("Starting test with " + nrRepetitions + " repetitions.");
+
         GraphAlgebra[] alg = new GraphAlgebra[testset.length];
+        GraphAlgebra[] doesAcceptAlg = new GraphAlgebra[testset.length];
         SGraph[] graph = new SGraph[testset.length];
         for (int i = 0; i < testset.length; i++) {
             alg[i] = new GraphAlgebra();
+            doesAcceptAlg[i] = new GraphAlgebra();
             graph[i] = alg[i].parseString(testset[i]);
             makeIncompleteDecompositionAlgebra(alg[i], graph[i], testSourceNrs[i]);
+            makeIncompleteDecompositionAlgebra(doesAcceptAlg[i], graph[i], doesAcceptSourcesCount);
         }
-        
-        
+
         //warmup
         for (int i = 0; i < testset.length; i++) {
-            for (int j = 0; j<warmupRepetitions; j++){
-                runIteration(graph[i], alg[i], true, true, false, false);
+            for (int j = 0; j < warmupRepetitions; j++) {
+                runIteration(graph[i], doesAcceptAlg[i], true, true, false, false);
             }
-            if (!noFullDecomposition.contains(i)){
-                for (int j = 0; j<warmupRepetitions; j++){
+            if (!noFullDecomposition.contains(i)) {
+                for (int j = 0; j < warmupRepetitions; j++) {
                     runIteration(graph[i], alg[i], false, true, false, false);
                 }
             }
         }
-        
-        
+
         //actual test
         for (int i = 0; i < testset.length; i++) {
-            
+
             startTime = System.currentTimeMillis();
-            for (int j = 0; j<nrRepetitions; j++){
-                runIteration(graph[i], alg[i], true, true, false, false);
+            for (int j = 0; j < nrRepetitions; j++) {
+                runIteration(graph[i], doesAcceptAlg[i], true, true, false, false);
             }
             stopTime = System.currentTimeMillis();
             elapsedTime = stopTime - startTime;
-            System.out.println("doesAccept for i="+i+"; Time ="+elapsedTime);
-            
-            
-            if (!noFullDecomposition.contains(i)){
+            System.out.println("doesAccept for i=" + i + "; Time =" + elapsedTime);
+
+            if (!noFullDecomposition.contains(i)) {
                 startTime = System.currentTimeMillis();
-                for (int j = 0; j<nrRepetitions; j++){
+                for (int j = 0; j < nrRepetitions; j++) {
                     runIteration(graph[i], alg[i], false, true, false, false);
                 }
                 stopTime = System.currentTimeMillis();
                 elapsedTime = stopTime - startTime;
-                System.out.println("iterateThroughRules1 for i="+i+"; Time ="+elapsedTime);
+                System.out.println("iterateThroughRules1 for i=" + i + "; Time =" + elapsedTime);
             }
         }
+    }
+
+    private static void writeFile() throws Exception {
+        String filename = "/Users/jonas/Documents/testDump/TESTSET.irtg";
+        PrintWriter writer = new PrintWriter(filename);
+        writer.println("interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra");
+        writer.println();
+
+        for (int i = 0; i < testset.length; i++) {
+            GraphAlgebra alg = new GraphAlgebra();
+            SGraph graph = alg.parseString(testset[i]);
+            writeIncompleteDecompositionIRTG(alg, graph, testSourceNrs[i], writer);
+        }
+
+        writer.close();
     }
 
 }

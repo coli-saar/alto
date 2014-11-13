@@ -165,6 +165,7 @@ public class SGraphBRDecompAutoInstruments {
         InitTuple iT = initAgenda(false, false);
         IntList agenda = iT.agenda;
         IntSet seen = iT.seen;
+        int nrMerges = 0;
        
         for (int i = 0; i < agenda.size(); i++) {
             int a = agenda.get(i);
@@ -178,15 +179,18 @@ public class SGraphBRDecompAutoInstruments {
                 addRuleResults(it, agenda, seen, -1, false, false);
             });
             
-            iT.bisymbols.stream().forEach((b) -> {
+            for (String b : iT.bisymbols) {
                 IntList partners = mpFinder.getAllMergePartners(a);
-                partners.stream().map((d) -> auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator()).forEach((it) -> {
-                    addRuleResults(it, agenda, seen, -1, false, false);
-                });
-            });
+                
+                for (int d: partners) {
+                    Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
+                    
+                    nrMerges += addRuleResults(it, agenda, seen, d, false, false);
+                }
+            }
             mpFinder.insert(a);
         }
-        System.out.println("Number of Parses: " + String.valueOf(nrParses));
+        System.out.println("Number of Parses: " + nrParses + ";   Number of Merges: " + nrMerges);
     }
     
     
