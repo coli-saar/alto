@@ -36,7 +36,7 @@ public class Rule implements Serializable {
         this.weight = weight;
         this.extra = null;
     }
-
+    
     public int[] getChildren() {
         return children;
     }

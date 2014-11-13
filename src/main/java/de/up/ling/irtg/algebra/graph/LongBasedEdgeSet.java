@@ -89,11 +89,11 @@ public class LongBasedEdgeSet {
         return true;
     }
 
-    private int getSource(GraphEdge edge, SGraphBRDecompositionAutomaton auto) {
+    private static int getSource(GraphEdge edge, SGraphBRDecompositionAutomaton auto) {
         return auto.getIntForNode(edge.getSource().getName());
     }
 
-    private int getTarget(GraphEdge edge, SGraphBRDecompositionAutomaton auto) {
+    private static int getTarget(GraphEdge edge, SGraphBRDecompositionAutomaton auto) {
         return auto.getIntForNode(edge.getTarget().getName());
     }
 
@@ -102,18 +102,22 @@ public class LongBasedEdgeSet {
         return new LongBasedEdgeSet(this);
     }
 
-    public void smartForgetIncident(int source, LongBasedEdgeSet reference, BoundaryRepresentation br) {
+    
+    
+    public long smartForgetIncident(int source, LongBasedEdgeSet reference, BoundaryRepresentation br, SGraphBRDecompositionAutomaton auto) {
         LongIterator li = reference.edges.iterator();
-
+        long res = 0;
         while (li.hasNext()) {
             long e = li.nextLong();
             int otherNr = reference.getOtherNode(e, source);
             if (otherNr != -1) {
                 if (!br.isSource(otherNr) || otherNr == source) {
                     edges.remove(e);
+                    res += br.getEdgeIDSummand(e, auto);
                 }
             }
         }
+        return res;//returns the decrease in edgeID.
     }
 
     private int getOtherNode(long e, int v) {
@@ -183,5 +187,9 @@ public class LongBasedEdgeSet {
     
     public boolean isEmpty(){
         return edges.isEmpty();
+    }
+    
+    public static long getLongForEdge(GraphEdge e, SGraphBRDecompositionAutomaton auto){
+        return NumbersCombine.combine(getSource(e, auto), getTarget(e, auto));
     }
 }

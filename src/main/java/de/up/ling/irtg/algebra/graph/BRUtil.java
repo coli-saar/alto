@@ -210,18 +210,19 @@ public class BRUtil {
         if (testIRTG) {
             InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/testString5sub1_3sources.irtg"));
 
-            for (int i = 0; i<1; i++){
-                //irtg.getInterpretation("graph");
+            for (int i = 0; i<10; i++){
+                
                 Map<String, String> map = new HashMap<>();
                 map.put("graph", testString5sub1);
 
-               long startTime = System.currentTimeMillis();
+                long startTime = System.currentTimeMillis();
                
-               irtg.parse(map);
+                //irtg.getInterpretation("graph").
+                irtg.parse(map);
                
                 long stopTime = System.currentTimeMillis();
-               long elapsedTime = stopTime - startTime;
-               System.out.println("IRTG parse time is " + elapsedTime + "ms");
+                long elapsedTime = stopTime - startTime;
+                System.out.println("IRTG parse time is " + elapsedTime + "ms");
             }
             return;
         }
@@ -242,7 +243,7 @@ public class BRUtil {
         boolean showSteps = false;
         boolean makeRulesTopDown = false;
         Set<Integer> noFullDecomposition = new HashSet<>();
-        //noFullDecomposition.add(3);
+        noFullDecomposition.add(3);
         //noFullDecomposition.add(4);
 
         long startTime = System.currentTimeMillis();
@@ -322,8 +323,8 @@ public class BRUtil {
     }
 
     private static void runTest(Set<Integer> noFullDecomposition) throws Exception {
-        int nrRepetitions = 10;
-        int warmupRepetitions = 5;
+        int nrRepetitions = 5;
+        int warmupRepetitions = 1;
         int doesAcceptSourcesCount = 4;
 
         long startTime;

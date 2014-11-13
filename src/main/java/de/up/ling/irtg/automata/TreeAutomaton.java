@@ -2507,7 +2507,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     protected Rule createRule(int parent, int label, int[] children, double weight) {
-        return new Rule(parent, label, children, weight);
+        Rule rule = new Rule(parent, label, children, weight);
+        return rule;
     }
 
     protected Rule createRule(int parent, int label, List<Integer> children, double weight) {
