@@ -1,0 +1,71 @@
+interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+S! -> m( X, X)
+[graph] merge(?1, ?2)
+
+X -> f0(X)
+[graph] f_0(?1)
+
+X -> r01(X)
+[graph] r_0_1(?1)
+
+X -> r02(X)
+[graph] r_0_2(?1)
+
+X -> f1(X)
+[graph] f_1(?1)
+
+X -> r10(X)
+[graph] r_1_0(?1)
+
+X -> r12(X)
+[graph] r_1_2(?1)
+
+X -> f2(X)
+[graph] f_2(?1)
+
+X -> r20(X)
+[graph] r_2_0(?1)
+
+X -> r21(X)
+[graph] r_2_1(?1)
+
+X -> bCONST
+[graph] "(b<0> / boy)"
+
+X -> bel1CONST
+[graph] "(bel1<0> / believe)"
+
+X -> wCONST
+[graph] "(w<0> / want)"
+
+X -> bel2CONST
+[graph] "(bel2<0> / believe)"
+
+X -> bel1ARG0bCONST
+[graph] "(bel1<0> :ARG0 (b<1>))"
+
+X -> bel1ARG0bCONST2
+[graph] "(bel1<1> :ARG0 (b<0>))"
+
+X -> bel1ARG1wCONST
+[graph] "(bel1<0> :ARG1 (w<1>))"
+
+X -> bel1ARG1wCONST2
+[graph] "(bel1<1> :ARG1 (w<0>))"
+
+X -> wARG1bel2CONST
+[graph] "(w<0> :ARG1 (bel2<1>))"
+
+X -> wARG1bel2CONST2
+[graph] "(w<1> :ARG1 (bel2<0>))"
+
+X -> bel2ARG0bCONST
+[graph] "(bel2<0> :ARG0 (b<1>))"
+
+X -> bel2ARG0bCONST2
+[graph] "(bel2<1> :ARG0 (b<0>))"
+
+X -> m( X, X)
+[graph] merge(?1, ?2)
+
