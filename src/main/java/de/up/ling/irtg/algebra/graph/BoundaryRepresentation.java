@@ -101,16 +101,16 @@ public class BoundaryRepresentation {
     }
 
     public long getEdgeIDSummand(long edge, SGraphBRDecompositionAutomaton auto) {
-        long[] incidentEdges = auto.getAllIncidentEdges2(isSourceNode);//IncidentEdges(isSourceNode);
+        long[] incidentEdges = new long[0];//auto.getAllIncidentEdges2(isSourceNode);//IncidentEdges(isSourceNode);
         int index = -1;
         for (int i = 0; i<incidentEdges.length; i++){
             if (edge == incidentEdges[i]){
                 index = i;
             }
         }
-        if (index == -1){
-            System.out.println("err0");
-        }
+        //if (index == -1){
+        //    System.out.println("err0");
+        //}
         return (long) Math.pow(2, index + 1);
     }
 
@@ -471,6 +471,21 @@ public class BoundaryRepresentation {
     public boolean isIdenticalExceptSources(BoundaryRepresentation other, SGraph completeGraph, SGraphBRDecompositionAutomaton auto) {
         return getGraph(completeGraph, auto).isIdenticalExceptSources(other.getGraph(completeGraph, auto));
     }
+    
+    public boolean isCompleteGraph(SGraphBRDecompositionAutomaton auto){
+        for (int source = 0; source < sourceToNodename.length; source++){
+            if (sourceToNodename[source]!= -1){
+                for(long edge : auto.getIncidentEdges(sourceToNodename[source])){
+                    if (!inBoundaryEdges.contains(edge)){
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    
+    
 
     public BoundaryRepresentation applyForgetRename(String label, SGraphBRDecompositionAutomaton auto)//maybe this should be in algebra? This should probably be int-based? i.e. make new int-based algebra for BR  -- only call this after checking if forget is allowed!!
     {

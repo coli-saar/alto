@@ -45,7 +45,28 @@ public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
 
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, getNrSources(), getNumberNodes());
         instr.iterateThroughRulesBottomUp1Clean(algebra);
+        
+        
+    }
+    
+    
+    @Override
+    Rule makeRule(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
+        /*StringBuilder message = new StringBuilder();
+         message.append(parent.toString(this)+" from " + signature.resolveSymbolId(labelId));
+         for (int i = 0; i<childStates.length; i++){
+         message.append(" __ "+getStateForId(childStates[i]).toString(this));
+         }
+         System.out.println(message);
+         SGraph graph = parent.getGraph(completeGraph, this);
+         System.out.println("sgraph: " + graph.toIsiAmrString());*/
+        
+        int parentState = addState(parent);
+        if (parent.isCompleteGraph(this)){
+            finalStates.add(parentState);
+        }
+        return createRule(parentState, labelId, childStates, 1);
     }
 
     

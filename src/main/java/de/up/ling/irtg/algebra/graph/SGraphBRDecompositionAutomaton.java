@@ -49,9 +49,10 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
     final Map<String, Integer> nodenameToInt;
     final String[] intToSourcename;
     final String[] intToNodename;
-    final Map<BitSet, long[]> incidentEdges;
+    //final Map<BitSet, long[]> incidentEdges;
     Int2ObjectMap<Int2ObjectMap<Set<Rule>>> storedRulesTopDown;
     boolean supportsTopDown;
+    final LongSet[] incidentEdges;
 
     SGraphBRDecompositionAutomaton(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(signature);
@@ -103,7 +104,6 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         }
         allEdges = allEdgesBuilder.toLongArray();
 
-
         storedRules = new IntTrie<>();
         this.completeGraph = completeGraph;
         int x = addState(new BoundaryRepresentation(completeGraph, this));
@@ -115,13 +115,11 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         supportsTopDown = false;
     }
 
-    
-
     public int getNumberNodes() {
         return completeGraph.getGraph().vertexSet().size();
     }
 
-    private Rule makeRule(BoundaryRepresentation parent, int labelId, int[] childStates) {
+    Rule makeRule(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
         /*StringBuilder message = new StringBuilder();
          message.append(parent.toString(this)+" from " + signature.resolveSymbolId(labelId));
@@ -134,27 +132,24 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         int parentState = addState(parent);
         return createRule(parentState, labelId, childStates, 1);
     }
-    
 
-    
-   /* private Rule makeRuleTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
+    /* private Rule makeRuleTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
         
-        int parentState;
-        long ID = parent.getID(this);
-        if (seen.contains(ID)) {
-            parentState = stateIdForID.get(ID);
-        }
-        parentState = addState(parent);
-        return createRule(parentState, labelId, childStates, 1);
-    }
+     int parentState;
+     long ID = parent.getID(this);
+     if (seen.contains(ID)) {
+     parentState = stateIdForID.get(ID);
+     }
+     parentState = addState(parent);
+     return createRule(parentState, labelId, childStates, 1);
+     }
 
 
-    private Iterable<Rule> singTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
-//        System.err.println("-> make rule, parent= " + parent);
-        return sing(makeRuleTrusting(parent, labelId, childStates));
-    }*/
-
+     private Iterable<Rule> singTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
+     //        System.err.println("-> make rule, parent= " + parent);
+     return sing(makeRuleTrusting(parent, labelId, childStates));
+     }*/
     private static <E> Iterable<E> sing(E object) {
         return Collections.singletonList(object);
     }
@@ -163,9 +158,8 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
 //        System.err.println("-> make rule, parent= " + parent);
         return sing(makeRule(parent, labelId, childStates));
     }
-    
-    
-    public void makeTrusting(){
+
+    public void makeTrusting() {
         this.stateInterner.setTrustingMode(true);
     }
 
@@ -278,7 +272,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
             throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
         }
     }
-    
+
     public Iterable<Rule> calculateRulesBottomUpMPF(int labelId, int[] childStates) {
         String label = signature.resolveSymbolId(labelId);
 
@@ -359,26 +353,12 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
 
     public Iterable<Rule> getRulesBottomUpMPF(int labelId, int[] childStates) {
         Iterable<Rule> res = calculateRulesBottomUpMPF(labelId, childStates);
-        
-        
+
         Iterator<Rule> it = res.iterator();
-        while (it.hasNext()){
+        while (it.hasNext()) {
             storeRule(it.next());
-            /*Rule rule = it.next();
-            int parent = rule.getParent();
-            Int2ObjectMap<Set<Rule>> labelMap = storedRulesTopDown.get(parent);
-            if (labelMap == null){
-                labelMap = new Int2ObjectOpenHashMap<>();
-                storedRulesTopDown.put(parent, labelMap);
-            }
-            Set<Rule> ruleSet = labelMap.get(labelId);
-            if (ruleSet == null){
-                ruleSet = new HashSet<>();
-                labelMap.put(labelId, ruleSet);
-            }
-            ruleSet.add(rule);*/
         }
-        
+
         return res;
     }
 
@@ -422,10 +402,10 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         return false;
     }
 
-    public void setSupportsTopDownQueries(boolean supportsTopDown){
+    public void setSupportsTopDownQueries(boolean supportsTopDown) {
         this.supportsTopDown = supportsTopDown;
     }
-    
+
     @Override
     public boolean supportsTopDownQueries() {
         return supportsTopDown;
@@ -470,68 +450,38 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         }
         return res.toLongArray();
     }
-    
-    public long[] getAllIncidentEdges2(BitSet vertices){
-        return incidentEdges.get(vertices);
-    }
+
 
     public long[] getAllEdges() {
         return allEdges;
     }
-    
-    public int getEdgeIndex(long edge){
-       for (int i = 0; i<allEdges.length; i++){
-           if (allEdges[i] == edge){
-               return i;
-           }
-       } 
-       return -1;
+
+    public int getEdgeIndex(long edge) {
+        for (int i = 0; i < allEdges.length; i++) {
+            if (allEdges[i] == edge) {
+                return i;
+            }
+        }
+        return -1;
     }
 
-    private Map<BitSet, long[]> computeIncidentEdges(){
-        BitSet seed = new BitSet();
-        Set<BitSet> allVertexSets = new HashSet<>();
-        allVertexSets.add(seed);
-        factorNewVertex(allVertexSets, getNumberNodes()-1, getNrSources());
-        
-        Map<BitSet, long[]> res = new HashMap<>();
-        for (BitSet b : allVertexSets){
-            LongList bIncidentEdges = new LongArrayList();
-            for (int i = 0; i<allEdges.length; i++){
-                long edge = allEdges[i];
-                int source = NumbersCombine.getFirst(edge);
-                int target = NumbersCombine.getSecond(edge);
-                if (b.get(source) || b.get(target)){
-                    bIncidentEdges.add(edge);
+    public LongSet getIncidentEdges(int vertex) {
+        return incidentEdges[vertex];
+    }
+
+    private LongSet[] computeIncidentEdges() {
+        int n = getNumberNodes();
+        LongSet[] res = new LongSet[n];
+        for (int vNr = 0; vNr < n; vNr++) {
+            res[vNr] = new LongOpenHashSet();
+            for (GraphEdge e : completeGraph.getGraph().edgeSet()){
+                if (vNr == getIntForNode(e.getSource().getName()) || vNr == getIntForNode(e.getTarget().getName())){
+                    res[vNr].add(LongBasedEdgeSet.getLongForEdge(e, this));
                 }
             }
-            res.put(b, bIncidentEdges.toLongArray());
         }
         return res;
     }
+
     
-    private void factorNewVertex(Set<BitSet> bSet, int vNr, int maxSize){
-        Set<BitSet> newBSet = new HashSet<>();
-        for (BitSet b : bSet){
-            if (b.cardinality()<maxSize){
-                BitSet bYes = (BitSet)b.clone();
-                bYes.set(vNr);
-                newBSet.add(bYes);
-            }
-        }
-        bSet.addAll(newBSet);
-        if (vNr > 0){
-            factorNewVertex(bSet, vNr-1, maxSize);
-        }
-    }
-    
-            
-    /*private class TupleBitSetLongSet{
-        public final BitSet bitset;
-        public final LongSet longset;
-        public TupleBitSetLongSet(BitSet b, LongSet l){
-            bitset = b;
-            longset = l;
-        }
-    }*/        
 }
