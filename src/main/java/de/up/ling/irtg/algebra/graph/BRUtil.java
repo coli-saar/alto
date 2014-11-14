@@ -210,7 +210,7 @@ public class BRUtil {
         if (testIRTG) {
             InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/testString5sub1_3sources.irtg"));
 
-            for (int i = 0; i<10; i++){
+            for (int i = 0; i<1; i++){
                 
                 Map<String, String> map = new HashMap<>();
                 map.put("graph", testString5sub1);
@@ -243,7 +243,7 @@ public class BRUtil {
         boolean showSteps = false;
         boolean makeRulesTopDown = false;
         Set<Integer> noFullDecomposition = new HashSet<>();
-        noFullDecomposition.add(3);
+        //noFullDecomposition.add(3);
         //noFullDecomposition.add(4);
 
         long startTime = System.currentTimeMillis();
@@ -305,6 +305,7 @@ public class BRUtil {
 
     private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
         SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decompose(graph);
+        auto.makeTrusting();
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNrSources(), graph.getGraph().vertexSet().size());
 
         if (onlyCheckAcceptance) {
@@ -323,8 +324,8 @@ public class BRUtil {
     }
 
     private static void runTest(Set<Integer> noFullDecomposition) throws Exception {
-        int nrRepetitions = 5;
-        int warmupRepetitions = 1;
+        int nrRepetitions = 10;
+        int warmupRepetitions = 5;
         int doesAcceptSourcesCount = 4;
 
         long startTime;
@@ -379,16 +380,17 @@ public class BRUtil {
     }
 
     private static void writeFile() throws Exception {
-        String filename = "/Users/jonas/Documents/testDump/TESTSET.irtg";
+        String filename = "examples/testString5_4Sources.irtg";
         PrintWriter writer = new PrintWriter(filename);
         writer.println("interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra");
         writer.println();
+        
+        GraphAlgebra alg = new GraphAlgebra();
+        SGraph graph = alg.parseString(testString5);
+        writeIncompleteDecompositionIRTG(alg, graph, 4, writer);
 
-        for (int i = 0; i < testset.length; i++) {
-            GraphAlgebra alg = new GraphAlgebra();
-            SGraph graph = alg.parseString(testset[i]);
-            writeIncompleteDecompositionIRTG(alg, graph, testSourceNrs[i], writer);
-        }
+       /*for (int i = 0; i < testset.length; i++) {;
+        }*/
 
         writer.close();
     }

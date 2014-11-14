@@ -62,7 +62,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     @Override
     public TreeAutomaton decompose(SGraph value) {
         //return new SGraphDecompositionAutomaton(value, this, getSignature());
-        return new SGraphBRDecAutTopDown(value, this, getSignature());
+        return new SGraphBRDecompositionAutomaton(value, this, getSignature());
     }
 
     static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {

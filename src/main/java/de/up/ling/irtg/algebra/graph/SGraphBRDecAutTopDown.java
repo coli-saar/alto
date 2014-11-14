@@ -51,7 +51,7 @@ public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
     
     
     @Override
-    Rule makeRule(BoundaryRepresentation parent, int labelId, int[] childStates) {
+    Rule makeRuleTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
         /*StringBuilder message = new StringBuilder();
          message.append(parent.toString(this)+" from " + signature.resolveSymbolId(labelId));
@@ -61,8 +61,21 @@ public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
          System.out.println(message);
          SGraph graph = parent.getGraph(completeGraph, this);
          System.out.println("sgraph: " + graph.toIsiAmrString());*/
+        int parentState = -1;
+        Long2IntMap edgeIDMap = storedStates.get(parent.vertexID);
+        if (edgeIDMap != null){
+            parentState = edgeIDMap.get(parent.edgeID);
+        }
         
-        int parentState = addState(parent);
+        if (parentState == -1){
+            parentState = addState(parent);
+            if (edgeIDMap == null){
+                edgeIDMap = new Long2IntOpenHashMap();
+                edgeIDMap.defaultReturnValue(-1);
+                storedStates.put(parent.vertexID, edgeIDMap);
+            }
+            edgeIDMap.put(parent.edgeID, parentState);
+        }
         if (parent.isCompleteGraph(this)){
             finalStates.add(parentState);
         }
@@ -79,6 +92,18 @@ public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
     @Override
     public boolean supportsBottomUpQueries() {
         return true;
+    }
+    
+    @Override
+    public Iterable<Rule> getRulesBottomUpMPF(int labelId, int[] childStates) {
+        Iterable<Rule> res = calculateRulesBottomUpMPF(labelId, childStates);
+
+        Iterator<Rule> it = res.iterator();
+        while (it.hasNext()) {
+            storeRule(it.next());
+        }
+
+        return res;
     }
 
 }
