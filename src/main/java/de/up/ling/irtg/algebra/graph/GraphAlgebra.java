@@ -54,6 +54,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     // operation symbols of this algebra
     public static final String OP_MERGE = "merge";
     public static final String OP_RENAME = "r_";
+    public static final String OP_SWAP = "s_";
     public static final String OP_FORGET_ALL = "f";
     public static final String OP_FORGET_ALL_BUT_ROOT = "fr";
     public static final String OP_FORGET_EXCEPT = "fe_";
@@ -62,6 +63,11 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     @Override
     public TreeAutomaton decompose(SGraph value) {
         //return new SGraphDecompositionAutomaton(value, this, getSignature());
+        //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
+        return new SGraphBRDecAutTopDown(value, this, getSignature());
+    }
+    
+    public TreeAutomaton decomposeNoStoreRules(SGraph value){
         return new SGraphBRDecompositionAutomaton(value, this, getSignature());
     }
 

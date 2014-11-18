@@ -273,6 +273,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                     }
                 }
             } else if (label.startsWith(GraphAlgebra.OP_RENAME)
+                    || label.startsWith(GraphAlgebra.OP_SWAP)
                     || label.startsWith(GraphAlgebra.OP_FORGET)
                     || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
                     || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
@@ -351,6 +352,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                     }
                 }
             } else if (label.startsWith(GraphAlgebra.OP_RENAME)
+                    || label.startsWith(GraphAlgebra.OP_SWAP)
                     || label.startsWith(GraphAlgebra.OP_FORGET)
                     || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
                     || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)

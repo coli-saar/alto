@@ -190,6 +190,42 @@ public class BRUtil {
             + "            :ARG1 i\n"
             + "            :ARG2 (t / temporal-quantity :quant 6\n"
             + "                  :unit (y / year))))";
+    
+    private static final String testString7 = "(a6 / and\n" +
+"      :op1 (l / look-02\n" +
+"            :ARG0 (p / picture\n" +
+"                  :name (n / name :op1 \"Drawing\" :op2 \"Number\" :op3 \"Two\")\n" +
+"                  :poss i)\n" +
+"            :ARG1 (t2 / this))\n" +
+"      :op2 (r / respond-01\n" +
+"            :ARG0 (g / grown-up)\n" +
+"            :ARG1 (i / i)\n" +
+"            :ARG2 (a / advise-01\n" +
+"                  :ARG0 g\n" +
+"                  :ARG1 i\n" +
+"                  :ARG2 (a3 / and\n" +
+"                        :op1 (l2 / lay-01\n" +
+"                              :ARG0 i\n" +
+"                              :ARG1 (t3 / thing\n" +
+"                                    :ARG1-of (d2 / draw-01\n" +
+"                                          :ARG0 i)\n" +
+"                                    :topic (b2 / boa\n" +
+"                                          :mod (c2 / constrictor)\n" +
+"                                          :mod (o / or\n" +
+"                                                :op1 (i2 / inside)\n" +
+"                                                :op2 (o2 / outside))))\n" +
+"                              :ARG2 (a2 / aside))\n" +
+"                        :op2 (d3 / devote-01\n" +
+"                              :ARG0 i\n" +
+"                              :ARG1 i\n" +
+"                              :ARG2 (a4 / and\n" +
+"                                    :op1 (g2 / geography)\n" +
+"                                    :op2 (h / history)\n" +
+"                                    :op3 (a5 / arithmetic)\n" +
+"                                    :op4 (g3 / grammar))\n" +
+"                              :mod (i3 / instead))))\n" +
+"            :time (t4 / time\n" +
+"                  :mod (t5 / this))))";//n = 31, sources needed = 3
 
     private static final String testStringChain = "(a / a :Z (b / b :Z (c / c :Z (d / d :Z (e / e)))))";
 
@@ -206,10 +242,9 @@ public class BRUtil {
 
     public static void main(String[] args) throws Exception {
         
-        boolean testIRTG = true;
+        boolean testIRTG = false;
         if (testIRTG) {
             InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/testString5sub1_3sources.irtg"));
-
             for (int i = 0; i<1; i++){
                 
                 Map<String, String> map = new HashMap<>();
@@ -234,12 +269,12 @@ public class BRUtil {
         }
         
 
-        String input = TESTSET;
-        int nrSources = 3;
+        String input = testString7;
+        int nrSources = 4;
         int repetitions = 0;
         boolean onlyCheckAcceptance = false;
         boolean doBenchmark = true;
-        boolean cleanVersion = false;
+        boolean cleanVersion = true;
         boolean showSteps = false;
         boolean makeRulesTopDown = false;
         Set<Integer> noFullDecomposition = new HashSet<>();
@@ -304,7 +339,7 @@ public class BRUtil {
     }
 
     private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
-        SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decompose(graph);
+        SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decomposeNoStoreRules(graph);
         auto.makeTrusting();
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNrSources(), graph.getGraph().vertexSet().size());
 

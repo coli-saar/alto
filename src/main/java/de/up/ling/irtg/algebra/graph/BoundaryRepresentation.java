@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Collection;
 import java.util.List;
 import com.google.common.base.Function;
+import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_SWAP;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -342,6 +343,35 @@ public class BoundaryRepresentation {
         }
         return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount, false, isSourceNode, newEdgeID, newVertexID, auto);
     }
+    
+    public BoundaryRepresentation swap(int oldSource, int newSource, SGraphBRDecompositionAutomaton auto)
+    {
+        LongBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();//set size?
+        int[] newSourceToNodename = sourceToNodename.clone();
+        int oldVNr = sourceToNodename[oldSource];
+        int newVNr = sourceToNodename[newSource];
+        newSourceToNodename[oldSource] = newVNr;
+        newSourceToNodename[newSource] = oldVNr;
+        long newVertexID = vertexID;
+        newVertexID -= getVertexIDSummand(oldVNr, oldSource, auto.getNumberNodes());
+        newVertexID += getVertexIDSummand(oldVNr, newSource, auto.getNumberNodes());
+        newVertexID -= getVertexIDSummand(newVNr, newSource, auto.getNumberNodes());
+        newVertexID += getVertexIDSummand(newVNr, oldSource, auto.getNumberNodes());
+        long newEdgeID = edgeID;
+        for (long edge : auto.getIncidentEdges(oldVNr)){
+            if (inBoundaryEdges.contains(edge)){
+                newEdgeID -= getEdgeIDSummand(edge, oldVNr, oldSource, auto);
+                newEdgeID += getEdgeIDSummand(edge, oldVNr, newSource, auto);
+            }
+        }
+        for (long edge : auto.getIncidentEdges(newVNr)){
+            if (inBoundaryEdges.contains(edge)){
+                newEdgeID -= getEdgeIDSummand(edge, newVNr, newSource, auto);
+                newEdgeID += getEdgeIDSummand(edge, newVNr, oldSource, auto);
+            }
+        }
+        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount, false, isSourceNode, newEdgeID, newVertexID, auto);
+    }
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
         return (commonNodesHaveCommonSourceNames(other)
@@ -506,6 +536,10 @@ public class BoundaryRepresentation {
             int[] labelSources = auto.getlabelSources(labelId);
 
             return rename(labelSources[0], labelSources[1], auto);
+        } else if (label.startsWith(OP_SWAP)) {
+            int[] labelSources = auto.getlabelSources(labelId);
+
+            return swap(labelSources[0], labelSources[1], auto);
         } else if (label.equals(OP_FORGET_ALL)) {
             // forget all sources
             return forgetSourcesExcept(Collections.EMPTY_SET, auto);
@@ -555,6 +589,9 @@ public class BoundaryRepresentation {
             return null;//do not use this for merge!
 
         } else if (label.startsWith(OP_RENAME)) {
+            return new IntOpenHashSet();
+
+        } else if (label.startsWith(OP_SWAP)) {
             return new IntOpenHashSet();
 
         } else if (label.equals(OP_FORGET_ALL)) {
