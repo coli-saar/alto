@@ -242,10 +242,10 @@ public class BRUtil {
 
     public static void main(String[] args) throws Exception {
         
-        boolean testIRTG = false;
+        boolean testIRTG = true;
         if (testIRTG) {
             InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/testString5sub1_3sources.irtg"));
-            for (int i = 0; i<1; i++){
+            for (int i = 0; i<1000; i++){
                 
                 Map<String, String> map = new HashMap<>();
                 map.put("graph", testString5sub1);
@@ -253,11 +253,13 @@ public class BRUtil {
                 long startTime = System.currentTimeMillis();
                
                 //irtg.getInterpretation("graph").
-                irtg.parse(map);
+                TreeAutomaton chart = irtg.parse(map);
                
                 long stopTime = System.currentTimeMillis();
                 long elapsedTime = stopTime - startTime;
                 System.out.println("IRTG parse time is " + elapsedTime + "ms");
+                
+//                System.err.println("chart:\n" + chart);
             }
             return;
         }

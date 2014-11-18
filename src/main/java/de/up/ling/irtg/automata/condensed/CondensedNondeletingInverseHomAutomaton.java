@@ -117,7 +117,13 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
      */
     @Override
     public Iterable<CondensedRule> getCondensedRulesByParentState(int parentState) {
-        Set<CondensedRule> ret = new HashSet<CondensedRule>();
+//        Set<CondensedRule> ret = new HashSet<CondensedRule>();
+        List<CondensedRule> ret = new ArrayList<CondensedRule>();
+        
+        // It seems wasteful to add the rule to the set here, and then again when we storeRule it
+        // in the condensed rule trie. Also, it is probably less frequent that we discover
+        // the same condensed rule twice than we would have in the non-condensed case.
+        // Thus let's try list instead of set for now.
 
         // check rules with nullary RHSs
         IntSet newLabelSetIDs = statesToNullaryLabelSets.get(parentState);
