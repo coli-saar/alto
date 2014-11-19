@@ -5,6 +5,7 @@
 package de.up.ling.irtg.automata.condensed;
 
 import de.saar.basic.CartesianIterator;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
@@ -16,10 +17,15 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.io.FileInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * A tree automaton that describes the homomorphic pre-image of the language of
@@ -58,7 +64,6 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 //        labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
         this.stateInterner = rhsAutomaton.getStateInterner();
         finalStates.addAll(rhsAutomaton.getFinalStates());
-
 
 //        Logging.get().fine("all rhs auto labels: " + rhsAutomaton.getAllLabels());
 //        Logging.get().fine(" rhs auto sig: " + rhsAutomaton.getSignature());
@@ -119,12 +124,11 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     public Iterable<CondensedRule> getCondensedRulesByParentState(int parentState) {
 //        Set<CondensedRule> ret = new HashSet<CondensedRule>();
         List<CondensedRule> ret = new ArrayList<CondensedRule>();
-        
+
         // It seems wasteful to add the rule to the set here, and then again when we storeRule it
         // in the condensed rule trie. Also, it is probably less frequent that we discover
         // the same condensed rule twice than we would have in the non-condensed case.
         // Thus let's try list instead of set for now.
-
         // check rules with nullary RHSs
         IntSet newLabelSetIDs = statesToNullaryLabelSets.get(parentState);
         if (newLabelSetIDs != null) {
@@ -138,10 +142,21 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         // check rules with RHSs with variables
         FastutilUtils.forEach(labelSetsWithVariables, labelSetID -> {
             Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
+            Tree<HomomorphismSymbol> rightmostLeaf = getRightmostLeaf(rhs);
+            int[] leafStates = new int[getRhsArity(rhs)];
+            
+            System.err.println("\nrule for " + getStateForId(parentState) + " @ " + HomomorphismSymbol.toStringTree(rhs, rhsAutomaton.getSignature()));
+//            System.err.println("\n\nrhs = " + rhs + "; rightmost: " + rightmostLeaf);
 
-//            System.err.println("- check labelSetID " + labelSetID + " = " + signature.resolveSymbolIDs(getLabelsForID(labelSetID)));
-//            System.err.println("- rhs(lsid) = " + HomomorphismSymbol.toStringTree(rhs, hom.getTargetSignature()));
-            // Find childstates
+            // Find child states
+            
+//            grtdDfs(rhs, rightmostLeaf, parentState, leafStates, ls -> {
+//                CondensedRule cr = new CondensedRule(parentState, labelSetID, ls.clone(), 1);
+//                System.err.println("add: " + cr.toString(this));
+//                ret.add(cr);
+//            });
+            
+            
             for (List<Integer> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs))) {
                 if (isCompleteSubstitutionTuple(substitutionTuple)) {
                     // TODO: weights
@@ -218,6 +233,67 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 
         return max + 1;
     }
+    
+    private static <E> Tree<E> getRightmostLeaf(Tree<E> tree) {
+        if( tree.getChildren().isEmpty() ) {
+            return tree;
+        } else {
+            List<Tree<E>> children = tree.getChildren();
+            return getRightmostLeaf(children.get(children.size()-1));
+        }
+    }
+    
+
+    private boolean grtdDfs(Tree<HomomorphismSymbol> rhs, Tree<HomomorphismSymbol> rightmostLeaf, int state, int[] leafStates, Consumer<int[]> fn) {
+        System.err.println("dfs on " + HomomorphismSymbol.toStringTree(rhs, rhsAutomaton.getSignature()) + " in state " + rhsAutomaton.getStateForId(state));
+        
+        switch (rhs.getLabel().getType()) {
+            case CONSTANT:
+                boolean foundRule = false;
+                int remappedLabel = labelsRemap.remapForward(rhs.getLabel().getValue());
+                System.err.println("constant " + rhsAutomaton.getSignature().resolveSymbolId(remappedLabel));
+
+                ruleLoop:
+                for (Rule rhsRule : rhsAutomaton.getRulesTopDown(remappedLabel, state)) {
+                    System.err.println("rule " + rhsRule.toString(rhsAutomaton));
+                    for (int i = 0; i < rhsRule.getArity(); i++) {
+                        if (!grtdDfs(rhs.getChildren().get(i), rightmostLeaf, rhsRule.getChildren()[i], leafStates, fn)) {
+                            System.err.println("-> child " + i + " was false, skip");
+                            continue ruleLoop;
+                        }
+                    }
+
+                    foundRule = true;
+                }
+
+                if (!foundRule) {
+                    System.err.println("no rule found, return false");
+                    return false;
+                }
+
+                break;
+                
+            case VARIABLE:
+                System.err.println("variable " + rhs.getLabel().getValue());
+                int varnum = rhs.getLabel().getValue();
+                leafStates[varnum] = state;
+                break;
+        }
+        
+        if( rhs == rightmostLeaf ) {
+            System.err.println("rightmost! accept with states: " + Arrays.toString(leafStates));
+            fn.accept(leafStates);
+        }
+
+        return true;
+    }
+    
+    public static void main(String[] args) throws Exception {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/cfg.irtg"));
+        Map<String,String> inputs = new HashMap<>();
+        inputs.put("i", "john watches the woman with the telescope");
+        System.err.println(irtg.parse(inputs));        
+    }
 
     private Set<List<Integer>> grtdDfs(Tree<HomomorphismSymbol> rhs, int state, int rhsArity) {
         Set<List<Integer>> ret = new HashSet<List<Integer>>();
@@ -273,7 +349,6 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 //
 //        return buf.toString() + "}";
 //    }
-
     // tuples is an n-list of m-lists of output states, where
     // n is number of children, and m is number of variables in homomorphism
     // If n = 0, the method returns [null, ..., null]

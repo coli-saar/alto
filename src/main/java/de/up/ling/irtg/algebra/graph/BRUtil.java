@@ -254,6 +254,8 @@ public class BRUtil {
                
                 //irtg.getInterpretation("graph").
                 TreeAutomaton chart = irtg.parse(map);
+                System.err.println(chart);
+                System.err.println(chart.viterbi());
                
                 long stopTime = System.currentTimeMillis();
                 long elapsedTime = stopTime - startTime;

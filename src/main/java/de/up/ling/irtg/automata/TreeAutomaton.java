@@ -815,17 +815,25 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     private Tree<String> extractTreeFromViterbi(int state, Int2ObjectMap<Pair<Double, Rule>> map) {
+//        System.err.println("et " + getStateForId(state));
+        
         if (map.containsKey(state)) {
+//            System.err.println("bp: " + map.get(state));
+//            System.err.println(" = " + map.get(state).right.toString(this));
+            
             Rule backpointer = map.get(state).right;
             List<Tree<String>> childTrees = new ArrayList<Tree<String>>();
 
             for (int child : backpointer.getChildren()) {
                 childTrees.add(extractTreeFromViterbi(child, map));
             }
-
-            return Tree.create(getSignature().resolveSymbolId(backpointer.getLabel()), childTrees);
+            
+            Tree<String> ret = Tree.create(getSignature().resolveSymbolId(backpointer.getLabel()), childTrees);
+//            System.err.println(getStateForId(state) + " -> " + ret);
+            return ret;
         }
 
+//        System.err.println(getStateForId(state) + " -> null");
         return null; // if language is empty, return null
     }
 
