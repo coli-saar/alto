@@ -31,21 +31,31 @@ public class BRUtil {
         for (int i = 0; i < nrSources; i++) {
             sources.add(String.valueOf(i));
         }
+        Set<String> seenEdgeLabels = new HashSet<>();
+        Set<String> seenNodeLabels = new HashSet<>();
         for (String source1 : sources) {
             sig.addSymbol("f_" + source1, 1);
             for (String vName : graph.getAllNodeNames()) {
-                sig.addSymbol("(" + vName + "<" + source1 + "> / " + graph.getNode(vName).getLabel() + ")", 0);
+                String nodeLabel = graph.getNode(vName).getLabel();
+                if (!seenNodeLabels.contains(nodeLabel)){
+                    seenNodeLabels.add(nodeLabel);
+                    sig.addSymbol("(" + vName + "<" + source1 + "> / " + nodeLabel + ")", 0);
+                }
             }
             for (String source2 : sources) {
                 if (!source2.equals(source1)) {
                     sig.addSymbol("r_" + source1 + "_" + source2, 1);
+                    sig.addSymbol("s_" + source1 + "_" + source2, 1);
                     for (String vName1 : graph.getAllNodeNames()) {
                         for (String vName2 : graph.getAllNodeNames()) {
                             if (!vName1.equals(vName2)) {
                                 GraphEdge e = graph.getGraph().getEdge(graph.getNode(vName1), graph.getNode(vName2));
                                 if (e != null) {
                                     String edgeLabel = e.getLabel();
-                                    sig.addSymbol("(" + vName1 + "<" + source1 + "> :" + edgeLabel + " (" + vName2 + "<" + source2 + ">))", 0);
+                                    if (!seenEdgeLabels.contains(edgeLabel)){
+                                        seenEdgeLabels.add(edgeLabel);
+                                        sig.addSymbol("(" + vName1 + "<" + source1 + "> :" + edgeLabel + " (" + vName2 + "<" + source2 + ">))", 0);
+                                    }
                                 }
                             }
                         }
@@ -69,23 +79,33 @@ public class BRUtil {
             for (String source2 : sources) {
                 if (!source2.equals(source1)) {
                     sig.addSymbol("r_" + source1 + "_" + source2, 1);
+                    sig.addSymbol("s_" + source1 + "_" + source2, 1);
                 }
             }
         }
+        Set<String> seenNodeLabels = new HashSet<>();
         for (String vName : graph.getAllNodeNames()) {
-            sig.addSymbol("(" + vName + "<" + sources.iterator().next() + "> / " + graph.getNode(vName).getLabel() + ")", 0);
+            String nodeLabel = graph.getNode(vName).getLabel();
+            if (!seenNodeLabels.contains(nodeLabel)){
+                seenNodeLabels.add(nodeLabel);
+                sig.addSymbol("(" + vName + "<" + sources.iterator().next() + "> / " + nodeLabel + ")", 0);
+            }
         }
+        Set<String> seenEdgeLabels = new HashSet<>();
         for (String vName1 : graph.getAllNodeNames()) {
             for (String vName2 : graph.getAllNodeNames()) {
                 if (!vName1.equals(vName2)) {
                     GraphEdge e = graph.getGraph().getEdge(graph.getNode(vName1), graph.getNode(vName2));
                     if (e != null) {
                         String edgeLabel = e.getLabel();
-                        Iterator<String> it = sources.iterator();
-                        String s1 = it.next();
-                        String s2 = it.next();
-                        sig.addSymbol("(" + vName1 + "<" + s1 + "> :" + edgeLabel + " (" + vName2 + "<" + s2 + ">))", 0);
-                        sig.addSymbol("(" + vName1 + "<" + s2 + "> :" + edgeLabel + " (" + vName2 + "<" + s1 + ">))", 0);
+                        if (!seenEdgeLabels.contains(edgeLabel)){
+                            seenEdgeLabels.add(edgeLabel);
+                            Iterator<String> it = sources.iterator();
+                            String s1 = it.next();
+                            String s2 = it.next();
+                            sig.addSymbol("(" + vName1 + "<" + s1 + "> :" + edgeLabel + " (" + vName2 + "<" + s2 + ">))", 0);
+                            sig.addSymbol("(" + vName1 + "<" + s2 + "> :" + edgeLabel + " (" + vName2 + "<" + s1 + ">))", 0);
+                        }
                     }
                 }
             }
@@ -123,39 +143,55 @@ public class BRUtil {
                     writer.println(nonterminal + transition + "r" + source1 + source2 + "(" + nonterminal + ")");
                     writer.println(strGraph + algString + "(?1)");
                     writer.println();
+                    
+                    String algString2 = "s_" + source1 + "_" + source2;
+                    sig.addSymbol(algString2, 1);
+                    writer.println(nonterminal + transition + "s" + source1 + source2 + "(" + nonterminal + ")");
+                    writer.println(strGraph + algString2 + "(?1)");
+                    writer.println();
                 }
             }
         }
 
+        Set<String> seenNodeLabels = new HashSet<>();
+        
         for (String vName : graph.getAllNodeNames()) {
-            String algString = "(" + vName + "<" + sources.iterator().next() + "> / " + graph.getNode(vName).getLabel() + ")";
-            sig.addSymbol(algString, 0);
-            writer.println(nonterminal + transition + vName + graph.getNode(vName).getLabel() + "CONST");
-            writer.println(strGraph + "\"" + algString + "\"");
-            writer.println();
+            String nodeLabel = graph.getNode(vName).getLabel();
+            if (!seenNodeLabels.contains(nodeLabel)){
+                seenNodeLabels.add(nodeLabel);
+                String algString = "(" + vName + "<" + sources.iterator().next() + "> / " + nodeLabel + ")";
+                sig.addSymbol(algString, 0);
+                writer.println(nonterminal + transition + nodeLabel + "VERTEX");
+                writer.println(strGraph + "\"" + algString + "\"");
+                writer.println();
+            }
         }
 
+        Set<String> seenEdgeLabels = new HashSet<>();
         for (String vName1 : graph.getAllNodeNames()) {
             for (String vName2 : graph.getAllNodeNames()) {
                 if (!vName1.equals(vName2)) {
                     GraphEdge e = graph.getGraph().getEdge(graph.getNode(vName1), graph.getNode(vName2));
                     if (e != null) {
                         String edgeLabel = e.getLabel();
-                        Iterator<String> it = sources.iterator();
-                        String s1 = it.next();
-                        String s2 = it.next();
+                        if (!seenEdgeLabels.contains(edgeLabel)){
+                            seenEdgeLabels.add(edgeLabel);
+                            Iterator<String> it = sources.iterator();
+                            String s1 = it.next();
+                            String s2 = it.next();
 
-                        String algString = "(" + vName1 + "<" + s1 + "> :" + edgeLabel + " (" + vName2 + "<" + s2 + ">))";
-                        sig.addSymbol(algString, 0);
-                        writer.println(nonterminal + transition + vName1 + edgeLabel + vName2 + "CONST");
-                        writer.println(strGraph + "\"" + algString + "\"");
-                        writer.println();
+                            String algString = "(" + vName1 + "<" + s1 + "> :" + edgeLabel + " (" + vName2 + "<" + s2 + ">))";
+                            sig.addSymbol(algString, 0);
+                            writer.println(nonterminal + transition + edgeLabel + "EDGE");
+                            writer.println(strGraph + "\"" + algString + "\"");
+                            writer.println();
 
-                        algString = "(" + vName1 + "<" + s2 + "> :" + edgeLabel + " (" + vName2 + "<" + s1 + ">))";
-                        sig.addSymbol(algString, 0);
-                        writer.println(nonterminal + transition + vName1 + edgeLabel + vName2 + "CONST2");
-                        writer.println(strGraph + "\"" + algString + "\"");
-                        writer.println();
+                            algString = "(" + vName1 + "<" + s2 + "> :" + edgeLabel + " (" + vName2 + "<" + s1 + ">))";
+                            sig.addSymbol(algString, 0);
+                            writer.println(nonterminal + transition + edgeLabel + "EDGE2");
+                            writer.println(strGraph + "\"" + algString + "\"");
+                            writer.println();
+                        }
                     }
                 }
             }
@@ -242,7 +278,10 @@ public class BRUtil {
 
     public static void main(String[] args) throws Exception {
         
-        boolean testIRTG = true;
+        boolean testIRTG = false;
+        boolean writeFile = false;
+        
+        
         if (testIRTG) {
             InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/testString5sub1_3sources.irtg"));
             for (int i = 0; i<1000; i++){
@@ -266,14 +305,13 @@ public class BRUtil {
             return;
         }
         
-        boolean writeFile = false;
         if (writeFile) {
             writeFile();
             return;
         }
         
 
-        String input = testString7;
+        String input = TESTSET;
         int nrSources = 4;
         int repetitions = 0;
         boolean onlyCheckAcceptance = false;
@@ -344,9 +382,8 @@ public class BRUtil {
 
     private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
         SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decomposeNoStoreRules(graph);
-        auto.makeTrusting();
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNrSources(), graph.getGraph().vertexSet().size());
-
+        
         if (onlyCheckAcceptance) {
             if (instr.doesAccept(alg)) {
                 System.out.println("Accepted!");
@@ -360,6 +397,7 @@ public class BRUtil {
                 instr.iterateThroughRulesBottomUp1(alg, showSteps, makeRulesTopDown);
             }
         }
+        
     }
 
     private static void runTest(Set<Integer> noFullDecomposition) throws Exception {
@@ -419,13 +457,13 @@ public class BRUtil {
     }
 
     private static void writeFile() throws Exception {
-        String filename = "examples/testString5_4Sources.irtg";
+        String filename = "examples/testString5sub1_3SourcesNew.irtg";
         PrintWriter writer = new PrintWriter(filename);
         writer.println("interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra");
         writer.println();
         
         GraphAlgebra alg = new GraphAlgebra();
-        SGraph graph = alg.parseString(testString5);
+        SGraph graph = alg.parseString(testString5sub1);
         writeIncompleteDecompositionIRTG(alg, graph, 4, writer);
 
        /*for (int i = 0; i < testset.length; i++) {;

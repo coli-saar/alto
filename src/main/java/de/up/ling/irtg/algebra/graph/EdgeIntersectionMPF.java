@@ -120,7 +120,7 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
         for (int i : allBdryReps){
             BoundaryRepresentation iBdryRep = auto.getStateForId(i);
             if (!found.contains(i)&&bdryRep.edgesDisjoint(iBdryRep)){
-                System.out.println("diff found: " + iBdryRep.toString(auto));
+                System.out.println("diff found: " + iBdryRep.toString());
             }
         }
     }

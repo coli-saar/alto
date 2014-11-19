@@ -125,11 +125,11 @@ public class SGraphBRDecompAutoInstruments {
             
             
             if (printSteps) {
-                System.out.println("Checking " + auto.getStateForId(a).toString(auto));
+                System.out.println("Checking " + auto.getStateForId(a).toString());
             }
             
             if (auto.getFinalStates().contains(a)) {
-                System.out.println("Found final state!  " + auto.getStateForId(a).toString(auto));//always print this, i guess
+                System.out.println("Found final state!  " + auto.getStateForId(a).toString());//always print this, i guess
             }
             
             for (String u : iT.unisymbols) {
@@ -160,8 +160,9 @@ public class SGraphBRDecompAutoInstruments {
     
     
 
-    public void iterateThroughRulesBottomUp1Clean(GraphAlgebra alg)//looks up potential merges with tree structure in MergePartnerFinder
+    public boolean iterateThroughRulesBottomUp1Clean(GraphAlgebra alg)//looks up potential merges with tree structure in MergePartnerFinder
     {
+        boolean ret = false;
         InitTuple iT = initAgenda(false, false);
         IntList agenda = iT.agenda;
         IntSet seen = iT.seen;
@@ -174,6 +175,9 @@ public class SGraphBRDecompAutoInstruments {
                 //System.out.println("Found final state!  " + auto.getStateForId(a).toString(auto));//always print this, i guess
             //    nrParses++;
             //}
+            if (auto.getFinalStates().contains(a)){
+                ret = true;
+            }
             
             iT.unisymbols.stream().map((u) -> auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator()).forEach((it) -> {
                 addRuleResults(it, agenda, seen, -1, false, false);
@@ -191,6 +195,7 @@ public class SGraphBRDecompAutoInstruments {
             mpFinder.insert(a);
         }
         System.out.println("Number of Parses: " + nrParses + ";   Number of Merges: " + nrMerges);
+        return ret;
     }
     
     
@@ -271,7 +276,7 @@ public class SGraphBRDecompAutoInstruments {
                         iT.agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
                     
                     if (printSteps) {
-                        System.out.println("Added constant " + auto.getStateForId(rule.getParent()).toString(auto));
+                        System.out.println("Added constant " + auto.getStateForId(rule.getParent()).toString());
                     }
                     
                     if (makeRulesTopDown) {
@@ -323,7 +328,7 @@ public class SGraphBRDecompAutoInstruments {
                     }
                     
                     if (printSteps) {
-                        System.out.println("Added constant " + auto.getStateForId(rule.getParent()).toString(auto));
+                        System.out.println("Added constant " + auto.getStateForId(rule.getParent()).toString());
                     }
                     
                     if (makeRulesTopDown) {
@@ -380,7 +385,7 @@ public class SGraphBRDecompAutoInstruments {
     private void addBR(IntSet seen, IntList agenda, int newBR, int partner, boolean printSteps) {
         
         if (printSteps && partner >= 0) {
-            System.out.println("Result of merge with " + auto.getStateForId(partner).toString(auto) + " is: " + auto.getStateForId(newBR).toString(auto));
+            System.out.println("Result of merge with " + auto.getStateForId(partner).toString() + " is: " + auto.getStateForId(newBR).toString());
         }
         
         if (!seen.contains(newBR)) {
@@ -396,7 +401,7 @@ public class SGraphBRDecompAutoInstruments {
             agenda.enqueue(newBR);
             seen.add(newBR);
             if (printSteps && partner >= 0) {
-                System.out.println("Result of merge with " + auto.getStateForId(partner).toString(auto) + " is: " + auto.getStateForId(newBR).toString(auto));
+                System.out.println("Result of merge with " + auto.getStateForId(partner).toString() + " is: " + auto.getStateForId(newBR).toString());
             }
         }
     }
@@ -500,11 +505,11 @@ public class SGraphBRDecompAutoInstruments {
                 if (rule.getArity() == 0) {
                     children = "";
                 } else if (rule.getArity() == 1) {
-                    children = auto.getStateForId(rule.getChildren()[0]).toString(auto);
+                    children = auto.getStateForId(rule.getChildren()[0]).toString();
                 } else if (rule.getArity() == 2) {
-                    children = auto.getStateForId(rule.getChildren()[0]).toString(auto) + " , " + auto.getStateForId(rule.getChildren()[1]).toString(auto);
+                    children = auto.getStateForId(rule.getChildren()[0]).toString() + " , " + auto.getStateForId(rule.getChildren()[1]).toString();
                 }
-                System.out.println(auto.getStateForId(rule.getParent()).toString(auto) + " -> " + rule.getLabel(auto) + "(" + children + ")");
+                System.out.println(auto.getStateForId(rule.getParent()).toString() + " -> " + rule.getLabel(auto) + "(" + children + ")");
             }
         }
         System.out.println("That is a total of " + String.valueOf(counter) + " Rules.");

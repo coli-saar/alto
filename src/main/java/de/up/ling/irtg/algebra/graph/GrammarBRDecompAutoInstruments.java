@@ -160,11 +160,11 @@ public class GrammarBRDecompAutoInstruments {
             int a = NumbersCombine.getSecond(next);//the boundary representation (i.e. the subgraph state)
 
             if (printSteps) {
-                System.out.println("Checking " + auto.getStateForId(a).toString(auto) + " / " + intToGrammarState[gSymb] + ": ");
+                System.out.println("Checking " + auto.getStateForId(a).toString() + " / " + intToGrammarState[gSymb] + ": ");
             }
 
             if (auto.getFinalStates().contains(a) && grammarFinalStates.contains(gSymb)) {
-                System.out.println("Found final state!  " + auto.getStateForId(a).toString(auto)+ " / " + intToGrammarState[gSymb]);//always print this, i guess
+                System.out.println("Found final state!  " + auto.getStateForId(a).toString()+ " / " + intToGrammarState[gSymb]);//always print this, i guess
             }
 
             for (int u : unaries.get(gSymb).keySet()) {
@@ -237,7 +237,7 @@ public class GrammarBRDecompAutoInstruments {
     private void addBR(LongSet seen, LongList agenda, int parentGState, int newBR, int partner, boolean printSteps) {
 
         if (printSteps && partner >= 0) {
-            System.out.println("Result of merge with " + auto.getStateForId(partner).toString(auto) + " is: " + auto.getStateForId(newBR).toString(auto));
+            System.out.println("Result of merge with " + auto.getStateForId(partner).toString() + " is: " + auto.getStateForId(newBR).toString());
         }
         
         long res = NumbersCombine.combine(parentGState, newBR);
@@ -245,7 +245,7 @@ public class GrammarBRDecompAutoInstruments {
             agenda.add(res);
             seen.add(res);
             if (printSteps) {
-                System.out.println("added " + auto.getStateForId(newBR).toString(auto) + " / " + intToGrammarState[parentGState]);
+                System.out.println("added " + auto.getStateForId(newBR).toString() + " / " + intToGrammarState[parentGState]);
             }
         }
 
@@ -268,7 +268,7 @@ public class GrammarBRDecompAutoInstruments {
                     }
 
                     if (printSteps) {
-                        System.out.println("Added constant " + auto.getStateForId(rule.getParent()).toString(auto));
+                        System.out.println("Added constant " + auto.getStateForId(rule.getParent()).toString());
                     }
 
                 }

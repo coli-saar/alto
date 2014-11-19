@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
 
-    private Signature signature;
+    protected Signature signature;
 
     public EvaluatingAlgebra() {
         signature = new Signature();

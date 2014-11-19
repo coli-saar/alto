@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
+import de.up.ling.irtg.signature.Signature;
 import java.io.FileInputStream;
 import java.io.StringReader;
 import java.util.Collections;
@@ -60,6 +61,16 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public static final String OP_FORGET_EXCEPT = "fe_";
     public static final String OP_FORGET = "f_";
 
+     
+    public GraphAlgebra() {
+        super();
+    }
+    
+    public GraphAlgebra(Signature signature) {
+        super();
+        this.signature = signature;
+    }
+    
     @Override
     public TreeAutomaton decompose(SGraph value) {
         //return new SGraphDecompositionAutomaton(value, this, getSignature());

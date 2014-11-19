@@ -42,7 +42,7 @@ public class StorageMPF extends MergePartnerFinder{
         for (int i : finalSet)
         {
             //content.append(String.valueOf(i)+",");
-            content.append(auto.getStateForId(i).toString(auto)+",");
+            content.append(auto.getStateForId(i).toString()+",");
         }
         System.out.println(indenter.toString()+prefix+content);
     }

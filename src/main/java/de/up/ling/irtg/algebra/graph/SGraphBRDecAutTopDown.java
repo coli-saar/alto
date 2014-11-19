@@ -38,13 +38,13 @@ import java.util.Iterator;
 
 public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
 
-
+    public final boolean foundFinalState;
 
     SGraphBRDecAutTopDown(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(completeGraph, algebra, signature);
 
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, getNrSources(), getNumberNodes());
-        instr.iterateThroughRulesBottomUp1Clean(algebra);
+        foundFinalState = instr.iterateThroughRulesBottomUp1Clean(algebra);
         
         
     }

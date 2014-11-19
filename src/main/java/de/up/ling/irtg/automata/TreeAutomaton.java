@@ -1,4 +1,3 @@
-
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -11,6 +10,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
@@ -34,6 +34,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
+import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
@@ -51,6 +52,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
@@ -584,16 +587,16 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected Iterable<Rule> getRulesTopDownFromExplicit(int labelId, int parentState) {
         return explicitRulesTopDown.getRules(labelId, parentState);
     }
-    
+
     public Iterable<Rule> getRulesForRhsState(int rhsState) {
         processNewRulesForRhs();
-        
+
         List<Iterable<Rule>> val = rulesForRhsState.get(rhsState);
-        if( val == null ) {
+        if (val == null) {
             return Collections.EMPTY_LIST;
         } else {
             return Iterables.concat(val);
-        }    
+        }
     }
 
     /**
@@ -791,7 +794,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         Int2ObjectMap<Pair<Double, Rule>> map
                 = evaluateInSemiring2(new ViterbiWithBackpointerSemiring(),
-                        rule -> new Pair(rule.getWeight(), rule));
+                                      rule -> new Pair(rule.getWeight(), rule));
 
         // find final state with highest weight
         int bestFinalState = 0;
@@ -874,45 +877,105 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
-    
+
     /**
-     * Generates a random tree from the language of this tree automaton.
-     * The probability of a tree is the product of the probabilities of the
-     * rules that were used to build it. The probability for the rule A -> f(B1,...,Bn)
-     * is the weight of that rule, divided by the sum of all weights for rules
-     * with left-hand side A. If the automaton has multiple final states,
-     * one of these is chosen with uniform probability.
-     * 
-     * @return 
+     * Generates a random tree from the language of this tree automaton. The
+     * probability of a tree is the product of the probabilities of the rules
+     * that were used to build it. The probability for the rule A ->
+     * f(B1,...,Bn) is the weight of that rule, divided by the sum of all
+     * weights for rules with left-hand side A. If the automaton has multiple
+     * final states, one of these is chosen with uniform probability.
+     *
+     * @return
      */
     public Tree<String> getRandomTree() {
         Random rnd = new Random();
-        int finalState = getFinalStates().toIntArray()[rnd.nextInt(getFinalStates().size())];
-        return getRandomTree(finalState, rnd);
+
+        if (getFinalStates().isEmpty()) {
+            return null;
+        } else {
+            int finalState = getFinalStates().toIntArray()[rnd.nextInt(getFinalStates().size())];
+            return getRandomTree(finalState, rnd, rule -> rule.getLabel(this));
+        }
     }
     
-    private Tree<String> getRandomTree(int state, Random rnd) {
+    public Tree<Rule> getRandomRuleTree() {
+        Random rnd = new Random();
+
+        if (getFinalStates().isEmpty()) {
+            return null;
+        } else {
+            int finalState = getFinalStates().toIntArray()[rnd.nextInt(getFinalStates().size())];
+            return getRandomTree(finalState, rnd, rule -> rule);
+        }
+    }
+
+    private <E> Tree<E> getRandomTree(int state, Random rnd, Function<Rule,E> makeLabel) {
         List<Rule> rulesHere = new ArrayList<>();
         double totalWeight = 0;
-        
-        for( Rule r : getRulesTopDown(state)) {
+
+        for (Rule r : getRulesTopDown(state)) {
             rulesHere.add(r);
             totalWeight += r.getWeight();
         }
-        
+
         double selectWeight = rnd.nextDouble() * totalWeight;
+        double cumulativeWeight = 0;
+
+        for (int i = 0; i < rulesHere.size(); i++) {
+            Rule rule = rulesHere.get(i);
+            cumulativeWeight += rule.getWeight();
+
+            if (cumulativeWeight >= selectWeight) {
+                List<Tree<E>> subtrees = new ArrayList<>();
+                for (int j = 0; j < rule.getArity(); j++) {
+                    subtrees.add(getRandomTree(rule.getChildren()[j], rnd, makeLabel));
+                }
+                return Tree.create(makeLabel.apply(rule), subtrees);
+            }
+        }
+
+        // should be unreachable
+        return null;
+    }
+    
+    public Tree<Rule> getRandomRuleTreeFromInside() {
+        Random rnd = new Random();
+        Map<Integer,Double> inside = inside();
+        
+        if( getFinalStates().isEmpty() ) {
+            return null;
+        } else {
+            int chosenFinalState = Util.sampleMultinomial(getFinalStates().toIntArray(), inside::get);
+            return getRandomTreeFromInside(chosenFinalState, rnd, inside, rule -> rule);
+        }
+    }
+    
+    public Tree<String> getRandomTreeFromInside() {
+        Random rnd = new Random();
+        Map<Integer,Double> inside = inside();
+        
+        if( getFinalStates().isEmpty() ) {
+            return null;
+        } else {
+            int chosenFinalState = Util.sampleMultinomial(getFinalStates().toIntArray(), inside::get);
+            return getRandomTreeFromInside(chosenFinalState, rnd, inside, rule -> rule.getLabel(this));
+        }
+    }
+    
+    private <E> Tree<E> getRandomTreeFromInside(int state, Random rnd, Map<Integer,Double> inside, Function<Rule,E> makeLabel) {
+        List<Rule> rulesHere = Lists.newArrayList(getRulesTopDown(state));
+        double selectWeight = rnd.nextDouble() * inside.get(state);
         double cumulativeWeight = 0;
         
         for( int i = 0; i < rulesHere.size(); i++ ) {
             Rule rule = rulesHere.get(i);
-            cumulativeWeight += rule.getWeight();
+            double insideChildren = Util.mult(Arrays.stream(rule.getChildren()).mapToDouble(inside::get));
             
+            cumulativeWeight += rule.getWeight() * insideChildren;
             if( cumulativeWeight >= selectWeight ) {
-                List<Tree<String>> subtrees = new ArrayList<>();
-                for( int j = 0; j < rule.getArity(); j++ ) {
-                    subtrees.add(getRandomTree(rule.getChildren()[j], rnd));
-                }
-                return Tree.create(rule.getLabel(this), subtrees);
+                List<Tree<E>> children = Arrays.stream(rule.getChildren()).mapToObj(ch -> getRandomTreeFromInside(ch, rnd, inside, makeLabel)).collect(Collectors.toList());
+                return Tree.create(makeLabel.apply(rule), children);
             }
         }
         
@@ -949,36 +1012,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         } else {
             return filter.apply(rule);
         }
-    }
-    
-    /**
-     * Compares two automata for equality. Two automata are equal if they have
-     * the same rules and the same final states. All label and state IDs are
-     * resolved to the actual labels and states for this comparison.<p>
-     * 
-     * This method differs from {@link #equals(java.lang.Object) } in that it assumes
-     * that the "other" tree automaton has states that are strings. It also maps
-     * the states of "this" automaton to their string representations, and takes
-     * a state of "this" and a state of "other" to be the same if they are
-     * the same string. This makes it possible to compare automata for equality
-     * even if they have different state classes. (The ordinary equals method
-     * will generally find such automata non-equals because it can't map the
-     * states to each other.)<p>
-     *
-     * The implementation of this method is currently very slow, and should only
-     * be used for small automata (e.g. in unit tests).
-     * 
-     * @param other
-     * @return 
-     */
-    public boolean equalsWithStringStates(TreeAutomaton<String> other) {
-        int[] stateRemap = stateInterner.remap(other.stateInterner, state -> state.toString());                  // stateId and stateRemap[stateId] are the same state
-        int[] labelRemap = getSignature().remap(other.getSignature());                       // labelId and labelRemap[labelId] are the same label
-
-        Iterable<Rule> allRules = getRuleSet();
-        Iterable<Rule> otherAllRules = other.getRuleSet();
-
-        return ruleSetsEqual(allRules, otherAllRules, labelRemap, stateRemap, other);
     }
 
     /**
@@ -1224,12 +1257,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(TreeAutomaton<OtherState> other) {
         return intersect(other, new IdentitySignatureMapper(signature));
     }
-    
+
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(TreeAutomaton<OtherState> other, SignatureMapper mapper) {
-        if( other instanceof CondensedTreeAutomaton ) {
+        if (other instanceof CondensedTreeAutomaton) {
             CondensedTreeAutomaton cOther = (CondensedTreeAutomaton) other;
-            
-            if( other.supportsTopDownQueries() ) {
+
+            if (other.supportsTopDownQueries()) {
                 Logging.get().info("Using condensed intersection.");
                 return intersectCondensed(cOther, mapper);
             } else {
@@ -1237,7 +1270,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 return intersectCondensedBottomUp(cOther, mapper);
             }
         } else {
-            if( other.supportsBottomUpQueries() ) {
+            if (other.supportsBottomUpQueries()) {
                 Logging.get().info("Using old-style bottom-up intersection.");
                 return intersectBottomUp(other);
             } else {
@@ -1265,13 +1298,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ret.makeAllRulesExplicit();
         return ret;
     }
-    
+
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensedBottomUp(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
         TreeAutomaton<Pair<State, OtherState>> ret = new CondensedBottomUpIntersectionAutomaton<>(this, other, signatureMapper);
         ret.makeAllRulesExplicit();
         return ret;
     }
-    
+
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensedBottomUp(CondensedTreeAutomaton<OtherState> other) {
         return intersectCondensedBottomUp(other, new IdentitySignatureMapper(signature));
     }
@@ -1494,15 +1527,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //    private Exception UnsupportedOperationException(String not_tested_yet) {
 //        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
 //    }
-
 //    private static class IntegerIdentity extends FunctionToInt<Integer> {
 //
 //        public int applyInt(Integer f) {
 //            return f;
 //        }
 //    }
-    
-    
     private static final ToIntFunction<Integer> INTEGER_IDENTITY = f -> f;
 
     /**
@@ -2515,8 +2545,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     protected Rule createRule(int parent, int label, int[] children, double weight) {
-        Rule rule = new Rule(parent, label, children, weight);
-        return rule;
+        return new Rule(parent, label, children, weight);
     }
 
     protected Rule createRule(int parent, int label, List<Integer> children, double weight) {
@@ -2619,11 +2648,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Interner getStateInterner() {
         return stateInterner;
     }
-    
+
     public boolean supportsTopDownQueries() {
         return true;
     }
-    
+
     public boolean supportsBottomUpQueries() {
         return true;
     }
@@ -2636,4 +2665,3 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return determinize(null);
     }
 }
-

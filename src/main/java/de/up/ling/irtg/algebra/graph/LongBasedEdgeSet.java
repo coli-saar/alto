@@ -12,6 +12,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.StringJoiner;
 
 /**
  *
@@ -158,9 +159,11 @@ public class LongBasedEdgeSet {
     }
 
     public void appendAll(StringBuilder result, SGraphBRDecompositionAutomaton auto) {
+        StringJoiner sj = new StringJoiner(", ", "[", "]");
         for (long e : edges) {
-            result.append("(").append(auto.getNodeForInt(NumbersCombine.getFirst(e))).append(",").append(auto.getNodeForInt(NumbersCombine.getSecond(e))).append(") ");
+            sj.add("("+auto.getNodeForInt(NumbersCombine.getFirst(e))+","+auto.getNodeForInt(NumbersCombine.getSecond(e))+")");
         }
+        result.append(sj);
     }
 
     @Override

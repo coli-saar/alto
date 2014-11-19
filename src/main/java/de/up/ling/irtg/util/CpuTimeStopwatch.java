@@ -32,14 +32,29 @@ public class CpuTimeStopwatch {
     }
     
     public void printMilliseconds(String... labels) {
+        System.err.println(toMilliseconds("\n", labels));
+    }
+    
+    public synchronized void printMillisecondsX(String id, String... labels) {
+        System.err.println("[" + id + "] " + toMilliseconds(" / ", labels));
+    }
+    
+    public String toMilliseconds(String separator, String... labels) {
         int maxLen = 0;
+        StringBuilder buf = new StringBuilder();
 
         for (int i = 0; i < labels.length; i++) {
             maxLen = Math.max(maxLen, labels[i].length());
         }
 
         for (int i = 0; i < labels.length; i++) {
-            System.err.printf("%-" + maxLen + "s : %d ms\n", labels[i], getTimeBefore(i+1)/1000000);
+            buf.append(String.format("%-" + maxLen + "s : %d ms", labels[i], getTimeBefore(i+1)/1000000));
+            
+            if( i < labels.length-1) {
+                buf.append(separator);
+            }
         }
+        
+        return buf.toString();
     }
 }

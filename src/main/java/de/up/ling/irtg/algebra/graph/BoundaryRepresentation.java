@@ -29,9 +29,12 @@ import java.util.List;
 import com.google.common.base.Function;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_SWAP;
 import de.up.ling.irtg.util.NumbersCombine;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.BitSet;
+import java.util.StringJoiner;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
@@ -49,6 +52,7 @@ public class BoundaryRepresentation {
     public final int largestSource;
     public final long edgeID;
     public final long vertexID;//ID1 == ID2 iff BR1 == BR2, but only among the BR in one automaton.
+    private final SGraphBRDecompositionAutomaton auto;
 
     //public long getID(SGraphBRDecompositionAutomaton auto) {
     //    return vertexID + edgeID * (long) Math.pow(auto.getNumberNodes() + 1, auto.getNrSources());
@@ -57,6 +61,7 @@ public class BoundaryRepresentation {
         inBoundaryEdges = new LongBasedEdgeSet();//make the size depend on d?
         sourceToNodename = new int[auto.getNrSources()];
         isSourceNode = new BitSet(auto.getNumberNodes());
+        this.auto = auto;
 
         boolean tempSourcesAllBottom = true;
         for (int j = 0; j < sourceToNodename.length; j++) {
@@ -144,6 +149,7 @@ public class BoundaryRepresentation {
      largestSource = NumbersCombine.getSecond(temp);
      }*/
     public BoundaryRepresentation(LongBasedEdgeSet inBoundaryEdges, int[] sourceToNodename, int innerNodeCount, boolean sourcesAllBottom, BitSet isSourceNode, long edgeID, long vertexID, SGraphBRDecompositionAutomaton auto) {
+        this.auto = auto;
         this.inBoundaryEdges = inBoundaryEdges;//no copy needed, since only modified in constructor
         this.sourceToNodename = sourceToNodename;//no copy needed, since only modified in constructor
         this.innerNodeCount = innerNodeCount;
@@ -346,6 +352,9 @@ public class BoundaryRepresentation {
     
     public BoundaryRepresentation swap(int oldSource, int newSource, SGraphBRDecompositionAutomaton auto)
     {
+        if (sourceToNodename[newSource] == -1 || sourceToNodename[oldSource] == -1) {
+            return null;
+        }
         LongBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();//set size?
         int[] newSourceToNodename = sourceToNodename.clone();
         int oldVNr = sourceToNodename[oldSource];
@@ -638,24 +647,45 @@ public class BoundaryRepresentation {
         //}
     }
 
-    //@Override
-    public String toString(SGraphBRDecompositionAutomaton auto) {
-        StringBuilder result = new StringBuilder();
-        result.append("[");
-        for (int source = 0; source < sourceToNodename.length; source++) {
-            if (sourceToNodename[source] != -1) {
-                result.append("(").append(auto.getNodeForInt(sourceToNodename[source])).append("<").append(auto.getSourceForInt(source)).append(">) ");
-            }
-        }
-        result.append("] -- [");
-        inBoundaryEdges.appendAll(result, auto);
-        result.append("]");
-        return result.toString();
-    }
-
     @Override
     public String toString() {
-        return inBoundaryEdges.toString();//careful, this loses information!
+        StringJoiner nodes = new StringJoiner(", ", "[", "]");
+        
+        
+        for (int vNr = 0; vNr<auto.getNumberNodes(); vNr++){
+            if (isSourceNode.get(vNr)){
+                StringBuilder vRes = new StringBuilder();
+                vRes.append(auto.getNodeForInt(vNr));
+                IntList sources = getAssignedSources(vNr);
+                StringJoiner sourceSJ = new StringJoiner(", ", "<", ">");
+                for (int source : sources){
+                    sourceSJ.add(String.valueOf(source));
+                }
+                vRes.append(sourceSJ);
+                long[] edges = auto.getIncidentEdges(vNr);
+                StringJoiner edgeSJ = new StringJoiner(", ", "{", "}");
+                for (long edge : edges){
+                    if (inBoundaryEdges.contains(edge)){
+                        edgeSJ.add(auto.getNodeForInt(NumbersCombine.getFirst(edge))+"_"+auto.getNodeForInt(NumbersCombine.getSecond(edge)));
+                    }
+                }
+                vRes.append(" " +edgeSJ);
+                nodes.add(vRes);
+            }
+            
+        }
+        return nodes.toString();
+    }
+    
+    private IntList getAssignedSources(int vNr){
+        IntList ret = new IntArrayList();
+        for (int source = 0; source < sourceToNodename.length; source++) {
+            if (sourceToNodename[source] == vNr){
+                ret.add(source);
+            }
+                
+        }
+        return ret;
     }
 
     @Override
@@ -718,8 +748,5 @@ public class BoundaryRepresentation {
         System.out.println(res);
     }
     
-    private void computeEdgeID(){
-        
-    }
 
 }

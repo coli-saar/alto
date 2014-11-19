@@ -26,7 +26,6 @@ import java.util.Set;
  * @author koller
  */
 public class Interner<E> implements Serializable, Cloneable {
-
     protected Object2IntMap<E> objectToInt;
     protected Int2ObjectMap<E> intToObject;
     protected List<E> uncachedObjects;
@@ -73,14 +72,13 @@ public class Interner<E> implements Serializable, Cloneable {
     private void processUncachedObjects() {
         if (trustingMode) {
             // if we're not in trusting mode, there will be no uncached objects
-            
+
 //            System.err.println("caching " + uncachedObjects.size() + " uncached objects");
 //            try {
 //                throw new Exception();
 //            } catch (Exception e) {
 //                e.printStackTrace(System.err);
 //            }
-            
             for (int i = 0; i < uncachedObjects.size(); i++) {
                 objectToInt.put(uncachedObjects.get(i), i + firstIndexForUncachedObjects);
             }
@@ -128,6 +126,11 @@ public class Interner<E> implements Serializable, Cloneable {
         return objectToInt.keySet();
     }
     
+    public E normalize(E object) {
+        int id = addObject(object);
+        return resolveId(id);
+    }
+
     public IntSet getKnownIds() {
         // no need to processUncachedObjects:
         // intToObject is always filled directly
@@ -142,18 +145,6 @@ public class Interner<E> implements Serializable, Cloneable {
         processUncachedObjects();
         return objectToInt;
     }
-    
-    public <O> int[] remap(Interner<O> other, Function<E,O> reprF) {
-        processUncachedObjects();
-
-        int[] ret = new int[nextIndex];
-
-        for (int i = 1; i < nextIndex; i++) {
-            ret[i] = other.resolveObject(reprF.apply(resolveId(i)));
-        }
-
-        return ret;
-    }
 
     /*
      * Returns an arrary x such that the symbol
@@ -163,7 +154,15 @@ public class Interner<E> implements Serializable, Cloneable {
      * will be 0.
      */
     public int[] remap(Interner<E> other) {
-        return remap(other, x -> x);
+        processUncachedObjects();
+
+        int[] ret = new int[nextIndex];
+
+        for (int i = 1; i < nextIndex; i++) {
+            ret[i] = other.resolveObject(resolveId(i));
+        }
+
+        return ret;
     }
 
     public static int[] remapArray(int[] ids, int[] remap) {
@@ -212,9 +211,9 @@ public class Interner<E> implements Serializable, Cloneable {
      * Switches the interner to "trusting mode". In trusting mode, the interner
      * trusts the caller to never try to intern the same object twice. This can
      * be faster than if every objects is checked for equality to earlier
-     * objects, but if the same object is added to the interner in trusting
-     * mode twice, there will be two objects with the same ID. By default,
-     * interners start in trusting mode = false.
+     * objects, but if the same object is added to the interner in trusting mode
+     * twice, there will be two objects with the same ID. By default, interners
+     * start in trusting mode = false.
      *
      * @param trustingMode
      */
