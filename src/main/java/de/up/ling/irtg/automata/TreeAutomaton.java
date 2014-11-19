@@ -51,6 +51,7 @@ import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
 import java.io.Serializable;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -1104,6 +1105,23 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         return buf.toString();
+    }
+    
+    public void write(Writer writer) throws Exception{
+        long countSuppressed = 0;
+
+        for (Rule rule : getRuleSet()) {
+            if (isRulePrinting(rule)) {
+                writer.write(rule.toString(this, getFinalStates().contains(rule.getParent())) + "\n");
+            } else {
+                countSuppressed++;
+            }
+        }
+
+        if (countSuppressed > 0) {
+            writer.write("(" + countSuppressed + " rules omitted)\n");
+        }
+
     }
 
     /**

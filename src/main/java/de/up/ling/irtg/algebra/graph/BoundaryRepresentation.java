@@ -659,7 +659,7 @@ public class BoundaryRepresentation {
                 IntList sources = getAssignedSources(vNr);
                 StringJoiner sourceSJ = new StringJoiner(", ", "<", ">");
                 for (int source : sources){
-                    sourceSJ.add(String.valueOf(source));
+                    sourceSJ.add(auto.getSourceForInt(source));
                 }
                 vRes.append(sourceSJ);
                 long[] edges = auto.getIncidentEdges(vNr);

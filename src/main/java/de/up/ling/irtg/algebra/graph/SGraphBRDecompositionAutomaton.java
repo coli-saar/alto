@@ -110,12 +110,13 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
 
         storedRules = new IntTrie<>();
         this.completeGraph = completeGraph;
+        incidentEdges = computeIncidentEdges();
+        
         BoundaryRepresentation completeRep = new BoundaryRepresentation(completeGraph, this);
         int x = addState(completeRep);
         finalStates.add(x);
 
         pwsp = new PairwiseShortestPaths(completeGraph, this);
-        incidentEdges = computeIncidentEdges();
         storedRulesTopDown = new Int2ObjectOpenHashMap<>();
         int maxDegBuilder = 0;
         for (int vNr = 0; vNr < intToNodename.length; vNr++) {
@@ -130,6 +131,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         maxDegree = maxDegBuilder;
         storedStates = new Long2ObjectOpenHashMap<>();
         Long2IntMap edgeIDMap = new Long2IntOpenHashMap();
+        edgeIDMap.defaultReturnValue(-1);
         edgeIDMap.put(completeRep.edgeID, x);
         storedStates.put(completeRep.vertexID, edgeIDMap);
         
@@ -360,6 +362,9 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
 
                 BoundaryRepresentation arg = children.get(0);
 
+                if (arg == null){
+                    System.out.println("error");
+                }
                 for (Integer sourceToForget : arg.getForgottenSources(label, labelId, this))//check if we may forget.
                 {
                     if (!arg.isForgetAllowed(sourceToForget, completeGraph, this)) {

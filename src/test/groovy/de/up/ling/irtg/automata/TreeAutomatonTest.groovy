@@ -96,7 +96,7 @@ class TreeAutomatonTest{
         assertEquals(new HashSet([p("q2","p1")]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it)}));
     }
     
-    @Test
+    /*@Test
     public void testEqualsWithStringStates() {
         TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
@@ -109,7 +109,7 @@ class TreeAutomatonTest{
         
         assert intersect.equalsWithStringStates(gold)
         assert ! gold.equalsWithStringStates(intersect)
-    }
+    }*/
     
     @Test
     public void testIntersectionLanguage() {

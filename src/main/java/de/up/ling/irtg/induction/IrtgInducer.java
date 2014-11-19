@@ -106,6 +106,9 @@ public class IrtgInducer {
     private final InputCodec<TreeAutomaton> icTreeAuto = new TreeAutomatonInputCodec();
     private final Random rnd = new Random();
 
+    
+    
+    
     public static void main(String[] args) throws Exception {
         int nrSources = 3;
         IntSet failed = new IntOpenHashSet();
@@ -133,8 +136,7 @@ public class IrtgInducer {
             
             sw.record(2*(i-start)+1);
             Writer rtgWriter = new FileWriter("corpora/amr-bank-v1.3_parses/"+String.valueOf(ti.id)+".rtg");
-            String autoString = auto.toString();
-            rtgWriter.write(autoString);
+            auto.write(rtgWriter);
             rtgWriter.close();
             
             
@@ -193,6 +195,9 @@ public class IrtgInducer {
 //        
 //        overall.printMilliseconds("overall time");
     }
+    
+    
+    
 
     public IrtgInducer(Reader corpusReader) {
         rtgState = rtg.addState("X");

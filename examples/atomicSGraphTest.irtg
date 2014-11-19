@@ -1,0 +1,81 @@
+/* A synchronous grammar that translates between strings and
+   semantic representations, represented as graphs.
+
+   Try parsing this sentence: "the boy wants to go"
+
+   And parsing this graph: 
+   (w / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))
+
+
+   The grammar can translate the sentence "the boy wants the girl to believe that 
+   the boy likes the girl", which is modeled after Chiang et al., ACL 2012, Figure 2. 
+   A crucial difference is that our grammar does not attempt to map the pronouns
+   in Chiang et al.'s example to the same nodes as "the boy" and "the girl".
+
+   For the reverse direction, try parsing the following graph:
+   (w_5 / want  :ARG0 (subj_6 / boy)  :ARG1 (vcomp_7 / believe  :ARG0 (obj_8 / girl)  :ARG1 (xcomp_6_3 / like  :ARG0 (subj_5_2_4 / boy)  :ARG1 (obj_6_3_5 / girl))))
+
+*/
+
+
+interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+S! -> f0(X)
+[graph] f_0(?1)
+
+S! -> f1(X)
+[graph] f_1(?1)
+
+S! -> m(Y, Y)
+[graph]  merge(?1, ?2)
+
+S! -> m(X, Y)
+[graph]  merge(?1, ?2)
+
+S! -> m(Y, X)
+[graph]  merge(?1, ?2)
+
+S!-> m(X, X)
+[graph]  merge(?1, ?2)
+
+X -> m(Y, Y)
+[graph]  merge(?1, ?2)
+
+X -> m(X, Y)
+[graph]  merge(?1, ?2)
+
+X -> m(Y, X)
+[graph]  merge(?1, ?2)
+
+X -> m(X, X)
+[graph]  merge(?1, ?2)
+
+X -> f0(X)
+[graph] f_0(?1)
+
+X -> f1(X)
+[graph] f_1(?1)
+
+X -> f0(Y)
+[graph] f_0(?1)
+
+X -> f1(Y)
+[graph] f_1(?1)
+
+Y -> r01(X)
+[graph] r_0_1(?1)
+
+Y -> r10(X)
+[graph] r_1_0(?1)
+
+X -> aaa
+[graph]  "(x<0> / gamma)"
+
+X -> edge
+[graph]  "(x<0> :alpha (y<1>))"
+
+X -> edge2
+[graph]  "(x<1> :alpha (y<0>))"
+
+X -> bbb
+[graph]  "(y<0> / beta)"

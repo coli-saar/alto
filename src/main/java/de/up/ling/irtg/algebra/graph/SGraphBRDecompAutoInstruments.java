@@ -272,6 +272,10 @@ public class SGraphBRDecompAutoInstruments {
                     Rule rule = it.next();
                     int parent = rule.getParent();
                     
+                    if (parent == 0){
+                        System.out.println("error!");
+                    }
+                    
                     if (!iT.agenda.contains(parent))
                         iT.agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
                     

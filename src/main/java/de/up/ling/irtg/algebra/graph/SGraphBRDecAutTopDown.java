@@ -42,10 +42,11 @@ public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
 
     SGraphBRDecAutTopDown(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(completeGraph, algebra, signature);
+        stateInterner.setTrustingMode(true);
 
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, getNrSources(), getNumberNodes());
         foundFinalState = instr.iterateThroughRulesBottomUp1Clean(algebra);
-        
+        //System.out.println(toString());
         
     }
     
