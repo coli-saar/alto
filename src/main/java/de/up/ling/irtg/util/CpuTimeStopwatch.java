@@ -15,6 +15,7 @@ import java.lang.management.ThreadMXBean;
  * @author koller
  */
 public class CpuTimeStopwatch {
+
     private final Int2LongMap timestamps;
     private final ThreadMXBean benchmarkBean;
 
@@ -30,15 +31,19 @@ public class CpuTimeStopwatch {
     public long getTimeBefore(int id) {
         return timestamps.get(id) - timestamps.get(id - 1);
     }
-    
+
+    public String printTimeBefore(int id, String label) {
+        return String.format("%-" + label.length() + "s : %d ms", label, getTimeBefore(id) / 1000000);
+    }
+
     public void printMilliseconds(String... labels) {
         System.err.println(toMilliseconds("\n", labels));
     }
-    
+
     public synchronized void printMillisecondsX(String id, String... labels) {
         System.err.println("[" + id + "] " + toMilliseconds(" / ", labels));
     }
-    
+
     public String toMilliseconds(String separator, String... labels) {
         int maxLen = 0;
         StringBuilder buf = new StringBuilder();
@@ -48,13 +53,13 @@ public class CpuTimeStopwatch {
         }
 
         for (int i = 0; i < labels.length; i++) {
-            buf.append(String.format("%-" + maxLen + "s : %d ms", labels[i], getTimeBefore(i+1)/1000000));
-            
-            if( i < labels.length-1) {
+            buf.append(String.format("%-" + maxLen + "s : %d ms", labels[i], getTimeBefore(i + 1) / 1000000));
+
+            if (i < labels.length - 1) {
                 buf.append(separator);
             }
         }
-        
+
         return buf.toString();
     }
 }

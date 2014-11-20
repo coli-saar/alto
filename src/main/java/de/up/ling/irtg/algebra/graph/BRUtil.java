@@ -112,6 +112,53 @@ public class BRUtil {
         }
         sig.addSymbol("merge", 2);
     }
+    
+    public static void makeIncompleteBolinasDecompositionAlgebra(GraphAlgebra alg, SGraph graph, int nrSources) throws Exception//only add empty algebra!!
+    {
+        String BOLINASROOTSTRING = "bolinasroot";
+        Signature sig = alg.getSignature();
+        List<String> sources = new ArrayList<>();
+        for (int i = 0; i < nrSources; i++) {
+            sources.add(String.valueOf(i));
+        }
+        for (String source1 : sources) {
+            sig.addSymbol(GraphAlgebra.OP_BOLINASMERGE+source1, 2);
+            sig.addSymbol("f_" + source1, 1);
+            for (String source2 : sources) {
+                if (!source2.equals(source1)) {
+                    sig.addSymbol("r_" + source1 + "_" + source2, 1);
+                    sig.addSymbol("s_" + source1 + "_" + source2, 1);
+                }
+            }
+        }
+        Set<String> seenNodeLabels = new HashSet<>();
+        for (String vName : graph.getAllNodeNames()) {
+            String nodeLabel = graph.getNode(vName).getLabel();
+            if (!seenNodeLabels.contains(nodeLabel)){
+                seenNodeLabels.add(nodeLabel);
+                sig.addSymbol("(" + vName + "<" + BOLINASROOTSTRING + "> / " + nodeLabel + ")", 0);
+            }
+        }
+        Set<String> seenEdgeLabels = new HashSet<>();
+        for (String vName1 : graph.getAllNodeNames()) {
+            for (String vName2 : graph.getAllNodeNames()) {
+                if (!vName1.equals(vName2)) {
+                    GraphEdge e = graph.getGraph().getEdge(graph.getNode(vName1), graph.getNode(vName2));
+                    if (e != null) {
+                        String edgeLabel = e.getLabel();
+                        if (!seenEdgeLabels.contains(edgeLabel)){
+                            seenEdgeLabels.add(edgeLabel);
+                            Iterator<String> it = sources.iterator();
+                            String s1 = it.next();
+                            sig.addSymbol("(" + vName1 + "<" + BOLINASROOTSTRING + "> :" + edgeLabel + " (" + vName2 + "<" + s1 + ">))", 0);
+                        }
+                    }
+                }
+            }
+        }
+        sig.addSymbol(GraphAlgebra.OP_MERGE, 2);
+        sig.addSymbol(GraphAlgebra.OP_FORGET_ALL, 1);
+    }
 
     public static void writeIncompleteDecompositionIRTG(GraphAlgebra alg, SGraph graph, int nrSources, PrintWriter writer) throws Exception//only add empty algebra!!
     {
@@ -382,7 +429,7 @@ public class BRUtil {
 
     private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
         SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decomposeNoStoreRules(graph);
-        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNrSources(), graph.getGraph().vertexSet().size());
+        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNrSources(), graph.getGraph().vertexSet().size(), false);
         
         if (onlyCheckAcceptance) {
             if (instr.doesAccept(alg)) {

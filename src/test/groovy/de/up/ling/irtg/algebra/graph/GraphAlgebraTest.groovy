@@ -53,13 +53,13 @@ class GraphAlgebraTest {
     
     
     
-    /*@Test
+    //@Test
     public void testParseGraph() {
         InterpretedTreeAutomaton irtg = pi(HRG);
         TreeAutomaton chart = irtg.parse(["graph":"(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))"])
         
         assertEquals(new HashSet([pt("want2(boy,go)")]), chart.language())
-    }*/
+    }
     
     /*@Test
     public void testParseGraphWithCoref() {

@@ -32,9 +32,13 @@ public class SGraphBRDecompAutoInstruments {
     private Map<String, String> constantAbbreviations;
     private int nrParses;
     
-    public SGraphBRDecompAutoInstruments(SGraphBRDecompositionAutomaton auto, int sourceCount, int nodeCount){
+    public SGraphBRDecompAutoInstruments(SGraphBRDecompositionAutomaton auto, int sourceCount, int nodeCount, boolean doBolinas){
         this.auto = auto;
-        mpFinder = new DynamicMergePartnerFinder(0, sourceCount, nodeCount, auto);
+        if (doBolinas){
+            mpFinder = new BolinasMPF(0, sourceCount, nodeCount, auto);
+        } else {
+            mpFinder = new DynamicMergePartnerFinder(0, sourceCount, nodeCount, auto);
+        }
     }
     
     
@@ -145,8 +149,12 @@ public class SGraphBRDecompAutoInstruments {
                 for (int d: partners) {
                     nrMergeChecks++;
                     Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
-                    
                     nrMerges += addRuleResults(it, agenda, seen, d, printSteps, makeRulesTopDown);
+                    if (iT.doBothWays.contains(b)){
+                        nrMergeChecks++;
+                        it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
+                        nrMerges += addRuleResults(it, agenda, seen, d, printSteps, makeRulesTopDown);
+                    }
                 }
             }
             
@@ -183,13 +191,16 @@ public class SGraphBRDecompAutoInstruments {
                 addRuleResults(it, agenda, seen, -1, false, false);
             });
             
+            IntList partners = mpFinder.getAllMergePartners(a);
             for (String b : iT.bisymbols) {
-                IntList partners = mpFinder.getAllMergePartners(a);
-                
                 for (int d: partners) {
                     Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
                     
                     nrMerges += addRuleResults(it, agenda, seen, d, false, false);
+                    if (iT.doBothWays.contains(b)){
+                        it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
+                        nrMerges += addRuleResults(it, agenda, seen, d, false, false);
+                    }
                 }
             }
             mpFinder.insert(a);
@@ -230,8 +241,12 @@ public class SGraphBRDecompAutoInstruments {
                 
                 for (int d: partners) {
                     Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
-                    
                     addRuleResults(it, agenda, seen, -1, false, false);
+                    
+                    if (iT.doBothWays.contains(b)){
+                        it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
+                        addRuleResults(it, agenda, seen, -1, false, false);
+                    }
                 }
             }
             
@@ -263,6 +278,9 @@ public class SGraphBRDecompAutoInstruments {
                 iT.unisymbols.add(s);
             } else if (symbols.get(s) == 2) {
                 iT.bisymbols.add(s);
+                if (s.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
+                    iT.doBothWays.add(s);
+                }
             }
         }
         for (String c : iT.constants) {
@@ -271,6 +289,9 @@ public class SGraphBRDecompAutoInstruments {
                 while (it.hasNext()) {
                     Rule rule = it.next();
                     int parent = rule.getParent();
+                    if (auto.getFinalStates().contains(parent)){
+                        nrParses++;
+                    }
                     
                     if (parent == 0){
                         System.out.println("error!");
@@ -316,6 +337,9 @@ public class SGraphBRDecompAutoInstruments {
                 iT.unisymbols.add(s);
             } else if (symbols.get(s) == 2) {
                 iT.bisymbols.add(s);
+                if (s.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
+                    iT.doBothWays.add(s);
+                }
             }
         }
         for (String c : iT.constants) {
@@ -527,6 +551,7 @@ public class SGraphBRDecompAutoInstruments {
         public Set<String> constants = new HashSet<>();
         public Set<String> unisymbols = new HashSet<>();
         public Set<String> bisymbols = new HashSet<>();
+        public Set<String> doBothWays = new HashSet<>();
     }
     
     private class InitTuplePriority{
@@ -535,6 +560,7 @@ public class SGraphBRDecompAutoInstruments {
         public Set<String> constants = new HashSet<>();
         public Set<String> unisymbols = new HashSet<>();
         public Set<String> bisymbols = new HashSet<>();
+        public Set<String> doBothWays = new HashSet<>();
         public InitTuplePriority(SGraphBRDecompositionAutomaton auto){
             agenda = new IntHeapPriorityQueue(new BRComparator(auto));
         }

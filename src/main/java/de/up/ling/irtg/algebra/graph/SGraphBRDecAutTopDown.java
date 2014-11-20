@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.NumbersCombine;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -26,6 +27,7 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.io.StringReader;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
@@ -44,13 +46,48 @@ public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
         super(completeGraph, algebra, signature);
         stateInterner.setTrustingMode(true);
 
-        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, getNrSources(), getNumberNodes());
+        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, getNrSources(), getNumberNodes(), doBolinas());//maybe check algebra if it contains bolinasmerge?
         foundFinalState = instr.iterateThroughRulesBottomUp1Clean(algebra);
         //System.out.println(toString());
-        
+
+    }
+
+    public void writeShort(Writer writer) throws Exception {
+        int count = 1;
+
+        for (Rule rule : getRuleSet()) {
+            boolean first = true;
+            StringBuilder ret = new StringBuilder(Tree.encodeLabel(encodeShort(rule.getParent())) + (finalStates.contains(rule.getParent()) ? "!" : "") + " -> " + Tree.encodeLabel(rule.getLabel(this)));
+
+            if (rule.getChildren().length > 0) {
+                ret.append("(");
+
+                for (int child : rule.getChildren()) {
+                    if (first) {
+                        first = false;
+                    } else {
+                        ret.append(", ");
+                    }
+
+                    ret.append((child == 0) ? "null" : Tree.encodeLabel(encodeShort(child)));
+                }
+
+                ret.append(")");
+            }
+            ret.append("\n");
+            writer.write(ret.toString());
+            if (count % 100 == 0) {
+                writer.flush();
+            }
+            count++;
+        }
+
     }
     
-    
+    private String encodeShort(int stateId){
+        return String.valueOf(stateId)+"_"+getStateForId(stateId).allSourcesToString();
+    }
+
     @Override
     Rule makeRuleTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
@@ -64,26 +101,24 @@ public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
          System.out.println("sgraph: " + graph.toIsiAmrString());*/
         int parentState = -1;
         Long2IntMap edgeIDMap = storedStates.get(parent.vertexID);
-        if (edgeIDMap != null){
+        if (edgeIDMap != null) {
             parentState = edgeIDMap.get(parent.edgeID);
         }
-        
-        if (parentState == -1){
+
+        if (parentState == -1) {
             parentState = addState(parent);
-            if (edgeIDMap == null){
+            if (edgeIDMap == null) {
                 edgeIDMap = new Long2IntOpenHashMap();
                 edgeIDMap.defaultReturnValue(-1);
                 storedStates.put(parent.vertexID, edgeIDMap);
             }
             edgeIDMap.put(parent.edgeID, parentState);
         }
-        if (parent.isCompleteGraph(this)){
+        if (parent.isCompleteGraph(this)) {
             finalStates.add(parentState);
         }
         return createRule(parentState, labelId, childStates, 1);
     }
-
-    
 
     @Override
     public boolean supportsTopDownQueries() {
@@ -94,7 +129,7 @@ public class SGraphBRDecAutTopDown extends SGraphBRDecompositionAutomaton {
     public boolean supportsBottomUpQueries() {
         return true;
     }
-    
+
     @Override
     public Iterable<Rule> getRulesBottomUpMPF(int labelId, int[] childStates) {
         Iterable<Rule> res = calculateRulesBottomUpMPF(labelId, childStates);

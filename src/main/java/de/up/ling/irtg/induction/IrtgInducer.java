@@ -13,7 +13,7 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import static de.up.ling.irtg.algebra.graph.BRUtil.makeIncompleteDecompositionAlgebra;
+import de.up.ling.irtg.algebra.graph.BRUtil;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
@@ -21,6 +21,7 @@ import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecAutTopDown;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompAutoInstruments;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonTopDownBolinas;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -106,58 +107,122 @@ public class IrtgInducer {
     private final InputCodec<TreeAutomaton> icTreeAuto = new TreeAutomatonInputCodec();
     private final Random rnd = new Random();
 
-    
-    
-    
     public static void main(String[] args) throws Exception {
-        int nrSources = 3;
-        IntSet failed = new IntOpenHashSet();
+        boolean bolinas = true;
         
+        String invalidArguments = "invalid arguments (use 'write', 'nowrite' or 'onlyAccept' as first argument, source count as second, dump path as third)!";
+        boolean doWrite;
+        boolean onlyAccept = false;
+        int nrSources;
+        String dumpPath;
+        if (args.length >= 3) {
+            dumpPath = args[2];
+            
+            try {
+                nrSources = Integer.valueOf(args[1]);
+            } catch (java.lang.Exception e) {
+                System.out.println(invalidArguments);
+                return;
+            }
+            
+            switch (args[0]) {
+                case "onlyAccept":
+                    onlyAccept = true;
+                case "nowrite":
+                    doWrite = false;
+                    break;
+                case "write":
+                    doWrite = true;
+                    break;
+                default:
+                    System.out.println(invalidArguments);
+                    return;
+            }
+        } else if (args.length == 0) {
+            System.out.println(invalidArguments+" -- using standard arguments");
+            //set standard arguments:
+            doWrite = true;
+            dumpPath = "corpora/amr-bank-v1.3_parses/";
+            nrSources = 2;
+        } else {
+            System.out.println(invalidArguments);
+            return;
+        }
+
+        
+        
+
+        IntSet failed = new IntOpenHashSet();
+
         Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         inducer.corpus.sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
-        
+
         int size = inducer.corpus.size();
         //System.out.println(String.valueOf(size));
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
         List<String> labels = new ArrayList<>();
         int start = 0;//later: start = 0;
-        int iterations = size;//later: iterations = size;
-        
-        for (int i = start; i<start+iterations; i++){
+        int iterations = size-start;//later: iterations = size-start;
+
+        for (int i = start; i < start + iterations; i++) {
             TrainingInstance ti = inducer.corpus.get(i);
-            System.out.println("i= "+String.valueOf(i)+"/"+String.valueOf(size));
-            sw.record(2*(i-start));
+            System.out.println("i= " + String.valueOf(i) + "/" + String.valueOf(size) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
+            sw.record(3 * (i - start));
             GraphAlgebra alg = new GraphAlgebra();
             SGraph graph = ti.graph;
-            makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
-            SGraphBRDecAutTopDown auto = (SGraphBRDecAutTopDown) alg.decompose(graph);
-            
-            
-            sw.record(2*(i-start)+1);
-            Writer rtgWriter = new FileWriter("corpora/amr-bank-v1.3_parses/"+String.valueOf(ti.id)+".rtg");
-            auto.write(rtgWriter);
-            rtgWriter.close();
-            
-            
-            if (!auto.foundFinalState){
-                failed .add(i);
+            if (bolinas){
+                BRUtil.makeIncompleteBolinasDecompositionAlgebra(alg, graph, nrSources);
+            } else {
+                BRUtil.makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
             }
-            
-            
+            if (onlyAccept) {//note: here always assumes no bolinas for now
+                
+                SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decomposeNoStoreRules(graph);
+                SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNumberNodes(), auto.getNrSources(), false);
+                if (!instr.doesAccept(alg)) {
+                    failed.add(i);
+                }
+                sw.record(3 * (i - start) + 1);
+                System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Accept time: "));
+                
+            } else {
+                SGraphBRDecAutTopDown auto;
+                if (bolinas){
+                    auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decomposeBolinas(graph);
+                } else {
+                    auto = (SGraphBRDecAutTopDown) alg.decompose(graph);
+                }
+
+                sw.record(3 * (i - start) + 1);
+                System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Decomposition time: "));
+                if (doWrite) {
+                    Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(ti.id) + ".rtg");
+                    auto.writeShort(rtgWriter);
+                    rtgWriter.close();
+                }
+
+                if (!auto.foundFinalState) {
+                    failed.add(i);
+                }
+            }
+            sw.record(3*(i-start)+2);
+            System.err.println(sw.printTimeBefore(3 * (i - start) + 2, "Write time: "));
+
             labels.add(graph.toString());
-            labels.add("<- "+String.valueOf(i)+"(decomp time); write time was ");
+            labels.add("<- " + String.valueOf(i) + "(decomp time); write time was ");
+            labels.add("filler time");
         }
-        
-        Writer logWriter = new FileWriter("corpora/amr-bank-v1.3_parses/log.txt");
-        sw.record(2*iterations);
+
+        Writer logWriter = new FileWriter(dumpPath +"log.txt");
+        sw.record(3 * iterations);
         StringJoiner sj = new StringJoiner(", ", "(", ")");
-        for (int i : failed){
+        for (int i : failed) {
             sj.add(String.valueOf(i));
         }
         logWriter.write(sj.toString());
-        logWriter.write("Total: "+String.valueOf(iterations));
-        logWriter.write("Failed: "+String.valueOf(failed));
+        logWriter.write("Total: " + String.valueOf(iterations));
+        logWriter.write("Failed: " + String.valueOf(failed));
         logWriter.write(sw.toMilliseconds("\n", labels.toArray(new String[labels.size()])));
         logWriter.close();
 //        IrtgInducer in = new IrtgInducer(new FileReader(args[0]));
@@ -195,9 +260,6 @@ public class IrtgInducer {
 //        
 //        overall.printMilliseconds("overall time");
     }
-    
-    
-    
 
     public IrtgInducer(Reader corpusReader) {
         rtgState = rtg.addState("X");
@@ -561,7 +623,7 @@ public class IrtgInducer {
 //        assert ruleLabelCounts.contains(label) : ("not present: " + label);
 
         String label = removeStatesFromLabel(labelWithStates);
-        
+
         if (ruleLabelCounts.contains(label)) {
             return ((double) ruleLabelCounts.count(label)) / ruleLabelCounts.size();
         } else {

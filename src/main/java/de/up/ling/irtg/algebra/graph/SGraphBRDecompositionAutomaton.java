@@ -29,6 +29,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
@@ -39,7 +40,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepresentation> {
-
+    
+    public static final String BOLINASROOTSTRING = "bolinasroot";
+    public static final String BOLINASSUBROOTSTRING = "bolinassubroot";
+    public final int BOLINASROOTSOURCENR;
+    public final int BOLINASSUBROOTSOURCENR;
+    
     final GraphAlgebra algebra;
     final SGraph completeGraph;
     final long[] allEdges;
@@ -81,6 +87,9 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                 for (int i = 1; i < parts.length; i++) {
                     sources.add(parts[i]);
                 }
+            } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
+                sources.add(BOLINASROOTSTRING);
+                sources.add(BOLINASSUBROOTSTRING);
             }
         }
 
@@ -91,6 +100,10 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
             intToSourcename[i] = source;
             i++;
         }
+        BOLINASROOTSOURCENR = Arrays.asList(intToSourcename).indexOf(BOLINASROOTSTRING);
+        BOLINASSUBROOTSOURCENR = Arrays.asList(intToSourcename).indexOf(BOLINASSUBROOTSTRING);
+        
+        
         intToNodename = new String[completeGraph.getAllNodeNames().size()];
         i = 0;
         for (String nodename : completeGraph.getAllNodeNames()) {
@@ -138,7 +151,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         labelSources = new Int2ObjectOpenHashMap<>();
         for (String label : signature.getSymbols()){
             int labelId = signature.getIdForSymbol(label);
-            if (signature.getArity(labelId) == 1){
+            if (signature.getArity(labelId) >= 1){
                 String[] parts = label.split("_");
                 if (parts.length == 2 && label.startsWith("r_")) {
                     parts = new String[]{"r", "root", parts[1]};
@@ -201,6 +214,16 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
     private Iterable<Rule> singTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
         //        System.err.println("-> make rule, parent= " + parent);
         return sing(makeRuleTrusting(parent, labelId, childStates));
+    }
+    
+    private Iterable<Rule> duoMergeSetTrusting(BoundaryRepresentation parent, int labelId, int[] childStates){
+        Rule r1 = makeRuleTrusting(parent, labelId, childStates);
+        int[] childStatesSwapped = new int[]{childStates[1], childStates[0]};
+        Rule r2 = makeRuleTrusting(parent, labelId, childStatesSwapped);
+        List<Rule> ret = new ArrayList<>();
+        ret.add(r1);
+        ret.add(r2);
+        return ret;
     }
 
     private static <E> Iterable<E> sing(E object) {
@@ -291,7 +314,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                 }
 
                 // now we can apply the operation.
-                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, this);// maybe do the above check in here? might be more efficient.
+                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, true, this);// maybe do the above check in here? might be more efficient.
 
                 if (result == null) {
 //                    System.err.println(label + " returned null: " + children.get(0));
@@ -340,7 +363,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
             if (label == null) {
                 return Collections.EMPTY_LIST;
             } else if (label.equals(GraphAlgebra.OP_MERGE)) {
-                if (!children.get(0).isMergeableMPF(pwsp, children.get(1))) { // ensure result is connected
+                if ((!doBolinas() && !children.get(0).isMergeableMPF(pwsp, children.get(1)))||(doBolinas() && !children.get(0).isMergeable(pwsp, children.get(1)))) { // ensure result is connected
                     return Collections.EMPTY_LIST;
                 } else {
                     BoundaryRepresentation result = children.get(0).merge(children.get(1), this);
@@ -350,7 +373,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                         return Collections.EMPTY_LIST;
                     } else {
                         //result.setEqualsMeansIsomorphy(false);//is this a problem??
-                        return singTrusting(result, labelId, childStates);
+                        return duoMergeSetTrusting(result, labelId, childStates);
                     }
                 }
             } else if (label.startsWith(GraphAlgebra.OP_RENAME)
@@ -373,7 +396,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                 }
 
                 // now we can apply the operation.
-                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, this);// maybe do the above check in here? might be more efficient.
+                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, doBolinas(), this);// maybe do the above check in here? might be more efficient.
 
                 if (result == null) {
 //                    System.err.println(label + " returned null: " + children.get(0));
@@ -381,6 +404,13 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
                 } else {
                     //result.setEqualsMeansIsomorphy(false);//is this a problem??
                     return singTrusting(result, labelId, childStates);
+                }
+            } else if (label.startsWith(GraphAlgebra.OP_BOLINASMERGE)) {
+                BoundaryRepresentation ret = children.get(0).applyBolinasMerge(children.get(1), labelId);
+                if (ret == null) { // ensure result is connected
+                    return Collections.EMPTY_LIST;//Collections.EMPTY_LIST;
+                } else {
+                    return singTrusting(ret, labelId, childStates);//sing(result, labelId, childStates);
                 }
             } else {
                 List<Rule> rules = new ArrayList<>();
@@ -538,4 +568,8 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         return res;
     }
 
+    boolean doBolinas(){
+        return false;
+    }
+    
 }

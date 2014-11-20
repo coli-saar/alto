@@ -54,6 +54,7 @@ import javax.swing.JComponent;
 public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     // operation symbols of this algebra
     public static final String OP_MERGE = "merge";
+    public static final String OP_BOLINASMERGE = "m_";
     public static final String OP_RENAME = "r_";
     public static final String OP_SWAP = "s_";
     public static final String OP_FORGET_ALL = "f";
@@ -76,6 +77,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         //return new SGraphDecompositionAutomaton(value, this, getSignature());
         //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
         return new SGraphBRDecAutTopDown(value, this, getSignature());
+    }
+    
+    public TreeAutomaton decomposeBolinas(SGraph value) {
+        return new SGraphBRDecompositionAutomatonTopDownBolinas(value, this, getSignature());
     }
     
     public TreeAutomaton decomposeNoStoreRules(SGraph value){
