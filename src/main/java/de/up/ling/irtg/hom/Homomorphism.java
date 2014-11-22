@@ -4,6 +4,9 @@
  */
 package de.up.ling.irtg.hom;
 
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.signature.Signature;
@@ -50,6 +53,8 @@ public class Homomorphism {
     private final Int2ObjectMap<IntSet> srcSymbolToRhsSymbols;  // maps a labelset ID f to the set of symbols in hom(f)
 
     private SignatureMapper signatureMapper;
+    
+    
 
     public Homomorphism(Signature src, Signature tgt) {
         srcSignature = src;
@@ -454,5 +459,50 @@ public class Homomorphism {
         }
 
         return signatureMapper;
+    }
+    
+    /**
+     * Computes a tree automaton that accepts all terms that can be built
+     * by combining right-hand sides of this homomorphism. More precisely,
+     * a term is accepted if it can be obtained by replacing variable-labeled
+     * nodes of some rhs h(f) by other accepted terms. The identity of the variables
+     * is ignored; i.e. for h(f) = g(?1,?1), the term g(a,b) may be accepted.
+     * For linear homomorphisms, the language of the automaton is h(L), where
+     * L is the set of all trees over the source signature.
+     * 
+     * @return 
+     */
+    public TreeAutomaton<String> patternMatcher() {
+        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>(getTargetSignature());
+        
+        int outsideState = ret.addState("X");
+        ret.addFinalState(outsideState);
+        
+        for( int i = 1; i < terms.size(); i++ ) {  // first term ID is 1
+            addPatternMatchingRules(terms.get(i), "r" + i + "_", terms.get(i), outsideState,  ret);
+        }
+        
+        return ret;
+    }
+    
+    private int addPatternMatchingRules(Tree<HomomorphismSymbol> subterm, String stateName, Tree<HomomorphismSymbol> term, int outsideState, ConcreteTreeAutomaton<String> ret) {
+//        System.err.println("pm rule for " + HomomorphismSymbol.toStringTree(subterm, tgtSignature) + " @ " + stateName);
+        HomomorphismSymbol root = subterm.getLabel();
+        
+        if( root.isVariable() ) {
+            return outsideState;
+        } else {
+            int[] children = new int[subterm.getChildren().size()];
+            
+            for( int i = 0; i < subterm.getChildren().size(); i++ ) {
+                children[i] = addPatternMatchingRules(subterm.getChildren().get(i), stateName + (i+1), term, outsideState, ret);
+            }
+            
+            int parent = (subterm == term) ? outsideState : ret.addState(stateName);
+            Rule rule = ret.createRule(parent, root.getValue(), children, 1);
+            ret.addRule(rule);
+            
+            return parent;
+        }
     }
 }

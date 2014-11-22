@@ -2506,11 +2506,35 @@ public abstract class TreeAutomaton<State> implements Serializable {
         getExplicitRulesBottomUp().printStatistics();
     }
 
-    protected Rule createRule(int parent, int label, int[] children, double weight) {
+    /** 
+     * Creates a new rule. Note that this method only creates the rule object;
+     * it does not add it to the automaton. For a more convenient (if slightly
+     * less efficient) alternative,
+     * consider {@link #createRule(java.lang.Object, java.lang.String, State[], double) }.
+     * 
+     * @param parent
+     * @param label
+     * @param children
+     * @param weight
+     * @return 
+     */
+    public Rule createRule(int parent, int label, int[] children, double weight) {
         return new Rule(parent, label, children, weight);
     }
 
-    protected Rule createRule(int parent, int label, List<Integer> children, double weight) {
+    /** 
+     * Creates a new rule. Note that this method only creates the rule object;
+     * it does not add it to the automaton. For a more convenient (if slightly
+     * less efficient) alternative,
+     * consider {@link #createRule(java.lang.Object, java.lang.String, java.util.List, double) }.
+     * 
+     * @param parent
+     * @param label
+     * @param children
+     * @param weight
+     * @return 
+     */
+    public Rule createRule(int parent, int label, List<Integer> children, double weight) {
         return new Rule(parent, label, intListToArray(children), weight);
     }
 

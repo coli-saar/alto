@@ -33,6 +33,11 @@ import java.util.stream.StreamSupport;
  */
 public class Util {
     private static Random rnd = new Random();
+    private static long nextGensym = 1;
+    
+    public static String gensym(String prefix) {
+        return prefix + (nextGensym++);
+    }
     
     public static Tree<String> makeBinaryTree(String symbol, List<String> leaves) {
         return makeBinaryTree(symbol, leaves, 0);
