@@ -6,6 +6,7 @@
 package de.up.ling.irtg.util;
 
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
+import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -33,6 +35,11 @@ import java.util.stream.StreamSupport;
  */
 public class Util {
     private static Random rnd = new Random();
+    private static long nextGensym = 1;
+    
+    public static String gensym(String prefix) {
+        return prefix + (nextGensym++);
+    }
     
     public static Tree<String> makeBinaryTree(String symbol, List<String> leaves) {
         return makeBinaryTree(symbol, leaves, 0);
@@ -167,6 +174,16 @@ public class Util {
         }
         
         return ret; 
+    }
+    
+    public static int[] makeIntArray(int n, IntUnaryOperator sup) {
+        int[] ret = new int[n];
+        
+        for( int i = 0; i < n; i++ ) {
+            ret[i] = sup.applyAsInt(i);
+        }
+        
+        return ret;
     }
     
     public static void printToFile(String filename, String content) {

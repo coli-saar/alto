@@ -11,6 +11,7 @@ import java.util.*
 import java.io.*
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*
+import de.up.ling.irtg.automata.TreeAutomaton
 import de.saar.chorus.term.*
 import de.up.ling.tree.*
 import static de.up.ling.irtg.util.TestingTools.*;
@@ -109,18 +110,6 @@ class HomomorphismTest {
         assertEquals("*(?1,?2)", h.rhsAsString(pth("*(?1,?2)", h.getTargetSignature())));
         assertEquals("'`'", h.rhsAsString(pth("\"`\"", h.getTargetSignature())));
     }
-
     
-    /*
-    public static Homomorphism hom(Map<String,String> mappings) {
-        Homomorphism ret = new Homomorphism();
-
-        mappings.each {
-            ret.add(it.key, TermParser.parse(it.value).toTreeWithVariables());
-        }
-
-        return ret;
-    }
-    */
 }
 
