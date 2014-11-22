@@ -39,7 +39,7 @@ import javax.swing.JLabel;
  *
  * @author koller
  */
-public class StringAlgebra extends Algebra<List<String>> {
+public class StringAlgebra extends Algebra<List<String>> implements Serializable {
 
     public static final String CONCAT = "*";
     protected int concatSymbolId;
