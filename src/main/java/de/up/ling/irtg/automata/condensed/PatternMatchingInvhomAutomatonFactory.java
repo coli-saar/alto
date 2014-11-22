@@ -11,6 +11,8 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.InputCodec;
+import de.up.ling.irtg.codec.PcfgIrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.IdentitySignatureMapper;
@@ -288,40 +290,57 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 //    private Int2ObjectMap<IntSet> computeReverseMapping
     // caveat: signature(auto) != signature
     public static void addToPatternMatchingAutomaton(Tree<HomomorphismSymbol> rhs, String prefix, final ConcreteTreeAutomaton<String> auto, Signature signature, boolean includeOutsideTransitions) {
+//        System.err.println("add: " + HomomorphismSymbol.toStringTree(rhs, signature));
+        
         String qf = prefix + "f";
         String q0 = prefix;
         String qmatch = prefix + "/";
+        
+        int qfId = auto.addState(qf);
+        int q0Id = auto.addState(q0);
+        int qmatchId = auto.addState(qmatch);
 
-        auto.addFinalState(auto.addState(qf));
-        auto.addFinalState(auto.addState(qmatch));
+        auto.addFinalState(qfId);
+        auto.addFinalState(qmatchId);
 
         List<String> pathsToVariables = new ArrayList<>();
         extractVariables(rhs, pathsToVariables, "");
+        
+        for( int symId = 1; symId <= signature.getMaxSymbolId(); symId ++ ) {
+            String sym = signature.resolveSymbolId(symId);
+            int arity = signature.getArity(symId);
+            
+            int[] allQ0Array = new int[arity];
+            Arrays.fill(allQ0Array, q0Id);
 
-        for (String sym : signature.getSymbols()) {
-            int arity = signature.getArityForLabel(sym);
+//        for (String sym : signature.getSymbols()) {
+//            int arity = signature.getArityForLabel(sym);
 
             for (int q1pos = 0; q1pos < arity; q1pos++) {
                 final int _q1pos = q1pos; // for access from lambda expr
 
                 if (includeOutsideTransitions) {
                     // path from root to match
-                    List<String> children = Util.makeList(arity, i -> i == _q1pos ? qf : q0);
-                    auto.addRule(auto.createRule(qf, sym, children));
+                    int[] children = Util.makeIntArray(arity, i -> i == _q1pos ? qfId : q0Id);
+//                    List<String> children = Util.makeList(arity, i -> i == _q1pos ? qf : q0);
+                    auto.addRule(auto.createRule(qfId, symId, children, 1));
 
                     // transition into matching tree
-                    children = Util.makeList(arity, i -> i == _q1pos ? qmatch : q0);
-                    auto.addRule(auto.createRule(qf, sym, children));
+                    children = Util.makeIntArray(arity, i -> i == _q1pos ? qmatchId : q0Id);
+//                    children = Util.makeList(arity, i -> i == _q1pos ? qmatch : q0);
+                    auto.addRule(auto.createRule(qfId, symId, children, 1));
                 }
             }
 
             // transitioning out of variable nodes
             for (String path : pathsToVariables) {
-                auto.addRule(auto.createRule(qmatch + path, sym, Util.makeList(arity, () -> q0)));
+                int pathStateId = auto.addState(qmatch + path);
+                auto.addRule(auto.createRule(pathStateId, symId, allQ0Array, 1));
+//                auto.addRule(auto.createRule(pathState, sym, Util.makeList(arity, () -> q0)));
             }
 
             // nodes below of or disjoint from match
-            auto.addRule(auto.createRule(q0, sym, Util.makeList(arity, () -> q0)));
+            auto.addRule(auto.createRule(q0Id, symId, allQ0Array, 1));
         }
 
         // add transitions within matcher
@@ -354,7 +373,8 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
         sw.record(0);
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
+        InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByExtension(Util.getFilenameExtension(args[0]));
+        InterpretedTreeAutomaton irtg = ic.read(new FileInputStream(args[0]));
         Homomorphism hom = irtg.getInterpretation("string").getHomomorphism();
         Algebra<List<String>> alg = irtg.getInterpretation("string").getAlgebra();
 
@@ -378,7 +398,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             List<String> sent = alg.parseString(line);
             TreeAutomaton decomp = alg.decompose(sent);
 
-            System.err.println("\n" + (numSent + 1) + " - " + sent.size() + " words");
+            System.err.println("\n# " + (numSent + 1) + "\n" + line);
 
             CpuTimeStopwatch w2 = new CpuTimeStopwatch();
             w2.record(0);

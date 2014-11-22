@@ -111,28 +111,5 @@ class HomomorphismTest {
         assertEquals("'`'", h.rhsAsString(pth("\"`\"", h.getTargetSignature())));
     }
     
-    @Test
-    public void testPatternMatcher() {
-        Homomorphism h = hom(["f":"g(?2,h(?1))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
-        TreeAutomaton auto = h.patternMatcher();
-        
-        assert auto.accepts(pt("g(k(b), h(l(e)))"))
-        assert auto.accepts(pt("g(l(e), h(k(b)))"))
-        assert auto.accepts(pt("g(k(b), h(g(l(e), h(k(b)))))"))
-        assert ! auto.accepts(pt("g(b, h(l(e)))"))
-    }
-
-    
-    /*
-    public static Homomorphism hom(Map<String,String> mappings) {
-        Homomorphism ret = new Homomorphism();
-
-        mappings.each {
-            ret.add(it.key, TermParser.parse(it.value).toTreeWithVariables());
-        }
-
-        return ret;
-    }
-    */
 }
 
