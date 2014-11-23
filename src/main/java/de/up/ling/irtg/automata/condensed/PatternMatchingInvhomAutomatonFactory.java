@@ -12,7 +12,6 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.InputCodec;
-import de.up.ling.irtg.codec.PcfgIrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.IdentitySignatureMapper;
@@ -31,6 +30,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -42,8 +42,7 @@ import java.util.stream.Collectors;
  *
  * @author koller
  */
-public class PatternMatchingInvhomAutomatonFactory<State> {
-
+public class PatternMatchingInvhomAutomatonFactory<State> implements Serializable {
     private TreeAutomaton<Set<String>> matcher;
     private ConcreteTreeAutomaton<String> nondetMatcher;
     private Homomorphism hom;
