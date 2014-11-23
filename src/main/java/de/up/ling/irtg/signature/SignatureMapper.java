@@ -65,12 +65,12 @@ public class SignatureMapper {
 
         buf.append("Forward mappings:\n");
         for (int i = 1; i < forward.length; i++) {
-            buf.append("" + i + " -> " + remapForward(i) + " (input=" + input.resolveSymbolId(i) + ", output=" + output.resolveSymbolId(remapForward(i)) + "\n");
+            buf.append("" + i + " -> " + remapForward(i) + " (input=" + input.resolveSymbolId(i) + ", output=" + output.resolveSymbolId(remapForward(i)) + ")\n");
         }
 
         buf.append("\nBackward mappings:\n");
         for (int i = 1; i < backward.length; i++) {
-            buf.append("" + i + " -> " + remapBackward(i) + " (output=" + output.resolveSymbolId(i) + ", input=" + input.resolveSymbolId(remapBackward(i)) + "\n");
+            buf.append("" + i + " -> " + remapBackward(i) + " (output=" + output.resolveSymbolId(i) + ", input=" + input.resolveSymbolId(remapBackward(i)) + ")\n");
         }
 
         return buf.toString();

@@ -4,14 +4,10 @@
  */
 package de.up.ling.irtg.hom;
 
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
-import de.up.ling.irtg.util.Lazy;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -25,18 +21,18 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
  *
  * @author koller
  */
-public class Homomorphism {
+public class Homomorphism implements Serializable {
 
     private static final Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-Z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
     private final Signature srcSignature, tgtSignature;
@@ -53,8 +49,6 @@ public class Homomorphism {
     private final Int2ObjectMap<IntSet> srcSymbolToRhsSymbols;  // maps a labelset ID f to the set of symbols in hom(f)
 
     private SignatureMapper signatureMapper;
-    
-    
 
     public Homomorphism(Signature src, Signature tgt) {
         srcSignature = src;
@@ -211,10 +205,10 @@ public class Homomorphism {
     public IntSet getLabelSetForLabel(int label) {
         return getLabelSet(labelToLabelSet.get(label));
     }
-    
+
     // valid label set IDs: 1 .. maxLabelSetID (inclusive)
     public int getMaxLabelSetID() {
-        return labelSetList.size()-1;
+        return labelSetList.size() - 1;
     }
 
     /**
@@ -242,7 +236,6 @@ public class Homomorphism {
 //        Logging.get().fine(() -> "tgt sig: " + getTargetSignature());
 //        Logging.get().fine("src sig: " + getSourceSignature());
 //        Logging.get().fine("labelset IDs: " + labelSetList);
-
         for (int srcSymbol : srcSymbolToRhsSymbols.keySet()) {
             if (tgtSymbols.containsAll(srcSymbolToRhsSymbols.get(srcSymbol))) {
                 ret.add(srcSymbol);
@@ -418,30 +411,34 @@ public class Homomorphism {
         return true;
     }
 
-    private Lazy<Boolean> nondeleting = new Lazy(new Supplier<Boolean>() {
-        @Override
-        public Boolean get() {
+    private transient Boolean nondeleting = null;
+    
+    private void checkNondeleting() {
+        if (nondeleting == null) {
             for (int label : labelToLabelSet.keySet()) {
-                Tree<HomomorphismSymbol> rhs = Homomorphism.this.get(label);
+                int labelSetIdForlabel = labelToLabelSet.get(label);
+                Tree<HomomorphismSymbol> rhs = get(labelSetIdForlabel);
                 Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
+                
                 for (HomomorphismSymbol l : rhs.getLeafLabels()) {
                     if (l.isVariable()) {
                         variables.add(l);
                     }
                 }
 
-                if (variables.size() < srcSignature.getArity((int) label)) {
-                    return false;
+                if (variables.size() < srcSignature.getArity(label)) {
+                    nondeleting = Boolean.FALSE;
+                    return;
                 }
             }
 
-            return true;
+            nondeleting = Boolean.TRUE;
         }
-
-    });
+    }
 
     public boolean isNonDeleting() {
-        return nondeleting.getValue();
+        checkNondeleting();
+        return nondeleting.booleanValue();
     }
 
     /**
@@ -460,42 +457,4 @@ public class Homomorphism {
 
         return signatureMapper;
     }
-    
-    
-    
-    /**
-    public TreeAutomaton<String> patternMatcher() {
-        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>(getTargetSignature());
-        
-        int outsideState = ret.addState("X");
-        ret.addFinalState(outsideState);
-        
-        for( int i = 1; i < terms.size(); i++ ) {  // first term ID is 1
-            addPatternMatchingRules(terms.get(i), "r" + i + "_", terms.get(i), outsideState,  ret);
-        }
-        
-        return ret;
-    }
-    
-    private int addPatternMatchingRules(Tree<HomomorphismSymbol> subterm, String stateName, Tree<HomomorphismSymbol> term, int outsideState, ConcreteTreeAutomaton<String> ret) {
-//        System.err.println("pm rule for " + HomomorphismSymbol.toStringTree(subterm, tgtSignature) + " @ " + stateName);
-        HomomorphismSymbol root = subterm.getLabel();
-        
-        if( root.isVariable() ) {
-            return outsideState;
-        } else {
-            int[] children = new int[subterm.getChildren().size()];
-            
-            for( int i = 0; i < subterm.getChildren().size(); i++ ) {
-                children[i] = addPatternMatchingRules(subterm.getChildren().get(i), stateName + (i+1), term, outsideState, ret);
-            }
-            
-            int parent = (subterm == term) ? outsideState : ret.addState(stateName);
-            Rule rule = ret.createRule(parent, root.getValue(), children, 1);
-            ret.addRule(rule);
-            
-            return parent;
-        }
-    }
-    */
 }

@@ -217,7 +217,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         Set<List<Integer>> ret = new HashSet<List<Integer>>();
 
         switch (rhs.getLabel().getType()) {
-            case CONSTANT:
+            case CONSTANT:                
                 for (Rule rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap.remapForward(rhs.getLabel().getValue()), state)) {
                     List<Set<List<Integer>>> childrenSubstitutions = new ArrayList<Set<List<Integer>>>(); // len = #children
 

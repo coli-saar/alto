@@ -12,13 +12,13 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
+import java.io.Serializable;
 
 /**
  *
  * @author koller
  */
-public class Interpretation<E> {
-
+public class Interpretation<E> implements Serializable {
     private Algebra<E> algebra;
     private Homomorphism hom;
 

@@ -52,7 +52,7 @@ class BestFirstIntersectionTest {
         TreeAutomaton inter = new BestFirstIntersectionAutomaton(irtg.getAutomaton(), decomp, eval)
         inter.makeAllRulesExplicit()
         
-        System.err.println(inter)
+//        System.err.println(inter)
         
         assert inter.countTrees() == 1
         assertEquals(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"), inter.viterbi())
@@ -89,7 +89,7 @@ class BestFirstIntersectionTest {
         TreeAutomaton inter = new BestFirstIntersectionAutomaton(irtg.getAutomaton(), decomp, eval)
         inter.makeAllRulesExplicit()
         
-        System.err.println(inter)
+//        System.err.println(inter)
         
         assert inter.countTrees() == 1
         assertEquals(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"), inter.viterbi())

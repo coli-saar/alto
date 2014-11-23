@@ -103,6 +103,24 @@ class HomomorphismTest {
     }
     
     @Test
+    public void testNondeleting() {
+        Homomorphism h1 = hom(["f":"g(?1,h(?2))", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
+        assert h1.isNonDeleting()
+    }
+    
+    @Test
+    public void testNondeletingNonlinear() {
+        Homomorphism h1 = hom(["f":"g(?1,h(?2),?1)", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
+        assert h1.isNonDeleting()
+    }
+    
+    @Test
+    public void testNotNondeleting() {
+        Homomorphism h1 = hom(["f":"g(?1,a)", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
+        assert ! h1.isNonDeleting()
+    }
+    
+    @Test
     public void testToString() {
         Homomorphism h = hom(["f":"g(?1)"], sig(["f":1]))
         

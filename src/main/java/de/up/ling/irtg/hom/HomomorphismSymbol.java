@@ -8,6 +8,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import java.io.Serializable;
 import java.util.List;
 import java.util.function.ToIntFunction;
 import java.util.regex.Pattern;
@@ -16,7 +17,7 @@ import java.util.regex.Pattern;
  *
  * @author koller
  */
-public class HomomorphismSymbol {
+public class HomomorphismSymbol implements Serializable {
     private static final Pattern VARNAME_PATTERN = Pattern.compile("\\?\\d+");
 
     public enum Type {
@@ -172,7 +173,11 @@ public class HomomorphismSymbol {
 
     @Override
     public String toString() {
-        return (isVariable() ? "?" : "") + value;
+        if( isVariable() ) {
+            return "?" + (value+1);
+        } else {
+            return "" + value;
+        }
     }
 
     
