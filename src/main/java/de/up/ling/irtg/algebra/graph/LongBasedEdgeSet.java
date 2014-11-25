@@ -7,8 +7,10 @@ package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.LongArraySet;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -23,22 +25,33 @@ public class LongBasedEdgeSet {
     /**
      *
      */
-    private final LongOpenHashSet edges;
+    static int idCounter = 0;
+    //private final String ID;
+    private final LongArraySet edges;
 
     public LongBasedEdgeSet() {
-        edges = new LongOpenHashSet();
+        edges = new LongArraySet();
+        //ID = "ID"+String.valueOf(idCounter);//for debugging
+        idCounter++;
+        //System.err.println(ID + " created from scratch");
     }
 
     private LongBasedEdgeSet(LongBasedEdgeSet input) {
-        this.edges = input.edges.clone();
+        edges = input.edges.clone();
+        //edges = cloneLongSet(input.edges);
+        //ID = "ID"+String.valueOf(idCounter);
+        idCounter++;
+        //System.err.println(ID + " created by cloning from " + input.ID);
     }
 
     public void add(int source, int target) {
         edges.add(NumbersCombine.combine(source, target));
+        //System.err.println(ID + " added " + NumbersCombine.combine(source, target));
     }
     
     public void add(long edge) {
         edges.add(edge);
+        //System.err.println(ID + " added " + String.valueOf(edge));
     }
 
     public boolean contains(int source, int target) {
@@ -68,6 +81,7 @@ public class LongBasedEdgeSet {
 
     public void addAll(LongBasedEdgeSet other) {
         edges.addAll(other.edges);
+        //System.err.println(ID + " added " + other.edges);
     }
 
     public void add(GraphEdge edge, SGraphBRDecompositionAutomaton auto) {
@@ -106,7 +120,12 @@ public class LongBasedEdgeSet {
     public long smartForgetIncident(int vNr, int source, LongBasedEdgeSet reference, BoundaryRepresentation br, SGraphBRDecompositionAutomaton auto) {
         LongIterator li = reference.edges.iterator();
         long res = 0;
+        //System.err.println("Next test: "+reference.ID);
+        //System.err.println(reference.edges.size());
+        int i = 0;
         while (li.hasNext()) {
+            //System.err.println(String.valueOf(i));
+            i++;
             long e = li.nextLong();
             
             
@@ -224,4 +243,23 @@ public class LongBasedEdgeSet {
     public static boolean isIncident(long edge, int vNr){
         return (NumbersCombine.getFirst(edge) == vNr || NumbersCombine.getSecond(edge) == vNr);
     }
+    
+    public static void main(String[] args){
+        LongOpenHashSet edges = new LongOpenHashSet();
+        edges.add(17179869187L);
+        edges.add(12884901889L);
+        edges.add(4294967296L);
+        edges.add(4294967297L);
+        LongIterator it = edges.iterator();
+        while (it.hasNext()){
+            long e = it.next();
+            System.out.println(e);
+        }
+    }
+    
+    /*private static LongOpenHashSet cloneLongSet(LongOpenHashSet other){
+        LongOpenHashSet ret = new LongOpenHashSet();
+        ret.addAll(other);
+        return ret;
+    }*/
 }

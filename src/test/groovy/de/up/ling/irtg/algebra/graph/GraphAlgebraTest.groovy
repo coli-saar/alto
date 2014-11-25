@@ -52,6 +52,24 @@ class GraphAlgebraTest {
     }
     
     
+    @Test
+    public void testInterpretationHasParse() {
+        InterpretedTreeAutomaton irtg = pi(HRGSimple);
+        //InterpretedTreeAutomaton irtg = pi(HRG);
+        Interpretation interp = irtg.getInterpretation("graph");
+        SGraph graph = (SGraph)irtg.parseString("graph","(g<root> / go :ARG0 (b<subj> / boy))");
+        //SGraph graph = (SGraph)irtg.parseString("graph","(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");
+        TreeAutomaton interpParse = interp.parse(graph);
+        interpParse.makeAllRulesExplicit();
+        boolean noParse = true;
+        for (Integer i : interpParse.getFinalStates()){
+            if (!interpParse.getRulesTopDown(i).isEmpty()){
+                noParse = false;
+            }
+        }
+        assert !noParse;
+    }
+    
     
     //@Test
     public void testParseGraph() {
@@ -60,6 +78,8 @@ class GraphAlgebraTest {
         
         assertEquals(new HashSet([pt("want2(boy,go)")]), chart.language())
     }
+    
+    
     
     /*@Test
     public void testParseGraphWithCoref() {
@@ -157,5 +177,20 @@ VP -> go
 
 
     """;
+
+    public static final String HRGSimple = """\n\
+
+interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+S! -> go(NP)
+[graph]  merge('(g<root> / go  :ARG0 (s<subj>))', r_subj(?1))
+
+
+NP -> boy
+[graph]  '(x<root> / boy)'
+
+
+    """;
 }
+
 

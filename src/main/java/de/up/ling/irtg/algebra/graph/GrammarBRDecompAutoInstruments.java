@@ -98,7 +98,7 @@ public class GrammarBRDecompAutoInstruments {
             }
         }
 
-        res.auto = (SGraphBRDecompositionAutomaton)alg.decomposeNoStoreRules(graph);
+        res.auto = (SGraphBRDecompositionAutomatonMPFTrusting)alg.decompose(graph, SGraphBRDecompositionAutomatonMPFTrusting.class);
         
         
         res.unaries = new Int2ObjectOpenHashMap<>();
@@ -168,7 +168,7 @@ public class GrammarBRDecompAutoInstruments {
             }
 
             for (int u : unaries.get(gSymb).keySet()) {
-                Iterable<Rule> rules = auto.getRulesBottomUpMPF(u, new int[]{a});
+                Iterable<Rule> rules = auto.getRulesBottomUp(u, new int[]{a});
 
                 IntSet parentGStates = unaries.get(gSymb).get(u);
                 for (int p : parentGStates) {
@@ -183,7 +183,7 @@ public class GrammarBRDecompAutoInstruments {
 
                 for (int d : partners) {
                     nrMergeChecks++;
-                    Iterable<Rule> rules = auto.getRulesBottomUpMPF(mergeLabelId, new int[]{a, d});
+                    Iterable<Rule> rules = auto.getRulesBottomUp(mergeLabelId, new int[]{a, d});
 
                     int doMerge = 0;
                     IntSet parentGStates = hereMPLeft.get(b);
@@ -200,7 +200,7 @@ public class GrammarBRDecompAutoInstruments {
 
                 for (int d : partners) {
                     nrMergeChecks++;
-                    Iterable<Rule> rules = auto.getRulesBottomUpMPF(mergeLabelId, new int[]{d, a});
+                    Iterable<Rule> rules = auto.getRulesBottomUp(mergeLabelId, new int[]{d, a});
 
                     int doMerge = 0;
                     IntSet parentGStates = hereMPRight.get(b);
@@ -256,7 +256,7 @@ public class GrammarBRDecompAutoInstruments {
         for (int c : constants.keySet()) {
             IntSet parentGStates = constants.get(c);
             for (int p : parentGStates) {
-                Iterator<Rule> it = auto.getRulesBottomUpMPF(c, new int[]{}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUp(c, new int[]{}).iterator();
                 while (it.hasNext()) {
                     Rule rule = it.next();
                     int parent = rule.getParent();

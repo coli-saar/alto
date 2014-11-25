@@ -63,6 +63,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public static final String OP_FORGET = "f_";
 
      
+        
+        
     public GraphAlgebra() {
         super();
     }
@@ -76,16 +78,33 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public TreeAutomaton decompose(SGraph value) {
         //return new SGraphDecompositionAutomaton(value, this, getSignature());
         //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
-        return new SGraphBRDecAutTopDown(value, this, getSignature());
+        return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());
     }
     
-    public TreeAutomaton decomposeBolinas(SGraph value) {
-        return new SGraphBRDecompositionAutomatonTopDownBolinas(value, this, getSignature());
+    public TreeAutomaton decompose(SGraph value, Class c){
+        try {
+            if (c == SGraphDecompositionAutomaton.class){
+                return new SGraphDecompositionAutomaton(value, this, getSignature());
+                
+            } else if (c == SGraphBRDecompositionAutomaton.class) {
+                return new SGraphBRDecompositionAutomaton(value, this, getSignature());
+                
+            } else if (c == SGraphBRDecompositionAutomatonMPFTrusting.class) {
+                return new SGraphBRDecompositionAutomatonMPFTrusting(value, this, getSignature());
+                
+            } else if (c == SGraphBRDecompositionAutomatonStoreTopDownExplicit.class) {
+                return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());
+                
+            } else if (c == SGraphBRDecompositionAutomatonTopDownBolinas.class) {
+                return new SGraphBRDecompositionAutomatonTopDownBolinas(value, this, getSignature());
+            }
+            else return null;
+        } catch (java.lang.Exception e) {
+            System.err.println(e.toString());
+            return null;
+        }
     }
     
-    public TreeAutomaton decomposeNoStoreRules(SGraph value){
-        return new SGraphBRDecompositionAutomaton(value, this, getSignature());
-    }
 
     static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {
         if ( opString.startsWith(OP_FORGET) || opString.startsWith(OP_FORGET_EXCEPT)) {
@@ -199,19 +218,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         return ret;
     }
     
-    public static void main(String[] args ) throws Exception {
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
-        
-        GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
-        SGraph graph = alg.parseString("(w / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))");
-        
-        System.out.println(graph);
-        
-        TreeAutomaton auto = alg.decompose(graph);
-        
-        System.out.println(auto.getSignature());
-        
-        System.out.println(auto.toStringBottomUp());
-    }
+    
 
 }

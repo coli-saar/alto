@@ -59,12 +59,12 @@ public class SGraphBRDecompAutoInstruments {
         List<BoundaryRepresentation> agenda = new ArrayList<>();
         for (String c : constants) {
             try {
-                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
                 while (it.hasNext()) {
                     BoundaryRepresentation newBR = auto.getStateForId(it.next().getParent());
                     agenda.add(newBR);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
                     if (printSteps) {
-                        System.out.println("Added constant " + newBR.toString());
+                        System.err.println("Added constant " + newBR.toString());
                     }
                 }
             } catch (java.lang.Exception e) {
@@ -77,14 +77,14 @@ public class SGraphBRDecompAutoInstruments {
         for (int i = 0; i < agenda.size(); i++) {
             BoundaryRepresentation a = agenda.get(i);
             if (printSteps) {
-                System.out.println("Checking " + a.toString());
+                System.err.println("Checking " + a.toString());
             }
             int id = auto.getIdForState(a);
             if (auto.getFinalStates().contains(id)) {
-                System.out.println("Found final state!  " + a.toString());//always print auto, i guess
+                System.err.println("Found final state!  " + a.toString());//always print auto, i guess
             }
             for (String u : unisymbols) {
-                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{auto.getIdForState(a)}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{auto.getIdForState(a)}).iterator();
                 if (it.hasNext()) {
                     Rule rule = it.next();
                     BoundaryRepresentation newBR = auto.getStateForId(rule.getParent());
@@ -92,21 +92,21 @@ public class SGraphBRDecompAutoInstruments {
                         agenda.add(newBR);
                         seen.add(newBR);
                         if (printSteps) {
-                            System.out.println("Result of " + rule.getLabel(auto) + " is: " + newBR.toString());
+                            System.err.println("Result of " + rule.getLabel(auto) + " is: " + newBR.toString());
                         }
                     }
                 }
             }
             for (String b : bisymbols) {
                 for (BoundaryRepresentation d : done) {
-                    Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{auto.getIdForState(a), auto.getIdForState(d)}).iterator();
+                    Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{auto.getIdForState(a), auto.getIdForState(d)}).iterator();
                     if (it.hasNext()) {
                         BoundaryRepresentation newBR = auto.getStateForId(it.next().getParent());
                         if (!seen.contains(newBR)) {
                             agenda.add(newBR);
                             seen.add(newBR);
                             if (printSteps) {
-                                System.out.println("Result of merge with " + d.toString() + " is: " + newBR.toString());
+                                System.err.println("Result of merge with " + d.toString() + " is: " + newBR.toString());
                             }
                         }
                     }
@@ -129,15 +129,15 @@ public class SGraphBRDecompAutoInstruments {
             
             
             if (printSteps) {
-                System.out.println("Checking " + auto.getStateForId(a).toString());
+                System.err.println("Checking " + auto.getStateForId(a).toString());
             }
             
             if (auto.getFinalStates().contains(a)) {
-                System.out.println("Found final state!  " + auto.getStateForId(a).toString());//always print this, i guess
+                System.err.println("Found final state!  " + auto.getStateForId(a).toString());//always print this, i guess
             }
             
             for (String u : iT.unisymbols) {
-                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
                 
                 addRuleResults(it, agenda, seen, -1, printSteps, makeRulesTopDown);
                 
@@ -148,11 +148,11 @@ public class SGraphBRDecompAutoInstruments {
                 
                 for (int d: partners) {
                     nrMergeChecks++;
-                    Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
+                    Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
                     nrMerges += addRuleResults(it, agenda, seen, d, printSteps, makeRulesTopDown);
                     if (iT.doBothWays.contains(b)){
                         nrMergeChecks++;
-                        it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
+                        it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
                         nrMerges += addRuleResults(it, agenda, seen, d, printSteps, makeRulesTopDown);
                     }
                 }
@@ -161,9 +161,9 @@ public class SGraphBRDecompAutoInstruments {
             mpFinder.insert(a);
         }
         mpFinder.print("MPF: ",0);
-        System.out.println("Number of Merge Checks: " + String.valueOf(nrMergeChecks));
-        System.out.println("Number of Merges: " + String.valueOf(nrMerges));
-        System.out.println("Number of Parses: " + String.valueOf(nrParses));
+        System.err.println("Number of Merge Checks: " + String.valueOf(nrMergeChecks));
+        System.err.println("Number of Merges: " + String.valueOf(nrMerges));
+        System.err.println("Number of Parses: " + String.valueOf(nrParses));
     }
     
     
@@ -180,32 +180,32 @@ public class SGraphBRDecompAutoInstruments {
             int a = agenda.get(i);
             
             //if (auto.getFinalStates().contains(a)) {
-                //System.out.println("Found final state!  " + auto.getStateForId(a).toString(auto));//always print this, i guess
+                //System.err.println("Found final state!  " + auto.getStateForId(a).toString(auto));//always print this, i guess
             //    nrParses++;
             //}
             if (auto.getFinalStates().contains(a)){
                 ret = true;
             }
             
-            iT.unisymbols.stream().map((u) -> auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator()).forEach((it) -> {
+            iT.unisymbols.stream().map((u) -> auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator()).forEach((it) -> {
                 addRuleResults(it, agenda, seen, -1, false, false);
             });
             
             IntList partners = mpFinder.getAllMergePartners(a);
             for (String b : iT.bisymbols) {
                 for (int d: partners) {
-                    Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
+                    Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
                     
                     nrMerges += addRuleResults(it, agenda, seen, d, false, false);
                     if (iT.doBothWays.contains(b)){
-                        it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
+                        it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
                         nrMerges += addRuleResults(it, agenda, seen, d, false, false);
                     }
                 }
             }
             mpFinder.insert(a);
         }
-        System.out.println("Number of Parses: " + nrParses + ";   Number of Merges: " + nrMerges);
+        System.err.println("Number of Parses: " + nrParses + ";   Number of Merges: " + nrMerges);
         return ret;
     }
     
@@ -228,7 +228,7 @@ public class SGraphBRDecompAutoInstruments {
             }
             
             for (String u : iT.unisymbols) {
-                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(u), new int[]{a}).iterator();
                 
                 
                 
@@ -240,11 +240,11 @@ public class SGraphBRDecompAutoInstruments {
                 IntList partners = mpFinder.getAllMergePartners(a);
                 
                 for (int d: partners) {
-                    Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
+                    Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{a, d}).iterator();
                     addRuleResults(it, agenda, seen, -1, false, false);
                     
                     if (iT.doBothWays.contains(b)){
-                        it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
+                        it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(b), new int[]{d, a}).iterator();
                         addRuleResults(it, agenda, seen, -1, false, false);
                     }
                 }
@@ -271,7 +271,7 @@ public class SGraphBRDecompAutoInstruments {
                 iT.constants.add(s);
                 if (makeRulesTopDown) {
                     constantAbbreviations.put(s, "C" + String.valueOf(j));
-                    System.out.println("C" + String.valueOf(j) + " represents " + s);
+                    System.err.println("C" + String.valueOf(j) + " represents " + s);
                     j++;
                 }
             } else if (symbols.get(s) == 1) {
@@ -285,7 +285,7 @@ public class SGraphBRDecompAutoInstruments {
         }
         for (String c : iT.constants) {
             try {
-                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
                 while (it.hasNext()) {
                     Rule rule = it.next();
                     int parent = rule.getParent();
@@ -294,14 +294,14 @@ public class SGraphBRDecompAutoInstruments {
                     }
                     
                     if (parent == 0){
-                        System.out.println("error!");
+                        System.err.println("error!");
                     }
                     
                     if (!iT.agenda.contains(parent))
                         iT.agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
                     
                     if (printSteps) {
-                        System.out.println("Added constant " + auto.getStateForId(rule.getParent()).toString());
+                        System.err.println("Added constant " + auto.getStateForId(rule.getParent()).toString());
                     }
                     
                     if (makeRulesTopDown) {
@@ -330,7 +330,7 @@ public class SGraphBRDecompAutoInstruments {
                 iT.constants.add(s);
                 if (makeRulesTopDown) {
                     constantAbbreviations.put(s, "C" + String.valueOf(j));
-                    System.out.println("C" + String.valueOf(j) + " represents " + s);
+                    System.err.println("C" + String.valueOf(j) + " represents " + s);
                     j++;
                 }
             } else if (symbols.get(s) == 1) {
@@ -344,7 +344,7 @@ public class SGraphBRDecompAutoInstruments {
         }
         for (String c : iT.constants) {
             try {
-                Iterator<Rule> it = auto.getRulesBottomUpMPF(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
+                Iterator<Rule> it = auto.getRulesBottomUp(auto.getSignature().getIdForSymbol(c), new int[]{}).iterator();
                 while (it.hasNext()) {
                     Rule rule = it.next();
                     int parent = rule.getParent();
@@ -356,7 +356,7 @@ public class SGraphBRDecompAutoInstruments {
                     }
                     
                     if (printSteps) {
-                        System.out.println("Added constant " + auto.getStateForId(rule.getParent()).toString());
+                        System.err.println("Added constant " + auto.getStateForId(rule.getParent()).toString());
                     }
                     
                     if (makeRulesTopDown) {
@@ -397,7 +397,7 @@ public class SGraphBRDecompAutoInstruments {
 
             
             //if (rule.getLabel(auto).startsWith("f"))
-            //    System.out.println("Forget: "+rule.getLabel(auto));
+            //    System.err.println("Forget: "+rule.getLabel(auto));
             
             addBR(seen, agenda, newBR, partner, printSteps);
 
@@ -413,7 +413,7 @@ public class SGraphBRDecompAutoInstruments {
     private void addBR(IntSet seen, IntList agenda, int newBR, int partner, boolean printSteps) {
         
         if (printSteps && partner >= 0) {
-            System.out.println("Result of merge with " + auto.getStateForId(partner).toString() + " is: " + auto.getStateForId(newBR).toString());
+            System.err.println("Result of merge with " + auto.getStateForId(partner).toString() + " is: " + auto.getStateForId(newBR).toString());
         }
         
         if (!seen.contains(newBR)) {
@@ -429,7 +429,7 @@ public class SGraphBRDecompAutoInstruments {
             agenda.enqueue(newBR);
             seen.add(newBR);
             if (printSteps && partner >= 0) {
-                System.out.println("Result of merge with " + auto.getStateForId(partner).toString() + " is: " + auto.getStateForId(newBR).toString());
+                System.err.println("Result of merge with " + auto.getStateForId(partner).toString() + " is: " + auto.getStateForId(newBR).toString());
             }
         }
     }
@@ -452,7 +452,7 @@ public class SGraphBRDecompAutoInstruments {
             auto.decompLengths = new HashMap<>();
             Set<String> possibleDecompositions = getPossibleDecompositionsTopDown(finalRep, new HashSet<>());
             for (String decomp : possibleDecompositions) {
-                System.out.println(decomp);
+                System.err.println(decomp);
             }
         }
     }
@@ -461,7 +461,7 @@ public class SGraphBRDecompAutoInstruments {
         for (int finalState : auto.getFinalStates()) {
             BoundaryRepresentation finalRep = auto.getStateForId(finalState);
             if (!auto.rulesTopDown.containsKey(finalRep)) {
-                System.out.println("no parse for " + finalRep.toString());
+                System.err.println("no parse for " + finalRep.toString());
             } else {
                 auto.decompLengths = new HashMap<>();
                 Set<String> possibleDecompositions = getPossibleDecompositionsTopDown(finalRep, new HashSet<>());
@@ -472,7 +472,7 @@ public class SGraphBRDecompAutoInstruments {
                     }
                     for (String decomp : possibleDecompositions) {
                         if (auto.decompLengths.get(decomp) == shortest) {
-                            System.out.println(decomp);
+                            System.err.println(decomp);
                         }
                     }
                 }
@@ -537,10 +537,10 @@ public class SGraphBRDecompAutoInstruments {
                 } else if (rule.getArity() == 2) {
                     children = auto.getStateForId(rule.getChildren()[0]).toString() + " , " + auto.getStateForId(rule.getChildren()[1]).toString();
                 }
-                System.out.println(auto.getStateForId(rule.getParent()).toString() + " -> " + rule.getLabel(auto) + "(" + children + ")");
+                System.err.println(auto.getStateForId(rule.getParent()).toString() + " -> " + rule.getLabel(auto) + "(" + children + ")");
             }
         }
-        System.out.println("That is a total of " + String.valueOf(counter) + " Rules.");
+        System.err.println("That is a total of " + String.valueOf(counter) + " Rules.");
     }
 
     

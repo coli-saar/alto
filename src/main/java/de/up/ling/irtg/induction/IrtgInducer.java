@@ -18,9 +18,10 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecAutTopDown;
+import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompAutoInstruments;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonMPFTrusting;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonTopDownBolinas;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -38,8 +39,12 @@ import de.up.ling.irtg.util.MutableDouble;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -152,7 +157,7 @@ public class IrtgInducer {
         
         
 
-        IntSet failed = new IntOpenHashSet();
+        IntList failed = new IntArrayList();
 
         Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
         IrtgInducer inducer = new IrtgInducer(corpusReader);
@@ -167,7 +172,8 @@ public class IrtgInducer {
 
         for (int i = start; i < start + iterations; i++) {
             TrainingInstance ti = inducer.corpus.get(i);
-            System.out.println("i= " + String.valueOf(i) + "/" + String.valueOf(size) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
+            System.out.println("i= " + String.valueOf(i+1) + "/" + String.valueOf(size) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
+            System.err.println("i= " + String.valueOf(i+1) + "/" + String.valueOf(size) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
             sw.record(3 * (i - start));
             GraphAlgebra alg = new GraphAlgebra();
             SGraph graph = ti.graph;
@@ -178,7 +184,7 @@ public class IrtgInducer {
             }
             if (onlyAccept) {//note: here always assumes no bolinas for now
                 
-                SGraphBRDecompositionAutomaton auto = (SGraphBRDecompositionAutomaton) alg.decomposeNoStoreRules(graph);
+                SGraphBRDecompositionAutomatonMPFTrusting auto = (SGraphBRDecompositionAutomatonMPFTrusting) alg.decompose(graph, SGraphBRDecompositionAutomatonMPFTrusting.class);
                 SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNumberNodes(), auto.getNrSources(), false);
                 if (!instr.doesAccept(alg)) {
                     failed.add(i);
@@ -187,11 +193,11 @@ public class IrtgInducer {
                 System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Accept time: "));
                 
             } else {
-                SGraphBRDecAutTopDown auto;
+                SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
                 if (bolinas){
-                    auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decomposeBolinas(graph);
+                    auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
                 } else {
-                    auto = (SGraphBRDecAutTopDown) alg.decompose(graph);
+                    auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
                 }
 
                 sw.record(3 * (i - start) + 1);
@@ -203,26 +209,22 @@ public class IrtgInducer {
                 }
 
                 if (!auto.foundFinalState) {
-                    failed.add(i);
+                    failed.add(ti.id);
                 }
             }
             sw.record(3*(i-start)+2);
             System.err.println(sw.printTimeBefore(3 * (i - start) + 2, "Write time: "));
 
             labels.add(graph.toString());
-            labels.add("<- " + String.valueOf(i) + "(decomp time); write time was ");
+            labels.add("<- " + String.valueOf(i)+", ID = " + String.valueOf(ti.id) + "(line above is decomp time); write time was ");
             labels.add("filler time");
         }
 
         Writer logWriter = new FileWriter(dumpPath +"log.txt");
         sw.record(3 * iterations);
-        StringJoiner sj = new StringJoiner(", ", "(", ")");
-        for (int i : failed) {
-            sj.add(String.valueOf(i));
-        }
-        logWriter.write(sj.toString());
-        logWriter.write("Total: " + String.valueOf(iterations));
-        logWriter.write("Failed: " + String.valueOf(failed));
+        
+        logWriter.write("Total: " + String.valueOf(iterations)+"\n");
+        logWriter.write("Failed: " + String.valueOf(failed)+"\n");
         logWriter.write(sw.toMilliseconds("\n", labels.toArray(new String[labels.size()])));
         logWriter.close();
 //        IrtgInducer in = new IrtgInducer(new FileReader(args[0]));
