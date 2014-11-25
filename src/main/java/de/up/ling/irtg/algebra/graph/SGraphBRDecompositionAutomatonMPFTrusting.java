@@ -70,7 +70,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                 }
 
                 // now we can apply the operation.
-                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, doBolinas(), this);// maybe do the above check in here? might be more efficient.
+                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, !doBolinas(), this);// maybe do the above check in here? might be more efficient.
 
                 if (result == null) {
 //                    System.err.println(label + " returned null: " + children.get(0));

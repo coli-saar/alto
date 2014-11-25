@@ -55,10 +55,8 @@ class GraphAlgebraTest {
     @Test
     public void testInterpretationHasParse() {
         InterpretedTreeAutomaton irtg = pi(HRGSimple);
-        //InterpretedTreeAutomaton irtg = pi(HRG);
         Interpretation interp = irtg.getInterpretation("graph");
         SGraph graph = (SGraph)irtg.parseString("graph","(g<root> / go :ARG0 (b<subj> / boy))");
-        //SGraph graph = (SGraph)irtg.parseString("graph","(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");
         TreeAutomaton interpParse = interp.parse(graph);
         interpParse.makeAllRulesExplicit();
         boolean noParse = true;
@@ -71,7 +69,7 @@ class GraphAlgebraTest {
     }
     
     
-    //@Test
+    @Test
     public void testParseGraph() {
         InterpretedTreeAutomaton irtg = pi(HRG);
         TreeAutomaton chart = irtg.parse(["graph":"(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))"])
@@ -81,22 +79,22 @@ class GraphAlgebraTest {
     
     
     
-    /*@Test
+    //@Test //currently not working
     public void testParseGraphWithCoref() {
         InterpretedTreeAutomaton irtg = pi(COREF);
         TreeAutomaton chart = irtg.parse(["graph":"(u91<root> / want-01  :ARG0 (u92<coref1> / bill)  :ARG1 (u93 / like-01           :ARG0 (u94 / girl)	  :ARG1 u92)  :dummy u94)"])
         
         assertEquals(new HashSet([pt("want3(bill, girl, like(bill))"), pt("want3(bill, girl, like(him))"), pt("want3(him, girl, like(bill))")]),
                      chart.language())
-    }*/
+    }
     
-    /*@Test
+    @Test
     public void testParseGraphWithoutSources() {
         InterpretedTreeAutomaton irtg = pi(HRG);
         TreeAutomaton chart = irtg.parse(["graph":"(w / want-01  :ARG0 (b / boy)  :ARG1 (g / go-01 :ARG0 b))"])
         
         assertEquals(new HashSet([pt("want2(boy,go)")]), chart.language())
-    }*/
+    }
     
     public static String COREF="""
     
@@ -181,6 +179,7 @@ VP -> go
     public static final String HRGSimple = """\n\
 
 interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
 
 S! -> go(NP)
 [graph]  merge('(g<root> / go  :ARG0 (s<subj>))', r_subj(?1))
