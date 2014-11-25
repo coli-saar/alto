@@ -384,20 +384,18 @@
           <snapshots>
             <enabled>false</enabled>
           </snapshots>
-          <id>central</id>
-          <name>libs-release</name>
+          <id>tcl-artifactory-release</id>
+          <name>tcl-artifactory-release</name>
           <url>http://tcl.ling.uni-potsdam.de/artifactory/release</url>
         </repository>
         <repository>
           <snapshots>
-            <enabled>false</enabled>
+            <enabled>true</enabled>
           </snapshots>
-          <id>snapshots</id>
-          <name>libs-snapshot</name>
+          <id>tcl-artifactory-snapshots</id>
+          <name>tcl-artifactory-snapshots</name>
           <url>http://tcl.ling.uni-potsdam.de/artifactory/snapshots</url>
         </repository>
-
-
 
 
     <repository>
