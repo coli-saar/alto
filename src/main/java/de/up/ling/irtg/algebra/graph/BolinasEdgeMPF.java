@@ -6,11 +6,11 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.util.NumbersCombine;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectCollection;
 import java.util.BitSet;
 import java.util.Iterator;
@@ -23,8 +23,8 @@ import java.util.List;
 public class BolinasEdgeMPF extends MergePartnerFinder{
     
     private final IntList localToGlobal;
-    private final Long2ObjectMap<BitSet> notHasEdge;
-    private final long[] relevantEdges;
+    private final Int2ObjectMap<BitSet> notHasEdge;
+    private final int[] relevantEdges;
     private final SGraphBRDecompositionAutomaton auto;
     private final IntList allBdryReps;
     private final IntSet vertices;
@@ -35,10 +35,10 @@ public class BolinasEdgeMPF extends MergePartnerFinder{
         this.vertices = vertices;
         this.hasAll = hasAll;
         localToGlobal = new IntArrayList();
-        notHasEdge = new Long2ObjectOpenHashMap<>();
+        notHasEdge = new Int2ObjectOpenHashMap<>();
         allBdryReps = new IntArrayList();
 
-        relevantEdges = auto.getAllEdges();
+        relevantEdges = auto.completeGraphInfo.getAllEdges();
     }
 
     @Override
@@ -46,10 +46,10 @@ public class BolinasEdgeMPF extends MergePartnerFinder{
         allBdryReps.add(rep);
         int localIndex = localToGlobal.size();
         localToGlobal.add(rep);
-        LongBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
+        IdBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
 
         for (int i = 0; i < relevantEdges.length; i++) {
-            long iLong = relevantEdges[i];
+            int iLong = relevantEdges[i];
             if (!inBEdges.contains(iLong)) {
                 if (notHasEdge.containsKey(iLong)) {
                     notHasEdge.get(iLong).set(localIndex);
@@ -70,10 +70,15 @@ public class BolinasEdgeMPF extends MergePartnerFinder{
 
     @Override
     public IntList getAllMergePartners(int rep) {
-        LongBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
-        LongBasedEdgeSet relevantInBdryEdges = new LongBasedEdgeSet();
+        IdBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
+        IdBasedEdgeSet relevantInBdryEdges;
+        if (auto.completeGraphInfo.useBytes){
+            relevantInBdryEdges = new ByteBasedEdgeSet();
+        } else {
+            relevantInBdryEdges = new ShortBasedEdgeSet();
+        }
         
-        for (long d : relevantEdges){
+        for (int d : relevantEdges){
             if (inBEdges.contains(d)){
                 relevantInBdryEdges.add(d);
             }
@@ -158,7 +163,7 @@ public class BolinasEdgeMPF extends MergePartnerFinder{
         StringBuilder content = new StringBuilder();
         for (int i : getAll()) {
             //content.append(String.valueOf(i)+",");
-            LongBasedEdgeSet inBdryEdges = auto.getStateForId(i).getInBoundaryEdges();
+            IdBasedEdgeSet inBdryEdges = auto.getStateForId(i).getInBoundaryEdges();
             content.append(inBdryEdges.toString() + ", ");
         }
         content.append("|");

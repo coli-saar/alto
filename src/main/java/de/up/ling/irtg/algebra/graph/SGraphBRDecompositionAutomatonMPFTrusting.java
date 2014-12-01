@@ -37,10 +37,10 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
             if (label == null) {
                 return Collections.EMPTY_LIST;
             } else if (label.equals(GraphAlgebra.OP_MERGE)) {
-                if ((!doBolinas() && !children.get(0).isMergeableMPF(pwsp, children.get(1)))||(doBolinas() && !children.get(0).isMergeable(pwsp, children.get(1)))) { // ensure result is connected
+                if ((!doBolinas() && !children.get(0).isMergeableMPF(completeGraphInfo.pwsp, children.get(1)))||(doBolinas() && !children.get(0).isMergeable(completeGraphInfo.pwsp, children.get(1)))) { // ensure result is connected
                     return Collections.EMPTY_LIST;
                 } else {
-                    BoundaryRepresentation result = children.get(0).merge(children.get(1), this);
+                    BoundaryRepresentation result = children.get(0).merge(children.get(1), completeGraphInfo);
 
                     if (result == null) {
 //                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
@@ -62,15 +62,15 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                 if (arg == null){
                     System.out.println("error");
                 }
-                for (Integer sourceToForget : arg.getForgottenSources(label, labelId, this))//check if we may forget.
+                for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
                 {
-                    if (!arg.isForgetAllowed(sourceToForget, completeGraph, this)) {
+                    if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.graph, completeGraphInfo)) {
                         return Collections.EMPTY_LIST;//
                     }
                 }
 
                 // now we can apply the operation.
-                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, !doBolinas(), this);// maybe do the above check in here? might be more efficient.
+                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, !doBolinas(), completeGraphInfo);// maybe do the above check in here? might be more efficient.
 
                 if (result == null) {
 //                    System.err.println(label + " returned null: " + children.get(0));
@@ -96,11 +96,11 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                 }
 
 //                System.err.println(" - looking for matches of " + sgraph + " in " + completeGraph);
-                completeGraph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+                completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                     if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                         matchedSubgraph.setEqualsMeansIsomorphy(false);
-                        rules.add(makeRuleTrusting(new BoundaryRepresentation(matchedSubgraph, this), labelId, childStates));
+                        rules.add(makeRuleTrusting(new BoundaryRepresentation(matchedSubgraph, completeGraphInfo), labelId, childStates));
                     } else {
 //                        System.err.println("match " + matchedSubgraph + " has crossing edges from nodes");
                     }

@@ -72,9 +72,9 @@ public class BolinasMPF extends MergePartnerFinder{
         this.hasAll = hasAll;
         
         int nrSkips = 0;
-        if (currentSource == auto.BOLINASROOTSOURCENR || currentSource == auto.BOLINASSUBROOTSOURCENR){
+        if (currentSource == auto.completeGraphInfo.BOLINASROOTSOURCENR || currentSource == auto.completeGraphInfo.BOLINASSUBROOTSOURCENR){
             nrSkips++;
-            if (currentSource+nrSkips == auto.BOLINASROOTSOURCENR || currentSource+nrSkips == auto.BOLINASSUBROOTSOURCENR){
+            if (currentSource+nrSkips == auto.completeGraphInfo.BOLINASROOTSOURCENR || currentSource+nrSkips == auto.completeGraphInfo.BOLINASSUBROOTSOURCENR){
                 nrSkips++;
             }
         }
@@ -86,9 +86,9 @@ public class BolinasMPF extends MergePartnerFinder{
         BOT = nrNodes + 1;
         
         int nrPastSkips = 0;
-        if (sourceNr+1 == auto.BOLINASROOTSOURCENR || sourceNr+1 == auto.BOLINASSUBROOTSOURCENR){
+        if (sourceNr+1 == auto.completeGraphInfo.BOLINASROOTSOURCENR || sourceNr+1 == auto.completeGraphInfo.BOLINASSUBROOTSOURCENR){
             nrPastSkips++;
-            if (sourceNr+1+nrPastSkips == auto.BOLINASROOTSOURCENR || currentSource+1+nrPastSkips == auto.BOLINASSUBROOTSOURCENR){
+            if (sourceNr+1+nrPastSkips == auto.completeGraphInfo.BOLINASROOTSOURCENR || currentSource+1+nrPastSkips == auto.completeGraphInfo.BOLINASSUBROOTSOURCENR){
                 nrPastSkips++;
             }
         }

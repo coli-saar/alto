@@ -14,7 +14,7 @@ import java.util.function.Function;
  * 
  * @author koller
  */
-public class GraphEdge {
+public class GraphEdge{
     private GraphNode source;
     private GraphNode target;
     private String label;

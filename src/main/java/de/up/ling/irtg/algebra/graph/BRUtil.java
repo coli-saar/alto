@@ -361,9 +361,9 @@ public class BRUtil {
         }
         
 
-        String input = TESTSET;
+        String input = testString7;
         int nrSources = 4;
-        int repetitions = 0;
+        int repetitions = 10;
         boolean onlyCheckAcceptance = false;
         boolean doBenchmark = true;
         boolean cleanVersion = true;
@@ -432,7 +432,7 @@ public class BRUtil {
 
     private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
         SGraphBRDecompositionAutomatonMPFTrusting auto = (SGraphBRDecompositionAutomatonMPFTrusting) alg.decompose(graph, SGraphBRDecompositionAutomatonMPFTrusting.class);
-        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNrSources(), graph.getGraph().vertexSet().size(), false);
+        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.completeGraphInfo.getNrSources(), graph.getGraph().vertexSet().size(), false);
         
         if (onlyCheckAcceptance) {
             if (instr.doesAccept(alg)) {
@@ -451,8 +451,8 @@ public class BRUtil {
     }
 
     private static void runTest(Set<Integer> noFullDecomposition) throws Exception {
-        int nrRepetitions = 2;
-        int warmupRepetitions = 1;
+        int nrRepetitions = 10;
+        int warmupRepetitions= 5;
         int doesAcceptSourcesCount = 4;
 
         long startTime;

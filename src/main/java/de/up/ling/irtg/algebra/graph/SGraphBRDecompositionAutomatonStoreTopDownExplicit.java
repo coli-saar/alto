@@ -21,7 +21,7 @@ public class SGraphBRDecompositionAutomatonStoreTopDownExplicit extends SGraphBR
         super(completeGraph, algebra, signature);
         stateInterner.setTrustingMode(true);
 
-        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, getNrSources(), getNumberNodes(), doBolinas());//maybe check algebra if it contains bolinasmerge?
+        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, completeGraphInfo.getNrSources(), completeGraphInfo.getNrNodes(), doBolinas());//maybe check algebra if it contains bolinasmerge?
         foundFinalState = instr.iterateThroughRulesBottomUp1Clean(algebra);
         //instr.iterateThroughRulesBottomUp1(algebra, true, false);
         //foundFinalState = false;
@@ -91,7 +91,7 @@ public class SGraphBRDecompositionAutomatonStoreTopDownExplicit extends SGraphBR
             }
             edgeIDMap.put(parent.edgeID, parentState);
         }
-        if (parent.isCompleteGraph(this)) {
+        if (parent.isCompleteGraph(completeGraphInfo)) {
             finalStates.add(parentState);
         }
         return createRule(parentState, labelId, childStates, 1);

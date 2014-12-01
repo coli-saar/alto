@@ -20,7 +20,6 @@ import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompAutoInstruments;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomaton;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonMPFTrusting;
 import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonTopDownBolinas;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
@@ -40,11 +39,7 @@ import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntLinkedOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
@@ -52,11 +47,11 @@ import it.unimi.dsi.fastutil.longs.LongList;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -70,7 +65,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-import java.util.StringJoiner;
 import java.util.function.BiConsumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -87,6 +81,7 @@ import org.jgrapht.DirectedGraph;
 public class IrtgInducer {
 
     private List<TrainingInstance> corpus = new ArrayList<TrainingInstance>();
+    public List<TrainingInstanceSerializable> corpusSerializable = new ArrayList<>();
     private ArrayList<Tree<ElementaryTree>> sampledTerm = new ArrayList<Tree<ElementaryTree>>();
     private static final Pattern sentenceSplitPattern = Pattern.compile("(\\S+)\\s+(.*)\\s+(\\S+)");
     private static final List<String> allSources = new ArrayList<String>();
@@ -113,9 +108,9 @@ public class IrtgInducer {
     private final Random rnd = new Random();
 
     public static void main(String[] args) throws Exception {
-        boolean bolinas = true;
+        boolean bolinas = false;
         
-        String invalidArguments = "invalid arguments (use 'write', 'nowrite' or 'onlyAccept' as first argument, source count as second, dump path as third)!";
+        String invalidArguments = "invalid arguments (use 'write', 'nowrite' or 'onlyAccept' as first argument, source count as second, dump path as third).";
         boolean doWrite;
         boolean onlyAccept = false;
         int nrSources;
@@ -148,76 +143,57 @@ public class IrtgInducer {
             //set standard arguments:
             doWrite = true;
             dumpPath = "corpora/amr-bank-v1.3_parses/";
-            nrSources = 2;
+            nrSources = 3;
         } else {
             System.out.println(invalidArguments);
             return;
         }
-
         
         
-
-        IntList failed = new IntArrayList();
-
+        
         Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         inducer.corpus.sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
+        
+        int start;
+        int stop;
+        if (args.length >= 4) {
+             try {
+                start = Integer.valueOf(args[3]);
+            } catch (java.lang.Exception e) {
+                System.out.println(invalidArguments + " Could not parse start index");
+                return;
+            } 
+        } else {
+            start = 0;
+        }
+        
+        if (args.length >= 5) {
+             try {
+                stop = Integer.valueOf(args[4]);
+            } catch (java.lang.Exception e) {
+                System.out.println(invalidArguments + " Could not parse start index");
+                return;
+            } 
+        } else {
+            stop = inducer.corpus.size();
+        }
+  
 
-        int size = inducer.corpus.size();
+        int iterations = stop-start;//later: iterations = size-start;
+        
+        IntList failed = new IntArrayList();
+
+
+        
         //System.out.println(String.valueOf(size));
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
         List<String> labels = new ArrayList<>();
-        int start = 0;//later: start = 0;
-        int iterations = size-start;//later: iterations = size-start;
+        
 
-        for (int i = start; i < start + iterations; i++) {
-            TrainingInstance ti = inducer.corpus.get(i);
-            System.out.println("i= " + String.valueOf(i+1) + "/" + String.valueOf(size) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
-            System.err.println("i= " + String.valueOf(i+1) + "/" + String.valueOf(size) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
-            sw.record(3 * (i - start));
-            GraphAlgebra alg = new GraphAlgebra();
-            SGraph graph = ti.graph;
-            if (bolinas){
-                BRUtil.makeIncompleteBolinasDecompositionAlgebra(alg, graph, nrSources);
-            } else {
-                BRUtil.makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
-            }
-            if (onlyAccept) {//note: here always assumes no bolinas for now
-                
-                SGraphBRDecompositionAutomatonMPFTrusting auto = (SGraphBRDecompositionAutomatonMPFTrusting) alg.decompose(graph, SGraphBRDecompositionAutomatonMPFTrusting.class);
-                SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.getNumberNodes(), auto.getNrSources(), false);
-                if (!instr.doesAccept(alg)) {
-                    failed.add(i);
-                }
-                sw.record(3 * (i - start) + 1);
-                System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Accept time: "));
-                
-            } else {
-                SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
-                if (bolinas){
-                    auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
-                } else {
-                    auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
-                }
-
-                sw.record(3 * (i - start) + 1);
-                System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Decomposition time: "));
-                if (doWrite) {
-                    Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(ti.id) + ".rtg");
-                    auto.writeShort(rtgWriter);
-                    rtgWriter.close();
-                }
-
-                if (!auto.foundFinalState) {
-                    failed.add(ti.id);
-                }
-            }
-            sw.record(3*(i-start)+2);
-            System.err.println(sw.printTimeBefore(3 * (i - start) + 2, "Write time: "));
-
-            labels.add(graph.toString());
-            labels.add("<- " + String.valueOf(i)+", ID = " + String.valueOf(ti.id) + "(line above is decomp time); write time was ");
-            labels.add("filler time");
+        for (int i = start; i < stop; i++) {
+            
+            inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
         }
 
         Writer logWriter = new FileWriter(dumpPath +"log.txt");
@@ -261,6 +237,123 @@ public class IrtgInducer {
 //        overall.record(1);
 //        
 //        overall.printMilliseconds("overall time");
+    }
+    
+    
+    public void parseInstance(int i, int start, int nrSources, int size, boolean doBolinas, boolean doWrite, boolean onlyAccept, String dumpPath, List<String> labels, CpuTimeStopwatch sw, IntList failed) throws Exception {
+        TrainingInstance ti = corpus.get(i);
+            System.out.println("i= " + String.valueOf(i) + "/" + String.valueOf(size-1) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
+            System.err.println("i= " + String.valueOf(i) + "/" + String.valueOf(size-1) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
+            
+            sw.record(3 * (i - start));
+            
+            GraphAlgebra alg = new GraphAlgebra();
+            SGraph graph = ti.graph;
+            if (doBolinas){
+                BRUtil.makeIncompleteBolinasDecompositionAlgebra(alg, graph, nrSources);
+            } else {
+                BRUtil.makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
+            }
+            
+            
+            if (onlyAccept) {//note: here always assumes no bolinas for now
+                
+                SGraphBRDecompositionAutomatonMPFTrusting auto = (SGraphBRDecompositionAutomatonMPFTrusting) alg.decompose(graph, SGraphBRDecompositionAutomatonMPFTrusting.class);
+                SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.completeGraphInfo.getNrNodes(), auto.completeGraphInfo.getNrSources(), false);
+                if (!instr.doesAccept(alg)) {
+                    failed.add(i);
+                }
+                
+                
+                sw.record(3 * (i - start) + 1);
+                System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Accept time: "));
+                
+                
+            } else {
+                
+                
+                SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
+                if (doBolinas){
+                    auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
+                } else {
+                    auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
+                }
+
+                sw.record(3 * (i - start) + 1);
+                
+                
+                
+                System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Decomposition time: "));
+                if (doWrite) {
+                    Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(ti.id) + ".rtg");
+                    auto.writeShort(rtgWriter);
+                    rtgWriter.close();
+                }
+
+                if (!auto.foundFinalState) {
+                    failed.add(ti.id);
+                }
+            }
+            
+            
+            sw.record(3*(i-start)+2);
+            System.err.println(sw.printTimeBefore(3 * (i - start) + 2, "Write time: "));
+
+            labels.add(graph.toString());
+            labels.add("<- " + String.valueOf(i)+", ID = " + String.valueOf(ti.id) + "(line above is decomp time); write time was ");
+            labels.add("filler time");
+    }
+    
+    public static boolean parseInstance(TrainingInstanceSerializable instance, int nrSources, boolean doBolinas, boolean doWrite, boolean onlyAccept, String dumpPath, CpuTimeStopwatch sw) throws Exception {
+        
+        
+        sw.record(0);
+        SGraph graph = new GraphAlgebra().parseString(instance.graph);
+
+        GraphAlgebra alg = new GraphAlgebra();
+        if (doBolinas){
+            BRUtil.makeIncompleteBolinasDecompositionAlgebra(alg, graph, nrSources);
+        } else {
+            BRUtil.makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
+        }
+
+
+        if (onlyAccept) {//note: here always assumes no bolinas for now
+
+            SGraphBRDecompositionAutomatonMPFTrusting auto = (SGraphBRDecompositionAutomatonMPFTrusting) alg.decompose(graph, SGraphBRDecompositionAutomatonMPFTrusting.class);
+            SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.completeGraphInfo.getNrNodes(), auto.completeGraphInfo.getNrSources(), false);
+            sw.record(1);
+            return instr.doesAccept(alg);
+
+
+            //System.err.println(sw.printTimeBefore(1, "Accept time(" + instance.id+"): "));
+
+
+        } else {
+
+
+            SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
+            if (doBolinas){
+                auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
+            } else {
+                auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
+            }
+
+            sw.record(1);
+
+
+
+            //System.err.println(sw.printTimeBefore(1, "Decomposition time(" + instance.id+"): "));
+            if (doWrite) {
+                Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(instance.id) + ".rtg");
+                auto.writeShort(rtgWriter);
+                rtgWriter.close();
+            }
+
+            sw.record(2);
+            //System.err.println(sw.printTimeBefore(2, "Write time (" + instance.id+"): "));
+            return auto.foundFinalState;
+        }
     }
 
     public IrtgInducer(Reader corpusReader) {
@@ -971,8 +1064,10 @@ public class IrtgInducer {
         int state = 0; // 0 = preamble; 1 = now reading sentence; 2 = now reading AMR
         StringBuffer currentAmr = new StringBuffer();
         TrainingInstance inst = new TrainingInstance(1);
+        TrainingInstanceSerializable instSzbl = new TrainingInstanceSerializable(1);
 
         corpus = new ArrayList<>();
+        corpusSerializable = new ArrayList<>();
 
         try {
             while (true) {
@@ -992,7 +1087,9 @@ public class IrtgInducer {
                                 break;
 
                             case 2:
+                                instSzbl.graph = currentAmr.toString();
                                 inst.graph = graphAlgebra.parseString(currentAmr.toString());
+                                corpusSerializable.add(instSzbl);
                                 corpus.add(inst);
 
                                 addToGraphSignature(inst.graph);
@@ -1000,6 +1097,7 @@ public class IrtgInducer {
                                 currentAmr = new StringBuffer();
                                 int newId = inst.id + 1;
                                 inst = new TrainingInstance(newId);
+                                instSzbl = new TrainingInstanceSerializable(newId);
                                 state = 1;
                                 break;
                         }
@@ -1012,6 +1110,7 @@ public class IrtgInducer {
                                 Matcher m = sentenceSplitPattern.matcher(line);
                                 if (m.matches()) {
                                     inst.string = stringAlgebra.parseString(m.group(2));
+                                    instSzbl.string = inst.string;
                                 }
 
                                 break;
@@ -1115,13 +1214,33 @@ public class IrtgInducer {
 
     }
 
-    private static class TrainingInstance {
+    private static class TrainingInstance{
 
         public List<String> string;
         public SGraph graph;
         public int id;
 
         public TrainingInstance(int id) {
+            this.string = null;
+            this.graph = null;
+            this.id = id;
+        }
+
+        public Map<String, Object> toMap() {
+            Map<String, Object> ret = new HashMap<>();
+            ret.put("string", string);
+            ret.put("graph", graph);
+            return ret;
+        }
+    }
+    
+    public static class TrainingInstanceSerializable implements Serializable {
+
+        public List<String> string;
+        public String graph;
+        public int id;
+
+        public TrainingInstanceSerializable(int id) {
             this.string = null;
             this.graph = null;
             this.id = id;

@@ -13,6 +13,7 @@ import com.google.common.collect.Sets;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,7 +44,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * 
  * @author koller
  */
-public class SGraph {
+public class SGraph{
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;

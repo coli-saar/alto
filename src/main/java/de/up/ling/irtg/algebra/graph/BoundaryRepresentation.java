@@ -5,28 +5,19 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Sets;
-import com.google.common.primitives.Ints;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET_ALL;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET_ALL_BUT_ROOT;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET_EXCEPT;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_MERGE;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_RENAME;
-import java.io.StringReader;
 import org.jgrapht.DirectedGraph;
-import java.util.Map;
-import java.util.HashMap;
 import java.util.Set;
-import java.util.NavigableSet;
 import java.util.HashSet;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Collection;
 import java.util.List;
-import com.google.common.base.Function;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_SWAP;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -44,59 +35,62 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 public class BoundaryRepresentation {
 
     private String stringRep;
-    private final LongBasedEdgeSet inBoundaryEdges;
-    private final int[] sourceToNodename;//nodes start with 0. Bottom/undefined is stored as -1.
+    
+    private final IdBasedEdgeSet inBoundaryEdges;
+    private final int[] sourceToNodename;//nodes start with 0. Bottom/undefined is stored as -1.  
+    
     private final BitSet isSourceNode;
-    public final int innerNodeCount;
     public final boolean sourcesAllBottom;
+    public final int innerNodeCount;
     public final int sourceCount;
     public final int largestSource;
+    
     public final long edgeID;
-    public final long vertexID;//ID1 == ID2 iff BR1 == BR2, but only among the BR in one automaton.
-    private final SGraphBRDecompositionAutomaton auto;
+    public final long vertexID;//ID1 == ID2 iff BR1 == BR2, but only among the BR in one completeGraphInfomaton.
+    private final GraphInfo completeGraphInfo;
 
-    //public long getID(SGraphBRDecompositionAutomaton auto) {
-    //    return vertexID + edgeID * (long) Math.pow(auto.getNumberNodes() + 1, auto.getNrSources());
+    //public long getID(GraphInfo completeGraphInfo) {
+    //    return vertexID + edgeID * (long) Math.pow(completeGraphInfo.getNumberNodes() + 1, completeGraphInfo.getNrSources());
     //}
-    public BoundaryRepresentation(SGraph T, SGraphBRDecompositionAutomaton auto) {
-        inBoundaryEdges = new LongBasedEdgeSet();//make the size depend on d?
-        sourceToNodename = new int[auto.getNrSources()];
-        isSourceNode = new BitSet(auto.getNumberNodes());
-        this.auto = auto;
+    public BoundaryRepresentation(SGraph T, GraphInfo completeGraphInfo) {
+        if (completeGraphInfo.useBytes) {
+            inBoundaryEdges = new ByteBasedEdgeSet();
+        } else {
+            inBoundaryEdges = new ShortBasedEdgeSet();
+        }
+        sourceToNodename = new int[completeGraphInfo.getNrSources()];
+        isSourceNode = new BitSet(completeGraphInfo.getNrNodes());
+        this.completeGraphInfo = completeGraphInfo;
 
         boolean tempSourcesAllBottom = true;
         for (int j = 0; j < sourceToNodename.length; j++) {
             sourceToNodename[j] = -1;
         }
 
-        int n = auto.getNumberNodes();
-        int s = auto.getNrSources();
+        int n = completeGraphInfo.getNrNodes();
+        int s = completeGraphInfo.getNrSources();
         int edgeIdBuilder = 0;
         int vertexIdBuilder = 0;
         for (String source : T.getAllSources()) {
-            int sNr = auto.getIntForSource(source);
+            int sNr = completeGraphInfo.getIntForSource(source);
             tempSourcesAllBottom = false;
             String vName = T.getNodeForSource(source);
-            int vNr = auto.getIntForNode(vName);
+            int vNr = completeGraphInfo.getIntForNode(vName);
             GraphNode v = T.getNode(vName);
-            sourceToNodename[auto.getIntForSource(source)] = vNr;
+            sourceToNodename[completeGraphInfo.getIntForSource(source)] = (short)vNr;
             if (!isSourceNode.get(vNr)) {
                 isSourceNode.set(vNr);
                 vertexIdBuilder += getVertexIDSummand(vNr, sNr, n);
             }
             if (v.getLabel() != null) {
                 if (!v.getLabel().equals("")) {
-                    long vEdge = NumbersCombine.combine(vNr, vNr);
-                    inBoundaryEdges.add(vEdge);
-                    edgeIdBuilder += getEdgeIDSummand(vEdge, vNr, sNr, auto);
+                    inBoundaryEdges.add(vNr, vNr, completeGraphInfo);
+                    edgeIdBuilder += getEdgeIDSummand(vNr, vNr, vNr, sNr, completeGraphInfo);
                 }
             }
             for (GraphEdge e : T.getGraph().edgesOf(v)) {
-                long edge = LongBasedEdgeSet.getLongForEdge(e, auto);
-                edgeIdBuilder += getEdgeIDSummand(edge, vNr, sNr, auto);
-                if (!inBoundaryEdges.contains(edge)) {
-                    inBoundaryEdges.add(edge);
-                }
+                edgeIdBuilder += getEdgeIDSummand(e, vNr, sNr, completeGraphInfo);
+                inBoundaryEdges.add(e, completeGraphInfo);
             }
         }
         edgeID = edgeIdBuilder;
@@ -109,8 +103,8 @@ public class BoundaryRepresentation {
         largestSource = NumbersCombine.getSecond(temp);
     }
 
-    public long getEdgeIDSummand(long edge, int vNr, int source, SGraphBRDecompositionAutomaton auto) {
-        long[] incidentEdges = auto.getIncidentEdges(vNr);//IncidentEdges(isSourceNode);
+    public long getEdgeIDSummand(int edge, int vNr, int source, GraphInfo completeGraphInfo) {
+        int[] incidentEdges = completeGraphInfo.getIncidentEdges(vNr);//IncidentEdges(isSourceNode);
         int index = -1;
         for (int i = 0; i < incidentEdges.length; i++) {
             if (edge == incidentEdges[i]) {
@@ -120,40 +114,48 @@ public class BoundaryRepresentation {
         if (index == -1) {
             System.out.println("err0");
         }
-        return (long) Math.pow(2, source * auto.maxDegree + index + 1);
+        return (long) Math.pow(2, source * completeGraphInfo.maxDegree + index + 1);
+    }
+    
+    public long getEdgeIDSummand(GraphEdge edge, int vNr, int source, GraphInfo completeGraphInfo) {
+        return getEdgeIDSummand(completeGraphInfo.edgeToId.get(edge), vNr, source, completeGraphInfo);
+    }
+    
+    public long getEdgeIDSummand(int edgeSource, int edgeTarget, int vNr, int source, GraphInfo completeGraphInfo) {
+        return getEdgeIDSummand(completeGraphInfo.edgesBySourceAndTarget[edgeSource][edgeTarget], vNr, source, completeGraphInfo);
     }
 
     public long getVertexIDSummand(int vNr, int source, int totalVertexCount) {
         return (long) Math.pow(totalVertexCount + 1, source) * (vNr + 1);
     }
 
-    /*public BoundaryRepresentation(GraphEdge edge, String sourceSource, String targetSource, SGraphBRDecompositionAutomaton auto)//creates a BR for an sGraph with just this one edge. sourcename1 goes to the source of the edge, sourcename2 to the target
+    /*public BoundaryRepresentation(GraphEdge edge, String sourceSource, String targetSource, GraphInfo completeGraphInfo)//creates a BR for an sGraph with just this one edge. sourcename1 goes to the source of the edge, sourcename2 to the target
      {
      inBoundaryEdges = new LongBasedEdgeSet();//make the size small?
-     sourceToNodename = new int[auto.getNrSources()];//make the size small?
+     sourceToNodename = new int[completeGraphInfo.getNrSources()];//make the size small?
      for (int j = 0; j<sourceToNodename.length; j++)
      {
      sourceToNodename[j] = -1;
      }
-     int sourcesourceNr = auto.getIntForSource(sourceSource);
-     int targetsourceNr = auto.getIntForSource(targetSource);
-     sourceToNodename[sourcesourceNr] = auto.getIntForNode(edge.getSource().getName());
-     sourceToNodename[targetsourceNr] = auto.getIntForNode(edge.getTarget().getName());
-     inBoundaryEdges.add(edge, auto);
+     int sourcesourceNr = completeGraphInfo.getIntForSource(sourceSource);
+     int targetsourceNr = completeGraphInfo.getIntForSource(targetSource);
+     sourceToNodename[sourcesourceNr] = completeGraphInfo.getIntForNode(edge.getSource().getName());
+     sourceToNodename[targetsourceNr] = completeGraphInfo.getIntForNode(edge.getTarget().getName());
+     inBoundaryEdges.add(edge, completeGraphInfo);
      innerNodeCount = 0;
      sourcesAllBottom = false;
-     isSourceNode = new BitSet(auto.getNumberNodes());
+     isSourceNode = new BitSet(completeGraphInfo.getNumberNodes());
      isSourceNode.set(sourcesourceNr);
      isSourceNode.set(targetsourceNr);
      long temp = calculateSourceCountAndMax();
      sourceCount = NumbersCombine.getFirst(temp);
      largestSource = NumbersCombine.getSecond(temp);
      }*/
-    public BoundaryRepresentation(LongBasedEdgeSet inBoundaryEdges, int[] sourceToNodename, int innerNodeCount, boolean sourcesAllBottom, BitSet isSourceNode, long edgeID, long vertexID, SGraphBRDecompositionAutomaton auto) {
-        if (arrayIsAllBottom(sourceToNodename) && !sourcesAllBottom) {
-            System.err.println("terrible inconsistency in BoundaryRepresentation constructor");
-        }
-        this.auto = auto;
+    public BoundaryRepresentation(IdBasedEdgeSet inBoundaryEdges, int[] sourceToNodename, int innerNodeCount, boolean sourcesAllBottom, BitSet isSourceNode, long edgeID, long vertexID, GraphInfo completeGraphInfo) {
+        //if (arrayIsAllBottom(sourceToNodename) && !sourcesAllBottom) {
+        //    System.err.println("terrible inconsistency in BoundaryRepresentation constructor");
+        //}
+        this.completeGraphInfo = completeGraphInfo;
         this.inBoundaryEdges = inBoundaryEdges;//no copy needed, since only modified in constructor
         this.sourceToNodename = sourceToNodename;//no copy needed, since only modified in constructor
         this.innerNodeCount = innerNodeCount;
@@ -163,22 +165,22 @@ public class BoundaryRepresentation {
         sourceCount = NumbersCombine.getFirst(temp);
         largestSource = NumbersCombine.getSecond(temp);
         this.edgeID = edgeID;
-        //if (edgeID != computeEdgeID(auto)){
+        //if (edgeID != computeEdgeID(completeGraphInfo)){
         //    System.out.println("err4");
         //}
         this.vertexID = vertexID;
         //printSources();
     }
 
-    private long computeEdgeID(SGraphBRDecompositionAutomaton auto) {
+    private long computeEdgeID(GraphInfo completeGraphInfo) {
         long res = 0;
         for (int source = 0; source < sourceToNodename.length; source++) {
-            res += inBoundaryEdges.computeEdgeIdSummand(sourceToNodename[source], source, this, auto);
+            res += inBoundaryEdges.computeEdgeIdSummand(sourceToNodename[source], source, this, completeGraphInfo);
         }
         return res;
     }
 
-    public SGraph getGraph(SGraph wholeGraph, SGraphBRDecompositionAutomaton auto) {
+    public SGraph getGraph(SGraph wholeGraph, GraphInfo completeGraphInfo) {
         SGraph T = new SGraph();
         DirectedGraph<GraphNode, GraphEdge> g = wholeGraph.getGraph();
         List<String> activeNodes = new ArrayList<>();
@@ -190,9 +192,9 @@ public class BoundaryRepresentation {
         for (int source = 0; source < sourceToNodename.length; source++) {
             int node = sourceToNodename[source];
             if (node >= 0) {
-                String nodeName = auto.getNodeForInt(node);
-                T.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, auto));
-                T.addSource(auto.getSourceForInt(source), nodeName);
+                String nodeName = completeGraphInfo.getNodeForInt(node);
+                T.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, completeGraphInfo));
+                T.addSource(completeGraphInfo.getSourceForInt(source), nodeName);
                 activeNodes.add(nodeName);
             }
         }
@@ -200,9 +202,9 @@ public class BoundaryRepresentation {
         for (int i = 0; i < activeNodes.size(); i++) {
             String vName = activeNodes.get(i);
             GraphNode v = wholeGraph.getNode(vName);
-            boolean isSource = isSource(vName, auto);
+            boolean isSource = isSource(vName, completeGraphInfo);
             for (GraphEdge e : g.edgeSet()) {
-                if (!isSource || isInBoundary(e, auto)) {
+                if (!isSource || isInBoundary(e, completeGraphInfo)) {
                     GraphNode target = e.getTarget();
                     GraphNode source = e.getSource();
                     if (source == v && !(target == v)) {
@@ -233,6 +235,16 @@ public class BoundaryRepresentation {
         }
         return res;
     }
+    
+    private boolean arrayContains(short[] array, short value) {
+        boolean res = false;
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] == value) {
+                res = true;
+            }
+        }
+        return res;
+    }
 
     private boolean arrayIsAllBottom(int[] array) {
         boolean res = true;
@@ -248,23 +260,23 @@ public class BoundaryRepresentation {
         return isSourceNode.get(node);
     }
 
-    private boolean isSource(String nodeName, SGraphBRDecompositionAutomaton auto) {
-        return isSource(auto.getIntForNode(nodeName));
+    private boolean isSource(String nodeName, GraphInfo completeGraphInfo) {
+        return isSource(completeGraphInfo.getIntForNode(nodeName));
     }
 
     public int getSourceNode(int s) {
         return sourceToNodename[s];
     }
 
-    public boolean isInBoundary(GraphEdge e, SGraphBRDecompositionAutomaton auto) {
-        return inBoundaryEdges.contains(e, auto);
+    public boolean isInBoundary(GraphEdge e, GraphInfo completeGraphInfo) {
+        return inBoundaryEdges.contains(e, completeGraphInfo);
     }
 
-    private String getNodeLabel(SGraph wholeGraph, String nodeName, boolean isSource, SGraphBRDecompositionAutomaton auto) {
+    private String getNodeLabel(SGraph wholeGraph, String nodeName, boolean isSource, GraphInfo completeGraphInfo) {
         GraphNode v = wholeGraph.getNode(nodeName);
         //DirectedGraph<GraphNode, GraphEdge> G = wholeGraph.getGraph();
         //GraphEdge e = G.getEdge(v, v);
-        if ((!isSource) || inBoundaryEdges.contains(auto.getIntForNode(nodeName), auto.getIntForNode(nodeName))) {
+        if ((!isSource) || inBoundaryEdges.contains(completeGraphInfo.getIntForNode(nodeName), completeGraphInfo.getIntForNode(nodeName), completeGraphInfo)) {
             return v.getLabel();
         } else {
             return "";
@@ -275,14 +287,14 @@ public class BoundaryRepresentation {
     //    return sourceToNodename;
     //    //return new HashMap(sourceToNodename);
     // }
-    public LongBasedEdgeSet getInBoundaryEdges() {
+    public IdBasedEdgeSet getInBoundaryEdges() {
         return inBoundaryEdges;
         //return new HashSet(inBoundaryEdges);
     }
 
-    public BoundaryRepresentation merge(BoundaryRepresentation other, SGraphBRDecompositionAutomaton auto)//only call this if merging is allowed!
+    public BoundaryRepresentation merge(BoundaryRepresentation other, GraphInfo completeGraphInfo)//only call this if merging is allowed!
     {
-        LongBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();
+        IdBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();
         newInBoundaryEdges.addAll(other.getInBoundaryEdges());
         int[] newSourceToNodename = new int[sourceToNodename.length];
         BitSet newIsSourceNode = (BitSet) isSourceNode.clone();
@@ -294,21 +306,21 @@ public class BoundaryRepresentation {
         long edgeIdBuilder = edgeID + other.edgeID;
         for (int i = 0; i < newSourceToNodename.length; i++) {
             if (newSourceToNodename[i] != -1) {
-                vertexIdBuilder += getVertexIDSummand(newSourceToNodename[i], i, auto.getNumberNodes());
+                vertexIdBuilder += getVertexIDSummand(newSourceToNodename[i], i, completeGraphInfo.getNrNodes());
             }
             //edgeIdBuilder += newInBoundaryEdges.computeEdgeIdBonus(source, )
         }
-        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount + other.innerNodeCount, false, newIsSourceNode, edgeIdBuilder, vertexIdBuilder, auto);//can just sum up the edge IDs, since the edge sets are disjoint!
+        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount + other.innerNodeCount, false, newIsSourceNode, edgeIdBuilder, vertexIdBuilder, completeGraphInfo);//can just sum up the edge IDs, since the edge sets are disjoint!
     }
 
-    public BoundaryRepresentation forget(int sourceToForget, SGraphBRDecompositionAutomaton auto)//only call this if the source name may be forgotten!
+    public BoundaryRepresentation forget(int sourceToForget, GraphInfo completeGraphInfo)//only call this if the source name may be forgotten!
     {
-        LongBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();
+        IdBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();
         int[] newSourceToNodename = sourceToNodename.clone();
         int vNr = sourceToNodename[sourceToForget];
         newSourceToNodename[sourceToForget] = -1;
         BitSet newIsSourceNode = (BitSet) isSourceNode.clone();
-        long newVertexID = vertexID - getVertexIDSummand(vNr, sourceToForget, auto.getNumberNodes());
+        long newVertexID = vertexID - getVertexIDSummand(vNr, sourceToForget, completeGraphInfo.getNrNodes());
 
         long newEdgeID = edgeID;
         //now remove inBoundaryEdges where necessary
@@ -316,77 +328,77 @@ public class BoundaryRepresentation {
         if (!arrayContains(newSourceToNodename, vNr)) {
             newIsSourceNode.clear(vNr);
             nrNewInnerNodes = 1;
-            newEdgeID -= newInBoundaryEdges.smartForgetIncident(vNr, sourceToForget, inBoundaryEdges, this, auto);
+            newEdgeID -= newInBoundaryEdges.smartForgetIncident(vNr, sourceToForget, inBoundaryEdges, this, completeGraphInfo);
         }
-        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount + nrNewInnerNodes, newIsSourceNode.isEmpty(), newIsSourceNode, newEdgeID, newVertexID, auto);
+        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount + nrNewInnerNodes, newIsSourceNode.isEmpty(), newIsSourceNode, newEdgeID, newVertexID, completeGraphInfo);
     }
 
-    public BoundaryRepresentation forgetSourcesExcept(Set<Integer> retainedSources, SGraphBRDecompositionAutomaton auto) {
+    public BoundaryRepresentation forgetSourcesExcept(Set<Integer> retainedSources, GraphInfo completeGraphInfo) {
         BoundaryRepresentation ret = this;
         for (int source = 0; source < sourceToNodename.length; source++) {
             if (!retainedSources.contains(source) && sourceToNodename[source] != -1) {
-                ret = ret.forget(source, auto);
+                ret = ret.forget(source, completeGraphInfo);
             }
         }
         return ret;
     }
 
     //returns null if the rename is not ok
-    public BoundaryRepresentation rename(int oldSource, int newSource, boolean allowSelfRename, SGraphBRDecompositionAutomaton auto) {
+    public BoundaryRepresentation rename(int oldSource, int newSource, boolean allowSelfRename, GraphInfo completeGraphInfo) {
         if (allowSelfRename && newSource == oldSource) {
             return this;
         } else if (sourceToNodename[newSource] != -1 || sourceToNodename[oldSource] == -1) {
             return null;
         } else {
-            LongBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();
+            IdBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();
             int[] newSourceToNodename = sourceToNodename.clone();
             int vNr = sourceToNodename[oldSource];
             newSourceToNodename[oldSource] = -1;
             newSourceToNodename[newSource] = vNr;
             long newVertexID = vertexID;
-            newVertexID -= getVertexIDSummand(vNr, oldSource, auto.getNumberNodes());
-            newVertexID += getVertexIDSummand(vNr, newSource, auto.getNumberNodes());
+            newVertexID -= getVertexIDSummand(vNr, oldSource, completeGraphInfo.getNrNodes());
+            newVertexID += getVertexIDSummand(vNr, newSource, completeGraphInfo.getNrNodes());
             long newEdgeID = edgeID;
-            for (long edge : auto.getIncidentEdges(vNr)) {
+            for (int edge : completeGraphInfo.getIncidentEdges(vNr)) {
                 if (inBoundaryEdges.contains(edge)) {
-                    newEdgeID -= getEdgeIDSummand(edge, vNr, oldSource, auto);
-                    newEdgeID += getEdgeIDSummand(edge, vNr, newSource, auto);
+                    newEdgeID -= getEdgeIDSummand(edge, vNr, oldSource, completeGraphInfo);
+                    newEdgeID += getEdgeIDSummand(edge, vNr, newSource, completeGraphInfo);
                 }
             }
-            return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount, false, isSourceNode, newEdgeID, newVertexID, auto);
+            return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount, false, isSourceNode, newEdgeID, newVertexID, completeGraphInfo);
         }
 
     }
 
-    public BoundaryRepresentation swap(int oldSource, int newSource, SGraphBRDecompositionAutomaton auto) {
+    public BoundaryRepresentation swap(int oldSource, int newSource, GraphInfo completeGraphInfo) {
         if (sourceToNodename[newSource] == -1 || sourceToNodename[oldSource] == -1) {
             return null;
         }
-        LongBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();//set size?
+        IdBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();//set size?
         int[] newSourceToNodename = sourceToNodename.clone();
         int oldVNr = sourceToNodename[oldSource];
         int newVNr = sourceToNodename[newSource];
         newSourceToNodename[oldSource] = newVNr;
         newSourceToNodename[newSource] = oldVNr;
         long newVertexID = vertexID;
-        newVertexID -= getVertexIDSummand(oldVNr, oldSource, auto.getNumberNodes());
-        newVertexID += getVertexIDSummand(oldVNr, newSource, auto.getNumberNodes());
-        newVertexID -= getVertexIDSummand(newVNr, newSource, auto.getNumberNodes());
-        newVertexID += getVertexIDSummand(newVNr, oldSource, auto.getNumberNodes());
+        newVertexID -= getVertexIDSummand(oldVNr, oldSource, completeGraphInfo.getNrNodes());
+        newVertexID += getVertexIDSummand(oldVNr, newSource, completeGraphInfo.getNrNodes());
+        newVertexID -= getVertexIDSummand(newVNr, newSource, completeGraphInfo.getNrNodes());
+        newVertexID += getVertexIDSummand(newVNr, oldSource, completeGraphInfo.getNrNodes());
         long newEdgeID = edgeID;
-        for (long edge : auto.getIncidentEdges(oldVNr)) {
+        for (int edge : completeGraphInfo.getIncidentEdges(oldVNr)) {
             if (inBoundaryEdges.contains(edge)) {
-                newEdgeID -= getEdgeIDSummand(edge, oldVNr, oldSource, auto);
-                newEdgeID += getEdgeIDSummand(edge, oldVNr, newSource, auto);
+                newEdgeID -= getEdgeIDSummand(edge, oldVNr, oldSource, completeGraphInfo);
+                newEdgeID += getEdgeIDSummand(edge, oldVNr, newSource, completeGraphInfo);
             }
         }
-        for (long edge : auto.getIncidentEdges(newVNr)) {
+        for (int edge : completeGraphInfo.getIncidentEdges(newVNr)) {
             if (inBoundaryEdges.contains(edge)) {
-                newEdgeID -= getEdgeIDSummand(edge, newVNr, newSource, auto);
-                newEdgeID += getEdgeIDSummand(edge, newVNr, oldSource, auto);
+                newEdgeID -= getEdgeIDSummand(edge, newVNr, newSource, completeGraphInfo);
+                newEdgeID += getEdgeIDSummand(edge, newVNr, oldSource, completeGraphInfo);
             }
         }
-        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount, false, isSourceNode, newEdgeID, newVertexID, auto);
+        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount, false, isSourceNode, newEdgeID, newVertexID, completeGraphInfo);
     }
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
@@ -424,8 +436,8 @@ public class BoundaryRepresentation {
                 if (vNr != -1) {
                     if (!other.isSourceNode.get(vNr))// i.e. if v is an inner node in other graph
                     {
-                        int k = pwsp.getGraphSize();
-                        IntBasedEdge decidingEdge = null;
+                        int k = completeGraphInfo.getNrNodes();
+                        int decidingEdge = -1;
                         for (int otherSource = 0; otherSource < otherSourceToNodename.length; otherSource++)//maybe move this loop into pwsp? possible to optimize this?
                         {
                             int otherVNr = otherSourceToNodename[otherSource];
@@ -439,7 +451,7 @@ public class BoundaryRepresentation {
                         }
                         //if (decidingEdge != null)//this can never be the case due to the other checks. I.e. this check is redundant.
                         //{
-                        if (other.getInBoundaryEdges().contains(decidingEdge.getSource(), decidingEdge.getTarget())) {
+                        if (other.getInBoundaryEdges().contains(completeGraphInfo.edgeSources[decidingEdge], completeGraphInfo.edgeTargets[decidingEdge], completeGraphInfo)) {
                             return true;
                         }
                         //}
@@ -495,11 +507,11 @@ public class BoundaryRepresentation {
     }
 
     public boolean edgesDisjoint(BoundaryRepresentation other) {
-        LongBasedEdgeSet otherInBoundaryEdges = other.inBoundaryEdges;
+        IdBasedEdgeSet otherInBoundaryEdges = other.inBoundaryEdges;
         return inBoundaryEdges.disjunt(otherInBoundaryEdges);
     }
 
-    public boolean isForgetAllowed(int source, SGraph completeGraph, SGraphBRDecompositionAutomaton auto) {
+    public boolean isForgetAllowed(int source, SGraph completeGraph, GraphInfo completeGraphInfo) {
 
         //is source even a source in our graph?
         if (sourceToNodename[source] == -1) {
@@ -507,28 +519,28 @@ public class BoundaryRepresentation {
         }
 
         int vNr = sourceToNodename[source];//get the vertex v to which our source is assigned.
-        for (int otherSource = 0; otherSource < sourceToNodename.length; otherSource++) {
+        for (short otherSource = 0; otherSource < sourceToNodename.length; otherSource++) {
             if (otherSource != source && sourceToNodename[otherSource] == vNr) {
                 return true;
             }
         }
 
         //otherwise, check if an incident edge is a non-boundary edge.
-        return inBoundaryEdges.containsAll(auto.incidentEdges[vNr]);
+        return inBoundaryEdges.containsAll(completeGraphInfo.incidentEdges[vNr]);
     }
 
-    public boolean isIdenticalExceptSources(SGraph other, SGraph completeGraph, SGraphBRDecompositionAutomaton auto) {
-        return getGraph(completeGraph, auto).isIdenticalExceptSources(other);
+    public boolean isIdenticalExceptSources(SGraph other, SGraph completeGraph, GraphInfo completeGraphInfo) {
+        return getGraph(completeGraph, completeGraphInfo).isIdenticalExceptSources(other);
     }
 
-    public boolean isIdenticalExceptSources(BoundaryRepresentation other, SGraph completeGraph, SGraphBRDecompositionAutomaton auto) {
-        return getGraph(completeGraph, auto).isIdenticalExceptSources(other.getGraph(completeGraph, auto));
+    public boolean isIdenticalExceptSources(BoundaryRepresentation other, SGraph completeGraph, GraphInfo completeGraphInfo) {
+        return getGraph(completeGraph, completeGraphInfo).isIdenticalExceptSources(other.getGraph(completeGraph, completeGraphInfo));
     }
 
-    public boolean isCompleteGraph(SGraphBRDecompositionAutomaton auto) {
+    public boolean isCompleteGraph(GraphInfo completeGraphInfo) {
         for (int source = 0; source < sourceToNodename.length; source++) {
             if (sourceToNodename[source] != -1) {
-                for (long edge : auto.getIncidentEdges(sourceToNodename[source])) {
+                for (int edge : completeGraphInfo.getIncidentEdges(sourceToNodename[source])) {
                     if (!inBoundaryEdges.contains(edge)) {
                         return false;
                     }
@@ -538,7 +550,7 @@ public class BoundaryRepresentation {
         return true;
     }
 
-    public BoundaryRepresentation applyForgetRename(String label, int labelId, boolean allowSelfRename, SGraphBRDecompositionAutomaton auto)//maybe this should be in algebra? This should probably be int-based? i.e. make new int-based algebra for BR  -- only call this after checking if forget is allowed!!
+    public BoundaryRepresentation applyForgetRename(String label, int labelId, boolean allowSelfRename, GraphInfo completeGraphInfo)//maybe this should be in algebra? This should probably be int-based? i.e. make new int-based algebra for BR  -- only call this after checking if forget is allowed!!
     {
         //try {
         if (label == null) {
@@ -546,46 +558,46 @@ public class BoundaryRepresentation {
         } else if (label.equals(OP_MERGE)) {
             return null;//do not use this for merge!
         } else if (label.startsWith(OP_RENAME)) {
-            int[] labelSources = auto.getlabelSources(labelId);
+            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
 
-            return rename(labelSources[0], labelSources[1], allowSelfRename, auto);
+            return rename(labelSources[0], labelSources[1], allowSelfRename, completeGraphInfo);
         } else if (label.startsWith(OP_SWAP)) {
-            int[] labelSources = auto.getlabelSources(labelId);
+            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
 
-            return swap(labelSources[0], labelSources[1], auto);
+            return swap(labelSources[0], labelSources[1], completeGraphInfo);
         } else if (label.equals(OP_FORGET_ALL)) {
             if (sourcesAllBottom) {
                 return null;
             } else {
                 // forget all sources
-                return forgetSourcesExcept(Collections.EMPTY_SET, auto);
+                return forgetSourcesExcept(Collections.EMPTY_SET, completeGraphInfo);
             }
         } else if (label.equals(OP_FORGET_ALL_BUT_ROOT)) {
             // forget all sources, except "root"
-            return forgetSourcesExcept(Collections.singleton(auto.getIntForSource("root")), auto);
+            return forgetSourcesExcept(Collections.singleton(completeGraphInfo.getIntForSource("root")), completeGraphInfo);
         } else if (label.startsWith(OP_FORGET_EXCEPT)) {
             // forget all sources, except ...
-            int[] labelSources = auto.getlabelSources(labelId);
+            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
             Set<Integer> retainedSources = new HashSet<>();
 
             for (int i = 0; i < labelSources.length; i++) {
                 retainedSources.add(labelSources[i]);
             }
 
-            return forgetSourcesExcept(retainedSources, auto);
+            return forgetSourcesExcept(retainedSources, completeGraphInfo);
         } else if (label.startsWith(OP_FORGET)) {
-            int[] labelSources = auto.getlabelSources(labelId);
+            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
             Set<Integer> retainedSources = new HashSet<>();
 
             if (labelSources.length == 1) {
-                return forget(labelSources[0], auto);
+                return forget(labelSources[0], completeGraphInfo);
             } else {
                 for (int source = 0; source < sourceToNodename.length; source++) {
                     if (!arrayContains(labelSources, source) && sourceToNodename[source] != -1) {
                         retainedSources.add(source);
                     }
                 }
-                return forgetSourcesExcept(retainedSources, auto);
+                return forgetSourcesExcept(retainedSources, completeGraphInfo);
             }
 
         } else {
@@ -596,7 +608,7 @@ public class BoundaryRepresentation {
         //}
     }
 
-    public IntSet getForgottenSources(String label, int labelId, SGraphBRDecompositionAutomaton auto)//maybe this should be in algebra?
+    public IntSet getForgottenSources(String label, int labelId, GraphInfo completeGraphInfo)//maybe this should be in algebra?
     {
         //try {
         if (label == null) {
@@ -625,14 +637,14 @@ public class BoundaryRepresentation {
             // forget all sources, except "root"
             IntSet ret = new IntOpenHashSet();
             for (int source = 0; source < sourceToNodename.length; source++) {
-                if (!auto.getSourceForInt(source).equals("root") && sourceToNodename[source] != -1) {
+                if (!completeGraphInfo.getSourceForInt(source).equals("root") && sourceToNodename[source] != -1) {
                     ret.add(source);
                 }
             }
             return ret;
 
         } else if (label.startsWith(OP_FORGET)) {
-            int[] labelSources = auto.getlabelSources(labelId);
+            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
             IntSet deletedSources = new IntOpenHashSet();
             for (int i = 0; i < labelSources.length; i++) {
                 deletedSources.add(labelSources[i]);
@@ -641,7 +653,7 @@ public class BoundaryRepresentation {
             return deletedSources;
 
         } else if (label.startsWith(OP_FORGET_EXCEPT)) {
-            int[] labelSources = auto.getlabelSources(labelId);
+            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
             IntSet deletedSources = new IntOpenHashSet();
 
             for (int source = 0; source < sourceToNodename.length; source++) {
@@ -666,21 +678,21 @@ public class BoundaryRepresentation {
         if (stringRep == null) {
             StringJoiner nodes = new StringJoiner(", ", "[", "]");
 
-            for (int vNr = 0; vNr < auto.getNumberNodes(); vNr++) {
+            for (int vNr = 0; vNr < completeGraphInfo.getNrNodes(); vNr++) {
                 if (isSourceNode.get(vNr)) {
                     StringBuilder vRes = new StringBuilder();
-                    vRes.append(auto.getNodeForInt(vNr));
+                    vRes.append(completeGraphInfo.getNodeForInt(vNr));
                     IntList sources = getAssignedSources(vNr);
                     StringJoiner sourceSJ = new StringJoiner(", ", "<", ">");
                     for (int source : sources) {
-                        sourceSJ.add(auto.getSourceForInt(source));
+                        sourceSJ.add(completeGraphInfo.getSourceForInt(source));
                     }
                     vRes.append(sourceSJ);
-                    long[] edges = auto.getIncidentEdges(vNr);
+                    int[] edges = completeGraphInfo.getIncidentEdges(vNr);
                     StringJoiner edgeSJ = new StringJoiner(", ", "{", "}");
-                    for (long edge : edges) {
+                    for (int edge : edges) {
                         if (inBoundaryEdges.contains(edge)) {
-                            edgeSJ.add(auto.getNodeForInt(NumbersCombine.getFirst(edge)) + "_" + auto.getNodeForInt(NumbersCombine.getSecond(edge)));
+                            edgeSJ.add(completeGraphInfo.getNodeForInt(completeGraphInfo.edgeSources[edge]) + "_" + completeGraphInfo.getNodeForInt(completeGraphInfo.edgeTargets[edge]));
                         }
                     }
                     vRes.append(" " + edgeSJ);
@@ -775,21 +787,21 @@ public class BoundaryRepresentation {
     }
 
     public BoundaryRepresentation applyBolinasMerge(BoundaryRepresentation other, int labelId) {
-        BoundaryRepresentation mp2 = other.rename(auto.BOLINASROOTSOURCENR, auto.BOLINASSUBROOTSOURCENR, false, auto);
+        BoundaryRepresentation mp2 = other.rename(completeGraphInfo.BOLINASROOTSOURCENR, completeGraphInfo.BOLINASSUBROOTSOURCENR, false, completeGraphInfo);
 
         if (mp2 == null) {
             return null;
         }
 
-        int mergeSource = auto.getlabelSources(labelId)[0];
-        BoundaryRepresentation mp1 = rename(mergeSource, auto.BOLINASSUBROOTSOURCENR, false, auto);
+        int mergeSource = completeGraphInfo.getlabelSources(labelId)[0];
+        BoundaryRepresentation mp1 = rename(mergeSource, completeGraphInfo.BOLINASSUBROOTSOURCENR, false, completeGraphInfo);
         if (mp1 == null) {
             return null;
         }
 
-        if (mp1.isMergeable(auto.pwsp, mp2)) {
-            BoundaryRepresentation mRes = mp1.merge(mp2, auto);
-            BoundaryRepresentation ret = mRes.rename(auto.BOLINASSUBROOTSOURCENR, mergeSource, false, auto);
+        if (mp1.isMergeable(completeGraphInfo.pwsp, mp2)) {
+            BoundaryRepresentation mRes = mp1.merge(mp2, completeGraphInfo);
+            BoundaryRepresentation ret = mRes.rename(completeGraphInfo.BOLINASSUBROOTSOURCENR, mergeSource, false, completeGraphInfo);
             return ret;//note that ret is possibly null
         } else {
             return null;

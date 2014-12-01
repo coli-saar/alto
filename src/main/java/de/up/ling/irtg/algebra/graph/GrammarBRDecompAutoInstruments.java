@@ -111,8 +111,8 @@ public class GrammarBRDecompAutoInstruments {
         res.mergePartnersRight.put(0, new Int2ObjectOpenHashMap<>());
         res.mergePartnersRight.put(1, new Int2ObjectOpenHashMap<>());
         res.mpf = new MergePartnerFinder[2];
-        res.mpf[0] = new DynamicMergePartnerFinder(0, nrSources, res.auto.getNumberNodes(), res.auto);
-        res.mpf[1] = new DynamicMergePartnerFinder(0, nrSources, res.auto.getNumberNodes(), res.auto);
+        res.mpf[0] = new DynamicMergePartnerFinder(0, nrSources, res.auto.completeGraphInfo.getNrNodes(), res.auto);
+        res.mpf[1] = new DynamicMergePartnerFinder(0, nrSources, res.auto.completeGraphInfo.getNrNodes(), res.auto);
         res.constants = new Int2ObjectOpenHashMap<>();
 
         IntSet onlyX = new IntOpenHashSet();
@@ -301,6 +301,10 @@ public class GrammarBRDecompAutoInstruments {
         }
         
     }
+    
+    
+    
+    
     
     
     

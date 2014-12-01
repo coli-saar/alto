@@ -8,6 +8,8 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -27,10 +29,10 @@ import java.util.Set;
 public class EdgeIntersectionMPF extends MergePartnerFinder {
 
     private final IntList localToGlobal;
-    private final Long2ObjectMap<BitSet> notHasEdge;
-    private final long[] relevantEdges;
+    private final Int2ObjectMap<BitSet> notHasEdge;
+    private final int[] relevantEdges;
     private final SGraphBRDecompositionAutomaton auto;
-    private final IntList allBdryReps;
+    //private final IntList allBdryReps;
     private final IntSet vertices;
     private final boolean hasAll;
 
@@ -39,33 +41,33 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
         this.vertices = vertices;
         this.hasAll = hasAll;
         localToGlobal = new IntArrayList();
-        notHasEdge = new Long2ObjectOpenHashMap<>();
-        allBdryReps = new IntArrayList();
+        notHasEdge = new Int2ObjectOpenHashMap<>();
+        //allBdryReps = new IntArrayList();
 
         if (hasAll) {
-            relevantEdges = auto.getAllEdges();
+            relevantEdges = auto.completeGraphInfo.getAllEdges();
         } else {
-            relevantEdges = auto.getAllIncidentEdges(vertices);
+            relevantEdges = auto.completeGraphInfo.getAllIncidentEdges(vertices);
         }
     }
 
     @Override
     public void insert(int rep) {
-        allBdryReps.add(rep);
+        //allBdryReps.add(rep);
         int localIndex = localToGlobal.size();
         localToGlobal.add(rep);
-        LongBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
+        IdBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
 
         for (int i = 0; i < relevantEdges.length; i++) {
-            long iLong = relevantEdges[i];
-            if (!inBEdges.contains(iLong)) {
-                if (notHasEdge.containsKey(iLong)) {
-                    notHasEdge.get(iLong).set(localIndex);
+            int edgeId = relevantEdges[i];
+            if (!inBEdges.contains(edgeId)) {
+                if (notHasEdge.containsKey(edgeId)) {
+                    notHasEdge.get(edgeId).set(localIndex);
                 } else {
                     BitSet newBitSet = new BitSet();
                     newBitSet.set(localIndex);
-                    notHasEdge.put(iLong, newBitSet);
-                    if (notHasEdge.get(iLong).isEmpty()){
+                    notHasEdge.put(edgeId, newBitSet);
+                    if (notHasEdge.get(edgeId).isEmpty()){
                         System.out.println("Error!");
                     }
                 }
@@ -78,10 +80,16 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
 
     @Override
     public IntList getAllMergePartners(int rep) {
-        LongBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
-        LongBasedEdgeSet relevantInBdryEdges = new LongBasedEdgeSet();
+        IdBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
+        IdBasedEdgeSet relevantInBdryEdges;
+        if (auto.completeGraphInfo.useBytes) {
+            relevantInBdryEdges = new ByteBasedEdgeSet();
+        } else {
+            relevantInBdryEdges = new ShortBasedEdgeSet();
+        }
         
-        for (long d : relevantEdges){
+        
+        for (int d : relevantEdges){
             if (inBEdges.contains(d)){
                 relevantInBdryEdges.add(d);
             }
@@ -115,7 +123,7 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
         }
     }
     
-    private void debugFindMissingBRs(int rep, IntList found){
+    /*private void debugFindMissingBRs(int rep, IntList found){
         BoundaryRepresentation bdryRep = auto.getStateForId(rep);
         for (int i : allBdryReps){
             BoundaryRepresentation iBdryRep = auto.getStateForId(i);
@@ -123,7 +131,7 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
                 System.out.println("diff found: " + iBdryRep.toString());
             }
         }
-    }
+    }*/
     
       
     private void debugCheckBitSets(){
@@ -166,7 +174,7 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
         StringBuilder content = new StringBuilder();
         for (int i : getAll()) {
             //content.append(String.valueOf(i)+",");
-            LongBasedEdgeSet inBdryEdges = auto.getStateForId(i).getInBoundaryEdges();
+            IdBasedEdgeSet inBdryEdges = auto.getStateForId(i).getInBoundaryEdges();
             content.append(inBdryEdges.toString() + ", ");
         }
         content.append("|");
