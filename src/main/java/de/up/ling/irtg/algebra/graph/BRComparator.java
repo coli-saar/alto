@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
 import it.unimi.dsi.fastutil.ints.IntComparator;
 /**
  *

@@ -18,10 +18,11 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecompAutoInstruments;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonMPFTrusting;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonTopDownBolinas;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompAutoInstruments;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownBolinas;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -197,7 +198,7 @@ public class IrtgInducer {
         }
 
         Writer logWriter = new FileWriter(dumpPath +"log.txt");
-        sw.record(3 * iterations);
+        sw.record(2 * iterations);
         
         logWriter.write("Total: " + String.valueOf(iterations)+"\n");
         logWriter.write("Failed: " + String.valueOf(failed)+"\n");
@@ -245,7 +246,7 @@ public class IrtgInducer {
             System.out.println("i= " + String.valueOf(i) + "/" + String.valueOf(size-1) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
             System.err.println("i= " + String.valueOf(i) + "/" + String.valueOf(size-1) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
             
-            sw.record(3 * (i - start));
+            sw.record(2 * (i - start));
             
             GraphAlgebra alg = new GraphAlgebra();
             SGraph graph = ti.graph;
@@ -265,42 +266,44 @@ public class IrtgInducer {
                 }
                 
                 
-                sw.record(3 * (i - start) + 1);
-                System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Accept time: "));
+                sw.record(2 * (i - start) + 1);
+                System.err.println(sw.printTimeBefore(2 * (i - start) + 1, "Accept time: "));
                 
                 
             } else {
                 
-                
-                SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
-                if (doBolinas){
-                    auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
-                } else {
-                    auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
-                }
-
-                sw.record(3 * (i - start) + 1);
-                
-                
-                
-                System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Decomposition time: "));
                 if (doWrite) {
                     Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(ti.id) + ".rtg");
-                    auto.writeShort(rtgWriter);
+                    SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.decompose(graph, rtgWriter);
+                    sw.record(2 * (i - start) + 1);
+                    System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Decomposition + Write time: "));
                     rtgWriter.close();
+                    if (!auto.foundFinalState) {
+                        failed.add(ti.id);
+                    }
+                        
+                } else {
+                    SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
+                    if (doBolinas){
+                        auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
+                    } else {
+                        auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
+                    }
+                    sw.record(2 * (i - start) + 1);
+                    System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Decomposition time: "));
+                    if (!auto.foundFinalState) {
+                        failed.add(ti.id);
+                    }
                 }
 
-                if (!auto.foundFinalState) {
-                    failed.add(ti.id);
-                }
+                
+
+                
             }
             
-            
-            sw.record(3*(i-start)+2);
-            System.err.println(sw.printTimeBefore(3 * (i - start) + 2, "Write time: "));
 
             labels.add(graph.toString());
-            labels.add("<- " + String.valueOf(i)+", ID = " + String.valueOf(ti.id) + "(line above is decomp time); write time was ");
+            labels.add("<- " + String.valueOf(i)+", ID = " + String.valueOf(ti.id) + "(line above is decomp + write (if applicable)time);");
             labels.add("filler time");
     }
     
@@ -332,27 +335,26 @@ public class IrtgInducer {
         } else {
 
 
-            SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
-            if (doBolinas){
-                auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
-            } else {
-                auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
-            }
-
-            sw.record(1);
-
-
-
-            //System.err.println(sw.printTimeBefore(1, "Decomposition time(" + instance.id+"): "));
             if (doWrite) {
-                Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(instance.id) + ".rtg");
-                auto.writeShort(rtgWriter);
-                rtgWriter.close();
-            }
+                    Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(instance.id) + ".rtg");
+                    SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.decompose(graph, rtgWriter);
+                    sw.record(1);
+                    rtgWriter.close();
+                    return auto.foundFinalState;
+                        
+                } else {
+                    SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
+                    if (doBolinas){
+                        auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
+                    } else {
+                        auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
+                    }
+                    sw.record(1);
+                    return auto.foundFinalState;
+                }
 
-            sw.record(2);
             //System.err.println(sw.printTimeBefore(2, "Write time (" + instance.id+"): "));
-            return auto.foundFinalState;
+            
         }
     }
 

@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.algebra.graph.decompauto;
 
+import de.up.ling.irtg.algebra.graph.GraphAlgebra;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.signature.Signature;
 
 /**

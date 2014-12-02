@@ -4,15 +4,21 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownBolinas;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import java.io.FileInputStream;
 import java.io.StringReader;
+import java.io.Writer;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -103,6 +109,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             System.err.println(e.toString());
             return null;
         }
+    }
+    
+    public TreeAutomaton decompose(SGraph value, Writer writer) throws Exception{
+        return new SGraphBRDecompositionAutomatonOnlyWrite(value, this, getSignature(), writer);
     }
     
 

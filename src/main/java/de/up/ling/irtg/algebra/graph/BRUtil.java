@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompAutoInstruments;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;

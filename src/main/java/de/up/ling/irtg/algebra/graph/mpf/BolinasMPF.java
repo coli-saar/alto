@@ -3,10 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.algebra.graph.mpf;
 
-import it.unimi.dsi.fastutil.ints.IntList;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
@@ -14,9 +15,8 @@ import it.unimi.dsi.fastutil.ints.IntSet;
  *
  * @author jonas
  */
-public class DynamicMergePartnerFinder extends MergePartnerFinder {
+public class BolinasMPF extends MergePartnerFinder{
 
-    //private final boolean isFinal;
     private final boolean hasAll;
     private final IntSet vertices;
     private final MergePartnerFinder[] children;
@@ -26,7 +26,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
     private final int BOT;
     private final SGraphBRDecompositionAutomaton auto;
 
-    public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto)//maybe give expected size of finalSet as parameter?
+    public BolinasMPF(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto)//maybe give expected size of finalSet as parameter?
     {
         this.auto = auto;
         /*if (nrSources == 0){
@@ -56,7 +56,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         //}
     }
 
-    public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto, boolean hasAll, IntSet vertices)//maybe give expected size of finalSet as parameter?
+    public BolinasMPF(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto, boolean hasAll, IntSet vertices)//maybe give expected size of finalSet as parameter?
     {
         this.auto = auto;
         /*if (nrSources == 0){
@@ -71,12 +71,30 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         //isFinal = false;
         this.vertices = vertices;
         this.hasAll = hasAll;
+        
+        int nrSkips = 0;
+        if (currentSource == auto.completeGraphInfo.BOLINASROOTSOURCENR || currentSource == auto.completeGraphInfo.BOLINASSUBROOTSOURCENR){
+            nrSkips++;
+            if (currentSource+nrSkips == auto.completeGraphInfo.BOLINASROOTSOURCENR || currentSource+nrSkips == auto.completeGraphInfo.BOLINASSUBROOTSOURCENR){
+                nrSkips++;
+            }
+        }
+        
 
-        sourceNr = currentSource;
+        sourceNr = currentSource+nrSkips;
         children = new MergePartnerFinder[nrNodes + 2];
         ALL = nrNodes;
         BOT = nrNodes + 1;
-        sourcesRemaining = nrSources;
+        
+        int nrPastSkips = 0;
+        if (sourceNr+1 == auto.completeGraphInfo.BOLINASROOTSOURCENR || sourceNr+1 == auto.completeGraphInfo.BOLINASSUBROOTSOURCENR){
+            nrPastSkips++;
+            if (sourceNr+1+nrPastSkips == auto.completeGraphInfo.BOLINASROOTSOURCENR || currentSource+1+nrPastSkips == auto.completeGraphInfo.BOLINASSUBROOTSOURCENR){
+                nrPastSkips++;
+            }
+        }
+        
+        sourcesRemaining = nrSources-nrSkips-nrPastSkips;
         /*for (int i = 0; i<nrNodes; i++)
          {
          children[i] = new MergePartnerFinder(currentSource + 1, nrSources -1, nrNodes, auto);//TODO: throw error if vName == ALL or vName == BOT
@@ -99,18 +117,12 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
         if (vNr != -1) {
             IntSet newVertices = new IntOpenHashSet();
-            IntSet newVerticesALL = new IntOpenHashSet();
             newVertices.addAll(vertices);
-            newVerticesALL.addAll(vertices);
             newVertices.add(vNr);
             insertInto(vNr, rep, newVertices);
-            if (sourcesRemaining  > 1 || vertices.size() != 0){
-                insertInto(ALL, rep, vertices);
-            }
+            insertInto(ALL, rep, vertices);
         } else {
-            if (sourcesRemaining  > 1 || vertices.size() != 0){
-                insertInto(BOT, rep, vertices);
-            }
+            insertInto(BOT, rep, vertices);
         }
     }
 
@@ -121,9 +133,9 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
             
             if (sourcesRemaining == 1) {
                 //children[index] = new StorageMPF(auto);
-                children[index] = new EdgeIntersectionMPF((hasAll || (index == ALL)), newVertices, auto);
+                children[index] = new BolinasEdgeMPF((hasAll || (index == ALL)), newVertices, auto);
             } else {
-                children[index] = new DynamicMergePartnerFinder(sourceNr + 1, sourcesRemaining - 1, children.length - 2, auto, (hasAll || (index == ALL)), newVertices);
+                children[index] = new BolinasMPF(sourceNr + 1, sourcesRemaining - 1, children.length - 2, auto, (hasAll || (index == ALL)), newVertices);
             }
             children[index].insert(rep);
         }
@@ -195,3 +207,4 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
     }
 
 }
+

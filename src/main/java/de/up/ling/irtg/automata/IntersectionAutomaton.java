@@ -16,7 +16,7 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.IntInt2IntMap;

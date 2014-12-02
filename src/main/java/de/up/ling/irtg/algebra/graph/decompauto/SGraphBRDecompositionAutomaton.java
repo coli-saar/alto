@@ -3,8 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.algebra.graph.decompauto;
 
+import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
+import de.up.ling.irtg.algebra.graph.GraphAlgebra;
+import de.up.ling.irtg.algebra.graph.GraphEdge;
+import de.up.ling.irtg.algebra.graph.GraphInfo;
+import de.up.ling.irtg.algebra.graph.GraphNode;
+import de.up.ling.irtg.algebra.graph.IsiAmrParser;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -36,7 +43,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
     Int2ObjectMap<Int2ObjectMap<Set<Rule>>> storedRulesTopDown;
     final Long2ObjectMap<Long2IntMap> storedStates;
 
-    SGraphBRDecompositionAutomaton(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
+    public SGraphBRDecompositionAutomaton(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(signature);
 
         this.algebra = algebra;

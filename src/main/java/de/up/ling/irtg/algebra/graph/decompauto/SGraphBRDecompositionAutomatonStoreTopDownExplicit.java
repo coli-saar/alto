@@ -3,8 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.algebra.graph.decompauto;
 
+import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
+import de.up.ling.irtg.algebra.graph.GraphAlgebra;
+import de.up.ling.irtg.algebra.graph.SGraph;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
@@ -17,7 +21,7 @@ public class SGraphBRDecompositionAutomatonStoreTopDownExplicit extends SGraphBR
 
     public final boolean foundFinalState;
 
-    SGraphBRDecompositionAutomatonStoreTopDownExplicit(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
+    public SGraphBRDecompositionAutomatonStoreTopDownExplicit(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(completeGraph, algebra, signature);
         stateInterner.setTrustingMode(true);
 

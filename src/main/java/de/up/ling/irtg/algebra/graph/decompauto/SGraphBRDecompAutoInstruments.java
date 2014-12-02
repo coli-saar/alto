@@ -3,9 +3,16 @@
  * To change auto template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.algebra.graph.decompauto;
 
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
+import de.up.ling.irtg.algebra.graph.mpf.BolinasMPF;
 import com.google.common.collect.Sets;
+import de.up.ling.irtg.algebra.graph.BRComparator;
+import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
+import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinder;
+import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntHeapPriorityQueue;
