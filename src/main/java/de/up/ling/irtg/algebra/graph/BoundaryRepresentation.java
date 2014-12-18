@@ -35,16 +35,16 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 public class BoundaryRepresentation {
 
     private String stringRep;
-    
+
     private final IdBasedEdgeSet inBoundaryEdges;
     private final int[] sourceToNodename;//nodes start with 0. Bottom/undefined is stored as -1.  
-    
+
     private final BitSet isSourceNode;
     public final boolean sourcesAllBottom;
     public final int innerNodeCount;
     public final int sourceCount;
     public final int largestSource;
-    
+
     public final long edgeID;
     public final long vertexID;//ID1 == ID2 iff BR1 == BR2, but only among the BR in one completeGraphInfomaton.
     private final GraphInfo completeGraphInfo;
@@ -77,7 +77,7 @@ public class BoundaryRepresentation {
             String vName = T.getNodeForSource(source);
             int vNr = completeGraphInfo.getIntForNode(vName);
             GraphNode v = T.getNode(vName);
-            sourceToNodename[completeGraphInfo.getIntForSource(source)] = (short)vNr;
+            sourceToNodename[completeGraphInfo.getIntForSource(source)] = (short) vNr;
             if (!isSourceNode.get(vNr)) {
                 isSourceNode.set(vNr);
                 vertexIdBuilder += getVertexIDSummand(vNr, sNr, n);
@@ -103,7 +103,7 @@ public class BoundaryRepresentation {
         largestSource = NumbersCombine.getSecond(temp);
     }
 
-    public long getEdgeIDSummand(int edge, int vNr, int source, GraphInfo completeGraphInfo) {
+    public static long getEdgeIDSummand(int edge, int vNr, int source, GraphInfo completeGraphInfo) {
         int[] incidentEdges = completeGraphInfo.getIncidentEdges(vNr);//IncidentEdges(isSourceNode);
         int index = -1;
         for (int i = 0; i < incidentEdges.length; i++) {
@@ -116,16 +116,16 @@ public class BoundaryRepresentation {
         }
         return (long) Math.pow(2, source * completeGraphInfo.maxDegree + index + 1);
     }
-    
-    public long getEdgeIDSummand(GraphEdge edge, int vNr, int source, GraphInfo completeGraphInfo) {
+
+    public static long getEdgeIDSummand(GraphEdge edge, int vNr, int source, GraphInfo completeGraphInfo) {
         return getEdgeIDSummand(completeGraphInfo.edgeToId.get(edge), vNr, source, completeGraphInfo);
     }
-    
-    public long getEdgeIDSummand(int edgeSource, int edgeTarget, int vNr, int source, GraphInfo completeGraphInfo) {
+
+    public static long getEdgeIDSummand(int edgeSource, int edgeTarget, int vNr, int source, GraphInfo completeGraphInfo) {
         return getEdgeIDSummand(completeGraphInfo.edgesBySourceAndTarget[edgeSource][edgeTarget], vNr, source, completeGraphInfo);
     }
 
-    public long getVertexIDSummand(int vNr, int source, int totalVertexCount) {
+    public static long getVertexIDSummand(int vNr, int source, int totalVertexCount) {
         return (long) Math.pow(totalVertexCount + 1, source) * (vNr + 1);
     }
 
@@ -165,17 +165,30 @@ public class BoundaryRepresentation {
         sourceCount = NumbersCombine.getFirst(temp);
         largestSource = NumbersCombine.getSecond(temp);
         this.edgeID = edgeID;
-        //if (edgeID != computeEdgeID(completeGraphInfo)){
-        //    System.out.println("err4");
-        //}
+        if (edgeID != computeEdgeID(completeGraphInfo)) {
+            System.out.println("err4");
+        }
         this.vertexID = vertexID;
+        if (vertexID != computeVertexID(completeGraphInfo)) {
+            System.out.println("err5");
+        }
         //printSources();
+    }
+
+    private long computeVertexID(GraphInfo completeGraphInfo) {
+        long ret = 0;
+        for (int source = 0; source < completeGraphInfo.getNrSources(); source++) {
+            if (sourceToNodename[source] != -1) {
+                ret += getVertexIDSummand(sourceToNodename[source], source, completeGraphInfo.getNrNodes());
+            }
+        }
+        return ret;
     }
 
     private long computeEdgeID(GraphInfo completeGraphInfo) {
         long res = 0;
         for (int source = 0; source < sourceToNodename.length; source++) {
-            res += inBoundaryEdges.computeEdgeIdSummand(sourceToNodename[source], source, this, completeGraphInfo);
+            res += inBoundaryEdges.computeEdgeIdSummand(sourceToNodename[source], source, completeGraphInfo);
         }
         return res;
     }
@@ -235,7 +248,7 @@ public class BoundaryRepresentation {
         }
         return res;
     }
-    
+
     private boolean arrayContains(short[] array, short value) {
         boolean res = false;
         for (int i = 0; i < array.length; i++) {
@@ -279,7 +292,7 @@ public class BoundaryRepresentation {
         if ((!isSource) || inBoundaryEdges.contains(completeGraphInfo.getIntForNode(nodeName), completeGraphInfo.getIntForNode(nodeName), completeGraphInfo)) {
             return v.getLabel();
         } else {
-            return "";
+            return null;
         }
     }
 
@@ -406,8 +419,8 @@ public class BoundaryRepresentation {
                 && hasCommonSourceNode(other)
                 && sourceNodesAgree(other)// always true with MPF!
                 && edgesDisjoint(other) //always true with edge-MPF!
-                && !hasSourcesInsideOther(pwsp, other)
-                && !other.hasSourcesInsideOther(pwsp, this));
+                && !hasSourcesInsideOther(other)
+                && !other.hasSourcesInsideOther(this));
     }
 
     public boolean isMergeableMPF(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
@@ -415,15 +428,15 @@ public class BoundaryRepresentation {
                 //&& hasCommonSourceNode(other)// always true with current MPF!
                 //&& sourceNodesAgree(other)// always true with MPF!
                 //&& edgesDisjoint(other) //always true with edge-MPF!
-                && !hasSourcesInsideOther(pwsp, other)
-                && !other.hasSourcesInsideOther(pwsp, this));
+                && !hasSourcesInsideOther(other)
+                && !other.hasSourcesInsideOther(this));
     }
 
     public boolean hasCommonSourceNode(BoundaryRepresentation other) {
         return isSourceNode.intersects(other.isSourceNode);
     }
 
-    public boolean hasSourcesInsideOther(PairwiseShortestPaths pwsp, BoundaryRepresentation other)//asymmetric! tests whether sources of this BR are inner nodes of the other BR
+    public boolean hasSourcesInsideOther(BoundaryRepresentation other)//asymmetric! tests whether sources of this BR are inner nodes of the other BR
     {
         if (sourcesAllBottom) {
             return false;
@@ -436,30 +449,42 @@ public class BoundaryRepresentation {
                 if (vNr != -1) {
                     if (!other.isSourceNode.get(vNr))// i.e. if v is an inner node in other graph
                     {
-                        int k = completeGraphInfo.getNrNodes();
-                        int decidingEdge = -1;
-                        for (int otherSource = 0; otherSource < otherSourceToNodename.length; otherSource++)//maybe move this loop into pwsp? possible to optimize this?
-                        {
-                            int otherVNr = otherSourceToNodename[otherSource];
-                            if (vNr != otherVNr && vNr != -1 && otherVNr != -1) {
-                                int dist = pwsp.getDistance(vNr, otherVNr);
-                                if (dist < k) {
-                                    k = dist;
-                                    decidingEdge = pwsp.getEdge(vNr, otherVNr);
-                                }
-                            }
-                        }
-                        //if (decidingEdge != null)//this can never be the case due to the other checks. I.e. this check is redundant.
-                        //{
-                        if (other.getInBoundaryEdges().contains(completeGraphInfo.edgeSources[decidingEdge], completeGraphInfo.edgeTargets[decidingEdge], completeGraphInfo)) {
+                        if (other.isInternalNode(vNr)) {
                             return true;
                         }
-                        //}
                     }
                 }
             }
             return false;
         }
+    }
+
+    public boolean isInternalNode(int vNr) {
+        if (sourcesAllBottom) {
+            return true;
+        } else if (isSource(vNr)) {
+            return false;
+        }
+        {
+            int k = completeGraphInfo.getNrNodes();
+            int decidingEdge = -1;
+            for (int source = 0; source < sourceToNodename.length; source++)//maybe move this loop into pwsp? possible to optimize this?
+            {
+                int sourceVNr = sourceToNodename[source];
+                if (vNr != sourceVNr && vNr != -1 && sourceVNr != -1) {
+                    int dist = completeGraphInfo.pwsp.getDistance(vNr, sourceVNr);
+                    if (dist < k) {
+                        k = dist;
+                        decidingEdge = completeGraphInfo.pwsp.getEdge(vNr, sourceVNr);
+                    }
+                }
+            }
+            return inBoundaryEdges.contains(completeGraphInfo.edgeSources[decidingEdge], completeGraphInfo.edgeTargets[decidingEdge], completeGraphInfo);
+        }
+    }
+
+    public boolean contains(int vNr) {
+        return (isSource(vNr) || isInternalNode(vNr));
     }
 
     public boolean commonNodesHaveCommonSourceNames(BoundaryRepresentation other) {
@@ -606,6 +631,45 @@ public class BoundaryRepresentation {
         //} catch (ParseException ex) {
         //    throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
         //}
+    }
+
+    public BoundaryRepresentation applyRenameReverse(String label, int labelId, boolean allowSelfRename, GraphInfo completeGraphInfo)//maybe this should be in algebra? This should probably be int-based? i.e. make new int-based algebra for BR  -- only call this after checking if forget is allowed!!
+    {
+        //try {
+        if (label == null) {
+            return null;
+        } else if (label.startsWith(OP_RENAME)) {
+            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
+
+            return rename(labelSources[1], labelSources[0], allowSelfRename, completeGraphInfo);//changing order of 1 and 0 here makes the difference.
+        } else if (label.startsWith(OP_SWAP)) {
+            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
+
+            return swap(labelSources[1], labelSources[0], completeGraphInfo);
+        } else {
+            return null;//do not call this for constant symbols!
+        }
+        //} catch (ParseException ex) {
+        //    throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
+        //}
+    }
+
+    public BoundaryRepresentation forgetReverse(int forgottenSource, int vNr) {
+        IdBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();
+        int[] newSourceToNodename = sourceToNodename.clone();
+        newSourceToNodename[forgottenSource] = vNr;
+        BitSet newIsSourceNode = (BitSet) isSourceNode.clone();
+        long newVertexID = vertexID + getVertexIDSummand(vNr, forgottenSource, completeGraphInfo.getNrNodes());
+
+        long newEdgeID = edgeID;
+        //now add inBoundaryEdges where necessary
+        int nrNewInnerNodes = 0;
+        if (!arrayContains(sourceToNodename, vNr)) {
+            newIsSourceNode.set(vNr);
+            nrNewInnerNodes = 1;
+            newEdgeID += newInBoundaryEdges.smartAddIncident(vNr, forgottenSource, inBoundaryEdges, this, completeGraphInfo);
+        }
+        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount + nrNewInnerNodes, newIsSourceNode.isEmpty(), newIsSourceNode, newEdgeID, newVertexID, completeGraphInfo);
     }
 
     public IntSet getForgottenSources(String label, int labelId, GraphInfo completeGraphInfo)//maybe this should be in algebra?
@@ -775,9 +839,9 @@ public class BoundaryRepresentation {
         res = res + " / max is " + String.valueOf(largestSource);
         System.out.println(res);
     }
-    
-    public String allSourcesToString(){
-        StringJoiner sj = new StringJoiner("","","");
+
+    public String allSourcesToString() {
+        StringJoiner sj = new StringJoiner("", "", "");
         for (int source = 0; source < sourceToNodename.length; source++) {
             if (sourceToNodename[source] != -1) {
                 sj.add(String.valueOf(source));

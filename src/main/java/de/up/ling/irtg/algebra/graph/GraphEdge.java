@@ -5,6 +5,8 @@
 package de.up.ling.irtg.algebra.graph;
 
 import java.util.function.Function;
+import org.jgrapht.Graph;
+import org.jgrapht.experimental.equivalence.EquivalenceComparator;
 
 
 /**
@@ -89,5 +91,23 @@ public class GraphEdge{
         return true;
     }
     
+    
+    static class EdgeLabelEquivalenceComparator implements EquivalenceComparator<GraphEdge, Graph<GraphNode, GraphEdge>> {
+        public boolean equivalenceCompare(GraphEdge e, GraphEdge e1, Graph<GraphNode, GraphEdge> c, Graph<GraphNode, GraphEdge> c1) {
+            if (e.label == null) {
+                return e1.label == null;
+            } else {
+                return e.label.equals(e1.label);
+            }
+        }
+
+        public int equivalenceHashcode(GraphEdge e, Graph<GraphNode, GraphEdge> c) {
+            if (e.label == null) {
+                return -1;
+            } else {
+                return e.label.hashCode();
+            }
+        }
+    }
     
 }

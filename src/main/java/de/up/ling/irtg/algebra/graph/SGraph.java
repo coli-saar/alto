@@ -936,6 +936,36 @@ public class SGraph{
             return false;
         }
     }
+    
+    public boolean isIsomorphicAlsoEdges(SGraph other) {
+        GraphIsomorphismInspector iso
+                = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
+                        getGraph(),
+                        other.getGraph(),
+                        new GraphNode.NodeLabelEquivalenceComparator(),
+                        new GraphEdge.EdgeLabelEquivalenceComparator());
+
+        if (!iso.isIsomorphic()) {
+            return false;
+        } else {
+            while (iso.hasNext()) {
+                final IsomorphismRelation<GraphNode, GraphEdge> ir = (IsomorphismRelation<GraphNode, GraphEdge>) iso.next();
+                
+                Map<String, String> rewrittenSources = new HashMap<>();                
+                for( String source : sourceToNodename.keySet() ) {
+                    GraphNode newNode = ir.getVertexCorrespondence(getNode(sourceToNodename.get(source)), true);
+                    String newNodename = newNode.getName();
+                    rewrittenSources.put(source, newNodename);
+                }
+                
+                if (rewrittenSources.equals(other.sourceToNodename)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
 
     /**
      * Computes a hash code for the s-graph. This implementation of hashCode

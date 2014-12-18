@@ -38,10 +38,12 @@ public abstract class IdBasedEdgeSet {
     public abstract boolean containsAll(int[] other);
 
     
-    public abstract long computeEdgeIdSummand(int vNr, int source, BoundaryRepresentation br, GraphInfo graphInfo);
+    public abstract long computeEdgeIdSummand(int vNr, int source, GraphInfo graphInfo);
     
     
     public abstract long smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo);
+    
+    public abstract long smartAddIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo);
     
     @Override
     public abstract IdBasedEdgeSet clone();
@@ -52,7 +54,9 @@ public abstract class IdBasedEdgeSet {
 
     public abstract List<BitSet> getCorrespondingBitSets(Int2ObjectMap<BitSet> map);
     
+   public abstract int size();
    
+    public abstract int getFirst();
     
     public abstract boolean isEmpty();
     

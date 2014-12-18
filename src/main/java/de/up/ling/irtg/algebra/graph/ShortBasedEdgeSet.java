@@ -156,6 +156,35 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
             return 0;
         }
     }
+    
+    @Override
+    public long smartAddIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
+        if (reference instanceof ShortBasedEdgeSet) {
+            int[] incidentEdges = graphInfo.incidentEdges[vNr];
+            long res = 0;
+        //System.err.println("Next test: "+reference.ID);
+            //System.err.println(reference.edges.size());
+            
+            for (int i = 0; i<incidentEdges.length;i++) {
+                //System.err.println(String.valueOf(i));
+                
+                short e = (short)incidentEdges[i];
+
+                short otherNr = ((ShortBasedEdgeSet) reference).getOtherNode(e, (short) vNr, graphInfo);
+                if (otherNr != -1) {//this should always be the case, maybe drop the check?
+                    res += br.getEdgeIDSummand(e, vNr, source, graphInfo);
+                    if (!((ShortBasedEdgeSet) reference).contains(e)) {//pretty much unnecessary, since the check is done in edges.add anyway
+                        edges.add(e);
+                    }
+                }
+
+            }
+            return res;//returns the increase in edgeID.
+        } else {
+            System.err.println("Conflicting types: was expecting ByteBasedEdgeSet!");
+            return 0;
+        }
+    }
 
     /*public long computeEdgeIdBonus(int source, BitSet isSourceNode, BoundaryRepresentation br, SGraphBRDecompositionAutomaton graphInfo){
      ShortIterator li = edges.iterator();
@@ -170,13 +199,13 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
      }*/
     
     @Override
-    public long computeEdgeIdSummand(int vNr, int source, BoundaryRepresentation br, GraphInfo graphInfo){
+    public long computeEdgeIdSummand(int vNr, int source, GraphInfo graphInfo){
         long res = 0;
         ShortIterator it = edges.iterator();
         while (it.hasNext()) {
            short edge = it.nextShort();
-           if (graphInfo.isIncident(edge, vNr)){
-              res += br.getEdgeIDSummand(edge, vNr, source, graphInfo);
+           if (graphInfo.isIncident(vNr, edge)){
+              res += BoundaryRepresentation.getEdgeIDSummand(edge, vNr, source, graphInfo);
            }
         }
         return res;
@@ -257,7 +286,23 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
     public boolean isEmpty() {
         return edges.isEmpty();
     }
-
+    
+    @Override
+    public int size() {
+        return edges.size();
+    }
+    
+    @Override
+    public int getFirst() {
+        ShortIterator it = edges.iterator();
+        if (it.hasNext()) {
+            return it.nextShort();
+        } else {
+            return -1;
+        }
+    }
+    
+    
     /*private static LongOpenHashSet cloneLongSet(LongOpenHashSet other){
      LongOpenHashSet ret = new LongOpenHashSet();
      ret.addAll(other);

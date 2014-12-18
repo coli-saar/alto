@@ -255,4 +255,16 @@ public class GraphInfo {
         return allEdges;
     }
     
+    public int getOtherNode(int e, int v) {
+        int source = edgeSources[e];
+        int target = edgeTargets[e];
+        if (source == v) {
+            return target;
+        } else if (target == v) {
+            return source;
+        } else {
+            return -1;
+        }
+    }
+    
 }
