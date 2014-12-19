@@ -177,6 +177,9 @@ public class SGraphBRDecompAutoInstruments {
 
     public boolean iterateThroughRulesBottomUp1Clean(GraphAlgebra alg)//looks up potential merges with tree structure in MergePartnerFinder
     {
+        boolean printResults = false;
+        
+        
         boolean ret = false;
         InitTuple iT = initAgenda(false, false);
         IntList agenda = iT.agenda;
@@ -212,7 +215,9 @@ public class SGraphBRDecompAutoInstruments {
             }
             mpFinder.insert(a);
         }
-        System.err.println("Number of Parses: " + nrParses + ";   Number of Merges: " + nrMerges);
+        if (printResults) {
+            System.err.println("Number of Parses: " + nrParses + ";   Number of Merges: " + nrMerges);
+        }
         return ret;
     }
     

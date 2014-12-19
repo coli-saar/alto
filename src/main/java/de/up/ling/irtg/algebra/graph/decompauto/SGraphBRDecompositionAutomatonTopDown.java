@@ -22,14 +22,11 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.io.ByteArrayInputStream;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -40,7 +37,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.io.IOUtils;
 
 /**
  *
@@ -95,7 +91,11 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if (isExplicit) {
+            return this.getRulesBottomUpFromExplicit(labelId, childStates);
+        } else {
+            throw new UnsupportedOperationException("Bottom-up queries in a non-explicit automaton of this type are not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     }
     
     
@@ -439,6 +439,39 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         
         TreeAutomaton chart = irtg.parse(map);
         
+        /*String input = testString3;
+        int nrSources = 2;
+        int nrIterations = 100;
+        
+        GraphAlgebra alg = new GraphAlgebra();
+        SGraph graph = alg.parseString(input);
+        makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
+        
+        
+        long t1 = System.currentTimeMillis();
+        for (int i = 0; i<nrIterations; i++) {
+            SGraphBRDecompositionAutomatonTopDown autoTopDown = (SGraphBRDecompositionAutomatonTopDown) alg.decompose(graph);
+            autoTopDown.makeAllRulesExplicit();
+        }
+        
+        long t2 = System.currentTimeMillis();
+        
+        System.out.println("Top Down time: "+String.valueOf(t2-t1));
+        
+        for (int i = 0; i<nrIterations; i++) {
+            SGraphBRDecompositionAutomatonStoreTopDownExplicit autoBottomUpExpl = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
+        }
+        
+        long t3 = System.currentTimeMillis();
+        System.out.println("MPF bottom up time: "+String.valueOf(t3-t2));
+        for (int i = 0; i<nrIterations; i++) {
+            SGraphBRDecompositionAutomaton autoBottomUp = (SGraphBRDecompositionAutomaton) alg.decompose(graph, SGraphBRDecompositionAutomaton.class);
+            autoBottomUp.makeAllRulesExplicit();
+        }
+            
+        long t4 = System.currentTimeMillis();
+        
+        System.out.println("Naive bottom up time: "+String.valueOf(t4-t3) +"(currently bugged)");*/
         
     }
     

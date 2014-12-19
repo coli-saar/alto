@@ -149,6 +149,9 @@ public class GrammarBRDecompAutoInstruments {
     
     public void iterateThroughRulesBottomUp(boolean printSteps)//looks up potential merges with tree structure in MergePartnerFinder
     {
+        boolean printResults = true;
+        
+        
         InitTuple iT = initAgenda(printSteps);
         LongList agenda = iT.agenda;
         LongSet seen = iT.seen;
@@ -218,8 +221,10 @@ public class GrammarBRDecompAutoInstruments {
             }
         }
         //mpFinder.print("MPF: ",0);
-        System.out.println("Number of Merge Checks: " + String.valueOf(nrMergeChecks));
-        System.out.println("Number of Merges: " + String.valueOf(nrMerges));
+        if (printResults) {
+            System.out.println("Number of Merge Checks: " + String.valueOf(nrMergeChecks));
+            System.out.println("Number of Merges: " + String.valueOf(nrMerges));
+        }
     }
 
     private int addRuleResults(Iterator<Rule> it, LongList agenda, LongSet seen, int parentGState, int partner, boolean printSteps) {
