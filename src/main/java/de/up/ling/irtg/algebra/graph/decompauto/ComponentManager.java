@@ -5,11 +5,13 @@
  */
 package de.up.ling.irtg.algebra.graph.decompauto;
 
+import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.ByteBasedEdgeSet;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.IdBasedEdgeSet;
 import de.up.ling.irtg.algebra.graph.ShortBasedEdgeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -29,15 +31,82 @@ public class ComponentManager {
     final Set<Component> components;
     
     //for completeGraph
-    public ComponentManager(boolean useBytes) {
+    public ComponentManager(BoundaryRepresentation bRep, GraphInfo graphInfo) {
         components = new HashSet<>();
-        IdBasedEdgeSet inBoundaryEdges;
-        if (useBytes) {
-            inBoundaryEdges = new ByteBasedEdgeSet();
+        
+        if (bRep.getInBoundaryEdges().isEmpty()) {
+            IdBasedEdgeSet inBoundaryEdges;
+            
+            if (graphInfo.useBytes) {
+                inBoundaryEdges = new ByteBasedEdgeSet();
+            } else {
+                inBoundaryEdges = new ShortBasedEdgeSet();
+            }
+            components.add(new Component(new int[0], inBoundaryEdges));
         } else {
-            inBoundaryEdges = new ShortBasedEdgeSet();
+            IntSet seenEdges = new IntOpenHashSet();
+            bRep.getInBoundaryEdges().forEach(edge -> {
+                if (!seenEdges.contains(edge)) {
+                    //init new component ingredients
+                    IntList cvList = new IntArrayList();
+                    IdBasedEdgeSet cInBoundaryEdges;
+                    if (graphInfo.useBytes) {
+                        cInBoundaryEdges = new ByteBasedEdgeSet();
+                    } else {
+                        cInBoundaryEdges = new ShortBasedEdgeSet();
+                    }
+                    
+                    //add edge where necessary
+                    seenEdges.add(edge);
+                    cInBoundaryEdges.add(edge);
+                    
+                    //init agenda and take care of first vertices
+                    IntList agenda = new IntArrayList();
+                    IntSet seen = new IntOpenHashSet();
+                    boolean useSource = bRep.isSource(graphInfo.edgeSources[edge]);
+                    int firstVertex;
+                    int seedVertex;
+                    if (useSource) {
+                        firstVertex = graphInfo.edgeSources[edge];
+                        seedVertex = graphInfo.edgeTargets[edge];
+                    } else {
+                        firstVertex = graphInfo.edgeTargets[edge];
+                        seedVertex = graphInfo.edgeSources[edge];
+                    }
+                    cvList.add(firstVertex);
+                    seen.add(firstVertex);
+                    agenda.add(seedVertex);
+                    
+                    //iteration over agenda
+                    for (int curVertex : agenda) {
+                        if (bRep.isSource(curVertex)) {
+                            cvList.add(curVertex);
+                        } else {
+                            for (int curEdge : graphInfo.getIncidentEdges(curVertex)) {
+                                if (bRep.getInBoundaryEdges().contains(curEdge)) {
+                                    cInBoundaryEdges.add(curEdge);
+                                }
+                                int nextVertex = graphInfo.getOtherNode(curEdge, curVertex);
+                                if (!agenda.contains(nextVertex)) {
+                                    agenda.add(nextVertex);
+                                }
+                            }
+                        }
+                    }
+                    
+                    components.add(new Component(cvList.toIntArray(), cInBoundaryEdges));
+                    
+                }
+            });
+            
+            
+            
+            
+            
+            
         }
-        components.add(new Component(new int[0], inBoundaryEdges));
+        
+        
     }
     
     

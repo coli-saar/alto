@@ -9,11 +9,11 @@ import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.ByteIterator;
 import it.unimi.dsi.fastutil.bytes.ByteArraySet;
-import it.unimi.dsi.fastutil.shorts.ShortIterator;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.IntConsumer;
 
 /**
  *
@@ -309,5 +309,13 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
      ret.addAll(other);
      return ret;
      }*/
+
+    @Override
+    public void forEach(IntConsumer action) {
+        ByteIterator it = edges.iterator();
+        while(it.hasNext()){
+            action.accept(it.nextByte());
+        }
+    }
 
 }

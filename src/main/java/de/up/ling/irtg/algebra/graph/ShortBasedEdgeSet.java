@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.IntConsumer;
 
 /**
  *
@@ -308,4 +309,13 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
      ret.addAll(other);
      return ret;
      }*/
+    
+    @Override
+    public void forEach(IntConsumer action) {
+        ShortIterator it = edges.iterator();
+        while(it.hasNext()){
+            action.accept(it.nextShort());
+        }
+    }
+    
 }

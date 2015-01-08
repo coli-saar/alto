@@ -84,7 +84,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         storedStates.put(completeRep.vertexID, edgeIDMap);
         
         componentManager = new Int2ObjectOpenHashMap<>();
-        componentManager.put(x, new ComponentManager(completeGraphInfo.useBytes));
+        componentManager.put(x, new ComponentManager(completeRep, completeGraphInfo));
         
     }
     
@@ -438,6 +438,8 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         map.put("graph", "(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");
         
         TreeAutomaton chart = irtg.parse(map);
+        
+        System.out.println(chart);
         
         /*String input = testString3;
         int nrSources = 2;

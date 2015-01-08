@@ -8,6 +8,7 @@ package de.up.ling.irtg.algebra.graph;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.util.BitSet;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 /**
  *
@@ -54,12 +55,12 @@ public abstract class IdBasedEdgeSet {
 
     public abstract List<BitSet> getCorrespondingBitSets(Int2ObjectMap<BitSet> map);
     
-   public abstract int size();
+    public abstract int size();
    
     public abstract int getFirst();
     
     public abstract boolean isEmpty();
     
-    
+    public abstract void forEach(IntConsumer action);
     
 }
