@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A template IRTG. A template IRTG is an
@@ -56,7 +57,8 @@ public class TemplateInterpretedTreeAutomaton {
     private List<TemplateRule> ruleTemplates;
     private Map<String, String> algebraClasses;
     private List<FeatureDeclaration> features;
-
+    private double[] featureWeights = null;
+            
     /**
      * Constructs an empty template IRTG.
      */
@@ -117,7 +119,7 @@ public class TemplateInterpretedTreeAutomaton {
      * @param className 
      */
     public void addAlgebraClass(String interpretation, String className) {
-        algebraClasses.put(interpretation, className);
+        getAlgebraClasses().put(interpretation, className);
     }
 
     /**
@@ -138,8 +140,8 @@ public class TemplateInterpretedTreeAutomaton {
         Map<String, Interpretation> interps = new HashMap<>();
 
         // initialize interpretations
-        for (String interp : algebraClasses.keySet()) {
-            Class algebraClass = Class.forName(algebraClasses.get(interp));
+        for (String interp : getAlgebraClasses().keySet()) {
+            Class algebraClass = Class.forName(getAlgebraClasses().get(interp));
             Algebra algebra = (Algebra) algebraClass.newInstance();
             Homomorphism hom = new Homomorphism(auto.getSignature(), algebra.getSignature());
             Interpretation intp = new Interpretation(algebra, hom);
@@ -223,6 +225,47 @@ public class TemplateInterpretedTreeAutomaton {
         }
 
         return ret;
+    }
+
+    public int getNumFeatures() {
+        return (features == null? 0 : features.size());
+    }
+
+    public List<String> getFeatureIds() {
+        return features.stream().map( f-> {return f.id;}).collect(Collectors.toList());
+    }
+    
+    /**
+     * @return the algebraClasses
+     */
+    public Map<String, String> getAlgebraClasses() {
+        return algebraClasses;
+    }
+
+    /**
+     * @return the featureWeights
+     */
+    public double[] getFeatureWeights() {
+        return featureWeights;
+    }
+
+    /**
+     * @param featureWeights the featureWeights to set
+     */
+    public void setFeatureWeights(double[] featureWeights) {
+        this.featureWeights = featureWeights;
+    }
+
+    public double getFeatureWeight(int i) {
+        if (featureWeights != null && i < featureWeights.length) {
+            return featureWeights[i];
+        } else {
+            return Double.NaN;
+        }
+    }
+    
+    public void setFeatureWeight(int index, double weight) {
+        featureWeights[index] = weight;
     }
 
     private static interface RuleConsumer {
@@ -342,8 +385,8 @@ public class TemplateInterpretedTreeAutomaton {
     public String toString() {
         StringBuilder buf = new StringBuilder();
 
-        for (String interp : algebraClasses.keySet()) {
-            buf.append("interpretation " + interp + ": " + algebraClasses.get(interp) + "\n");
+        for (String interp : getAlgebraClasses().keySet()) {
+            buf.append("interpretation " + interp + ": " + getAlgebraClasses().get(interp) + "\n");
         }
 
         for (TemplateRule trule : ruleTemplates) {

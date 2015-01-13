@@ -21,7 +21,7 @@
     <dependency>
       <groupId>de.saar.coli</groupId>
       <artifactId>basics</artifactId>
-      <version>[1.2.34,)</version>
+      <version>[1.2.32,)</version>
     </dependency>
 
     <dependency>
@@ -406,7 +406,7 @@
 	<enabled>true</enabled>
       </releases>
       <snapshots>
-	<enabled>true</enabled>
+	<enabled>false</enabled>
       </snapshots>
     </repository>
 
