@@ -27,6 +27,7 @@ public class SGraphBRDecompositionAutomatonStoreTopDownExplicit extends SGraphBR
 
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, completeGraphInfo.getNrSources(), completeGraphInfo.getNrNodes(), doBolinas());//maybe check algebra if it contains bolinasmerge?
         foundFinalState = instr.iterateThroughRulesBottomUp1Clean(algebra);
+        this.isExplicit = true;
         //instr.iterateThroughRulesBottomUp1(algebra, true, false);
         //foundFinalState = false;
         //System.out.println(toString());

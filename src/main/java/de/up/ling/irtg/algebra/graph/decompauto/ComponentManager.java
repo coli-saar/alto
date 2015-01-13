@@ -16,9 +16,11 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntListIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
@@ -203,8 +205,8 @@ public class ComponentManager {
         return false;
     }
     
-    public Set<ComponentManager[]> getAllConnectedNonemptyComplementsPairs() {
-        Set<ComponentManager[]> ret = new HashSet<>();
+    public List<ComponentManager[]> getAllConnectedNonemptyComplementsPairs() {
+        List<ComponentManager[]> ret = new ArrayList<>();
         Set<Component> copySet = new HashSet<>();
         copySet.addAll(components);
         Set<Set<Component>> allSubsets = getAllSubsets(copySet);

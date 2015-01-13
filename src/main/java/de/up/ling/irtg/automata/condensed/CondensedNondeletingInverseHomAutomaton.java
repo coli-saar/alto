@@ -145,7 +145,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
             Tree<HomomorphismSymbol> rightmostLeaf = getRightmostLeaf(rhs);
             int[] leafStates = new int[getRhsArity(rhs)];
             
-            System.err.println("\nrule for " + getStateForId(parentState) + " @ " + HomomorphismSymbol.toStringTree(rhs, rhsAutomaton.getSignature()));
+//            System.err.println("\nrule for " + getStateForId(parentState) + " @ " + HomomorphismSymbol.toStringTree(rhs, rhsAutomaton.getSignature()));
 //            System.err.println("\n\nrhs = " + rhs + "; rightmost: " + rightmostLeaf);
 
             // Find child states

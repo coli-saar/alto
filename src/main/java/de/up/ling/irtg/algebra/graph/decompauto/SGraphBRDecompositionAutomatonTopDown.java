@@ -37,6 +37,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 
 /**
  *
@@ -51,6 +53,8 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     
     final GraphAlgebra algebra;
     
+    final Set<BoundaryRepresentation>[] storedConstants;
+    
     
     final Int2ObjectMap<Int2ObjectMap<Iterable<Rule>>> storedRules;
     
@@ -58,7 +62,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     final Int2ObjectMap<ComponentManager> componentManager;
     
     
-    public SGraphBRDecompositionAutomatonTopDown(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
+    public SGraphBRDecompositionAutomatonTopDown(SGraph completeGraph, GraphAlgebra algebra, Signature signature) throws Exception{
         super(signature);
 
         this.algebra = algebra;
@@ -67,8 +71,25 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         completeGraphInfo = new GraphInfo(completeGraph, algebra, signature);
         
 
-        
-        
+        storedConstants = new HashSet[algebra.getSignature().getMaxSymbolId()+1];
+        Map<String, Integer> symbols = algebra.getSignature().getSymbolsWithArities();
+        for (String label : symbols.keySet()) {
+            if (symbols.get(label) == 0) {
+                int labelID = algebra.getSignature().getIdForSymbol(label);
+                storedConstants[labelID] = new HashSet<>();
+                SGraph sgraph = algebra.parseString(label);
+                completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+//                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
+                    if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
+                        matchedSubgraph.setEqualsMeansIsomorphy(false);
+                        storedConstants[labelID].add(new BoundaryRepresentation(matchedSubgraph, completeGraphInfo));
+                    } else {
+//                        System.err.println("match " + matchedSubgraph + " has crossing edges from nodes");
+                    }
+                });
+                
+            }
+        }
         
         BoundaryRepresentation completeRep = new BoundaryRepresentation(completeGraph, completeGraphInfo);
         int x = addState(completeRep);
@@ -87,6 +108,24 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         componentManager.put(x, new ComponentManager(completeRep, completeGraphInfo));
         
     }
+    
+    /*private List<SGraph> addSourceRecursive(List<SGraph> previous, int sourceID) {
+        if (sourceID >= completeGraphInfo.getNrSources()) {
+            return previous;
+        } else {
+            List<SGraph> newList = new ArrayList<>();
+            for (SGraph prevGraph : previous) {
+                newList.add(prevGraph);
+                for (int i = 0; i<completeGraphInfo.getNrNodes(); i++) {
+                    SGraph newGraph = prevGraph.withFreshNodenames();
+                    newGraph.addSource(completeGraphInfo.getSourceForInt(sourceID), completeGraphInfo.getNodeForInt(i));
+                    newList.add(newGraph);
+                }
+            }
+            return addSourceRecursive(newList, sourceID+1);
+        }
+    }*/
+    
     
     
     @Override
@@ -116,13 +155,13 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         rulesHere.put(labelId, rules);
 
         // add final state if needed
-        for (Rule rule : rules) {
+        /*for (Rule rule : rules) {
             BoundaryRepresentation parent = getStateForId(rule.getParent());
 
-            if (parent.isIdenticalExceptSources(completeGraphInfo.graph, completeGraphInfo.graph, completeGraphInfo)) {
+            if (parent.isIdenticalExceptSources(completeGraphInfo.graph, completeGraphInfo.graph, completeGraphInfo)) {//do this right in the beginning (find all final states), or just stick with one final state.
                 finalStates.add(rule.getParent());
             }
-        }
+        }*/
         return rules;
     }
 
@@ -172,76 +211,80 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         BoundaryRepresentation parent = getStateForId(parentState);
         List<Rule> rules = new ArrayList<>();
         
-        try {
-            if (label == null) {
-                return Collections.EMPTY_LIST;
-            } else if (label.equals(GraphAlgebra.OP_MERGE)) {
-                
-                Map<BoundaryRepresentation[], ComponentManager[]> allSplits = getAllSplits(componentManager.get(parentState), parent);
-                
-                for (BoundaryRepresentation[] childStates : allSplits.keySet()) {
-                    rules.add(makeRule(parentState, labelId, childStates, allSplits.get(childStates)));
-                }
-                
-            } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
-                Map<BoundaryRepresentation, ComponentManager> allForgotten = getAllForgotten(parent, componentManager.get(parentState), completeGraphInfo.getlabelSources(labelId)[0]);
-                
-                for (BoundaryRepresentation childState : allForgotten.keySet()) {
-                    rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{childState}, new ComponentManager[]{allForgotten.get(childState)}));
-                }
-                
-            } else if (label.startsWith(GraphAlgebra.OP_FORGET_ALL)) {
-                Map<BoundaryRepresentation, ComponentManager> allForgotten = getAllForgottenAll(parent, componentManager.get(parentState));
-                
-                for (BoundaryRepresentation childState : allForgotten.keySet()) {
-                    rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{childState}, new ComponentManager[]{allForgotten.get(childState)}));
-                }
-            } else if (label.startsWith(GraphAlgebra.OP_RENAME)
-                    || label.startsWith(GraphAlgebra.OP_SWAP))
-                    //|| label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)   //not supporting those two at the moment
-                    //|| label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) 
-                    {
+        if (label == null) {
+            return Collections.EMPTY_LIST;
+        } else if (label.equals(GraphAlgebra.OP_MERGE)) {
 
+            List<Pair<BoundaryRepresentation[], ComponentManager[]>> allSplits = getAllSplits(componentManager.get(parentState), parent);
 
-                // now we can apply the operation.
-                BoundaryRepresentation result = parent.applyRenameReverse(label, labelId, true, completeGraphInfo);// maybe do the above check in here? might be more efficient.
-
-                if (result != null) {
-//                    System.err.println(label + " returned null: " + children.get(0));
-                    rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{result}, new ComponentManager[]{componentManager.get(parentState)}));//has same component manager as parent
-                }
-            } else {
-                SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
-                
-                //boolean hasInternalNode = false;
-                //for (int i = 0; i<completeGraphInfo.getNrNodes(); i++) {
-                //    if (parent.isInternalNode(i)) {
-               //         hasInternalNode = true;
-               //     }
-               // }
-                //if (!hasInternalNode && parent.getInBoundaryEdges().size() == 1 && !DEBUGalreadyseen.contains(parentState)) {
-                //    System.out.println("DebugStuff in TopDown (const)");
-                //    DEBUGalreadyseen.add(parentState);
-                //}
-                
-                //if (parentState == 293 && labelId == 16) {
-                //    System.out.println("DebugStuff in TopDown (const)");
-               // }
-         
-                        
-                if (parent.getGraph(completeGraphInfo.graph, completeGraphInfo).isIsomorphicAlsoEdges(sgraph)) {//works only for nodes, not edges
-                    rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[0], new ComponentManager[0]));
-                }
-
+            for (Pair<BoundaryRepresentation[], ComponentManager[]> childStates : allSplits) {
+                rules.add(makeRule(parentState, labelId, childStates.getLeft(), childStates.getRight()));
             }
-            
-            
-            return memoize(rules, labelId, parentState);
-            
-            
-        } catch (de.up.ling.irtg.algebra.graph.ParseException ex) {
-            throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
+
+        } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
+            List<Pair<BoundaryRepresentation, ComponentManager>> allForgotten = getAllForgotten(parent, componentManager.get(parentState), completeGraphInfo.getlabelSources(labelId)[0]);
+
+            for (Pair<BoundaryRepresentation, ComponentManager> childState : allForgotten) {
+                rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{childState.getLeft()}, new ComponentManager[]{childState.getRight()}));
+            }
+
+        } else if (label.startsWith(GraphAlgebra.OP_FORGET_ALL)) {
+            List<Pair<BoundaryRepresentation, ComponentManager>> allForgotten = getAllForgottenAll(parent, componentManager.get(parentState));
+
+            for (Pair<BoundaryRepresentation, ComponentManager> childState : allForgotten) {
+                rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{childState.getLeft()}, new ComponentManager[]{childState.getRight()}));
+            }
+        } else if (label.startsWith(GraphAlgebra.OP_RENAME)
+                || label.startsWith(GraphAlgebra.OP_SWAP))
+                //|| label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)   //not supporting those two at the moment
+                //|| label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) 
+                {
+
+
+            // now we can apply the operation.
+            BoundaryRepresentation result = parent.applyRenameReverse(label, labelId, true, completeGraphInfo);// maybe do the above check in here? might be more efficient.
+
+            if (result != null) {
+//                    System.err.println(label + " returned null: " + children.get(0));
+                rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{result}, new ComponentManager[]{componentManager.get(parentState)}));//has same component manager as parent
+            }
+        } else {
+
+            if (storedConstants[labelId].contains(parent)) {
+                rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[0], new ComponentManager[0]));
+            }
+
+
+
+            //SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
+
+            //boolean hasInternalNode = false;
+            //for (int i = 0; i<completeGraphInfo.getNrNodes(); i++) {
+            //    if (parent.isInternalNode(i)) {
+           //         hasInternalNode = true;
+           //     }
+           // }
+            //if (!hasInternalNode && parent.getInBoundaryEdges().size() == 1 && !DEBUGalreadyseen.contains(parentState)) {
+            //    System.out.println("DebugStuff in TopDown (const)");
+            //    DEBUGalreadyseen.add(parentState);
+            //}
+
+            //if (parentState == 293 && labelId == 16) {
+            //    System.out.println("DebugStuff in TopDown (const)");
+           // }
+
+
+            //if (parent.getGraph(completeGraphInfo.graph, completeGraphInfo).isIsomorphicAlsoEdges(sgraph)) {
+            //    rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[0], new ComponentManager[0]));
+            //}
+
         }
+
+
+        return memoize(rules, labelId, parentState);
+            
+            
+        
     }
 
     
@@ -278,16 +321,16 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
 
     
     
-    private Map<BoundaryRepresentation[], ComponentManager[]> getAllSplits(ComponentManager cm, BoundaryRepresentation parent) {
+    private List<Pair<BoundaryRepresentation[], ComponentManager[]>> getAllSplits(ComponentManager cm, BoundaryRepresentation parent) {
         
-        Map<BoundaryRepresentation[], ComponentManager[]> ret = new HashMap<>();
-        Set<ComponentManager[]> allPairs =  cm.getAllConnectedNonemptyComplementsPairs();
+        List<Pair<BoundaryRepresentation[], ComponentManager[]>> ret = new ArrayList<>();
+        List<ComponentManager[]> allPairs =  cm.getAllConnectedNonemptyComplementsPairs();
         for (ComponentManager[] pair : allPairs) {
             BoundaryRepresentation[] bReps = new BoundaryRepresentation[2];
             for (int i : new int[]{0,1}) {
                 bReps[i] = makeBR(pair[i], parent);
             }
-            ret.put(bReps, pair);
+            ret.add(new ImmutablePair(bReps, pair));//or use MutablePair?
         }
         return ret;
     }
@@ -331,50 +374,50 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     }
     
     
-    private Map<BoundaryRepresentation, ComponentManager> getAllForgotten(BoundaryRepresentation parent, ComponentManager cm, int forgottenSource) {
-        Map<BoundaryRepresentation, ComponentManager> ret = new HashMap<>();
+    private List<Pair<BoundaryRepresentation, ComponentManager>> getAllForgotten(BoundaryRepresentation parent, ComponentManager cm, int forgottenSource) {
+        List<Pair<BoundaryRepresentation, ComponentManager>> ret = new ArrayList<>();
         if (parent.getSourceNode(forgottenSource) == -1) {
             for (int vNr = 0; vNr<completeGraphInfo.getNrNodes(); vNr++) {
                 if (parent.isInternalNode(vNr)) {//change to parent.contains(i) to allow multiple sources on one node
-                    ret.put(parent.forgetReverse(forgottenSource, vNr), new ComponentManager(cm, vNr, completeGraphInfo));
+                    ret.add(new ImmutablePair(parent.forgetReverse(forgottenSource, vNr), new ComponentManager(cm, vNr, completeGraphInfo)));
                 }
             }
         }
         return ret;
     }
     
-    private Map<BoundaryRepresentation, ComponentManager> getAllForgottenAll(BoundaryRepresentation parent, ComponentManager cm) {
+    private List<Pair<BoundaryRepresentation, ComponentManager>> getAllForgottenAll(BoundaryRepresentation parent, ComponentManager cm) {
         if (!parent.sourcesAllBottom) {
-            return new HashMap<>();
+            return new ArrayList<>();
         } else {
-            Map<BoundaryRepresentation, ComponentManager> ret = new HashMap<>();
+            List<Pair<BoundaryRepresentation, ComponentManager>> ret = new ArrayList<>();
             List<Integer> allSources = new ArrayList<>();
             for (int i = 0; i<completeGraphInfo.getNrSources(); i++) {
                 allSources.add(i);
             }
             for (List<Integer> forgottenSources : getAllSubsets(allSources)) {
                 
-                Map<BoundaryRepresentation, ComponentManager> intermResPrev = new HashMap<>();
-                Map<BoundaryRepresentation, ComponentManager> intermRes = new HashMap<>();
-                intermResPrev.put(parent, cm);
+                List<Pair<BoundaryRepresentation, ComponentManager>> intermResPrev = new ArrayList<>();
+                List<Pair<BoundaryRepresentation, ComponentManager>> intermRes = new ArrayList<>();
+                intermResPrev.add(new ImmutablePair(parent, cm));
                 for (int source : forgottenSources) {
                     
-                    for (BoundaryRepresentation intermParent : intermResPrev.keySet()) {
+                    for (Pair<BoundaryRepresentation, ComponentManager> intermParent : intermResPrev) {
                         
-                        intermRes.putAll(getAllForgotten(intermParent, intermResPrev.get(intermParent), source));
+                        intermRes.addAll(getAllForgotten(intermParent.getLeft(), intermParent.getRight(), source));
                         
                     }
                     intermResPrev = intermRes;
-                    intermRes = new HashMap<>();
+                    intermRes = new ArrayList<>();
                 }
-                ret.putAll(intermResPrev);
+                ret.addAll(intermResPrev);
             }
             return ret;
         }
     }
     
-    private Set<List<Integer>> getAllSubsets(List<Integer> set) {
-        Set<List<Integer>> ret = new HashSet<>();
+    private List<List<Integer>> getAllSubsets(List<Integer> set) {
+        List<List<Integer>> ret = new ArrayList<>();
         if (set.size() > 1) {
             for (List<Integer> recList : getAllSubsets(set.subList(1, set.size()))) {
                 ret.add(recList);
@@ -412,15 +455,6 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     
     
     public static void main(String[] args) throws Exception{
-        String input = testString3;
-        int nrSources = 2;
-        
-        GraphAlgebra alg = new GraphAlgebra();
-            SGraph graph = alg.parseString(input);
-            makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
-        SGraphBRDecompositionAutomatonTopDown auto = (SGraphBRDecompositionAutomatonTopDown) alg.decompose(graph);
-        
-        auto.makeAllRulesExplicit();
         
         
         
@@ -436,10 +470,46 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream( HRG.getBytes( Charset.defaultCharset() ) ));
         Map<String, String> map = new HashMap<>();
         map.put("graph", "(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");
-        
         TreeAutomaton chart = irtg.parse(map);
+        System.err.println(chart);
         
-        System.out.println(chart);
+        
+        
+        String input = testString5;
+        int nrSources = 4;
+        GraphAlgebra alg = new GraphAlgebra();
+        SGraph graph = alg.parseString(input);
+        makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
+        //GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra();
+        //SGraph graph = alg.parseString("(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");
+        
+        
+        //warmup
+        for (int i = 0; i<1; i++) {
+            TreeAutomaton aut1 = alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
+            aut1.makeAllRulesExplicit();
+            TreeAutomaton aut2 = alg.decompose(graph, SGraphBRDecompositionAutomatonTopDown.class); 
+            aut2.makeAllRulesExplicit();
+        }
+        
+        int nrIt = 10;
+        long time = System.currentTimeMillis();
+        /*for (int i = 0; i<nrIt; i++) {
+            TreeAutomaton aut1 = alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
+            aut1.makeAllRulesExplicit();
+        }
+        System.err.println("avg time bottomUp: " + String.valueOf((System.currentTimeMillis()-time)/nrIt));
+        System.err.println("total time: " + String.valueOf(System.currentTimeMillis()-time));
+        
+        time = System.currentTimeMillis();*/
+        for (int i = 0; i<nrIt; i++) {
+            TreeAutomaton aut2 = alg.decompose(graph, SGraphBRDecompositionAutomatonTopDown.class); 
+            aut2.makeAllRulesExplicit();
+        }
+        System.err.println("avg time topDown: " + String.valueOf((System.currentTimeMillis()-time)/nrIt));
+        System.err.println("total time: " + String.valueOf(System.currentTimeMillis()-time));
+        
+        //System.out.println(chart);
         
         /*String input = testString3;
         int nrSources = 2;

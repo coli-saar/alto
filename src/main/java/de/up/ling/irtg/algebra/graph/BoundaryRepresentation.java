@@ -165,13 +165,13 @@ public class BoundaryRepresentation {
         sourceCount = NumbersCombine.getFirst(temp);
         largestSource = NumbersCombine.getSecond(temp);
         this.edgeID = edgeID;
-        if (edgeID != computeEdgeID(completeGraphInfo)) {
-            System.out.println("err4");
-        }
+        //if (edgeID != computeEdgeID(completeGraphInfo)) {
+        //    System.out.println("err4");
+        //}
         this.vertexID = vertexID;
-        if (vertexID != computeVertexID(completeGraphInfo)) {
-            System.out.println("err5");
-        }
+        //if (vertexID != computeVertexID(completeGraphInfo)) {
+        //    System.out.println("err5");
+        //}
         //printSources();
     }
 

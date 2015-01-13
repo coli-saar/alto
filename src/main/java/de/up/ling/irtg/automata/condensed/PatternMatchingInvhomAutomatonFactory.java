@@ -6,6 +6,7 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.collect.Iterables;
+import com.google.common.primitives.Ints;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
@@ -23,7 +24,11 @@ import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.BufferedReader;
@@ -31,21 +36,26 @@ import java.io.FileInputStream;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  *
  * @author koller
+ * @param <State>
  */
 public class PatternMatchingInvhomAutomatonFactory<State> {
 
     private TreeAutomaton<Set<String>> matcher;
     private ConcreteTreeAutomaton<String> nondetMatcher;
     private Homomorphism hom;
-    private List<IntSet> detMatcherStatesToNondet = new ArrayList<IntSet>();
+    private List<IntSet> detMatcherStatesToNondet = new ArrayList<>();
     private Int2IntMap startStateIdToLabelSetID = new ArrayInt2IntMap();
     private Int2ObjectMap<int[]> matcherParentToChildren;
     private Tree<HomomorphismSymbol>[] rightmostVariableForLabelSetID;
@@ -125,6 +135,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         matcherParentToChildren.put(nondetMatcher.getIdForState(matcherState), children);
     }
 
+    
     public CondensedTreeAutomaton<State> invhom(TreeAutomaton<State> rhs) {
         ConcreteCondensedTreeAutomaton<State> ret = new CondensedInvhomAutomaton(rhs);
 
@@ -165,7 +176,231 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
         return ret;
     }
+    
+    
+    public CondensedTreeAutomaton<State> invhomTopDown(TreeAutomaton<State> rhs) {
+        ConcreteCondensedTreeAutomaton<State> ret = new CondensedInvhomAutomaton(rhs);
+        
+        Int2ObjectMap<Int2IntMap> seen = new Int2ObjectOpenHashMap<>();
+        PendingManager pm = new PendingManager();
+        TreeAutomaton<DuoState> intersectionAutomaton = new ConcreteTreeAutomaton<>();
+        IntList results = new IntArrayList();
+        for (int f1 : matcher.getFinalStates()) {
+            for (int f2 : rhs.getFinalStates()) {
+                results.add(intersect(f1, f2, rhs, intersectionAutomaton, seen, pm));//give correct automaton here
+            }
+        }
+        
+        //do something with results here + make invhom from intersectionAutomaton
+        
+        return ret;
+    }
+    
+    //returns 0 if the input state is definitely inaccessible, 1 if pending (i.e. still depending on other states) and 2 if accessible.
+    private int intersect(int matcherParent, int rhsParent, TreeAutomaton<State> rhs, TreeAutomaton<DuoState> auto, Int2ObjectMap<Int2IntMap> seen, PendingManager pm) {
+        Int2IntMap rhsMap = seen.get(matcherParent);
+        if (rhsMap != null && rhsMap.containsKey(rhsParent)) {
+            return rhsMap.get(rhsParent);
+        } else {
+            if (rhsMap == null) {
+                rhsMap = new Int2IntOpenHashMap();
+                seen.put(matcherParent, rhsMap);
+            }
+            rhsMap.put(rhsParent, 1);//still pending. Note that we checked that rhsMap does not contain the key rhsParent further above.
+            
+            
+            IntList outerResults = new IntArrayList();
+            Iterable<Rule> matcherRules = matcher.getRulesTopDown(matcherParent);
+            //List<Rule> rhsRules = new ArrayList<>();//different labels give different rules, so no need to use set here
+            
+            //iterate over all pairs of rules
+            for (Rule matcherRule : matcherRules) {
+                int arity = matcherRule.getArity();
+                int[] matcherChildren = matcherRule.getChildren();
+                String label = matcherRule.getLabel(matcher);
+                
+                for (Rule rhsRule : rhs.getRulesTopDown(rhs.getSignature().getIdForSymbol(label), rhsParent)) {
+                    int[] rhsChildren = rhsRule.getChildren();
+                    DuoState[] duoChildren = new DuoState[arity];
+                    for (int i = 0; i<arity; i++) {
+                        duoChildren[i] = new DuoState(matcherChildren[i], rhsChildren[i]);
+                    }
+                    
+                    IntList innerResults = new IntArrayList();
+                    Set<DuoState> pendingStates = new HashSet<>();
+                    
+                    //iterate over all children (pairwise)
+                    for (int i = 0; i<arity; i++) {
+                        int res = intersect(matcherChildren[i], rhsChildren[i], rhs, auto, seen, pm);
+                        innerResults.add(res);
+                        if (res == 1) {
+                            pendingStates.add(new DuoState(matcherChildren[i], rhsChildren[i]));
+                        }
+                    }
+                    
+                    int minRes;
+                    if (arity > 0) {
+                        minRes = Ints.min(innerResults.toIntArray());
+                    } else {
+                        minRes = 2;//if no children needed, then the rule always works.
+                    }
+                    outerResults.add(minRes);
+                    switch (minRes) {
+                        case 1:
+                            pm.add(duoChildren, pendingStates, new DuoState(matcherParent, rhsParent), label);
+                            break;
+                        case 2:
+                            addRule(new PendingRule(duoChildren, pendingStates, new DuoState(matcherParent, rhsParent), label), auto, pm, seen);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            int maxRes = Ints.max(outerResults.toIntArray());
+            if (maxRes == 0) {
+                rhsMap.put(rhsParent, 0);//overwriting the temporary 1. Overwriting into 2 is done in the inner loop
+            }
+            return maxRes;
+        }
+    }
+    
+    private void addRule(PendingRule rule, TreeAutomaton<DuoState> auto, PendingManager pm, Int2ObjectMap<Int2IntMap> seen) {
+        
+        auto.createRule(rule.parent, rule.label, rule.children);//make invHomAutomaton directly instead?
+        
+        Int2IntMap rhsMap = seen.get(rule.parent.getLeft());
+        if (rhsMap == null) {
+           rhsMap = new Int2IntOpenHashMap();
+           seen.put(rule.parent.getLeft(), rhsMap);
+        }
+        rhsMap.put(rule.parent.getRight(), 2);//overwriting the temporary 1
+        
+        
+        pm.removeChild(rule.parent).stream().forEach(recRule -> addRule(recRule, auto, pm, seen));
+    }
+    
+    private static class DuoState {
+        private final int[] states;
+        public DuoState(int left, int right) {
+            states = new int[2];
+            states[0] = left;
+            states[1] = right;
+        }
+        
+        public int getLeft() {
+            return states[0];
+        }
+        
+        public int getRight() {
+            return states[1];
+        }
+        
+        @Override
+        public boolean equals (Object other) {
+            if (other == null) {
+            return false;
+        }
+        if (other == this) {
+            return true;
+        }
+        if (!(other instanceof DuoState)) {
+            return false;
+        }
+        DuoState f = (DuoState) other;
+        return (states[0] == f.states[0] && states[1] == f.states[1]);
+        }
+        
+        @Override
+        public int hashCode() {
+            return new HashCodeBuilder(19, 43).append(states[0]).append(states[1]).toHashCode();
+        }
+        
+    }
+    
+    private static class PendingRule {
+        DuoState[] children;
+        Set<DuoState> pendingChildren;
+        DuoState parent;
+        String label;
+        
+        public PendingRule(DuoState[] children, Set<DuoState> pendingChildren, DuoState parent, String label) {
+            this.parent = parent;
+            this.children = children;
+            this.pendingChildren = pendingChildren;
+            this.label = label;
+        }
+        
+        
+        public boolean removeChild(DuoState child) {
+            pendingChildren.remove(child);
+            return pendingChildren.isEmpty();
+        }
+        
+        
+        //careful, they count as equal as long as parent is equal!!
+        @Override
+        public boolean equals (Object other) {
+            if (other == null) {
+            return false;
+        }
+        if (other == this) {
+            return true;
+        }
+        if (!(other instanceof PendingRule)) {
+            return false;
+        }
+        PendingRule f = (PendingRule) other;
+        return parent.equals(f.parent) && Arrays.equals(children, f.children) && label.equals(f.label);
+        }
+        
+        @Override
+        public int hashCode() {
+            return new HashCodeBuilder(19, 43).append(parent).append(label).append(Arrays.hashCode(children)).toHashCode();
+        }
+    }
+    
+    private static class PendingManager {
+        private final Map<DuoState,Set<PendingRule>> child2Pending;
+        
+        public PendingManager() {
+            child2Pending = new HashMap<>();
+        }
+        
+        public void add(DuoState[] children, Set<DuoState> pendingChildren, DuoState parent, String label) {
+            Set<PendingRule> pendingSet;
+            PendingRule pendingRule = new PendingRule(children, pendingChildren, parent, label);
+            
+            for (DuoState child : pendingChildren) {
+                if (child2Pending.containsKey(child)) {
+                    pendingSet = child2Pending.get(child);
+                } else {
+                    pendingSet = new HashSet<>();
+                    child2Pending.put(child, pendingSet);
+                }
+                pendingSet.add(pendingRule);
+            }
+        }
+        
+        
+        //updates that the child is found to be accessible. returns the rules that can be applied in consequence of this.
+        public List<PendingRule> removeChild(DuoState child) {
+            List<PendingRule> ret = new ArrayList<>();
+            Set<PendingRule> pendingSet = child2Pending.get(child);
+            if (pendingSet != null) {
+                for (PendingRule pendingRule : pendingSet) {
+                    if (pendingRule.removeChild(child)) {
+                        ret.add(pendingRule);
+                    }
+                }
+            }
+            return ret;
+        }
+    }
 
+    
+    
+    
     private class CondensedInvhomAutomaton extends ConcreteCondensedTreeAutomaton<State> {
         public CondensedInvhomAutomaton(TreeAutomaton<State> rhs) {
             signature = hom.getSourceSignature();
