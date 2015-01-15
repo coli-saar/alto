@@ -608,5 +608,23 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
 "VP -> go\n"+
 "[string] go\n"+
 "[graph]  '(g<root> / go-01  :ARG0 (s<subj>))'";
+ 
+    
+    public static final String HRGSimple = "interpretation string: de.up.ling.irtg.algebra.StringAlgebra\n"+
+"interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra\n"+
+
+"S! -> want2(NP, VP)\n"+
+"[string] *(?1, *(wants, *(to, ?2)))\n"+
+"[graph]  merge(merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj(?1)), r_vcomp(r_subj_subj(?2)))\n"+
+
+
+"NP -> boy\n"+
+"[string] *(the, boy)\n"+
+"[graph]  '(x<root> / boy)'\n"+
+
+
+"VP -> go\n"+
+"[string] go\n"+
+"[graph]  '(g<root> / go-01  :ARG0 (s<subj>))'";
     
 }
