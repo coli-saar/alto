@@ -111,6 +111,24 @@ class TreeAutomatonTest{
         assert ! gold.equalsWithStringStates(intersect)
     }
     
+//    @Test
+    public void testStringAutomata() {
+       StringAlgebra sal = new StringAlgebra();
+       sal.getSignature().addSymbol("a", 0);
+       sal.getSignature().addSymbol("b", 0);
+       sal.getSignature().addSymbol("c", 0);
+
+       List<TreeAutomaton<?>> l = new ArrayList<>();
+       List<String> words = new ArrayList<String>();
+       words.add("a");
+       words.add("b");
+       words.add("b");
+       words.add("c");
+
+       TreeAutomaton t1 = sal.decompose(words);
+       assert t1.equals(t1);
+    }
+    
     @Test
     public void testIntersectionLanguage() {
         
