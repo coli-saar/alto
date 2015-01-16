@@ -251,6 +251,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                         State rhsState = rhs.getStateForId(rhsStateID);
                         int rhsStateIDdoubleCheck = rhs.getIdForState(rhsState);
                         int rhsStateIDtripleCheck = rhs.getIdForState(intersState.getRight());
+                        if (rhsStateIDdoubleCheck != rhsStateIDtripleCheck) {
+                            System.err.println("terrible inconsistency in state IDs (at paternmatching invhomRestrictive)!");
+                        }
                         ret.addRule(new CondensedRule(rhsStateID, labelSetID, new int[0], 1));
                     } else {
                         int[] childStates = new int[numVariables];

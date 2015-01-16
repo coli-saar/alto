@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
+import java.util.function.Consumer;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
@@ -38,10 +40,11 @@ public class ComponentManager {
     final IntSet components;
     final Int2ObjectMap<Component> componentById;
     final Object2IntMap<Component> componentToId;
-    private int maxID = 0;
+    private int maxID;
     
     //for completeGraph
     public ComponentManager(BoundaryRepresentation bRep, GraphInfo graphInfo) {
+        maxID = 0;
         components = new IntOpenHashSet();
         componentById = new Int2ObjectOpenHashMap<>();
         componentToId = new Object2IntOpenHashMap<>();
@@ -53,7 +56,7 @@ public class ComponentManager {
             } else {
                 inBoundaryEdges = new ShortBasedEdgeSet();
             }
-            addComponent(new Component(new int[0], inBoundaryEdges));
+            addComponent(new Component(new int[0], inBoundaryEdges, graphInfo));
         } else {
             IntSet seenEdges = new IntOpenHashSet();
             bRep.getInBoundaryEdges().forEach(edge -> {
@@ -93,6 +96,7 @@ public class ComponentManager {
                         } else {
                             for (int curEdge : graphInfo.getIncidentEdges(curVertex)) {
                                 if (bRep.getInBoundaryEdges().contains(curEdge)) {
+                                    seenEdges.add(curEdge);
                                     cInBoundaryEdges.add(curEdge);
                                 }
                                 int nextVertex = graphInfo.getOtherNode(curEdge, curVertex);
@@ -103,7 +107,7 @@ public class ComponentManager {
                         }
                     }
                     
-                    addComponent(new Component(cvList.toIntArray(), cInBoundaryEdges));
+                    addComponent(new Component(cvList.toIntArray(), cInBoundaryEdges, graphInfo));
                     
                 }
             });
@@ -114,8 +118,18 @@ public class ComponentManager {
             
             
         }
+        //checkEquality();
         
-        
+    }
+    
+    private void checkEquality() {
+        for (int i1: components) {
+            for (int i2: components) {
+                if (i1 != i2 && componentById.get(i1).equalsPrecise(componentById.get(i2))) {
+                    System.err.println("terrible error in managing component IDs in componentManager!");
+                }
+            }
+        }
     }
     
     private void addComponent(Component comp) {
@@ -133,6 +147,7 @@ public class ComponentManager {
         componentToId = new Object2IntOpenHashMap<>();
         componentById.putAll(cm.componentById);
         componentToId.putAll(cm.componentToId);
+        this.maxID = cm.maxID;
         boolean containsNode = false;//just to double check
         for (int compID : cm.components) {
             Component comp = componentById.get(compID);
@@ -187,7 +202,7 @@ public class ComponentManager {
                         }
                     }
                     
-                    addComponent(new Component(currentSourceNodes.toIntArray(), currentInBoundaryEdges));
+                    addComponent(new Component(currentSourceNodes.toIntArray(), currentInBoundaryEdges, graphInfo));
                 }
                 
             } else {
@@ -198,7 +213,7 @@ public class ComponentManager {
             System.err.println("Terrible Error in ComponentManager constuctor!");
         }
         
-        
+        //checkEquality();
         
     }
     
@@ -211,6 +226,8 @@ public class ComponentManager {
         this.components = components;
         componentById = parent.componentById;
         componentToId = parent.componentToId;
+        this.maxID = parent.maxID;
+        //checkEquality();
     }
     
     public boolean isSourceNode(int vNr) {
@@ -233,61 +250,39 @@ public class ComponentManager {
     
     public List<ComponentManager[]> getAllConnectedNonemptyComplementsPairs() {
         List<ComponentManager[]> ret = new ArrayList<>();
-        IntList copySet = new IntArrayList();
+        int first = components.iterator().nextInt();
+        IntList rest = new IntArrayList(components);
+        rest.rem(first);
+        iterateOverAllSubsetsByComplements(new IntArrayList(first), rest, cm -> {
+            IntSet complement = getIntComplement(cm);
+            if (isConnectedInt(cm) && isConnectedInt(complement) && !cm.isEmpty() && ! complement.isEmpty()) {
+                ret.add(new ComponentManager[]{new ComponentManager(this, cm), new ComponentManager(this, complement)});
+            }
+        });
+        
+        /*IntSet copySet = new IntOpenHashSet();
         copySet.addAll(components);
-        List<IntList> allSubsets = getAllSubsets(copySet);
-        Set<ComponentManager> allManagers = new HashSet<>();
-        for (IntList set : allSubsets) {
-            allManagers.add(new ComponentManager(this, new IntOpenHashSet(set)));
-        }
+        List<IntSet> allSubsets = getAllSubsets(copySet);
+        Set<IntSet> allManagers = new HashSet<>(allSubsets);
+        //System.err.println("set: " + components);
+        //System.err.println("setSize: " + components.size());
+        //System.err.println("subsets: " + allSubsets.size());
+        
         while (!allManagers.isEmpty()) {
-            ComponentManager cm = allManagers.iterator().next();
-            ComponentManager complement = getComplement(cm);
-            if (cm.isConnected() && complement.isConnected() && !cm.components.isEmpty() && ! complement.components.isEmpty()) {
-                ret.add(new ComponentManager[]{cm, complement});
+            IntSet cm = allManagers.iterator().next();
+            IntSet complement = getIntComplement(cm);
+            if (isConnectedInt(cm) && isConnectedInt(complement) && !cm.isEmpty() && ! complement.isEmpty()) {
+                ret.add(new ComponentManager[]{new ComponentManager(this, cm), new ComponentManager(this, complement)});
             }
             allManagers.remove(cm);
             allManagers.remove(complement);
             //System.err.println(allManagers.size());
-        }
+        }*/
         return ret;
     }
     
-    private ComponentManager getComplement(ComponentManager cm) {
-        IntSet newSet = new IntOpenHashSet();
-        for (int compID : components) {
-            if (!cm.components.contains(compID)) {
-                newSet.add(compID);
-            }
-        }
-        return new ComponentManager(this, newSet);
-    }
-    
-    private List<IntList> getAllSubsets(IntList set) {
-        List<IntList> ret = new ArrayList<>();
-        if (!set.isEmpty()) {
-            int first = set.getInt(0);
-            if (set.size()>1) {
-                IntList newList = set.subList(1, set.size());
-                for (IntList recList : getAllSubsets(newList)) {
-                    ret.add(recList);
-                    IntList with = new IntArrayList();
-                    with.add(first);
-                    with.addAll(recList);
-                    ret.add(with);
-                }
-            } else {
-                ret.add(new IntArrayList());
-                IntList with = new IntArrayList();
-                with.add(first);
-                ret.add(with);
-            }
-        }
-        return ret;
-    }
-    
-    private boolean isConnected() {
-        IntIterator it = components.iterator();
+    private boolean isConnectedInt(IntSet cm) {
+        IntIterator it = cm.iterator();
         if (it.hasNext()) {
             Component seed = componentById.get(it.next());
             Set<Component> agenda = new HashSet<>();
@@ -320,6 +315,76 @@ public class ComponentManager {
         } else {
             return true;
         }
+    }
+    
+    private ComponentManager getComplement(ComponentManager cm) {
+        IntSet newSet = new IntOpenHashSet();
+        for (int compID : components) {
+            if (!cm.components.contains(compID)) {
+                newSet.add(compID);
+            }
+        }
+        return new ComponentManager(this, newSet);
+    }
+    
+    private IntSet getIntComplement(IntSet other) {
+        IntSet newSet = new IntOpenHashSet();
+        for (int compID : components) {
+            if (!other.contains(compID)) {
+                newSet.add(compID);
+            }
+        }
+        return newSet;
+    }
+    
+    private List<IntSet> getAllSubsets(IntSet set) {
+        List<IntSet> ret = new ArrayList<>();
+        if (!set.isEmpty()) {
+            int first = set.iterator().nextInt();
+            if (set.size()>1) {
+                IntSet newSet = new IntOpenHashSet(set);
+                newSet.remove(first);
+                for (IntSet recSet : getAllSubsets(newSet)) {
+                    ret.add(recSet);
+                    IntSet with = new IntOpenHashSet();
+                    with.add(first);
+                    with.addAll(recSet);
+                    ret.add(with);
+                }
+            } else {
+                ret.add(new IntOpenHashSet());
+                IntSet with = new IntOpenHashSet();
+                with.add(first);
+                ret.add(with);
+            }
+        }
+        return ret;
+    }
+    
+    
+    //start with previous containing one of the total items
+    private void iterateOverAllSubsetsByComplements(IntList previous, IntList next, Consumer<IntSet> function) {
+        int nextSize = next.size();
+        if (nextSize>0) {
+            int first = next.iterator().nextInt();
+            if (nextSize>1) {
+                IntList newNext = next.subList(1, nextSize);
+                IntList newPreviousWith = new IntArrayList(previous);
+                newPreviousWith.add(first);
+                iterateOverAllSubsetsByComplements(previous, newNext, function);
+                iterateOverAllSubsetsByComplements(newPreviousWith, newNext, function);
+                
+            } else {
+                IntSet with = new IntOpenHashSet(previous);
+                with.add(next.get(0));
+                function.accept(with);
+                function.accept(new IntOpenHashSet(previous));
+            }
+        }
+    }
+    
+    private boolean isConnected() {
+        return isConnectedInt(components);
     }
     
     
@@ -357,10 +422,12 @@ public class ComponentManager {
     public class Component {
         IdBasedEdgeSet inBoundaryEdges;
         int[] vertices;
+        GraphInfo completeGraphInfo;
         
-        public Component(int[] vertices, IdBasedEdgeSet inBoundaryEdges) {
+        public Component(int[] vertices, IdBasedEdgeSet inBoundaryEdges, GraphInfo completeGraphInfo) {
             this.inBoundaryEdges = inBoundaryEdges;
             this.vertices = vertices;
+            this.completeGraphInfo = completeGraphInfo;
         }
         
         public boolean contains (int vNr, GraphInfo graphInfo) {
@@ -403,6 +470,42 @@ public class ComponentManager {
             return res;
         }
         
+        public boolean equalsPrecise(Object other) {
+            if (other == null) {
+                return false;
+            }
+            if (other == this) {
+                return true;
+            }
+            if (!(other instanceof Component)) {
+                return false;
+            }
+            Component f = (Component) other;
+            return (inBoundaryEdges.equals(f.inBoundaryEdges) && Arrays.equals(vertices, f.vertices));
+        }
+        
+        @Override
+        public String toString() {
+            StringJoiner nodes = new StringJoiner(", ", "[", "]");
+
+            for (int vNr = 0; vNr < completeGraphInfo.getNrNodes(); vNr++) {
+                if (arrayContains(vertices, vNr)) {
+                    StringBuilder vRes = new StringBuilder();
+                    vRes.append(completeGraphInfo.getNodeForInt(vNr));
+                    int[] edges = completeGraphInfo.getIncidentEdges(vNr);
+                    StringJoiner edgeSJ = new StringJoiner(", ", "{", "}");
+                    for (int edge : edges) {
+                        if (inBoundaryEdges.contains(edge)) {
+                            edgeSJ.add(completeGraphInfo.getNodeForInt(completeGraphInfo.edgeSources[edge]) + "_" + completeGraphInfo.getNodeForInt(completeGraphInfo.edgeTargets[edge]));
+                        }
+                    }
+                    vRes.append(" " + edgeSJ);
+                    nodes.add(vRes);
+                }
+
+            }
+            return nodes.toString();
+        }
         
         //treat them all distinctly for now
         /*@Override
