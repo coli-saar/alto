@@ -61,12 +61,12 @@ public class GraphInfo {
         
         //find all sources used in algebra:
         Set<String> sources = new HashSet<>();
-        for (String symbol : signature.getSymbols())//this adds all sources from the signature, but be careful, this is kind of a hack. Maybe better just give this a list of sources directly?
+        for (String symbol : signature.getSymbols())//this adds all sources from the signature, (but be careful, this is kind of a hack) should work now. Maybe better just give this a list of sources directly?
         {
-            if (symbol.startsWith(GraphAlgebra.OP_FORGET)) {
+            if (symbol.startsWith(GraphAlgebra.OP_FORGET) || symbol.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
                 String[] parts = symbol.split("_");
                 sources.add(parts[1]);
-            } else if (symbol.startsWith(GraphAlgebra.OP_RENAME)) {
+            } else if (symbol.startsWith(GraphAlgebra.OP_RENAME) || symbol.startsWith(GraphAlgebra.OP_SWAP)) {
                 String[] parts = symbol.split("_");
                 if (parts.length == 2) {
                     sources.add("root");
@@ -77,6 +77,13 @@ public class GraphInfo {
             } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
                 sources.add(BOLINASROOTSTRING);
                 sources.add(BOLINASSUBROOTSTRING);
+            } else if (signature.getArityForLabel(symbol) == 0) {
+                String[] parts = symbol.split("<");
+                for (int i = 1; i<parts.length; i++) {
+                    sources.add(parts[i].split(">")[0]);//do not want the first element in parts!
+                }
+            } else if (symbol.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)) {
+                sources.add("root");
             }
         }
 

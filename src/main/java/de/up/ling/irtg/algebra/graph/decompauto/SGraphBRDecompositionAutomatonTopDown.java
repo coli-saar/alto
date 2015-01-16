@@ -216,9 +216,11 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         } else if (label.equals(GraphAlgebra.OP_MERGE)) {
 
             List<Pair<BoundaryRepresentation[], ComponentManager[]>> allSplits = getAllSplits(componentManager.get(parentState), parent);
-
             for (Pair<BoundaryRepresentation[], ComponentManager[]> childStates : allSplits) {
                 rules.add(makeRule(parentState, labelId, childStates.getLeft(), childStates.getRight()));
+                BoundaryRepresentation[] symmetricBRs = new BoundaryRepresentation[]{childStates.getLeft()[1], childStates.getLeft()[0]};
+                ComponentManager[] symmetricComponentManagers = new ComponentManager[]{childStates.getRight()[1], childStates.getRight()[0]};
+                rules.add(makeRule(parentState, labelId, symmetricBRs, symmetricComponentManagers));
             }
 
         } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
@@ -337,8 +339,8 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     
     private BoundaryRepresentation makeBR(ComponentManager cm, BoundaryRepresentation parent) {
         IdBasedEdgeSet newInBoundaryEdges;
-        if (cm.components.iterator().hasNext()) {
-            if (cm.components.iterator().next().inBoundaryEdges instanceof ShortBasedEdgeSet) {
+        if (!cm.isEmpty()) {
+            if (cm.getAComponent().inBoundaryEdges instanceof ShortBasedEdgeSet) {
                 newInBoundaryEdges = new ShortBasedEdgeSet();
             } else {
                 newInBoundaryEdges = new ByteBasedEdgeSet();
@@ -355,7 +357,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         long vertexId = 0;
         
         cm.components.stream().forEach((comp) -> {
-            newInBoundaryEdges.addAll(comp.inBoundaryEdges);
+            newInBoundaryEdges.addAll(cm.componentById.get(comp).inBoundaryEdges);
         });
         
         for (int source = 0; source < completeGraphInfo.getNrSources(); source ++) {
@@ -599,11 +601,45 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
 // every VP has a 'subj' source at which the subject is inserted
 "VP -> believe(S)\n"+
 "[string] *(believe, *(that, ?1))\n"+
-"[graph]  merge('(u<root> / believe-01  :ARG0 (v<subj>)  :ARG1 (w<xcomp>))', r_xcomp(f_root(?1)))\n"+
+"[graph]  f_xcomp(merge('(u<root> / believe-01  :ARG0 (v<subj>)  :ARG1 (w<xcomp>))', r_xcomp(f_root(?1))))\n"+//f_root a mistake?
 
 "S -> likes(NP,NP)\n"+
 "[string] *(?1, *(likes, ?2))\n"+
 "[graph]  merge(merge('(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))', r_subj(?1)), r_obj(?2))\n"+
+
+"VP -> go\n"+
+"[string] go\n"+
+"[graph]  '(g<root> / go-01  :ARG0 (s<subj>))'";
+    
+        public static final String HRGCleanS = "interpretation string: de.up.ling.irtg.algebra.StringAlgebra\n"+
+"interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra\n"+
+
+"S! -> want2(NP, VP)\n"+
+"[string] *(?1, *(wants, *(to, ?2)))\n"+
+"[graph]  f_subj(f_vcomp(merge(merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj(?1)), r_vcomp(r_subj_subj(?2)))))\n"+
+
+"S -> want3(NP, NP, VP)\n"+
+"[string] *(?1, *(wants, *(?2, *(to, ?3))))\n"+
+"[graph] f_subj(f_obj(f_vcomp(merge(merge(merge('(u<root> / want-01  :ARG0 (v<subj>)  :ARG1 (w<vcomp>)  :dummy (x<obj>))', \n"+
+                       "   r_subj(?1)), \n"+
+                  "  r_obj(?2)), \n"+
+            "  r_vcomp(r_subj_obj(?3))))))\n"+
+
+"NP -> boy\n"+
+"[string] *(the, boy)\n"+
+"[graph]  '(x<root> / boy)'\n"+
+
+"NP -> girl\n"+
+"[graph]  '(x<root> / girl)'\n"+
+
+// every VP has a 'subj' source at which the subject is inserted
+"VP -> believe(S)\n"+
+"[string] *(believe, *(that, ?1))\n"+
+"[graph]  f_xcomp(merge('(u<root> / believe-01  :ARG0 (v<subj>)  :ARG1 (w<xcomp>))', r_xcomp(?1)))\n"+
+
+"S -> likes(NP,NP)\n"+
+"[string] *(?1, *(likes, ?2))\n"+
+"[graph]  f_subj(f_obj(merge(merge('(u<root> / like-01  :ARG0 (v<subj>)  :ARG1 (w<obj>))', r_subj(?1)), r_obj(?2))))\n"+
 
 "VP -> go\n"+
 "[string] go\n"+
@@ -626,5 +662,34 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
 "VP -> go\n"+
 "[string] go\n"+
 "[graph]  '(g<root> / go-01  :ARG0 (s<subj>))'";
+  
+
+    public static final String HRGSimpleCleanS = "interpretation string: de.up.ling.irtg.algebra.StringAlgebra\n"+
+"interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra\n"+
+
+"S! -> want2(NP, VP)\n"+
+"[string] *(?1, *(wants, *(to, ?2)))\n"+
+"[graph]  f_subj(merge(merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj(?1)), r_vcomp(r_subj_subj(?2))))\n"+
+
+
+"NP -> boy\n"+
+"[string] *(the, boy)\n"+
+"[graph]  '(x<root> / boy)'\n"+
+
+
+"VP -> go\n"+
+"[string] go\n"+
+"[graph]  '(g<root> / go-01  :ARG0 (s<subj>))'";
+    
+    public static final String HRGVerySimpleCleanS = "interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra\n"+
+
+
+"NP -> boy\n"+
+"[graph]  '(x<subj> / boy)'\n"+
+
+
+"S! -> go(NP)\n"+
+"[graph]  f_subj(merge('(g<root> / go-01  :ARG0 (s<subj>))', ?1))";
+    
     
 }

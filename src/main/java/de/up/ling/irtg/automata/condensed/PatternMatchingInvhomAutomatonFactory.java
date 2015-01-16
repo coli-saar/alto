@@ -11,6 +11,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -37,6 +38,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -231,8 +233,8 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 results.add(intersect(f1, f2, rhs, intersectionAutomaton, rToLToIntersectID, mapper));//give correct automaton here
             }
         }
-        System.err.println(results);
-        System.err.println(intersectionAutomaton);
+        //System.err.println(results);
+        //System.err.println(intersectionAutomaton);
         //do something with results here + make invhom from intersectionAutomaton
         
         for (int intersStateID : intersectionAutomaton.getAllStates()) {
@@ -246,6 +248,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                     int numVariables = arityForLabelSetID.get(labelSetID);
 
                     if (numVariables == 0) {
+                        State rhsState = rhs.getStateForId(rhsStateID);
+                        int rhsStateIDdoubleCheck = rhs.getIdForState(rhsState);
+                        int rhsStateIDtripleCheck = rhs.getIdForState(intersState.getRight());
                         ret.addRule(new CondensedRule(rhsStateID, labelSetID, new int[0], 1));
                     } else {
                         int[] childStates = new int[numVariables];
@@ -734,7 +739,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
     public static void main(String[] args) throws Exception {
         
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream( SGraphBRDecompositionAutomatonTopDown.HRGSimple.getBytes( Charset.defaultCharset() ) ));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream( SGraphBRDecompositionAutomatonTopDown.HRGCleanS.getBytes( Charset.defaultCharset() ) ));
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism();
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra();
         PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom);
@@ -744,9 +749,50 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             System.err.println(hom.getByLabelSetID(labelSetID));
         }
         System.err.println(f.restrictiveMatcher);
-        TreeAutomaton rhs = alg.decompose(alg.parseString("(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))"));
-        System.err.println(f.invhomRestrictive(rhs));
+        String ex0 = "(g<root >/ go-01 :ARG0 (b / boy))";
+        String ex1 = "(w<root> / want-01  :ARG0 (b / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))";
+        String ex2 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (bel / believe-01 :ARG0 (g / girl) :ARG1 (l / like-01 :ARG0 (b2 / boy) :ARG1 (g2 / girl))) :dummy g)";
+        String ex3 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)";
+        String input = ex2;
         
+        TreeAutomaton rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonTopDown.class);
+        /*System.err.println(rhs);
+        int ruleCount = 0;
+        Iterator it = rhs.getRuleSet().iterator();
+        while (it.hasNext()) {
+            it.next();
+            ruleCount++;
+        }
+        System.err.println("rule count: " + ruleCount);*/
+        TreeAutomaton invhom = f.invhomRestrictive(rhs);
+        IntersectionAutomaton finalIntAut = new IntersectionAutomaton(irtg.getAutomaton(), invhom); 
+        System.err.println("INVHOM:\n"+invhom);
+        System.err.println("FINALINTERSECTION:\n"+finalIntAut);
+        
+        Map<String, String> map = new HashMap<>();
+        map.put("graph", input);
+        TreeAutomaton chart = irtg.parse(map);
+        System.out.println("IRTG parse:\n" + chart);
+        
+        CpuTimeStopwatch sw = new CpuTimeStopwatch();
+        sw.record(0);
+        
+        int iterations = 10;
+        int standardIterations = 10;
+        
+        for (int i = 0; i < iterations; i++) {
+            rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonTopDown.class);
+            invhom = f.invhomRestrictive(rhs);
+            finalIntAut = new IntersectionAutomaton(irtg.getAutomaton(), invhom); 
+            //System.err.println(finalIntAut);
+        }
+        sw.record(1);
+        for (int i = 0; i < standardIterations; i++) {
+            irtg.parse(map);
+        }
+        sw.record(2);
+        System.err.println(iterations+"/"+standardIterations + " iterations:");
+        sw.printMilliseconds("pattern matching", "standard");
         
         /*CpuTimeStopwatch sw = new CpuTimeStopwatch();
         sw.record(0);
