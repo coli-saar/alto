@@ -13,6 +13,8 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,8 +26,23 @@ import java.util.List;
  */
 public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompositionAutomaton{
 
+    Long2ObjectMap<Long2IntMap> storedStates;
+    boolean initialized = false;
+        
+        
     public SGraphBRDecompositionAutomatonMPFTrusting(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(completeGraph, algebra, signature);
+        
+    }
+    
+    @Override
+    void preinitialize() {
+        stateInterner.setTrustingMode(true);
+        storedStates = new Long2ObjectOpenHashMap<>();
+        Long2IntMap edgeIDMap = new Long2IntOpenHashMap();
+        edgeIDMap.defaultReturnValue(-1);
+        //edgeIDMap.put(completeRep.edgeID, x);
+        //storedStates.put(completeRep.vertexID, edgeIDMap);
     }
     
     public Iterable<Rule> calculateRulesBottomUpMPF(int labelId, int[] childStates) {
@@ -118,6 +135,26 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
     }
     
     @Override
+    protected int addState(BoundaryRepresentation stateBR) {
+        int stateID = -1;
+        Long2IntMap edgeIDMap = storedStates.get(stateBR.vertexID);
+        if (edgeIDMap != null){
+            stateID = edgeIDMap.get(stateBR.edgeID);
+        }
+        
+        if (stateID == -1){
+            stateID = super.addState(stateBR);//this is kind of ugly
+            if (edgeIDMap == null){
+                edgeIDMap = new Long2IntOpenHashMap();
+                edgeIDMap.defaultReturnValue(-1);
+                storedStates.put(stateBR.vertexID, edgeIDMap);
+            }
+            edgeIDMap.put(stateBR.edgeID, stateID);
+        }
+        return stateID;
+    }
+    
+    @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
         Iterable<Rule> res = calculateRulesBottomUpMPF(labelId, childStates);
 
@@ -131,21 +168,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
     
     Rule makeRuleTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
-        int parentState = -1;
-        Long2IntMap edgeIDMap = storedStates.get(parent.vertexID);
-        if (edgeIDMap != null){
-            parentState = edgeIDMap.get(parent.edgeID);
-        }
-        
-        if (parentState == -1){
-            parentState = addState(parent);
-            if (edgeIDMap == null){
-                edgeIDMap = new Long2IntOpenHashMap();
-                edgeIDMap.defaultReturnValue(-1);
-                storedStates.put(parent.vertexID, edgeIDMap);
-            }
-            edgeIDMap.put(parent.edgeID, parentState);
-        }
+        int parentState = addState(parent);
         //if (getStateForId(parentState) == null){
         //    System.out.println("error 5");
         //}

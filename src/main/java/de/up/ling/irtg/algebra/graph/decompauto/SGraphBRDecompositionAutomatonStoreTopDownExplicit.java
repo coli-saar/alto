@@ -23,7 +23,6 @@ public class SGraphBRDecompositionAutomatonStoreTopDownExplicit extends SGraphBR
 
     public SGraphBRDecompositionAutomatonStoreTopDownExplicit(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(completeGraph, algebra, signature);
-        stateInterner.setTrustingMode(true);
 
         SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(this, completeGraphInfo.getNrSources(), completeGraphInfo.getNrNodes(), doBolinas());//maybe check algebra if it contains bolinasmerge?
         foundFinalState = instr.iterateThroughRulesBottomUp1Clean(algebra);
@@ -81,21 +80,7 @@ public class SGraphBRDecompositionAutomatonStoreTopDownExplicit extends SGraphBR
          System.out.println(message);
          SGraph graph = parent.getGraph(completeGraph, this);
          System.out.println("sgraph: " + graph.toIsiAmrString());*/
-        int parentState = -1;
-        Long2IntMap edgeIDMap = storedStates.get(parent.vertexID);
-        if (edgeIDMap != null) {
-            parentState = edgeIDMap.get(parent.edgeID);
-        }
-
-        if (parentState == -1) {
-            parentState = addState(parent);
-            if (edgeIDMap == null) {
-                edgeIDMap = new Long2IntOpenHashMap();
-                edgeIDMap.defaultReturnValue(-1);
-                storedStates.put(parent.vertexID, edgeIDMap);
-            }
-            edgeIDMap.put(parent.edgeID, parentState);
-        }
+        int parentState = addState(parent);
         if (parent.isCompleteGraph(completeGraphInfo)) {
             finalStates.add(parentState);
         }

@@ -40,41 +40,32 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
     public Map<String, Integer> decompLengths;
     
     //final Map<BitSet, long[]> incidentEdges;
-    Int2ObjectMap<Int2ObjectMap<Set<Rule>>> storedRulesTopDown;
-    final Long2ObjectMap<Long2IntMap> storedStates;
+    //Int2ObjectMap<Int2ObjectMap<Set<Rule>>> storedRulesTopDown;
 
     public SGraphBRDecompositionAutomaton(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(signature);
-
+        
         this.algebra = algebra;
         //getStateInterner().setTrustingMode(true);
 
         completeGraphInfo = new GraphInfo(completeGraph, algebra, signature);
         
         
-
-        
-        
         storedRules = new IntTrie<>();
         
-        storedRulesTopDown = new Int2ObjectOpenHashMap<>();
+        //storedRulesTopDown = new Int2ObjectOpenHashMap<>();
+        
+        preinitialize();
         
         BoundaryRepresentation completeRep = new BoundaryRepresentation(completeGraph, completeGraphInfo);
         int x = addState(completeRep);
         finalStates.add(x);
         
-        
-        storedStates = new Long2ObjectOpenHashMap<>();
-        Long2IntMap edgeIDMap = new Long2IntOpenHashMap();
-        edgeIDMap.defaultReturnValue(-1);
-        edgeIDMap.put(completeRep.edgeID, x);
-        storedStates.put(completeRep.vertexID, edgeIDMap);
-        
-        
-        
     }
-
     
+    void preinitialize() {
+        //override this in child instances
+    }
 
     Rule makeRule(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
