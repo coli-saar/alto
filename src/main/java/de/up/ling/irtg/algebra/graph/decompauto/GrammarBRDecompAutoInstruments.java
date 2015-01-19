@@ -33,7 +33,7 @@ import java.util.Set;
  */
 public class GrammarBRDecompAutoInstruments {
 
-    private SGraphBRDecompositionAutomaton auto;
+    private SGraphBRDecompositionAutomatonBottomUp auto;
 
     private String[] intToGrammarState;
     private IntSet grammarFinalStates;

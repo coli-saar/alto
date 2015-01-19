@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 
 /**
@@ -14,9 +14,9 @@ import de.up.ling.irtg.automata.IntersectionAutomaton;
  */
 public class BREdgeEvaluator implements de.up.ling.irtg.automata.EdgeEvaluator{
 
-    SGraphBRDecompositionAutomaton auto;
+    SGraphBRDecompositionAutomatonBottomUp auto;
     
-    public BREdgeEvaluator(SGraphBRDecompositionAutomaton auto){
+    public BREdgeEvaluator(SGraphBRDecompositionAutomatonBottomUp auto){
         this.auto = auto;
     }
     

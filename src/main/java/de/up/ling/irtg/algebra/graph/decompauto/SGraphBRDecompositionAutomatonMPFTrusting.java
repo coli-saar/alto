@@ -24,7 +24,7 @@ import java.util.List;
  *
  * @author jonas
  */
-public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompositionAutomaton{
+public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompositionAutomatonBottomUp{
 
     Long2ObjectMap<Long2IntMap> storedStates;
     boolean initialized = false;

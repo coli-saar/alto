@@ -11,7 +11,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -867,8 +867,10 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         String ex2 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (bel / believe-01 :ARG0 (g / girl) :ARG1 (l / like-01 :ARG0 (b2 / boy) :ARG1 (g2 / girl))) :dummy g)";
         String ex3 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)";
         String input = ex2;
+        SGraph sgraph = alg.parseString(input);
         
-        TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomaton.class);
+        TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
+        
         /*System.err.println(rhs);
         int ruleCount = 0;
         Iterator it = rhs.getRuleSet().iterator();
@@ -890,22 +892,20 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         TreeAutomaton chart = irtg.parse(map);
         System.out.println("IRTG parse:\n" + chart);
         
-        CpuTimeStopwatch sw = new CpuTimeStopwatch();
         
-        for (int i = 0; i < 100; i++) {
-            rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomaton.class);
+
+        for (int i = 0; i < 10000; i++) {
+            rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
             invhom = f.invhomRestrictive(rhs);
             finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
         }
-        
+        CpuTimeStopwatch sw = new CpuTimeStopwatch();
         int iterations = 100000;
-        int standardIterations = 10;
-        
+        int standardIterations = 0;
         
         sw.record(0);
-        SGraph sgraph = alg.parseString(input);
         for (int i = 0; i < iterations; i++) {
-            rhs = alg.decompose(sgraph, SGraphBRDecompositionAutomaton.class);
+            rhs = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class);
             invhom = f.invhomRestrictive(rhs);
             finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
         }

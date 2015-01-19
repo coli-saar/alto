@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph.mpf;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 
@@ -15,9 +15,9 @@ import it.unimi.dsi.fastutil.ints.IntList;
  */
 public class StorageMPF extends MergePartnerFinder{
     private final IntList finalSet;//list is fine, since every subgraph gets sorted in at most once.
-    private final SGraphBRDecompositionAutomaton auto;
+    private final SGraphBRDecompositionAutomatonBottomUp auto;
     
-    public StorageMPF(SGraphBRDecompositionAutomaton auto){
+    public StorageMPF(SGraphBRDecompositionAutomatonBottomUp auto){
         finalSet = new IntArrayList();
         this.auto = auto;
     }

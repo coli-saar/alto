@@ -7,7 +7,7 @@ package de.up.ling.irtg.algebra.graph.mpf;
 
 import de.up.ling.irtg.algebra.graph.ByteBasedEdgeSet;
 import de.up.ling.irtg.algebra.graph.IdBasedEdgeSet;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.ShortBasedEdgeSet;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -35,12 +35,12 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
     private final IntList localToGlobal;
     private final Int2ObjectMap<BitSet> notHasEdge;
     private final int[] relevantEdges;
-    private final SGraphBRDecompositionAutomaton auto;
+    private final SGraphBRDecompositionAutomatonBottomUp auto;
     //private final IntList allBdryReps;
     private final IntSet vertices;
     private final boolean hasAll;
 
-    public EdgeIntersectionMPF(boolean hasAll, IntSet vertices, SGraphBRDecompositionAutomaton auto) {
+    public EdgeIntersectionMPF(boolean hasAll, IntSet vertices, SGraphBRDecompositionAutomatonBottomUp auto) {
         this.auto = auto;
         this.vertices = vertices;
         this.hasAll = hasAll;

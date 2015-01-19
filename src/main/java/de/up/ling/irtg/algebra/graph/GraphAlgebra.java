@@ -6,7 +6,7 @@ package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownBolinas;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
@@ -92,8 +92,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             if (c == SGraphDecompositionAutomaton.class){
                 return new SGraphDecompositionAutomaton(value, this, getSignature());
                 
-            } else if (c == SGraphBRDecompositionAutomaton.class) {
-                return new SGraphBRDecompositionAutomaton(value, this, getSignature());
+            } else if (c == SGraphBRDecompositionAutomatonBottomUp.class) {
+                return new SGraphBRDecompositionAutomatonBottomUp(value, this, getSignature());
                 
             } else if (c == SGraphBRDecompositionAutomatonMPFTrusting.class) {
                 return new SGraphBRDecompositionAutomatonMPFTrusting(value, this, getSignature());

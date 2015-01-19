@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 package de.up.ling.irtg.algebra.graph.mpf;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 /**Deprecated! Use DynamicMergePartherFinder instead
@@ -21,9 +21,9 @@ public class StaticMergePartnerFinder extends MergePartnerFinder {
    private final int sourceNr;
    private final int ALL;//give this name so its unlikely this is actually a name of a source
    private final int BOT;
-   private final SGraphBRDecompositionAutomaton auto;
+   private final SGraphBRDecompositionAutomatonBottomUp auto;
    
-   public StaticMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto)//maybe give expected size of finalSet as parameter?
+   public StaticMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto)//maybe give expected size of finalSet as parameter?
    {
        this.auto = auto;
        if (nrSources == 0){

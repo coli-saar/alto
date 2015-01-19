@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph.mpf;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import de.up.ling.irtg.algebra.graph.mpf.EdgeIntersectionMPF;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -27,9 +27,9 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
     private final int sourcesRemaining;
     private final int ALL;
     private final int BOT;
-    private final SGraphBRDecompositionAutomaton auto;
+    private final SGraphBRDecompositionAutomatonBottomUp auto;
 
-    public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto)//maybe give expected size of finalSet as parameter?
+    public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto)//maybe give expected size of finalSet as parameter?
     {
         this.auto = auto;
         /*if (nrSources == 0){
@@ -59,7 +59,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         //}
     }
 
-    public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto, boolean hasAll, IntSet vertices)//maybe give expected size of finalSet as parameter?
+    public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto, boolean hasAll, IntSet vertices)//maybe give expected size of finalSet as parameter?
     {
         this.auto = auto;
         /*if (nrSources == 0){

@@ -5,16 +5,16 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import it.unimi.dsi.fastutil.ints.IntComparator;
 /**
  *
  * @author jonas
  */
 public class BRComparator implements IntComparator{
-    private final SGraphBRDecompositionAutomaton auto;
+    private final SGraphBRDecompositionAutomatonBottomUp auto;
     
-    public BRComparator(SGraphBRDecompositionAutomaton auto){
+    public BRComparator(SGraphBRDecompositionAutomatonBottomUp auto){
         this.auto = auto;
     }
     

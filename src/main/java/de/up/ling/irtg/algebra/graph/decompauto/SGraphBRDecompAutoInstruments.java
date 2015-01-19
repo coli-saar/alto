@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph.decompauto;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import de.up.ling.irtg.algebra.graph.mpf.BolinasMPF;
 import com.google.common.collect.Sets;
@@ -34,12 +34,12 @@ import java.util.Set;
  */
 public class SGraphBRDecompAutoInstruments {
     
-    private final SGraphBRDecompositionAutomaton auto;
+    private final SGraphBRDecompositionAutomatonBottomUp auto;
     private final MergePartnerFinder mpFinder;
     private Map<String, String> constantAbbreviations;
     private int nrParses;
     
-    public SGraphBRDecompAutoInstruments(SGraphBRDecompositionAutomaton auto, int sourceCount, int nodeCount, boolean doBolinas){
+    public SGraphBRDecompAutoInstruments(SGraphBRDecompositionAutomatonBottomUp auto, int sourceCount, int nodeCount, boolean doBolinas){
         this.auto = auto;
         if (doBolinas){
             mpFinder = new BolinasMPF(0, sourceCount, nodeCount, auto);
@@ -573,7 +573,7 @@ public class SGraphBRDecompAutoInstruments {
         public Set<String> unisymbols = new HashSet<>();
         public Set<String> bisymbols = new HashSet<>();
         public Set<String> doBothWays = new HashSet<>();
-        public InitTuplePriority(SGraphBRDecompositionAutomaton auto){
+        public InitTuplePriority(SGraphBRDecompositionAutomatonBottomUp auto){
             agenda = new IntHeapPriorityQueue(new BRComparator(auto));
         }
     }

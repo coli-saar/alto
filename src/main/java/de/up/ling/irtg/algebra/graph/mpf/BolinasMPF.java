@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph.mpf;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -24,9 +24,9 @@ public class BolinasMPF extends MergePartnerFinder{
     private final int sourcesRemaining;
     private final int ALL;
     private final int BOT;
-    private final SGraphBRDecompositionAutomaton auto;
+    private final SGraphBRDecompositionAutomatonBottomUp auto;
 
-    public BolinasMPF(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto)//maybe give expected size of finalSet as parameter?
+    public BolinasMPF(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto)//maybe give expected size of finalSet as parameter?
     {
         this.auto = auto;
         /*if (nrSources == 0){
@@ -56,7 +56,7 @@ public class BolinasMPF extends MergePartnerFinder{
         //}
     }
 
-    public BolinasMPF(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomaton auto, boolean hasAll, IntSet vertices)//maybe give expected size of finalSet as parameter?
+    public BolinasMPF(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto, boolean hasAll, IntSet vertices)//maybe give expected size of finalSet as parameter?
     {
         this.auto = auto;
         /*if (nrSources == 0){

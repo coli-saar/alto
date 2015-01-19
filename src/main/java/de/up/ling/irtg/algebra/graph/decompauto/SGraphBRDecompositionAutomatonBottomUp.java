@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepresentation> {
+public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<BoundaryRepresentation> {
     
     
     public final GraphInfo completeGraphInfo;
@@ -38,7 +38,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
     //final Map<BitSet, long[]> incidentEdges;
     //Int2ObjectMap<Int2ObjectMap<Set<Rule>>> storedRulesTopDown;
 
-    public SGraphBRDecompositionAutomaton(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
+    public SGraphBRDecompositionAutomatonBottomUp(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(signature);
         
         this.algebra = algebra;
@@ -107,7 +107,7 @@ public class SGraphBRDecompositionAutomaton extends TreeAutomaton<BoundaryRepres
         for (Rule rule : rules) {
             BoundaryRepresentation parent = getStateForId(rule.getParent());
 
-            if (parent.isIdenticalExceptSources(completeGraphInfo.graph, completeGraphInfo.graph, completeGraphInfo)) {
+            if (parent.isCompleteGraph(completeGraphInfo)) {
                 finalStates.add(rule.getParent());
             }
         }
