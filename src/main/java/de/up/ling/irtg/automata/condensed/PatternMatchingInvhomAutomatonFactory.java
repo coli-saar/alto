@@ -6,19 +6,19 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomaton;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
@@ -29,7 +29,6 @@ import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -43,7 +42,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -261,11 +259,11 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         
             }
         } else {
-            for (int iChild : rhsChildIDs[i]) {
+            FastutilUtils.forEach(rhsChildIDs[i], iChild -> {
                 IntList newProcessed = new IntArrayList(rhsProcessedChildIDs);
                 newProcessed.add(iChild);
                 addAllRulesBottomUp(newProcessed, rhsChildIDs, rhsLabelID, matcherRule, rhs, intersectionAutomaton, matcherStateToRhsState, agenda, seen);
-            }
+            });
         }
     }
     
@@ -870,7 +868,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         String ex3 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)";
         String input = ex2;
         
-        TreeAutomaton rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomaton.class);
+        TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomaton.class);
         /*System.err.println(rhs);
         int ruleCount = 0;
         Iterator it = rhs.getRuleSet().iterator();
@@ -879,8 +877,10 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             ruleCount++;
         }
         System.err.println("rule count: " + ruleCount);*/
-        TreeAutomaton invhom = f.invhomRestrictive(rhs);
-        IntersectionAutomaton finalIntAut = new IntersectionAutomaton(irtg.getAutomaton(), invhom); 
+        CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhomRestrictive(rhs);
+        TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature())); 
+            //new IntersectionAutomaton(irtg.getAutomaton(), invhom); 
+        
         System.err.println("Number Bottom up queries: " + f.debugCounter);
         System.err.println("INVHOM:\n"+invhom);
         System.err.println("FINALINTERSECTION:\n"+finalIntAut);
@@ -891,17 +891,25 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         System.out.println("IRTG parse:\n" + chart);
         
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
-        sw.record(0);
         
-        int iterations = 1000;
-        int standardIterations = 10;
-        
-        for (int i = 0; i < iterations; i++) {
+        for (int i = 0; i < 100; i++) {
             rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomaton.class);
             invhom = f.invhomRestrictive(rhs);
-            finalIntAut = new IntersectionAutomaton(irtg.getAutomaton(), invhom); 
-            //System.err.println(finalIntAut);
+            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
         }
+        
+        int iterations = 100000;
+        int standardIterations = 10;
+        
+        
+        sw.record(0);
+        SGraph sgraph = alg.parseString(input);
+        for (int i = 0; i < iterations; i++) {
+            rhs = alg.decompose(sgraph, SGraphBRDecompositionAutomaton.class);
+            invhom = f.invhomRestrictive(rhs);
+            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
+        }
+
         sw.record(1);
         for (int i = 0; i < standardIterations; i++) {
             irtg.parse(map);
