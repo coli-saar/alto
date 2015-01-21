@@ -59,34 +59,8 @@ public class GraphInfo {
         sourcenameToInt = new HashMap<>();
         nodenameToInt = new HashMap<>();
         
-        //find all sources used in algebra:
-        Set<String> sources = new HashSet<>();
-        for (String symbol : signature.getSymbols())//this adds all sources from the signature, (but be careful, this is kind of a hack) should work now. Maybe better just give this a list of sources directly?
-        {
-            if (symbol.startsWith(GraphAlgebra.OP_FORGET) || symbol.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
-                String[] parts = symbol.split("_");
-                sources.add(parts[1]);
-            } else if (symbol.startsWith(GraphAlgebra.OP_RENAME) || symbol.startsWith(GraphAlgebra.OP_SWAP)) {
-                String[] parts = symbol.split("_");
-                if (parts.length == 2) {
-                    sources.add("root");
-                }
-                for (int i = 1; i < parts.length; i++) {
-                    sources.add(parts[i]);
-                }
-            } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
-                sources.add(BOLINASROOTSTRING);
-                sources.add(BOLINASSUBROOTSTRING);
-            } else if (signature.getArityForLabel(symbol) == 0) {
-                String[] parts = symbol.split("<");
-                for (int i = 1; i<parts.length; i++) {
-                    sources.add(parts[i].split(">")[0]);//do not want the first element in parts!
-                }
-            } else if (symbol.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)) {
-                sources.add("root");
-            }
-        }
-
+        Set<String> sources = getAllSourcesFromSignature(signature);
+        
         intToSourcename = new String[sources.size()];
         int i = 0;
         for (String source : sources) {
@@ -97,8 +71,9 @@ public class GraphInfo {
         BOLINASROOTSOURCENR = Arrays.asList(intToSourcename).indexOf(BOLINASROOTSTRING);
         BOLINASSUBROOTSOURCENR = Arrays.asList(intToSourcename).indexOf(BOLINASSUBROOTSTRING);
         
-        
         intToNodename = new String[completeGraph.getAllNodeNames().size()];
+        
+        
         i = 0;
         for (String nodename : completeGraph.getAllNodeNames()) {
             nodenameToInt.put(nodename, i);
@@ -178,6 +153,40 @@ public class GraphInfo {
                 labelSources.put(labelId, sourcesHere);
             }
         }
+    }
+    
+    private Set<String> getAllSourcesFromSignature(Signature signature) {
+        //find all sources used in algebra:
+        Set<String> ret = new HashSet<>();
+        for (String symbol : signature.getSymbols())//this adds all sources from the signature, (but be careful, this is kind of a hack) should work now. Maybe better just give this a list of sources directly?
+        {
+            if (symbol.startsWith(GraphAlgebra.OP_FORGET) || symbol.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
+                String[] parts = symbol.split("_");
+                for (int i = 1; i<parts.length; i++) {
+                    ret.add(parts[i]);
+                }
+            } else if (symbol.startsWith(GraphAlgebra.OP_RENAME) || symbol.startsWith(GraphAlgebra.OP_SWAP)) {
+                String[] parts = symbol.split("_");
+                if (parts.length == 2) {
+                    ret.add("root");
+                }
+                for (int i = 1; i < parts.length; i++) {
+                    ret.add(parts[i]);
+                }
+            } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
+                ret.add(BOLINASROOTSTRING);
+                ret.add(BOLINASSUBROOTSTRING);
+            } else if (signature.getArityForLabel(symbol) == 0) {
+                String[] parts = symbol.split("<");
+                for (int i = 1; i<parts.length; i++) {//do not want the first element in parts!
+                    ret.addAll(Arrays.asList(parts[i].split(">")[0].split(",")));
+                }
+            } else if (symbol.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)) {
+                ret.add("root");
+            }
+        }
+        return ret;
+
     }
     
     private int[][] computeIncidentEdges() {

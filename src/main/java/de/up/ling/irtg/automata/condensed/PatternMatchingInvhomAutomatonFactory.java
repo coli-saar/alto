@@ -6,6 +6,7 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
@@ -25,6 +26,7 @@ import de.up.ling.irtg.util.ArrayInt2IntMap;
 import de.up.ling.irtg.util.ArrayInt2ObjectMap;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.FastutilUtils;
+import de.up.ling.irtg.util.IntArrayTupleIterator;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
@@ -47,6 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -69,7 +72,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     private Set<Rule> matcherConstantRules = new HashSet<>();
     private Int2ObjectMap<Set<Pair<Rule, Integer>>> matcherChild2Rule = new Int2ObjectArrayMap<>();//use arraymap because we only add to this, and it is dense. The Integer stores the position of the child in the rule
     
-    private int debugCounter = 0;
+    private int debugCounterConst = 0;
+    private int debugCounterUnary = 0;
+    private int debugCounterBinary = 0;
     
 
     public PatternMatchingInvhomAutomatonFactory(Homomorphism hom) {
@@ -163,9 +168,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
         sw.record(1);
 
-        System.err.println(Iterables.size(restrictiveMatcher.getRuleSet()) + " rules");
+        //System.err.println(Iterables.size(restrictiveMatcher.getRuleSet()) + " rules");
 
-        sw.printMilliseconds("add rules");
+        //sw.printMilliseconds("add rules");
 
 //        for (int parent : matcherParentToChildren.keySet()) {
 //            System.err.println(nondetMatcher.getStateForId(parent) + " -> " + Arrays.stream(matcherParentToChildren.get(parent)).mapToObj(nondetMatcher::getStateForId).collect(Collectors.toList()));
@@ -243,96 +248,116 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     }
     
     
-    //TODO: implement this without recursion
-    private void addAllRulesBottomUp(IntList rhsProcessedChildIDs, IntSet[] rhsChildIDs, int rhsLabelID, Rule matcherRule, TreeAutomaton<State> rhs, ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton, Int2ObjectMap<IntSet> matcherStateToRhsState, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen) {
-        int i = rhsProcessedChildIDs.size();
-        if (i == rhsChildIDs.length) {
-            debugCounter++;
-            for (Rule rhsRule : rhs.getRulesBottomUp(rhsLabelID, rhsProcessedChildIDs)) {
-                Pair<String, State> intersParent = makeDuoState(matcherRule.getParent(), rhsRule.getParent(), rhs, matcherStateToRhsState, agenda, seen);
-                int arity = matcherRule.getArity();
-                Pair<String, State>[] intersChildren = new Pair[arity];
-                for (int j = 0; j<arity; j++) {
-                    intersChildren[j] = new ImmutablePair(restrictiveMatcher.getStateForId(matcherRule.getChildren()[j]), rhs.getStateForId(rhsProcessedChildIDs.get(j)));
-                }
-                intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, matcherRule.getLabel(restrictiveMatcher), intersChildren));
-        
-            }
-        } else {
-            FastutilUtils.forEach(rhsChildIDs[i], iChild -> {
-                IntList newProcessed = new IntArrayList(rhsProcessedChildIDs);
-                newProcessed.add(iChild);
-                addAllRulesBottomUp(newProcessed, rhsChildIDs, rhsLabelID, matcherRule, rhs, intersectionAutomaton, matcherStateToRhsState, agenda, seen);
-            });
-        }
-    }
+    
     
     public CondensedTreeAutomaton<State> invhomRestrictive(TreeAutomaton<State> rhs) {
-        ConcreteCondensedTreeAutomaton<State> ret = new CondensedInvhomAutomaton(rhs);
-        
-        IntInt2IntMap rToLToIntersectID = new IntInt2IntMap();//we expect rhs states to be relatively dense here.
-        rToLToIntersectID.setDefaultReturnValue(-1);
-        SignatureMapper mapper = rhs.getSignature().getMapperTo(restrictiveMatcher.getSignature());
-        ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton = new ConcreteTreeAutomaton<>(rhs.getSignature());
+        ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton;
         
         if (rhs.supportsBottomUpQueries()) {
-            Int2ObjectMap<IntSet> matcherStateToRhsState = new Int2ObjectOpenHashMap<>();
-            // set up agenda with constant pairs, and add correspinding rules to intersection automaton.
-            List<Pair<Integer, Integer>> agenda = new ArrayList<>();
-            Set<Pair<Integer, Integer>> seen = new HashSet<>();
-            for (Rule constRuleMatcher : matcherConstantRules) {
-                debugCounter++;
-                for (Rule constRuleRhs : rhs.getRulesBottomUp(mapper.remapBackward(constRuleMatcher.getLabel()), new int[0])) {
-                    int matcherParent = constRuleMatcher.getParent();
-                    int rhsParent = constRuleRhs.getParent();
-                    Pair<String, State> parent = makeDuoState(matcherParent, rhsParent, rhs, matcherStateToRhsState, agenda, seen);
-                    Rule intersRule = intersectionAutomaton.createRule(parent, constRuleMatcher.getLabel(restrictiveMatcher), new Pair[0]);
-                    intersectionAutomaton.addRule(intersRule);
-                }
-            }
-            for (int i = 0; i<agenda.size(); i++) {
-                Pair<Integer, Integer> pq = agenda.get(i);
-                int matcherChildID = pq.getLeft();
-                int rhsChildID = pq.getRight();
-                
-                for (Pair<Rule, Integer> ruleAndPos : matcherChild2Rule.get(matcherChildID)) {
-                    Rule matcherRule = ruleAndPos.getLeft();
-                    int pos = ruleAndPos.getRight();
-                    int rhsLabelID = mapper.remapBackward(matcherRule.getLabel());
-                    int arity = matcherRule.getArity();
-                    IntSet[] rhsChildIDs = new IntSet[arity];
-                    for (int j = 0; j<arity; j++) {
-                        rhsChildIDs[j] = new IntOpenHashSet();
-                        if (j == pos) {
-                            rhsChildIDs[j].add(rhsChildID);
-                        } else {
-                            IntSet knownRhsChildIDs = matcherStateToRhsState.get(matcherRule.getChildren()[j]);
-                            if (knownRhsChildIDs != null) {
-                                rhsChildIDs[j].addAll(knownRhsChildIDs);
-                            }
-                        }
-                    }
-                    addAllRulesBottomUp(new IntArrayList(), rhsChildIDs, rhsLabelID, matcherRule, rhs, intersectionAutomaton, matcherStateToRhsState, agenda, seen);
-                }
-            }
-            
-            
-            
+            intersectionAutomaton = intersectWithRestrictiveMatcherBottomUp(rhs);
         } else {
-            IntList results = new IntArrayList();
+            intersectionAutomaton = intersectWithRestrictiveMatcherTopDown(rhs);
+        }
+        
+        //System.err.println(intersectionAutomaton);
+        
+        return getInvhomFromMatchingIntersection(intersectionAutomaton, rhs);
+    }
+    
+    
+    private ConcreteTreeAutomaton<Pair<String, State>> intersectWithRestrictiveMatcherTopDown(TreeAutomaton<State> rhs) {
+        ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton = new ConcreteTreeAutomaton<>(rhs.getSignature());
+        SignatureMapper mapper = rhs.getSignature().getMapperTo(restrictiveMatcher.getSignature());
+        IntInt2IntMap rToLToIntersectID = new IntInt2IntMap();//we expect rhs states to be relatively dense here.
+        rToLToIntersectID.setDefaultReturnValue(-1);
+        IntList results = new IntArrayList();
             for (int f1 : restrictiveMatcher.getFinalStates()) {
                 for (int f2 : rhs.getFinalStates()) {
                     results.add(intersect(f1, f2, rhs, intersectionAutomaton, rToLToIntersectID, mapper));//give correct automaton here
                 }
             }
             //System.err.println(results);
+            return intersectionAutomaton;
+    }
+    
+    
+    
+    
+    private ConcreteTreeAutomaton<Pair<String, State>> intersectWithRestrictiveMatcherBottomUp(TreeAutomaton<State> rhs) {
+        ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton = new ConcreteTreeAutomaton<>(rhs.getSignature());
+        SignatureMapper mapper = rhs.getSignature().getMapperTo(restrictiveMatcher.getSignature());
+        Int2ObjectMap<IntSet> matcherStateToRhsState = new Int2ObjectOpenHashMap<>();
+        // set up agenda with constant pairs, and add correspinding rules to intersection automaton.
+        List<Pair<Integer, Integer>> agenda = new ArrayList<>();
+        Set<Pair<Integer, Integer>> seen = new HashSet<>();
+        for (Rule constRuleMatcher : matcherConstantRules) {
+            debugCounterConst++;
+            for (Rule constRuleRhs : rhs.getRulesBottomUp(mapper.remapBackward(constRuleMatcher.getLabel()), new int[0])) {
+                int matcherParent = constRuleMatcher.getParent();
+                int rhsParent = constRuleRhs.getParent();
+                Pair<String, State> parent = makeDuoState(matcherParent, rhsParent, rhs, matcherStateToRhsState, agenda, seen);
+                Rule intersRule = intersectionAutomaton.createRule(parent, constRuleMatcher.getLabel(restrictiveMatcher), new Pair[0]);
+                intersectionAutomaton.addRule(intersRule);
+            }
         }
-        
-        
-        
-        
-        //System.err.println(intersectionAutomaton);
-        
+        for (int i = 0; i<agenda.size(); i++) {
+            Pair<Integer, Integer> pq = agenda.get(i);
+            int matcherChildID = pq.getLeft();
+            int rhsChildID = pq.getRight();
+
+            for (Pair<Rule, Integer> ruleAndPos : matcherChild2Rule.get(matcherChildID)) {
+                Rule matcherRule = ruleAndPos.getLeft();
+                int pos = ruleAndPos.getRight();
+                int rhsLabelID = mapper.remapBackward(matcherRule.getLabel());
+                int arity = matcherRule.getArity();
+                IntSet[] rhsChildIDs = new IntSet[arity];
+                for (int j = 0; j<arity; j++) {
+                    rhsChildIDs[j] = new IntOpenHashSet();
+                    if (j == pos) {
+                        rhsChildIDs[j].add(rhsChildID);
+                    } else {
+                        IntSet knownRhsChildIDs = matcherStateToRhsState.get(matcherRule.getChildren()[j]);
+                        if (knownRhsChildIDs != null) {
+                            rhsChildIDs[j].addAll(knownRhsChildIDs);
+                        }
+                    }
+                }
+                Stream<int[]> inputTupleSets = Arrays.stream(rhsChildIDs).map(set -> set.toIntArray());
+                int[][] inputTuple = inputTupleSets.toArray(size -> new int[size][]);
+                IntArrayTupleIterator tupleIt = new IntArrayTupleIterator(inputTuple);
+                try {
+                while (tupleIt.hasNext()) {
+                    int[] rhsProcessedChildIDs = tupleIt.next();
+                    if (arity == 1) {
+                        debugCounterUnary++;
+                    } else if (arity == 2) {
+                        debugCounterBinary++;
+                    }
+                    for (Rule rhsRule : rhs.getRulesBottomUp(rhsLabelID, rhsProcessedChildIDs)) {
+
+                        Pair<String, State> intersParent = makeDuoState(matcherRule.getParent(), rhsRule.getParent(), rhs, matcherStateToRhsState, agenda, seen);
+                        Pair<String, State>[] intersChildren = new Pair[arity];
+                        for (int j = 0; j<arity; j++) {
+                            intersChildren[j] = new ImmutablePair(restrictiveMatcher.getStateForId(matcherRule.getChildren()[j]), rhs.getStateForId(rhsProcessedChildIDs[j]));
+                        }
+                        intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, matcherRule.getLabel(restrictiveMatcher), intersChildren));
+
+                    }
+                }
+                } catch (java.lang.Exception e) {
+                    System.err.println(e.toString());
+                }
+
+            }
+        }
+        return intersectionAutomaton;
+    }
+    
+    
+    
+    
+    private ConcreteCondensedTreeAutomaton<State> getInvhomFromMatchingIntersection(ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton, TreeAutomaton<State> rhs) {
+        ConcreteCondensedTreeAutomaton<State> ret = new CondensedInvhomAutomaton(rhs);
         for (int intersStateID : intersectionAutomaton.getAllStates()) {
             if (intersectionAutomaton.getRulesTopDown(intersStateID).iterator().hasNext()) {//this seems inefficient. But maybe not so bad since intersectionAutomaton is explicit?
                 Pair<String, State> intersState = intersectionAutomaton.getStateForId(intersStateID);
@@ -353,7 +378,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                         ret.addRule(new CondensedRule(rhsStateID, labelSetID, new int[0], 1));
                     } else {
                         int[] childStates = new int[numVariables];
-                        forAllMatchesRestrictive(intersStateID, term, rightmostVariableForLabelSetID[labelSetID], childStates, rhs, intersectionAutomaton, rToLToIntersectID, cs -> {
+                        forAllMatchesRestrictive(intersStateID, term, rightmostVariableForLabelSetID[labelSetID], childStates, rhs, intersectionAutomaton, cs -> {
     //                        System.err.println("match! " + Arrays.stream(cs).mapToObj(rhs::getStateForId).collect(Collectors.toList()));
                                 ret.addRule(new CondensedRule(rhsStateID, labelSetID, cs.clone(), 1));
                             });
@@ -361,11 +386,11 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 }
             }
         }
-        
         return ret;
     }
     
     //returns 0 if the input state is definitely inaccessible, 1 if pending (i.e. still depending on other states) and 2 if accessible.
+    //could turn "seen" into a IntInt2BooleanMap or sth like that.
     private int intersect(int matcherParentID, int rhsParentID, TreeAutomaton<State> rhs, ConcreteTreeAutomaton<Pair<String, State>> auto, IntInt2IntMap seen, SignatureMapper mapper) {
         int prevState = seen.get(rhsParentID, matcherParentID);
         if (prevState != -1) {
@@ -643,7 +668,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         }
     }
 
-    private void forAllMatchesRestrictive(int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, int[] childStates, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, IntInt2IntMap rToLToIntersState, Consumer<int[]> fn) {
+    private void forAllMatchesRestrictive(int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, int[] childStates, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, Consumer<int[]> fn) {
 //      System.err.println("dfs for " + rhsAuto.getStateForId(rhsState) + "@" + nondetMatcher.getStateForId(matcherState) + " at " + HomomorphismSymbol.toStringTree(term, hom.getTargetSignature()));
 
         if (intersState < 1) {
@@ -668,7 +693,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 //            System.err.println("  in rhsauto sig: " + rhsAuto.getSignature().resolveSymbolId(term.getLabel().getValue()));
             for (Rule rule : intersectionAuto.getRulesTopDown(term.getLabel().getValue(), intersState)) {
                 for (int i = 0; i < rule.getChildren().length; i++) {
-                    forAllMatchesRestrictive(rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, childStates, rhsAuto, intersectionAuto, rToLToIntersState, fn);
+                    forAllMatchesRestrictive(rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, childStates, rhsAuto, intersectionAuto, fn);
                 }
             }
         }
@@ -854,6 +879,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream( SGraphBRDecompositionAutomatonTopDown.HRGCleanS.getBytes( Charset.defaultCharset() ) ));
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism();
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra();
+        
         PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom);
         f.computeRestrictiveMatcherFromHomomorphism();
         System.err.println(alg.getSignature());
@@ -866,7 +892,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         String ex1 = "(w<root> / want-01  :ARG0 (b / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))";
         String ex2 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (bel / believe-01 :ARG0 (g / girl) :ARG1 (l / like-01 :ARG0 (b2 / boy) :ARG1 (g2 / girl))) :dummy g)";
         String ex3 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)";
-        String input = ex2;
+        String input = ex3;
         SGraph sgraph = alg.parseString(input);
         
         TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
@@ -883,7 +909,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature())); 
             //new IntersectionAutomaton(irtg.getAutomaton(), invhom); 
         
-        System.err.println("Number Bottom up queries: " + f.debugCounter);
+        System.err.println("Number Bottom up constant queries: " + f.debugCounterConst);
+        System.err.println("Number Bottom up unary queries: " + f.debugCounterUnary);
+        System.err.println("Number Bottom up binary queries: " + f.debugCounterBinary);
         System.err.println("INVHOM:\n"+invhom);
         System.err.println("FINALINTERSECTION:\n"+finalIntAut);
         
@@ -892,7 +920,10 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         TreeAutomaton chart = irtg.parse(map);
         System.out.println("IRTG parse:\n" + chart);
         
-        
+        for (int i = 0; i<10000; i++) {
+            f = new PatternMatchingInvhomAutomatonFactory(hom);
+            f.computeRestrictiveMatcherFromHomomorphism();
+        }
 
         for (int i = 0; i < 10000; i++) {
             rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
@@ -900,23 +931,30 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
         }
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
+        int setupIterations = 100000;
         int iterations = 100000;
         int standardIterations = 0;
         
         sw.record(0);
+        for (int i = 0; i<setupIterations; i++) {
+            f = new PatternMatchingInvhomAutomatonFactory(hom);
+            f.computeRestrictiveMatcherFromHomomorphism();
+        }
+        
+        sw.record(1);
         for (int i = 0; i < iterations; i++) {
             rhs = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class);
             invhom = f.invhomRestrictive(rhs);
             finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
         }
 
-        sw.record(1);
+        sw.record(2);
         for (int i = 0; i < standardIterations; i++) {
             irtg.parse(map);
         }
-        sw.record(2);
+        sw.record(3);
         System.err.println(iterations+"/"+standardIterations + " iterations:");
-        sw.printMilliseconds("pattern matching", "standard");
+        sw.printMilliseconds("create pattern matching automaton ("+setupIterations+" iterations)", "invhom via pattern matching ("+iterations+" iterations)", "invhom via irtg.parse ("+standardIterations+" iterations)");
         
         /*CpuTimeStopwatch sw = new CpuTimeStopwatch();
         sw.record(0);

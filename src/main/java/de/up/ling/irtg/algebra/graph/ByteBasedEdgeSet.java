@@ -135,15 +135,15 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
             long res = 0;
         //System.err.println("Next test: "+reference.ID);
             //System.err.println(reference.edges.size());
-            int i = 0;
+            //int i = 0;
             while (li.hasNext()) {
                 //System.err.println(String.valueOf(i));
-                i++;
+                //i++;
                 byte e = li.nextByte();
 
                 byte otherNr = ((ByteBasedEdgeSet) reference).getOtherNode(e, (byte) vNr, graphInfo);
                 if (otherNr != -1) {
-                    res += br.getEdgeIDSummand(e, vNr, source, graphInfo);
+                    res += BoundaryRepresentation.getEdgeIDSummand(e, vNr, source, graphInfo);
                     if (!br.isSource(otherNr) || otherNr == vNr) {
                         edges.remove(e);
                     }
