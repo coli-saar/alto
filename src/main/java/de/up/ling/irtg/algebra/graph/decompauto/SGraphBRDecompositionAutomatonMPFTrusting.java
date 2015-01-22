@@ -26,24 +26,13 @@ import java.util.List;
  */
 public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompositionAutomatonBottomUp{
 
-    Long2ObjectMap<Long2IntMap> storedStates;
-    boolean initialized = false;
         
         
     public SGraphBRDecompositionAutomatonMPFTrusting(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(completeGraph, algebra, signature);
-        
     }
     
-    @Override
-    void preinitialize() {
-        stateInterner.setTrustingMode(true);
-        storedStates = new Long2ObjectOpenHashMap<>();
-        Long2IntMap edgeIDMap = new Long2IntOpenHashMap();
-        edgeIDMap.defaultReturnValue(-1);
-        //edgeIDMap.put(completeRep.edgeID, x);
-        //storedStates.put(completeRep.vertexID, edgeIDMap);
-    }
+    
     
     public Iterable<Rule> calculateRulesBottomUpMPF(int labelId, int[] childStates) {
         String label = signature.resolveSymbolId(labelId);
@@ -98,14 +87,14 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                     return Collections.EMPTY_LIST;
                 } else {
                     //result.setEqualsMeansIsomorphy(false);//is this a problem??
-                    return singTrusting(result, labelId, childStates);
+                    return sing(result, labelId, childStates);
                 }
             } else if (label.startsWith(GraphAlgebra.OP_BOLINASMERGE)) {
                 BoundaryRepresentation ret = children.get(0).applyBolinasMerge(children.get(1), labelId);
                 if (ret == null) { // ensure result is connected
                     return Collections.EMPTY_LIST;//Collections.EMPTY_LIST;
                 } else {
-                    return singTrusting(ret, labelId, childStates);//sing(result, labelId, childStates);
+                    return sing(ret, labelId, childStates);//sing(result, labelId, childStates);
                 }
             } else {
                 List<Rule> rules = new ArrayList<>();
@@ -121,7 +110,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                     if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                         matchedSubgraph.setEqualsMeansIsomorphy(false);
-                        rules.add(makeRuleTrusting(new BoundaryRepresentation(matchedSubgraph, completeGraphInfo), labelId, childStates));
+                        rules.add(makeRule(new BoundaryRepresentation(matchedSubgraph, completeGraphInfo), labelId, childStates));
                     } else {
 //                        System.err.println("match " + matchedSubgraph + " has crossing edges from nodes");
                     }
@@ -134,25 +123,8 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
         }
     }
     
-    @Override
-    protected int addState(BoundaryRepresentation stateBR) {
-        int stateID = -1;
-        Long2IntMap edgeIDMap = storedStates.get(stateBR.vertexID);
-        if (edgeIDMap != null){
-            stateID = edgeIDMap.get(stateBR.edgeID);
-        }
-        
-        if (stateID == -1){
-            stateID = super.addState(stateBR);//this is kind of ugly
-            if (edgeIDMap == null){
-                edgeIDMap = new Long2IntOpenHashMap();
-                edgeIDMap.defaultReturnValue(-1);
-                storedStates.put(stateBR.vertexID, edgeIDMap);
-            }
-            edgeIDMap.put(stateBR.edgeID, stateID);
-        }
-        return stateID;
-    }
+
+    
     
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
@@ -162,28 +134,25 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
         while (it.hasNext()) {
             storeRule(it.next());
         }*/
+        
+        // add final state if needed
+        for (Rule rule : res) {
+            BoundaryRepresentation parent = getStateForId(rule.getParent());
+
+            if (parent.isCompleteGraph(completeGraphInfo)) {
+                finalStates.add(rule.getParent());
+            }
+        }
 
         return res;
     }
     
-    Rule makeRuleTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
-        int parentState = addState(parent);
-        //if (getStateForId(parentState) == null){
-        //    System.out.println("error 5");
-        //}
-        return createRule(parentState, labelId, childStates, 1);
-    }
-
-    private Iterable<Rule> singTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
-        //        System.err.println("-> make rule, parent= " + parent);
-        return sing(makeRuleTrusting(parent, labelId, childStates));
-    }
     
     private Iterable<Rule> duoMergeSetTrusting(BoundaryRepresentation parent, int labelId, int[] childStates){
-        Rule r1 = makeRuleTrusting(parent, labelId, childStates);
+        Rule r1 = makeRule(parent, labelId, childStates);
         int[] childStatesSwapped = new int[]{childStates[1], childStates[0]};
-        Rule r2 = makeRuleTrusting(parent, labelId, childStatesSwapped);
+        Rule r2 = makeRule(parent, labelId, childStatesSwapped);
         List<Rule> ret = new ArrayList<>();
         ret.add(r1);
         ret.add(r2);

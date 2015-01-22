@@ -18,6 +18,10 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,6 +39,8 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     public Map<BoundaryRepresentation, Set<Rule>> rulesTopDown;
     public Map<String, Integer> decompLengths;
     
+    Long2ObjectMap<Long2IntMap> storedStates;
+    
     //final Map<BitSet, long[]> incidentEdges;
     //Int2ObjectMap<Int2ObjectMap<Set<Rule>>> storedRulesTopDown;
 
@@ -51,11 +57,16 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
         //storedRulesTopDown = new Int2ObjectOpenHashMap<>();
         
-        preinitialize();
         
-        BoundaryRepresentation completeRep = new BoundaryRepresentation(completeGraph, completeGraphInfo);
-        int x = addState(completeRep);
-        finalStates.add(x);
+        stateInterner.setTrustingMode(true);
+        storedStates = new Long2ObjectOpenHashMap<>();
+        Long2IntMap edgeIDMap = new Long2IntOpenHashMap();
+        edgeIDMap.defaultReturnValue(-1);
+        
+        
+        //BoundaryRepresentation completeRep = new BoundaryRepresentation(completeGraph, completeGraphInfo);
+        //int x = addState(completeRep);
+        //finalStates.add(x);
         
     }
     
@@ -73,17 +84,45 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
          System.out.println(message);
          SGraph graph = parent.getGraph(completeGraph, this);
          System.out.println("sgraph: " + graph.toIsiAmrString());*/
+        
+        
         int parentState = addState(parent);
+        
+        // add final state if needed
+        if (parent.isCompleteGraph(completeGraphInfo)) {
+                finalStates.add(parentState);
+        }
+        
         return createRule(parentState, labelId, childStates, 1);
     }
 
+    
+        @Override
+    protected int addState(BoundaryRepresentation stateBR) {
+        int stateID = -1;
+        Long2IntMap edgeIDMap = storedStates.get(stateBR.vertexID);
+        if (edgeIDMap != null){
+            stateID = edgeIDMap.get(stateBR.edgeID);
+        }
+        
+        if (stateID == -1){
+            stateID = super.addState(stateBR);//this is kind of ugly?
+            if (edgeIDMap == null){
+                edgeIDMap = new Long2IntOpenHashMap();
+                edgeIDMap.defaultReturnValue(-1);
+                storedStates.put(stateBR.vertexID, edgeIDMap);
+            }
+            edgeIDMap.put(stateBR.edgeID, stateID);
+        }
+        return stateID;
+    }
     
 
     static <E> Iterable<E> sing(E object) {
         return Collections.singletonList(object);
     }
 
-    private Iterable<Rule> sing(BoundaryRepresentation parent, int labelId, int[] childStates) {
+    Iterable<Rule> sing(BoundaryRepresentation parent, int labelId, int[] childStates) {
 //        System.err.println("-> make rule, parent= " + parent);
         return sing(makeRule(parent, labelId, childStates));
     }
@@ -103,14 +142,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
         rulesHere.put(labelId, rules);
 
-        // add final state if needed
-        for (Rule rule : rules) {
-            BoundaryRepresentation parent = getStateForId(rule.getParent());
-
-            if (parent.isCompleteGraph(completeGraphInfo)) {
-                finalStates.add(rule.getParent());
-            }
-        }
+        
         return rules;
     }
 

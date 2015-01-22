@@ -71,30 +71,7 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
         return String.valueOf(stateId)+"_"+getStateForId(stateId).allSourcesToString();
     }
 
-    @Override
-    Rule makeRuleTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
 
-        
-        int parentState = -1;
-        Long2IntMap edgeIDMap = storedStates.get(parent.vertexID);
-        if (edgeIDMap != null) {
-            parentState = edgeIDMap.get(parent.edgeID);
-        }
-
-        if (parentState == -1) {
-            parentState = addState(parent);
-            if (edgeIDMap == null) {
-                edgeIDMap = new Long2IntOpenHashMap();
-                edgeIDMap.defaultReturnValue(-1);
-                storedStates.put(parent.vertexID, edgeIDMap);
-            }
-            edgeIDMap.put(parent.edgeID, parentState);
-        }
-        if (parent.isCompleteGraph(completeGraphInfo)) {
-            finalStates.add(parentState);
-        }
-        return createRule(parentState, labelId, childStates, 1);
-    }
 
     @Override
     public boolean supportsTopDownQueries() {

@@ -4,11 +4,12 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownBolinas;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
 import com.google.common.collect.Sets;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
@@ -16,9 +17,13 @@ import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTo
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
+import static de.up.ling.irtg.util.TestingTools.pt;
+import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -84,7 +89,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         //return new SGraphDecompositionAutomaton(value, this, getSignature());
         //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
         //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());
-        return decompose(value, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
+        return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
     }
     
     public TreeAutomaton decompose(SGraph value, Class c){
@@ -101,8 +106,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             } else if (c == SGraphBRDecompositionAutomatonStoreTopDownExplicit.class) {
                 return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());
                 
-            } else if (c == SGraphBRDecompositionAutomatonTopDownBolinas.class) {
-                return new SGraphBRDecompositionAutomatonTopDownBolinas(value, this, getSignature());
+            } else if (c == SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas.class) {
+                return new SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas(value, this, getSignature());
             } else if (c == SGraphBRDecompositionAutomatonTopDown.class) {
                 return new SGraphBRDecompositionAutomatonTopDown(value, this, getSignature());
             }
@@ -229,7 +234,14 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 
         return ret;
     }
+
     
-    
+    public static void main(String[] args) throws Exception {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream( SGraphBRDecompositionAutomatonTopDown.HRG.getBytes( Charset.defaultCharset() ) ));
+        Map<String, String> map = new HashMap<>();
+        map.put("graph","(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");
+        TreeAutomaton chart = irtg.parse(map);
+        System.err.println(chart);
+    }
 
 }

@@ -68,7 +68,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     private Int2IntMap startStateIdToLabelSetID = new ArrayInt2IntMap();
     private Int2ObjectMap<int[]> matcherParentToChildren;
     private Tree<HomomorphismSymbol>[] rightmostVariableForLabelSetID;
-    private Int2IntMap arityForLabelSetID = new ArrayInt2IntMap();
+    private Int2IntMap arityForLabelSetID;
     private Set<Rule> matcherConstantRules = new HashSet<>();
     private Int2ObjectMap<Set<Pair<Rule, Integer>>> matcherChild2Rule = new Int2ObjectArrayMap<>();//use arraymap because we only add to this, and it is dense. The Integer stores the position of the child in the rule
     
@@ -79,12 +79,18 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
     public PatternMatchingInvhomAutomatonFactory(Homomorphism hom) {
         this.hom = hom;
-
+        initialize(false);
+        
+    }
+    
+    private void initialize(boolean computeMatcher) {
         rightmostVariableForLabelSetID = new Tree[hom.getMaxLabelSetID() + 1];
+        arityForLabelSetID = new ArrayInt2IntMap();
 
         for (int labelSetID = 1; labelSetID <= hom.getMaxLabelSetID(); labelSetID++) {
             Tree<HomomorphismSymbol> term = hom.getByLabelSetID(labelSetID);
 
+            
             int numVariables = (int) term.getLeafLabels().stream().filter(sym -> sym.isVariable()).count();
             arityForLabelSetID.put(labelSetID, numVariables);
 
@@ -95,12 +101,17 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                     return node;
                 } else {
                     for (Tree<HomomorphismSymbol> child : children) {
-                        ret = child;
+                        if (child != null) {
+                            ret = child;
+                        }
                     }
 
                     return ret;
                 }
             });
+        }
+        if (computeMatcher) {
+            computeRestrictiveMatcherFromHomomorphism();
         }
     }
 
@@ -251,6 +262,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     
     
     public CondensedTreeAutomaton<State> invhomRestrictive(TreeAutomaton<State> rhs) {
+        if (restrictiveMatcher == null) {
+            initialize(true);//do this here since when constructed, hom may not have its rules yet.
+        }
         ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton;
         
         if (rhs.supportsBottomUpQueries()) {
@@ -358,6 +372,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     
     private ConcreteCondensedTreeAutomaton<State> getInvhomFromMatchingIntersection(ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton, TreeAutomaton<State> rhs) {
         ConcreteCondensedTreeAutomaton<State> ret = new CondensedInvhomAutomaton(rhs);
+        SignatureMapper mapperIntersToHom = intersectionAutomaton.getSignature().getMapperTo(hom.getTargetSignature());
         for (int intersStateID : intersectionAutomaton.getAllStates()) {
             if (intersectionAutomaton.getRulesTopDown(intersStateID).iterator().hasNext()) {//this seems inefficient. But maybe not so bad since intersectionAutomaton is explicit?
                 Pair<String, State> intersState = intersectionAutomaton.getStateForId(intersStateID);
@@ -378,7 +393,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                         ret.addRule(new CondensedRule(rhsStateID, labelSetID, new int[0], 1));
                     } else {
                         int[] childStates = new int[numVariables];
-                        forAllMatchesRestrictive(intersStateID, term, rightmostVariableForLabelSetID[labelSetID], childStates, rhs, intersectionAutomaton, cs -> {
+                        forAllMatchesRestrictive(intersStateID, term, rightmostVariableForLabelSetID[labelSetID], childStates, rhs, intersectionAutomaton,mapperIntersToHom,  cs -> {
     //                        System.err.println("match! " + Arrays.stream(cs).mapToObj(rhs::getStateForId).collect(Collectors.toList()));
                                 ret.addRule(new CondensedRule(rhsStateID, labelSetID, cs.clone(), 1));
                             });
@@ -668,7 +683,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         }
     }
 
-    private void forAllMatchesRestrictive(int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, int[] childStates, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, Consumer<int[]> fn) {
+    private void forAllMatchesRestrictive(int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, int[] childStates, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom, Consumer<int[]> fn) {
 //      System.err.println("dfs for " + rhsAuto.getStateForId(rhsState) + "@" + nondetMatcher.getStateForId(matcherState) + " at " + HomomorphismSymbol.toStringTree(term, hom.getTargetSignature()));
 
         if (intersState < 1) {
@@ -691,9 +706,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
 //            System.err.println("term label is " + term.getLabel() + ", value = " + term.getLabel().getValue() + ", str=" + hom.getTargetSignature().resolveSymbolId(term.getLabel().getValue()));
 //            System.err.println("  in rhsauto sig: " + rhsAuto.getSignature().resolveSymbolId(term.getLabel().getValue()));
-            for (Rule rule : intersectionAuto.getRulesTopDown(term.getLabel().getValue(), intersState)) {
+            for (Rule rule : intersectionAuto.getRulesTopDown(mapperintersToHom.remapBackward(term.getLabel().getValue()), intersState)) {
                 for (int i = 0; i < rule.getChildren().length; i++) {
-                    forAllMatchesRestrictive(rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, childStates, rhsAuto, intersectionAuto, fn);
+                    forAllMatchesRestrictive(rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, childStates, rhsAuto, intersectionAuto, mapperintersToHom, fn);
                 }
             }
         }

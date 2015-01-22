@@ -22,7 +22,7 @@ import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonSt
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompAutoInstruments;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownBolinas;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -285,7 +285,7 @@ public class IrtgInducer {
                 } else {
                     SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
                     if (doBolinas){
-                        auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
+                        auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas.class);
                     } else {
                         auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
                     }
@@ -345,7 +345,7 @@ public class IrtgInducer {
                 } else {
                     SGraphBRDecompositionAutomatonStoreTopDownExplicit auto;
                     if (doBolinas){
-                        auto = (SGraphBRDecompositionAutomatonTopDownBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonTopDownBolinas.class);
+                        auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas.class);
                     } else {
                         auto = (SGraphBRDecompositionAutomatonStoreTopDownExplicit) alg.decompose(graph, SGraphBRDecompositionAutomatonStoreTopDownExplicit.class);
                     }

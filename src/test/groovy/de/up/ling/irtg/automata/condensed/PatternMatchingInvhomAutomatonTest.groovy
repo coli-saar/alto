@@ -73,8 +73,8 @@ class PatternMatchingInvhomAutomatonTest {
 //        System.err.println(invhom.toString())
     }
     
-    @Test
-    public void testEvaluate1() {
+    @Test//should have a hand made explicit rhs automaton here? so that this does not depend on the graph side working.
+    public void testPatternMatchingInvhomBottomUp() {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream(HRGCleanS.getBytes( Charset.defaultCharset() ) ))
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism()
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
@@ -87,6 +87,30 @@ class PatternMatchingInvhomAutomatonTest {
         SGraph sgraph = alg.parseString(input)
         
         TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class)
+        
+        CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhomRestrictive(rhs)
+        TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
+        
+        //System.err.println(intersectionGold)
+        //System.err.println(finalIntAut.toString())
+        
+        assertEquals(intersectionGold, finalIntAut.toString());
+    }
+    
+    @Test//should have a hand made explicit rhs automaton here? so that this does not depend on the graph side working.
+    public void testPatternMatchingInvhomTopDown() {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream(HRGCleanS.getBytes( Charset.defaultCharset() ) ))
+        Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism()
+        GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
+        
+        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom)
+        f.computeRestrictiveMatcherFromHomomorphism()
+        
+        String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"
+        
+        SGraph sgraph = alg.parseString(input)
+        
+        TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonTopDown.class)
         
         CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhomRestrictive(rhs)
         TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));

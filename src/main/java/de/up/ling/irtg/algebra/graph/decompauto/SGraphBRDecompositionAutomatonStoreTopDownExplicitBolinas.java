@@ -13,9 +13,9 @@ import de.up.ling.irtg.signature.Signature;
  *
  * @author jonas
  */
-public class SGraphBRDecompositionAutomatonTopDownBolinas  extends SGraphBRDecompositionAutomatonStoreTopDownExplicit{
+public class SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas  extends SGraphBRDecompositionAutomatonStoreTopDownExplicit{
 
-    public SGraphBRDecompositionAutomatonTopDownBolinas(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
+    public SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(completeGraph, algebra, signature);
     }
     

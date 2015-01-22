@@ -69,23 +69,7 @@ public class SGraphBRDecompositionAutomatonStoreTopDownExplicit extends SGraphBR
         return String.valueOf(stateId)+"_"+getStateForId(stateId).allSourcesToString();
     }
 
-    @Override
-    Rule makeRuleTrusting(BoundaryRepresentation parent, int labelId, int[] childStates) {
-
-        /*StringBuilder message = new StringBuilder();
-         message.append(parent.toString(this)+" from " + signature.resolveSymbolId(labelId));
-         for (int i = 0; i<childStates.length; i++){
-         message.append(" __ "+getStateForId(childStates[i]).toString(this));
-         }
-         System.out.println(message);
-         SGraph graph = parent.getGraph(completeGraph, this);
-         System.out.println("sgraph: " + graph.toIsiAmrString());*/
-        int parentState = addState(parent);
-        if (parent.isCompleteGraph(completeGraphInfo)) {
-            finalStates.add(parentState);
-        }
-        return createRule(parentState, labelId, childStates, 1);
-    }
+   
 
     @Override
     public boolean supportsTopDownQueries() {

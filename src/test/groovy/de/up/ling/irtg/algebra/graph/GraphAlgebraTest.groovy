@@ -51,30 +51,27 @@ class GraphAlgebraTest {
         assertEquals(gold, alg.evaluate(term))
     }
  
-    @Test //currently not working
-    public void testParseGraphWithCoref() {
-        InterpretedTreeAutomaton irtg = pi(COREF);
-        TreeAutomaton chart = irtg.parse(["graph":"(u91<root> / want-01  :ARG0 (u92<coref1> / bill)  :ARG1 (u93 / like-01           :ARG0 (u94 / girl)	  :ARG1 u92)  :dummy u94)"])
-        System.err.println(chart);
-        assertEquals(new HashSet([pt("want3(bill, girl, like(him))"), pt("want3(him, girl, like(bill))")]),
-                     chart.language())
-    }
+
     
     
     @Test
     public void testInterpretationHasParse() {
-        InterpretedTreeAutomaton irtg = pi(HRGSimple);
-        Interpretation interp = irtg.getInterpretation("graph");
-        SGraph graph = (SGraph)irtg.parseString("graph","(g<root> / go :ARG0 (b<subj> / boy))");
-        TreeAutomaton interpParse = interp.parse(graph);
-        interpParse.makeAllRulesExplicit();
-        boolean noParse = true;
-        for (Integer i : interpParse.getFinalStates()){
-            if (!interpParse.getRulesTopDown(i).isEmpty()){
-                noParse = false;
+        InterpretedTreeAutomaton irtg = pi(HRGSimple)
+        Interpretation interp = irtg.getInterpretation("graph")
+        SGraph graph = (SGraph)irtg.parseString("graph","(g<root> / go :ARG0 (b<subj> / boy))")
+        TreeAutomaton interpParse = interp.parse(graph)
+        interpParse.makeAllRulesExplicit()
+        boolean hasParse = false
+        if (interpParse.supportsBottomUpQueries()) {
+            hasParse = interpParse.getFinalStates().size() > 0
+        } else {
+            for (Integer i : interpParse.getFinalStates()){
+                if (!interpParse.getRulesTopDown(i).iterator().hasNext()){
+                    hasParse = true;
+                }
             }
         }
-        assert !noParse;
+        assert hasParse;
     }
     
     
@@ -87,7 +84,14 @@ class GraphAlgebraTest {
     }
     
     
-    
+        @Test //currently not working
+    public void testParseGraphWithCoref() {
+        InterpretedTreeAutomaton irtg = pi(COREF);
+        TreeAutomaton chart = irtg.parse(["graph":"(u91<root> / want-01  :ARG0 (u92<coref1> / bill)  :ARG1 (u93 / like-01           :ARG0 (u94 / girl)	  :ARG1 u92)  :dummy u94)"])
+        System.err.println(chart);
+        assertEquals(new HashSet([pt("want3(bill, girl, like(him))"), pt("want3(him, girl, like(bill))")]),
+                     chart.language())
+    }
 
     
     @Test
