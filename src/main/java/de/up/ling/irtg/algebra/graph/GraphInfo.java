@@ -14,9 +14,11 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -134,6 +136,17 @@ public class GraphInfo {
         maxDegree = maxDegBuilder;
         
         labelSources = new Int2ObjectOpenHashMap<>();
+        
+        //take care of rules of type merge_x_y
+        List<String> mergeRenameLabels = new ArrayList<>();
+        for (String label : signature.getSymbols()){
+            if (label.startsWith(GraphAlgebra.OP_MERGE) && label.contains("_")) {
+                mergeRenameLabels.add(GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1));//the +1 to not get double "_"
+            }
+        }
+        mergeRenameLabels.forEach(label -> signature.addSymbol(label, 1));//not sure if this should be added to the actual signature, or rather stored locally in GraphInfo
+        
+        //store label Ids
         for (String label : signature.getSymbols()){
             int labelId = signature.getIdForSymbol(label);
             
@@ -144,6 +157,8 @@ public class GraphInfo {
                 if (parts.length == 2 && label.startsWith("r_")) {
                     parts = new String[]{"r", "root", parts[1]};
                 }
+                
+                
                 
                 int[] sourcesHere = new int[parts.length-1];
                 for (int j = 1; j<parts.length; j++){
@@ -163,6 +178,9 @@ public class GraphInfo {
             if (symbol.startsWith(GraphAlgebra.OP_FORGET) || symbol.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
                 String[] parts = symbol.split("_");
                 for (int i = 1; i<parts.length; i++) {
+                    if (parts[i].equals("")) {
+                        System.err.println("empty sourcename!");
+                    } 
                     ret.add(parts[i]);
                 }
             } else if (symbol.startsWith(GraphAlgebra.OP_RENAME) || symbol.startsWith(GraphAlgebra.OP_SWAP)) {
@@ -171,6 +189,9 @@ public class GraphInfo {
                     ret.add("root");
                 }
                 for (int i = 1; i < parts.length; i++) {
+                    if (parts[i].equals("")) {
+                        System.err.println("empty sourcename!");
+                    } 
                     ret.add(parts[i]);
                 }
             } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
@@ -179,7 +200,11 @@ public class GraphInfo {
             } else if (signature.getArityForLabel(symbol) == 0) {
                 String[] parts = symbol.split("<");
                 for (int i = 1; i<parts.length; i++) {//do not want the first element in parts!
-                    ret.addAll(Arrays.asList(parts[i].split(">")[0].split(",")));
+                    List<String> smallerParts = Arrays.asList(parts[i].split(">")[0].split(","));
+                    if (smallerParts.contains("")) {
+                       System.err.println("empty sourcename!");  
+                    }
+                    ret.addAll(smallerParts);
                 }
             } else if (symbol.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)) {
                 ret.add("root");
@@ -206,6 +231,9 @@ public class GraphInfo {
     }
     
     public final int getIntForSource(String source) {
+        if (!sourcenameToInt.containsKey(source)) {
+            System.err.println("unknown Source in GraphInfo#getIntForSource!");
+        }
         return sourcenameToInt.get(source);
     }
 

@@ -169,6 +169,9 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             if (label == null) {
                 return Collections.EMPTY_LIST;
             } else if (label.equals(GraphAlgebra.OP_MERGE)) {
+                if (children.size() <2) {
+                    System.err.println("trying to merge less than 2!");
+                }
                 if (!children.get(0).isMergeable(completeGraphInfo.pwsp, children.get(1))) { // ensure result is connected
                     return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
                 } else {
@@ -182,6 +185,35 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                         return memoize(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
                     }
                 }
+            } else if (label.startsWith(GraphAlgebra.OP_MERGE)) {
+                if (children.size() <2) {
+                    System.err.println("trying to merge less than 2!");
+                }
+                
+                String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
+                
+                BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
+                if (tempResult == null) {
+                    return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
+                }
+                
+                if (!children.get(0).isMergeable(completeGraphInfo.pwsp, tempResult)) { // ensure result is connected
+                    return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
+                } else {
+                    BoundaryRepresentation result = children.get(0).merge(tempResult, completeGraphInfo);
+
+                    if (result == null) {
+//                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
+                        return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
+                    } else {
+                        //result.setEqualsMeansIsomorphy(false);//is this a problem??
+                        return memoize(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
+                    }
+                }
+                
+                
+                
+                
             } else if (label.startsWith(GraphAlgebra.OP_RENAME)
                     || label.startsWith(GraphAlgebra.OP_SWAP)
                     || label.startsWith(GraphAlgebra.OP_FORGET)

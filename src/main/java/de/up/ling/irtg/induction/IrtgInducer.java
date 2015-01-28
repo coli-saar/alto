@@ -81,7 +81,7 @@ import org.jgrapht.DirectedGraph;
  */
 public class IrtgInducer {
 
-    private List<TrainingInstance> corpus = new ArrayList<TrainingInstance>();
+    public List<TrainingInstance> corpus = new ArrayList<TrainingInstance>();
     public List<TrainingInstanceSerializable> corpusSerializable = new ArrayList<>();
     private ArrayList<Tree<ElementaryTree>> sampledTerm = new ArrayList<Tree<ElementaryTree>>();
     private static final Pattern sentenceSplitPattern = Pattern.compile("(\\S+)\\s+(.*)\\s+(\\S+)");
@@ -192,11 +192,33 @@ public class IrtgInducer {
         List<String> labels = new ArrayList<>();
         
 
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/LittlePrinceSubtrees.irtg"));
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         for (int i = start; i < stop; i++) {
-            
             inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
         }
 
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
         Writer logWriter = new FileWriter(dumpPath +"log.txt");
         sw.record(2 * iterations);
         
@@ -240,6 +262,13 @@ public class IrtgInducer {
 //        overall.printMilliseconds("overall time");
     }
     
+    public void parseInstanceWithIrtg(InterpretedTreeAutomaton irtg, int i) {
+        TrainingInstance ti = corpus.get(i);
+        Map<String, Object> input = new HashMap<>();
+        input.put("int", ti.graph);
+        TreeAutomaton chart = irtg.parseInputObjects(input);
+        //System.err.println(chart);
+    }
     
     public void parseInstance(int i, int start, int nrSources, int size, boolean doBolinas, boolean doWrite, boolean onlyAccept, String dumpPath, List<String> labels, CpuTimeStopwatch sw, IntList failed) throws Exception {
         TrainingInstance ti = corpus.get(i);
@@ -1216,7 +1245,7 @@ public class IrtgInducer {
 
     }
 
-    private static class TrainingInstance{
+    public static class TrainingInstance{
 
         public List<String> string;
         public SGraph graph;

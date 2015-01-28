@@ -165,13 +165,13 @@ public class BoundaryRepresentation {
         sourceCount = NumbersCombine.getFirst(temp);
         largestSource = NumbersCombine.getSecond(temp);
         this.edgeID = edgeID;
-        if (edgeID != computeEdgeID(completeGraphInfo)) {
+        /*if (edgeID != computeEdgeID(completeGraphInfo)) {
             System.out.println("err4");
-        }
+        }*/
         this.vertexID = vertexID;
-        if (vertexID != computeVertexID(completeGraphInfo)) {
+        /*if (vertexID != computeVertexID(completeGraphInfo)) {
             System.out.println("err5");
-        }
+        }*/
         //printSources();
     }
 
@@ -596,7 +596,9 @@ public class BoundaryRepresentation {
             return null;//do not use this for merge!
         } else if (label.startsWith(OP_RENAME)) {
             int[] labelSources = completeGraphInfo.getlabelSources(labelId);
-
+            if (labelSources == null) {
+                System.err.println("error");
+            }
             return rename(labelSources[0], labelSources[1], allowSelfRename, completeGraphInfo);
         } else if (label.startsWith(OP_SWAP)) {
             int[] labelSources = completeGraphInfo.getlabelSources(labelId);

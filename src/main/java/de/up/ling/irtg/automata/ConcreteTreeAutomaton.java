@@ -4,11 +4,15 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.automata.index.MapTopDownIndex;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
 /**
@@ -37,6 +41,15 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 
     public void addRule(Rule rule) {
         storeRule(rule);
+    }
+    
+    public void removeAllRules() {
+        explicitRulesBottomUp = new IntTrie<Int2ObjectMap<Set<Rule>>>();
+
+        explicitRulesTopDown = new MapTopDownIndex();
+
+        unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
+        unprocessedUpdatesForBottomUp = new ArrayList<>();
     }
 
     @Override

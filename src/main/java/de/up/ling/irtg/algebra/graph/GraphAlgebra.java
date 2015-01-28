@@ -93,7 +93,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     public TreeAutomaton decompose(SGraph value, Class c){
-        try {
+        //try {
             if (c == SGraphDecompositionAutomaton.class){
                 return new SGraphDecompositionAutomaton(value, this, getSignature());
                 
@@ -112,10 +112,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return new SGraphBRDecompositionAutomatonTopDown(value, this, getSignature());
             }
             else return null;
-        } catch (java.lang.Exception e) {
-            System.err.println(e.toString());
-            return null;
-        }
+        //} catch (java.lang.Exception e) {
+        //    System.err.println(e.toString());
+        //    return null;
+        //}
     }
     
     public TreeAutomaton decompose(SGraph value, Writer writer) throws Exception{

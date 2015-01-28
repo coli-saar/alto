@@ -14,7 +14,6 @@ import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.IdBasedEdgeSet;
-import de.up.ling.irtg.algebra.graph.IsiAmrParser;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.algebra.graph.ShortBasedEdgeSet;
 import de.up.ling.irtg.automata.Rule;
@@ -27,7 +26,6 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.io.ByteArrayInputStream;
-import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -62,7 +60,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     final Int2ObjectMap<ComponentManager> componentManager;
     
     
-    public SGraphBRDecompositionAutomatonTopDown(SGraph completeGraph, GraphAlgebra algebra, Signature signature) throws Exception{
+    public SGraphBRDecompositionAutomatonTopDown(SGraph completeGraph, GraphAlgebra algebra, Signature signature){
         super(signature);
 
         this.algebra = algebra;
@@ -77,7 +75,13 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
             if (symbols.get(label) == 0) {
                 int labelID = algebra.getSignature().getIdForSymbol(label);
                 storedConstants[labelID] = new HashSet<>();
-                SGraph sgraph = algebra.parseString(label);
+                SGraph sgraph;
+                try {
+                    sgraph = algebra.parseString(label);
+                } catch (java.lang.Exception e) {
+                    sgraph = null;
+                    System.err.println("parsing error when creating Top Down automaton!");
+                }
                 completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                     if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
