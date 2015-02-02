@@ -148,9 +148,9 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-        Int2ObjectMap<Iterable<Rule>> rulesHere = storedRules.get(childStates);
-
+        
         // check stored rules
+        Int2ObjectMap<Iterable<Rule>> rulesHere = storedRules.get(childStates);
         if (rulesHere != null) {
             Iterable<Rule> rules = rulesHere.get(labelId);
             if (rules != null) {
@@ -165,105 +165,101 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             children.add(getStateForId(childStates[i]));
         }
 
-        try {
-            if (label == null) {
-                return Collections.EMPTY_LIST;
-            } else if (label.equals(GraphAlgebra.OP_MERGE)) {
-                if (children.size() <2) {
-                    System.err.println("trying to merge less than 2!");
-                }
-                if (!children.get(0).isMergeable(completeGraphInfo.pwsp, children.get(1))) { // ensure result is connected
-                    return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
-                } else {
-                    BoundaryRepresentation result = children.get(0).merge(children.get(1), completeGraphInfo);
-
-                    if (result == null) {
-//                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
-                        return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
-                    } else {
-                        //result.setEqualsMeansIsomorphy(false);//is this a problem??
-                        return memoize(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
-                    }
-                }
-            } else if (label.startsWith(GraphAlgebra.OP_MERGE)) {
-                if (children.size() <2) {
-                    System.err.println("trying to merge less than 2!");
-                }
-                
-                String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
-                
-                BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
-                if (tempResult == null) {
-                    return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
-                }
-                
-                if (!children.get(0).isMergeable(completeGraphInfo.pwsp, tempResult)) { // ensure result is connected
-                    return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
-                } else {
-                    BoundaryRepresentation result = children.get(0).merge(tempResult, completeGraphInfo);
-
-                    if (result == null) {
-//                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
-                        return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
-                    } else {
-                        //result.setEqualsMeansIsomorphy(false);//is this a problem??
-                        return memoize(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
-                    }
-                }
-                
-                
-                
-                
-            } else if (label.startsWith(GraphAlgebra.OP_RENAME)
-                    || label.startsWith(GraphAlgebra.OP_SWAP)
-                    || label.startsWith(GraphAlgebra.OP_FORGET)
-                    || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
-                    || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
-                    || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
-
-                BoundaryRepresentation arg = children.get(0);
-
-                for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
-                {
-                    if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.graph, completeGraphInfo)) {
-                        return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;//
-                    }
-                }
-
-                // now we can apply the operation.
-                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, true, completeGraphInfo);// maybe do the above check in here? might be more efficient.
+        if (label == null) {
+            return Collections.EMPTY_LIST;
+        } else if (label.equals(GraphAlgebra.OP_MERGE)) {
+            if (children.size() <2) {
+                System.err.println("trying to merge less than 2!");
+            }
+            if (!children.get(0).isMergeable(completeGraphInfo.pwsp, children.get(1))) { // ensure result is connected
+                return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
+            } else {
+                BoundaryRepresentation result = children.get(0).merge(children.get(1), completeGraphInfo);
 
                 if (result == null) {
-//                    System.err.println(label + " returned null: " + children.get(0));
+//                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
                     return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
                 } else {
                     //result.setEqualsMeansIsomorphy(false);//is this a problem??
                     return memoize(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
                 }
-            } else {
-                List<Rule> rules = new ArrayList<>();
-                SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
+            }
+        } else if (label.startsWith(GraphAlgebra.OP_MERGE)) {
+            if (children.size() <2) {
+                System.err.println("trying to merge less than 2!");
+            }
 
-                if (sgraph == null) {
-//                    System.err.println("Unparsable operation: " + label);
-                    return memoize(Collections.EMPTY_LIST, labelId, childStates);//return Collections.EMPTY_LIST;
+            String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
+
+            BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
+            if (tempResult == null) {
+                return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
+            }
+
+            if (!children.get(0).isMergeable(completeGraphInfo.pwsp, tempResult)) { // ensure result is connected
+                return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
+            } else {
+                BoundaryRepresentation result = children.get(0).merge(tempResult, completeGraphInfo);
+
+                if (result == null) {
+//                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
+                    return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
+                } else {
+                    //result.setEqualsMeansIsomorphy(false);//is this a problem??
+                    return memoize(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
                 }
+            }
+
+
+
+
+        } else if (label.startsWith(GraphAlgebra.OP_RENAME)
+                || label.startsWith(GraphAlgebra.OP_SWAP)
+                || label.startsWith(GraphAlgebra.OP_FORGET)
+                || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
+                || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
+                || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
+
+            BoundaryRepresentation arg = children.get(0);
+
+            for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
+            {
+                if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.graph, completeGraphInfo)) {
+                    return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;//
+                }
+            }
+
+            // now we can apply the operation.
+            BoundaryRepresentation result = arg.applyForgetRename(label, labelId, true, completeGraphInfo);// maybe do the above check in here? might be more efficient.
+
+            if (result == null) {
+//                    System.err.println(label + " returned null: " + children.get(0));
+                return memoize(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
+            } else {
+                //result.setEqualsMeansIsomorphy(false);//is this a problem??
+                return memoize(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
+            }
+        } else {
+            List<Rule> rules = new ArrayList<>();
+            SGraph sgraph = algebra.constantLabelInterpretations.get(labelId);//IsiAmrParser.parse(new StringReader(label));
+
+            if (sgraph == null) {
+//                    System.err.println("Unparsable operation: " + label);
+                return memoize(Collections.EMPTY_LIST, labelId, childStates);//return Collections.EMPTY_LIST;
+            }
 
 //                System.err.println(" - looking for matches of " + sgraph + " in " + completeGraphInfo.graph);
-                completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+            completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
-                    if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
-                        matchedSubgraph.setEqualsMeansIsomorphy(false);
-                        rules.add(makeRule(new BoundaryRepresentation(matchedSubgraph, completeGraphInfo), labelId, childStates));
-                    } else {
+                if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
+                    matchedSubgraph.setEqualsMeansIsomorphy(false);
+                    rules.add(makeRule(new BoundaryRepresentation(matchedSubgraph, completeGraphInfo), labelId, childStates));
+                } else {
 //                        System.err.println("match " + matchedSubgraph + " has crossing edges from nodes");
-                    }
-                });
+                }
+            });
 
-                return memoize(rules, labelId, childStates);//return rules;
-            }
-        } catch (de.up.ling.irtg.algebra.graph.ParseException ex) {
-            throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
+            return memoize(rules, labelId, childStates);//return rules;
         }
     }
 

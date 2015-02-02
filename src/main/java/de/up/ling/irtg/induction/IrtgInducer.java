@@ -262,13 +262,7 @@ public class IrtgInducer {
 //        overall.printMilliseconds("overall time");
     }
     
-    public void parseInstanceWithIrtg(InterpretedTreeAutomaton irtg, int i) {
-        TrainingInstance ti = corpus.get(i);
-        Map<String, Object> input = new HashMap<>();
-        input.put("int", ti.graph);
-        TreeAutomaton chart = irtg.parseInputObjects(input);
-        //System.err.println(chart);
-    }
+    
     
     public void parseInstance(int i, int start, int nrSources, int size, boolean doBolinas, boolean doWrite, boolean onlyAccept, String dumpPath, List<String> labels, CpuTimeStopwatch sw, IntList failed) throws Exception {
         TrainingInstance ti = corpus.get(i);

@@ -18,6 +18,8 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import static de.up.ling.irtg.util.TestingTools.pt;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.Writer;
@@ -72,16 +74,35 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public static final String OP_FORGET_EXCEPT = "fe_";
     public static final String OP_FORGET = "f_";
 
-     
+    public final Int2ObjectMap<SGraph> constantLabelInterpretations;
         
         
     public GraphAlgebra() {
         super();
+        
+        constantLabelInterpretations = new Int2ObjectOpenHashMap<>();
     }
     
     public GraphAlgebra(Signature signature) {
         super();
         this.signature = signature;
+        
+        constantLabelInterpretations = new Int2ObjectOpenHashMap<>();
+        precomputeAllConstants();
+        
+    }
+    
+    private void precomputeAllConstants() {
+        for (int id = 1; id <= signature.getMaxSymbolId(); id++) {
+            if (signature.getArity(id) == 0) {
+                String label = signature.resolveSymbolId(id);
+                try {
+                    constantLabelInterpretations.put(id, parseString(label));
+                } catch (ParserException ex) {
+                    throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage() + "when initializing constants for algebra");
+                }
+            }
+        }
     }
     
     @Override
@@ -93,6 +114,9 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     public TreeAutomaton decompose(SGraph value, Class c){
+        if (constantLabelInterpretations.isEmpty()) {
+            precomputeAllConstants();
+        }
         //try {
             if (c == SGraphDecompositionAutomaton.class){
                 return new SGraphDecompositionAutomaton(value, this, getSignature());
@@ -119,6 +143,9 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     public TreeAutomaton decompose(SGraph value, Writer writer) throws Exception{
+        if (constantLabelInterpretations.isEmpty()) {
+            precomputeAllConstants();
+        }
         return new SGraphBRDecompositionAutomatonOnlyWrite(value, this, getSignature(), writer);
     }
     

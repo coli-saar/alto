@@ -41,6 +41,8 @@ class GraphAlgebraTest {
         assertEquals(gold, alg.evaluate(term))
     }
     
+    
+    
     @Test
     public void testEvaluate2() {
         GraphAlgebra alg = new GraphAlgebra();
@@ -52,7 +54,16 @@ class GraphAlgebraTest {
     }
  
 
-    
+    public void testLoopGraph() {
+        InterpretedTreeAutomaton irtg = pi(HRGSimple)//could be any irtg really
+        try {
+            SGraph graph = (SGraph)irtg.parseString("graph","(b<root> :boy b)")//just checking if an error occurs
+            assert true;
+        } catch (java.lang.Exception e) {
+            assert false;
+        }
+        
+    }
     
     @Test
     public void testInterpretationHasParse() {

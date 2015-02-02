@@ -22,6 +22,7 @@ public class Interpretation<E> {
     private Algebra<E> algebra;
     private Homomorphism hom;
     private PatternMatchingInvhomAutomatonFactory pmFactory;
+    
 
     public Interpretation(Algebra<E> algebra, Homomorphism hom) {
         this.algebra = algebra;
@@ -92,4 +93,9 @@ public class Interpretation<E> {
         return true;
     }
 
+    
+    public void setPmLogName(String name) {
+        pmFactory.logTitle = name;
+    }
+    
 }

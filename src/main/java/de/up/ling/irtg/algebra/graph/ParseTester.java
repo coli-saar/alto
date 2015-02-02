@@ -35,10 +35,10 @@ public class ParseTester {
         inducer.corpus.sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
         
         int start = 0;
-        int stop = 200;
+        int stop = 1000;
   
-        int warmupIterations = 1;
-        int iterations = 2;
+        int warmupIterations = 5;
+        int iterations = 10;
         
         IntList failed = new IntArrayList();
 
@@ -55,12 +55,15 @@ public class ParseTester {
         
         
         
+        //uncomment this to write a log of the pattern matching:
+        //irtg.getInterpretation("int").setPmLogName("AfterMergingStartStatesInto_q");
+        
         
         
         
         for (int j = 0; j<warmupIterations; j++) {
             for (int i = start; i < stop; i++) {
-                inducer.parseInstanceWithIrtg(irtg, i);
+                parseInstanceWithIrtg(inducer.corpus, irtg, i);
                 System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
@@ -71,7 +74,7 @@ public class ParseTester {
         
         for (int j = 0; j<iterations; j++) {
             for (int i = start; i < stop; i++) {
-                inducer.parseInstanceWithIrtg(irtg, i);
+                parseInstanceWithIrtg(inducer.corpus, irtg, i);
                 System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
@@ -99,7 +102,7 @@ public class ParseTester {
         
     }
     
-    public void parseInstanceWithIrtg(List<IrtgInducer.TrainingInstance> corpus, InterpretedTreeAutomaton irtg, int i) {
+    public static void parseInstanceWithIrtg(List<IrtgInducer.TrainingInstance> corpus, InterpretedTreeAutomaton irtg, int i) {
         IrtgInducer.TrainingInstance ti = corpus.get(i);
         Map<String, Object> input = new HashMap<>();
         input.put("int", ti.graph);
