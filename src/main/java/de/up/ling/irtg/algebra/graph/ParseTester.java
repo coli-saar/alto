@@ -37,7 +37,7 @@ public class ParseTester {
         int start = 0;
         int stop = 1000;
   
-        int warmupIterations = 5;
+        int warmupIterations = 0;
         int iterations = 10;
         
         IntList failed = new IntArrayList();
@@ -104,9 +104,15 @@ public class ParseTester {
     
     public static void parseInstanceWithIrtg(List<IrtgInducer.TrainingInstance> corpus, InterpretedTreeAutomaton irtg, int i) {
         IrtgInducer.TrainingInstance ti = corpus.get(i);
+        
+//        System.err.println("\n" + ti.graph);
+        
         Map<String, Object> input = new HashMap<>();
         input.put("int", ti.graph);
         TreeAutomaton chart = irtg.parseInputObjects(input);
+        
+//        System.err.println(chart.viterbi());
+        
         //System.err.println(chart);
     }
     
