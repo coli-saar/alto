@@ -10,12 +10,18 @@ package de.up.ling.irtg.signature;
  * @author koller
  */
 public class IdentitySignatureMapper extends SignatureMapper {
-    public IdentitySignatureMapper(Signature signature) {
+    public IdentitySignatureMapper(Interner interner) {
         forward = null;
         backward = null;
-        input = signature;
-        output = signature;
+        input = interner;
+        output = interner;
     }
+
+//    public IdentitySignatureMapper(Signature signature) {
+//        this(signature.getInterner());
+//    }
+    
+    
 
     @Override
     public void recompute() {

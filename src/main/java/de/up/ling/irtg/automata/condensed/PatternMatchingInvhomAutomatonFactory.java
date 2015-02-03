@@ -1169,7 +1169,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhomRestrictive(rhs);
         System.err.println(f.restrictiveMatcher);
         System.err.println(f.matcherChild2Rule);
-        TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature())); 
+        TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
             //new IntersectionAutomaton(irtg.getAutomaton(), invhom); 
         
         System.err.println("Number Bottom up constant queries: " + f.debugCounterConst);
@@ -1195,7 +1195,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         for (int i = 0; i < warmupIterations; i++) {
             rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
             invhom = f.invhomRestrictive(rhs);
-            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
+            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
         }
         
         f.computeCompleteMatcher = true;
@@ -1203,7 +1203,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         for (int i = 0; i < warmupIterations; i++) {
             rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
             invhom = f.invhomRestrictive(rhs);
-            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
+            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
         }
         
         
@@ -1225,7 +1225,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         for (int i = 0; i < iterations; i++) {
             rhs = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class);
             invhom = f.invhomRestrictive(rhs);
-            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
+            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
         }
 
         
@@ -1235,7 +1235,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         for (int i = 0; i < standardIterations; i++) {
             rhs = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class);
             invhom = f.invhomRestrictive(rhs);
-            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(irtg.getAutomaton().getSignature()));
+            finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
         }
         sw.record(3);
         System.err.println(iterations+"/"+standardIterations + " iterations:");

@@ -450,7 +450,7 @@ public class Homomorphism {
      */
     public SignatureMapper getSignatureMapper() {
         if (signatureMapper == null) {
-            signatureMapper = new SignatureMapper(srcSignature, tgtSignature);
+            signatureMapper = srcSignature.getMapperTo(tgtSignature);
         }
 
         return signatureMapper;

@@ -18,7 +18,20 @@ import java.util.ArrayList;
 import java.util.function.IntConsumer;
 
 /**
- *
+ * An implementation of an int-to-object map that
+ * is backed by an ArrayList. Get operations are simply
+ * array lookups and therefore fast. Put
+ * operations may be expensive when the backing array
+ * has to grow. This implementation is therefore useful
+ * if the get operations are much more frequent than the
+ * put operations. If the int keys are sparse, the 
+ * data structure wastes a lot of memory; use hashmaps
+ * in this case.<p>
+ * 
+ * Note that for implementation reasons, the map may
+ * not contain null values. Keys that are mapped to null
+ * are treated as if they were not present.
+ * 
  * @author koller
  */
 public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
@@ -112,6 +125,19 @@ public class ArrayMap<E> extends AbstractInt2ObjectMap<E> {
     private int arraySize() {
         return values.size();
     }
+
+    @Override
+    public E remove(int key) {
+        if( key < values.size() ) {
+            E oldValue = values.get(key);
+            values.set(key, null);
+            return oldValue;
+        } else {
+            return null;
+        }
+    }
+    
+    
 
     private class KeyIterator extends AbstractIntIterator {
 

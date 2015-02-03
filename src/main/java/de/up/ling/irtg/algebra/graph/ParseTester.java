@@ -37,8 +37,8 @@ public class ParseTester {
         int start = 0;
         int stop = 1000;
   
-        int warmupIterations = 0;
-        int iterations = 10;
+        int warmupIterations = 2;
+        int iterations = 1;
         
         IntList failed = new IntArrayList();
 

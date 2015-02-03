@@ -42,7 +42,7 @@ public class Determinizer<State> {
 
     public Determinizer(TreeAutomaton<State> originalAutomaton) {
         this.originalAutomaton = originalAutomaton;
-        ism = new IdentitySignatureMapper(originalAutomaton.getSignature());
+        ism = originalAutomaton.getSignature().getIdentityMapper();
         allStateLists.add(null); // to ensure allStateLists.get(newState) == states represented by newState
     }
     

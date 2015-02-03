@@ -36,10 +36,20 @@ public class Interner<E> implements Serializable, Cloneable {
     public Interner() {
         objectToInt = new Object2IntOpenHashMap<E>();
         intToObject = new Int2ObjectOpenHashMap<E>();
+//        intToObject = new ArrayMap<>();
         uncachedObjects = new ArrayList<E>();
         nextIndex = 1;
         firstIndexForUncachedObjects = 1;
         trustingMode = false;
+    }
+    
+    
+    public SignatureMapper getMapperTo(Interner<E> other) {
+        if( equals(other)) {
+            return new IdentitySignatureMapper(this);
+        } else {
+            return new SignatureMapper(this, other);
+        }
     }
 
     public void clear() {
@@ -166,6 +176,7 @@ public class Interner<E> implements Serializable, Cloneable {
         return ret;
     }
 
+    /*
     public static int[] remapArray(int[] ids, int[] remap) {
         int[] ret = new int[ids.length];
         for (int i = 0; i < ids.length; i++) {
@@ -173,6 +184,7 @@ public class Interner<E> implements Serializable, Cloneable {
         }
         return ret;
     }
+    */
 
     @Override
     public Object clone() {

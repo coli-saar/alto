@@ -6,19 +6,23 @@
 package de.up.ling.irtg.signature;
 
 /**
- * A mapping between the symbol IDs of two signatures.
+ * A mapping between the symbol IDs of two interners.<p>
+ * 
+ * TODO - despite the name, this data structure maps between
+ * two interners, not two signatures. We should rename the class
+ * at some point.
  *
  * @author koller
  */
 public class SignatureMapper {
     protected int[] forward, backward;
-    protected Signature input, output;
+    protected Interner input, output;
     
     protected SignatureMapper() {
         
     }
 
-    public SignatureMapper(Signature input, Signature output) {
+    public SignatureMapper(Interner input, Interner output) {
         this.input = input;
         this.output = output;
 
@@ -65,12 +69,12 @@ public class SignatureMapper {
 
         buf.append("Forward mappings:\n");
         for (int i = 1; i < forward.length; i++) {
-            buf.append("" + i + " -> " + remapForward(i) + " (input=" + input.resolveSymbolId(i) + ", output=" + output.resolveSymbolId(remapForward(i)) + "\n");
+            buf.append("" + i + " -> " + remapForward(i) + " (input=" + input.resolveId(i) + ", output=" + output.resolveId(remapForward(i)) + "\n");
         }
 
         buf.append("\nBackward mappings:\n");
         for (int i = 1; i < backward.length; i++) {
-            buf.append("" + i + " -> " + remapBackward(i) + " (output=" + output.resolveSymbolId(i) + ", input=" + input.resolveSymbolId(remapBackward(i)) + "\n");
+            buf.append("" + i + " -> " + remapBackward(i) + " (output=" + output.resolveId(i) + ", input=" + input.resolveId(remapBackward(i)) + "\n");
         }
 
         return buf.toString();
