@@ -1229,13 +1229,30 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
-    
+
+    /**
+     * Computes a concrete representation of this automaton, with string states.
+     * The method returns a {@link ConcreteTreeAutomaton} that looks exactly
+     * like the given automaton when printed with {@link #toString() } (except
+     * perhaps for reordering of rules), but all state objects (of class State)
+     * are replaced by their string representations. Thus the states of the
+     * returned automaton are always strings. This is mostly useful for testing,
+     * when automata with string states are read from string literals.
+     * 
+     * @return 
+     */
     public ConcreteTreeAutomaton<String> asConcreteTreeAutomatonWithStringStates() {
-        ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
+        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
         ret.signature = signature;
-        ret.stateInterner = stateInterner;
 
         makeAllRulesExplicit();
+
+        // copy string versions of states to new automaton
+        ret.stateInterner.setTrustingMode(true);
+        for (int q : getAllStates()) {
+            ret.stateInterner.addObjectWithIndex(q, getStateForId(q).toString());
+        }
+        ret.stateInterner.setTrustingMode(false);
 
         for (Rule rule : getRuleSet()) {
             ret.addRule(rule);
@@ -1245,10 +1262,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
             ret.addFinalState(f);
         }
 
-//        return ret;
-        return null;
+        return ret;
     }
-    
 
     /**
      * Computes a concrete representation of this automaton. The method returns
