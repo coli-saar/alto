@@ -81,8 +81,8 @@ import org.jgrapht.DirectedGraph;
  */
 public class IrtgInducer {
 
-    public List<TrainingInstance> corpus = new ArrayList<TrainingInstance>();
-    public List<TrainingInstanceSerializable> corpusSerializable = new ArrayList<>();
+    private List<TrainingInstance> corpus = new ArrayList<TrainingInstance>();
+    private List<TrainingInstanceSerializable> corpusSerializable = new ArrayList<>();
     private ArrayList<Tree<ElementaryTree>> sampledTerm = new ArrayList<Tree<ElementaryTree>>();
     private static final Pattern sentenceSplitPattern = Pattern.compile("(\\S+)\\s+(.*)\\s+(\\S+)");
     private static final List<String> allSources = new ArrayList<String>();
@@ -1319,5 +1319,9 @@ public class IrtgInducer {
         public String toString() {
             return label + "@" + state;
         }
+    }
+    
+    public List<TrainingInstance> getCorpus() {
+        return corpus;
     }
 }

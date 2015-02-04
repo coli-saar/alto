@@ -1,2 +1,3 @@
 de.up.ling.irtg.codec.TikzQtreeOutputCodec
 de.up.ling.irtg.codec.TikzSgraphOutputCodec
+de.up.ling.irtg.codec.BolinasGraphOutputCodec

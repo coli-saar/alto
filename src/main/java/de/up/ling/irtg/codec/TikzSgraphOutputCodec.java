@@ -9,7 +9,6 @@ import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.tree.Tree;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;

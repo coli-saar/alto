@@ -13,9 +13,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.io.FileInputStream;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.Reader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -32,7 +30,7 @@ public class ParseTester {
         
         Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
         IrtgInducer inducer = new IrtgInducer(corpusReader);
-        inducer.corpus.sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
+        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
         
         int start = 0;
         int stop = 1000;
@@ -63,7 +61,7 @@ public class ParseTester {
         
         for (int j = 0; j<warmupIterations; j++) {
             for (int i = start; i < stop; i++) {
-                parseInstanceWithIrtg(inducer.corpus, irtg, i);
+                parseInstanceWithIrtg(inducer.getCorpus(), irtg, i);
                 System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
@@ -74,7 +72,7 @@ public class ParseTester {
         
         for (int j = 0; j<iterations; j++) {
             for (int i = start; i < stop; i++) {
-                parseInstanceWithIrtg(inducer.corpus, irtg, i);
+                parseInstanceWithIrtg(inducer.getCorpus(), irtg, i);
                 System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
