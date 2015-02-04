@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.spark;
 
+import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import java.io.FileReader;
 import java.io.Reader;
@@ -32,66 +33,77 @@ import org.apache.spark.api.java.JavaRDD;
  */
 public class BRCorpusParser {
 
-    
-    private static ParsingResult workerFunction(ParsingArgument arg) throws Exception{
+    private static ParsingResult workerFunction(ParsingArgument arg) throws Exception {
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
-      boolean res = IrtgInducer.parseInstance(arg.instance, arg.nrSources, false, true, false, "/data/csuserb/parsingResults/", sw);
-      ParsingResult ret = new ParsingResult(res, sw.getTimeBefore(1), arg.instance.id);
-      return ret;
+        boolean res = IrtgInducer.parseInstance(arg.instance, arg.nrSources, false, true, false, "/data/csuserb/parsingResults/", sw);
+        ParsingResult ret = new ParsingResult(res, sw.getTimeBefore(1), arg.instance.id);
+        return ret;
     }
 
-  public static void main(String[] args) throws Exception{
-    
-    int nrSources = 3;
-      
-    if (args.length >= 2) {
-        nrSources = Integer.valueOf(args[1]);
-    }  
-      
-    SparkConf conf = new SparkConf().setAppName("Boundary Representation Parser");
-    JavaSparkContext sc = new JavaSparkContext(conf);
-    int tasks = 1;
-    if (args.length > 0) {
-        tasks = Integer.valueOf(args[0]);
-    }
-    
-    
-    // load corpus
-    Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
-    IrtgInducer inducer = new IrtgInducer(corpusReader);
-    
-    //inducer.corpusSerializable.
-    
-    /*inducer.corpusSerializable.sort(Comparator.comparingInt(inst -> {
-        try {
-            return (new GraphAlgebra()).parseString(inst.graph).getAllNodeNames().size();
-        } catch (java.lang.Exception e) {
-            System.err.println(e + ": Corpus not properly sorted as a result.");
-            return 0;
+    public static void main(String[] args) throws Exception {
+
+        int nrSources = 3;
+
+        if (args.length >= 2) {
+            nrSources = Integer.valueOf(args[1]);
         }
-    }));*/
-    
 
-    int min = 0;
-    int max = inducer.corpusSerializable.size();
-    
-    if (args.length >= 4) {
-        min = Integer.valueOf(args[2]);
-        max = Integer.valueOf(args[3]);
-    }
-    
-    List<IrtgInducer.TrainingInstanceSerializable> relevantCorpus = ((List<IrtgInducer.TrainingInstanceSerializable>) inducer.corpusSerializable).subList(min, max);
-    
+        SparkConf conf = new SparkConf().setAppName("Boundary Representation Parser");
+        JavaSparkContext sc = new JavaSparkContext(conf);
+        int tasks = 1;
+        if (args.length > 0) {
+            tasks = Integer.valueOf(args[0]);
+        }
+
+        // load corpus
+        Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
+        IrtgInducer inducer = new IrtgInducer(corpusReader);
+
+        //inducer.corpusSerializable.
+        /*inducer.corpusSerializable.sort(Comparator.comparingInt(inst -> {
+         try {
+         return (new GraphAlgebra()).parseString(inst.graph).getAllNodeNames().size();
+         } catch (java.lang.Exception e) {
+         System.err.println(e + ": Corpus not properly sorted as a result.");
+         return 0;
+         }
+         }));*/
+        int min = 0;
+        int max = inducer.getCorpusSerializable().size();
+
+        if (args.length >= 4) {
+            min = Integer.valueOf(args[2]);
+            max = Integer.valueOf(args[3]);
+        }
+
+        GraphAlgebra graphAlgebra = new GraphAlgebra();
+
+        inducer.getCorpusSerializable().sort(Comparator.comparingInt((IrtgInducer.TrainingInstanceSerializable inst) -> {
+            try {
+                return graphAlgebra.parseString(inst.graph).getAllNodeNames().size();
+            } catch (ParserException e) {
+                System.err.println("Could not sort corpus! " + e.toString());
+                return 0;
+            }
+        }
+        ));
+        
+
+        List<IrtgInducer.TrainingInstanceSerializable> relevantCorpus = ((List<IrtgInducer.TrainingInstanceSerializable>) inducer.getCorpusSerializable()).subList(min, max);
+
     List<ParsingArgument> argumentList = new ArrayList<>();
+
+    for (IrtgInducer.TrainingInstanceSerializable relevantCorpu : relevantCorpus
+
     
-    for (IrtgInducer.TrainingInstanceSerializable relevantCorpu : relevantCorpus) {
-        argumentList.add(new ParsingArgument(nrSources, relevantCorpu));
+        ) {
+            argumentList.add(new ParsingArgument(nrSources, relevantCorpu));
     }
 
     // do the actual work
     JavaRDD<ParsingArgument> inputs = sc.parallelize(argumentList, tasks);
 
-    List<ParsingResult> results = inputs.map( BRCorpusParser::workerFunction).collect();
+    List<ParsingResult> results = inputs.map(BRCorpusParser::workerFunction).collect();
 
     // IMPORTANT: "collect" is a Spark _action_, which means that it
     // triggers the distributed computations, collects the results,
@@ -102,58 +114,75 @@ public class BRCorpusParser {
     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd_HH:mm:ss");
     Date date = new Date();
     String sDate = dateFormat.format(date); //2014/08/06_15:59:48
-    
+
     String imacPath = "/Users/jonas/Documents/Logs";
     String ketosPath = "/data/csuserb/Logs";
     boolean onImac = false;
-    try {
-        File targetDir = new File(imacPath);
+
+    
+        try {
+            File targetDir = new File(imacPath);
         onImac = targetDir.isDirectory();
-    } catch (java.lang.Exception e) {
-        onImac = false;
     }
+    catch (java.lang.Exception e
+
     
-    
+        ) {
+            onImac = false;
+    }
+
     String logFilename;
-    if (onImac) {
-        logFilename = imacPath;
-    } else {
-        logFilename = ketosPath;
-    }
-    logFilename += "/BRCorpusParserLog"+sDate+".txt";
+    if (onImac
+
     
+        ) {
+            logFilename = imacPath;
+    }
+
+    
+        else {
+            logFilename = ketosPath;
+    }
+    logFilename += "/BRCorpusParserLog" + sDate + ".txt" ;
+
     Writer logWriter = new FileWriter(logFilename);
+
+    for (ParsingResult pRes : results
+
     
-    for (ParsingResult pRes : results) {
-        logWriter.write(pRes.toString());
+        ) {
+            logWriter.write(pRes.toString());
     }
-    logWriter.close();
+
+    logWriter.close ();
 }
-  
-  
-  
-    private static class ParsingResult implements Serializable{
-        final boolean hasParse;
-        final long decompTime;
-        final int id;
-        public ParsingResult(boolean hasParse, long decompTime, int id){
-            this.hasParse = hasParse;
-            this.decompTime = decompTime;
-            this.id = id;
-        }
-        @Override
-        public String toString(){
-            return "ID " + id +"(" + hasParse + "); Decomposition Time: " + decompTime;
-        }
+
+private static class ParsingResult implements Serializable {
+
+    final boolean hasParse;
+    final long decompTime;
+    final int id;
+
+    public ParsingResult(boolean hasParse, long decompTime, int id) {
+        this.hasParse = hasParse;
+        this.decompTime = decompTime;
+        this.id = id;
     }
-     
-    private static class ParsingArgument implements Serializable{
-        final int nrSources;
-        final IrtgInducer.TrainingInstanceSerializable instance;
-        
-        public ParsingArgument(int nrSources, IrtgInducer.TrainingInstanceSerializable instance) {
-            this.nrSources = nrSources;
-            this.instance = instance;
-        }
+
+    @Override
+    public String toString() {
+        return "ID " + id + "(" + hasParse + "); Decomposition Time: " + decompTime;
     }
+}
+
+private static class ParsingArgument implements Serializable {
+
+    final int nrSources;
+    final IrtgInducer.TrainingInstanceSerializable instance;
+
+    public ParsingArgument(int nrSources, IrtgInducer.TrainingInstanceSerializable instance) {
+        this.nrSources = nrSources;
+        this.instance = instance;
+    }
+}
 }

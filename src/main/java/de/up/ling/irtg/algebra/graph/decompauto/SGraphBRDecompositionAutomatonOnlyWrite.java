@@ -5,15 +5,11 @@
  */
 package de.up.ling.irtg.algebra.graph.decompauto;
 
-import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import java.io.FileWriter;
 import java.io.Writer;
 import java.util.Iterator;
 

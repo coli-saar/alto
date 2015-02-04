@@ -10,19 +10,19 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.GraphNode;
-import de.up.ling.irtg.algebra.graph.IsiAmrParser;
+import de.up.ling.irtg.algebra.graph.ParseTester;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.ArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -53,7 +53,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         completeGraphInfo = new GraphInfo(completeGraph, algebra, signature);
         
         
-        storedRules = new IntTrie<>();
+        storedRules = new IntTrie<>(depth -> new ArrayMap<>());
         
         //storedRulesTopDown = new Int2ObjectOpenHashMap<>();
         
@@ -149,15 +149,23 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
         
+        //ParseTester.averageLogger.increaseValue("TotalRulesChecked");
         // check stored rules
         Int2ObjectMap<Iterable<Rule>> rulesHere = storedRules.get(childStates);
         if (rulesHere != null) {
             Iterable<Rule> rules = rulesHere.get(labelId);
             if (rules != null) {
+                /*String labelHere = signature.resolveSymbolId(labelId);
+                if (!(labelHere.startsWith("m")||labelHere.startsWith("f")||labelHere.startsWith("f"))) {
+                    ParseTester.averageLogger.increaseValue("FoundDuplicateRules (Constant)");
+                }
+                else {
+                    ParseTester.averageLogger.increaseValue("FoundDuplicateRules ("+labelHere+")");
+                }*/
                 return rules;
             }
         }
-
+        
         String label = signature.resolveSymbolId(labelId);
         //List<BoundaryRepresentation> children = Arrays.stream(childStates).mapToObj(q -> getStateForId(q)).collect(Collectors.toList());
         List<BoundaryRepresentation> children = new ArrayList<>();
@@ -168,6 +176,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         if (label == null) {
             return Collections.EMPTY_LIST;
         } else if (label.equals(GraphAlgebra.OP_MERGE)) {
+            //ParseTester.averageLogger.increaseValue("MergeRulesChecked");
             if (children.size() <2) {
                 System.err.println("trying to merge less than 2!");
             }
@@ -188,7 +197,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             if (children.size() <2) {
                 System.err.println("trying to merge less than 2!");
             }
-
+            //ParseTester.averageLogger.increaseValue("CombinedMergeRulesChecked");
             String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
 
             BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
@@ -219,7 +228,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
                 || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
                 || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
-
+            //ParseTester.averageLogger.increaseValue("UnaryRulesChecked");
             BoundaryRepresentation arg = children.get(0);
 
             for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
@@ -240,6 +249,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 return memoize(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
             }
         } else {
+            //ParseTester.averageLogger.increaseValue("ConstantRulesChecked");
             List<Rule> rules = new ArrayList<>();
             SGraph sgraph = algebra.constantLabelInterpretations.get(labelId);//IsiAmrParser.parse(new StringReader(label));
 

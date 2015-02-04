@@ -1324,4 +1324,8 @@ public class IrtgInducer {
     public List<TrainingInstance> getCorpus() {
         return corpus;
     }
+    
+    public List<TrainingInstanceSerializable> getCorpusSerializable() {
+        return corpusSerializable;
+    }
 }

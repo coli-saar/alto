@@ -8,6 +8,7 @@ package de.up.ling.irtg.util;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Arrays;
 
 /**
  *
@@ -17,6 +18,7 @@ public class IntArrayTupleIterator implements Iterator {
 
     private final int[][] arrayTuple;
     private final int[] curPos;
+    private final int[] currentValues;
     private final boolean isEmpty;
 
     public IntArrayTupleIterator(int[][] arrayTuple) {
@@ -29,6 +31,7 @@ public class IntArrayTupleIterator implements Iterator {
             }
         }
         isEmpty = tempIsEmpty;
+        currentValues = new int[arrayTuple.length];
     }
 
     public static IntArrayTupleIterator fromCollections(List<? extends IntCollection> collectionTuple) {
@@ -49,17 +52,17 @@ public class IntArrayTupleIterator implements Iterator {
         return !isEmpty && curPos[curPos.length - 1] < arrayTuple[curPos.length - 1].length;//we can see if we are at the end by only checking the last variable.
     }
 
-    // TODO - don't clone (and document it)
+    
     /**
-     * TODO - document me
+     * TODO - fix the rest of the code so we don't have to clone here.
      *
      * @return
      */
     @Override
     public int[] next() {
-        //store ret first and increase curPos later, so that we actually get the (0,0,..,0) entry.
-        int[] ret = getCurrent();//add exception handling here?
-
+        //set currentValues first and increase curPos later, so that we actually get the (0,0,..,0) entry.
+        setCurrentValues();
+        
         //now increase curPos
         for (int i = 0; i < curPos.length; i++) {
             curPos[i]++;
@@ -72,15 +75,13 @@ public class IntArrayTupleIterator implements Iterator {
             }
         }
 
-        return ret;
+        return Arrays.copyOf(currentValues, currentValues.length);//InterpretedTreeAutomatonTest#testMarco() runs into an infinite loop if we just return currentValues
     }
 
-    private int[] getCurrent() {
-        int[] ret = new int[curPos.length];
+    private void setCurrentValues() {
         for (int i = 0; i < curPos.length; i++) {
-            ret[i] = arrayTuple[i][curPos[i]];
+            currentValues[i] = arrayTuple[i][curPos[i]];
         }
-        return ret;
     }
 
 }
