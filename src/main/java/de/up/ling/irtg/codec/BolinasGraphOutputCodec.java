@@ -37,7 +37,7 @@ public class BolinasGraphOutputCodec extends OutputCodec<SGraph> {
     @Override
     public void write(SGraph object, OutputStream ostream) throws IOException {
         DirectedGraph<GraphNode, GraphEdge> graph = object.getGraph();
-        Writer w = new BufferedWriter(new OutputStreamWriter(ostream, "ISO-8859-1"));
+        Writer w = new BufferedWriter(new OutputStreamWriter(ostream));
         
         List<GraphNode> roots = findRoots(graph);
         
