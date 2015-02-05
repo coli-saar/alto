@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -58,16 +59,16 @@ public class Util {
                 return Tree.create(tree.getLabel() + "_0");
             }
         } else {
-            List<Tree<String>> mappedChildren = mapList(tree.getChildren(), Util::makeTreeWithArities);
+            List<Tree<String>> mappedChildren = mapToList(tree.getChildren(), Util::makeTreeWithArities);
             return Tree.create(tree.getLabel() + "_" + mappedChildren.size(), mappedChildren);
         }
     }
 
-    public static <I, O> List<O> mapList(List<I> values, Function<I, O> fn) {
+    public static <I, O> List<O> mapToList(Collection<I> values, Function<I, O> fn) {
         return values.stream().map(fn).collect(Collectors.toList());
     }
     
-    public static <I, O> Set<O> mapSet(Set<I> values, Function<I, O> fn) {
+    public static <I, O> Set<O> mapToSet(Collection<I> values, Function<I, O> fn) {
         return values.stream().map(fn).collect(Collectors.toSet());
     }
     
@@ -131,7 +132,7 @@ public class Util {
     }
     
     public static <L,V> V dfs(Tree<L> tree, BottomUpTreeVisitor<L,V> visitor) {
-        List<V> childValues = mapList(tree.getChildren(), u -> dfs(u, visitor));
+        List<V> childValues = mapToList(tree.getChildren(), u -> dfs(u, visitor));
         return visitor.combine(tree, childValues);
     }
     

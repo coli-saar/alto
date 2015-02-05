@@ -114,7 +114,7 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             String terminal = gensym("r");
             auto.addRule(auto.createRule(rule.lhs, terminal, rhsNonterminals, rule.weight));
             stringHom.add(terminal, Util.makeBinaryTree("*", homLeaves));
-            treeHom.add(terminal, Util.makeTreeWithArities(Tree.create(rule.lhs, Util.mapList(homLeaves, Tree::create))));
+            treeHom.add(terminal, Util.makeTreeWithArities(Tree.create(rule.lhs, Util.mapToList(homLeaves, Tree::create))));
         }
 
         auto.addFinalState(auto.addState(startsym));

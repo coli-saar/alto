@@ -123,7 +123,7 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
         Auto_ruleContext autoRule = irtgRule.auto_rule();
 
         trule.lhs = name(autoRule.state().name());
-        trule.rhs = Util.mapList(autoRule.state_list().state(), x -> name(x.name()));
+        trule.rhs = Util.mapToList(autoRule.state_list().state(), x -> name(x.name()));
         trule.label = name(autoRule.name());
 
         if (autoRule.state().FIN_MARK() != null) {
@@ -161,7 +161,7 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
     private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Atomic_guard_conditionContext condition) throws ParseException {
         Tree<String> guardTerm = term(condition.term());
 
-        List<String> guardArgs = Util.mapList(guardTerm.getChildren(), x -> x.getLabel());
+        List<String> guardArgs = Util.mapToList(guardTerm.getChildren(), x -> x.getLabel());
         return new TemplateInterpretedTreeAutomaton.AtomicGuard(guardTerm.getLabel(), guardArgs);
     }
 

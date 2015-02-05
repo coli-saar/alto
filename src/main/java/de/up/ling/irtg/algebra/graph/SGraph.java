@@ -54,6 +54,11 @@ public class SGraph{
     private boolean hasCachedHashcode;
     private int cachedHashcode;
     private boolean equalsMeansIsomorphy;
+    private Map<String, Set<String>> incomingEdgeLabels;
+    private Map<String, Set<String>> outgoingEdgeLabels;
+    private Map<String, String[]> incomingEdgeLabelsAsList;
+    private Map<String, String[]> outgoingEdgeLabelsAsList;
+    private List<String> allNodeNames;
 
     /**
      * Creates an empty s-graph.
@@ -66,6 +71,12 @@ public class SGraph{
         hasCachedHashcode = false;
         equalsMeansIsomorphy = true;
     }
+    
+    private void invalidate() {
+        hasCachedHashcode = false;
+        incomingEdgeLabels = null;
+        outgoingEdgeLabels = null;
+    }
 
     /**
      * Creates an s-graph with the given underlying graph, and no sources.
@@ -77,7 +88,7 @@ public class SGraph{
 
         sourceToNodename = new HashMap<>();
         nodenameToSources = HashMultimap.create();
-        hasCachedHashcode = false;
+        invalidate();
         equalsMeansIsomorphy = true;
 
         nameToNode = new HashMap<>();
@@ -110,7 +121,7 @@ public class SGraph{
             nameToNode.put(name, u);
         }
 
-        hasCachedHashcode = false;
+        invalidate();
         return u;
     }
 
@@ -128,7 +139,7 @@ public class SGraph{
         GraphNode u = new GraphNode(anonymousName, label);
         graph.addVertex(u);
         nameToNode.put(anonymousName, u);
-        hasCachedHashcode = false;
+        invalidate();
         return u;
     }
 
@@ -150,7 +161,7 @@ public class SGraph{
 //            System.err.println("graph was: " + this);
         } else {
             e.setLabel(label);
-            hasCachedHashcode = false;
+            invalidate();
         }
 
         return e;
@@ -166,7 +177,7 @@ public class SGraph{
     public void addSource(String sourceName, String nodename) {
         sourceToNodename.put(sourceName, nodename);
         nodenameToSources.put(nodename, sourceName);
-        hasCachedHashcode = false;
+        invalidate();
     }
 
     /**
@@ -818,6 +829,33 @@ public class SGraph{
         foreachMatchingSubgraph(subgraph, s -> ret.add(s));
         return ret;
     }
+    
+    private void recomputeAdjacencyCache() {
+        if( incomingEdgeLabels == null ) {
+            incomingEdgeLabels = new HashMap<>();
+            outgoingEdgeLabels = new HashMap<>();
+            incomingEdgeLabelsAsList = new HashMap<>();
+            outgoingEdgeLabelsAsList = new HashMap<>();
+            
+            String[] x = new String[0];
+            
+            for( GraphNode node : graph.vertexSet() ) {
+                String nodename = node.getName();
+                Set<String> out = Util.mapToSet(getGraph().outgoingEdgesOf(node), e -> e.getLabel());
+                outgoingEdgeLabels.put(nodename, out);                
+                outgoingEdgeLabelsAsList.put(nodename, out.toArray(x));
+                
+                Set<String> in = Util.mapToSet(getGraph().incomingEdgesOf(node), e -> e.getLabel());
+                incomingEdgeLabels.put(nodename, in);
+                
+                incomingEdgeLabelsAsList.put(nodename, in.toArray(x));
+            }
+            
+            allNodeNames = Util.mapToList(graph.vertexSet(), u -> u.getName());
+        }
+    }
+    
+    
 
     /**
      * Applies the given function "fn" to all sub-s-graphs of this s-graph
@@ -829,9 +867,12 @@ public class SGraph{
      * @param fn 
      */
     public void foreachMatchingSubgraph(SGraph subgraph, Consumer<SGraph> fn) {
-        Map<String, Set<String>> possibleNodeRenamings = new HashMap<>();
+        Map<String, Collection<String>> possibleNodeRenamings = new HashMap<>();
 
         ensureNodeIndices();
+        recomputeAdjacencyCache();
+        
+        subgraph.recomputeAdjacencyCache();
         
 //        System.err.println("\nmatch complete graph: " + this);
 //        System.err.println("   - subgraph: " + subgraph);
@@ -840,40 +881,60 @@ public class SGraph{
         for (String nodename : subgraph.getAllNodeNames()) {
             GraphNode node = subgraph.getNode(nodename);
             String nodelabel = node.getLabel();
-            Set<String> possibleRenamingsHere = null; // node names in "this" that nodename might correspond to
             
-//            System.err.println("possible renamings for subgraph node " + nodename);
+            String[] outgoingEdgeLabelsOfNode = subgraph.outgoingEdgeLabelsAsList.get(nodename);
+            String[] incomingEdgeLabelsOfNode = subgraph.incomingEdgeLabelsAsList.get(nodename);
+            
+            Collection<String> maybePossibleRenamingsHere = (nodelabel == null) ? allNodeNames : labelToNodename.get(nodelabel);
+            List<String> actuallyPossibleRenamingsHere = new ArrayList<>();
+            
+            renamedNodeLoop:
+            for( String renamedNode : maybePossibleRenamingsHere ) {                
+                Set<String> outgoingEdgeLabelsOfRenamed = outgoingEdgeLabels.get(renamedNode);
+                Set<String> incomingEdgeLabelsOfRenamed = incomingEdgeLabels.get(renamedNode);
 
-            if (nodelabel == null) {
-                possibleRenamingsHere = Util.mapSet(graph.vertexSet(), x -> x.getName());
-            } else {
-                List<String> possibleNodenames = labelToNodename.get(nodelabel);
-                possibleRenamingsHere = new HashSet<String>(possibleNodenames);
+                // only collect node if its outgoing edges cover all the outgoing edge labels of node to match
+                for( int i = 0; i < outgoingEdgeLabelsOfNode.length; i++ ) {
+                    if( ! outgoingEdgeLabelsOfRenamed.contains(outgoingEdgeLabelsOfNode[i]) ) {
+                        continue renamedNodeLoop;
+                    }
+                }
+                
+                // same for incoming edge labels
+                for( int i = 0; i < incomingEdgeLabelsOfNode.length; i++ ) {
+                    if( ! incomingEdgeLabelsOfRenamed.contains(incomingEdgeLabelsOfNode[i])) {
+                        continue renamedNodeLoop;
+                    }
+                }
+                
+                actuallyPossibleRenamingsHere.add(renamedNode);
             }
+            
+            
             
 //            System.err.println("- initial guess: " + possibleRenamingsHere);
 
-            // filter out node renamings that don't have correct adjacent edge labels
-            for (GraphEdge e : subgraph.graph.outgoingEdgesOf(node)) {
-                possibleRenamingsHere.removeIf(renamedNodeName
-                        -> !getGraph().outgoingEdgesOf(getNode(renamedNodeName))
-                        .stream()
-                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
-                );
-            }
-            
-//            System.err.println("- after outgoing edge filter: " + possibleRenamingsHere);
-
-            for (GraphEdge e : subgraph.graph.incomingEdgesOf(node)) {
-                possibleRenamingsHere.removeIf(renamedNodeName -> !getGraph().incomingEdgesOf(getNode(renamedNodeName))
-                        .stream()
-                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
-                );
-            }
+//            // filter out node renamings that don't have correct adjacent edge labels
+//            for (GraphEdge e : subgraph.graph.outgoingEdgesOf(node)) {
+//                maybePossibleRenamingsHere.removeIf(renamedNodeName
+//                        -> !getGraph().outgoingEdgesOf(getNode(renamedNodeName))
+//                        .stream()
+//                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
+//                );
+//            }
+//            
+////            System.err.println("- after outgoing edge filter: " + possibleRenamingsHere);
+//
+//            for (GraphEdge e : subgraph.graph.incomingEdgesOf(node)) {
+//                maybePossibleRenamingsHere.removeIf(renamedNodeName -> !getGraph().incomingEdgesOf(getNode(renamedNodeName))
+//                        .stream()
+//                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
+//                );
+//            }
             
 //            System.err.println("- after incoming edge filter: " + possibleRenamingsHere);
 
-            possibleNodeRenamings.put(nodename, possibleRenamingsHere);
+            possibleNodeRenamings.put(nodename, actuallyPossibleRenamingsHere);
         }
 
         // iterate over all combinations
@@ -881,7 +942,7 @@ public class SGraph{
         _foreachMatchingSubgraph(nodesInOrder, 0, possibleNodeRenamings, new HashMap<String, String>(), subgraph, fn);
     }
 
-    private void _foreachMatchingSubgraph(List<String> nodes, int pos, Map<String, Set<String>> possibleRenamings, Map<String, String> selectedRenaming, SGraph subgraph, Consumer<SGraph> fn) {
+    private void _foreachMatchingSubgraph(List<String> nodes, int pos, Map<String, Collection<String>> possibleRenamings, Map<String, String> selectedRenaming, SGraph subgraph, Consumer<SGraph> fn) {
         if (pos == nodes.size()) {
             // check that this is actually a subgraph
             if (containsAsSubgraph(subgraph.getGraph(), selectedRenaming)) {

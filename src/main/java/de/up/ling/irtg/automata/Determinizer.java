@@ -152,7 +152,7 @@ public class Determinizer<State> {
     }
 
     private Set<State> mapStates(IntSet stateIds) {
-        return Util.mapSet(stateIds, q -> originalAutomaton.getStateForId(q));
+        return Util.mapToSet(stateIds, q -> originalAutomaton.getStateForId(q));
     }
 
     // returns sorted, duplicate-free list of parents of the rules
