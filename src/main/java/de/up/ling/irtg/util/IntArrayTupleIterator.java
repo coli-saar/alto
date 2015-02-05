@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.ints.IntCollection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 /**
  *
@@ -20,6 +21,37 @@ public class IntArrayTupleIterator implements Iterator {
     private final int[] curPos;
     private final int[] currentValues;
     private final boolean isEmpty;
+    
+    public void foreach(Consumer<int[]> fn) {
+        boolean done = isEmpty;
+        int i = 0;
+        
+        while( !done ) {
+            fn.accept(currentValues);
+            
+            // increment positions
+            i = 0;
+            while( i < curPos.length ) {
+                curPos[i]++;
+                
+                if( curPos[i] < arrayTuple[i].length ) {
+                    currentValues[i] = arrayTuple[i][curPos[i]];
+                    break;
+                } else {
+                    curPos[i] = 0;
+                    currentValues[i] = arrayTuple[i][0];
+                    i++;
+                    // fall through and increment next position
+                }
+            }
+            
+            if( i == curPos.length ) {
+                done = true;
+                // at this point, all curPos entries are 0,
+                // so array is prepared for next foreach
+            }
+        }
+    }
 
     public IntArrayTupleIterator(int[][] arrayTuple) {
         this.arrayTuple = arrayTuple;

@@ -40,14 +40,14 @@ public class ParseTester {
     
     public static void main(String[] args) throws Exception{
         
-        Reader corpusReader = new FileReader("corpora and grammars/corpora/amr-bank-v1.3.txt");
+        Reader corpusReader = new FileReader("corpora-and-grammars/corpora/amr-bank-v1.3.txt");
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
         
         int start = 0;
         int stop = 1000;
   
-        int warmupIterations = 0;
+        int warmupIterations = 2;
         int iterations = 1;
         int internalIterations = 1;
         
@@ -61,7 +61,7 @@ public class ParseTester {
         List<String> labels = new ArrayList<>();
         
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("corpora and grammars/grammars/LittlePrinceSubtreesTyped.txt"));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("corpora-and-grammars/grammars/LittlePrinceSubtreesTyped.txt"));
         
         
         

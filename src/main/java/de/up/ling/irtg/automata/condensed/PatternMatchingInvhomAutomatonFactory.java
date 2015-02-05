@@ -541,6 +541,8 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         //Stream<int[]> inputTupleSets = Arrays.stream(rhsChildIDs).map(set -> set.toIntArray());
         //int[][] inputTuple = inputTupleSets.toArray(size -> new int[size][]);
         //IntArrayTupleIterator tupleItOld = new IntArrayTupleIterator(inputTuple);
+        
+//        tupleIt.foreach( rhsProcessedChildIDs -> {
         while (tupleIt.hasNext()) {
             //ret++;
 
