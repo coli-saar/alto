@@ -17,7 +17,6 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
@@ -27,7 +26,6 @@ import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.IntArrayTupleIterator;
 import de.up.ling.irtg.util.IntInt2IntMap;
-import de.up.ling.irtg.util.IntSetTupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -542,11 +540,8 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         //int[][] inputTuple = inputTupleSets.toArray(size -> new int[size][]);
         //IntArrayTupleIterator tupleItOld = new IntArrayTupleIterator(inputTuple);
         
-//        tupleIt.foreach( rhsProcessedChildIDs -> {
-        while (tupleIt.hasNext()) {
-            //ret++;
-
-            int[] rhsProcessedChildIDs = tupleIt.next();
+        // internal iteration without array copy is about 10% faster (after extensive warmup)
+        tupleIt.foreach( rhsProcessedChildIDs -> {
             for (Rule rhsRule : rhs.getRulesBottomUp(rhsLabelID, rhsProcessedChildIDs)) {
                 Pair<String, State> intersParent = makeDuoState(matcherRule.getParent(), rhsRule.getParent(), rhs, matcherStateToRhsState, agenda, seen);
                 Pair<String, State>[] intersChildren = new Pair[arity];
@@ -556,8 +551,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, matcherRule.getLabel(restrictiveMatcher), intersChildren));
 
             }
-        }
-        //return ret;
+        });
     }
 
     //given a rule matcherRule and a position pos of the currently examined state, this returns the known possible rhs children in rhsChildIDs which match the matcher-childstates of the rule.

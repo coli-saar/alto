@@ -10,7 +10,6 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.GraphNode;
-import de.up.ling.irtg.algebra.graph.ParseTester;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
@@ -30,7 +29,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<BoundaryRepresentation> {
-    
+//    private Int2ObjectMap<Iterable<Rule>> storedRulesNullary;
+//    private Int2Object
     
     public final GraphInfo completeGraphInfo;
     

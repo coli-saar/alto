@@ -58,13 +58,13 @@ class PatternMatchingInvhomAutomatonTest {
         List input = alg.parseString("john watches the woman with the telescope")
         TreeAutomaton decomp = alg.decompose(input)
         
-        CpuTimeStopwatch sw = new CpuTimeStopwatch()
-        sw.record(0)
+//        CpuTimeStopwatch sw = new CpuTimeStopwatch()
+//        sw.record(0)
         
         CondensedTreeAutomaton invhom = f.invhom(decomp)
         
-        sw.record(1)
-        sw.printMilliseconds("invhom")
+//        sw.record(1)
+//        sw.printMilliseconds("invhom")
         
         assert invhom.accepts(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
         assert invhom.accepts(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));

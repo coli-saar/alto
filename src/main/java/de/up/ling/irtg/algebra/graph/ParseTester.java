@@ -47,7 +47,7 @@ public class ParseTester {
         int start = 0;
         int stop = 1000;
   
-        int warmupIterations = 2;
+        int warmupIterations = 10;
         int iterations = 1;
         int internalIterations = 1;
         
@@ -76,9 +76,10 @@ public class ParseTester {
         for (int j = 0; j<warmupIterations; j++) {
             for (int i = start; i < stop; i++) {
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, internalIterations, internalSw);
-                System.err.println("i = " + i);
+                System.err.print(" i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
+            System.err.println();
         }
         
         sw.record(0);
@@ -99,9 +100,10 @@ public class ParseTester {
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, internalIterations, internalSw);
-                System.err.println("i = " + i);
+                System.err.print("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
+            System.err.println();
             averageLogger.setDefaultCount((stop-start)*internalIterations);
             averageLogger.printAveragesAsError();
         }

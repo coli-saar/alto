@@ -99,7 +99,7 @@ class GraphAlgebraTest {
     public void testParseGraphWithCoref() {
         InterpretedTreeAutomaton irtg = pi(COREF);
         TreeAutomaton chart = irtg.parse(["graph":"(u91<root> / want-01  :ARG0 (u92<coref1> / bill)  :ARG1 (u93 / like-01           :ARG0 (u94 / girl)	  :ARG1 u92)  :dummy u94)"])
-        System.err.println(chart);
+//        System.err.println(chart);
         assertEquals(new HashSet([pt("want3(bill, girl, like(him))"), pt("want3(him, girl, like(bill))")]),
                      chart.language())
     }
