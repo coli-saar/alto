@@ -28,11 +28,14 @@ import de.up.ling.irtg.util.IntArrayTupleIterator;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.AbstractIntList;
+import it.unimi.dsi.fastutil.ints.IntLists.Singleton;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -504,7 +507,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         int rhsLabelID = mapper.remapBackward(matcherRule.getLabel());
         int arity = matcherRule.getArity();
 
-        List<IntSet> rhsChildIDs = new ArrayList<>();
+        List<IntCollection> rhsChildIDs = new ArrayList<>();
         boolean isEmpty = collectRhsChildIDs(rhsChildIDs, arity, pos, rhsChildID, matcherStateToRhsState, matcherRule);
 
         if (!isEmpty) {
@@ -531,7 +534,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     }
 
     //iterates over all combinations in rhsChildIDs and checks if the rhs automaton has matching bottom up rules.
-    private void getRulesBottomUpForRhsChildren(TreeAutomaton<State> rhs, List<IntSet> rhsChildIDs, int rhsLabelID, Rule matcherRule, int arity, Int2ObjectMap<IntSet> matcherStateToRhsState, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen, ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton) {
+    private void getRulesBottomUpForRhsChildren(TreeAutomaton<State> rhs, List<IntCollection> rhsChildIDs, int rhsLabelID, Rule matcherRule, int arity, Int2ObjectMap<IntSet> matcherStateToRhsState, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen, ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton) {
         //int ret = 0;
 
         IntArrayTupleIterator tupleIt = IntArrayTupleIterator.fromCollections(rhsChildIDs);
@@ -553,14 +556,54 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             }
         });
     }
+    
+    
+    // immutable IntList that contains a single element
+    private static class MySingletonIntList extends AbstractIntList {
+        private int[] valueArray;
+
+        public MySingletonIntList(int value) {
+            valueArray = new int[1];
+            valueArray[0] = value;
+        }
+        
+        @Override
+        public int size() {
+            return 1;
+        }
+
+        @Override
+        public int getInt(int i) {
+            if( i == 0 ) {
+                return valueArray[0];
+            } else {
+                return 0; // let's not call this
+            }
+        }
+
+        @Override
+        public int[] toIntArray() {
+            return valueArray;
+        }
+    }
+    
+    // cache for singleton IntLists that we have seen before
+    private Int2ObjectMap<MySingletonIntList> singletonCache = new ArrayMap<MySingletonIntList>();
 
     //given a rule matcherRule and a position pos of the currently examined state, this returns the known possible rhs children in rhsChildIDs which match the matcher-childstates of the rule.
-    private boolean collectRhsChildIDs(List<IntSet> rhsChildIDs, int arity, int pos, int rhsChildID, Int2ObjectMap<IntSet> matcherStateToRhsState, Rule matcherRule) {
+    private boolean collectRhsChildIDs(List<IntCollection> rhsChildIDs, int arity, int pos, int rhsChildID, Int2ObjectMap<IntSet> matcherStateToRhsState, Rule matcherRule) {
         boolean isEmpty = false;
         for (int j = 0; j < arity; j++) {
-            IntSet jSet = new IntArraySet();
+            IntCollection jSet = null;
+            
             if (j == pos) {
-                jSet.add(rhsChildID);
+                jSet = singletonCache.get(rhsChildID);
+                
+                if( jSet == null ) {
+                    MySingletonIntList x = new MySingletonIntList(rhsChildID);
+                    singletonCache.put(rhsChildID, x);
+                    jSet = x;
+                }
             } else {
                 IntSet knownRhsChildIDs = matcherStateToRhsState.get(matcherRule.getChildren()[j]);
                 if (knownRhsChildIDs != null) {
@@ -569,11 +612,10 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                     isEmpty = true;
                 }
             }
+            
             rhsChildIDs.add(jSet);
-            //int size = rhsChildIDs[j].size();
-            //if (size > 1)
-            //    System.err.println(size);
         }
+        
         return isEmpty;
     }
 

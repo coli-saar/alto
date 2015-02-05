@@ -40,13 +40,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         //getStateInterner().setTrustingMode(true);
 
         completeGraphInfo = new GraphInfo(completeGraph, algebra, signature);
-        
-        
-//        storedRules = new BinaryRuleCache();
-        storedRules = new TrieRuleCache();
-        
-        
-        
+        storedRules = new BinaryRuleCache();
         
         //storedRulesTopDown = new Int2ObjectOpenHashMap<>();
         
