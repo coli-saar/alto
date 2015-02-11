@@ -51,7 +51,7 @@ class PatternMatchingInvhomAutomatonTest {
     @Test
     public void testInvhomCfg() {
         InterpretedTreeAutomaton cfg = pi(CFG)
-        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(cfg.getInterpretation("i").getHomomorphism())
+        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(cfg.getInterpretation("i").getHomomorphism(), cfg.getInterpretation("i").getAlgebra())
         f.computeMatcherFromHomomorphism()
         
         Algebra alg = cfg.getInterpretation("i").getAlgebra()
@@ -79,7 +79,7 @@ class PatternMatchingInvhomAutomatonTest {
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism()
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
         
-        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom)
+        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom, alg)
         f.computeRestrictiveMatcherFromHomomorphism()
         
         String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"
@@ -104,7 +104,7 @@ class PatternMatchingInvhomAutomatonTest {
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism()
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
         
-        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom)
+        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom, alg)
         f.computeRestrictiveMatcherFromHomomorphism()
         
         String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"

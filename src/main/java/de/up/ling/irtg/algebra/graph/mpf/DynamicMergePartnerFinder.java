@@ -102,9 +102,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
         if (vNr != -1) {
             IntSet newVertices = new IntOpenHashSet();
-            IntSet newVerticesALL = new IntOpenHashSet();
             newVertices.addAll(vertices);
-            newVerticesALL.addAll(vertices);
             newVertices.add(vNr);
             insertInto(vNr, rep, newVertices);
             if (sourcesRemaining  > 1 || vertices.size() != 0){
@@ -123,8 +121,8 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         } else {
             
             if (sourcesRemaining == 1) {
-                //children[index] = new StorageMPF(auto);
-                children[index] = new EdgeIntersectionMPF((hasAll || (index == ALL)), newVertices, auto);
+                children[index] = new StorageMPF(auto);
+                //children[index] = new EdgeIntersectionMPF((hasAll || (index == ALL)), newVertices, auto);
             } else {
                 children[index] = new DynamicMergePartnerFinder(sourceNr + 1, sourcesRemaining - 1, children.length - 2, auto, (hasAll || (index == ALL)), newVertices);
             }

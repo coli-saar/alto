@@ -261,6 +261,12 @@ public abstract class Algebra<E> {
     }
     
     
+    public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
+        return new BinaryPartnerFinder.DummyBinaryPartnerFinder();
+    }
+    
+    
+    
     protected class EvaluatingDecompositionAutomaton extends TreeAutomaton<E> {
 
         public EvaluatingDecompositionAutomaton(E finalElement) {

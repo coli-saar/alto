@@ -43,6 +43,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -2745,5 +2746,35 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     public TreeAutomaton<Set<State>> determinize() {
         return determinize(null);
+    }
+    
+    
+    private IntSet statesForPatternMatching;
+    //private BitSet seenStatesForPatternMatching;
+    /**
+     * This allows to store the states that can be partners for a certain state in a binary rule. Only a dummy in TreeAutomaton, needs implementation in more advanced decomposition automata.
+     * @param stateID 
+     */
+    public void addStateForPatternMatching(int stateID) {
+        if (statesForPatternMatching == null) {
+            statesForPatternMatching = new IntOpenHashSet();
+            //seenStatesForPatternMatching = new BitSet();
+        }
+        //if (!seenStatesForPatternMatching.get(stateID)) {
+            statesForPatternMatching.add(stateID);
+        //    seenStatesForPatternMatching.set(stateID);
+        //}
+        
+    }
+    
+    /**
+     * This returns a list of possible partners for a given state given a binary rule. Only a dummy in TreeAutomaton, needs implementation in more advanced decomposition automata. This returns the original list, so be careful not to modify it!
+     * @return 
+     */
+    public IntCollection getPartnersForPatternMatching(int stateID, int labelID) {
+        if (statesForPatternMatching == null) {
+            statesForPatternMatching = new IntOpenHashSet();
+        }
+        return statesForPatternMatching;
     }
 }

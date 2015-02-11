@@ -50,7 +50,7 @@ public class Interpretation<E> {
         // and bottom up queries.
         if (hom.isNonDeleting()) {
             if (pmFactory == null) {
-                pmFactory = new PatternMatchingInvhomAutomatonFactory(hom);
+                pmFactory = new PatternMatchingInvhomAutomatonFactory(hom, algebra);
             }
             Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching.");
             return pmFactory.invhomRestrictive(decompositionAutomaton);

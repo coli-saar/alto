@@ -10,15 +10,21 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.GraphNode;
+import de.up.ling.irtg.algebra.graph.ParseTester;
 import de.up.ling.irtg.algebra.graph.SGraph;
+import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinder;
+import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +36,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     final GraphAlgebra algebra;
     public Map<BoundaryRepresentation, Set<Rule>> rulesTopDown;
     public Map<String, Integer> decompLengths;
+    public MergePartnerFinder startStateMPF;
     
     Long2ObjectMap<Long2IntMap> storedStates;
 
@@ -45,12 +52,13 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         //storedRulesTopDown = new Int2ObjectOpenHashMap<>();
         
         
+        
         stateInterner.setTrustingMode(true);
         storedStates = new Long2ObjectOpenHashMap<>();
         Long2IntMap edgeIDMap = new Long2IntOpenHashMap();
         edgeIDMap.defaultReturnValue(-1);
         
-        
+        startStateMPF = new DynamicMergePartnerFinder(0, completeGraphInfo.getNrSources(), completeGraphInfo.getNrNodes(), this);
         //BoundaryRepresentation completeRep = new BoundaryRepresentation(completeGraph, completeGraphInfo);
         //int x = addState(completeRep);
         //finalStates.add(x);
@@ -125,6 +133,11 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         Iterable<Rule> cachedResult = storedRules.get(labelId, childStates);
         
         if( cachedResult != null ) {
+            /*switch (signature.getArity(labelId)) {
+                case 0: ParseTester.averageLogger.increaseValue("constants recognised"); break;
+                case 1: ParseTester.averageLogger.increaseValue("unaries recognised"); break;
+                case 2: ParseTester.averageLogger.increaseValue("merges recognised"); break;
+            }*/
             return cachedResult;
         }
         
@@ -145,6 +158,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 System.err.println("trying to merge less than 2!");
             }
             if (!children.get(0).isMergeable(completeGraphInfo.pwsp, children.get(1))) { // ensure result is connected
+                //ParseTester.averageLogger.increaseValue("MergeFail");
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
                 BoundaryRepresentation result = children.get(0).merge(children.get(1), completeGraphInfo);
@@ -166,16 +180,18 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
             BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
             if (tempResult == null) {
+                //ParseTester.averageLogger.increaseValue("m1RenameFail");
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             }
 
             if (!children.get(0).isMergeable(completeGraphInfo.pwsp, tempResult)) { // ensure result is connected
+                //ParseTester.averageLogger.increaseValue("m1MergeFail");
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
                 BoundaryRepresentation result = children.get(0).merge(tempResult, completeGraphInfo);
 
                 if (result == null) {
-//                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
+                    System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
                     return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
                 } else {
                     //result.setEqualsMeansIsomorphy(false);//is this a problem??
@@ -193,6 +209,13 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
                 || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
             //ParseTester.averageLogger.increaseValue("UnaryRulesChecked");
+            if (label.startsWith(GraphAlgebra.OP_RENAME)) {
+                //ParseTester.averageLogger.increaseValue("RenameRulesChecked");
+            } else if (label.startsWith(GraphAlgebra.OP_SWAP)) {
+                //ParseTester.averageLogger.increaseValue("SwapRulesChecked");
+            } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
+                //ParseTester.averageLogger.increaseValue("ForgetRulesChecked");
+            }
             BoundaryRepresentation arg = children.get(0);
 
             for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
@@ -290,8 +313,29 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
 
 
-
+    @Override
+    public IntCollection getPartnersForPatternMatching(int stateID, int labelID) {
+        if (signature.resolveSymbolId(labelID).equals(GraphAlgebra.OP_MERGE)) {
+            return startStateMPF.getAllMergePartners(stateID);
+        } else {
+            return super.getPartnersForPatternMatching(stateID, labelID);
+        }
+        
+    }
     
+    private BitSet seenStatesForPatternMatching;
+    
+    @Override
+    public void addStateForPatternMatching(int stateID) {
+        if (seenStatesForPatternMatching == null) {
+            seenStatesForPatternMatching = new BitSet();
+        }
+        if (!seenStatesForPatternMatching.get(stateID)) {
+            seenStatesForPatternMatching.set(stateID);
+            startStateMPF.insert(stateID);
+        }
+        super.addStateForPatternMatching(stateID); //To change body of generated methods, choose Tools | Templates.
+    }
 
     boolean doBolinas(){
         return false;
