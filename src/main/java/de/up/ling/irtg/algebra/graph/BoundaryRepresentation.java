@@ -905,4 +905,14 @@ public class BoundaryRepresentation {
         }
     }
     
+    public Set<String> getAllSourceNames() {
+        Set<String> ret = new HashSet<>();
+        for (int source = 0; source<sourceToNodename.length; source++) {
+            if (sourceToNodename[source]>=0) {
+                ret.add(completeGraphInfo.getSourceForInt(source));
+            }
+        }
+        return ret;
+    }
+    
 }
