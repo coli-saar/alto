@@ -35,7 +35,7 @@ public class BRCorpusParser {
 
     private static ParsingResult workerFunction(ParsingArgument arg) throws Exception {
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
-        boolean res = IrtgInducer.parseInstance(arg.instance, arg.nrSources, false, true, false, "/data/csuserb/parsingResults/", sw);
+        boolean res = IrtgInducer.parseInstance(arg.instance, arg.nrSources, false, true, false, "/data/csuserb/parsingResultsFeb1378/", sw);
         ParsingResult ret = new ParsingResult(res, sw.getTimeBefore(1), arg.instance.id);
         return ret;
     }

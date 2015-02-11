@@ -292,6 +292,8 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     private void addTermToRestrictiveMatcher(int labelSetID) {
         posOfStartStateRepInRules.addAll(labelSetID2StartStateRules.get(labelSetID));
         
+        restrictiveMatcher.addRule(labelSetID2TopDownStartRules.get(labelSetID));
+        
         for (Pair<Rule, Integer> pair : labelSetID2StartStateRules.get(labelSetID)) {
             restrictiveMatcher.addRule(pair.getLeft());
         }
@@ -647,6 +649,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         for (Rule constRuleMatcher : matcherConstantRules) {
             debugCounterConst++;
             for (Rule constRuleRhs : rhs.getRulesBottomUp(mapper.remapBackward(constRuleMatcher.getLabel()), new int[0])) {
+                //System.err.println(constRuleMatcher.getLabel(restrictiveMatcher));
                 int matcherParent = constRuleMatcher.getParent();
                 int rhsParent = constRuleRhs.getParent();
                 Pair<String, State> parent = makeDuoState(matcherParent, rhsParent, rhs, matcherState2RhsState, agenda, seen);
@@ -1316,7 +1319,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 if (!isStartState.get(rule.getParent())) {
                     matcherAuto.addRule(rule);
                 } else {
-                    
+                    labelSetID2TopDownStartRules.put(labelSetID, rule);
                 }
             }
         }

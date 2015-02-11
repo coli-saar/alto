@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 public class ParseTester {
 
     static int runningNumber = 0;
-    static String logDescription = "BolinasTopDown";
+    static String logDescription = "1000";
 
     public static AverageLogger averageLogger = new AverageLogger();
 
@@ -158,6 +158,7 @@ public class ParseTester {
     private static void parseBolinasCompatible() throws Exception {
         Reader corpusReader = new FileReader("corpora and grammars/corpora/amr-bank-v1.3.txt");
         IrtgInducer inducer = new IrtgInducer(corpusReader);
+        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
         //no sorting here!
 
         int start = 0;
@@ -180,6 +181,7 @@ public class ParseTester {
         //irtg.getInterpretation("int").setPmLogName("AfterMergingStartStatesInto_q");
         for (int j = 0; j < warmupIterations; j++) {
             for (int i = start; i < stop; i++) {
+                //System.err.println(inducer.getCorpus().get(i).id);
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, 1, internalSw);
                 System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
@@ -246,11 +248,14 @@ public class ParseTester {
             Map<String, Object> input = new HashMap<>();
             input.put("int", ti.graph);
             chart = irtg.parseInputObjects(input);
+            
             //chart.viterbi();
         }
-        System.err.println("Language Size: "+chart.language().size());//DEBUGGING
+        //System.err.println(ti.graph.getAllNodeNames().size());
         internalSw.record(1);
         if (resultWriter != null) {
+            int languageSize = chart.getFinalStates().size();
+            //System.err.println("Language Size: "+languageSize);//DEBUGGING
             StringJoiner sj = new StringJoiner(",");
             sj.add(String.valueOf(ti.id));
             sj.add(String.valueOf(runningNumber));
@@ -260,7 +265,7 @@ public class ParseTester {
             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("int").getAlgebra();
             sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).maxDegree));
             sj.add(String.valueOf(internalSw.getTimeBefore(1) / 1000000));
-            sj.add(String.valueOf(chart.getFinalStates().size()));
+            sj.add(String.valueOf(languageSize));
             try {
                 resultWriter.write(sj.toString() + "\n");
             } catch (IOException ex) {

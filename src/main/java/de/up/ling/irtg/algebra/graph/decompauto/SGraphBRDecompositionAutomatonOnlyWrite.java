@@ -36,9 +36,12 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
 
     public void writeRule(Rule rule) throws Exception {
 
-            boolean first = true;
-            writer.write(Tree.encodeLabel(encodeShort(rule.getParent())) + (finalStates.contains(rule.getParent()) ? "!" : "") + " -> " + Tree.encodeLabel(rule.getLabel(this)));
+            String renameStatePrefix = "0R";
+            String parentPrefix = rule.getLabel(this).startsWith(GraphAlgebra.OP_RENAME) ? renameStatePrefix : "";
+            writer.write(Tree.encodeLabel(parentPrefix + encodeShort(rule.getParent())) + (finalStates.contains(rule.getParent()) ? "!" : "") + " -> " + Tree.encodeLabel(rule.getLabel(this)));
 
+            
+            boolean first = true;
             if (rule.getChildren().length > 0) {
                 writer.write("(");
 
@@ -56,11 +59,35 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
             }
             writer.write("\n");
             
+            
+            
+            if (rule.getLabel(this).equals(GraphAlgebra.OP_MERGE)) {
+                
+                writer.write(Tree.encodeLabel(parentPrefix + encodeShort(rule.getParent())) + (finalStates.contains(rule.getParent()) ? "!" : "") + " -> " + Tree.encodeLabel(rule.getLabel(this)));
+
+                first = true;
+                if (rule.getChildren().length > 0) {
+                    writer.write("(");
+                    for (int child : rule.getChildren()) {
+                        if (first) {
+                            first = false;
+                            writer.write((child == 0) ? "null" : Tree.encodeLabel(encodeShort(child)));
+                        } else {
+                            writer.write(", ");
+                            writer.write((child == 0) ? "null" : Tree.encodeLabel(renameStatePrefix + encodeShort(child)));
+                        }
+                    }
+
+                    writer.write(")");
+                }
+                writer.write("\n");
+            }
+
             count++;
             if (count % flushThreshold == 0) {
                 writer.flush();
             }
-
+            
     }
     
     private String encodeShort(int stateId){

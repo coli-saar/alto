@@ -133,8 +133,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
         //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());
         
-        //return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
-        return decompose(value, SGraphBRDecompositionAutomatonTopDown.class);
+        return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
+        //return decompose(value, SGraphBRDecompositionAutomatonTopDown.class);
     }
     
     public TreeAutomaton decompose(SGraph value, Class c){
