@@ -94,6 +94,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     //private Int2ObjectMap<IntSet> matcherState2RhsState;
     private Int2ObjectMap<BinaryPartnerFinder> matcherState2RhsState;
     private final Algebra rhsAlgebra;
+    private Int2ObjectMap<Rule> labelSetID2TopDownStartRules;
     
     //private Map<String, Set<Rule>> matcherConstantRulesByNodeLabel;       idea for later!
     //private Map<String, Set<Rule>> matcherConstantRulesWithoutNodeLabelsByTerm;
@@ -119,6 +120,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     }
 
     public void initialize(boolean computeMatcher) {
+        labelSetID2TopDownStartRules = new Int2ObjectOpenHashMap();
         matcherChild2Rule = new ArrayMap<>();
         posOfStartStateRepInRules = new ArrayList<>();
         posOfStartStateRepInRulesFromConstantFreeTerms = new ArrayList<>();
@@ -1307,11 +1309,15 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         //matcherAuto.addRule(rule);//for now just always add all rules to the automaton.
         for (int pos = 0; pos < rule.getChildren().length; pos++) {
             int childID = rule.getChildren()[pos];
-            if (childID == startStateRepresentativeID || isStartState.get(rule.getParent())) {
+            if (childID == startStateRepresentativeID) {
                 storeRuleTemp(rule, labelSetID, pos);
             } else {
                 matcherChild2Rule.put(childID, new ImmutablePair(rule, pos));
-                matcherAuto.addRule(rule);
+                if (!isStartState.get(rule.getParent())) {
+                    matcherAuto.addRule(rule);
+                } else {
+                    
+                }
             }
         }
     }
