@@ -97,6 +97,26 @@ public class FastutilUtils {
             }
         }
     }
+    
+    public static void forEachInIntersection(IntSet s1, IntSet s2, IntConsumer fn) {
+        if( s1.size() < s2.size() ) {
+            IntIterator it = s1.iterator();            
+            while( it.hasNext() ) {
+                int i = it.nextInt();
+                if( s2.contains(i)) {
+                    fn.accept(i);
+                }
+            }
+        } else {
+            IntIterator it = s2.iterator();            
+            while( it.hasNext() ) {
+                int i = it.nextInt();
+                if( s1.contains(i)) {
+                    fn.accept(i);
+                }
+            }
+        }
+    }
 
     /**
      * Iterates over all tuples of elements in the given iterables. In other
