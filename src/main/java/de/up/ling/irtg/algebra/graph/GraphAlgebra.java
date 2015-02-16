@@ -18,6 +18,7 @@ import static de.up.ling.irtg.algebra.graph.GraphInfo.BOLINASSUBROOTSTRING;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
 import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinder;
+import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinderOLD;
 import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
@@ -131,8 +132,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public TreeAutomaton decompose(SGraph value) {
         //return new SGraphDecompositionAutomaton(value, this, getSignature());
         //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
-        //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());
         
+        //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());//currently bugged
         return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
         //return decompose(value, SGraphBRDecompositionAutomatonTopDown.class);
     }

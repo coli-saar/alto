@@ -41,13 +41,18 @@ public class ParseTester {
 
     static int runningNumber = 0;
     static String logDescription = "1000";
+    
+    
+    static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
+    static String grammarPath = "corpora-and-grammars/grammars/sgraph_bolinas_comparison/rules.txt";
+    static String bolinasGrammarPath = "corpora-and-grammars/corporas/graph_bolinas_comparison/bolinas.txt";
 
     public static AverageLogger averageLogger = new AverageLogger();
 
     
     
     public static void main(String[] args) throws Exception {
-        parseBolinasCompatible();
+        parseAll();
     }
     
     
@@ -60,13 +65,13 @@ public class ParseTester {
         origNumberSet.add(1377);
         origNumberSet.add(148);
 
-        Reader corpusReader = new FileReader("corpora and grammars/corpora/amr-bank-v1.3.txt");
+        Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         //no sorting.
         int iterations = 5;
         int internalIterations = 100;
         
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("corpora and grammars/grammars/LittlePrinceSubtreesTyped.txt"));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
         CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
         
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
@@ -94,12 +99,12 @@ public class ParseTester {
     }
 
     private static void parseAll() throws Exception {
-        Reader corpusReader = new FileReader("corpora and grammars/corpora/amr-bank-v1.3.txt");
+        Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
 
-        int start = 0;
-        int stop = inducer.getCorpus().size();
+        int start = 20;
+        int stop = 30;//inducer.getCorpus().size();
 
         int warmupIterations = 0;
         int iterations = 1;
@@ -112,7 +117,7 @@ public class ParseTester {
         CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
         List<String> labels = new ArrayList<>();
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("corpora and grammars/grammars/LittlePrinceSubtreesTyped.txt"));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
 
         //uncomment this to write a log of the pattern matching:
         //irtg.getInterpretation("int").setPmLogName("AfterMergingStartStatesInto_q");
@@ -129,16 +134,16 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             runningNumber = 0;
-            //averageLogger = new AverageLogger();
-            //averageLogger.activate();
+            averageLogger = new AverageLogger();
+            averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, internalIterations, internalSw);
                 System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
-            //averageLogger.setDefaultCount((stop-start)*internalIterations);
-            //averageLogger.printAveragesAsError();
+            averageLogger.setDefaultCount((stop-start)*internalIterations);
+            averageLogger.printAveragesAsError();
         }
         resultWriter.close();
 
@@ -156,7 +161,7 @@ public class ParseTester {
     }
 
     private static void parseBolinasCompatible() throws Exception {
-        Reader corpusReader = new FileReader("corpora and grammars/corpora/amr-bank-v1.3.txt");
+        Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
         //no sorting here!
@@ -175,7 +180,7 @@ public class ParseTester {
         CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
         List<String> labels = new ArrayList<>();
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("corpora and grammars/grammars/LittlePrinceSubtreesTyped.txt"));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
 
         //uncomment this to write a log of the pattern matching:
         //irtg.getInterpretation("int").setPmLogName("AfterMergingStartStatesInto_q");
@@ -193,7 +198,7 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             runningNumber = 0;
-            Reader bolinasReader = new FileReader("corpora and grammars/corpora/bolinas-amr-bank-v1.3.txt");
+            Reader bolinasReader = new FileReader(bolinasGrammarPath);
             BufferedReader br = new BufferedReader(bolinasReader);
             averageLogger = new AverageLogger();
             averageLogger.activate();
@@ -251,6 +256,8 @@ public class ParseTester {
             
             //chart.viterbi();
         }
+        System.err.println(ti.graph.toIsiAmrString());
+        //System.err.println(chart);
         //System.err.println(ti.graph.getAllNodeNames().size());
         internalSw.record(1);
         if (resultWriter != null) {

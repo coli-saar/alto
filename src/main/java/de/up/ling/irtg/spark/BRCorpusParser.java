@@ -33,9 +33,10 @@ import org.apache.spark.api.java.JavaRDD;
  */
 public class BRCorpusParser {
 
+    
     private static ParsingResult workerFunction(ParsingArgument arg) throws Exception {
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
-        boolean res = IrtgInducer.parseInstance(arg.instance, arg.nrSources, false, true, false, "/data/csuserb/parsingResultsFeb1378/", sw);
+        boolean res = IrtgInducer.parseInstance(arg.instance, arg.nrSources, false, true, false, arg.targetPath, sw);
         ParsingResult ret = new ParsingResult(res, sw.getTimeBefore(1), arg.instance.id);
         return ret;
     }
@@ -55,6 +56,13 @@ public class BRCorpusParser {
             tasks = Integer.valueOf(args[0]);
         }
 
+        String targetPath;
+        if (args.length  >= 3) {
+            targetPath = args[2];
+        } else {
+            targetPath = "/data/csuserb/parsingResults/";
+        }
+        
         // load corpus
         Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
         IrtgInducer inducer = new IrtgInducer(corpusReader);
@@ -71,9 +79,9 @@ public class BRCorpusParser {
         int min = 0;
         int max = inducer.getCorpusSerializable().size();
 
-        if (args.length >= 4) {
-            min = Integer.valueOf(args[2]);
-            max = Integer.valueOf(args[3]);
+        if (args.length >= 5) {
+            min = Integer.valueOf(args[3]);
+            max = Integer.valueOf(args[4]);
         }
 
         GraphAlgebra graphAlgebra = new GraphAlgebra();
@@ -97,7 +105,7 @@ public class BRCorpusParser {
 
     
         ) {
-            argumentList.add(new ParsingArgument(nrSources, relevantCorpu));
+            argumentList.add(new ParsingArgument(nrSources, relevantCorpu, targetPath));
     }
 
     // do the actual work
@@ -177,12 +185,14 @@ private static class ParsingResult implements Serializable {
 
 private static class ParsingArgument implements Serializable {
 
+    final String targetPath;
     final int nrSources;
     final IrtgInducer.TrainingInstanceSerializable instance;
 
-    public ParsingArgument(int nrSources, IrtgInducer.TrainingInstanceSerializable instance) {
+    public ParsingArgument(int nrSources, IrtgInducer.TrainingInstanceSerializable instance, String targetPath) {
         this.nrSources = nrSources;
         this.instance = instance;
+        this.targetPath = targetPath;
     }
 }
 }
