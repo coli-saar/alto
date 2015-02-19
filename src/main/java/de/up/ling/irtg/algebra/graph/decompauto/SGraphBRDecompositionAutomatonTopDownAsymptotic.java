@@ -42,7 +42,7 @@ import org.apache.commons.lang3.tuple.Pair;
  *
  * @author jonas
  */
-public class SGraphBRDecompositionAutomatonTopDownAysmptotic extends TreeAutomaton<BRepTopDown>{
+public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomaton<BRepTopDown>{
 
     public final GraphInfo completeGraphInfo;
     
@@ -57,7 +57,7 @@ public class SGraphBRDecompositionAutomatonTopDownAysmptotic extends TreeAutomat
     
     private final Map<BRepComponent, BRepComponent> storedComponents;
     
-    public SGraphBRDecompositionAutomatonTopDownAysmptotic(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
+    public SGraphBRDecompositionAutomatonTopDownAsymptotic(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(signature);
         this.algebra = algebra;
         //getStateInterner().setTrustingMode(true);
@@ -85,6 +85,7 @@ public class SGraphBRDecompositionAutomatonTopDownAysmptotic extends TreeAutomat
                     if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                         matchedSubgraph.setEqualsMeansIsomorphy(false);
                         storedConstants[labelID].add(new BRepTopDown(matchedSubgraph, storedComponents, completeGraphInfo));
+                        //System.err.println("found constant: "+labelID+"/"+matchedSubgraph.toIsiAmrString());
                     } else {
 //                        System.err.println("match " + matchedSubgraph + " has crossing edges from nodes");
                     }
@@ -92,10 +93,35 @@ public class SGraphBRDecompositionAutomatonTopDownAysmptotic extends TreeAutomat
                 
             }
         }
-        
-        BRepTopDown completeRep = new BRepTopDown(completeGraph, storedComponents, completeGraphInfo);
-        int x = addState(completeRep);
-        finalStates.add(x);
+        Set<BRepTopDown> completeGraphStates = new HashSet<>();
+        SGraph bareCompleteGraph = completeGraph.forgetSourcesExcept(new HashSet<>());
+        completeGraphStates.add(new BRepTopDown(bareCompleteGraph, storedComponents, completeGraphInfo));
+        for (int source = 0; source < completeGraphInfo.getNrSources(); source++) {
+            Set<BRepTopDown> newHere = new HashSet<>();
+            for (BRepTopDown oldRep : completeGraphStates) {
+                for (BRepComponent comp : oldRep.getComponents()) {
+                    Int2ObjectMap<BRepComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
+                    for (int v : nonsplitChildren.keySet()) {
+                        BRepTopDown child = oldRep.forgetReverse(source, v, comp, nonsplitChildren.get(v));
+                        if (child != null) {
+                            newHere.add(child);
+                        }
+                    }
+                    Int2ObjectMap<Set<BRepComponent>> splitChildren = comp.getAllSplits(storedComponents, completeGraphInfo);
+                    for (int v : splitChildren.keySet()) {
+                        BRepTopDown child = oldRep.forgetReverse(source, v, comp, splitChildren.get(v));
+                        if (child != null) {
+                            newHere.add(child);
+                        }
+                    }
+                }
+            }
+            completeGraphStates.addAll(newHere);
+        }
+        for (BRepTopDown completeRep : completeGraphStates) {
+            int x = addState(completeRep);
+            finalStates.add(x);
+        }
         
         
         storedRules = new Int2ObjectOpenHashMap<>();

@@ -35,20 +35,17 @@ public class BRepComponent {
     SplitManager splitManager;
     
     
-    public BRepComponent(GraphInfo completeGraphInfo) {
-        bVertices = new IntOpenHashSet();
-        inBEdges = new IntOpenHashSet();
-        minEdge = -1;
-    }
+    
     
     
     private BRepComponent(IntSet bVertices, IntSet inBEdges) {
-        if (inBEdges.isEmpty()) {
-            System.err.println();
-        }
         this.bVertices = bVertices;
         this.inBEdges = inBEdges;
-        minEdge = Collections.min(inBEdges);
+        if (inBEdges.isEmpty()) {
+            minEdge = -1;
+        } else {
+            minEdge = Collections.min(inBEdges);
+        }
     }
     
     
@@ -73,53 +70,70 @@ public class BRepComponent {
     }
     
     private UndirectedGraph<Integer, Integer> computeCompGraph(GraphInfo graphInfo) {
-        UndirectedGraph<Integer, Integer> ret = new SimpleGraph<>(new GraphInfoEdgeFactory(graphInfo));
-        int startingEdge = inBEdges.iterator().nextInt();
-        Queue<Integer> agenda = new LinkedList<>();
-        agenda.add(startingEdge);
-        BitSet visitedEdges = new BitSet();
-        BitSet visitedVertices = new BitSet();
-        while (!agenda.isEmpty()) {
-            int curE = agenda.poll();
-            visitedEdges.set(curE);
-
-            int[] adjacentVs = new int[]{graphInfo.edgeSources[curE], graphInfo.edgeTargets[curE]};
-            int[] shiftedVs = new int[2];
-            for (int i = 0; i<2; i++) {
-                int curV = adjacentVs[i];
-                if (!visitedVertices.get(curV)) {
-                    ret.addVertex(curV);
-                    visitedVertices.set(curV);
-                    if (!bVertices.contains(curV)) {
-                        for (int nextEdge : graphInfo.getIncidentEdges(curV)) {
-                            if (!visitedEdges.get(nextEdge)) {// && !(graphInfo.edgeSources[nextEdge] == graphInfo.edgeTargets[nextEdge])) {//dont add inner loops
-                                agenda.add(nextEdge);
-                            }
-                        }
-                    }
-                    shiftedVs[i] = curV;
-
-                } else if (bVertices.contains(curV)) {
-                    int shiftedCurV = curV + graphInfo.getNrNodes();
-                    while (visitedVertices.get(shiftedCurV)) {
-                        shiftedCurV+= graphInfo.getNrNodes();
-                    }
-                    ret.addVertex(shiftedCurV);
-                    visitedVertices.set(shiftedCurV);
-                    shiftedVs[i] = shiftedCurV;
-                } else {
-                    shiftedVs[i] = curV;
+        if (bVertices.isEmpty()) {
+            UndirectedGraph<Integer, Integer> ret = new SimpleGraph<>(new GraphInfoEdgeFactory(graphInfo));
+            for (int v = 0; v < graphInfo.getNrNodes(); v++) {
+                ret.addVertex(v);
+                ret.addVertex(v+graphInfo.getNrNodes());
+                ret.addEdge(v, v+graphInfo.getNrNodes());
+            }
+            for (int edge = 0; edge < graphInfo.allEdges.length; edge++) {
+                int v1 = graphInfo.edgeSources[edge];
+                int v2 = graphInfo.edgeTargets[edge];
+                if (v1 != v2) {
+                    ret.addEdge(v1, v2);
                 }
             }
-            if (shiftedVs[0] == shiftedVs[1]) { //&& bVertices.contains(shiftedVs[0]%graphInfo.getNrNodes())) {
-                shiftedVs[1]+=graphInfo.getNrNodes();
-                ret.addVertex(shiftedVs[1]);
-             //   System.err.println();
-            }
-            ret.addEdge(shiftedVs[0], shiftedVs[1]);
+            return ret;
+        } else {
+            UndirectedGraph<Integer, Integer> ret = new SimpleGraph<>(new GraphInfoEdgeFactory(graphInfo));
+            int startingEdge = inBEdges.iterator().nextInt();
+            Queue<Integer> agenda = new LinkedList<>();
+            agenda.add(startingEdge);
+            BitSet visitedEdges = new BitSet();
+            BitSet visitedVertices = new BitSet();
+            while (!agenda.isEmpty()) {
+                int curE = agenda.poll();
+                visitedEdges.set(curE);
 
+                int[] adjacentVs = new int[]{graphInfo.edgeSources[curE], graphInfo.edgeTargets[curE]};
+                int[] shiftedVs = new int[2];
+                for (int i = 0; i<2; i++) {
+                    int curV = adjacentVs[i];
+                    if (!visitedVertices.get(curV)) {
+                        ret.addVertex(curV);
+                        visitedVertices.set(curV);
+                        if (!bVertices.contains(curV)) {
+                            for (int nextEdge : graphInfo.getIncidentEdges(curV)) {
+                                if (!visitedEdges.get(nextEdge)) {// && !(graphInfo.edgeSources[nextEdge] == graphInfo.edgeTargets[nextEdge])) {//dont add inner loops
+                                    agenda.add(nextEdge);
+                                }
+                            }
+                        }
+                        shiftedVs[i] = curV;
+
+                    } else if (bVertices.contains(curV)) {
+                        int shiftedCurV = curV + graphInfo.getNrNodes();
+                        while (visitedVertices.get(shiftedCurV)) {
+                            shiftedCurV+= graphInfo.getNrNodes();
+                        }
+                        ret.addVertex(shiftedCurV);
+                        visitedVertices.set(shiftedCurV);
+                        shiftedVs[i] = shiftedCurV;
+                    } else {
+                        shiftedVs[i] = curV;
+                    }
+                }
+                if (shiftedVs[0] == shiftedVs[1]) { //&& bVertices.contains(shiftedVs[0]%graphInfo.getNrNodes())) {
+                    shiftedVs[1]+=graphInfo.getNrNodes();
+                    ret.addVertex(shiftedVs[1]);
+                 //   System.err.println();
+                }
+                ret.addEdge(shiftedVs[0], shiftedVs[1]);
+
+            }
+            return ret;
         }
-        return ret;
     }
     
     
@@ -162,11 +176,8 @@ public class BRepComponent {
     }
     
     public Int2ObjectMap<BRepComponent> getAllNonSplits(Map<BRepComponent, BRepComponent> storedComponents, GraphInfo graphInfo) {
-        try {
-            return splitManager.getAllNonSplits(storedComponents, graphInfo);
-        } catch (java.lang.Exception e) {
-            return new Int2ObjectOpenHashMap<>();
-        }
+        return splitManager.getAllNonSplits(storedComponents, graphInfo);
+        
     }
     
     

@@ -65,14 +65,14 @@ public class SplitManager {
         
         for (int v : compGraph.vertexSet()) {
             if (!cutpoints.contains(v%graphInfo.getNrNodes()) && !bVertices.contains(v%graphInfo.getNrNodes())) {//careful, this does currently not allow multiple source names on one node!
-                nonSplitVertices.add(v);
+                nonSplitVertices.add(v%graphInfo.getNrNodes());
             }
         }
         
         Map<UndirectedGraph<Integer, Integer>, Set<DefaultEdge>> node2Degree = new HashMap<>();
         Queue<DefaultEdge> agenda = new LinkedList<>();
         for (UndirectedGraph<Integer, Integer> c : bcg.vertexSet()) {
-            node2Degree.put(c, bcg.edgesOf(c));
+            node2Degree.put(c, new HashSet<>(bcg.edgesOf(c)));
             if (bcg.degreeOf(c) == 1) {
                 DefaultEdge e = bcg.edgesOf(c).iterator().next();
                 addToAgenda(e, c, agenda);
@@ -129,7 +129,7 @@ public class SplitManager {
             
             
             
-            Set<DefaultEdge> nextOutgoingEdges = new HashSet<>(node2Degree.get(next));
+            Set<DefaultEdge> nextOutgoingEdges = node2Degree.get(next);
             nextOutgoingEdges.remove(e);
             if (nextOutgoingEdges.size() <1) {
                 //do nothing: then e was just a remainder on the agenda.
@@ -199,12 +199,13 @@ public class SplitManager {
             Set<BRepComponent> components = new HashSet<>();
             for (DefaultEdge e : bcg.edgesOf(cutVertex2BcgNode.get(cutVertex))) {
                 
+                if (!bcgEdge2BoundaryEdges.containsKey(e)) {
+                    System.err.println();
+                }
                 IntSet newInBEdges = new IntOpenHashSet(bcgEdge2BoundaryEdges.get(e));
                 newInBEdges.addAll(bcgEdge2incidentGraphEdges.get(e));
                 
-                if (newInBEdges.size() == 2) {
-                    System.err.println();
-                }
+                
                 
                 IntSet newBVertices = new IntOpenHashSet(bcgEdge2BVertices.get(e));
                 newBVertices.add(cutVertex);
@@ -229,7 +230,9 @@ public class SplitManager {
             for (int e : graphInfo.getIncidentEdges(v)) {
                 newInBEdges.add(e);
             }
-            ret.put(v, BRepComponent.makeComponent(allBVertices, newInBEdges, storedComponents, graphInfo));
+            IntSet newBVertices = new IntOpenHashSet(allBVertices);
+            newBVertices.add(v);
+            ret.put(v, BRepComponent.makeComponent(newBVertices, newInBEdges, storedComponents, graphInfo));
         }
         return ret;
     }

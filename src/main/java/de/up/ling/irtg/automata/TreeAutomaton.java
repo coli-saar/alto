@@ -419,6 +419,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected void addFinalState(int state) {
         finalStates.add(state);
     }
+    
 
     /**
      * *********** RULE CACHING ************

@@ -105,7 +105,7 @@ class GraphAlgebraTest {
     }
 
     
-    //@Test//doesnt work for Top down atm, since we only have one final state
+    @Test
     public void testParseGraphWithoutSources() {
         InterpretedTreeAutomaton irtg = pi(HRG);
         TreeAutomaton chart = irtg.parse(["graph":"(w / want-01  :ARG0 (b / boy)  :ARG1 (g / go-01 :ARG0 b))"])

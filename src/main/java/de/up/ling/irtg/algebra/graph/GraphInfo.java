@@ -119,7 +119,7 @@ public class GraphInfo {
         }
         for (int vNr = 0; vNr < n; vNr ++){
             if (!seenLoops.contains(vNr)) {
-                edgeSources[edgeId] = vNr;
+                edgeSources[edgeId] = vNr;//so this means we always have loops for every vertex? see also in construction of BRepComponent for empty BR.
                 edgeTargets[edgeId] = vNr;
                 edgesBySourceAndTarget[vNr][vNr] = edgeId;
                 allEdges[edgeId] = edgeId;

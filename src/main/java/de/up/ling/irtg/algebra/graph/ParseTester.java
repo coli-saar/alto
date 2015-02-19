@@ -40,7 +40,7 @@ import java.util.logging.Logger;
 public class ParseTester {
 
     static int runningNumber = 0;
-    static String logDescription = "1000Unlex";
+    static String logDescription = "TOPDOWN1000lex";
     
     
     static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
@@ -105,8 +105,8 @@ public class ParseTester {
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
 
-        int start = 20;
-        int stop = 30;//inducer.getCorpus().size();
+        int start = 0;
+        int stop = 200;//inducer.getCorpus().size();
 
         int warmupIterations = 0;
         int iterations = 1;
@@ -178,7 +178,7 @@ public class ParseTester {
         }
 
         int start = 0;
-        int stop = 891;//inducer.getCorpus().size();
+        int stop = 200;//inducer.getCorpus().size();
         int warmupStop = 50;
         
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));

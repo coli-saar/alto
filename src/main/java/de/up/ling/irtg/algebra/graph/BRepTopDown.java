@@ -66,70 +66,76 @@ public class BRepTopDown {
             sourceToNodename[j] = -1;
         }
 
-        BitSet visitedEdges = new BitSet();
+        if (graph.getAllSources().isEmpty()) {
+            components.add(BRepComponent.makeComponent(new IntOpenHashSet(), new IntOpenHashSet(), storedComponents, completeGraphInfo));
+        } else {
         
-        for (String source : graph.getAllSources()) {
-            int sNr = completeGraphInfo.getIntForSource(source);
-            String vName = graph.getNodeForSource(source);
-            int vNr = completeGraphInfo.getIntForNode(vName);
-            isSourceNode.set(vNr);
-            GraphNode v = graph.getNode(vName);
-            sourceToNodename[sNr] = vNr;
-            
-        }
-            
-        for (String source : graph.getAllSources()) {
-            String vName = graph.getNodeForSource(source);
-            int vNr = completeGraphInfo.getIntForNode(vName);
-            GraphNode v = graph.getNode(vName);
-            if (v.getLabel() != null) {
-                if (!v.getLabel().equals("")) {
-                    IntSet vSet = new IntOpenHashSet();
-                    vSet.add(vNr);
-                    IntSet edgeSet = new IntOpenHashSet();
-                    edgeSet.add(completeGraphInfo.edgesBySourceAndTarget[vNr][vNr]);
-                    
-                    components.add(BRepComponent.makeComponent(vSet, edgeSet, storedComponents, completeGraphInfo));
-                }
+
+            BitSet visitedEdges = new BitSet();
+
+            for (String source : graph.getAllSources()) {
+                int sNr = completeGraphInfo.getIntForSource(source);
+                String vName = graph.getNodeForSource(source);
+                int vNr = completeGraphInfo.getIntForNode(vName);
+                isSourceNode.set(vNr);
+                GraphNode v = graph.getNode(vName);
+                sourceToNodename[sNr] = vNr;
+
             }
-            
-            
-            
-            for (GraphEdge e : graph.getGraph().edgesOf(v)) {
-                int eNr = completeGraphInfo.getEdgeId(e);
-                if (!visitedEdges.get(eNr)) {
-                    IntSet bVertices = new IntOpenHashSet();
-                    IntSet bEdges = new IntOpenHashSet();
-                    BitSet visitedVertices = new BitSet();
-                    Queue<Integer> agenda = new LinkedList<>();
-                    agenda.add(eNr);
-                    while (!agenda.isEmpty()) {
-                        int curE = agenda.poll();
-                        visitedEdges.set(curE);
-                        
-                        int[] adjacentVs = new int[]{completeGraphInfo.edgeSources[curE], completeGraphInfo.edgeTargets[curE]};
-                        for (int curV : adjacentVs) {
-                            if (!visitedVertices.get(curV)) {
-                                visitedVertices.set(curV);
-                                if (isSourceNode.get(curV)) {
-                                    bVertices.add(curV);//might add multiple times, but doesnt harm since it is a set (runtime issues?)
-                                    bEdges.add(curE);//might add multiple times, but doesnt harm since it is a set
-                                } else {
 
-                                    for (int nextEdge : completeGraphInfo.getIncidentEdges(curV)) {
-                                        if (!visitedEdges.get(nextEdge)) {
-                                            agenda.add(nextEdge);
+            for (String source : graph.getAllSources()) {
+                String vName = graph.getNodeForSource(source);
+                int vNr = completeGraphInfo.getIntForNode(vName);
+                GraphNode v = graph.getNode(vName);
+                if (v.getLabel() != null) {
+                    if (!v.getLabel().equals("")) {
+                        IntSet vSet = new IntOpenHashSet();
+                        vSet.add(vNr);
+                        IntSet edgeSet = new IntOpenHashSet();
+                        edgeSet.add(completeGraphInfo.edgesBySourceAndTarget[vNr][vNr]);
+
+                        components.add(BRepComponent.makeComponent(vSet, edgeSet, storedComponents, completeGraphInfo));
+                    }
+                }
+
+
+
+                for (GraphEdge e : graph.getGraph().edgesOf(v)) {
+                    int eNr = completeGraphInfo.getEdgeId(e);
+                    if (!visitedEdges.get(eNr)) {
+                        IntSet bVertices = new IntOpenHashSet();
+                        IntSet bEdges = new IntOpenHashSet();
+                        BitSet visitedVertices = new BitSet();
+                        Queue<Integer> agenda = new LinkedList<>();
+                        agenda.add(eNr);
+                        while (!agenda.isEmpty()) {
+                            int curE = agenda.poll();
+                            visitedEdges.set(curE);
+
+                            int[] adjacentVs = new int[]{completeGraphInfo.edgeSources[curE], completeGraphInfo.edgeTargets[curE]};
+                            for (int curV : adjacentVs) {
+                                if (!visitedVertices.get(curV)) {
+                                    visitedVertices.set(curV);
+                                    if (isSourceNode.get(curV)) {
+                                        bVertices.add(curV);//might add multiple times, but doesnt harm since it is a set (runtime issues?)
+                                        bEdges.add(curE);//might add multiple times, but doesnt harm since it is a set
+                                    } else {
+
+                                        for (int nextEdge : completeGraphInfo.getIncidentEdges(curV)) {
+                                            if (!visitedEdges.get(nextEdge)) {
+                                                agenda.add(nextEdge);
+                                            }
                                         }
-                                    }
 
+                                    }
                                 }
                             }
+
+
+
                         }
-                        
-                        
-                        
+                        components.add(BRepComponent.makeComponent(bVertices, bEdges, storedComponents, completeGraphInfo));
                     }
-                    components.add(BRepComponent.makeComponent(bVertices, bEdges, storedComponents, completeGraphInfo));
                 }
             }
         }

@@ -8,7 +8,7 @@ import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonSt
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAysmptotic;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAsymptotic;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.BinaryPartnerFinder;
@@ -137,7 +137,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         
         //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());//currently bugged
         //return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
-        return decompose(value, SGraphBRDecompositionAutomatonTopDownAysmptotic.class);
+        return decompose(value, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
         //return decompose(value, SGraphBRDecompositionAutomatonTopDown.class);
     }
     
@@ -165,8 +165,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return new SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas(value, this, getSignature());
             } else if (c == SGraphBRDecompositionAutomatonTopDown.class) {
                 return new SGraphBRDecompositionAutomatonTopDown(value, this, getSignature());
-            } else if (c == SGraphBRDecompositionAutomatonTopDownAysmptotic.class) {
-                return new SGraphBRDecompositionAutomatonTopDownAysmptotic(value, this, getSignature());
+            } else if (c == SGraphBRDecompositionAutomatonTopDownAsymptotic.class) {
+                return new SGraphBRDecompositionAutomatonTopDownAsymptotic(value, this, getSignature());
             }
             else return null;
         //} catch (java.lang.Exception e) {
