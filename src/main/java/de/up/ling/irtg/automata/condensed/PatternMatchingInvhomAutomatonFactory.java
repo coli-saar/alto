@@ -16,6 +16,7 @@ import de.up.ling.irtg.algebra.graph.ParseTester;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAysmptotic;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -367,7 +368,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             if (isStartState.get(matcherStateID)) {
                 matcherStoreID = startStateRepresentativeID;
                 
-                rhs.addStateForPatternMatching(rhsStateID);
+                //rhs.addStateForPatternMatching(rhsStateID);
                 
                 
             } else {
@@ -529,7 +530,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             }
         }
         
-        System.err.println("posOfStartStateRepInRules size: " + posOfStartStateRepInRules.size());
+        //System.err.println("posOfStartStateRepInRules size: " + posOfStartStateRepInRules.size());
         
     }
 
@@ -544,6 +545,15 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 results.add(intersect(f1, f2, rhs, intersectionAutomaton, rToLToIntersectID, mapper));//give correct automaton here
             }
         }
+        /*for (int id : rhs.getStateInterner().getKnownIds()) {
+            System.err.println("id " + id + " for state " + rhs.getStateForId(id));
+        }
+        for (int source = 0; source < ((SGraphBRDecompositionAutomatonTopDownAysmptotic)rhs).completeGraphInfo.getNrSources(); source++) {
+            System.err.println(source + " is source " + ((SGraphBRDecompositionAutomatonTopDownAysmptotic)rhs).completeGraphInfo.getSourceForInt(source));
+        }
+        for (int labelID = 0; labelID<rhs.getSignature().getMaxSymbolId(); labelID++) {
+            System.err.println(labelID + " is label " + rhs.getSignature().resolveSymbolId(labelID));
+        }*/
         //System.err.println(results);
         return intersectionAutomaton;
     }
@@ -603,7 +613,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
         List<IntCollection> rhsChildIDs = new ArrayList<>();
         boolean isEmpty;
-        if (arity == 2 && matcherRule.getChildren()[(pos+1)%2] == startStateRepresentativeID) {
+        /*if (arity == 2 && matcherRule.getChildren()[(pos+1)%2] == startStateRepresentativeID) {
             IntList singleton = singletonCache.get(rhsChildID);
             if( singleton == null ) {
                 MySingletonIntList x = new MySingletonIntList(rhsChildID);
@@ -629,7 +639,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             }*/
             
             
-            isEmpty = binaryPartners.isEmpty();
+            /*isEmpty = binaryPartners.isEmpty();
             if (pos == 0) {
                 rhsChildIDs.add(singleton);
                 rhsChildIDs.add(binaryPartners);
@@ -637,9 +647,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 rhsChildIDs.add(binaryPartners);
                 rhsChildIDs.add(singleton);
             }
-        } else {
+        } else {*/
             isEmpty = collectRhsChildIDs(rhsChildIDs, arity, pos, rhsChildID, matcherRule, rhsLabelID);
-        }
+        //}
 
         if (!isEmpty) {
             //iterate over all combinations of rhs children:
@@ -678,7 +688,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         // internal iteration without array copy is about 10% faster (after extensive warmup)
         tupleIt.foreach(rhsProcessedChildIDs -> {
             //DEBUGGING
-            if (arity == 2) {
+            /*if (arity == 2) {
                 boolean role1 = matcherRule.getChildren()[pos] == startStateRepresentativeID;
                 boolean role2 = matcherRule.getChildren()[(pos+1)%2] == startStateRepresentativeID;
                 if (role1) {
@@ -694,7 +704,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                         ParseTester.averageLogger.increaseValue("startStateNoRole");
                     }
                 }
-            }
+            }*/
             for (Rule rhsRule : rhs.getRulesBottomUp(rhsLabelID, rhsProcessedChildIDs)) {
                 Pair<String, State> intersParent = makeDuoStateAndPutOnAgenda(matcherRule.getParent(), rhsRule.getParent(), rhs, matcherState2RhsState, agenda, seen);
                 Pair<String, State>[] intersChildren = new Pair[arity];
@@ -841,6 +851,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 int matcherLabel = matcherRule.getLabel();
                 for (Rule rhsRule : rhs.getRulesTopDown(mapper.remapBackward(matcherLabel), rhsParentID)) {
                     int[] rhsChildren = rhsRule.getChildren();
+                    //System.err.println(rhsRule);
                     /*DuoState[] duoChildren = new DuoState[arity];
                      for (int i = 0; i<arity; i++) {
                      duoChildren[i] = new DuoState(matcherChildren[i], rhsChildren[i]);

@@ -40,19 +40,21 @@ import java.util.logging.Logger;
 public class ParseTester {
 
     static int runningNumber = 0;
-    static String logDescription = "1000";
+    static String logDescription = "1000Unlex";
     
     
     static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
-    static String grammarPath = "corpora-and-grammars/grammars/sgraph_bolinas_comparison/rules.txt";
-    static String bolinasGrammarPath = "corpora-and-grammars/corporas/graph_bolinas_comparison/bolinas.txt";
+    static String grammarPath = "corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
+    static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
+    static String sortedBolinasCorpusPath = "corpora-and-grammars/corpora/sorted-bolinas-amr-bank-v1.3.txt";
 
     public static AverageLogger averageLogger = new AverageLogger();
 
     
     
     public static void main(String[] args) throws Exception {
-        parseAll();
+        //writeSortedBolinas();
+        parseBolinasCompatible();
     }
     
     
@@ -163,15 +165,27 @@ public class ParseTester {
     private static void parseBolinasCompatible() throws Exception {
         Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
-        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
-        //no sorting here!
+        //no sorting yet!
+
+        Reader bolinasReader = new FileReader(bolinasCorpusPath);
+        BufferedReader br = new BufferedReader(bolinasReader);
+        int removedCount = 0;
+        for (int i = 0; i<inducer.getCorpus().size(); i++) {
+            if (br.readLine().startsWith("()")) {
+                inducer.getCorpus().remove(i-removedCount);
+                removedCount++;
+            }
+        }
 
         int start = 0;
-        int stop = inducer.getCorpus().size();
-
-        int warmupIterations = 5;
+        int stop = 891;//inducer.getCorpus().size();
+        int warmupStop = 50;
+        
+        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
+        
+        int warmupIterations = 1;
         int iterations = 1;
-        int internalIterations = 10;
+        int internalIterations = 5;
 
         IntList failed = new IntArrayList();
 
@@ -185,7 +199,7 @@ public class ParseTester {
         //uncomment this to write a log of the pattern matching:
         //irtg.getInterpretation("int").setPmLogName("AfterMergingStartStatesInto_q");
         for (int j = 0; j < warmupIterations; j++) {
-            for (int i = start; i < stop; i++) {
+            for (int i = start; i < warmupStop; i++) {
                 //System.err.println(inducer.getCorpus().get(i).id);
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, 1, internalSw);
                 System.err.println("i = " + i);
@@ -198,20 +212,16 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             runningNumber = 0;
-            Reader bolinasReader = new FileReader(bolinasGrammarPath);
-            BufferedReader br = new BufferedReader(bolinasReader);
-            averageLogger = new AverageLogger();
-            averageLogger.activate();
+            //averageLogger = new AverageLogger();
+            //averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
-                if (!br.readLine().startsWith("()")) {
-                    parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, resultWriter, internalIterations, internalSw);
-                    System.err.println("i = " + i);
-                }
+                parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, resultWriter, internalIterations, internalSw);
+                System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
-            averageLogger.setDefaultCount((stop - start) * internalIterations);
-            averageLogger.printAveragesAsError();
+            //averageLogger.setDefaultCount((stop - start) * internalIterations);
+            //averageLogger.printAveragesAsError();
         }
         resultWriter.close();
 
@@ -246,6 +256,9 @@ public class ParseTester {
     public static void parseInstanceWithIrtg(List<IrtgInducer.TrainingInstance> corpus, InterpretedTreeAutomaton irtg, int i, Writer resultWriter, int internalIterations, CpuTimeStopwatch internalSw) {
         runningNumber++;
         IrtgInducer.TrainingInstance ti = corpus.get(i);
+        if (ti == null) {
+            return;
+        }
         internalSw.record(0);
         TreeAutomaton chart = null;
 //        System.err.println("\n" + ti.graph);
@@ -256,13 +269,13 @@ public class ParseTester {
             
             //chart.viterbi();
         }
+        internalSw.record(1);
         System.err.println(ti.graph.toIsiAmrString());
         //System.err.println(chart);
         //System.err.println(ti.graph.getAllNodeNames().size());
-        internalSw.record(1);
         if (resultWriter != null) {
-            int languageSize = chart.getFinalStates().size();
-            //System.err.println("Language Size: "+languageSize);//DEBUGGING
+            long languageSize = (int)chart.countTrees();
+            System.err.println("Language Size: "+languageSize);//DEBUGGING
             StringJoiner sj = new StringJoiner(",");
             sj.add(String.valueOf(ti.id));
             sj.add(String.valueOf(runningNumber));
@@ -286,6 +299,39 @@ public class ParseTester {
          }*/
 //        System.err.println(chart.viterbi());
         //System.err.println(chart);
+    }
+    
+    private static void writeSortedBolinas() throws Exception {
+        Reader bolinasReader = new FileReader(bolinasCorpusPath);
+        BufferedReader br = new BufferedReader(bolinasReader);
+        averageLogger = new AverageLogger();
+        averageLogger.activate();
+        //averageLogger.deactivate();
+        List<String> bolinasLines = new ArrayList<>();
+        Reader corpusReader = new FileReader(corpusPath);
+        IrtgInducer inducer = new IrtgInducer(corpusReader);
+        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
+        for (int line = 0; line < inducer.getCorpus().size(); line++) {
+            bolinasLines.add(br.readLine());
+        }
+        //Writer bolinasWriter = new FileWriter(sortedBolinasCorpusPath);
+        
+        int count = 0;
+        
+        for (int i = 0; i< 1000; i++) {
+            IrtgInducer.TrainingInstance ti = inducer.getCorpus().get(i);
+            String matchingBolinasRule = bolinasLines.get(ti.id-1);
+            if (matchingBolinasRule.startsWith("()")) {
+                System.err.println("i="+i);
+                System.err.println("id="+ti.id);
+                System.err.println();
+                count++;
+                //bolinasWriter.write(matchingBolinasRule+"\n");
+            }
+        }
+        System.err.println(count);
+        
+        
     }
 
 }

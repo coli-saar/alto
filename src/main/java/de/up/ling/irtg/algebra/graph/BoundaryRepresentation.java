@@ -959,4 +959,16 @@ public class BoundaryRepresentation {
         return ret;
     }
     
+    private IntList sortedBoundaryEdges;
+    
+    public IntList getSortedInBEdges() {
+        if (sortedBoundaryEdges == null) {
+            sortedBoundaryEdges = new IntArrayList();
+            inBoundaryEdges.forEach(edge -> sortedBoundaryEdges.add(edge));
+            Collections.sort(sortedBoundaryEdges);
+        }
+        return sortedBoundaryEdges;
+    }
+    
+    
 }

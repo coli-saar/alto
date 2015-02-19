@@ -18,6 +18,7 @@ import static org.hamcrest.CoreMatchers.*;
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.up.ling.irtg.algebra.*;
+import de.up.ling.irtg.algebra.graph.decompauto.*;
 import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
 import de.up.ling.irtg.util.*
@@ -49,7 +50,8 @@ class BoundaryRepresentationTest {
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
         String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"
         SGraph sgraph = alg.parseString(input)
-        TreeAutomaton<BoundaryRepresentation> chart = alg.decompose(sgraph)
+        TreeAutomaton<BoundaryRepresentation> chart = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class)
+        chart.makeAllRulesExplicit()
         GraphInfo graphInfo = new GraphInfo(sgraph, alg, alg.getSignature())
         
         for (BoundaryRepresentation br : chart.getStateInterner().getKnownObjects()) {

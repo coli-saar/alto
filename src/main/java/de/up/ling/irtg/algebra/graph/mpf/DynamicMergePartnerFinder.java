@@ -32,7 +32,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         this.vertices = new IntOpenHashSet();
 
         sourceNr = currentSource;
-        children = new MergePartnerFinder[nrNodes + 2];
+        children = new MergePartnerFinder[nrNodes];
         sourcesRemaining = nrSources;
         
     }
@@ -44,7 +44,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         this.vertices = vertices;
 
         sourceNr = currentSource;
-        children = new MergePartnerFinder[nrNodes + 2];
+        children = new MergePartnerFinder[nrNodes];
         sourcesRemaining = nrSources;
         
     }
@@ -66,13 +66,16 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         
         if (children[vNr] == null) {
             if (sourcesRemaining == 1) {
-                children[vNr] = new StorageMPF(auto);
-                //children[index] = new EdgeIntersectionMPF((hasAll || (index == ALL)), newVertices, auto);
+                IntSet newVertices = new IntOpenHashSet();
+                newVertices.addAll(vertices);
+                newVertices.add(vNr);
+                //children[vNr] = new StorageMPF(auto);
+                children[vNr] = new EdgeMPF(newVertices, auto);
             } else {
                 IntSet newVertices = new IntOpenHashSet();
                 newVertices.addAll(vertices);
                 newVertices.add(vNr);
-                children[vNr] = new DynamicMergePartnerFinder(sourceNr + 1, sourcesRemaining - 1, children.length - 2, auto, newVertices);
+                children[vNr] = new DynamicMergePartnerFinder(sourceNr + 1, sourcesRemaining - 1, children.length, auto, newVertices);
             }
         }
         

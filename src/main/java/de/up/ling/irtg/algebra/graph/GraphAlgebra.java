@@ -8,6 +8,7 @@ import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonSt
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAysmptotic;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.BinaryPartnerFinder;
@@ -18,7 +19,6 @@ import static de.up.ling.irtg.algebra.graph.GraphInfo.BOLINASSUBROOTSTRING;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
 import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinder;
-import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinderOLD;
 import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
@@ -33,6 +33,7 @@ import java.io.StringReader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -98,6 +99,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     public GraphAlgebra(Signature signature) {
         super();
+        isPure = true;
         this.signature = signature;
         for (String label : signature.getSymbols()) {
             if (signature.getArityForLabel(label) == 2) {
@@ -134,7 +136,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
         
         //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());//currently bugged
-        return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
+        //return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
+        return decompose(value, SGraphBRDecompositionAutomatonTopDownAysmptotic.class);
         //return decompose(value, SGraphBRDecompositionAutomatonTopDown.class);
     }
     
@@ -162,6 +165,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return new SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas(value, this, getSignature());
             } else if (c == SGraphBRDecompositionAutomatonTopDown.class) {
                 return new SGraphBRDecompositionAutomatonTopDown(value, this, getSignature());
+            } else if (c == SGraphBRDecompositionAutomatonTopDownAysmptotic.class) {
+                return new SGraphBRDecompositionAutomatonTopDownAysmptotic(value, this, getSignature());
             }
             else return null;
         //} catch (java.lang.Exception e) {
@@ -336,17 +341,18 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
 
     
-    /*@Override
+    @Override
     public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
         if (isPure) {
             return new MPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto); //To change body of generated methods, choose Tools | Templates.
         } else {
             return new ImpureMPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto);
         }
-    }*/
+    }
     
     private class MPFBinaryPartnerFinder extends BinaryPartnerFinder{
         MergePartnerFinder mpf;
+        BitSet seen = new BitSet();
         public MPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
             mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
         }
@@ -362,7 +368,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 
         @Override
         public void addState(int stateID) {
-            mpf.insert(stateID);
+            if (!seen.get(stateID)) {
+                mpf.insert(stateID);
+                seen.set(stateID);
+            }
         }
         
     }
@@ -386,8 +395,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 
         @Override
         public void addState(int stateID) {
-            mpf.insert(stateID);
-            backupset.add(stateID);
+            if (!backupset.contains(stateID)) {
+                mpf.insert(stateID);
+                backupset.add(stateID);
+            }
         }
         
     }
