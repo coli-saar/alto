@@ -232,7 +232,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 addTermToRestrictiveMatcher(labelSetID);//add rest of rules now
             } else if (constantIDsHere.isEmpty()) {
                 posOfStartStateRepInRulesFromConstantFreeTerms.addAll(labelSetID2StartStateRules.get(labelSetID));
-                genericStartStateIDs.add(restrictiveMatcher.addState(matchingStartState));
+                genericStartStateIDs.add(restrictiveMatcher.getIdForState(matchingStartState));
             } else {
                 //constants2LabelSetID.add(new ImmutablePair(res, labelSetID));//add rest of rules only later when necessary
                 /*if (constantIDsHere.isEmpty()) {
@@ -444,6 +444,8 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         } else {
             intersectionAutomaton = intersectWithRestrictiveMatcherTopDownByTerm(rhs);
         }
+        
+        //System.err.println(intersectionAutomaton);
         //System.err.println("rhsState2StartStates:\n"+rhsState2MatchingStartStates);
 
         //System.err.println("Intersection automaton:\n"+intersectionAutomaton);
@@ -601,17 +603,31 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton = new ConcreteTreeAutomaton<>(rhs.getSignature());
         SignatureMapper mapper = rhs.getSignature().getMapperTo(restrictiveMatcher.getSignature());
         
+        /*for (int matcherState: genericStartStateIDs) {
+            System.err.println(hom.getByLabelSetID(startStateIdToLabelSetID.get(matcherState)));
+        }*/
+        
+        
         Queue<Integer> rhsAgenda = new LinkedList<>();
         BitSet seen = new BitSet();
-            for (int f2 : rhs.getFinalStates()) {
+        for (int f2 : rhs.getFinalStates()) {
+            if (!seen.get(f2)) {
                 rhsAgenda.add(f2);
+                seen.set(f2);
             }
+        }
         while (!rhsAgenda.isEmpty()) {
+            
             int rhsState = rhsAgenda.poll();
+            //System.err.println(rhs.getStateForId(rhsState).toString());
             //System.err.println("FROM AGENDA: "+rhsState);
             for (int matcherState : startStateIDs) {
+                //System.err.println(hom.getByLabelSetID(startStateIdToLabelSetID.get(matcherState)));
                 //System.err.println("now iterating MSS:" + restrictiveMatcher.getStateForId(matcherState));
                 //System.err.println("matching Term: "+hom.getByLabelSetID(startStateIdToLabelSetID.get(matcherState)).toString());
+                /*if (rhs.getStateForId(rhsState).toString().startsWith("[4, -1]") && hom.getByLabelSetID(startStateIdToLabelSetID.get(matcherState)).toString().equals("'3'('179'('?0'),'?1')")) {
+                    System.err.println();
+                }*/
                 Pair<IntList, Boolean> termResult = intersectTerm(rhsState, matcherState, rhs, mapper, intersectionAutomaton);
                 if (termResult.getRight()) {
                     //System.err.println("ADDING TO AGENDA: " + termResult.getLeft());
@@ -639,6 +655,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             Rule matcherRule = matcherParent2Rule.get(matcherState);//restrictiveMatcher.getRulesTopDown(matcherState).iterator().next();//have only one rule in this case by the nature of restrictiveMatcher
             //System.err.println("now testing  "+ matcherRule.toString(restrictiveMatcher));
             int rhsLabel = mapper.remapBackward(matcherRule.getLabel());
+            
             Iterable<Rule> rhsRules = rhs.getRulesTopDown(rhsLabel, rhsState);
             IntList outerCarryover = new IntArrayList();
             boolean outerRes = false;
@@ -920,24 +937,26 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                         int numVariables = arityForLabelSetID.get(labelSetID);
 
                         if (numVariables == 0) {
-                            State rhsState = rhs.getStateForId(rhsStateID);
-                            int rhsStateIDdoubleCheck = rhs.getIdForState(rhsState);
-                            int rhsStateIDtripleCheck = rhs.getIdForState(intersState.getRight());
-                            if (rhsStateIDdoubleCheck != rhsStateIDtripleCheck) {
-                                System.err.println("terrible inconsistency in state IDs (at paternmatching invhomRestrictive)!");
-                            }
                             ret.addRule(new CondensedRule(rhsStateID, labelSetID, new int[0], 1));
                         } else {
-                            int[] childStates = new int[numVariables];
+                            /*int[] childStates = new int[numVariables];
                             forAllMatchesRestrictive(intersStateID, term, rightmostVariableForLabelSetID[labelSetID], childStates, rhs, intersectionAutomaton, mapperIntersToHom, cs -> {
                                 //                        System.err.println("match! " + Arrays.stream(cs).mapToObj(rhs::getStateForId).collect(Collectors.toList()));
                                 ret.addRule(new CondensedRule(rhsStateID, labelSetID, cs.clone(), 1));
-                            });
+                            });*/
+                            int[] seed = new int[numVariables];
+                            List<int[]> seedList = new ArrayList<>();
+                            seedList.add(seed);
+                            List<int[]> res = forAllMatchesRestrictiveFIX(seedList, intersStateID, term, rightmostVariableForLabelSetID[labelSetID], rhs, intersectionAutomaton, mapperIntersToHom);
+                            for (int[] childStates : res) {
+                                 ret.addRule(new CondensedRule(rhsStateID, labelSetID, childStates, 1));
+                            }
                         }
                     }
                 }
             }
         }
+        //System.err.println(ret);
         return ret;
     }
 
@@ -1253,11 +1272,62 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
 
 //            System.err.println("term label is " + term.getLabel() + ", value = " + term.getLabel().getValue() + ", str=" + hom.getTargetSignature().resolveSymbolId(term.getLabel().getValue()));
 //            System.err.println("  in rhsauto sig: " + rhsAuto.getSignature().resolveSymbolId(term.getLabel().getValue()));
-            for (Rule rule : intersectionAuto.getRulesTopDown(mapperintersToHom.remapBackward(term.getLabel().getValue()), intersState)) {
+            Iterable<Rule> rules = intersectionAuto.getRulesTopDown(mapperintersToHom.remapBackward(term.getLabel().getValue()), intersState);
+            /*for (Rule rule : rules) {
+                for (int child : rule.getChildren()) {
+                    System.err.println(intersectionAuto.getStateForId(child));
+                }
+            }*/
+            for (Rule rule : rules) {
                 for (int i = 0; i < rule.getChildren().length; i++) {
                     forAllMatchesRestrictive(rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, childStates, rhsAuto, intersectionAuto, mapperintersToHom, fn);
                 }
             }
+        }
+    }
+    
+    private List<int[]> forAllMatchesRestrictiveFIX(List<int[]> prevList, int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom) {
+//      System.err.println("dfs for " + rhsAuto.getStateForId(rhsState) + "@" + nondetMatcher.getStateForId(matcherState) + " at " + HomomorphismSymbol.toStringTree(term, hom.getTargetSignature()));
+
+        if (intersState < 1) {
+            System.err.println("Terrible error in PatternMatchingInvhomAutomatonFactory#forAllMatchesRestrictive: intersState is " + intersState);
+        }
+
+        if (term.getChildren().isEmpty()) {
+            if (term.getLabel().isVariable()) {
+//                System.err.println("var " + term.getLabel().getValue() + " -> " + rhsAuto.getStateForId(rhsState));
+                
+                List<int[]> ret = new ArrayList<>();
+                
+                for (int[] prev : prevList) {
+                    int[] newArray = prev.clone();
+                    newArray[term.getLabel().getValue()] = rhsAuto.getIdForState(intersectionAuto.getStateForId(intersState).getRight());
+                    ret.add(newArray);
+                }
+
+                return ret;
+            } else {
+                return prevList;
+            }
+        } else {
+
+//            System.err.println("term label is " + term.getLabel() + ", value = " + term.getLabel().getValue() + ", str=" + hom.getTargetSignature().resolveSymbolId(term.getLabel().getValue()));
+//            System.err.println("  in rhsauto sig: " + rhsAuto.getSignature().resolveSymbolId(term.getLabel().getValue()));
+            Iterable<Rule> rules = intersectionAuto.getRulesTopDown(mapperintersToHom.remapBackward(term.getLabel().getValue()), intersState);
+            /*for (Rule rule : rules) {
+                for (int child : rule.getChildren()) {
+                    System.err.println(intersectionAuto.getStateForId(child));
+                }
+            }*/
+            List<int[]> ret = new ArrayList<>();
+            for (Rule rule : rules) {
+                List<int[]> tempList = prevList;
+                for (int i = 0; i < rule.getChildren().length; i++) {
+                    tempList = forAllMatchesRestrictiveFIX(tempList, rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, rhsAuto, intersectionAuto, mapperintersToHom);
+                }
+                ret.addAll(tempList);
+            }
+            return ret;
         }
     }
 
