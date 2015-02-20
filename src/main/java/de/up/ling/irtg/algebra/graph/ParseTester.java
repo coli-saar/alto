@@ -40,11 +40,11 @@ import java.util.logging.Logger;
 public class ParseTester {
 
     static int runningNumber = 0;
-    static String logDescription = "TOPDOWN1000lex";
+    static String logDescription = "TOPDOWNsubtreesTyped";
     
     
     static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
-    static String grammarPath = "corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
+    static String grammarPath = "corpora-and-grammars/grammars/LittlePrinceSubtreesTyped.txt";//"corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";//"corpora-and-grammars/grammars/LittlePrinceSubtreesTyped.txt";
     static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
     static String sortedBolinasCorpusPath = "corpora-and-grammars/corpora/sorted-bolinas-amr-bank-v1.3.txt";
 
@@ -106,7 +106,7 @@ public class ParseTester {
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
 
         int start = 0;
-        int stop = 200;//inducer.getCorpus().size();
+        int stop = 1000;//inducer.getCorpus().size();
 
         int warmupIterations = 0;
         int iterations = 1;
@@ -178,7 +178,7 @@ public class ParseTester {
         }
 
         int start = 0;
-        int stop = 200;//inducer.getCorpus().size();
+        int stop = 891;//inducer.getCorpus().size();
         int warmupStop = 50;
         
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
@@ -274,8 +274,8 @@ public class ParseTester {
         //System.err.println(chart);
         //System.err.println(ti.graph.getAllNodeNames().size());
         if (resultWriter != null) {
-            long languageSize = (int)chart.countTrees();
-            System.err.println("Language Size: "+languageSize);//DEBUGGING
+            //long languageSize = (int)chart.countTrees();
+            //System.err.println("Language Size: "+languageSize);//DEBUGGING
             StringJoiner sj = new StringJoiner(",");
             sj.add(String.valueOf(ti.id));
             sj.add(String.valueOf(runningNumber));
@@ -285,7 +285,7 @@ public class ParseTester {
             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("int").getAlgebra();
             sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).maxDegree));
             sj.add(String.valueOf(internalSw.getTimeBefore(1) / 1000000));
-            sj.add(String.valueOf(languageSize));
+            sj.add(String.valueOf(0));//change this back!!
             try {
                 resultWriter.write(sj.toString() + "\n");
             } catch (IOException ex) {

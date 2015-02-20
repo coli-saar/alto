@@ -13,22 +13,34 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.GraphNode;
+import static de.up.ling.irtg.algebra.graph.ParseTester.averageLogger;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import static de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown.HRG;
 import static de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown.HRGSimpleCleanS;
 import static de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown.HRGVerySimpleCleanS;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
+import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.AverageLogger;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.Reader;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -160,6 +172,27 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
             });
             
             
+        } else if (label.startsWith(GraphAlgebra.OP_MERGE)) {
+            List<BRepTopDown[]> allSplits = new ArrayList<>();
+            Set<BRepComponent> parentComponents = parent.getComponents();
+            
+            getAllNonemptyComponentDistributions(parentComponents).forEach(pair -> {
+                BRepTopDown child0 = parent.getChildFromComponents(pair.getLeft());
+                BRepTopDown child1 = parent.getChildFromComponents(pair.getRight());
+                allSplits.add(new BRepTopDown[]{child0, child1});
+                allSplits.add(new BRepTopDown[]{child1, child0});
+            });
+            for (BRepTopDown[] childStates : allSplits) {
+                
+                String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
+                int[] renameSources = completeGraphInfo.getlabelSources(signature.getIdForSymbol(renameLabel));
+                
+                BRepTopDown renamedRight = childStates[1].renameReverse(renameSources[0], renameSources[1]);
+                if (renamedRight != null) {
+                    rules.add(makeRule(parentState, labelId, new BRepTopDown[]{childStates[0], renamedRight}));
+                }
+                
+            }
         } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
             int forgottenSource = completeGraphInfo.getlabelSources(labelId)[0];
             
@@ -326,30 +359,66 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
         return true; //To change body of generated methods, choose Tools | Templates.
     }
     
+    
+    
+    static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
+    static String grammarPath = "corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
+    
     public static void main(String[] args) throws Exception {
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream( HRG.getBytes( Charset.defaultCharset() ) ));
-        /*GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra();
-        SGraph graph = alg.parseString("(w<root> / want-01  :ARG0 (b / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");//"(g<root> / go-01 :ARG0 (b / boy))");
+        Reader corpusReader = new FileReader(corpusPath);
+        IrtgInducer inducer = new IrtgInducer(corpusReader);
+        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
+
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
+        PatternMatchingInvhomAutomatonFactory pm = new PatternMatchingInvhomAutomatonFactory(irtg.getInterpretation("int").getHomomorphism(), irtg.getInterpretation("int").getAlgebra());
         
-        SGraphBRDecompositionAutomatonTopDownAysmptotic auto = new SGraphBRDecompositionAutomatonTopDownAysmptotic(graph, alg, alg.getSignature());
-        auto.makeAllRulesExplicit();
-        System.err.println(Arrays.toString(auto.completeGraphInfo.edgeSources));
-        System.err.println(Arrays.toString(auto.completeGraphInfo.edgeTargets));
-        System.err.println(auto.storedComponents);
-        for (int id : auto.stateInterner.getKnownIds()) {
-            System.err.println("id "+id+" with state "+auto.stateInterner.resolveId(id).toString());
+        
+        int start = 0;//maybe start later to get to interesting graphs sooner
+        int stop = 200;//inducer.getCorpus().size();
+
+        int iterations = 1;
+        int internalIterations = 1;
+
+
+        CpuTimeStopwatch sw = new CpuTimeStopwatch();
+        CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
+
+
+
+        sw.record(0);
+
+        for (int j = 0; j < iterations; j++) {
+            for (int i = start; i < stop; i++) {
+                System.err.println("i = " + i+":");
+                parseInstance(inducer.getCorpus(), pm, (GraphAlgebra)irtg.getInterpretation("int").getAlgebra(), i, null, internalIterations, internalSw);
+            }
         }
-        System.err.println(auto);*/
-        Map<String, String> map = new HashMap<>();
-        map.put("graph", "(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");
-        //map.put("graph", "(g<root> / go-01 :ARG0 (b / boy))");
-        TreeAutomaton chart = irtg.parse(map);
-        System.out.println(chart);
+        sw.record(1);
+
+        sw.printMilliseconds("parsing trees from " + start + " to " + stop + "(" + (iterations * internalIterations) + " iterations)");
+
+    }
         
        
-    }
 
-    
-    
+    public static void parseInstance(List<IrtgInducer.TrainingInstance> corpus, PatternMatchingInvhomAutomatonFactory pm, GraphAlgebra alg, int i, Writer resultWriter, int internalIterations, CpuTimeStopwatch internalSw) {
+        IrtgInducer.TrainingInstance ti = corpus.get(i);
+        if (ti == null) {
+            return;
+        }
+        internalSw.record(0);
+        TreeAutomaton chart = null;
+//        System.err.println("\n" + ti.graph);
+        for (int j = 0; j < internalIterations; j++) {
+            SGraphBRDecompositionAutomatonTopDownAsymptotic rhs = (SGraphBRDecompositionAutomatonTopDownAsymptotic)alg.decompose(ti.graph, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
+            chart = pm.invhomRestrictive(rhs);
+            
+            //chart.viterbi();
+        }
+        internalSw.record(1);
+        internalSw.printMilliseconds("time: ");
+        System.err.println(ti.graph.toIsiAmrString());
+        System.err.println(chart.countTrees());
+    }
     
 }
