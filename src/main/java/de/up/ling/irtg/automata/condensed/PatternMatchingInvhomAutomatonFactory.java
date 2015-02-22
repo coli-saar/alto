@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+import java.util.StringJoiner;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -947,10 +948,14 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                             int[] seed = new int[numVariables];
                             List<int[]> seedList = new ArrayList<>();
                             seedList.add(seed);
-                            List<int[]> res = forAllMatchesRestrictiveFIX(seedList, intersStateID, term, rightmostVariableForLabelSetID[labelSetID], rhs, intersectionAutomaton, mapperIntersToHom);
-                            for (int[] childStates : res) {
-                                 ret.addRule(new CondensedRule(rhsStateID, labelSetID, childStates, 1));
+                            forAllMatchesRestrictiveFIX(seedList, intersStateID, term, rightmostVariableForLabelSetID[labelSetID], rhs, intersectionAutomaton, mapperIntersToHom,
+                                    childStates -> ret.addRule(new CondensedRule(rhsStateID, labelSetID, childStates, 1)));
+                            /*StringJoiner sj = new StringJoiner(", ", "{", "}");
+                            for (int[] array : res) {
+                                sj.add(Arrays.toString(array));
                             }
+                            System.err.println(sj);*/
+                            //System.err.println(res.size());
                         }
                     }
                 }
@@ -1286,7 +1291,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         }
     }
     
-    private List<int[]> forAllMatchesRestrictiveFIX(List<int[]> prevList, int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom) {
+    private List<int[]> forAllMatchesRestrictiveFIX(List<int[]> prevList, int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom, Consumer<int[]> fn) {
 //      System.err.println("dfs for " + rhsAuto.getStateForId(rhsState) + "@" + nondetMatcher.getStateForId(matcherState) + " at " + HomomorphismSymbol.toStringTree(term, hom.getTargetSignature()));
 
         if (intersState < 1) {
@@ -1302,7 +1307,11 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 for (int[] prev : prevList) {
                     int[] newArray = prev.clone();
                     newArray[term.getLabel().getValue()] = rhsAuto.getIdForState(intersectionAuto.getStateForId(intersState).getRight());
-                    ret.add(newArray);
+                    if (term == rightmostVariable) {
+                        fn.accept(newArray);
+                    } else {
+                        ret.add(newArray);
+                    }
                 }
 
                 return ret;
@@ -1323,7 +1332,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             for (Rule rule : rules) {
                 List<int[]> tempList = prevList;
                 for (int i = 0; i < rule.getChildren().length; i++) {
-                    tempList = forAllMatchesRestrictiveFIX(tempList, rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, rhsAuto, intersectionAuto, mapperintersToHom);
+                    tempList = forAllMatchesRestrictiveFIX(tempList, rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, rhsAuto, intersectionAuto, mapperintersToHom, fn);
                 }
                 ret.addAll(tempList);
             }
