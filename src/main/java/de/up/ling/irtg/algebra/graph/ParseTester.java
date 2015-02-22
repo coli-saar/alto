@@ -6,7 +6,11 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.binarization.BkvBinarizer;
+import de.up.ling.irtg.binarization.IdentitySeed;
+import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
@@ -16,16 +20,13 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
-//import java.sql.Date;
-import java.util.Date;
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -126,7 +127,7 @@ public class ParseTester {
         int iterations = 5;
         int internalIterations = 100;
         
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
+        InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
         CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
         
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
@@ -152,6 +153,27 @@ public class ParseTester {
 
         
     }
+    
+    private static InterpretedTreeAutomaton loadIrtg(String filename) throws FileNotFoundException, IOException {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(filename));
+        Algebra graphAlgebra = irtg.getInterpretation("int").getAlgebra();
+        
+//        Map<String,RegularSeed> seeds = new HashMap<>();
+//        seeds.put("int", new IdentitySeed(graphAlgebra, graphAlgebra));
+//        
+//        Map<String,Algebra> newAlgebras = new HashMap<>();
+//        newAlgebras.put("int", new GraphAlgebra());
+//        
+//        BkvBinarizer bin = new BkvBinarizer(seeds);
+//        InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
+//        
+//        FileWriter x = new FileWriter("binarized.txt");
+//        x.write(binarized.toString());
+//        x.flush();
+//        x.close();
+        
+        return irtg;
+    }
 
     private static void parseAll(int start, int stop, int warmupStop, int internalIterations) throws Exception {
         Reader corpusReader = new FileReader(corpusPath);
@@ -167,7 +189,7 @@ public class ParseTester {
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
         CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
+        InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
 
         //uncomment this to write a log of the pattern matching:
         //irtg.getInterpretation("int").setPmLogName("AfterMergingStartStatesInto_q");
@@ -239,7 +261,7 @@ public class ParseTester {
         CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
         List<String> labels = new ArrayList<>();
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
+        InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
 
         //uncomment this to write a log of the pattern matching:
         //irtg.getInterpretation("int").setPmLogName("AfterMergingStartStatesInto_q");
@@ -440,7 +462,7 @@ public class ParseTester {
         int stop = 1378;
 
 
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
+        InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
 
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("int").getAlgebra();
         averageLogger = new AverageLogger();
