@@ -96,4 +96,40 @@ public class AverageLogger {
             });
         }
     }
+    
+    public static class DummyAverageLogger extends AverageLogger {
+
+        @Override
+        public void printAveragesAsError() {
+        }
+
+        @Override
+        public void setDefaultCount(int newDefaultCount) {
+        }
+
+        @Override
+        public void increaseCountBy(String label, int increase) {
+        }
+
+        @Override
+        public void increaseCount(String label) {
+        }
+
+        @Override
+        public void increaseValueBy(String label, int increase) {
+        }
+
+        @Override
+        public void increaseValue(String label) {
+        }
+
+        @Override
+        public void deactivate() {
+        }
+
+        @Override
+        public void activate() {
+        }
+        
+    }
 }

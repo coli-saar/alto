@@ -8,45 +8,31 @@ package de.up.ling.irtg.algebra.graph.decompauto;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.BRepComponent;
 import de.up.ling.irtg.algebra.graph.BRepTopDown;
-import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.GraphNode;
-import static de.up.ling.irtg.algebra.graph.ParseTester.averageLogger;
+import de.up.ling.irtg.algebra.graph.ParseTester;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import static de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown.HRG;
-import static de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown.HRGSimpleCleanS;
-import static de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown.HRGVerySimpleCleanS;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
 import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.Reader;
 import java.io.Writer;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -152,6 +138,11 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
         if (rulesHere != null) {
             Iterable<Rule> rules = rulesHere.get(labelId);
             if (rules != null) {
+                switch (signature.getArity(labelId)) {
+                    case 0: ParseTester.averageLogger.increaseValue("constants recognised"); break;
+                    case 1: ParseTester.averageLogger.increaseValue("unaries recognised"); break;
+                    case 2: ParseTester.averageLogger.increaseValue("merges recognised"); break;
+                }
                 return rules;
             }
         }
@@ -162,6 +153,7 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
         List<Rule> rules = new ArrayList<>();
         
         if (label.equals(GraphAlgebra.OP_MERGE)) {
+            ParseTester.averageLogger.increaseValue("merge tests");
             Set<BRepComponent> parentComponents = parent.getComponents();
             
             getAllNonemptyComponentDistributions(parentComponents).forEach(pair -> {
@@ -169,10 +161,16 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
                 BRepTopDown child1 = parent.getChildFromComponents(pair.getRight());
                 rules.add(makeRule(parentState, labelId, new BRepTopDown[]{child0, child1}));
                 rules.add(makeRule(parentState, labelId, new BRepTopDown[]{child1, child0}));
+                if (!child0.isConnected() || !child1.isConnected()) {
+                    ParseTester.averageLogger.increaseValueBy("total disconnected merge rules", 2);
+                }
             });
+            ParseTester.averageLogger.increaseValueBy("total merge rules", rules.size());
+            
             
             
         } else if (label.startsWith(GraphAlgebra.OP_MERGE)) {
+            ParseTester.averageLogger.increaseValue("comibed rename-merge tests");
             List<BRepTopDown[]> allSplits = new ArrayList<>();
             Set<BRepComponent> parentComponents = parent.getComponents();
             
@@ -194,9 +192,11 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
                 
             }
         } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
+            ParseTester.averageLogger.increaseValue("forget tests");
             int forgottenSource = completeGraphInfo.getlabelSources(labelId)[0];
             
             if (parent.getSourceNode(forgottenSource) == -1) {
+                ParseTester.averageLogger.increaseValue("successfull forget tests");
                 for (BRepComponent comp : parent.getComponents()) {
                     Int2ObjectMap<BRepComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
                     for (int v : nonsplitChildren.keySet()) {
@@ -213,20 +213,25 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
                         }
                     }
                 }
+                ParseTester.averageLogger.increaseValueBy("total forget rules", rules.size());
             }
             //else just dont add a rule
             
             
         } else if (label.startsWith(GraphAlgebra.OP_RENAME)) {
+            ParseTester.averageLogger.increaseValue("rename tests");
             int[] renamedSources = completeGraphInfo.getlabelSources(labelId);
             BRepTopDown child = parent.renameReverse(renamedSources[0], renamedSources[1]);
             if (child != null) {
+                ParseTester.averageLogger.increaseValue("successfull rename tests");
                 rules.add(makeRule(parentState, labelId, new BRepTopDown[]{child}));
             }
             
             
         } else {
+            ParseTester.averageLogger.increaseValue("constant tests");
             if (storedConstants[labelId].contains(parent)) {
+            ParseTester.averageLogger.increaseValue("constants found");
                 rules.add(makeRule(parentState, labelId, new BRepTopDown[0]));
             }
         }

@@ -429,7 +429,7 @@ public class BoundaryRepresentation {
     }
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
-        /*if (!hasCommonSourceNode(other)) {
+        if (!hasCommonSourceNode(other)) {
             ParseTester.averageLogger.increaseValue("noCommonSource");//10
             return false;
         } else if (!sourceNodesAgree(other)) {
@@ -439,21 +439,21 @@ public class BoundaryRepresentation {
             ParseTester.averageLogger.increaseValue("edgesNotDisjoint");//33
             return false;
         } else if (!commonNodesHaveCommonSourceNames(other)) {
-            ParseTester.averageLogger.increaseValue("commonNodeWithUncommonSource");//.4
+            ParseTester.averageLogger.increaseValue("commonNodeWithNoCommonSource");//.4
             return false;
         } else if (hasSourcesInsideOther(other) || other.hasSourcesInsideOther(this)) {
             ParseTester.averageLogger.increaseValue("notDisjoint");//0
             return false;
         } else {
             return true;
-        }*/
+        }
         
-        return (commonNodesHaveCommonSourceNames(other)
+        /*return (commonNodesHaveCommonSourceNames(other)
                 && hasCommonSourceNode(other)
                 && sourceNodesAgree(other)// always true with MPF!
                 && edgesDisjoint(other) //always true with edge-MPF!
                 && !hasSourcesInsideOther(other)
-                && !other.hasSourcesInsideOther(this));
+                && !other.hasSourcesInsideOther(this));*/
     }
 
     public boolean isMergeableMPF(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {

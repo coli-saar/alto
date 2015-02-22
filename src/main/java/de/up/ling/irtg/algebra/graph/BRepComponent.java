@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -178,6 +179,10 @@ public class BRepComponent {
     public Int2ObjectMap<BRepComponent> getAllNonSplits(Map<BRepComponent, BRepComponent> storedComponents, GraphInfo graphInfo) {
         return splitManager.getAllNonSplits(storedComponents, graphInfo);
         
+    }
+    
+    public boolean sharesVertex(BRepComponent other) {
+        return !Sets.intersection(bVertices, other.bVertices).isEmpty();
     }
     
     

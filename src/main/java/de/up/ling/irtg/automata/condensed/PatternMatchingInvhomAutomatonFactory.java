@@ -12,6 +12,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.BinaryPartnerFinder;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
+import de.up.ling.irtg.algebra.graph.ParseTester;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
@@ -661,6 +662,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                     }
                     Pair<String, State> intersParent = new ImmutablePair(restrictiveMatcher.getStateForId(matcherState), rhs.getStateForId(rhsState));
                     String label = rhs.getSignature().resolveSymbolId(rhsLabel);
+                    ParseTester.averageLogger.increaseValue("intersection rules count");
                     intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, label, children));
 
                     outerRes = true;
@@ -823,6 +825,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                 for (int j = 0; j < arity; j++) {
                     intersChildren[j] = new ImmutablePair(restrictiveMatcher.getStateForId(matcherRule.getChildren()[j]), rhs.getStateForId(rhsProcessedChildIDs[j]));
                 }
+                ParseTester.averageLogger.increaseValue("intersection rules count");
                 intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, matcherRule.getLabel(restrictiveMatcher), intersChildren));
 
             }
@@ -928,7 +931,10 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                             List<int[]> seedList = new ArrayList<>();
                             seedList.add(seed);
                             forAllMatchesRestrictiveFIX(seedList, intersStateID, term, rightmostVariableForLabelSetID[labelSetID], rhs, intersectionAutomaton, mapperIntersToHom,
-                                                        childStates -> ret.addRule(new CondensedRule(rhsStateID, labelSetID, childStates, 1)));
+                                                        childStates -> {
+                                                            ret.addRule(new CondensedRule(rhsStateID, labelSetID, childStates, 1));
+                                                            ParseTester.averageLogger.increaseValue("invhom rules count");
+                                                                });
 
 //                            forAllMatchesRestrictive2(intersStateID, term, null, seed, rhs, intersectionAutomaton, mapperIntersToHom, 
 //                                                        childStates -> ret.addRule(new CondensedRule(rhsStateID, labelSetID, childStates, 1)));

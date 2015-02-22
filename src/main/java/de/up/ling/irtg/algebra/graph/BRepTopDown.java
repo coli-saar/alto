@@ -55,6 +55,11 @@ public class BRepTopDown {
                 isSourceNode.set(v);
             }
         }
+        if (isConnected()) {
+            ParseTester.averageLogger.increaseValue("Connected states");
+        } else {
+            ParseTester.averageLogger.increaseValue("Unconnected states");
+        }
     }
     
     public BRepTopDown(SGraph graph, Map<BRepComponent, BRepComponent> storedComponents, GraphInfo completeGraphInfo) {
@@ -152,6 +157,24 @@ public class BRepTopDown {
         }
         return ret;
     }*/
+    
+    public boolean isConnected() {
+        Set<BRepComponent> found = new HashSet<>();
+        Set<BRepComponent> change = new HashSet<>();
+        change.add(components.iterator().next());
+        while (!change.isEmpty()) {
+            found.addAll(change);
+            change = new HashSet<>();
+            for (BRepComponent seed : found) {
+                for (BRepComponent test : components) {
+                    if (!found.contains(test) && seed.sharesVertex(test)) {
+                        change.add(test);
+                    }
+                }
+            }
+        }
+        return found.size() == components.size();
+    }
     
     public int getSourceNode(int source) {
         return sourceToNodename[source];

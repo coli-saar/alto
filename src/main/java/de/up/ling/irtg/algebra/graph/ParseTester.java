@@ -56,7 +56,7 @@ public class ParseTester {
     static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
     static String sortedBolinasCorpusPath = "corpora-and-grammars/corpora/sorted-bolinas-amr-bank-v1.3.txt";
 
-    public static AverageLogger averageLogger = new AverageLogger();
+    public static AverageLogger averageLogger = new AverageLogger.DummyAverageLogger();
 
     
     
@@ -92,6 +92,9 @@ public class ParseTester {
                 } else if (args[0].equals("count")) {
                     System.out.println("now counting degrees");
                     countNodesAndDegrees();
+                } else if (args[0].equals("averages")) {
+                    System.out.println("now counting average numbers");
+                    getAverages(start, stop);
                 } else {
                     System.out.println("Now parsing all graphs from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (useTopDown ? "top down" : "bottom up"));
                     parseAll(start, stop, warmupStop, internalIterations);
@@ -111,21 +114,52 @@ public class ParseTester {
         
     }
     
-    
-
-    private static void parseOrigNumberSet() throws Exception {
-        IntSet origNumberSet = new IntArraySet();
-        origNumberSet.add(428);
+    private static void getAverages(int start, int stop) throws Exception{
+        averageLogger = new AverageLogger();
+        averageLogger.activate();
+        /*origNumberSet.add(428);
         origNumberSet.add(775);
         origNumberSet.add(1158);
         origNumberSet.add(1377);
-        origNumberSet.add(148);
+        origNumberSet.add(148);*/
 
         Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
-        //no sorting.
-        int iterations = 5;
-        int internalIterations = 100;
+        sortCorpus(inducer.getCorpus());
+        int internalIterations = 1;
+        
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
+        CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
+        for (int i = start; i<stop; i++) {
+            System.err.println("i = " + i);
+            parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, false, internalIterations, internalSw);
+            //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
+        }
+        //averageLogger.setDefaultCount((stop-start)*internalIterations);
+        //averageLogger.printAveragesAsError();
+        averageLogger.setDefaultCount((stop-start) * internalIterations);
+        averageLogger.printAveragesAsError();
+        
+    }
+
+    private static void parseOrigNumberSet(int start, int stop) throws Exception {
+        averageLogger = new AverageLogger();
+        averageLogger.activate();
+        IntSet origNumberSet = new IntArraySet();
+        for (int i = start; i < stop; i++) {
+            origNumberSet.add(i);
+        }
+        /*origNumberSet.add(428);
+        origNumberSet.add(775);
+        origNumberSet.add(1158);
+        origNumberSet.add(1377);
+        origNumberSet.add(148);*/
+
+        Reader corpusReader = new FileReader(corpusPath);
+        IrtgInducer inducer = new IrtgInducer(corpusReader);
+        sortCorpus(inducer.getCorpus());
+        int iterations = 1;
+        int internalIterations = 1;
         
         InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
         CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
@@ -134,8 +168,6 @@ public class ParseTester {
         sw.record(0);
         for (int j = 0; j < iterations; j++) {
             runningNumber = 0;
-            averageLogger = new AverageLogger();
-            averageLogger.activate();
             for (int id : origNumberSet) {
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, id-1, null, false, internalIterations, internalSw);
                 System.err.println("id = " + inducer.getCorpus().get(id-1).id);
