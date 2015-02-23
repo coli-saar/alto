@@ -132,6 +132,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         Iterable<Rule> cachedResult = storedRules.get(labelId, childStates);
         
         if( cachedResult != null ) {
+            ParseTester.cachedAnswers++;
             switch (signature.getArity(labelId)) {
                 case 0: ParseTester.averageLogger.increaseValue("constants recognised"); break;
                 case 1: ParseTester.averageLogger.increaseValue("unaries recognised"); break;
@@ -139,7 +140,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             }
             return cachedResult;
         }
-        
+        ParseTester.newAnswers++;
         //ParseTester.averageLogger.increaseValue("TotalRulesChecked");
         
         String label = signature.resolveSymbolId(labelId);

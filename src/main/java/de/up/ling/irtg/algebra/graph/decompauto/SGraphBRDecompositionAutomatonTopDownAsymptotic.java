@@ -49,7 +49,7 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
     public final Set<BRepTopDown>[] storedConstants;
     
     
-    final Int2ObjectMap<Int2ObjectMap<Iterable<Rule>>> storedRules;
+    final Int2ObjectMap<Int2ObjectMap<List<Rule>>> storedRules;
     
     //final Long2ObjectMap<Long2IntMap> storedStates;
     
@@ -132,12 +132,13 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
     @Override
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
         
-        Int2ObjectMap<Iterable<Rule>> rulesHere = storedRules.get(parentState);
+        Int2ObjectMap<List<Rule>> rulesHere = storedRules.get(parentState);
 
         // check stored rules
         if (rulesHere != null) {
-            Iterable<Rule> rules = rulesHere.get(labelId);
+            List<Rule> rules = rulesHere.get(labelId);
             if (rules != null) {
+                ParseTester.cachedAnswers+=rules.size();
                 switch (signature.getArity(labelId)) {
                     case 0: ParseTester.averageLogger.increaseValue("constants recognised"); break;
                     case 1: ParseTester.averageLogger.increaseValue("unaries recognised"); break;
@@ -236,7 +237,7 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
             }
         }
         
-        
+        ParseTester.newAnswers+= rules.size();
         return memoize(rules, labelId, parentState);
         
     }
@@ -258,8 +259,8 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
     
     
     
-    private Iterable<Rule> memoize(Iterable<Rule> rules, int labelId, int parentState) {
-        Int2ObjectMap<Iterable<Rule>> rulesHere = storedRules.get(parentState);
+    private Iterable<Rule> memoize(List<Rule> rules, int labelId, int parentState) {
+        Int2ObjectMap<List<Rule>> rulesHere = storedRules.get(parentState);
 
         if (rulesHere == null) {
             rulesHere = new Int2ObjectOpenHashMap<>();

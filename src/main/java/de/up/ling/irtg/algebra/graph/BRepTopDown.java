@@ -55,6 +55,15 @@ public class BRepTopDown {
                 isSourceNode.set(v);
             }
         }
+        int numberEdges = 0;
+        for (BRepComponent comp : components) {
+            numberEdges+=comp.getInBEdges().size();
+        }
+        try {
+            ParseTester.componentWriter.write(components.size()+","+numberEdges+"\n");
+        } catch (java.lang.Exception e) {
+            System.out.println(e.toString());
+        }
         if (isConnected()) {
             ParseTester.averageLogger.increaseValue("Connected states");
         } else {

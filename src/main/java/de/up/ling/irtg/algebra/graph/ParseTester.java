@@ -14,6 +14,7 @@ import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -25,12 +26,15 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -55,7 +59,14 @@ public class ParseTester {
             "corpora-and-grammars/grammars/sgraph_bolinas_comparison/small_grammar/rules.txt";
     static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
     static String sortedBolinasCorpusPath = "corpora-and-grammars/corpora/sorted-bolinas-amr-bank-v1.3.txt";
-
+    public static int cachedAnswers;
+    public static int newAnswers;
+    public static int intersectionRules;
+    public static int invhomRules;
+    public static int termCount;
+    
+    public static Writer componentWriter = new StringWriter();
+    
     public static AverageLogger averageLogger = new AverageLogger.DummyAverageLogger();
 
     
@@ -77,6 +88,7 @@ public class ParseTester {
             System.out.println("Last argument is the grammar to use for parsing (Corpus is always amr bank 1.3)");
         } else {
             try {
+                componentWriter = new FileWriter("COMPONENTS_"+args[0]+"_"+args[1]+"_"+args[3]+"_"+args[4]);
                 sortBy = args[2];
                 int start = Integer.parseInt(args[3]);
                 int stop = Integer.parseInt(args[4]);
@@ -307,7 +319,7 @@ public class ParseTester {
         }
 
         sw.record(0);
-        Writer resultWriter = setupResultWriter();
+        //Writer resultWriter = setupResultWriter();
 
         for (int j = 0; j < iterations; j++) {
             runningNumber = 0;
@@ -315,14 +327,14 @@ public class ParseTester {
             //averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
-                parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, resultWriter, false, internalIterations, internalSw);
+                parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, true, internalIterations, internalSw);
                 System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
             //averageLogger.setDefaultCount((stop - start) * internalIterations);
             //averageLogger.printAveragesAsError();
         }
-        resultWriter.close();
+        //resultWriter.close();
 
         sw.record(1);
 
@@ -344,10 +356,14 @@ public class ParseTester {
         sj.add("Ordering number");
         sj.add("Node count");
         sj.add("Edge count");
-        sj.add("Node + Edge count");
         sj.add("maxDeg");
         sj.add("Time");
         sj.add("Language size");
+        sj.add("cachedAnswers");
+        sj.add("newAnswers");
+        sj.add("intersectionRules");
+        sj.add("invhomRules");
+        sj.add("PMtermCount");
         resultWriter.write(sj.toString() + "\n");
         return resultWriter;
     }
@@ -358,15 +374,23 @@ public class ParseTester {
         sj.add("Ordering number");
         sj.add("Node count");
         sj.add("Edge count");
-        sj.add("Node + Edge count");
         sj.add("maxDeg");
         sj.add("Time");
         sj.add("Language size");
+        sj.add("cachedAnswers");
+        sj.add("newAnswers");
+        sj.add("intersectionRules");
+        sj.add("invhomRules");
+        sj.add("PMtermCount");
         System.err.println(sj.toString());
     }
 
     public static void parseInstanceWithIrtg(List<IrtgInducer.TrainingInstance> corpus, InterpretedTreeAutomaton irtg, int i, Writer resultWriter, boolean printOutput, int internalIterations, CpuTimeStopwatch internalSw) {
         runningNumber++;
+        newAnswers = 0;
+        cachedAnswers = 0;
+        invhomRules = 0;
+        intersectionRules = 0;
         IrtgInducer.TrainingInstance ti = corpus.get(i);
         if (ti == null || ti.graph.getAllNodeNames().size() > 12) {
             return;
@@ -398,11 +422,15 @@ public class ParseTester {
             sj.add(String.valueOf(runningNumber));
             sj.add(String.valueOf(ti.graph.getAllNodeNames().size()));
             sj.add(String.valueOf(ti.graph.getGraph().edgeSet().size()));
-            sj.add(String.valueOf(ti.graph.getGraph().edgeSet().size()) + ti.graph.getAllNodeNames().size());
             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("int").getAlgebra();
             sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).maxDegree));
             sj.add(String.valueOf(internalSw.getTimeBefore(1) / 1000000));
-            sj.add(String.valueOf(languageSize));//change this back!!
+            sj.add(String.valueOf(languageSize));
+            sj.add(String.valueOf(cachedAnswers));
+            sj.add(String.valueOf(newAnswers));
+            sj.add(String.valueOf(intersectionRules));
+            sj.add(String.valueOf(invhomRules));
+            sj.add(String.valueOf(termCount));
             try {
                 resultWriter.write(sj.toString() + "\n");
             } catch (IOException ex) {
@@ -421,14 +449,22 @@ public class ParseTester {
             sj.add(String.valueOf(runningNumber));
             sj.add(String.valueOf(ti.graph.getAllNodeNames().size()));
             sj.add(String.valueOf(ti.graph.getGraph().edgeSet().size()));
-            sj.add(String.valueOf(ti.graph.getGraph().edgeSet().size()) + ti.graph.getAllNodeNames().size());
             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("int").getAlgebra();
             sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).maxDegree));
             sj.add(String.valueOf(internalSw.getTimeBefore(1) / 1000000));
             sj.add(String.valueOf(languageSize));
+            sj.add(String.valueOf(cachedAnswers));
+            sj.add(String.valueOf(newAnswers));
+            sj.add(String.valueOf(intersectionRules));
+            sj.add(String.valueOf(invhomRules));
+            sj.add(String.valueOf(termCount));
             System.err.println(sj.toString());
         }
-        
+        try {
+            componentWriter.flush();
+        } catch (java.lang.Exception e) {
+            System.out.println(e.toString());
+        }
 
         /*if (!chart.language().isEmpty()) {
          averageLogger.increaseCount("nonemptyLanguageSize");
@@ -491,7 +527,7 @@ public class ParseTester {
         sortCorpus(inducer.getCorpus());
 
         int start = 0;
-        int stop = 1378;
+        int stop = 1561;
 
 
         InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
@@ -505,12 +541,50 @@ public class ParseTester {
             GraphInfo graphInfo = new GraphInfo(ti.graph, alg, alg.getSignature());
             int maxDeg = graphInfo.maxDegree;
             int n = graphInfo.getNrNodes();
-            System.err.println("maxDeg = "+maxDeg);
-            System.err.println("n = "+n);
-            averageLogger.increaseValue(n+"/"+maxDeg);
+            System.err.println("   maxDeg = "+maxDeg);
+            System.err.println("   n = "+n);
+            int bigD = getD(ti.graph, alg);
+            System.err.println("   D = "+bigD);
+            //averageLogger.increaseValue(n+"/"+maxDeg);
+            averageLogger.increaseValue(("d="+maxDeg+"/D="+bigD));
             //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
         }
         averageLogger.printAveragesAsError();
+    }
+    
+    private static int getD(SGraph graph, GraphAlgebra alg) {
+        Map<BRepComponent, BRepComponent> storedComponents = new HashMap<>();
+        GraphInfo completeGraphInfo = new GraphInfo(graph, alg, alg.getSignature());
+        Set<BRepTopDown> completeGraphStates = new HashSet<>();
+        SGraph bareCompleteGraph = graph.forgetSourcesExcept(new HashSet<>());
+        completeGraphStates.add(new BRepTopDown(bareCompleteGraph, storedComponents, completeGraphInfo));
+        for (int source = 0; source < completeGraphInfo.getNrSources(); source++) {
+            Set<BRepTopDown> newHere = new HashSet<>();
+            for (BRepTopDown oldRep : completeGraphStates) {
+                for (BRepComponent comp : oldRep.getComponents()) {
+                    Int2ObjectMap<BRepComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
+                    for (int v : nonsplitChildren.keySet()) {
+                        BRepTopDown child = oldRep.forgetReverse(source, v, comp, nonsplitChildren.get(v));
+                        if (child != null) {
+                            newHere.add(child);
+                        }
+                    }
+                    Int2ObjectMap<Set<BRepComponent>> splitChildren = comp.getAllSplits(storedComponents, completeGraphInfo);
+                    for (int v : splitChildren.keySet()) {
+                        BRepTopDown child = oldRep.forgetReverse(source, v, comp, splitChildren.get(v));
+                        if (child != null) {
+                            newHere.add(child);
+                        }
+                    }
+                }
+            }
+            completeGraphStates.addAll(newHere);
+        }
+        int max = 0;
+        for (BRepTopDown completeRep : completeGraphStates) {
+            max = Math.max(completeRep.getComponents().size(), max);
+        }
+        return max;
     }
     
 }

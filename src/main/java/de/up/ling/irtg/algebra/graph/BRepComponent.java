@@ -209,6 +209,12 @@ public class BRepComponent {
         }
         
     } 
+
+    public IntSet getInBEdges() {
+        return inBEdges;
+    }
+    
+    
     
     @Override
     public String toString() {
