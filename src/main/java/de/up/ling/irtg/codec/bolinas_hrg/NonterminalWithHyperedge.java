@@ -16,7 +16,9 @@ public class NonterminalWithHyperedge {
     private String nonterminal;
     private List<String> endpoints;
 
-    public NonterminalWithHyperedge() {
+    public NonterminalWithHyperedge(String nonterminal, List<String> endpoints) {
+        this.nonterminal = nonterminal;
+        this.endpoints = endpoints;
     }
 
     public String getNonterminal() {
@@ -34,6 +36,9 @@ public class NonterminalWithHyperedge {
     void setEndpoints(List<String> endpoints) {
         this.endpoints = endpoints;
     }
-    
-    
+
+    @Override
+    public String toString() {
+        return nonterminal + endpoints;
+    }
 }

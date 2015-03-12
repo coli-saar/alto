@@ -14,6 +14,7 @@ import java.util.List;
  * @author koller
  */
 public class BolinasHrgGrammar {
+    private String startSymbol;
     private List<Rule> rules;
 
     public BolinasHrgGrammar() {
@@ -26,5 +27,24 @@ public class BolinasHrgGrammar {
     
     void addRule(Rule rule) {
         rules.add(rule);
+    }
+
+    public String getStartSymbol() {
+        return startSymbol;
+    }
+
+    void setStartSymbol(String startSymbol) {
+        this.startSymbol = startSymbol;
+    }
+
+    @Override
+    public String toString() {
+        StringBuffer buf = new StringBuffer();
+        
+        for( Rule rule : rules ) {
+            buf.append(rule.toString() + "\n");
+        }
+        
+        return buf.toString();
     }
 }

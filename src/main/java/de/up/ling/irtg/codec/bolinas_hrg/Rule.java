@@ -7,9 +7,12 @@
 package de.up.ling.irtg.codec.bolinas_hrg;
 
 import de.up.ling.irtg.algebra.graph.GraphEdge;
+import de.up.ling.irtg.algebra.graph.GraphEdgeFactory;
 import de.up.ling.irtg.algebra.graph.GraphNode;
+import java.util.ArrayList;
 import java.util.List;
 import org.jgrapht.DirectedGraph;
+import org.jgrapht.graph.DefaultDirectedGraph;
 
 /**
  *
@@ -22,6 +25,8 @@ public class Rule {
     private double weight;
 
     public Rule() {
+        rhsGraph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
+        rhsNonterminals = new ArrayList<>();
     }
 
     public NonterminalWithHyperedge getLhsNonterminal() {
@@ -36,16 +41,8 @@ public class Rule {
         return rhsGraph;
     }
 
-    void setRhsGraph(DirectedGraph<GraphNode, GraphEdge> rhsGraph) {
-        this.rhsGraph = rhsGraph;
-    }
-
     public List<NonterminalWithHyperedge> getRhsNonterminals() {
         return rhsNonterminals;
-    }
-
-    void setRhsNonterminals(List<NonterminalWithHyperedge> rhsNonterminals) {
-        this.rhsNonterminals = rhsNonterminals;
     }
 
     public double getWeight() {
@@ -54,5 +51,10 @@ public class Rule {
 
     void setWeight(double weight) {
         this.weight = weight;
+    }
+
+    @Override
+    public String toString() {
+        return lhsNonterminal + " -> " + rhsGraph + " " + rhsNonterminals + " {" + weight + "}";
     }
 }

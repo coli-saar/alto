@@ -10,7 +10,7 @@ import org.jgrapht.EdgeFactory;
  * 
  * @author koller
  */
-class GraphEdgeFactory implements EdgeFactory<GraphNode, GraphEdge> {
+public class GraphEdgeFactory implements EdgeFactory<GraphNode, GraphEdge> {
 
     public GraphEdge createEdge(GraphNode v, GraphNode v1) {
         return new GraphEdge(v, v1);
