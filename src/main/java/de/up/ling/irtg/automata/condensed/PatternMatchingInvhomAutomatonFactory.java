@@ -324,6 +324,8 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     }
 
     public CondensedTreeAutomaton<State> invhom(TreeAutomaton<State> rhs) {
+        
+        
         ConcreteCondensedTreeAutomaton<State> ret = new CondensedInvhomAutomaton(rhs);
 
         SignatureMapper mapper = rhs.getSignature().getMapperTo(matcher.getSignature());
@@ -409,6 +411,9 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     }
 
     public CondensedTreeAutomaton<State> invhomRestrictive(TreeAutomaton<State> rhs) {
+        if (ParseTester.useTopDown) {
+            ParseTester.rhs = rhs;
+        }
         //if (!rhs.supportsBottomUpQueries() && !computeCompleteMatcher) {
         //    computeCompleteMatcher = true;
         //    initialize(true);
@@ -640,14 +645,14 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             }
         } else {
             seenRhs = new Int2ObjectOpenHashMap<>();
-            seen.put(matcherState, seenRhs);
+            seen.put(rhsState, seenRhs);
         }
         if (matcherState == startStateRepresentativeID) {
             //System.err.println("found q");
             IntList ret = new IntArrayList();
             ret.add(rhsState);
             Pair<IntList, Boolean> retPair = new ImmutablePair(ret, true);
-            seenRhs.put(rhsState, retPair);
+            seenRhs.put(matcherState, retPair);
             return retPair;
         } else {
             Rule matcherRule = matcherParent2Rule.get(matcherState);//restrictiveMatcher.getRulesTopDown(matcherState).iterator().next();//have only one rule in this case by the nature of restrictiveMatcher

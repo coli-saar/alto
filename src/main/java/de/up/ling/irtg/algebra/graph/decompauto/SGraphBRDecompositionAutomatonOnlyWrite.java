@@ -5,9 +5,12 @@
  */
 package de.up.ling.irtg.algebra.graph.decompauto;
 
+import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.algebra.graph.BRUtil;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -16,16 +19,26 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.Reader;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.util.BitSet;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
 public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositionAutomatonMPFTrusting {
 
+    
+    private boolean actuallyWrite = false;
+    
+    
     private final int flushThreshold = 10000;
     private final Writer writer;
+    private int ruleCount = 0;
     int count;
     public final boolean foundFinalState;
     //BitSet onlyFoundByRename = new BitSet();
@@ -200,6 +213,7 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
     
     public void writeRule(Rule rule) throws Exception {
 
+        
         boolean found = false;
         Object2IntMap<String> rule2ParentLocal = new Object2IntOpenHashMap<>();
         
@@ -359,17 +373,61 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
         Iterable<Rule> res = calculateRulesBottomUpMPF(labelId, childStates);
 
+        
+        
+
         Iterator<Rule> it = res.iterator();
         while (it.hasNext()) {
             try{
-                writeRule(it.next());
+                ruleCount++;
+                double variable = Math.log10(ruleCount);
+                if ((variable == Math.floor(variable)) && !Double.isInfinite(variable)) {
+                    System.out.println(String.valueOf(ruleCount));
+                }
+                if (actuallyWrite) {
+                    writeRule(it.next());
+                } else {
+                    it.next();
+                }
             } catch (java.lang.Exception e) {
                 System.err.println(e.toString());
             }
-            
+
         }
 
         return res;
     }
 
+    //finds out which parses have a final state, set actuallyWrite to false for that.
+    public static void main(String[] args) throws Exception {
+        Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
+        IrtgInducer inducer = new IrtgInducer(corpusReader);
+        GraphAlgebra graphAlgebra = new GraphAlgebra();
+        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
+        ));
+        //Writer resWriter = new FileWriter("logs/fromKetos/DecompFinalStatesFoundComplete2");
+        //resWriter.write("success, i, origNumber\n");
+        for (int i = 1551; i<1552; i++) {
+            System.out.println(i);
+            IrtgInducer.TrainingInstance instance = inducer.getCorpus().get(i);
+            GraphAlgebra alg = new GraphAlgebra();
+            BRUtil.makeIncompleteDecompositionAlgebra(alg, instance.graph, 3);
+            Writer rtgWriter = new StringWriter();
+            SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.decompose(instance.graph, rtgWriter);
+            rtgWriter.close();
+            
+            System.out.println(String.valueOf(auto.ruleCount));
+            /*if (auto.foundFinalState) {
+                resWriter.write("1");
+            } else {
+                resWriter.write("0");
+            }
+            resWriter.write(","+i+","+instance.id+"\n");
+            resWriter.flush();*/
+        }
+        
+        //resWriter.close();
+        
+    }
+    
 }

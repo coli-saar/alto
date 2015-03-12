@@ -48,7 +48,7 @@ public class ParseTester {
     static int runningNumber = 0;
     static String logDescription = "TOPDOWNSubtreesTypeds";
     
-    static boolean useTopDown = true;
+    static public boolean useTopDown = false;
     static String sortBy = "n";
     static boolean computeLanguageSize = true;
     static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
@@ -64,6 +64,7 @@ public class ParseTester {
     public static int intersectionRules;
     public static int invhomRules;
     public static int termCount;
+    public static TreeAutomaton rhs;
     
     public static Writer componentWriter = new StringWriter();
     
@@ -74,10 +75,14 @@ public class ParseTester {
     public static void main(String[] args) throws Exception {
         //writeSortedBolinas();
         
-        //countNodesAndDegrees();
+        /*sortBy = args[2];
+        grammarPath = args[8];
+        compareLanguageSizes();*/
+        
+        countNodesAndDegrees();
         
         
-        if (args.length < 9) {
+        /*if (args.length < 9) {
             System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibal (type 'bol') or all (type 'all') graphs.");
             System.out.println("Second is 'bottomup' or 'topdown'");
             System.out.println("Third is how the corpus should be sorted. 'n' for node count, 'd' for degree (and nodecount within degree), 'no' for n sorting.");
@@ -112,16 +117,16 @@ public class ParseTester {
                     parseAll(start, stop, warmupStop, internalIterations);
                 }
             } catch (java.lang.Exception e) {
-                System.out.println(e.toString());
                 System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibal (type 'bol') or all (type 'all') graphs.");
                 System.out.println("Second is 'bottomup' or 'topdown'");
-                System.out.println("Third and fourth are the start and stop number of which graphs to parse.");
-                System.out.println("Fifth is the number of graphs to parse at warmup.");
-                System.out.println("Sixth is the number of iterations per graph.");
-                System.out.println("Seventh is 'true' to compute language sizes, 'false' otherwise.");
-                System.out.println("Last argument is the grammar to use for parsing. Corpus is always amr bank 1.3");
+                System.out.println("Third is how the corpus should be sorted. 'n' for node count, 'd' for degree (and nodecount within degree), 'no' for n sorting.");
+                System.out.println("Fourth and fifth are the start and stop number of which graphs to parse.");
+                System.out.println("Sixth is the number of graphs to parse at warmup.");
+                System.out.println("Seventh is the number of iterations per graph.");
+                System.out.println("Eighth is 'true' to compute language sizes, 'false' otherwise.");
+                System.out.println("Last argument is the grammar to use for parsing (Corpus is always amr bank 1.3)");
             }
-        }
+        }*/
         
         
     }
@@ -251,16 +256,16 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             //runningNumber = 0;
-            //averageLogger = new AverageLogger();
-            //averageLogger.activate();
+            averageLogger = new AverageLogger();
+            averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
                 System.out.println("i = " + i);
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, true, internalIterations, internalSw);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
-            //averageLogger.setDefaultCount((stop-start)*internalIterations);
-            //averageLogger.printAveragesAsError();
+            averageLogger.setDefaultCount((stop-start)*internalIterations);
+            averageLogger.printAveragesAsError();
         }
         //resultWriter.close();
 
@@ -312,13 +317,14 @@ public class ParseTester {
         for (int j = 0; j < warmupIterations; j++) {
             for (int i = start; i < warmupStop; i++) {
                 //System.err.println(inducer.getCorpus().get(i).id);
+                System.out.println("warmup, i = " + i);
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, false, 1, internalSw);
-                System.out.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
         }
 
         sw.record(0);
+        printHeader();
         //Writer resultWriter = setupResultWriter();
 
         for (int j = 0; j < iterations; j++) {
@@ -327,8 +333,9 @@ public class ParseTester {
             //averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
+                System.out.println("i = " + i);
+                //System.out.println(inducer.getCorpus().get(i).graph.toIsiAmrString());
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, true, internalIterations, internalSw);
-                System.err.println("i = " + i);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
             //averageLogger.setDefaultCount((stop - start) * internalIterations);
@@ -338,7 +345,7 @@ public class ParseTester {
 
         sw.record(1);
 
-        sw.printMilliseconds("parsing trees from " + start + " to " + stop + "(" + (iterations * internalIterations) + " iterations)");
+        //sw.printMilliseconds("parsing trees from " + start + " to " + stop + "(" + (iterations * internalIterations) + " iterations)");
 
         /*Writer logWriter = new FileWriter(dumpPath +"log.txt");
          sw.record(2 * iterations);
@@ -437,6 +444,12 @@ public class ParseTester {
                 Logger.getLogger(ParseTester.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (printOutput) {
+            if (useTopDown) {
+                for (Object o: rhs.getStateInterner().getKnownObjects()) {
+                    BRepTopDown br = (BRepTopDown)o;
+                    br.writeStats();
+                }
+            }
             long languageSize;
             if (computeLanguageSize) {
                 languageSize = chart.countTrees();
@@ -484,6 +497,7 @@ public class ParseTester {
         }
     }
     
+    
     private static int getMaxDeg(SGraph graph) {
         GraphAlgebra alg = new GraphAlgebra();
         GraphInfo graphInfo = new GraphInfo(graph, alg, alg.getSignature());
@@ -504,21 +518,29 @@ public class ParseTester {
             bolinasLines.add(br.readLine());
         }
         //Writer bolinasWriter = new FileWriter(sortedBolinasCorpusPath);
-        
+        Writer numberWriter = new FileWriter("logs/numberTranslations");
         int count = 0;
-        
+        int nonCompatibleCount = 0;
         for (int i = 0; i< 1000; i++) {
             IrtgInducer.TrainingInstance ti = inducer.getCorpus().get(i);
             String matchingBolinasRule = bolinasLines.get(ti.id-1);
-            if (matchingBolinasRule.startsWith("()")) {
+            if (!matchingBolinasRule.startsWith("()")) {
+                numberWriter.write(ti.id+","+String.valueOf(i-nonCompatibleCount)+"\n");
+                
+                /*//this is something else
                 System.err.println("i="+i);
                 System.err.println("id="+ti.id);
                 System.err.println();
-                count++;
+                count++;*/
+                
                 //bolinasWriter.write(matchingBolinasRule+"\n");
+            } else {
+                nonCompatibleCount++;
             }
         }
-        System.err.println(count);
+        System.out.println(nonCompatibleCount);
+        numberWriter.close();
+        //System.err.println(count);
     }
 
     private static void countNodesAndDegrees() throws Exception {
@@ -527,14 +549,16 @@ public class ParseTester {
         sortCorpus(inducer.getCorpus());
 
         int start = 0;
-        int stop = 1561;
+        int stop = inducer.getCorpus().size();
 
 
         InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
 
+        FileWriter writer = new FileWriter("logs/fromKetos/bigDCompleteNew");
+        writer.write("Original number,Node count,maxDeg,D\n");
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("int").getAlgebra();
-        averageLogger = new AverageLogger();
-        averageLogger.activate();
+        //averageLogger = new AverageLogger();
+        //averageLogger.activate();
         for (int i = start; i < stop; i++) {
             IrtgInducer.TrainingInstance ti = inducer.getCorpus().get(i);
             System.err.println("i = " + i);
@@ -545,11 +569,59 @@ public class ParseTester {
             System.err.println("   n = "+n);
             int bigD = getD(ti.graph, alg);
             System.err.println("   D = "+bigD);
+            writer.write(ti.id+","+n+","+maxDeg+","+bigD+"\n");
+            if (i%20==0) {
+                writer.flush();
+            }
             //averageLogger.increaseValue(n+"/"+maxDeg);
-            averageLogger.increaseValue(("d="+maxDeg+"/D="+bigD));
+            //averageLogger.increaseValue(("d="+maxDeg+"/D="+bigD));
             //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
         }
-        averageLogger.printAveragesAsError();
+        writer.close();
+        //averageLogger.printAveragesAsError();
+    }
+    
+    private static void compareLanguageSizes() throws Exception {
+        Reader corpusReader = new FileReader(corpusPath);
+        IrtgInducer inducer = new IrtgInducer(corpusReader);
+        sortCorpus(inducer.getCorpus());
+
+        
+        int warmupIterations = 1;
+        int iterations = 1;
+
+
+        //System.out.println(String.valueOf(size));
+        CpuTimeStopwatch sw = new CpuTimeStopwatch();
+        CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
+
+        InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
+
+
+        sw.record(0);
+
+        
+        for (int i = 0; i < 55; i++) {
+            //System.out.println("i = " + i);
+            IrtgInducer.TrainingInstance ti = inducer.getCorpus().get(i);
+            if (ti == null || ti.graph.getAllNodeNames().size() > 12) {
+                return;
+            }
+            //System.out.println(ti.graph.toIsiAmrString());
+            Map<String, Object> input = new HashMap<>();
+            input.put("int", ti.graph);
+            useTopDown = true;
+            long languageSize1 = irtg.parseInputObjects(input).countTrees();
+            useTopDown = false;
+            long languageSize2 = irtg.parseInputObjects(input).countTrees();
+            long diff = languageSize1-languageSize2;
+            if (diff != 0) {
+                System.out.println(languageSize1+"/"+languageSize2);
+                System.out.println(diff+", i="+i + ", id="+ti.id);
+            } else {
+                System.out.println("fine,  i="+i);
+            }
+        }
     }
     
     private static int getD(SGraph graph, GraphAlgebra alg) {

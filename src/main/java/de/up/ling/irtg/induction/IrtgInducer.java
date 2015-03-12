@@ -1148,6 +1148,10 @@ public class IrtgInducer {
                     }
                 }
             }
+            instSzbl.graph = currentAmr.toString();
+            inst.graph = graphAlgebra.parseString(currentAmr.toString());
+            corpusSerializable.add(instSzbl);
+            corpus.add(inst);
         } catch (IOException ex) {
             Logger.getLogger(IrtgInducer.class
                     .getName()).log(Level.SEVERE, null, ex);

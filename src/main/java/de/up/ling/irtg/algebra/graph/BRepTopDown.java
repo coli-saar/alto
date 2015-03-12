@@ -55,6 +55,9 @@ public class BRepTopDown {
                 isSourceNode.set(v);
             }
         }
+    }
+    
+    public void writeStats() {
         int numberEdges = 0;
         for (BRepComponent comp : components) {
             numberEdges+=comp.getInBEdges().size();
