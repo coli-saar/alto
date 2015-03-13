@@ -6,6 +6,7 @@
 package de.up.ling.irtg.codec.bolinas_hrg;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.codec.CodecMetadata;
@@ -26,8 +27,21 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
- * Caution: not thread-safe, you should make a separate codec object for each
- * thread.
+ * An input codec for reading hyperedge replacement grammars (HRGs)
+ * in the input format for the Bolinas parser. The codec reads a
+ * monolingual graph grammar and converts it into an IRTG with a
+ * single interpretation over the {@link GraphAlgebra}.<p>
+ * 
+ * Because the
+ * graph algebra only represents graphs (and not hypergraphs), the
+ * conversion will only be successful if every ordinary edge in the
+ * rules has one or two endpoints. Edges with one endpoint are
+ * translated into loops. Nonterminal hyperedges are treated
+ * differently, and may still have an arbitrary number of endpoints.<p>
+ * 
+ * A note of caution: This class is not thread-safe. If you want to
+ * use it in a multi-threaded environment, you should make a separate 
+ * codec object for each thread.
  *
  * @author koller
  */
@@ -186,7 +200,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                     break;
 
                 default:
-                    throw new RuntimeException("Cannot convert hyperedge with " + childNodes.size() + " endpoints.");
+                    throw new ParseException("Cannot convert hyperedge with " + childNodes.size() + " endpoints.");
             }
 
             GraphNode srcn = nameToNode.get(src);

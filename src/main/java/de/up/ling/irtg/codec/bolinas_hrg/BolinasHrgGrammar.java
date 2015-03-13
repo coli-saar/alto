@@ -10,10 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * A Bolinas-style hyperedge replacement grammar.
+ * 
  * @author koller
  */
-public class BolinasHrgGrammar {
+class BolinasHrgGrammar {
     private String startSymbol;
     private List<Rule> rules;
 

@@ -9,10 +9,12 @@ package de.up.ling.irtg.codec.bolinas_hrg;
 import java.util.List;
 
 /**
- *
+ * A single nonterminal hyperedge, represented by the
+ * nonterminal symbol and its endpoints in the hypergraph.
+ * 
  * @author koller
  */
-public class NonterminalWithHyperedge {
+class NonterminalWithHyperedge {
     private String nonterminal;
     private List<String> endpoints;
 

@@ -15,10 +15,11 @@ import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 /**
- *
+ * A rule in a Bolinas-style HRG grammar.
+ * 
  * @author koller
  */
-public class Rule {
+class Rule {
     private NonterminalWithHyperedge lhsNonterminal;
     private DirectedGraph<GraphNode, GraphEdge> rhsGraph;
     private List<NonterminalWithHyperedge> rhsNonterminals;
