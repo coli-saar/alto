@@ -9,11 +9,14 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecUtilities;
 import de.up.ling.irtg.codec.ExceptionErrorStrategy;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.ParseException;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
@@ -82,6 +87,97 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     // TODO
     private InterpretedTreeAutomaton makeIrtg(BolinasHrgGrammar hrg) {
+        
+        TreeAutomaton<String> ta = new ConcreteTreeAutomaton<>();
+        
+        //TODO create interpretation here
+        
+        for(Rule r : hrg.getRules())
+        {
+            SortedSet<String> certainOuter = new TreeSet<>(r.getLhsNonterminal().getEndpoints());
+            
+            List<EdgeTree> edges = new ArrayList<>();
+            Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>();
+            for(NonterminalWithHyperedge nwh : r.getRhsNonterminals())
+            {
+                for(String s : nwh.getEndpoints())
+                {
+                    counts.addTo(s, 1);
+                }
+            }
+            for(GraphEdge ge : r.getRhsGraph().edgeSet())
+            {
+                counts.addTo(ge.getSource().getName(), 1);
+                counts.addTo(ge.getTarget().getName(), 1);
+            }
+            
+            SortedSet<String> uncertainOuter = new TreeSet<>();
+            for(String s : counts.keySet())
+            {
+                if(1 < counts.get(s))
+                {
+                    uncertainOuter.add(s);
+                }
+            }
+            counts.clear();
+            
+            uncertainOuter.addAll(certainOuter);
+            
+            for(NonterminalWithHyperedge nwh : r.getRhsNonterminals())
+            {
+                edges.add(new EdgeTree(nwh, uncertainOuter));
+            }
+            for(GraphEdge ge : r.getRhsGraph().edgeSet())
+            {
+                edges.add(new EdgeTree(ge, uncertainOuter));
+            }
+            
+            while(edges.size() > 1)
+            {
+                int first = -1;
+                int second = -1;
+                int score = -10000;
+                
+                uncertainOuter.clear();
+                counts.clear();
+                
+                for(EdgeTree et : edges)
+                {
+                    et.addCounts(counts);
+                }
+                
+                for(String s : counts.keySet())
+                {
+                    if(2 < counts.get(s))
+                    {
+                        uncertainOuter.add(s);
+                    }
+                }
+                uncertainOuter.addAll(certainOuter);
+                
+                for(int i=0;i<edges.size();++i)
+                {
+                    for(int j=i+1;j<edges.size();++j)
+                    {
+                        int val = edges.get(i).joinSize(edges.get(j), uncertainOuter);
+                        if(val > score)
+                        {
+                            first = i;
+                            second = j;
+                        }
+                    }
+                }
+                
+                EdgeTree t = edges.remove(second);
+                EdgeTree o = edges.remove(first);
+                
+                edges.add(new EdgeTree(o, t, uncertainOuter));
+            }
+            
+            //TODO transfer the whole thing into an actual rule
+            
+        }
+        
         return null;
     }
 

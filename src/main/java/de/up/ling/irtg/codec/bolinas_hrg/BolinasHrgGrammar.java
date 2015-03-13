@@ -15,8 +15,10 @@ import java.util.List;
  * @author koller
  */
 class BolinasHrgGrammar {
+    
     private String startSymbol;
-    private List<Rule> rules;
+
+    private final List<Rule> rules;
 
     public BolinasHrgGrammar() {
         rules = new ArrayList<>();
@@ -40,10 +42,11 @@ class BolinasHrgGrammar {
 
     @Override
     public String toString() {
-        StringBuffer buf = new StringBuffer();
+    
+        StringBuilder buf = new StringBuilder();
         
         for( Rule rule : rules ) {
-            buf.append(rule.toString() + "\n");
+            buf.append(rule.toString()).append("\n");
         }
         
         return buf.toString();

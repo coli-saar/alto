@@ -17,8 +17,11 @@ import org.jgrapht.experimental.equivalence.EquivalenceComparator;
  * @author koller
  */
 public class GraphEdge{
+
     private GraphNode source;
+    
     private GraphNode target;
+    
     private String label;
 
     public GraphEdge(GraphNode source, GraphNode target) {

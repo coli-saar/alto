@@ -21,12 +21,15 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  */
 class Rule {
     private NonterminalWithHyperedge lhsNonterminal;
-    private DirectedGraph<GraphNode, GraphEdge> rhsGraph;
-    private List<NonterminalWithHyperedge> rhsNonterminals;
+
+    private final DirectedGraph<GraphNode, GraphEdge> rhsGraph;
+    
+    private final List<NonterminalWithHyperedge> rhsNonterminals;
+    
     private double weight;
 
     public Rule() {
-        rhsGraph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
+        rhsGraph = new DefaultDirectedGraph<>(new GraphEdgeFactory());
         rhsNonterminals = new ArrayList<>();
     }
 

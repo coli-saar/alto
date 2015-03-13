@@ -15,7 +15,9 @@ import org.jgrapht.experimental.equivalence.EquivalenceComparator;
  * @author koller
  */
 public class GraphNode {
+   
     private String name;
+    
     private String label;
 
     public GraphNode(String name, String label) {
