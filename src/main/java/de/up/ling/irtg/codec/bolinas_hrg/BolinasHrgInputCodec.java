@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.codec.bolinas_hrg;
 
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
@@ -16,12 +17,14 @@ import de.up.ling.irtg.codec.CodecUtilities;
 import de.up.ling.irtg.codec.ExceptionErrorStrategy;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.ParseException;
+import de.up.ling.irtg.hom.Homomorphism;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -85,15 +88,28 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return makeIrtg(hrg);
     }
 
-    // TODO
+    /**
+     * 
+     * @param hrg
+     * @return 
+     */
     private InterpretedTreeAutomaton makeIrtg(BolinasHrgGrammar hrg) {
         
-        TreeAutomaton<String> ta = new ConcreteTreeAutomaton<>();
+        ConcreteTreeAutomaton<String> ta = new ConcreteTreeAutomaton<>();
+        GraphAlgebra ga = new GraphAlgebra();
+        Homomorphism hom = new Homomorphism(ta.getSignature(), ga.getSignature());
         
-        //TODO create interpretation here
+        StringSource stso = new StringSource("INS");
+        
+        String endpoint  = null;
         
         for(Rule r : hrg.getRules())
         {
+            if(endpoint == null)
+            {
+                endpoint = r.getLhsNonterminal().getNonterminal();
+            }
+            
             SortedSet<String> certainOuter = new TreeSet<>(r.getLhsNonterminal().getEndpoints());
             
             List<EdgeTree> edges = new ArrayList<>();
@@ -174,11 +190,21 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 edges.add(new EdgeTree(o, t, uncertainOuter));
             }
             
-            //TODO transfer the whole thing into an actual rule
-            
+            edges.get(0).transform(ta,hom,stso,
+                    r.getLhsNonterminal().getNonterminal()+r.getLhsNonterminal().getEndpoints().size(),
+                    new HashSet<>(), r.getLhsNonterminal().getEndpoints());
+            if(endpoint.equals(r.getLhsNonterminal().getNonterminal()))
+            {
+                ta.addFinalState(ta.getIdForState(
+                        r.getLhsNonterminal().getNonterminal()+r.getLhsNonterminal().getEndpoints().size()));
+            }
         }
         
-        return null;
+        InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(ta);
+        Interpretation in = new Interpretation(ga, hom);
+        ita.addInterpretation("Graph", in);
+        
+        return ita;
     }
 
     private void doHrg(BolinasHrgParser.HrgContext hrgContext, BolinasHrgGrammar grammar) {
