@@ -153,7 +153,19 @@ class EdgeTree {
         }
         else
         {
-         
+            
+            String left = stso.get();
+            this.first.transform(ta, hom, stso, left, seenNodes, null);
+            
+            
+            String right = stso.get();
+            this.second.transform(ta, hom, stso, left, seenNodes, null);
+            
+            ta.addRule(ta.createRule(nonterminalName, stso.get(), new String[] {left,right}));
+            
+            //TODO
+            
+            
             
             //TODO
             return;
