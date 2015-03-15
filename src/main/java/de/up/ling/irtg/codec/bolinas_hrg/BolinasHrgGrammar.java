@@ -18,17 +18,17 @@ class BolinasHrgGrammar {
     
     private String startSymbol;
 
-    private final List<Rule> rules;
+    private final List<BolinasRule> rules;
 
     public BolinasHrgGrammar() {
         rules = new ArrayList<>();
     }
 
-    public List<Rule> getRules() {
+    public List<BolinasRule> getRules() {
         return rules;
     }
     
-    void addRule(Rule rule) {
+    void addRule(BolinasRule rule) {
         rules.add(rule);
     }
 
@@ -45,7 +45,7 @@ class BolinasHrgGrammar {
     
         StringBuilder buf = new StringBuilder();
         
-        for( Rule rule : rules ) {
+        for( BolinasRule rule : rules ) {
             buf.append(rule.toString()).append("\n");
         }
         

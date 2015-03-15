@@ -56,7 +56,8 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 @CodecMetadata(name = "bolinas_hrg", description = "Hyperedge replacement grammar (Bolinas format)", extension = "hrg", type = InterpretedTreeAutomaton.class)
 public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
-    private static final String TEST = "N_1_0_1_2 -> ( 0. :N_0_0_1$  ( 1.*0 :N_0_0$ ) :N_0_0_2$  2.*1 );	0.0022123893805309734";
+    private static final String TEST = "N_1_0_1_2 -> ( 0. :N_0_0_1$  ( 1.*0 :N_0_0$ ) :N_0_0_2$  2.*1 );	0.0022123893805309734\n"
+            + "N_0_0_1 -> (. :ARG1 .);0.0001";
     
 //    private static final String TEST = "T -> (. :want' :arg0 (x. :E$) :arg1 (. :T$ x.));\n"
 //            + "T -> (. :believe' :arg0 (. :girl') :arg1 (. :T$ .*)); \n"
@@ -64,11 +65,18 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 //            + "E -> (. :boy');";
 
     private CodecUtilities util = new CodecUtilities();
+    
     private int nextMarker;
 
     public static void main(String[] args) throws Exception {
         InputStream is = new ByteArrayInputStream(TEST.getBytes());
         InterpretedTreeAutomaton irtg = new BolinasHrgInputCodec().read(is);
+    }
+    
+    public static InterpretedTreeAutomaton create(String input) throws IOException
+    {
+        InputStream is = new ByteArrayInputStream(input.getBytes());
+        return new BolinasHrgInputCodec().read(is);
     }
 
     @Override
@@ -103,7 +111,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         
         String endpoint  = null;
         
-        for(Rule r : hrg.getRules())
+        for(BolinasRule r : hrg.getRules())
         {
             if(endpoint == null)
             {
@@ -193,7 +201,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             NonterminalWithHyperedge nwh = r.getLhsNonterminal();
             
             edges.get(0).transform(ta,hom,stso, makeLHS(nwh),
-                    new HashSet<>(), nwh.getEndpoints());
+                    new HashSet<>(), nwh.getEndpoints(), r.getWeight());
             if(endpoint.equals(r.getLhsNonterminal().getNonterminal()))
             {
                 ta.addFinalState(ta.getIdForState(makeLHS(nwh)));
@@ -213,7 +221,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * @return 
      */
     static String makeLHS(NonterminalWithHyperedge nwh) {
-        return nwh.getNonterminal()+"_"+nwh.getEndpoints().size();
+        return nwh.getNonterminal()+"__"+nwh.getEndpoints().size();
     }
 
     /**
@@ -225,7 +233,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         boolean isFirstRule = true;
 
         for (BolinasHrgParser.HrgRuleContext ruleContext : hrgContext.hrgRule()) {
-            Rule rule = doHrgRule(ruleContext);
+            BolinasRule rule = doHrgRule(ruleContext);
             grammar.addRule(rule);
 
             if (isFirstRule) {
@@ -240,8 +248,8 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * @param ruleContext
      * @return 
      */
-    private Rule doHrgRule(BolinasHrgParser.HrgRuleContext ruleContext) {
-        Rule ret = new Rule();
+    private BolinasRule doHrgRule(BolinasHrgParser.HrgRuleContext ruleContext) {
+        BolinasRule ret = new BolinasRule();
         Map<Integer, String> externalNodeNames = new HashMap<>();
         Map<String, GraphNode> nameToNode = new HashMap<>();
 
@@ -279,7 +287,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * @param nameToNode
      * @return 
      */
-    private String doTerm(BolinasHrgParser.TermContext term, Rule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
+    private String doTerm(BolinasHrgParser.TermContext term, BolinasRule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
         BolinasHrgParser.NodeContext nodeContext = term.node();
         String nodename = doNode(nodeContext, rule, externalNodeNames, nameToNode);
 
@@ -290,7 +298,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return nodename;
     }
 
-    private String doNode(BolinasHrgParser.NodeContext node, Rule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
+    private String doNode(BolinasHrgParser.NodeContext node, BolinasRule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
         BolinasHrgParser.IdContext id = node.id();
         BolinasHrgParser.LabelContext label = node.label();
 
@@ -319,7 +327,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return nodename;
     }
 
-    private void doEdge(BolinasHrgParser.EdgeWithChildrenContext ewcc, String nodename, Rule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
+    private void doEdge(BolinasHrgParser.EdgeWithChildrenContext ewcc, String nodename, BolinasRule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
         List<String> childNodes = new ArrayList<>();
 
         // collect all endpoints of hyperedge

@@ -19,7 +19,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * 
  * @author koller
  */
-class Rule {
+class BolinasRule {
     private NonterminalWithHyperedge lhsNonterminal;
 
     private final DirectedGraph<GraphNode, GraphEdge> rhsGraph;
@@ -28,7 +28,7 @@ class Rule {
     
     private double weight;
 
-    public Rule() {
+    public BolinasRule() {
         rhsGraph = new DefaultDirectedGraph<>(new GraphEdgeFactory());
         rhsNonterminals = new ArrayList<>();
     }
