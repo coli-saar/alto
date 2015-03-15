@@ -190,13 +190,13 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 edges.add(new EdgeTree(o, t, uncertainOuter));
             }
             
-            edges.get(0).transform(ta,hom,stso,
-                    r.getLhsNonterminal().getNonterminal()+r.getLhsNonterminal().getEndpoints().size(),
-                    new HashSet<>(), r.getLhsNonterminal().getEndpoints());
+            NonterminalWithHyperedge nwh = r.getLhsNonterminal();
+            
+            edges.get(0).transform(ta,hom,stso, makeLHS(nwh),
+                    new HashSet<>(), nwh.getEndpoints());
             if(endpoint.equals(r.getLhsNonterminal().getNonterminal()))
             {
-                ta.addFinalState(ta.getIdForState(
-                        r.getLhsNonterminal().getNonterminal()+r.getLhsNonterminal().getEndpoints().size()));
+                ta.addFinalState(ta.getIdForState(makeLHS(nwh)));
             }
         }
         
@@ -207,6 +207,20 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return ita;
     }
 
+    /**
+     * 
+     * @param nwh
+     * @return 
+     */
+    static String makeLHS(NonterminalWithHyperedge nwh) {
+        return nwh.getNonterminal()+"_"+nwh.getEndpoints().size();
+    }
+
+    /**
+     * 
+     * @param hrgContext
+     * @param grammar 
+     */
     private void doHrg(BolinasHrgParser.HrgContext hrgContext, BolinasHrgGrammar grammar) {
         boolean isFirstRule = true;
 
@@ -221,6 +235,11 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
+    /**
+     * 
+     * @param ruleContext
+     * @return 
+     */
     private Rule doHrgRule(BolinasHrgParser.HrgRuleContext ruleContext) {
         Rule ret = new Rule();
         Map<Integer, String> externalNodeNames = new HashMap<>();
@@ -252,6 +271,14 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return ret;
     }
 
+    /**
+     * 
+     * @param term
+     * @param rule
+     * @param externalNodeNames
+     * @param nameToNode
+     * @return 
+     */
     private String doTerm(BolinasHrgParser.TermContext term, Rule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
         BolinasHrgParser.NodeContext nodeContext = term.node();
         String nodename = doNode(nodeContext, rule, externalNodeNames, nameToNode);

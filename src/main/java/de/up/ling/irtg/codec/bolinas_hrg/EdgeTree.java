@@ -5,12 +5,16 @@
  */
 package de.up.ling.irtg.codec.bolinas_hrg;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -144,13 +148,20 @@ class EdgeTree {
         }
         else if(this.nont != null)
         {
-            //TODO handle nonterminal edge
+            String label = stso.get();
+            String right = BolinasHrgInputCodec.makeLHS(nont);
             
+            ta.addRule(ta.createRule(nonterminalName, label, new String[] {right}));
+            
+            Tree<String> main = Tree.create("?1");
+            main = rename(this.nont.getEndpoints(),this.nodes, main);
+            
+            hom.add(label, main);
         }
         else
         {
             
-            handleCombination(stso, ta, hom, seenNodes, nonterminalName);
+            handleCombination(stso, ta, hom, seenNodes, nonterminalName, ordering);
         }
     }
 
@@ -162,7 +173,9 @@ class EdgeTree {
      * @param seenNodes
      * @param nonterminalName 
      */
-    private void handleCombination(StringSource stso, ConcreteTreeAutomaton<String> ta, Homomorphism hom, HashSet<String> seenNodes, String nonterminalName) {
+    private void handleCombination(StringSource stso, ConcreteTreeAutomaton<String> ta,
+            Homomorphism hom, HashSet<String> seenNodes, String nonterminalName,
+            List<String> outer) {
         String left = stso.get();
         this.first.transform(ta, hom, stso, left, seenNodes, null);
         
@@ -173,7 +186,7 @@ class EdgeTree {
         String label = stso.get();
         ta.addRule(ta.createRule(nonterminalName, label, new String[] {left,right}));
         
-        Set<String> combined = new TreeSet<>();
+        SortedSet<String> combined = new TreeSet<>();
         combined.addAll(this.first.nodes);
         combined.addAll(this.second.nodes);
         
@@ -183,7 +196,14 @@ class EdgeTree {
         
         Tree<String> main = Tree.create("merge", lr, rr);
         
-        main = rename(combined,this.nodes,main);
+        if(outer == null)
+        {
+            main = rename(combined,this.nodes,main);
+        }
+        else
+        {
+            main = rename(combined,outer,main);
+        }
         
         hom.add(label, main);
     }
@@ -256,8 +276,105 @@ class EdgeTree {
      * @param string
      * @return 
      */
-    private Tree<String> rename(Set<String> from, Set<String> to, Tree<String> string) {
-        //TODO
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private Tree<String> rename(SortedSet<String> f, SortedSet<String> t, Tree<String> main) {
+        BiMap<String,Integer> from = HashBiMap.create();
+        int i = 0;
+        for(String s : f)
+        {
+            from.put(s,i++);
+        }
+        
+        BiMap<String,Integer> to = HashBiMap.create();
+        i = 0;
+        for(String s : t)
+        {
+            to.put(s, i++);
+        }
+        
+        return rename(from,to,main);
+    }
+
+    private Tree<String> rename(SortedSet<String> combined, List<String> outer, Tree<String> main) {
+        BiMap<String,Integer> from = HashBiMap.create();
+        int i = 0;
+        for(String s : combined)
+        {
+            from.put(s,i++);
+        }
+        
+        BiMap<String,Integer> to = HashBiMap.create();
+        i = 0;
+        for(String s : outer)
+        {
+            to.put(s, i++);
+        }
+        
+        return rename(from,to,main);
+    }
+    
+    private Tree<String> rename(List<String> combined, SortedSet<String> outer, Tree<String> main) {
+        BiMap<String,Integer> from = HashBiMap.create();
+        int i = 0;
+        for(String s : combined)
+        {
+            from.put(s,i++);
+        }
+        
+        BiMap<String,Integer> to = HashBiMap.create();
+        i = 0;
+        for(String s : outer)
+        {
+            to.put(s, i++);
+        }
+        
+        return rename(from,to,main);
+    }
+    
+    /**
+     * 
+     * @param from
+     * @param to
+     * @param main
+     * @return 
+     */
+    private Tree<String> rename(BiMap<String,Integer> from, BiMap<String,Integer> to,
+                        Tree<String> main)
+    {
+        Collection<String> c = new ArrayList<String>(from.keySet());
+        
+        for(String s : c)
+        {
+            if(!to.containsKey(s))
+            {
+                main = Tree.create("f_"+from.get(s), main);
+                continue;
+            }
+            Integer current = from.get(s);
+            Integer goal    = to.get(s);
+            
+            if(current.equals(goal))
+            {
+                continue;
+            }
+            
+            if(from.inverse().containsKey(goal))
+            {
+                String block = from.inverse().get(goal);
+                from.remove(s);
+                from.remove(block);
+                from.put(block, current);
+                from.put(s, goal);
+                
+                main = Tree.create("s_"+from+"_"+goal, main);
+            }
+            else
+            {
+                from.remove(s);
+                from.put(s, goal);
+                main = Tree.create("r_"+current+"_"+goal, main);
+            }
+        }
+        
+        return main;
     }
 }
