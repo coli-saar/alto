@@ -8,7 +8,6 @@ package de.up.ling.irtg.codec.bolinas_hrg;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -139,37 +138,54 @@ class EdgeTree {
      */
     void transform(ConcreteTreeAutomaton<String> ta, Homomorphism hom, StringSource stso, String nonterminalName,
             HashSet<String> seenNodes, List<String> ordering) {
-        
         if(this.de != null)
         {
             handleEdge(stso, ta, nonterminalName, seenNodes, ordering, hom);
-            return;
         }
         else if(this.nont != null)
         {
-            
             //TODO handle nonterminal edge
-            return;
+            
         }
         else
         {
             
-            String left = stso.get();
-            this.first.transform(ta, hom, stso, left, seenNodes, null);
-            
-            
-            String right = stso.get();
-            this.second.transform(ta, hom, stso, left, seenNodes, null);
-            
-            ta.addRule(ta.createRule(nonterminalName, stso.get(), new String[] {left,right}));
-            
-            //TODO
-            
-            
-            
-            //TODO
-            return;
+            handleCombination(stso, ta, hom, seenNodes, nonterminalName);
         }
+    }
+
+    /**
+     * 
+     * @param stso
+     * @param ta
+     * @param hom
+     * @param seenNodes
+     * @param nonterminalName 
+     */
+    private void handleCombination(StringSource stso, ConcreteTreeAutomaton<String> ta, Homomorphism hom, HashSet<String> seenNodes, String nonterminalName) {
+        String left = stso.get();
+        this.first.transform(ta, hom, stso, left, seenNodes, null);
+        
+        
+        String right = stso.get();
+        this.second.transform(ta, hom, stso, left, seenNodes, null);
+        
+        String label = stso.get();
+        ta.addRule(ta.createRule(nonterminalName, label, new String[] {left,right}));
+        
+        Set<String> combined = new TreeSet<>();
+        combined.addAll(this.first.nodes);
+        combined.addAll(this.second.nodes);
+        
+        
+        Tree<String> lr = rename(first.nodes,combined,Tree.create("?1"));
+        Tree<String> rr = rename(second.nodes,combined,Tree.create("?2"));
+        
+        Tree<String> main = Tree.create("merge", lr, rr);
+        
+        main = rename(combined,this.nodes,main);
+        
+        hom.add(label, main);
     }
 
     /**
@@ -181,7 +197,8 @@ class EdgeTree {
      * @param ordering
      * @param hom 
      */
-    private void handleEdge(StringSource stso, ConcreteTreeAutomaton<String> ta, String nonterminalName, HashSet<String> seenNodes, List<String> ordering, Homomorphism hom) {
+    private void handleEdge(StringSource stso, ConcreteTreeAutomaton<String> ta, String nonterminalName,
+            HashSet<String> seenNodes, List<String> ordering, Homomorphism hom) {
         String label = stso.get();
         ta.addRule(ta.createRule(nonterminalName, label, new String[] {}));
         
@@ -222,7 +239,25 @@ class EdgeTree {
         return s;
     }
 
+    /**
+     * 
+     * @param source
+     * @param seenNodes
+     * @return 
+     */
     private String convert(GraphNode source, HashSet<String> seenNodes) {
+        return source.getName();
+    }
+
+    /**
+     * 
+     * @param from
+     * @param to
+     * @param string
+     * @return 
+     */
+    private Tree<String> rename(Set<String> from, Set<String> to, Tree<String> string) {
+        //TODO
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
