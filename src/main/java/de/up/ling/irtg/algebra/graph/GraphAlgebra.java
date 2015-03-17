@@ -219,6 +219,11 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return null;
             } else if (label.equals(OP_MERGE)) {
                 return childrenValues.get(0).merge(childrenValues.get(1));
+            } else if (label.startsWith(OP_MERGE)) {
+                String[] parts = label.split("_");
+                
+                return childrenValues.get(0).merge(childrenValues.get(1).renameSource(parts[1], parts[2]));
+                
             } else if (label.startsWith(OP_RENAME)) {
                 String[] parts = label.split("_");
 

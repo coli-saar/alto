@@ -340,8 +340,10 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 childNodes.add(doNode(cc.node(), rule, externalNodeNames, nameToNode));
             }
         }
-
-        if (ewcc.edgelabel() != null) {
+        
+        String edgelabel = ewcc.edgelabel().EDGELABEL().getText().substring(1);  // strip :
+        
+        if (! edgelabel.endsWith("$")) {
             // "real" edge
             String src, tgt;
 
@@ -363,10 +365,11 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             GraphNode srcn = nameToNode.get(src);
             GraphNode tgtn = nameToNode.get(tgt);
             GraphEdge e = rule.getRhsGraph().addEdge(srcn, tgtn);
-            e.setLabel(ewcc.edgelabel().getText());
+            e.setLabel(edgelabel);
         } else {
             // nonterminal hyperedge
-            NonterminalWithHyperedge nt = new NonterminalWithHyperedge(ewcc.nonterminalEdgelabel().NAME().getText(), childNodes);
+            String ntLabel = edgelabel.substring(0, edgelabel.length()-1);
+            NonterminalWithHyperedge nt = new NonterminalWithHyperedge(ntLabel, childNodes);
             rule.getRhsNonterminals().add(nt);
         }
     }
