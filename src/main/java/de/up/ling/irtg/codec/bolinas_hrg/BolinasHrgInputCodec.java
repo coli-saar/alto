@@ -27,12 +27,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jgrapht.DirectedGraph;
 
 /**
  * An input codec for reading hyperedge replacement grammars (HRGs)
@@ -56,7 +58,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 @CodecMetadata(name = "bolinas_hrg", description = "Hyperedge replacement grammar (Bolinas format)", extension = "hrg", type = InterpretedTreeAutomaton.class)
 public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
-    private static final String TEST = "N_1_0_1_2 -> ( 0. :N_0_0_1$  ( 1.*0 :N_0_0$ ) :N_0_0_2$  2.*1 );	0.0022123893805309734\n"
+    private static final String TEST = "N_1_0_1_2 -> ( 0. :boy :N_0_0_1$  ( 1.*0 :N_0_0$ ) :N_0_0_2$  2.*1 );	0.0022123893805309734\n"
             + "N_0_0_1 -> (. :ARG1 .);0.0001";
     
 //    private static final String TEST = "T -> (. :want' :arg0 (x. :E$) :arg1 (. :T$ x.));\n"
@@ -102,7 +104,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * @return 
      */
     private InterpretedTreeAutomaton makeIrtg(BolinasHrgGrammar hrg) {
-        
         ConcreteTreeAutomaton<String> ta = new ConcreteTreeAutomaton<>();
         GraphAlgebra ga = new GraphAlgebra();
         Homomorphism hom = new Homomorphism(ta.getSignature(), ga.getSignature());

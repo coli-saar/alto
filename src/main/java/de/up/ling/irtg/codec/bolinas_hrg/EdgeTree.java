@@ -230,7 +230,7 @@ class EdgeTree {
         
         s = addNode(s, seenNodes, ordering);
         s += " :"+this.de.getLabel()+" ";
-        s = addNode(s, seenNodes, ordering);
+        s = "("+addNode(s, seenNodes, ordering)+")";
         
         s += ")'";
         
