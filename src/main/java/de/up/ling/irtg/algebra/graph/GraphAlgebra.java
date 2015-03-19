@@ -274,6 +274,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      */
     @Override
     public SGraph parseString(String representation) throws ParserException {
+        System.err.println("parse string: " + representation);
+        
         try {
             return IsiAmrParser.parse(new StringReader(representation));
         } catch (ParseException ex) {

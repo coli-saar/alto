@@ -12,6 +12,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.WeightedTree;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.InputCodec;
@@ -58,7 +59,7 @@ public class InterpretedTreeAutomaton {
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;
-    
+
     /**
      * Constructs a new IRTG with the given derivation tree automaton.
      *
@@ -198,25 +199,44 @@ public class InterpretedTreeAutomaton {
      */
     public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
 //        Logging.get().fine(() -> "parseInputObjects: " + inputs);
-        
+
         TreeAutomaton ret = automaton;
 
         for (String interpName : inputs.keySet()) {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
-            
-//            Logging.get().fine(() -> "Input: " + input);
 
+//            Logging.get().fine(() -> "Input: " + input);
             TreeAutomaton interpParse = interp.parse(input);
             //System.err.println(interpParse);
 //            Logging.get().finest(() -> "invhom(decomp): " + interpParse);
-            
+
             ret = ret.intersect(interpParse);
-            
+
 //            Logging.get().finest(() -> ("Intersect: " + ret));
         }
 
-        return ret.reduceTopDown();
+//        Map<Integer, Double> inside = ret.inside();
+//        double sum = 0;
+//        for (int q : ret.getFinalStates()) {
+//            double w = inside.get(q);
+//            System.err.println("inside for final state " + ret.getStateForId(q) + ": " + w);
+//            sum += w;
+//        }
+//        System.err.println("--- total = " + sum);
+
+        ret = ret.reduceTopDown();
+        
+        Iterator<WeightedTree> it = ret.sortedLanguageIterator();
+        int i = 1;
+        while(it.hasNext()) {
+            WeightedTree wt = it.next();
+            System.err.println(i + ". " + ret.getSignature().resolve(wt.getTree()));
+            System.err.println("P = " + wt.getWeight() + "\n");
+            i++;
+        }
+
+        return ret;
     }
 
     /**
@@ -571,7 +591,7 @@ public class InterpretedTreeAutomaton {
             logLikelihood += Math.log(likelihoodHere);
 
             if (listener != null) {
-                listener.accept(i+1, parses.size(), null);
+                listener.accept(i + 1, parses.size(), null);
 //                listener.update(iteration, i);
             }
         }

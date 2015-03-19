@@ -11,7 +11,6 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecUtilities;
 import de.up.ling.irtg.codec.ExceptionErrorStrategy;
@@ -27,31 +26,28 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.jgrapht.DirectedGraph;
 
 /**
- * An input codec for reading hyperedge replacement grammars (HRGs)
- * in the input format for the Bolinas parser. The codec reads a
- * monolingual graph grammar and converts it into an IRTG with a
- * single interpretation over the {@link GraphAlgebra}.<p>
- * 
- * Because the
- * graph algebra only represents graphs (and not hypergraphs), the
- * conversion will only be successful if every ordinary edge in the
- * rules has one or two endpoints. Edges with one endpoint are
- * translated into loops. Nonterminal hyperedges are treated
- * differently, and may still have an arbitrary number of endpoints.<p>
- * 
- * A note of caution: This class is not thread-safe. If you want to
- * use it in a multi-threaded environment, you should make a separate 
- * codec object for each thread.
+ * An input codec for reading hyperedge replacement grammars (HRGs) in the input
+ * format for the Bolinas parser. The codec reads a monolingual graph grammar
+ * and converts it into an IRTG with a single interpretation over the {@link GraphAlgebra}
+ * .<p>
+ *
+ * Because the graph algebra only represents graphs (and not hypergraphs), the
+ * conversion will only be successful if every ordinary edge in the rules has
+ * one or two endpoints. Edges with one endpoint are translated into loops.
+ * Nonterminal hyperedges are treated differently, and may still have an
+ * arbitrary number of endpoints.<p>
+ *
+ * A note of caution: This class is not thread-safe. If you want to use it in a
+ * multi-threaded environment, you should make a separate codec object for each
+ * thread.
  *
  * @author koller
  */
@@ -60,23 +56,21 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     private static final String TEST = "N_1_0_1_2 -> ( 0. :boy :N_0_0_1$  ( 1.*0 :N_0_0$ ) :N_0_0_2$  2.*1 );	0.0022123893805309734\n"
             + "N_0_0_1 -> (. :ARG1 .);0.0001";
-    
+
 //    private static final String TEST = "T -> (. :want' :arg0 (x. :E$) :arg1 (. :T$ x.));\n"
 //            + "T -> (. :believe' :arg0 (. :girl') :arg1 (. :T$ .*)); \n"
 //            + "T -> (. :want' :arg1 .*);\n"
 //            + "E -> (. :boy');";
-
     private CodecUtilities util = new CodecUtilities();
-    
+
     private int nextMarker;
 
     public static void main(String[] args) throws Exception {
         InputStream is = new ByteArrayInputStream(TEST.getBytes());
         InterpretedTreeAutomaton irtg = new BolinasHrgInputCodec().read(is);
     }
-    
-    public static InterpretedTreeAutomaton create(String input) throws IOException
-    {
+
+    public static InterpretedTreeAutomaton create(String input) throws IOException {
         InputStream is = new ByteArrayInputStream(input.getBytes());
         return new BolinasHrgInputCodec().read(is);
     }
@@ -93,142 +87,124 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         BolinasHrgGrammar hrg = new BolinasHrgGrammar();
         doHrg(result, hrg);
 
-        System.err.println(hrg);
-
+//        System.err.println(hrg);
         return makeIrtg(hrg);
     }
 
     /**
-     * 
+     *
      * @param hrg
-     * @return 
+     * @return
      */
     private InterpretedTreeAutomaton makeIrtg(BolinasHrgGrammar hrg) {
         ConcreteTreeAutomaton<String> ta = new ConcreteTreeAutomaton<>();
         GraphAlgebra ga = new GraphAlgebra();
         Homomorphism hom = new Homomorphism(ta.getSignature(), ga.getSignature());
-        
+
         StringSource stso = new StringSource("INS");
-        
-        String endpoint  = null;
-        
-        for(BolinasRule r : hrg.getRules())
-        {
-            if(endpoint == null)
-            {
+
+        String endpoint = null;
+
+        for (BolinasRule r : hrg.getRules()) {
+            if (endpoint == null) {
                 endpoint = r.getLhsNonterminal().getNonterminal();
             }
-            
+
             SortedSet<String> certainOuter = new TreeSet<>(r.getLhsNonterminal().getEndpoints());
-            
+
             List<EdgeTree> edges = new ArrayList<>();
             Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>();
-            for(NonterminalWithHyperedge nwh : r.getRhsNonterminals())
-            {
-                for(String s : nwh.getEndpoints())
-                {
+            for (NonterminalWithHyperedge nwh : r.getRhsNonterminals()) {
+                for (String s : nwh.getEndpoints()) {
                     counts.addTo(s, 1);
                 }
             }
-            for(GraphEdge ge : r.getRhsGraph().edgeSet())
-            {
+            for (GraphEdge ge : r.getRhsGraph().edgeSet()) {
                 counts.addTo(ge.getSource().getName(), 1);
                 counts.addTo(ge.getTarget().getName(), 1);
             }
-            
+
             SortedSet<String> uncertainOuter = new TreeSet<>();
-            for(String s : counts.keySet())
-            {
-                if(1 < counts.get(s))
-                {
+            for (String s : counts.keySet()) {
+                if (1 < counts.get(s)) {
                     uncertainOuter.add(s);
                 }
             }
             counts.clear();
-            
+
             uncertainOuter.addAll(certainOuter);
-            
-            for(NonterminalWithHyperedge nwh : r.getRhsNonterminals())
-            {
+
+            for (NonterminalWithHyperedge nwh : r.getRhsNonterminals()) {
                 edges.add(new EdgeTree(nwh, uncertainOuter));
             }
-            for(GraphEdge ge : r.getRhsGraph().edgeSet())
-            {
+            for (GraphEdge ge : r.getRhsGraph().edgeSet()) {
                 edges.add(new EdgeTree(ge, uncertainOuter));
             }
-            
-            while(edges.size() > 1)
-            {
+
+            while (edges.size() > 1) {
                 int first = -1;
                 int second = -1;
                 int score = -10000;
-                
+
                 uncertainOuter.clear();
                 counts.clear();
-                
-                for(EdgeTree et : edges)
-                {
+
+                for (EdgeTree et : edges) {
                     et.addCounts(counts);
                 }
-                
-                for(String s : counts.keySet())
-                {
-                    if(2 < counts.get(s))
-                    {
+
+                for (String s : counts.keySet()) {
+                    if (2 < counts.get(s)) {
                         uncertainOuter.add(s);
                     }
                 }
                 uncertainOuter.addAll(certainOuter);
-                
-                for(int i=0;i<edges.size();++i)
-                {
-                    for(int j=i+1;j<edges.size();++j)
-                    {
+
+                for (int i = 0; i < edges.size(); ++i) {
+                    for (int j = i + 1; j < edges.size(); ++j) {
                         int val = edges.get(i).joinSize(edges.get(j), uncertainOuter);
-                        if(val > score)
-                        {
+                        if (val > score) {
                             first = i;
                             second = j;
                         }
                     }
                 }
-                
+
                 EdgeTree t = edges.remove(second);
                 EdgeTree o = edges.remove(first);
-                
+
                 edges.add(new EdgeTree(o, t, uncertainOuter));
             }
-            
+
             NonterminalWithHyperedge nwh = r.getLhsNonterminal();
-            
-            edges.get(0).transform(ta,hom,stso, makeLHS(nwh),
+
+            edges.get(0).transform(ta, hom, stso, makeLHS(nwh),
                     new HashSet<>(), nwh.getEndpoints(), r.getWeight());
-            if(endpoint.equals(r.getLhsNonterminal().getNonterminal()))
-            {
+            if (endpoint.equals(r.getLhsNonterminal().getNonterminal())) {
                 ta.addFinalState(ta.getIdForState(makeLHS(nwh)));
             }
         }
-        
+
         InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(ta);
         Interpretation in = new Interpretation(ga, hom);
         ita.addInterpretation("Graph", in);
-        
+
         return ita;
     }
 
     /**
-     * 
+     *
      * @param nwh
-     * @return 
+     * @return
      */
     static String makeLHS(NonterminalWithHyperedge nwh) {
-        return nwh.getNonterminal()+"__"+nwh.getEndpoints().size();
+        return nwh.getNonterminal() + "__" + nwh.getEndpoints().size();
     }
 
     /**
-     * 
+     *
      * @param hrgContext
-     * @param grammar 
+     * @param grammar
      */
     private void doHrg(BolinasHrgParser.HrgContext hrgContext, BolinasHrgGrammar grammar) {
         boolean isFirstRule = true;
@@ -245,9 +221,9 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
 
     /**
-     * 
+     *
      * @param ruleContext
-     * @return 
+     * @return
      */
     private BolinasRule doHrgRule(BolinasHrgParser.HrgRuleContext ruleContext) {
         BolinasRule ret = new BolinasRule();
@@ -263,7 +239,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         String lhsNonterminalSymbol = ruleContext.nonterminal().getText();
         List<String> listOfExternalNodes = new ArrayList<>();
         for (int i = 0; i < externalNodeNames.size(); i++) {
-            listOfExternalNodes.add(externalNodeNames.get(i-1));
+            listOfExternalNodes.add(externalNodeNames.get(i - 1));
         }
 
         NonterminalWithHyperedge lhs = new NonterminalWithHyperedge(lhsNonterminalSymbol, listOfExternalNodes);
@@ -281,12 +257,12 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
 
     /**
-     * 
+     *
      * @param term
      * @param rule
      * @param externalNodeNames
      * @param nameToNode
-     * @return 
+     * @return
      */
     private String doTerm(BolinasHrgParser.TermContext term, BolinasRule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
         BolinasHrgParser.NodeContext nodeContext = term.node();
@@ -341,10 +317,10 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 childNodes.add(doNode(cc.node(), rule, externalNodeNames, nameToNode));
             }
         }
-        
+
         String edgelabel = ewcc.edgelabel().EDGELABEL().getText().substring(1);  // strip :
-        
-        if (! edgelabel.endsWith("$")) {
+
+        if (!edgelabel.endsWith("$")) {
             // "real" edge
             String src, tgt;
 
@@ -369,7 +345,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             e.setLabel(edgelabel);
         } else {
             // nonterminal hyperedge
-            String ntLabel = edgelabel.substring(0, edgelabel.length()-1);
+            String ntLabel = edgelabel.substring(0, edgelabel.length() - 1);
             NonterminalWithHyperedge nt = new NonterminalWithHyperedge(ntLabel, childNodes);
             rule.getRhsNonterminals().add(nt);
         }
