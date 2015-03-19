@@ -228,9 +228,9 @@ class EdgeTree {
         
         String s = "'(";
         
-        s = addNode(s, seenNodes, ordering);
+        s += addNode(seenNodes, ordering);
         s += " :"+this.de.getLabel()+" ";
-        s = "("+addNode(s, seenNodes, ordering)+")";
+        s += "("+addNode(seenNodes, ordering)+")";
         
         s += ")'";
         
@@ -245,8 +245,8 @@ class EdgeTree {
      * @param ordering
      * @return 
      */
-    private String addNode(String s, HashSet<String> seenNodes, List<String> ordering) {
-        s += convert(this.de.getSource(),seenNodes);
+    private String addNode(HashSet<String> seenNodes, List<String> ordering) {
+        String s = convert(this.de.getSource(),seenNodes);
         if(this.nodes.contains(this.de.getSource().getName()))
         {
             if(ordering != null && ordering.contains(this.de.getSource().getName()))
