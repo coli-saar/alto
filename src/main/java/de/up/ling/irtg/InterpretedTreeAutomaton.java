@@ -227,6 +227,7 @@ public class InterpretedTreeAutomaton {
 
         ret = ret.reduceTopDown();
         
+        /*  // for debugging: print weighted language
         Iterator<WeightedTree> it = ret.sortedLanguageIterator();
         int i = 1;
         while(it.hasNext()) {
@@ -235,7 +236,8 @@ public class InterpretedTreeAutomaton {
             System.err.println("P = " + wt.getWeight() + "\n");
             i++;
         }
-
+*/
+        
         return ret;
     }
 

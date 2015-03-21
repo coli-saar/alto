@@ -372,6 +372,7 @@
         </plugins>
       </build>
     </profile>
+
     <profile>
       <id>zip</id>
       <activation>
