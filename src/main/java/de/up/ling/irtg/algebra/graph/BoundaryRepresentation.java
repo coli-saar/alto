@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.List;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_SWAP;
 import de.up.ling.irtg.util.FastutilUtils;
+import de.up.ling.irtg.util.MutableBoolean;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -27,7 +28,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.BitSet;
 import java.util.StringJoiner;
-import org.apache.commons.lang.mutable.MutableBoolean;
+//import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
