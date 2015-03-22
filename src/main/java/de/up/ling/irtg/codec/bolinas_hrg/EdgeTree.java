@@ -185,7 +185,7 @@ class EdgeTree {
         
         
         String right = stso.get();
-        this.second.transform(ta, hom, stso, left, seenNodes, null,1.0);
+        this.second.transform(ta, hom, stso, right, seenNodes, null,1.0);
         
         String label = stso.get();
         ta.addRule(ta.createRule(nonterminalName, label, new String[] {left,right}, weight));
