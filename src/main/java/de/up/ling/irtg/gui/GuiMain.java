@@ -74,6 +74,13 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public GuiMain() {
         initComponents();
         jMenuBar1.add(new WindowMenu(this));
+        
+        if( ! GuiMain.isMac() ) {
+            miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+            miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));            
+            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+        }
     }
 
     public static GuiMain getApplication() {
@@ -97,13 +104,13 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         log = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
-        jMenuItem2 = new javax.swing.JMenuItem();
-        jMenuItem6 = new javax.swing.JMenuItem();
+        miLoadIrtg = new javax.swing.JMenuItem();
+        miLoadAutomaton = new javax.swing.JMenuItem();
+        miLoadTemplateIrtg = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem4 = new javax.swing.JMenuItem();
+        miCloseAllWindows = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
-        jMenuItem3 = new javax.swing.JMenuItem();
+        miQuit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         jMenuItem5 = new javax.swing.JMenuItem();
 
@@ -117,51 +124,51 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         jMenu1.setText("File");
 
-        jMenuItem1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
-        jMenuItem1.setText("Load IRTG ...");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+        miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
+        miLoadIrtg.setText("Load IRTG ...");
+        miLoadIrtg.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
+                miLoadIrtgActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem1);
+        jMenu1.add(miLoadIrtg);
 
-        jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
-        jMenuItem2.setText("Load Tree Automaton ...");
-        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+        miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
+        miLoadAutomaton.setText("Load Tree Automaton ...");
+        miLoadAutomaton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem2ActionPerformed(evt);
+                miLoadAutomatonActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem2);
+        jMenu1.add(miLoadAutomaton);
 
-        jMenuItem6.setText("Load Template IRTG ...");
-        jMenuItem6.addActionListener(new java.awt.event.ActionListener() {
+        miLoadTemplateIrtg.setText("Load Template IRTG ...");
+        miLoadTemplateIrtg.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem6ActionPerformed(evt);
+                miLoadTemplateIrtgActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem6);
+        jMenu1.add(miLoadTemplateIrtg);
         jMenu1.add(jSeparator1);
 
-        jMenuItem4.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
-        jMenuItem4.setText("Close All Windows");
-        jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
+        miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
+        miCloseAllWindows.setText("Close All Windows");
+        miCloseAllWindows.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem4ActionPerformed(evt);
+                miCloseAllWindowsActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem4);
+        jMenu1.add(miCloseAllWindows);
         jMenu1.add(jSeparator2);
 
-        jMenuItem3.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
-        jMenuItem3.setText("Quit");
-        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+        miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
+        miQuit.setText("Quit");
+        miQuit.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem3ActionPerformed(evt);
+                miQuitActionPerformed(evt);
             }
         });
-        jMenu1.add(jMenuItem3);
+        jMenu1.add(miQuit);
 
         jMenuBar1.add(jMenu1);
 
@@ -199,29 +206,29 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+    private void miLoadIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadIrtgActionPerformed
         loadIrtg(this);
-    }//GEN-LAST:event_jMenuItem1ActionPerformed
+    }//GEN-LAST:event_miLoadIrtgActionPerformed
 
-    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+    private void miLoadAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadAutomatonActionPerformed
         loadAutomaton(this);
-    }//GEN-LAST:event_jMenuItem2ActionPerformed
+    }//GEN-LAST:event_miLoadAutomatonActionPerformed
 
-    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+    private void miQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miQuitActionPerformed
         System.exit(0);
-    }//GEN-LAST:event_jMenuItem3ActionPerformed
+    }//GEN-LAST:event_miQuitActionPerformed
 
-    private void jMenuItem4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem4ActionPerformed
+    private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
         closeAllWindows();
-    }//GEN-LAST:event_jMenuItem4ActionPerformed
+    }//GEN-LAST:event_miCloseAllWindowsActionPerformed
 
     private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
         showDecompositionDialog(this);
     }//GEN-LAST:event_jMenuItem5ActionPerformed
 
-    private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed
+    private void miLoadTemplateIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadTemplateIrtgActionPerformed
         loadTemplateIrtg(this);
-    }//GEN-LAST:event_jMenuItem6ActionPerformed
+    }//GEN-LAST:event_miLoadTemplateIrtgActionPerformed
 
     public static void showDecompositionDialog(java.awt.Frame parent) {
         new DecompositionDialog(parent, true).setVisible(true);
@@ -564,15 +571,15 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JMenuItem jMenuItem2;
-    private javax.swing.JMenuItem jMenuItem3;
-    private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
-    private javax.swing.JMenuItem jMenuItem6;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JTextArea log;
+    private javax.swing.JMenuItem miCloseAllWindows;
+    private javax.swing.JMenuItem miLoadAutomaton;
+    private javax.swing.JMenuItem miLoadIrtg;
+    private javax.swing.JMenuItem miLoadTemplateIrtg;
+    private javax.swing.JMenuItem miQuit;
     private javax.swing.JScrollPane spLog;
     // End of variables declaration//GEN-END:variables
 
