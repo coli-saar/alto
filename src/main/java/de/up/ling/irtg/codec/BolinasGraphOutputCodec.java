@@ -78,8 +78,6 @@ public class BolinasGraphOutputCodec extends OutputCodec<SGraph> {
     
     
     private void encode(GraphNode node, DirectedGraph<GraphNode, GraphEdge> graph, Set<GraphNode> visited, Writer w) throws IOException {
-        System.err.println("enc: " + node.repr());
-        
         if( visited.contains(node)) {
             w.write(node.getName() + ".");
         } else {

@@ -13,17 +13,17 @@ import it.unimi.dsi.fastutil.ints.IntList;
  * 
  * @author jonas
  */
-public class StaticMergePartnerFinder extends MergePartnerFinder {
+public class StaticMergePartnerFinderOLD extends MergePartnerFinder {
     
    private final boolean isFinal;
-   private final StaticMergePartnerFinder[] children;
+   private final StaticMergePartnerFinderOLD[] children;
    private final IntList finalSet;
    private final int sourceNr;
    private final int ALL;//give this name so its unlikely this is actually a name of a source
    private final int BOT;
    private final SGraphBRDecompositionAutomatonBottomUp auto;
    
-   public StaticMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto)//maybe give expected size of finalSet as parameter?
+   public StaticMergePartnerFinderOLD(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto)//maybe give expected size of finalSet as parameter?
    {
        this.auto = auto;
        if (nrSources == 0){
@@ -38,15 +38,15 @@ public class StaticMergePartnerFinder extends MergePartnerFinder {
            isFinal = false;
            finalSet = null;
            sourceNr = currentSource;
-           children = new StaticMergePartnerFinder[nrNodes + 2];
+           children = new StaticMergePartnerFinderOLD[nrNodes + 2];
            ALL = nrNodes;
            BOT = nrNodes +1;
            for (int i = 0; i<nrNodes; i++)
            {
-               children[i] = new StaticMergePartnerFinder(currentSource + 1, nrSources -1, nrNodes, auto);//TODO: throw error if vName == ALL or vName == BOT
+               children[i] = new StaticMergePartnerFinderOLD(currentSource + 1, nrSources -1, nrNodes, auto);//TODO: throw error if vName == ALL or vName == BOT
            }
-           children[BOT] = new StaticMergePartnerFinder(currentSource + 1, nrSources -1, nrNodes, auto);
-           children[ALL] = new StaticMergePartnerFinder(currentSource + 1, nrSources -1, nrNodes, auto);
+           children[BOT] = new StaticMergePartnerFinderOLD(currentSource + 1, nrSources -1, nrNodes, auto);
+           children[ALL] = new StaticMergePartnerFinderOLD(currentSource + 1, nrSources -1, nrNodes, auto);
        }
    }
    

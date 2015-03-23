@@ -51,20 +51,20 @@ class PatternMatchingInvhomAutomatonTest {
     @Test
     public void testInvhomCfg() {
         InterpretedTreeAutomaton cfg = pi(CFG)
-        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(cfg.getInterpretation("i").getHomomorphism())
+        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(cfg.getInterpretation("i").getHomomorphism(), cfg.getInterpretation("i").getAlgebra())
         f.computeMatcherFromHomomorphism()
         
         Algebra alg = cfg.getInterpretation("i").getAlgebra()
         List input = alg.parseString("john watches the woman with the telescope")
         TreeAutomaton decomp = alg.decompose(input)
         
-        CpuTimeStopwatch sw = new CpuTimeStopwatch()
-        sw.record(0)
+//        CpuTimeStopwatch sw = new CpuTimeStopwatch()
+//        sw.record(0)
         
         CondensedTreeAutomaton invhom = f.invhom(decomp)
         
-        sw.record(1)
-        sw.printMilliseconds("invhom")
+//        sw.record(1)
+//        sw.printMilliseconds("invhom")
         
         assert invhom.accepts(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
         assert invhom.accepts(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
@@ -79,7 +79,7 @@ class PatternMatchingInvhomAutomatonTest {
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism()
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
         
-        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom)
+        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom, alg)
         f.computeRestrictiveMatcherFromHomomorphism()
         
         String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"
@@ -104,7 +104,7 @@ class PatternMatchingInvhomAutomatonTest {
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism()
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
         
-        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom)
+        PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom, alg)
         f.computeRestrictiveMatcherFromHomomorphism()
         
         String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"

@@ -38,6 +38,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public void addFinalState(int state) {
         super.addFinalState(state);
     }
+    
 
     public void addRule(Rule rule) {
         storeRule(rule);

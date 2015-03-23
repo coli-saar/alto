@@ -8,22 +8,32 @@ import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonSt
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
+import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAsymptotic;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.BinaryPartnerFinder;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
+import static de.up.ling.irtg.algebra.graph.GraphInfo.BOLINASROOTSTRING;
+import static de.up.ling.irtg.algebra.graph.GraphInfo.BOLINASSUBROOTSTRING;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
+import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinder;
+import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
-import static de.up.ling.irtg.util.TestingTools.pt;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.Writer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,8 +85,12 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public static final String OP_FORGET = "f_";
 
     public final Int2ObjectMap<SGraph> constantLabelInterpretations;
+    Set<String> sources;
         
         
+    private boolean isPure = false;
+    private int mergeLabelID;
+    
     public GraphAlgebra() {
         super();
         
@@ -85,11 +99,22 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     public GraphAlgebra(Signature signature) {
         super();
+        isPure = true;
         this.signature = signature;
+        for (String label : signature.getSymbols()) {
+            if (signature.getArityForLabel(label) == 2) {
+                if (label.equals(OP_MERGE)) {
+                    mergeLabelID = signature.getIdForSymbol(label);
+                } else {
+                    isPure = false;
+                }
+            }
+        }
+        
         
         constantLabelInterpretations = new Int2ObjectOpenHashMap<>();
         precomputeAllConstants();
-        
+        sources = getAllSourcesFromSignature(signature);
     }
     
     private void precomputeAllConstants() {
@@ -109,11 +134,21 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public TreeAutomaton decompose(SGraph value) {
         //return new SGraphDecompositionAutomaton(value, this, getSignature());
         //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
-        //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());
-        return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
+        
+        //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());//currently bugged
+        if (ParseTester.useTopDown) {
+            return decompose(value, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
+        } else {
+            return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
+        }
+        //return decompose(value, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
+        //return decompose(value, SGraphBRDecompositionAutomatonTopDown.class);
     }
     
     public TreeAutomaton decompose(SGraph value, Class c){
+        if (sources == null) {
+            sources = getAllSourcesFromSignature(signature);
+        }
         if (constantLabelInterpretations.isEmpty()) {
             precomputeAllConstants();
         }
@@ -134,6 +169,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return new SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas(value, this, getSignature());
             } else if (c == SGraphBRDecompositionAutomatonTopDown.class) {
                 return new SGraphBRDecompositionAutomatonTopDown(value, this, getSignature());
+            } else if (c == SGraphBRDecompositionAutomatonTopDownAsymptotic.class) {
+                return new SGraphBRDecompositionAutomatonTopDownAsymptotic(value, this, getSignature());
             }
             else return null;
         //} catch (java.lang.Exception e) {
@@ -182,6 +219,11 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return null;
             } else if (label.equals(OP_MERGE)) {
                 return childrenValues.get(0).merge(childrenValues.get(1));
+            } else if (label.startsWith(OP_MERGE)) {
+                String[] parts = label.split("_");
+                
+                return childrenValues.get(0).merge(childrenValues.get(1).renameSource(parts[1], parts[2]));
+                
             } else if (label.startsWith(OP_RENAME)) {
                 String[] parts = label.split("_");
 
@@ -232,6 +274,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      */
     @Override
     public SGraph parseString(String representation) throws ParserException {
+//        System.err.println("parse string: " + representation);
+        
         try {
             return IsiAmrParser.parse(new StringReader(representation));
         } catch (ParseException ex) {
@@ -261,7 +305,116 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 
         return ret;
     }
+    
+    
+    public static Set<String> getAllSourcesFromSignature(Signature signature) {
+        //find all sources used in algebra:
+        Set<String> ret = new HashSet<>();
+        for (String symbol : signature.getSymbols())//this adds all sources from the signature, (but be careful, this is kind of a hack) should work now. Maybe better just give this a list of sources directly?
+        {
+            if (symbol.startsWith(GraphAlgebra.OP_FORGET) || symbol.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
+                String[] parts = symbol.split("_");
+                for (int i = 1; i<parts.length; i++) {
+                    if (parts[i].equals("")) {
+                        System.err.println("empty sourcename!");
+                    } 
+                    ret.add(parts[i]);
+                }
+            } else if (symbol.startsWith(GraphAlgebra.OP_RENAME) || symbol.startsWith(GraphAlgebra.OP_SWAP)) {
+                String[] parts = symbol.split("_");
+                if (parts.length == 2) {
+                    ret.add("root");
+                }
+                for (int i = 1; i < parts.length; i++) {
+                    if (parts[i].equals("")) {
+                        System.err.println("empty sourcename!");
+                    } 
+                    ret.add(parts[i]);
+                }
+            } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
+                ret.add(BOLINASROOTSTRING);
+                ret.add(BOLINASSUBROOTSTRING);
+            } else if (signature.getArityForLabel(symbol) == 0) {
+                String[] parts = symbol.split("<");
+                for (int i = 1; i<parts.length; i++) {//do not want the first element in parts!
+                    List<String> smallerParts = Arrays.asList(parts[i].split(">")[0].split(","));
+                    if (smallerParts.contains("")) {
+                       System.err.println("empty sourcename!");  
+                    }
+                    ret.addAll(smallerParts);
+                }
+            } else if (symbol.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)) {
+                ret.add("root");
+            }
+        }
+        return ret;
 
+    }
+
+    
+    @Override
+    public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
+        if (isPure) {
+            return new MPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto); //To change body of generated methods, choose Tools | Templates.
+        } else {
+            return new ImpureMPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto);
+        }
+    }
+    
+    private class MPFBinaryPartnerFinder extends BinaryPartnerFinder{
+        MergePartnerFinder mpf;
+        BitSet seen = new BitSet();
+        public MPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
+            mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
+        }
+        
+        @Override
+        public IntCollection getPartners(int labelID, int stateID) {
+            if (labelID == mergeLabelID) {
+                return mpf.getAllMergePartners(stateID);
+            } else {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        }
+
+        @Override
+        public void addState(int stateID) {
+            if (!seen.get(stateID)) {
+                mpf.insert(stateID);
+                seen.set(stateID);
+            }
+        }
+        
+    }
+    
+    private class ImpureMPFBinaryPartnerFinder extends BinaryPartnerFinder{
+        MergePartnerFinder mpf;
+        IntSet backupset;
+        public ImpureMPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
+            mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
+            backupset = new IntOpenHashSet();
+        }
+        
+        @Override
+        public IntCollection getPartners(int labelID, int stateID) {
+            if (signature.resolveSymbolId(labelID).equals(OP_MERGE)) {
+                return mpf.getAllMergePartners(stateID);
+            } else {
+                return backupset;
+            }
+        }
+
+        @Override
+        public void addState(int stateID) {
+            if (!backupset.contains(stateID)) {
+                mpf.insert(stateID);
+                backupset.add(stateID);
+            }
+        }
+        
+    }
+    
+    
     
     public static void main(String[] args) throws Exception {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream( SGraphBRDecompositionAutomatonTopDown.HRG.getBytes( Charset.defaultCharset() ) ));
@@ -271,4 +424,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         System.err.println(chart);
     }
 
+    
+    
 }

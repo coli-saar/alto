@@ -137,11 +137,15 @@
       <type>jar</type>
     </dependency>
     
+<!--
     <dependency>
 	<groupId>org.apache.spark</groupId>
 	<artifactId>spark-core_2.10</artifactId>
 	<version>1.1.0</version>
 </dependency>
+
+-->
+
 
   </dependencies>
 
@@ -368,6 +372,7 @@
         </plugins>
       </build>
     </profile>
+
     <profile>
       <id>zip</id>
       <activation>

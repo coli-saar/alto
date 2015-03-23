@@ -89,7 +89,7 @@ public class CodecUtilities {
         List<Tree<O>> retChildren = Collections.EMPTY_LIST;
         
         if( cChildren != null ) {
-            retChildren = Util.mapList(children.apply(context), x -> processTree(x, label, children));
+            retChildren = Util.mapToList(children.apply(context), x -> processTree(x, label, children));
         }
          
         return Tree.create(label.apply(context), retChildren);

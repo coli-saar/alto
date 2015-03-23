@@ -799,7 +799,7 @@ public class IrtgInducer {
                 assert childValues.stream().allMatch(x -> x.decomposedSubtrees.size() == 1);
 
                 long eltreeId = Util.parseNumberWithPrefix(label);
-                List<Tree<ElementaryTree>> myChildren = Util.mapList(childValues, x -> x.decomposedSubtrees.get(0));
+                List<Tree<ElementaryTree>> myChildren = Util.mapToList(childValues, x -> x.decomposedSubtrees.get(0));
 
                 Tree<ElementaryTree> newTree = Tree.create(knownElementaryTrees.get(eltreeId), myChildren);
                 return new DecompositionResult(Collections.singletonList(newTree), nullTree);
@@ -815,7 +815,7 @@ public class IrtgInducer {
 //                } else {
 //                    ruleHere = LabeledRule.fromRule(rule, chart);
 //                }
-                List<Tree<Either<LabeledRule, String>>> childPartialEltrees = Util.mapList(childValues, x -> x.partialElementaryTree.getTree());
+                List<Tree<Either<LabeledRule, String>>> childPartialEltrees = Util.mapToList(childValues, x -> x.partialElementaryTree.getTree());
                 ElementaryTree partialEltreeHere = new ElementaryTree(Tree.create(Either.makeFirst(ruleHere), childPartialEltrees));
 
                 List<Tree<ElementaryTree>> allSubtrees = new ArrayList<>();
@@ -1148,6 +1148,10 @@ public class IrtgInducer {
                     }
                 }
             }
+            instSzbl.graph = currentAmr.toString();
+            inst.graph = graphAlgebra.parseString(currentAmr.toString());
+            corpusSerializable.add(instSzbl);
+            corpus.add(inst);
         } catch (IOException ex) {
             Logger.getLogger(IrtgInducer.class
                     .getName()).log(Level.SEVERE, null, ex);
@@ -1323,5 +1327,9 @@ public class IrtgInducer {
     
     public List<TrainingInstance> getCorpus() {
         return corpus;
+    }
+    
+    public List<TrainingInstanceSerializable> getCorpusSerializable() {
+        return corpusSerializable;
     }
 }

@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.Collection;
 import java.util.List;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_SWAP;
+import de.up.ling.irtg.util.FastutilUtils;
+import de.up.ling.irtg.util.MutableBoolean;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -26,6 +28,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.BitSet;
 import java.util.StringJoiner;
+//import org.apache.commons.lang.mutable.MutableBoolean;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
@@ -427,12 +430,31 @@ public class BoundaryRepresentation {
     }
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
-        return (commonNodesHaveCommonSourceNames(other)
+        if (!hasCommonSourceNode(other)) {
+            ParseTester.averageLogger.increaseValue("noCommonSource");//10
+            return false;
+        } else if (!sourceNodesAgree(other)) {
+            ParseTester.averageLogger.increaseValue("sourceNodesDontAgree");//64
+            return false;
+        } else if (!edgesDisjoint(other)) {
+            ParseTester.averageLogger.increaseValue("edgesNotDisjoint");//33
+            return false;
+        } else if (!commonNodesHaveCommonSourceNames(other)) {
+            ParseTester.averageLogger.increaseValue("commonNodeWithNoCommonSource");//.4
+            return false;
+        } else if (hasSourcesInsideOther(other) || other.hasSourcesInsideOther(this)) {
+            ParseTester.averageLogger.increaseValue("notDisjoint");//0
+            return false;
+        } else {
+            return true;
+        }
+        
+        /*return (commonNodesHaveCommonSourceNames(other)
                 && hasCommonSourceNode(other)
                 && sourceNodesAgree(other)// always true with MPF!
                 && edgesDisjoint(other) //always true with edge-MPF!
                 && !hasSourcesInsideOther(other)
-                && !other.hasSourcesInsideOther(this));
+                && !other.hasSourcesInsideOther(this));*/
     }
 
     public boolean isMergeableMPF(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
@@ -497,6 +519,48 @@ public class BoundaryRepresentation {
 
     public boolean contains(int vNr) {
         return (isSource(vNr) || isInternalNode(vNr));
+    }
+    
+    // Alternative implementation of commonNodesHaveCommonSourceNames
+    // that runs in time O(|S|) instead of O(|S|^2), but is slower
+    // in practice because of constant factors.
+    private boolean commonNodesHaveCommonSourceNames2(BoundaryRepresentation other) {
+        IntSet mySourceNodes = new IntOpenHashSet();
+        IntSet otherSourceNodes = new IntOpenHashSet();
+        IntSet sourceNodesWithCommonName = new IntOpenHashSet();
+        
+        for( int source = 0; source < sourceToNodename.length; source++ ) {
+            int mySource = sourceToNodename[source];
+            int otherSource = other.sourceToNodename[source];
+            
+            if( mySource != -1 ) {
+                mySourceNodes.add(mySource);
+                
+                if( otherSource == mySource ) {
+                    sourceNodesWithCommonName.add(mySource);
+                }
+            }
+            
+            if( otherSource != -1 ) {
+                otherSourceNodes.add(otherSource);
+            }
+        }
+        
+        final MutableBoolean allCommonNodesHaveCommonSourceName = new MutableBoolean(true);
+        FastutilUtils.forEachInIntersection(mySourceNodes, otherSourceNodes, sourceNode -> {
+           if( ! sourceNodesWithCommonName.contains(sourceNode) )  {
+               allCommonNodesHaveCommonSourceName.setValue(false);
+           }
+        });
+        
+        return allCommonNodesHaveCommonSourceName.booleanValue();
+        
+//        // compute source nodes that occur in both BRs
+//        mySourceNodes.retainAll(otherSourceNodes);
+//        
+//        // check that all source nodes that occur in both also have
+//        // at least one source name in common
+//        return sourceNodesWithCommonName.containsAll(mySourceNodes);
     }
 
     public boolean commonNodesHaveCommonSourceNames(BoundaryRepresentation other) {
@@ -885,4 +949,27 @@ public class BoundaryRepresentation {
             return null;
         }
     }
+    
+    public Set<String> getAllSourceNames() {
+        Set<String> ret = new HashSet<>();
+        for (int source = 0; source<sourceToNodename.length; source++) {
+            if (sourceToNodename[source]>=0) {
+                ret.add(completeGraphInfo.getSourceForInt(source));
+            }
+        }
+        return ret;
+    }
+    
+    private IntList sortedBoundaryEdges;
+    
+    public IntList getSortedInBEdges() {
+        if (sortedBoundaryEdges == null) {
+            sortedBoundaryEdges = new IntArrayList();
+            inBoundaryEdges.forEach(edge -> sortedBoundaryEdges.add(edge));
+            Collections.sort(sortedBoundaryEdges);
+        }
+        return sortedBoundaryEdges;
+    }
+    
+    
 }

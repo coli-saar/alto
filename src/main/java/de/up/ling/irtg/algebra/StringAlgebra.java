@@ -180,7 +180,7 @@ public class StringAlgebra extends Algebra<List<String>> {
 
                     Span span = new Span(getStateForId(childStates[0]).start, getStateForId(childStates[1]).end);
                     int spanState = addState(span);
-                    Rule rule = createRule(spanState, label, childStates, 1);
+                    Rule rule = createRule(spanState, label, Arrays.copyOf(childStates, childStates.length), 1);  // contents of childStates may change in the future, clone it to be on the safe side
                     ret.add(rule);
                     storeRule(rule);
 

@@ -51,7 +51,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     
     final GraphAlgebra algebra;
     
-    final Set<BoundaryRepresentation>[] storedConstants;
+    public final Set<BoundaryRepresentation>[] storedConstants;
     
     
     final Int2ObjectMap<Int2ObjectMap<Iterable<Rule>>> storedRules;
@@ -227,6 +227,24 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
                 rules.add(makeRule(parentState, labelId, symmetricBRs, symmetricComponentManagers));
             }
 
+        } else if (label.startsWith(GraphAlgebra.OP_MERGE)) {
+            List<Pair<BoundaryRepresentation[], ComponentManager[]>> allSplits = getAllSplits(componentManager.get(parentState), parent);
+            for (Pair<BoundaryRepresentation[], ComponentManager[]> childStates : allSplits) {
+                BoundaryRepresentation[] symmetricBRs = new BoundaryRepresentation[]{childStates.getLeft()[1], childStates.getLeft()[0]};
+                ComponentManager[] symmetricComponentManagers = new ComponentManager[]{childStates.getRight()[1], childStates.getRight()[0]};
+                
+                String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
+                
+                BoundaryRepresentation renamedRight = childStates.getLeft()[1].applyRenameReverse(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
+                if (renamedRight != null) {
+                    rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{childStates.getLeft()[0], renamedRight}, childStates.getRight()));
+                }
+                
+                BoundaryRepresentation symmetricRenamedRight = symmetricBRs[1].applyRenameReverse(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
+                if (symmetricRenamedRight != null) {
+                    rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{symmetricBRs[0], symmetricRenamedRight}, symmetricComponentManagers));
+                }
+            }
         } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
             List<Pair<BoundaryRepresentation, ComponentManager>> allForgotten = getAllForgotten(parent, componentManager.get(parentState), completeGraphInfo.getlabelSources(labelId)[0]);
 
@@ -256,6 +274,9 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
             }
         } else {
 
+            if (storedConstants[labelId] == null) {
+                System.err.println();
+            }
             if (storedConstants[labelId].contains(parent)) {
                 rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[0], new ComponentManager[0]));
             }

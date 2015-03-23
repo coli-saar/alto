@@ -27,7 +27,7 @@ public class Interpretation<E> {
     public Interpretation(Algebra<E> algebra, Homomorphism hom) {
         this.algebra = algebra;
         this.hom = hom;
-        this.pmFactory = new PatternMatchingInvhomAutomatonFactory(hom);
+        pmFactory = null;
     }
 
     public E interpret(Tree<String> t) {
@@ -49,6 +49,9 @@ public class Interpretation<E> {
         // inverse homomorphism, if that is possible. Pattern matching works for both top down
         // and bottom up queries.
         if (hom.isNonDeleting()) {
+            if (pmFactory == null) {
+                pmFactory = new PatternMatchingInvhomAutomatonFactory(hom, algebra);
+            }
             Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching.");
             return pmFactory.invhomRestrictive(decompositionAutomaton);
 

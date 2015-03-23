@@ -37,13 +37,13 @@ public class EdgeIntersectionMPF extends MergePartnerFinder {
     private final int[] relevantEdges;
     private final SGraphBRDecompositionAutomatonBottomUp auto;
     //private final IntList allBdryReps;
-    private final IntSet vertices;
-    private final boolean hasAll;
+    //private final IntSet vertices;
+    //private final boolean hasAll;
 
     public EdgeIntersectionMPF(boolean hasAll, IntSet vertices, SGraphBRDecompositionAutomatonBottomUp auto) {
         this.auto = auto;
-        this.vertices = vertices;
-        this.hasAll = hasAll;
+        //this.vertices = vertices;
+        //this.hasAll = hasAll;
         localToGlobal = new IntArrayList();
         notHasEdge = new Int2ObjectOpenHashMap<>();
         //allBdryReps = new IntArrayList();

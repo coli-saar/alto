@@ -9,6 +9,7 @@ import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.ByteIterator;
 import it.unimi.dsi.fastutil.bytes.ByteArraySet;
+import it.unimi.dsi.fastutil.bytes.ByteCollections;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -27,6 +28,7 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
     static int idCounter = 0;
     //private final String ID;
     private final ByteArraySet edges;
+    
 
     public ByteBasedEdgeSet() {
         edges = new ByteArraySet();
@@ -317,5 +319,4 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
             action.accept(it.nextByte());
         }
     }
-
 }

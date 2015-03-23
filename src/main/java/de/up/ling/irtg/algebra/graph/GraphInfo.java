@@ -60,8 +60,13 @@ public class GraphInfo {
         this.graph = completeGraph;
         sourcenameToInt = new HashMap<>();
         nodenameToInt = new HashMap<>();
+        Set<String> sources;
+        if (algebra.sources != null) {
+            sources = algebra.sources;
+        } else {
+            sources = GraphAlgebra.getAllSourcesFromSignature(signature);
+        }
         
-        Set<String> sources = getAllSourcesFromSignature(signature);
         
         intToSourcename = new String[sources.size()];
         int i = 0;
@@ -98,6 +103,7 @@ public class GraphInfo {
         edgeToId = new Object2IntOpenHashMap<>();
         
         int edgeId = 0;
+        IntSet seenLoops = new IntOpenHashSet();
         for (GraphEdge e : graph.getGraph().edgeSet()) {
             int s = nodenameToInt.get(e.getSource().getName());
             int t = nodenameToInt.get(e.getTarget().getName());
@@ -107,13 +113,18 @@ public class GraphInfo {
             edgeToId.put(e, edgeId);
             allEdges[edgeId] = edgeId;
             edgeId++;
+            if (s==t) {
+                seenLoops.add(s);
+            }
         }
         for (int vNr = 0; vNr < n; vNr ++){
-            edgeSources[edgeId] = vNr;
-            edgeTargets[edgeId] = vNr;
-            edgesBySourceAndTarget[vNr][vNr] = edgeId;
-            allEdges[edgeId] = edgeId;
-            edgeId++;
+            if (!seenLoops.contains(vNr)) {
+                edgeSources[edgeId] = vNr;//so this means we always have loops for every vertex? see also in construction of BRepComponent for empty BR.
+                edgeTargets[edgeId] = vNr;
+                edgesBySourceAndTarget[vNr][vNr] = edgeId;
+                allEdges[edgeId] = edgeId;
+                edgeId++;
+            }
         }
         
 
@@ -170,49 +181,7 @@ public class GraphInfo {
         }
     }
     
-    private Set<String> getAllSourcesFromSignature(Signature signature) {
-        //find all sources used in algebra:
-        Set<String> ret = new HashSet<>();
-        for (String symbol : signature.getSymbols())//this adds all sources from the signature, (but be careful, this is kind of a hack) should work now. Maybe better just give this a list of sources directly?
-        {
-            if (symbol.startsWith(GraphAlgebra.OP_FORGET) || symbol.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
-                String[] parts = symbol.split("_");
-                for (int i = 1; i<parts.length; i++) {
-                    if (parts[i].equals("")) {
-                        System.err.println("empty sourcename!");
-                    } 
-                    ret.add(parts[i]);
-                }
-            } else if (symbol.startsWith(GraphAlgebra.OP_RENAME) || symbol.startsWith(GraphAlgebra.OP_SWAP)) {
-                String[] parts = symbol.split("_");
-                if (parts.length == 2) {
-                    ret.add("root");
-                }
-                for (int i = 1; i < parts.length; i++) {
-                    if (parts[i].equals("")) {
-                        System.err.println("empty sourcename!");
-                    } 
-                    ret.add(parts[i]);
-                }
-            } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
-                ret.add(BOLINASROOTSTRING);
-                ret.add(BOLINASSUBROOTSTRING);
-            } else if (signature.getArityForLabel(symbol) == 0) {
-                String[] parts = symbol.split("<");
-                for (int i = 1; i<parts.length; i++) {//do not want the first element in parts!
-                    List<String> smallerParts = Arrays.asList(parts[i].split(">")[0].split(","));
-                    if (smallerParts.contains("")) {
-                       System.err.println("empty sourcename!");  
-                    }
-                    ret.addAll(smallerParts);
-                }
-            } else if (symbol.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)) {
-                ret.add("root");
-            }
-        }
-        return ret;
-
-    }
+    
     
     private int[][] computeIncidentEdges() {
         int n = getNrNodes();

@@ -22,8 +22,8 @@ class TagAlgebrasTest {
         
         TreeAutomaton chart = irtg.parse(["string": "the small businessman sleep"]);
         
-        System.err.println(chart)
-        System.err.println(chart.language())
+//        System.err.println(chart)
+//        System.err.println(chart.language())
         
         assert chart.accepts(pt("inx0V-sleep(iNXN-businessman(aAn-small(*NOP*,*NOP*),aDnx-the(*NOP*,*NOP*)),*NOP*,*NOP*,*NOP*)"))
         
