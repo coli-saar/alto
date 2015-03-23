@@ -58,7 +58,10 @@ public class JInterpretation extends JDerivationDisplayable {
         // term panel
         termPanel.removeAll();
         TreePanel<String> rawTreePanel = new TreePanel(term);
-        rawTreePanel.setTooltipSource(t -> alg.evaluate(t).toString());
+        rawTreePanel.setTooltipSource(t -> {
+            Object val = alg.evaluate(t);
+            return (val == null) ? "<null>" : val.toString();
+        });
         JComponent treePanel = sp(rawTreePanel);
         termPanel.add(treePanel);
 
@@ -75,7 +78,6 @@ public class JInterpretation extends JDerivationDisplayable {
                 "tikz-qtree", tikz)
                 .addAsMouseListener(rawTreePanel);
 
-        
         // value panel
         valuePanel.removeAll();
 
