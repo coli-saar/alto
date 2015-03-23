@@ -245,13 +245,13 @@ class EdgeTree {
         Rule r = ta.createRule(nonterminalName, label, new String[] {},weight);
         ta.addRule(r);
         
-        String s = "\"(";
+        String s = "(";
         
         s += addNode(seenNodes, ordering,this.de.getSource());
         s += " :"+this.de.getLabel()+" ";
         s += "("+addNode(seenNodes, ordering,this.de.getTarget())+")";
         
-        s += ")\"";
+        s += ")";
         
         Tree<String> h = Tree.create(s);
         hom.add(label, h);
