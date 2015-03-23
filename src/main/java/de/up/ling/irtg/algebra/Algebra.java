@@ -13,6 +13,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.Reader;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -58,7 +59,7 @@ import javax.swing.JLabel;
  * 
  * @author koller
  */
-public abstract class Algebra<E> {
+public abstract class Algebra<E> implements Serializable {
     protected Signature signature;
 
     public Algebra() {

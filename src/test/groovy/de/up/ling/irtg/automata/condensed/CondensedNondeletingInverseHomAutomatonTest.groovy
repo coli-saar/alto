@@ -55,6 +55,24 @@ class CondensedNondeletingInverseHomAutomatonTest {
         assertEquals(new HashSet([pt("r1(r1(r2,r2), r2)"), pt("r1(r2, r1(r2,r2))")]), inv.language())
     }
     
+    @Test
+    public void testSignatureMapping() {
+        InterpretedTreeAutomaton irtg = pi(AB_IRTG);
+        Homomorphism h = irtg.getInterpretation("i").getHomomorphism();
+
+        // new algebra with deliberately scrambled constants
+        Algebra a = new StringAlgebra()
+        a.getSignature().addSymbol("c", 0)
+        a.getSignature().addSymbol("b", 0)
+        a.getSignature().addSymbol("a", 0)
+        
+        TreeAutomaton decomp = a.decompose(a.parseString("a a a"));
+        CondensedTreeAutomaton inv = decomp.inverseCondensedHomomorphism(h);
+        
+        assertEquals(new HashSet([pt("r1(r1(r2,r2), r2)"), pt("r1(r2, r1(r2,r2))")]), inv.language())
+    }
+    
+    
 //    @Test
     public void testNullaryRulesWithVariables() {
         // makes sure that rules like the following are working.

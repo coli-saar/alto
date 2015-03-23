@@ -218,6 +218,25 @@ S -> r2
         compareWeight("r7", "NP", 1/3.0, auto);
         compareWeight("r2", "NP", 2/3.0, auto);
     }
+    
+    @Test
+    public void testSerialization() {
+        InterpretedTreeAutomaton irtg = pi(CFG_STR);
+        
+        // serialize IRTG to byte buffer
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        new ObjectOutputStream(bos).writeObject(irtg);
+        bos.close();
+        
+        // deserialize IRTG from byte buffer
+        byte[] bytes = bos.toByteArray();
+        InterpretedTreeAutomaton deserialized = new ObjectInputStream(new ByteArrayInputStream(bytes)).readObject();
+                
+        // check that parsing from deserialized IRTG works
+        TreeAutomaton chartFromDeserialized = deserialized.parse(["i":"john watches the woman with the telescope"])
+        TreeAutomaton chartFromOriginal     = irtg.parse(["i":"john watches the woman with the telescope"])        
+        assertEquals(chartFromOriginal.language(), chartFromDeserialized.language())        
+    }
 
     private Rule fr(int label, int parentState, TreeAutomaton rtg) {
         return rtg.getRulesTopDown(label, parentState).iterator().next();

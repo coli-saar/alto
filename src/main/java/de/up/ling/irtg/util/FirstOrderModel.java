@@ -60,6 +60,10 @@ public class FirstOrderModel {
             return atomicInterpretations.get(predicate);
         }
     }
+    
+    public void setInterpretation(String predicate, Set<List<String>> interpretation) {
+        atomicInterpretations.put(predicate, interpretation);
+    }
 
     /**
      * Reads the options from a Json string representation. The options for the

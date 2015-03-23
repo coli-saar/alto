@@ -54,8 +54,7 @@ import org.apache.commons.math3.special.Gamma;
  *
  * @author koller
  */
-public class InterpretedTreeAutomaton {
-
+public class InterpretedTreeAutomaton implements Serializable {
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;

@@ -89,6 +89,13 @@ public class Signature implements Serializable {
         return true;
     }
     
+    /**
+     * Returns the highest symbol ID that has been used 
+     * in this signature. Iterate over all symbol IDs
+     * by iterating from 1 to getMaxSymbolId() (inclusively).
+     * 
+     * @return 
+     */
     public int getMaxSymbolId() {
         return interner.getNextIndex()-1;
     }

@@ -8,7 +8,6 @@ import com.bric.window.WindowMenu;
 import com.google.common.collect.Iterables;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
@@ -171,6 +170,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
         miBinarize.setEnabled(true);
         miMaxent.setEnabled(irtg instanceof MaximumEntropyIrtg);
+        miSaveIrtg.setEnabled(true);
     }
 
     public void setParsingEnabled(boolean enabled) {
@@ -202,6 +202,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miOpenIrtg = new javax.swing.JMenuItem();
         miOpenAutomaton = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
+        miSaveIrtg = new javax.swing.JMenuItem();
         miSaveAutomaton = new javax.swing.JMenuItem();
         jSeparator4 = new javax.swing.JPopupMenu.Separator();
         miCloseWindow = new javax.swing.JMenuItem();
@@ -278,7 +279,15 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu3.add(miOpenAutomaton);
         jMenu3.add(jSeparator1);
 
-        miSaveAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.META_MASK));
+        miSaveIrtg.setText("Save IRTG ...");
+        miSaveIrtg.setEnabled(false);
+        miSaveIrtg.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miSaveIrtgActionPerformed(evt);
+            }
+        });
+        jMenu3.add(miSaveIrtg);
+
         miSaveAutomaton.setText("Save Tree Automaton ...");
         miSaveAutomaton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -648,6 +657,10 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         GuiMain.showDecompositionDialog(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
+    private void miSaveIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miSaveIrtgActionPerformed
+        GuiMain.saveIrtg(irtg, this);
+    }//GEN-LAST:event_miSaveIrtgActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
@@ -673,6 +686,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JMenuItem miParse;
     private javax.swing.JMenuItem miQuit;
     private javax.swing.JMenuItem miSaveAutomaton;
+    private javax.swing.JMenuItem miSaveIrtg;
     private javax.swing.JMenuItem miShowLanguage;
     private javax.swing.JMenuItem miShowMaxentWeights;
     private javax.swing.JMenuItem miTrainEM;

@@ -8,7 +8,6 @@ import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
-import de.up.ling.irtg.util.Lazy;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -22,18 +21,18 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
  *
  * @author koller
  */
-public class Homomorphism {
+public class Homomorphism implements Serializable {
 
     private static final Pattern HOM_NON_QUOTING_PATTERN = Pattern.compile("([a-zA-Z*+_]([a-zA-Z0-9_*+-]*))|([?]([0-9]+))");
     private final Signature srcSignature, tgtSignature;
@@ -206,10 +205,10 @@ public class Homomorphism {
     public IntSet getLabelSetForLabel(int label) {
         return getLabelSet(labelToLabelSet.get(label));
     }
-    
+
     // valid label set IDs: 1 .. maxLabelSetID (inclusive)
     public int getMaxLabelSetID() {
-        return labelSetList.size()-1;
+        return labelSetList.size() - 1;
     }
 
     /**
@@ -237,7 +236,6 @@ public class Homomorphism {
 //        Logging.get().fine(() -> "tgt sig: " + getTargetSignature());
 //        Logging.get().fine("src sig: " + getSourceSignature());
 //        Logging.get().fine("labelset IDs: " + labelSetList);
-
         for (int srcSymbol : srcSymbolToRhsSymbols.keySet()) {
             if (tgtSymbols.containsAll(srcSymbolToRhsSymbols.get(srcSymbol))) {
                 ret.add(srcSymbol);
@@ -413,30 +411,34 @@ public class Homomorphism {
         return true;
     }
 
-    private Lazy<Boolean> nondeleting = new Lazy(new Supplier<Boolean>() {
-        @Override
-        public Boolean get() {
+    private transient Boolean nondeleting = null;
+    
+    private void checkNondeleting() {
+        if (nondeleting == null) {
             for (int label : labelToLabelSet.keySet()) {
-                Tree<HomomorphismSymbol> rhs = Homomorphism.this.get(label);
+                int labelSetIdForlabel = labelToLabelSet.get(label);
+                Tree<HomomorphismSymbol> rhs = get(labelSetIdForlabel);
                 Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
+                
                 for (HomomorphismSymbol l : rhs.getLeafLabels()) {
                     if (l.isVariable()) {
                         variables.add(l);
                     }
                 }
 
-                if (variables.size() < srcSignature.getArity((int) label)) {
-                    return false;
+                if (variables.size() < srcSignature.getArity(label)) {
+                    nondeleting = Boolean.FALSE;
+                    return;
                 }
             }
 
-            return true;
+            nondeleting = Boolean.TRUE;
         }
-
-    });
+    }
 
     public boolean isNonDeleting() {
-        return nondeleting.getValue();
+        checkNondeleting();
+        return nondeleting.booleanValue();
     }
 
     /**
