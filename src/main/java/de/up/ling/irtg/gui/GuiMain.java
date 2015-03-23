@@ -38,12 +38,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.ToolTipManager;
 import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
@@ -74,11 +76,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     public GuiMain() {
         initComponents();
         jMenuBar1.add(new WindowMenu(this));
-        
-        if( ! GuiMain.isMac() ) {
+
+        if (!GuiMain.isMac()) {
             miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
             miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));            
+            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
             miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
         }
     }
@@ -261,21 +263,50 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    public static boolean saveAutomaton(TreeAutomaton auto, Component parent) {
-        File file = chooseFileForSaving(new FileNameExtensionFilter("Tree automata", "auto"), parent);
+    private static boolean saveSomething(Object toSave, String objectDescription, FileFilter filter, BiFunction<File, Exception, String> errorMsgCreator, Component parent) {
+        File file = chooseFileForSaving(filter, parent);
 
         try {
             if (file != null) {
+                if (file.exists()) {
+                    int response = JOptionPane.showConfirmDialog(parent, "The file " + file.getName() + " already exists. Do you want to replace the existing file?",
+                            "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+                    if (response != JOptionPane.YES_OPTION) {
+                        log("Canceled writing " + objectDescription + " to file " + file.getName());
+                        return false;
+                    }
+                }
+
+                long start = System.nanoTime();
+
                 PrintWriter w = new PrintWriter(new FileWriter(file));
-                w.println(auto.toString());
+                w.println(toSave.toString());
                 w.close();
+
+                log("Wrote " + objectDescription + " to " + file.getName() + ", " + Util.formatTimeSince(start));
+
                 return true;
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while attempting to save automaton as" + file.getName(), e);
+            showError(parent, errorMsgCreator.apply(file, e));
         }
 
         return false;
+    }
+
+    public static boolean saveAutomaton(TreeAutomaton auto, Component parent) {
+        return saveSomething(auto, "automaton",
+                new FileNameExtensionFilter("Tree automata (*.auto)", "auto"),
+                (file, exc) -> "An error occurred while attempting to save automaton as" + file.getName(),
+                parent);
+    }
+
+    public static boolean saveIrtg(InterpretedTreeAutomaton irtg, Component parent) {
+        return saveSomething(irtg, "IRTG",
+                new FileNameExtensionFilter("Interpreted regular tree grammars (*.irtg)", "irtg"),
+                (file, exc) -> "An error occurred while attempting to save IRTG as" + file.getName(),
+                parent);
     }
 
     public static Corpus loadAnnotatedCorpus(InterpretedTreeAutomaton irtg, Component parent) {
@@ -509,10 +540,10 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             public void run() {
                 synchronized (x) {
                     String oldLog = x.log.getText();
-                    if( ! oldLog.endsWith("\n")) {
+                    if (!oldLog.endsWith("\n")) {
                         oldLog = oldLog + "\n";
                     }
-                    
+
                     x.log.setText(oldLog + log);
                     Document d = x.log.getDocument();
                     x.log.select(d.getLength(), d.getLength());
@@ -529,7 +560,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        
+
         // tooltips stay visible forever
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
 
@@ -544,7 +575,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         // set up logging
         Logging.setUp();
         Logging.get().setLevel(Level.INFO);
-        
+
         Logging.setHandler(new Handler() {
             @Override
             public void publish(LogRecord record) {
