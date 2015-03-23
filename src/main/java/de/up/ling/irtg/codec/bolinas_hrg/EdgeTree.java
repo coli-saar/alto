@@ -10,11 +10,13 @@ import com.google.common.collect.HashBiMap;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,6 +81,7 @@ class EdgeTree {
         
         this.nodes = new TreeSet<>();
         this.nodes.add(this.de.getSource().getName());
+        this.nodes.add(this.de.getTarget().getName());
         this.nodes.retainAll(outer);
         
         first = null;
@@ -99,7 +102,9 @@ class EdgeTree {
         second = et2;
         
         this.nodes = new TreeSet<>(et1.nodes);
+        
         this.nodes.addAll(et2.nodes);
+        
         this.nodes.retainAll(outer);
     }
     
@@ -140,8 +145,10 @@ class EdgeTree {
      * @param seenNodes
      * @param ordering 
      */
-    void transform(ConcreteTreeAutomaton<String> ta, Homomorphism hom, StringSource stso, String nonterminalName,
+    void transform(ConcreteTreeAutomaton<String> ta, Homomorphism hom,
+            StringSource stso, String nonterminalName,
             HashSet<String> seenNodes, List<String> ordering, double weight) {
+        
         if(this.de != null)
         {
             handleEdge(stso, ta, nonterminalName, seenNodes, ordering, hom, weight);
@@ -152,16 +159,25 @@ class EdgeTree {
         }
         else
         {
-            
             handleCombination(stso, ta, hom, seenNodes, nonterminalName, ordering, weight);
         }
     }
 
-    void makeNonterminal(StringSource stso, ConcreteTreeAutomaton<String> ta, String nonterminalName, double weight, Homomorphism hom) {
+    /**
+     * 
+     * @param stso
+     * @param ta
+     * @param nonterminalName
+     * @param weight
+     * @param hom 
+     */
+    private void makeNonterminal(StringSource stso, ConcreteTreeAutomaton<String> ta,
+            String nonterminalName, double weight, Homomorphism hom) {
         String label = stso.get();
         String right = BolinasHrgInputCodec.makeLHS(nont);
         
-        ta.addRule(ta.createRule(nonterminalName, label, new String[] {right},weight));
+        Rule r = ta.createRule(nonterminalName, label, new String[] {right},weight);
+        ta.addRule(r);
         
         Tree<String> main = Tree.create("?1");
         main = rename(this.nont.getEndpoints(),this.nodes, main);
@@ -177,23 +193,21 @@ class EdgeTree {
      * @param seenNodes
      * @param nonterminalName 
      */
-    private void handleCombination(StringSource stso, ConcreteTreeAutomaton<String> ta,
-            Homomorphism hom, HashSet<String> seenNodes, String nonterminalName,
-            List<String> outer, double weight) {
-        String left = stso.get();
-        this.first.transform(ta, hom, stso, left, seenNodes, null,1.0);
+    private void handleCombination(final StringSource stso, final ConcreteTreeAutomaton<String> ta,
+            final Homomorphism hom, final HashSet<String> seenNodes, final String nonterminalName,
+            final List<String> outer, final double weight) {
         
-        
-        String right = stso.get();
-        this.second.transform(ta, hom, stso, right, seenNodes, null,1.0);
+        final String left = stso.get();
+        final String right = stso.get();
         
         String label = stso.get();
-        ta.addRule(ta.createRule(nonterminalName, label, new String[] {left,right}, weight));
+        
+        Rule r = ta.createRule(nonterminalName, label, new String[] {left,right}, weight);
+        ta.addRule(r);
         
         SortedSet<String> combined = new TreeSet<>();
         combined.addAll(this.first.nodes);
         combined.addAll(this.second.nodes);
-        
         
         Tree<String> lr = rename(first.nodes,combined,Tree.create("?1"));
         Tree<String> rr = rename(second.nodes,combined,Tree.create("?2"));
@@ -210,6 +224,9 @@ class EdgeTree {
         }
         
         hom.add(label, main);
+        
+        this.first.transform(ta, hom, stso, left, seenNodes, null,1.0);
+        this.second.transform(ta, hom, stso, right, seenNodes, null,1.0);
     }
 
     /**
@@ -224,13 +241,15 @@ class EdgeTree {
     private void handleEdge(StringSource stso, ConcreteTreeAutomaton<String> ta, String nonterminalName,
             HashSet<String> seenNodes, List<String> ordering, Homomorphism hom, double weight) {
         String label = stso.get();
-        ta.addRule(ta.createRule(nonterminalName, label, new String[] {},weight));
+        
+        Rule r = ta.createRule(nonterminalName, label, new String[] {},weight);
+        ta.addRule(r);
         
         String s = "\"(";
         
-        s += addNode(seenNodes, ordering);
+        s += addNode(seenNodes, ordering,this.de.getSource());
         s += " :"+this.de.getLabel()+" ";
-        s += "("+addNode(seenNodes, ordering)+")";
+        s += "("+addNode(seenNodes, ordering,this.de.getTarget())+")";
         
         s += ")\"";
         
@@ -245,18 +264,19 @@ class EdgeTree {
      * @param ordering
      * @return 
      */
-    private String addNode(HashSet<String> seenNodes, List<String> ordering) {
-        String s = convert(this.de.getSource(),seenNodes);
-        if(this.nodes.contains(this.de.getSource().getName()))
+    private String addNode(HashSet<String> seenNodes, List<String> ordering,
+            GraphNode n) {
+        String s = convert(n,seenNodes);
+        if(this.nodes.contains(n.getName()))
         {
-            if(ordering != null && ordering.contains(this.de.getSource().getName()))
+            if(ordering != null && ordering.contains(n.getName()))
             {
-                int num = ordering.indexOf(this.de.getSource().getName());
+                int num = ordering.indexOf(n.getName());
                 s += "<"+num+">";
             }
             else
             {
-                int num = this.nodes.headSet(this.de.getSource().getName()).size();
+                int num = this.nodes.headSet(n.getName()).size();
                 s += "<"+num+">";
             }
         }
@@ -269,8 +289,8 @@ class EdgeTree {
      * @param seenNodes
      * @return 
      */
-    private String convert(GraphNode source, HashSet<String> seenNodes) {
-        return source.getName();
+    private String convert(GraphNode node, HashSet<String> seenNodes) {
+        return node.getName();
     }
 
     /**
@@ -344,7 +364,7 @@ class EdgeTree {
     private Tree<String> rename(BiMap<String,Integer> from, BiMap<String,Integer> to,
                         Tree<String> main)
     {
-        Collection<String> c = new ArrayList<String>(from.keySet());
+        Collection<String> c = new ArrayList<>(from.keySet());
         
         for(String s : c)
         {
@@ -380,5 +400,38 @@ class EdgeTree {
         }
         
         return main;
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    @Override
+    public String toString()
+    {
+       String s = this.nodes.toString();
+       s += " ";
+       if(this.de != null)
+       {
+           return s + this.de.getSource()+"-"+this.de.getLabel()+"->"+this.de.getTarget();
+       }
+       else if(this.nont != null)
+       {
+           return s + this.nont.toString();
+       }
+       else
+       {
+           s += "( "+this.first.toString()+" , "+this.second.toString()+" )";
+           return s;
+       }
+    }
+
+    /**
+     * 
+     * @param et2
+     * @return 
+     */
+    boolean disjoint(EdgeTree et2) {
+        return Collections.disjoint(nodes, et2.nodes);
     }
 }

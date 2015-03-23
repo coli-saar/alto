@@ -142,9 +142,10 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             }
 
             while (edges.size() > 1) {
+                
                 int first = -1;
                 int second = -1;
-                int score = -10000;
+                int score = -Integer.MIN_VALUE;
 
                 uncertainOuter.clear();
                 counts.clear();
@@ -152,20 +153,32 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 for (EdgeTree et : edges) {
                     et.addCounts(counts);
                 }
-
+                
                 for (String s : counts.keySet()) {
                     if (2 < counts.get(s)) {
                         uncertainOuter.add(s);
                     }
                 }
                 uncertainOuter.addAll(certainOuter);
-
+                
                 for (int i = 0; i < edges.size(); ++i) {
+                    EdgeTree et1 = edges.get(i);
+                    
                     for (int j = i + 1; j < edges.size(); ++j) {
-                        int val = edges.get(i).joinSize(edges.get(j), uncertainOuter);
+                        
+                        EdgeTree et2 = edges.get(j);
+                        
+                        if(et1.disjoint(et2))
+                        {
+                            continue;
+                        }
+                        
+                        int val = et1.joinSize(et2, uncertainOuter);
+                        
                         if (val > score) {
                             first = i;
                             second = j;
+                            score = val;
                         }
                     }
                 }
