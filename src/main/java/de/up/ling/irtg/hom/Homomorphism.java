@@ -416,9 +416,9 @@ public class Homomorphism implements Serializable {
     private void checkNondeleting() {
         if (nondeleting == null) {
             for (int label : labelToLabelSet.keySet()) {
-                int labelSetIdForlabel = labelToLabelSet.get(label);
-                Tree<HomomorphismSymbol> rhs = get(labelSetIdForlabel);
-                Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
+                //int labelSetIdForlabel = labelToLabelSet.get(label);
+                Tree<HomomorphismSymbol> rhs = get(label);
+                Set<HomomorphismSymbol> variables = new HashSet<>();
                 
                 for (HomomorphismSymbol l : rhs.getLeafLabels()) {
                     if (l.isVariable()) {

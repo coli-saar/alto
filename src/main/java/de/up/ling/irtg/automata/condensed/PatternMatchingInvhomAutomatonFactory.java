@@ -95,6 +95,7 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
     private final Algebra rhsAlgebra;
     private Int2ObjectMap<Rule> labelSetID2TopDownStartRules;
     private Int2ObjectMap<Rule> matcherParent2Rule;
+    private IntList epsilonLabelSetIDs;
 
     //private Map<String, Set<Rule>> matcherConstantRulesByNodeLabel;       idea for later!
     //private Map<String, Set<Rule>> matcherConstantRulesWithoutNodeLabelsByTerm;
@@ -133,10 +134,15 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
         labelSetID2StartStateRules = new Int2ObjectOpenHashMap<>();
         constants2LabelSetID = new ArrayList<>();
         constants2LabelSetIDSimplified = new ArrayMap<>();
+        epsilonLabelSetIDs = new IntArrayList();
 
 //        rhsState2MatchingStartStates = new Int2ObjectOpenHashMap<>();
         for (int labelSetID = 1; labelSetID <= hom.getMaxLabelSetID(); labelSetID++) {
             Tree<HomomorphismSymbol> term = hom.getByLabelSetID(labelSetID);
+            if (term.getLabel().isVariable())
+            {
+                epsilonLabelSetIDs.add(labelSetID);
+            }
 
             int numVariables = (int) term.getLeafLabels().stream().filter(sym -> sym.isVariable()).count();
             arityForLabelSetID.put(labelSetID, numVariables);
@@ -229,8 +235,10 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
             if (computeCompleteMatcher) {
                 addTermToRestrictiveMatcher(labelSetID);//add rest of rules now
             } else if (constantIDsHere.isEmpty()) {
-                posOfStartStateRepInRulesFromConstantFreeTerms.addAll(labelSetID2StartStateRules.get(labelSetID));
-                genericStartStateIDs.add(restrictiveMatcher.getIdForState(matchingStartState));
+                if (labelSetID2StartStateRules.containsKey(labelSetID)) {
+                    posOfStartStateRepInRulesFromConstantFreeTerms.addAll(labelSetID2StartStateRules.get(labelSetID));
+                    genericStartStateIDs.add(restrictiveMatcher.getIdForState(matchingStartState));
+                }
             } else {
                 //constants2LabelSetID.add(new ImmutablePair(res, labelSetID));//add rest of rules only later when necessary
                 /*if (constantIDsHere.isEmpty()) {
@@ -1292,6 +1300,8 @@ public class PatternMatchingInvhomAutomatonFactory<State> {
                     }
                 }
             }
+            
+            epsilonLabelSetIDs.stream().forEach(labelSetID -> ret.add(new CondensedRule(parentState, labelSetID, new int[]{parentState}, 1)));
             //System.err.println(ret);
             return ret;
         }
