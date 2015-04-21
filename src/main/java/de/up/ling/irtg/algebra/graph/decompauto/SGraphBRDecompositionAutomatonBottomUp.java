@@ -209,13 +209,13 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
                 || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
                 || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
-            ParseTester.averageLogger.increaseValue("UnaryRulesChecked");
+            //ParseTester.averageLogger.increaseValue("UnaryRulesChecked");
             if (label.startsWith(GraphAlgebra.OP_RENAME)) {
-                ParseTester.averageLogger.increaseValue("RenameRulesChecked");
+                //ParseTester.averageLogger.increaseValue("RenameRulesChecked");
             } else if (label.startsWith(GraphAlgebra.OP_SWAP)) {
-                ParseTester.averageLogger.increaseValue("SwapRulesChecked");
+                //ParseTester.averageLogger.increaseValue("SwapRulesChecked");
             } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
-                ParseTester.averageLogger.increaseValue("ForgetRulesChecked");
+               // ParseTester.averageLogger.increaseValue("ForgetRulesChecked");
             }
             BoundaryRepresentation arg = children.get(0);
 
@@ -235,16 +235,16 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             } else {
                 //result.setEqualsMeansIsomorphy(false);//is this a problem??
                 if (label.startsWith(GraphAlgebra.OP_RENAME)) {
-                    ParseTester.averageLogger.increaseValue("successfull renames");
+                    //ParseTester.averageLogger.increaseValue("successfull renames");
                 } else if (label.startsWith(GraphAlgebra.OP_SWAP)) {
-                    ParseTester.averageLogger.increaseValue("successfull swaps");
+                   // ParseTester.averageLogger.increaseValue("successfull swaps");
                 } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
-                    ParseTester.averageLogger.increaseValue("successfull forgets");
+                   // ParseTester.averageLogger.increaseValue("successfull forgets");
                 }
                 return storedRules.put(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
             }
         } else {
-            ParseTester.averageLogger.increaseValue("ConstantRulesChecked");
+            //ParseTester.averageLogger.increaseValue("ConstantRulesChecked");
             List<Rule> rules = new ArrayList<>();
             SGraph sgraph = algebra.constantLabelInterpretations.get(labelId);//IsiAmrParser.parse(new StringReader(label));
 
@@ -257,7 +257,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                 if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
-                    ParseTester.averageLogger.increaseValue("Constants found");
+                    //ParseTester.averageLogger.increaseValue("Constants found");
                     matchedSubgraph.setEqualsMeansIsomorphy(false);
                     rules.add(makeRule(new BoundaryRepresentation(matchedSubgraph, completeGraphInfo), labelId, childStates));
                 } else {

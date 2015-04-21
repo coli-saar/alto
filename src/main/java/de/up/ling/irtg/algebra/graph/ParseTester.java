@@ -73,16 +73,20 @@ public class ParseTester {
     
     
     public static void main(String[] args) throws Exception {
+        
+        
+       
+        
         //writeSortedBolinas();
         
         /*sortBy = args[2];
         grammarPath = args[8];
         compareLanguageSizes();*/
         
-        countNodesAndDegrees();
+        //countNodesAndDegrees();
         
         
-        /*if (args.length < 9) {
+        if (args.length < 9) {
             System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibal (type 'bol') or all (type 'all') graphs.");
             System.out.println("Second is 'bottomup' or 'topdown'");
             System.out.println("Third is how the corpus should be sorted. 'n' for node count, 'd' for degree (and nodecount within degree), 'no' for n sorting.");
@@ -126,8 +130,8 @@ public class ParseTester {
                 System.out.println("Eighth is 'true' to compute language sizes, 'false' otherwise.");
                 System.out.println("Last argument is the grammar to use for parsing (Corpus is always amr bank 1.3)");
             }
-        }*/
-        
+        }
+       
         
     }
     
@@ -329,8 +333,8 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             runningNumber = 0;
-            //averageLogger = new AverageLogger();
-            //averageLogger.activate();
+            averageLogger = new AverageLogger();
+            averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
                 System.out.println("i = " + i);
@@ -338,8 +342,8 @@ public class ParseTester {
                 parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, true, internalIterations, internalSw);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
-            //averageLogger.setDefaultCount((stop - start) * internalIterations);
-            //averageLogger.printAveragesAsError();
+            averageLogger.setDefaultCount((stop - start) * internalIterations);
+            averageLogger.printAveragesAsError();
         }
         //resultWriter.close();
 

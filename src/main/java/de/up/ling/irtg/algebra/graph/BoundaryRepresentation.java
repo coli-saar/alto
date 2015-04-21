@@ -431,16 +431,16 @@ public class BoundaryRepresentation {
 
     public boolean isMergeable(PairwiseShortestPaths pwsp, BoundaryRepresentation other) {
         if (!hasCommonSourceNode(other)) {
-            ParseTester.averageLogger.increaseValue("noCommonSource");//10
+            //ParseTester.averageLogger.increaseValue("noCommonSource");//10
             return false;
         } else if (!sourceNodesAgree(other)) {
-            ParseTester.averageLogger.increaseValue("sourceNodesDontAgree");//64
+            //ParseTester.averageLogger.increaseValue("sourceNodesDontAgree");//64
             return false;
         } else if (!edgesDisjoint(other)) {
-            ParseTester.averageLogger.increaseValue("edgesNotDisjoint");//33
+            //ParseTester.averageLogger.increaseValue("edgesNotDisjoint");//33
             return false;
         } else if (!commonNodesHaveCommonSourceNames(other)) {
-            ParseTester.averageLogger.increaseValue("commonNodeWithNoCommonSource");//.4
+            //ParseTester.averageLogger.increaseValue("commonNodeWithNoCommonSource");//.4
             return false;
         } else if (hasSourcesInsideOther(other) || other.hasSourcesInsideOther(this)) {
             ParseTester.averageLogger.increaseValue("notDisjoint");//0
