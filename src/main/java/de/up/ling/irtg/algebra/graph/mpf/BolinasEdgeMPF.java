@@ -77,7 +77,7 @@ public class BolinasEdgeMPF extends MergePartnerFinder{
     public IntList getAllMergePartners(int rep) {
         IdBasedEdgeSet inBEdges = auto.getStateForId(rep).getInBoundaryEdges();
         IdBasedEdgeSet relevantInBdryEdges;
-        if (auto.completeGraphInfo.useBytes){
+        if (auto.completeGraphInfo.useBytes()){
             relevantInBdryEdges = new ByteBasedEdgeSet();
         } else {
             relevantInBdryEdges = new ShortBasedEdgeSet();

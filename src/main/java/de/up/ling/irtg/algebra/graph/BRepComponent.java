@@ -7,8 +7,6 @@ package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Sets;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.BitSet;
 import java.util.Collections;
@@ -18,10 +16,8 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.StringJoiner;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.EdgeFactory;
 import org.jgrapht.UndirectedGraph;
-import org.jgrapht.graph.AsUndirectedGraph;
 import org.jgrapht.graph.SimpleGraph;
 
 /**
@@ -78,9 +74,9 @@ public class BRepComponent {
                 ret.addVertex(v+graphInfo.getNrNodes());
                 ret.addEdge(v, v+graphInfo.getNrNodes());
             }
-            for (int edge = 0; edge < graphInfo.allEdges.length; edge++) {
-                int v1 = graphInfo.edgeSources[edge];
-                int v2 = graphInfo.edgeTargets[edge];
+            for (int edge = 0; edge < graphInfo.getEdgeCount(); edge++) {
+                int v1 = graphInfo.getEdgeSource(edge);
+                int v2 = graphInfo.getEdgeTarget(edge);
                 if (v1 != v2) {
                     ret.addEdge(v1, v2);
                 }
@@ -97,7 +93,7 @@ public class BRepComponent {
                 int curE = agenda.poll();
                 visitedEdges.set(curE);
 
-                int[] adjacentVs = new int[]{graphInfo.edgeSources[curE], graphInfo.edgeTargets[curE]};
+                int[] adjacentVs = new int[]{graphInfo.getEdgeSource(curE), graphInfo.getEdgeTarget(curE)};
                 int[] shiftedVs = new int[2];
                 for (int i = 0; i<2; i++) {
                     int curV = adjacentVs[i];
@@ -197,10 +193,10 @@ public class BRepComponent {
         @Override
         public Integer createEdge(Integer v, Integer v1) {
             try {
-                return graphInfo.edgesBySourceAndTarget[v%graphInfo.getNrNodes()][v1%graphInfo.getNrNodes()];
+                return graphInfo.getEdge(v%graphInfo.getNrNodes(),v1%graphInfo.getNrNodes());
             } catch (java.lang.Exception e) {
                 try {
-                    return graphInfo.edgesBySourceAndTarget[v1%graphInfo.getNrNodes()][v%graphInfo.getNrNodes()];
+                    return graphInfo.getEdge(v1%graphInfo.getNrNodes(),v%graphInfo.getNrNodes());
                 } catch (java.lang.Exception e2) {
                     System.err.println("error in creating edge in compGraph!");
                     return 0;

@@ -7,10 +7,10 @@ package de.up.ling.irtg.algebra.graph.decompauto;
 
 import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import com.google.common.collect.Sets;
-import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinderOLD;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.SGraph;
+import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinder;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.NumbersCombine;
@@ -112,8 +112,8 @@ public class GrammarBRDecompAutoInstruments {
         res.mergePartnersRight.put(0, new Int2ObjectOpenHashMap<>());
         res.mergePartnersRight.put(1, new Int2ObjectOpenHashMap<>());
         res.mpf = new MergePartnerFinder[2];
-        res.mpf[0] = new DynamicMergePartnerFinderOLD(0, nrSources, res.auto.completeGraphInfo.getNrNodes(), res.auto);
-        res.mpf[1] = new DynamicMergePartnerFinderOLD(0, nrSources, res.auto.completeGraphInfo.getNrNodes(), res.auto);
+        res.mpf[0] = new DynamicMergePartnerFinder(0, nrSources, res.auto.completeGraphInfo.getNrNodes(), res.auto);
+        res.mpf[1] = new DynamicMergePartnerFinder(0, nrSources, res.auto.completeGraphInfo.getNrNodes(), res.auto);
         res.constants = new Int2ObjectOpenHashMap<>();
 
         IntSet onlyX = new IntOpenHashSet();

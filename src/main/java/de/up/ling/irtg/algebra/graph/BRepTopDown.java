@@ -40,7 +40,7 @@ public class BRepTopDown {
     public BRepTopDown(SGraph completeGraph, GraphAlgebra alg) {
         components = new HashSet<>();
         GraphInfo complGraphInfo = new GraphInfo(completeGraph, alg, alg.getSignature());
-        sourceToNodename = new int[complGraphInfo.intToSourcename.length];
+        sourceToNodename = new int[complGraphInfo.getSourceCount()];
         Arrays.fill(sourceToNodename, -1);
         isSourceNode = new BitSet();
     }
@@ -109,7 +109,7 @@ public class BRepTopDown {
                         IntSet vSet = new IntOpenHashSet();
                         vSet.add(vNr);
                         IntSet edgeSet = new IntOpenHashSet();
-                        edgeSet.add(completeGraphInfo.edgesBySourceAndTarget[vNr][vNr]);
+                        edgeSet.add(completeGraphInfo.getEdge(vNr,vNr));
 
                         components.add(BRepComponent.makeComponent(vSet, edgeSet, storedComponents, completeGraphInfo));
                     }
@@ -129,7 +129,7 @@ public class BRepTopDown {
                             int curE = agenda.poll();
                             visitedEdges.set(curE);
 
-                            int[] adjacentVs = new int[]{completeGraphInfo.edgeSources[curE], completeGraphInfo.edgeTargets[curE]};
+                            int[] adjacentVs = new int[]{completeGraphInfo.getEdgeSource(curE), completeGraphInfo.getEdgeTarget(curE)};
                             for (int curV : adjacentVs) {
                                 if (!visitedVertices.get(curV)) {
                                     visitedVertices.set(curV);

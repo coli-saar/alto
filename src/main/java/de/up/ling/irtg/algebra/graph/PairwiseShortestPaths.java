@@ -49,15 +49,15 @@ public class PairwiseShortestPaths {//this class computes (and stores) pairwise 
                 {
                     oldP[j][l] = 1;
                     oldP[l][j] = 1;
-                    oldE[j][l] = graphInfo.edgesBySourceAndTarget[j][l]; // always making new edges may be very storage inefficient. Better have one big set and get them from there!.
-                    oldE[l][j] = graphInfo.edgesBySourceAndTarget[j][l];
+                    oldE[j][l] = graphInfo.getEdge(j,l); // always making new edges may be very storage inefficient. Better have one big set and get them from there!.
+                    oldE[l][j] = graphInfo.getEdge(j,l);
                 }
                 else if (g.containsEdge(nodek, nodej))
                 {
                     oldP[j][l] = 1;
                     oldP[l][j] = 1;
-                    oldE[j][l] = graphInfo.edgesBySourceAndTarget[l][j]; // always making new edges may be very storage inefficient. Better have one big set and get them from there!.
-                    oldE[l][j] = graphInfo.edgesBySourceAndTarget[l][j];
+                    oldE[j][l] = graphInfo.getEdge(l,j); // always making new edges may be very storage inefficient. Better have one big set and get them from there!.
+                    oldE[l][j] = graphInfo.getEdge(l,j);
                 }
                 else
                 {
@@ -104,7 +104,13 @@ public class PairwiseShortestPaths {//this class computes (and stores) pairwise 
         return pwShortestPaths[node1][node2];
     }
     
-    public int getEdge(int startNode, int endNode)//order important (returns edge incident to endNode).
+    /**
+     * returns the edge of shortest path between the nodes which is incident to endNode.
+     * @param startNode
+     * @param endNode
+     * @return
+     */
+    public int getEdge(int startNode, int endNode)
     {
         return edges[startNode][endNode];
     }

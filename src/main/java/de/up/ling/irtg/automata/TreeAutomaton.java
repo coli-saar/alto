@@ -16,6 +16,7 @@ import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.algebra.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.condensed.CondensedBottomUpIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
@@ -2774,32 +2775,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
     
     
-    private IntSet statesForPatternMatching;
-    //private BitSet seenStatesForPatternMatching;
+ 
     /**
-     * This allows to store the states that can be partners for a certain state in a binary rule. Only a dummy in TreeAutomaton, needs implementation in more advanced decomposition automata.
-     * @param stateID 
-     */
-    public void addStateForPatternMatching(int stateID) {
-        if (statesForPatternMatching == null) {
-            statesForPatternMatching = new IntOpenHashSet();
-            //seenStatesForPatternMatching = new BitSet();
-        }
-        //if (!seenStatesForPatternMatching.get(stateID)) {
-            statesForPatternMatching.add(stateID);
-        //    seenStatesForPatternMatching.set(stateID);
-        //}
-        
-    }
-    
-    /**
-     * This returns a list of possible partners for a given state given a binary rule. Only a dummy in TreeAutomaton, needs implementation in more advanced decomposition automata. This returns the original list, so be careful not to modify it!
+     * This returns an object that stores and finds possible partners for a given state given a binary rule, for pattern matching. (see i.e. automata.condensed.PMFactoryRestrictive.) Only a dummy in TreeAutomaton, needs implementation in more advanced decomposition automata.
      * @return 
      */
-    public IntCollection getPartnersForPatternMatching(int stateID, int labelID) {
-        if (statesForPatternMatching == null) {
-            statesForPatternMatching = new IntOpenHashSet();
-        }
-        return statesForPatternMatching;
+    public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
+        return new BinaryPartnerFinder.DummyBinaryPartnerFinder();
     }
 }

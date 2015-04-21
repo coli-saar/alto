@@ -434,7 +434,7 @@ public class ParseTester {
             sj.add(String.valueOf(ti.graph.getAllNodeNames().size()));
             sj.add(String.valueOf(ti.graph.getGraph().edgeSet().size()));
             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("int").getAlgebra();
-            sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).maxDegree));
+            sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).getMaxDegree()));
             sj.add(String.valueOf(internalSw.getTimeBefore(1) / 1000000));
             sj.add(String.valueOf(languageSize));
             sj.add(String.valueOf(cachedAnswers));
@@ -467,7 +467,7 @@ public class ParseTester {
             sj.add(String.valueOf(ti.graph.getAllNodeNames().size()));
             sj.add(String.valueOf(ti.graph.getGraph().edgeSet().size()));
             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("int").getAlgebra();
-            sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).maxDegree));
+            sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).getMaxDegree()));
             sj.add(String.valueOf(internalSw.getTimeBefore(1) / 1000000));
             sj.add(String.valueOf(languageSize));
             sj.add(String.valueOf(cachedAnswers));
@@ -505,7 +505,7 @@ public class ParseTester {
     private static int getMaxDeg(SGraph graph) {
         GraphAlgebra alg = new GraphAlgebra();
         GraphInfo graphInfo = new GraphInfo(graph, alg, alg.getSignature());
-        return graphInfo.maxDegree;
+        return graphInfo.getMaxDegree();
     }
     
     private static void writeSortedBolinas() throws Exception {
@@ -567,7 +567,7 @@ public class ParseTester {
             IrtgInducer.TrainingInstance ti = inducer.getCorpus().get(i);
             System.err.println("i = " + i);
             GraphInfo graphInfo = new GraphInfo(ti.graph, alg, alg.getSignature());
-            int maxDeg = graphInfo.maxDegree;
+            int maxDeg = graphInfo.getMaxDegree();
             int n = graphInfo.getNrNodes();
             System.err.println("   maxDeg = "+maxDeg);
             System.err.println("   n = "+n);

@@ -43,7 +43,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
             if (label == null) {
                 return Collections.EMPTY_LIST;
             } else if (label.equals(GraphAlgebra.OP_MERGE)) {
-                if ((!doBolinas() && !children.get(0).isMergeableMPF(completeGraphInfo.pwsp, children.get(1)))||(doBolinas() && !children.get(0).isMergeable(completeGraphInfo.pwsp, children.get(1)))) { // ensure result is connected
+                if ((!doBolinas() && !children.get(0).isMergeableMPF(children.get(1)))||(doBolinas() && !children.get(0).isMergeable(children.get(1)))) { // ensure result is connected
                     return Collections.EMPTY_LIST;
                 } else {
                     BoundaryRepresentation result = children.get(0).merge(children.get(1), completeGraphInfo);
@@ -70,7 +70,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                 }
                 for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
                 {
-                    if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.graph, completeGraphInfo)) {
+                    if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.getSGraph(), completeGraphInfo)) {
                         return Collections.EMPTY_LIST;//
                     }
                 }
@@ -102,7 +102,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                 }
 
 //                System.err.println(" - looking for matches of " + sgraph + " in " + completeGraph);
-                completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+                completeGraphInfo.getSGraph().foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                     if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                         matchedSubgraph.setEqualsMeansIsomorphy(false);

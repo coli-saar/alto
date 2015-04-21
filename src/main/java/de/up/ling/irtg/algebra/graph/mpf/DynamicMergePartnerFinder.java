@@ -6,7 +6,6 @@
 package de.up.ling.irtg.algebra.graph.mpf;
 
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
-import de.up.ling.irtg.algebra.graph.mpf.EdgeIntersectionMPF;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;

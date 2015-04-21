@@ -45,7 +45,7 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
 
     @Override
     public void add(int source, int target, GraphInfo graphInfo) {
-        edges.add((short) graphInfo.edgesBySourceAndTarget[source][target]);
+        edges.add((short) graphInfo.getEdge(source,target));
         //System.err.println(ID + " added " + NumbersCombine.combine(source, target));
     }
 
@@ -57,7 +57,7 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
 
     @Override
     public boolean contains(int source, int target, GraphInfo graphInfo) {
-        return edges.contains((short) graphInfo.edgesBySourceAndTarget[source][target]);
+        return edges.contains((short) graphInfo.getEdge(source,target));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
 
     @Override
     public void remove(int source, int target, GraphInfo graphInfo) {
-        edges.remove((short) graphInfo.edgesBySourceAndTarget[source][target]);
+        edges.remove((short) graphInfo.getEdge(source,target));
     }
 
     @Override
@@ -161,7 +161,7 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
     @Override
     public long smartAddIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
         if (reference instanceof ShortBasedEdgeSet) {
-            int[] incidentEdges = graphInfo.incidentEdges[vNr];
+            int[] incidentEdges = graphInfo.getIncidentEdges(vNr);
             long res = 0;
         //System.err.println("Next test: "+reference.ID);
             //System.err.println(reference.edges.size());
@@ -214,8 +214,8 @@ public class ShortBasedEdgeSet extends IdBasedEdgeSet {
     
     
     private short getOtherNode(short e, short v, GraphInfo graphInfo) {
-        short source = (short) graphInfo.edgeSources[e];
-        short target = (short) graphInfo.edgeTargets[e];
+        short source = (short) graphInfo.getEdgeSource(e);
+        short target = (short) graphInfo.getEdgeTarget(e);
         if (source == v) {
             return target;
         } else if (target == v) {

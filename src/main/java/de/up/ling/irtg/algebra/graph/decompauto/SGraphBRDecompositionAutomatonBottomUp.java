@@ -5,8 +5,10 @@
  */
 package de.up.ling.irtg.algebra.graph.decompauto;
 
+import de.up.ling.irtg.algebra.BinaryPartnerFinder;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
+import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_MERGE;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.GraphNode;
@@ -18,6 +20,8 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -157,7 +161,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             if (children.size() <2) {
                 System.err.println("trying to merge less than 2!");
             }
-            if (!children.get(0).isMergeable(completeGraphInfo.pwsp, children.get(1))) { // ensure result is connected
+            if (!children.get(0).isMergeable(children.get(1))) { // ensure result is connected
                 ParseTester.averageLogger.increaseValue("MergeFail");
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
@@ -185,7 +189,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             }
 
-            if (!children.get(0).isMergeable(completeGraphInfo.pwsp, tempResult)) { // ensure result is connected
+            if (!children.get(0).isMergeable(tempResult)) { // ensure result is connected
                 ParseTester.averageLogger.increaseValue("m1MergeFail");
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
@@ -221,7 +225,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
             for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
             {
-                if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.graph, completeGraphInfo)) {
+                if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.getSGraph(), completeGraphInfo)) {
                     return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;//
                 }
             }
@@ -254,7 +258,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             }
 
 //                System.err.println(" - looking for matches of " + sgraph + " in " + completeGraphInfo.graph);
-            completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+            completeGraphInfo.getSGraph().foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                 if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                     //ParseTester.averageLogger.increaseValue("Constants found");
@@ -274,23 +278,23 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
         for (String nodename : nodenames) {
             if (!subgraph.isSourceNode(nodename)) {
-                GraphNode node = completeGraphInfo.graph.getNode(nodename);
+                GraphNode node = completeGraphInfo.getSGraph().getNode(nodename);
 
-                if (!completeGraphInfo.graph.getGraph().containsVertex(node)) {
+                if (!completeGraphInfo.getSGraph().getGraph().containsVertex(node)) {
                     System.err.println("*** TERRIBLE ERROR ***");
-                    System.err.println(" int graph: " + completeGraphInfo.graph);
+                    System.err.println(" int graph: " + completeGraphInfo.getSGraph());
                     System.err.println("can't find node " + node);
                     System.err.println(" - node name: " + nodename);
                     assert false;
                 }
 
-                for (GraphEdge edge : completeGraphInfo.graph.getGraph().incomingEdgesOf(node)) {
+                for (GraphEdge edge : completeGraphInfo.getSGraph().getGraph().incomingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getSource().getName()) == null) {
                         return true;
                     }
                 }
 
-                for (GraphEdge edge : completeGraphInfo.graph.getGraph().outgoingEdgesOf(node)) {
+                for (GraphEdge edge : completeGraphInfo.getSGraph().getGraph().outgoingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getTarget().getName()) == null) {
                         return true;
                     }
@@ -322,7 +326,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
 
 
-    @Override
+    /*@Override
     public IntCollection getPartnersForPatternMatching(int stateID, int labelID) {
         if (signature.resolveSymbolId(labelID).equals(GraphAlgebra.OP_MERGE)) {
             return startStateMPF.getAllMergePartners(stateID);
@@ -344,10 +348,75 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             startStateMPF.insert(stateID);
         }
         super.addStateForPatternMatching(stateID); //To change body of generated methods, choose Tools | Templates.
-    }
+    }*/
+    
+    
 
     boolean doBolinas(){
         return false;
+    }
+    
+    
+    @Override
+    public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
+        if (algebra.isPure) {
+            return new MPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto); //To change body of generated methods, choose Tools | Templates.
+        } else {
+            return new ImpureMPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto);
+        }
+    }
+    
+    private class MPFBinaryPartnerFinder extends BinaryPartnerFinder{
+        MergePartnerFinder mpf;
+        BitSet seen = new BitSet();
+        public MPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
+            mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
+        }
+        
+        @Override
+        public IntCollection getPartners(int labelID, int stateID) {
+            if (labelID == algebra.mergeLabelID) {
+                return mpf.getAllMergePartners(stateID);
+            } else {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
+        }
+
+        @Override
+        public void addState(int stateID) {
+            if (!seen.get(stateID)) {
+                mpf.insert(stateID);
+                seen.set(stateID);
+            }
+        }
+        
+    }
+    
+    private class ImpureMPFBinaryPartnerFinder extends BinaryPartnerFinder{
+        MergePartnerFinder mpf;
+        IntSet backupset;
+        public ImpureMPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
+            mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
+            backupset = new IntOpenHashSet();
+        }
+        
+        @Override
+        public IntCollection getPartners(int labelID, int stateID) {
+            if (signature.resolveSymbolId(labelID).equals(OP_MERGE)) {
+                return mpf.getAllMergePartners(stateID);
+            } else {
+                return backupset;
+            }
+        }
+
+        @Override
+        public void addState(int stateID) {
+            if (!backupset.contains(stateID)) {
+                mpf.insert(stateID);
+                backupset.add(stateID);
+            }
+        }
+        
     }
     
 }

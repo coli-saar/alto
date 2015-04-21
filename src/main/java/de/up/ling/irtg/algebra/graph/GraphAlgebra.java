@@ -11,29 +11,20 @@ import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMP
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAsymptotic;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.BinaryPartnerFinder;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import static de.up.ling.irtg.algebra.graph.GraphInfo.BOLINASROOTSTRING;
-import static de.up.ling.irtg.algebra.graph.GraphInfo.BOLINASSUBROOTSTRING;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
-import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinder;
-import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntCollection;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -88,8 +79,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     Set<String> sources;
         
         
-    private boolean isPure = false;
-    private int mergeLabelID;
+    public boolean isPure = false;
+    public int mergeLabelID;
     
     public GraphAlgebra() {
         super();
@@ -132,18 +123,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     @Override
     public TreeAutomaton decompose(SGraph value) {
-        //return new SGraphDecompositionAutomaton(value, this, getSignature());
-        //return new SGraphBRDecompositionAutomaton(value, this, getSignature());
-        
-        //return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());//currently bugged
-        if (ParseTester.useTopDown) {
-            return decompose(value, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
-        } else {
-            return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
-        }
-        //return decompose(value, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
-        //return decompose(value, SGraphBRDecompositionAutomatonTopDown.class);
+        return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
     }
+    
+    
     
     public TreeAutomaton decompose(SGraph value, Class c){
         if (sources == null) {
@@ -173,10 +156,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return new SGraphBRDecompositionAutomatonTopDownAsymptotic(value, this, getSignature());
             }
             else return null;
-        //} catch (java.lang.Exception e) {
-        //    System.err.println(e.toString());
-        //    return null;
-        //}
     }
     
     public TreeAutomaton decompose(SGraph value, Writer writer) throws Exception{
@@ -332,8 +311,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                     ret.add(parts[i]);
                 }
             } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
-                ret.add(BOLINASROOTSTRING);
-                ret.add(BOLINASSUBROOTSTRING);
+                ret.add(GraphInfo.getBOLINASROOTSTRING());
+                ret.add(GraphInfo.getBOLINASSUBROOTSTRING());
             } else if (signature.getArityForLabel(symbol) == 0) {
                 String[] parts = symbol.split("<");
                 for (int i = 1; i<parts.length; i++) {//do not want the first element in parts!
@@ -352,67 +331,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
 
     
-    @Override
-    public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
-        if (isPure) {
-            return new MPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto); //To change body of generated methods, choose Tools | Templates.
-        } else {
-            return new ImpureMPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto);
-        }
-    }
     
-    private class MPFBinaryPartnerFinder extends BinaryPartnerFinder{
-        MergePartnerFinder mpf;
-        BitSet seen = new BitSet();
-        public MPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
-            mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
-        }
-        
-        @Override
-        public IntCollection getPartners(int labelID, int stateID) {
-            if (labelID == mergeLabelID) {
-                return mpf.getAllMergePartners(stateID);
-            } else {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-        }
-
-        @Override
-        public void addState(int stateID) {
-            if (!seen.get(stateID)) {
-                mpf.insert(stateID);
-                seen.set(stateID);
-            }
-        }
-        
-    }
-    
-    private class ImpureMPFBinaryPartnerFinder extends BinaryPartnerFinder{
-        MergePartnerFinder mpf;
-        IntSet backupset;
-        public ImpureMPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
-            mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
-            backupset = new IntOpenHashSet();
-        }
-        
-        @Override
-        public IntCollection getPartners(int labelID, int stateID) {
-            if (signature.resolveSymbolId(labelID).equals(OP_MERGE)) {
-                return mpf.getAllMergePartners(stateID);
-            } else {
-                return backupset;
-            }
-        }
-
-        @Override
-        public void addState(int stateID) {
-            if (!backupset.contains(stateID)) {
-                mpf.insert(stateID);
-                backupset.add(stateID);
-            }
-        }
-        
-    }
     
     
     

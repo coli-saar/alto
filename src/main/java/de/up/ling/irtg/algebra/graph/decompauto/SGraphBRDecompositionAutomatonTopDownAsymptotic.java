@@ -16,6 +16,7 @@ import de.up.ling.irtg.algebra.graph.ParseTester;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.PMFactoryRestrictive;
 import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
 import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.signature.Signature;
@@ -78,7 +79,7 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
                     sgraph = null;
                     System.err.println("parsing error when creating Top Down automaton!");
                 }
-                completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+                completeGraphInfo.getSGraph().foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                     if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                         matchedSubgraph.setEqualsMeansIsomorphy(false);
@@ -287,23 +288,23 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
     boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
         for (String nodename : nodenames) {
             if (!subgraph.isSourceNode(nodename)) {
-                GraphNode node = completeGraphInfo.graph.getNode(nodename);
+                GraphNode node = completeGraphInfo.getSGraph().getNode(nodename);
 
-                if (!completeGraphInfo.graph.getGraph().containsVertex(node)) {
+                if (!completeGraphInfo.getSGraph().getGraph().containsVertex(node)) {
                     System.err.println("*** TERRIBLE ERROR ***");
-                    System.err.println(" int graph: " + completeGraphInfo.graph);
+                    System.err.println(" int graph: " + completeGraphInfo.getSGraph());
                     System.err.println("can't find node " + node);
                     System.err.println(" - node name: " + nodename);
                     assert false;
                 }
 
-                for (GraphEdge edge : completeGraphInfo.graph.getGraph().incomingEdgesOf(node)) {
+                for (GraphEdge edge : completeGraphInfo.getSGraph().getGraph().incomingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getSource().getName()) == null) {
                         return true;
                     }
                 }
 
-                for (GraphEdge edge : completeGraphInfo.graph.getGraph().outgoingEdgesOf(node)) {
+                for (GraphEdge edge : completeGraphInfo.getSGraph().getGraph().outgoingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getTarget().getName()) == null) {
                         return true;
                     }
@@ -376,7 +377,7 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
 
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
-        PatternMatchingInvhomAutomatonFactory pm = new PatternMatchingInvhomAutomatonFactory(irtg.getInterpretation("int").getHomomorphism(), irtg.getInterpretation("int").getAlgebra());
+        PatternMatchingInvhomAutomatonFactory pm = new PMFactoryRestrictive(irtg.getInterpretation("int").getHomomorphism(), irtg.getInterpretation("int").getAlgebra());
         
         
         int start = 0;//maybe start later to get to interesting graphs sooner
@@ -417,7 +418,7 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
 //        System.err.println("\n" + ti.graph);
         for (int j = 0; j < internalIterations; j++) {
             SGraphBRDecompositionAutomatonTopDownAsymptotic rhs = (SGraphBRDecompositionAutomatonTopDownAsymptotic)alg.decompose(ti.graph, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
-            chart = pm.invhomRestrictive(rhs);
+            chart = pm.invhom(rhs);
             
             //chart.viterbi();
         }

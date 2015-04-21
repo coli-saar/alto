@@ -8,6 +8,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.InverseHomAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.automata.condensed.PMFactoryRestrictive;
 import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.Logging;
@@ -50,10 +51,10 @@ public class Interpretation<E> implements Serializable {
         // and bottom up queries.
         if (hom.isNonDeleting()) {
             if (pmFactory == null) {
-                pmFactory = new PatternMatchingInvhomAutomatonFactory(hom, algebra);
+                pmFactory = new PMFactoryRestrictive(hom, algebra);
             }
             Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching.");
-            return pmFactory.invhomRestrictive(decompositionAutomaton);
+            return pmFactory.invhom(decompositionAutomaton);
 
 
             //return new CondensedNondeletingInverseHomAutomaton(decompositionAutomaton, hom);//this works only using top down queries.

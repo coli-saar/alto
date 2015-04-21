@@ -9,7 +9,6 @@ import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.ByteIterator;
 import it.unimi.dsi.fastutil.bytes.ByteArraySet;
-import it.unimi.dsi.fastutil.bytes.ByteCollections;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -47,7 +46,7 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
 
     @Override
     public void add(int source, int target, GraphInfo graphInfo) {
-        edges.add((byte) graphInfo.edgesBySourceAndTarget[source][target]);
+        edges.add((byte) graphInfo.getEdge(source,target));
         //System.err.println(ID + " added " + NumbersCombine.combine(source, target));
     }
 
@@ -59,7 +58,7 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
 
     @Override
     public boolean contains(int source, int target, GraphInfo graphInfo) {
-        return edges.contains((byte) graphInfo.edgesBySourceAndTarget[source][target]);
+        return edges.contains((byte) graphInfo.getEdge(source,target));
     }
 
     @Override
@@ -69,7 +68,7 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
 
     @Override
     public void remove(int source, int target, GraphInfo graphInfo) {
-        edges.remove((byte) graphInfo.edgesBySourceAndTarget[source][target]);
+        edges.remove((byte) graphInfo.getEdge(source,target));
     }
 
     @Override
@@ -164,7 +163,7 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
     @Override
     public long smartAddIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
         if (reference instanceof ByteBasedEdgeSet) {
-            int[] incidentEdges = graphInfo.incidentEdges[vNr];
+            int[] incidentEdges = graphInfo.getIncidentEdges(vNr);
             long res = 0;
         //System.err.println("Next test: "+reference.ID);
             //System.err.println(reference.edges.size());
@@ -217,8 +216,8 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
     
     
     private byte getOtherNode(byte e, byte v, GraphInfo graphInfo) {
-        byte source = (byte) graphInfo.edgeSources[e];
-        byte target = (byte) graphInfo.edgeTargets[e];
+        byte source = (byte) graphInfo.getEdgeSource(e);
+        byte target = (byte) graphInfo.getEdgeTarget(e);
         if (source == v) {
             return target;
         } else if (target == v) {

@@ -51,7 +51,7 @@ public class ComponentManager {
         if (bRep.getInBoundaryEdges().isEmpty()) {
             IdBasedEdgeSet inBoundaryEdges;
             
-            if (graphInfo.useBytes) {
+            if (graphInfo.useBytes()) {
                 inBoundaryEdges = new ByteBasedEdgeSet();
             } else {
                 inBoundaryEdges = new ShortBasedEdgeSet();
@@ -64,7 +64,7 @@ public class ComponentManager {
                     //init new component ingredients
                     IntList cvList = new IntArrayList();
                     IdBasedEdgeSet cInBoundaryEdges;
-                    if (graphInfo.useBytes) {
+                    if (graphInfo.useBytes()) {
                         cInBoundaryEdges = new ByteBasedEdgeSet();
                     } else {
                         cInBoundaryEdges = new ShortBasedEdgeSet();
@@ -76,15 +76,15 @@ public class ComponentManager {
                     
                     //init agenda and take care of first vertices
                     IntList agenda = new IntArrayList();
-                    boolean useSource = bRep.isSource(graphInfo.edgeSources[edge]);
+                    boolean useSource = bRep.isSource(graphInfo.getEdgeSource(edge));
                     int firstVertex;
                     int seedVertex;
                     if (useSource) {
-                        firstVertex = graphInfo.edgeSources[edge];
-                        seedVertex = graphInfo.edgeTargets[edge];
+                        firstVertex = graphInfo.getEdgeSource(edge);
+                        seedVertex = graphInfo.getEdgeTarget(edge);
                     } else {
-                        firstVertex = graphInfo.edgeTargets[edge];
-                        seedVertex = graphInfo.edgeSources[edge];
+                        firstVertex = graphInfo.getEdgeTarget(edge);
+                        seedVertex = graphInfo.getEdgeSource(edge);
                     }
                     cvList.add(firstVertex);
                     agenda.add(seedVertex);
@@ -437,15 +437,7 @@ public class ComponentManager {
                 System.err.println("Feature in Component.contains not supported yet!");
                 return true;
             } else {
-                int relevantEdge = -1;
-                int k = graphInfo.getNrNodes()+1;
-                for (int vertex : vertices) {
-                    int dist = graphInfo.pwsp.getDistance(vNr, vertex);
-                    if (dist<k) {
-                        k = dist;
-                        relevantEdge = graphInfo.pwsp.getEdge(vNr, vertex);
-                    }
-                }
+                int relevantEdge = graphInfo.getDecidingEdgePWSP(vertices, vNr);
                 return inBoundaryEdges.contains(relevantEdge);
             }
         }
@@ -496,7 +488,7 @@ public class ComponentManager {
                     StringJoiner edgeSJ = new StringJoiner(", ", "{", "}");
                     for (int edge : edges) {
                         if (inBoundaryEdges.contains(edge)) {
-                            edgeSJ.add(completeGraphInfo.getNodeForInt(completeGraphInfo.edgeSources[edge]) + "_" + completeGraphInfo.getNodeForInt(completeGraphInfo.edgeTargets[edge]));
+                            edgeSJ.add(completeGraphInfo.getNodeForInt(completeGraphInfo.getEdgeSource(edge)) + "_" + completeGraphInfo.getNodeForInt(completeGraphInfo.getEdgeTarget(edge)));
                         }
                     }
                     vRes.append(" " + edgeSJ);

@@ -109,6 +109,12 @@ class HomomorphismTest {
     }
     
     @Test
+    public void testNondeletingWithSetsAndEpsilonRules() {
+        Homomorphism h1 = hom(["A":"g(?1,?2)", "B":"g(?1,?2)", "C":"c", "D":"d", "E":"?1", "F":"?1"], sig(["A":2, "B":2, "C":0, "D":0, "E":1, "F":1]));
+        assert h1.isNonDeleting()
+    }
+    
+    @Test
     public void testNondeletingNonlinear() {
         Homomorphism h1 = hom(["f":"g(?1,h(?2),?1)", "a":"k(b)", "c":"l(e)"], sig(["f":2, "a":0, "c":0]));
         assert h1.isNonDeleting()

@@ -82,7 +82,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
                     sgraph = null;
                     System.err.println("parsing error when creating Top Down automaton!");
                 }
-                completeGraphInfo.graph.foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
+                completeGraphInfo.getSGraph().foreachMatchingSubgraph(sgraph, matchedSubgraph -> {
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                     if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                         matchedSubgraph.setEqualsMeansIsomorphy(false);
@@ -319,23 +319,23 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
         for (String nodename : nodenames) {
             if (!subgraph.isSourceNode(nodename)) {
-                GraphNode node = completeGraphInfo.graph.getNode(nodename);
+                GraphNode node = completeGraphInfo.getSGraph().getNode(nodename);
 
-                if (!completeGraphInfo.graph.getGraph().containsVertex(node)) {
+                if (!completeGraphInfo.getSGraph().getGraph().containsVertex(node)) {
                     System.err.println("*** TERRIBLE ERROR ***");
-                    System.err.println(" int graph: " + completeGraphInfo.graph);
+                    System.err.println(" int graph: " + completeGraphInfo.getSGraph());
                     System.err.println("can't find node " + node);
                     System.err.println(" - node name: " + nodename);
                     assert false;
                 }
 
-                for (GraphEdge edge : completeGraphInfo.graph.getGraph().incomingEdgesOf(node)) {
+                for (GraphEdge edge : completeGraphInfo.getSGraph().getGraph().incomingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getSource().getName()) == null) {
                         return true;
                     }
                 }
 
-                for (GraphEdge edge : completeGraphInfo.graph.getGraph().outgoingEdgesOf(node)) {
+                for (GraphEdge edge : completeGraphInfo.getSGraph().getGraph().outgoingEdgesOf(node)) {
                     if (subgraph.getNode(edge.getTarget().getName()) == null) {
                         return true;
                     }

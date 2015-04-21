@@ -262,9 +262,7 @@ public abstract class Algebra<E> implements Serializable {
     }
     
     
-    public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
-        return new BinaryPartnerFinder.DummyBinaryPartnerFinder();
-    }
+
     
     
     

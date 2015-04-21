@@ -11,7 +11,6 @@ import de.up.ling.irtg.algebra.graph.mpf.BolinasMPF;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.graph.BRComparator;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
-import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinderOLD;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.mpf.DynamicMergePartnerFinder;
 import de.up.ling.irtg.automata.Rule;

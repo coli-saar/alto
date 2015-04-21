@@ -17,45 +17,50 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * Compactly represents the information of an s-graph needed for our algorithms.
  * @author jonas
  */
 public class GraphInfo {
-    public final SGraph graph;
-    
-    public final boolean useBytes;
-    
-    public final int[] edgeSources;
-    public final int[] edgeTargets;
-    public final int[][] edgesBySourceAndTarget;
-    public final Object2IntMap<GraphEdge> edgeToId;
-    
-    public final PairwiseShortestPaths pwsp;
-    public final int maxDegree;
-    
-    final Map<String, Integer> sourcenameToInt;
-    final Map<String, Integer> nodenameToInt;
-    final String[] intToSourcename;
-    final String[] intToNodename;
-    
-    final int[][] incidentEdges;
-    final int[] allEdges;
-    
-    final Int2ObjectMap<int[]> labelSources;
-    
-    public static final String BOLINASROOTSTRING = "bolinasroot";
-    public static final String BOLINASSUBROOTSTRING = "bolinassubroot";
-    public final int BOLINASROOTSOURCENR;
-    public final int BOLINASSUBROOTSOURCENR;
+    private final SGraph graph;
+
     
     
+    private final boolean useBytes;
+   
+    private final int[] edgeSources;
+    private final int[] edgeTargets;
+    private final int[][] edgesBySourceAndTarget;
+    private final Object2IntMap<GraphEdge> edgeToId;
     
+    private final PairwiseShortestPaths pwsp;
+    private final int maxDegree;
+    
+    private final Map<String, Integer> sourcenameToInt;
+    private final Map<String, Integer> nodenameToInt;
+    private final String[] intToSourcename;
+    private final String[] intToNodename;
+    
+    private final int[][] incidentEdges;
+    private final int[] allEdges;
+    
+    private final Int2ObjectMap<int[]> labelSources;
+    
+    private static final String BOLINASROOTSTRING = "bolinasroot";
+    private static final String BOLINASSUBROOTSTRING = "bolinassubroot";
+    private final int BOLINASROOTSOURCENR;
+    private final int BOLINASSUBROOTSOURCENR;
+    
+    
+    
+    /**
+    * Compactly represents the information of an s-graph needed for our algorithms.
+    * @author jonas
+    */
     public GraphInfo(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         this.graph = completeGraph;
         sourcenameToInt = new HashMap<>();
@@ -279,5 +284,82 @@ public class GraphInfo {
             return -1;
         }
     }
+    
+    public int getEdgeSource(int e) {
+        return edgeSources[e];
+    }
+    
+    public int getEdgeTarget(int e) {
+        return edgeTargets[e];
+    }
+    
+    public int getEdge(int source, int target) {
+        return edgesBySourceAndTarget[source][target];
+    }
+    
+    public int getEdge(GraphEdge edge) {
+        return edgeToId.get(edge);
+    }
+    
+    public SGraph getSGraph() {
+        return graph;
+    }
+
+    public int getMaxDegree() {
+        return maxDegree;
+    }
+    
+    public int getEdgeCount() {
+        return allEdges.length;
+    }
+    
+    public int getSourceCount() {
+        return intToSourcename.length;
+    }
+    
+    /**
+     * describes whether we should use shorts or bytes to represent edges and vertices (depends purely on graph size).
+     * @return 
+     */
+    public boolean useBytes() {
+        return useBytes;
+    }
+    
+    public int getDecidingEdgePWSP(int[] vSet, int v) {
+        int k = getNrNodes();
+        int decidingEdge = -1;
+        for (int setV : vSet) {
+            if (v != setV && v != -1 && setV != -1) {
+                int dist = dist(v, setV);
+                if (dist < k) {
+                    k = dist;
+                    decidingEdge = pwsp.getEdge(v, setV);
+                }
+            }
+        }
+        return decidingEdge;
+    }
+    
+    public int dist(int vNr1, int vNr2) {
+        return pwsp.getDistance(vNr1, vNr2);
+    }
+
+    public static String getBOLINASROOTSTRING() {
+        return BOLINASROOTSTRING;
+    }
+
+    public static String getBOLINASSUBROOTSTRING() {
+        return BOLINASSUBROOTSTRING;
+    }
+
+    public int getBOLINASROOTSOURCENR() {
+        return BOLINASROOTSOURCENR;
+    }
+
+    public int getBOLINASSUBROOTSOURCENR() {
+        return BOLINASSUBROOTSOURCENR;
+    }
+    
+    
     
 }

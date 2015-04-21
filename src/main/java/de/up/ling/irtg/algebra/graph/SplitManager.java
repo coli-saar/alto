@@ -156,11 +156,11 @@ public class SplitManager {
     private IntSet computeBVertices(IntSet inBEdges, IntSet parentBVertices, GraphInfo graphInfo) {
         IntSet ret = new IntOpenHashSet();
         for (int e : inBEdges) {
-            if (parentBVertices.contains(graphInfo.edgeSources[e])) {
-                ret.add(graphInfo.edgeSources[e]);
+            if (parentBVertices.contains(graphInfo.getEdgeSource(e))) {
+                ret.add(graphInfo.getEdgeSource(e));
             }
-            if (parentBVertices.contains(graphInfo.edgeTargets[e])) {
-                ret.add(graphInfo.edgeTargets[e]);
+            if (parentBVertices.contains(graphInfo.getEdgeTarget(e))) {
+                ret.add(graphInfo.getEdgeTarget(e));
             }
         }
         return ret;
