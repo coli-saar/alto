@@ -102,21 +102,21 @@ public class GraphInfo {
         for (int j = 0; j<n; j++){
             Arrays.fill(edgesBySourceAndTarget[j], -1);//just to get an error when accessing a wrong entry, instead of a "silent" 0.
         }
-        edgeSources = new int[m+n];
-        edgeTargets = new int[m+n];
-        allEdges = new int[m+n];
         edgeToId = new Object2IntOpenHashMap<>();
         
+        IntList edgeSourceList = new IntArrayList();
+        IntList edgeTargetList = new IntArrayList();
+        IntList edgeList = new IntArrayList();
         int edgeId = 0;
         IntSet seenLoops = new IntOpenHashSet();
         for (GraphEdge e : graph.getGraph().edgeSet()) {
             int s = nodenameToInt.get(e.getSource().getName());
             int t = nodenameToInt.get(e.getTarget().getName());
             edgesBySourceAndTarget[s][t] = edgeId;
-            edgeSources[edgeId] = s;
-            edgeTargets[edgeId] = t;
+            edgeSourceList.add(s);
+            edgeTargetList.add(t);
             edgeToId.put(e, edgeId);
-            allEdges[edgeId] = edgeId;
+            edgeList.add(edgeId);
             edgeId++;
             if (s==t) {
                 seenLoops.add(s);
@@ -124,12 +124,20 @@ public class GraphInfo {
         }
         for (int vNr = 0; vNr < n; vNr ++){
             if (!seenLoops.contains(vNr)) {
-                edgeSources[edgeId] = vNr;//so this means we always have loops for every vertex? see also in construction of BRepComponent for empty BR.
-                edgeTargets[edgeId] = vNr;
+                edgeSourceList.add(vNr);//so this means we always have loops for every vertex? see also in construction of BRepComponent for empty BR.
+                edgeTargetList.add(vNr);
                 edgesBySourceAndTarget[vNr][vNr] = edgeId;
-                allEdges[edgeId] = edgeId;
+                edgeList.add(edgeId);
                 edgeId++;
             }
+        }
+        edgeSources = new int[edgeList.size()];
+        edgeTargets = new int[edgeList.size()];
+        allEdges = new int[edgeList.size()];
+        for (int j = 0; j<edgeList.size(); j++) {
+            edgeSources[j] = edgeSourceList.get(j);
+            edgeTargets[j] = edgeTargetList.get(j);
+            allEdges[j] = edgeList.get(j);
         }
         
 
@@ -192,7 +200,7 @@ public class GraphInfo {
         int n = getNrNodes();
         int[][] res = new int[n][];
         for (int vNr = 0; vNr < n; vNr++) {
-            IntList tempList = new IntArrayList();
+            IntSet tempList = new IntOpenHashSet();//use set such that loops dont get added twice.
             for (GraphEdge e : graph.getGraph().edgeSet()) {
                 if (vNr == getIntForNode(e.getSource().getName()) || vNr == getIntForNode(e.getTarget().getName())) {
                     tempList.add(edgesBySourceAndTarget[getIntForNode(e.getSource().getName())][getIntForNode(e.getTarget().getName())]);

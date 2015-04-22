@@ -71,7 +71,6 @@ public class BoundaryRepresentation {
         }
 
         int n = completeGraphInfo.getNrNodes();
-        int s = completeGraphInfo.getNrSources();
         int edgeIdBuilder = 0;
         int vertexIdBuilder = 0;
         for (String source : T.getAllSources()) {
