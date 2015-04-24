@@ -21,15 +21,23 @@ import org.jgrapht.UndirectedGraph;
 import org.jgrapht.graph.SimpleGraph;
 
 /**
- *
+ * A subgraph defined by boundary vertices, and in-boundary edges, such that all its vertices are connected without crossing a boundary vertex.
  * @author jonas
  */
 public class BRepComponent {
     
-    final IntSet bVertices;
-    final IntSet inBEdges;
-    final int minEdge;
-    SplitManager splitManager;
+    private final IntSet bVertices;
+
+    /**
+     * Returns the set of boundary vertices of the component.
+     * @return
+     */
+    public IntSet getBVertices() {
+        return bVertices;
+    }
+    private final IntSet inBEdges;
+    private final int minEdge;
+    private SplitManager splitManager;
     
     
     
@@ -45,7 +53,9 @@ public class BRepComponent {
         }
     }
     
-    
+    /**
+     * Returns true iff the set of boundary vertices is identical, and a common edge exists (the latter implies that the components are identical, if they are on the same graph).
+     */
     @Override
     public boolean equals(Object other) {
         if (other == null) {
@@ -143,7 +153,16 @@ public class BRepComponent {
         return hash;
     }
     
-    //lookup if component exists before making new one.
+    /**
+     * Creates a new BRepComponent with the given data, the default way to create a BRepComponent.
+     * Checks if a component with the same data already exists in storedComponents, and in that cases returns this already existing
+     * BRepComponent, which may already contain some computations.
+     * @param bVertices
+     * @param inBEdges
+     * @param storedComponents
+     * @param graphInfo
+     * @return
+     */
     public static BRepComponent makeComponent(IntSet bVertices, IntSet inBEdges, Map<BRepComponent, BRepComponent> storedComponents, GraphInfo graphInfo) {
         BRepComponent ret = new BRepComponent(bVertices, inBEdges);
         BRepComponent storedC = storedComponents.get(ret);
@@ -159,7 +178,7 @@ public class BRepComponent {
     }
     
     /**
-     * provides a map that assigns to each cutvertex the set of components it cuts this component into.
+     * provides a map that assigns to each cut vertex the set of components it cuts this component into.
      * @param storedComponents
      * @param graphInfo
      * @return
@@ -172,11 +191,22 @@ public class BRepComponent {
         //}
     }
     
+    /**
+     * provides a map that assigns to each non-cut vertex a version of this BRepComponent where that non-cut vertex became a source.
+     * @param storedComponents
+     * @param graphInfo
+     * @return
+     */
     public Int2ObjectMap<BRepComponent> getAllNonSplits(Map<BRepComponent, BRepComponent> storedComponents, GraphInfo graphInfo) {
         return splitManager.getAllNonSplits(storedComponents, graphInfo);
         
     }
     
+    /**
+     * returns true iff the other BRepComponent shares a boundary vertex with this one.
+     * @param other
+     * @return
+     */
     public boolean sharesVertex(BRepComponent other) {
         return !Sets.intersection(bVertices, other.bVertices).isEmpty();
     }
@@ -206,6 +236,10 @@ public class BRepComponent {
         
     } 
 
+    /**
+     * returns the set of inboundary edges of this BRepComponent, encoded according to GraphInfo.
+     * @return
+     */
     public IntSet getInBEdges() {
         return inBEdges;
     }

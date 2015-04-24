@@ -8,23 +8,35 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import it.unimi.dsi.fastutil.ints.IntComparator;
 /**
- *
+ * Comparator to decide which boundary representation is closer to the final graph.
  * @author jonas
  */
 public class BRComparator implements IntComparator{
     private final SGraphBRDecompositionAutomatonBottomUp auto;
     
+    /**
+     * Comparator to decide which boundary representation is closer to the final graph. Not a good implementation at the moment.
+     * @param auto An SGraphBRDecompositionAutomatonBottomUp, to translate int to BoundaryRepresentation (via getStateForId)
+     */
     public BRComparator(SGraphBRDecompositionAutomatonBottomUp auto){
         this.auto = auto;
     }
     
+    /**
+     * returns 1 if rep1 is larger than rep2, in this case if it has more sources, or if equal sources then if it has less inner nodes.
+     * returns -1 in the symmetric case
+     * in the other results, simply rep1-rep2 is returned, i.e. 0 iff the ints are identical.
+     * @param rep1
+     * @param rep2
+     * @return
+     */
     @Override
     public int compare (int rep1, int rep2){
         BoundaryRepresentation br1 = auto.getStateForId(rep1);
         BoundaryRepresentation br2 = auto.getStateForId(rep2);
-        if (br1.sourceCount> br2.sourceCount){
+        if (br1.getSourceCount()> br2.getSourceCount()){
             return 1;
-        } else if (br1.sourceCount > br2.sourceCount){
+        } else if (br1.getSourceCount() > br2.getSourceCount()){
             return -1;
         /*} else { //then equal number of sources
             if (br1.largestSource < br2.largestSource){
@@ -32,9 +44,9 @@ public class BRComparator implements IntComparator{
             } else if (br1.largestSource > br2.largestSource){
                 return 1;*/
             } else{
-                if (br1.innerNodeCount > br2.innerNodeCount){
+                if (br1.getInnerNodeCount() > br2.getInnerNodeCount()){
                     return -1;
-                } else if (br1.innerNodeCount < br2.innerNodeCount){
+                } else if (br1.getInnerNodeCount() < br2.getInnerNodeCount()){
                     return 1;
                 } else {
                     return rep1-rep2;

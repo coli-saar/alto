@@ -237,7 +237,7 @@ public class BRepTopDown {
         int[] childSource2Nodename = new int[sourceToNodename.length];
         IntSet totalBVertices = new IntOpenHashSet();
         for (BRepComponent comp : childComponents) {
-            totalBVertices.addAll(comp.bVertices);
+            totalBVertices.addAll(comp.getBVertices());
         }
         for (int source = 0; source < sourceToNodename.length; source++) {
             int vNr = sourceToNodename[source];

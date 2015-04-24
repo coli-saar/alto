@@ -117,7 +117,7 @@ public class BolinasEdgeMPF extends MergePartnerFinder{
         }
     }
     
-    private void debugFindMissingBRs(int rep, IntList found){
+    /*private void debugFindMissingBRs(int rep, IntList found){
         BoundaryRepresentation bdryRep = auto.getStateForId(rep);
         for (int i : allBdryReps){
             BoundaryRepresentation iBdryRep = auto.getStateForId(i);
@@ -125,7 +125,7 @@ public class BolinasEdgeMPF extends MergePartnerFinder{
                 System.out.println("diff found: " + iBdryRep.toString());
             }
         }
-    }
+    }*/
     
       
     private void debugCheckBitSets(){

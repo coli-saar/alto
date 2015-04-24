@@ -5,8 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph.decompauto;
 
-import de.up.ling.irtg.InterpretedTreeAutomaton;
-import static de.up.ling.irtg.algebra.graph.BRUtil.makeIncompleteDecompositionAlgebra;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.ByteBasedEdgeSet;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
@@ -25,12 +23,9 @@ import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -235,12 +230,12 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
                 
                 String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
                 
-                BoundaryRepresentation renamedRight = childStates.getLeft()[1].applyRenameReverse(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
+                BoundaryRepresentation renamedRight = childStates.getLeft()[1].applyRenameReverse(renameLabel, signature.getIdForSymbol(renameLabel), true);
                 if (renamedRight != null) {
                     rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{childStates.getLeft()[0], renamedRight}, childStates.getRight()));
                 }
                 
-                BoundaryRepresentation symmetricRenamedRight = symmetricBRs[1].applyRenameReverse(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
+                BoundaryRepresentation symmetricRenamedRight = symmetricBRs[1].applyRenameReverse(renameLabel, signature.getIdForSymbol(renameLabel), true);
                 if (symmetricRenamedRight != null) {
                     rules.add(makeRule(parentState, labelId, new BoundaryRepresentation[]{symmetricBRs[0], symmetricRenamedRight}, symmetricComponentManagers));
                 }
@@ -266,7 +261,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
 
 
             // now we can apply the operation.
-            BoundaryRepresentation result = parent.applyRenameReverse(label, labelId, true, completeGraphInfo);// maybe do the above check in here? might be more efficient.
+            BoundaryRepresentation result = parent.applyRenameReverse(label, labelId, true);// maybe do the above check in here? might be more efficient.
 
             if (result != null) {
 //                    System.err.println(label + " returned null: " + children.get(0));
@@ -414,7 +409,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     }
     
     private List<Pair<BoundaryRepresentation, ComponentManager>> getAllForgottenAll(BoundaryRepresentation parent, ComponentManager cm) {
-        if (!parent.sourcesAllBottom) {
+        if (!parent.isSourcesAllBottom()) {
             return new ArrayList<>();
         } else {
             List<Pair<BoundaryRepresentation, ComponentManager>> ret = new ArrayList<>();
@@ -481,7 +476,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
     
     
     
-    public static void main(String[] args) throws Exception{
+    /*public static void main(String[] args) throws Exception{
         
         
         
@@ -529,7 +524,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         System.err.println("total time: " + String.valueOf(System.currentTimeMillis()-time));
         
         time = System.currentTimeMillis();*/
-        for (int i = 0; i<nrIt; i++) {
+       /* for (int i = 0; i<nrIt; i++) {
             TreeAutomaton aut2 = alg.decompose(graph, SGraphBRDecompositionAutomatonTopDown.class); 
             aut2.makeAllRulesExplicit();
         }
@@ -571,7 +566,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
         long t4 = System.currentTimeMillis();
         
         System.out.println("Naive bottom up time: "+String.valueOf(t4-t3) +"(currently bugged)");*/
-        
+    /*    
     }
     
     
@@ -715,6 +710,6 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<Boundar
 
 "S! -> go(NP)\n"+
 "[graph]  f_subj(merge('(g<root> / go-01  :ARG0 (s<subj>))', ?1))";
-    
+    */
     
 }

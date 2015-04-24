@@ -6,12 +6,6 @@
 package de.up.ling.irtg.algebra.graph;
 
 import org.jgrapht.DirectedGraph;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.ArrayList;
-import java.util.List;
 /**
  *
  * @author jonas

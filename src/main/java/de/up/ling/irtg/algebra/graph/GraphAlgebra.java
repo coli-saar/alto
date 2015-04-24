@@ -335,13 +335,13 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     
     
-    public static void main(String[] args) throws Exception {
+    /*public static void main(String[] args) throws Exception {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream( SGraphBRDecompositionAutomatonTopDown.HRG.getBytes( Charset.defaultCharset() ) ));
         Map<String, String> map = new HashMap<>();
         map.put("graph","(w<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))");
         TreeAutomaton chart = irtg.parse(map);
         System.err.println(chart);
-    }
+    }*/
 
     
     

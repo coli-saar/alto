@@ -24,7 +24,7 @@ public class ByteBasedEdgeSet extends IdBasedEdgeSet {
     /**
      *
      */
-    static int idCounter = 0;
+    private static int idCounter = 0;
     //private final String ID;
     private final ByteArraySet edges;
     

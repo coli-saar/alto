@@ -87,7 +87,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         int parentState = addState(parent);
         
         // add final state if needed
-        if (parent.isCompleteGraph(completeGraphInfo)) {
+        if (parent.isCompleteGraph()) {
                 finalStates.add(parentState);
         }
         
@@ -165,7 +165,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 ParseTester.averageLogger.increaseValue("MergeFail");
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
-                BoundaryRepresentation result = children.get(0).merge(children.get(1), completeGraphInfo);
+                BoundaryRepresentation result = children.get(0).merge(children.get(1));
 
                 if (result == null) {
 //                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
@@ -183,7 +183,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             ParseTester.averageLogger.increaseValue("CombinedMergeRulesChecked");
             String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
 
-            BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true, completeGraphInfo);
+            BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true);
             if (tempResult == null) {
                 ParseTester.averageLogger.increaseValue("m1RenameFail");
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
@@ -193,7 +193,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 ParseTester.averageLogger.increaseValue("m1MergeFail");
                 return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
-                BoundaryRepresentation result = children.get(0).merge(tempResult, completeGraphInfo);
+                BoundaryRepresentation result = children.get(0).merge(tempResult);
 
                 if (result == null) {
                     System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
@@ -223,7 +223,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             }
             BoundaryRepresentation arg = children.get(0);
 
-            for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
+            for (Integer sourceToForget : arg.getForgottenSources(label, labelId))//check if we may forget.
             {
                 if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.getSGraph(), completeGraphInfo)) {
                     return storedRules.put(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;//
@@ -231,7 +231,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             }
 
             // now we can apply the operation.
-            BoundaryRepresentation result = arg.applyForgetRename(label, labelId, true, completeGraphInfo);// maybe do the above check in here? might be more efficient.
+            BoundaryRepresentation result = arg.applyForgetRename(label, labelId, true);// maybe do the above check in here? might be more efficient.
 
             if (result == null) {
 //                    System.err.println(label + " returned null: " + children.get(0));

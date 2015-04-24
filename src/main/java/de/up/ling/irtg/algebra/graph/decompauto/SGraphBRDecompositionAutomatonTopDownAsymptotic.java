@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph.decompauto;
 
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.BRepComponent;
 import de.up.ling.irtg.algebra.graph.BRepTopDown;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
@@ -16,19 +15,10 @@ import de.up.ling.irtg.algebra.graph.ParseTester;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.condensed.PMFactoryRestrictive;
-import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
-import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.CpuTimeStopwatch;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.Reader;
-import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -371,7 +361,7 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
     static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
     static String grammarPath = "corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
     
-    public static void main(String[] args) throws Exception {
+    /*public static void main(String[] args) throws Exception {
         Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
@@ -426,6 +416,6 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
         internalSw.printMilliseconds("time: ");
         System.err.println(ti.graph.toIsiAmrString());
         System.err.println(chart.countTrees());
-    }
+    }*/
     
 }

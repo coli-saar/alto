@@ -21,11 +21,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * Utility class that has methods to create algebras based on atomic subgraphs of a given graph.
  * @author jonas
  */
 public class BRUtil {
 
+    /**
+     * Creates a GraphAlgebra based on graph with nrSources many sources (named 1,..,nrSources).
+     * The resulting algebra contains as constants all atomic subgraphs (single edges, and single labled nodes), with all possible source combinations.
+     * Further, the merge operation and all possible versions of forget and rename.
+     * @param alg empty GraphAlgebra, carries the result.
+     * @param graph
+     * @param nrSources
+     * @throws Exception
+     */
     public static void makeCompleteDecompositionAlgebra(GraphAlgebra alg, SGraph graph, int nrSources) throws Exception//only add empty algebra!!
     {
         Signature sig = alg.getSignature();
@@ -69,6 +78,16 @@ public class BRUtil {
         sig.addSymbol("merge", 2);
     }
 
+    /**
+     * Creates a GraphAlgebra based on graph with nrSources many sources (named 1,..,nrSources).
+     * The resulting algebra contains as constants all atomic subgraphs (single edges, and single labled nodes), but only one source is used for nodes,
+     * and one more source for edges (both possibilities to name the vertices incident to the edge with these two sources are included).
+     * Further, the merge operation and all possible versions of forget and rename.
+     * @param alg empty GraphAlgebra, carries the result.
+     * @param graph
+     * @param nrSources
+     * @throws Exception
+     */
     public static void makeIncompleteDecompositionAlgebra(GraphAlgebra alg, SGraph graph, int nrSources) throws Exception//only add empty algebra!!
     {
         Signature sig = alg.getSignature();
@@ -121,6 +140,17 @@ public class BRUtil {
         sig.addSymbol("merge", 2);
     }
     
+    /**
+     * Creates a GraphAlgebra based on graph with nrSources many sources (named 1,..,nrSources).
+     * The resulting algebra contains as constants all atomic subgraphs (single edges, and single labled nodes), but only one source is used for nodes,
+     * and one more source for edges (both possibilities to name the vertices incident to the edge with these two sources are included).
+     * Further, the merge operation and all possible versions of forget and rename.
+     * Also includes the special bolinasmerge operation, as well as forget all.
+     * @param alg empty GraphAlgebra, carries the result.
+     * @param graph
+     * @param nrSources
+     * @throws Exception
+     */
     public static void makeIncompleteBolinasDecompositionAlgebra(GraphAlgebra alg, SGraph graph, int nrSources) throws Exception//only add empty algebra!!
     {
         String BOLINASROOTSTRING = "bolinasroot";
@@ -168,6 +198,17 @@ public class BRUtil {
         sig.addSymbol(GraphAlgebra.OP_FORGET_ALL, 1);
     }
 
+    /**
+     * Writes an irtg file based on graph with nrSources many sources (named 1,..,nrSources).
+     * The resulting irtg represents a GraphAlgebra which contains as constants all atomic subgraphs (single edges, and single labled nodes), but only one source is used for nodes,
+     * and one more source for edges (both possibilities to name the vertices incident to the edge with these two sources are included).
+     * Further, the merge operation and all possible versions of forget and rename.
+     * The one final state is S, the one nonfinal state is X.
+     * @param alg empty GraphAlgebra, carries the result.
+     * @param graph
+     * @param nrSources
+     * @throws Exception
+     */
     public static void writeIncompleteDecompositionIRTG(GraphAlgebra alg, SGraph graph, int nrSources, PrintWriter writer) throws Exception//only add empty algebra!!
     {
         String terminal = "S!";
@@ -331,6 +372,13 @@ public class BRUtil {
     private static final String[] testset = new String[]{testString1, testString3, testString5sub1, testString5, testString6};
     private static final int[] testSourceNrs = new int[]{2, 2, 3, 4, 3};
 
+    /**
+     * Main for testing purposes.
+     * Computes decomposition algebras and corresponding complete decomposition automata for strings defined in the source code.
+     * Further parameters can be set in the source code.
+     * @param args no arguments
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         
         boolean testIRTG = false;

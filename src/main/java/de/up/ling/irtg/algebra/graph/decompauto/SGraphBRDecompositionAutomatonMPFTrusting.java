@@ -46,7 +46,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                 if ((!doBolinas() && !children.get(0).isMergeableMPF(children.get(1)))||(doBolinas() && !children.get(0).isMergeable(children.get(1)))) { // ensure result is connected
                     return Collections.EMPTY_LIST;
                 } else {
-                    BoundaryRepresentation result = children.get(0).merge(children.get(1), completeGraphInfo);
+                    BoundaryRepresentation result = children.get(0).merge(children.get(1));
 
                     if (result == null) {
 //                        System.err.println("merge returned null: " + children.get(0) + " with " + children.get(1));
@@ -68,7 +68,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                 if (arg == null){
                     System.out.println("error");
                 }
-                for (Integer sourceToForget : arg.getForgottenSources(label, labelId, completeGraphInfo))//check if we may forget.
+                for (Integer sourceToForget : arg.getForgottenSources(label, labelId))//check if we may forget.
                 {
                     if (!arg.isForgetAllowed(sourceToForget, completeGraphInfo.getSGraph(), completeGraphInfo)) {
                         return Collections.EMPTY_LIST;//
@@ -76,7 +76,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
                 }
 
                 // now we can apply the operation.
-                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, !doBolinas(), completeGraphInfo);// maybe do the above check in here? might be more efficient.
+                BoundaryRepresentation result = arg.applyForgetRename(label, labelId, !doBolinas());// maybe do the above check in here? might be more efficient.
 
                 if (result == null) {
 //                    System.err.println(label + " returned null: " + children.get(0));
@@ -135,7 +135,7 @@ public class SGraphBRDecompositionAutomatonMPFTrusting  extends SGraphBRDecompos
         for (Rule rule : res) {
             BoundaryRepresentation parent = getStateForId(rule.getParent());
 
-            if (parent.isCompleteGraph(completeGraphInfo)) {
+            if (parent.isCompleteGraph()) {
                 finalStates.add(rule.getParent());
             }
         }
