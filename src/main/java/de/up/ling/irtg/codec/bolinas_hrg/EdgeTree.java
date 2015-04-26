@@ -147,7 +147,7 @@ class EdgeTree {
      */
     void transform(ConcreteTreeAutomaton<String> ta, Homomorphism hom,
             StringSource stso, String nonterminalName,
-            HashSet<String> seenNodes, List<String> ordering, double weight) {
+            HashSet<GraphNode> seenNodes, List<String> ordering, double weight) {
         
         if(this.de != null)
         {
@@ -194,7 +194,7 @@ class EdgeTree {
      * @param nonterminalName 
      */
     private void handleCombination(final StringSource stso, final ConcreteTreeAutomaton<String> ta,
-            final Homomorphism hom, final HashSet<String> seenNodes, final String nonterminalName,
+            final Homomorphism hom, final HashSet<GraphNode> seenNodes, final String nonterminalName,
             final List<String> outer, final double weight) {
         
         final String left = stso.get();
@@ -225,8 +225,8 @@ class EdgeTree {
         
         hom.add(label, main);
         
-        this.first.transform(ta, hom, stso, left, seenNodes, null,1.0);
-        this.second.transform(ta, hom, stso, right, seenNodes, null,1.0);
+        this.first.transform(ta, hom, stso, left, seenNodes, null, 1.0);
+        this.second.transform(ta, hom, stso, right, seenNodes, null, 1.0);
     }
 
     /**
@@ -239,7 +239,7 @@ class EdgeTree {
      * @param hom 
      */
     private void handleEdge(StringSource stso, ConcreteTreeAutomaton<String> ta, String nonterminalName,
-            HashSet<String> seenNodes, List<String> ordering, Homomorphism hom, double weight) {
+            HashSet<GraphNode> seenNodes, List<String> ordering, Homomorphism hom, double weight) {
         String label = stso.get();
         
         Rule r = ta.createRule(nonterminalName, label, new String[] {},weight);
@@ -264,9 +264,9 @@ class EdgeTree {
      * @param ordering
      * @return 
      */
-    private String addNode(HashSet<String> seenNodes, List<String> ordering,
+    private String addNode(HashSet<GraphNode> seenNodes, List<String> ordering,
             GraphNode n) {
-        String s = convert(n,seenNodes);
+        String s = convert(n);
         if(this.nodes.contains(n.getName()))
         {
             if(ordering != null && ordering.contains(n.getName()))
@@ -280,6 +280,12 @@ class EdgeTree {
                 s += "<"+num+">";
             }
         }
+        
+        if(!seenNodes.contains(n))
+        {
+            seenNodes.add(n);
+            s += " / "+n.getName();
+        }
         return s;
     }
 
@@ -289,7 +295,7 @@ class EdgeTree {
      * @param seenNodes
      * @return 
      */
-    private String convert(GraphNode node, HashSet<String> seenNodes) {
+    private String convert(GraphNode node) {
         return node.getName();
     }
 
