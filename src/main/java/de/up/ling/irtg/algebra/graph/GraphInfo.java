@@ -58,19 +58,18 @@ public class GraphInfo {
     
     
     /**
-    * Compactly represents the information of an s-graph needed for our algorithms.
-    * @author jonas
+    * Compactly represents the information of an s-graph needed for our algorithms. 
+    * 
+    * @param completeGraph
+    * @param algebra
+    * @param signature
     */
     public GraphInfo(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         this.graph = completeGraph;
         sourcenameToInt = new HashMap<>();
         nodenameToInt = new HashMap<>();
         Set<String> sources;
-        if (algebra.sources != null) {
-            sources = algebra.sources;
-        } else {
-            sources = GraphAlgebra.getAllSourcesFromSignature(signature);
-        }
+        sources = algebra.getAllSourceNames();
         
         
         intToSourcename = new String[sources.size()];

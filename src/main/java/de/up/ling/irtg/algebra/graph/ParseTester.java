@@ -8,9 +8,6 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.binarization.BkvBinarizer;
-import de.up.ling.irtg.binarization.IdentitySeed;
-import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
@@ -59,6 +56,7 @@ public class ParseTester {
             "corpora-and-grammars/grammars/sgraph_bolinas_comparison/small_grammar/rules.txt";
     static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
     static String sortedBolinasCorpusPath = "corpora-and-grammars/corpora/sorted-bolinas-amr-bank-v1.3.txt";
+    
     public static int cachedAnswers;
     public static int newAnswers;
     public static int intersectionRules;
@@ -70,8 +68,11 @@ public class ParseTester {
     
     public static AverageLogger averageLogger = new AverageLogger.DummyAverageLogger();
 
-    
-    
+    /**
+     * Benchmarks the s-graph parsing algorithm. Execute without arguments to get more detailed instructions.
+     * @param args
+     * @throws Exception
+     */
     public static void main(String[] args) throws Exception {
         
         
@@ -87,7 +88,7 @@ public class ParseTester {
         
         
         if (args.length < 9) {
-            System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibal (type 'bol') or all (type 'all') graphs.");
+            System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibel (type 'bol') or all (type 'all') graphs.");
             System.out.println("Second is 'bottomup' or 'topdown'");
             System.out.println("Third is how the corpus should be sorted. 'n' for node count, 'd' for degree (and nodecount within degree), 'no' for n sorting.");
             System.out.println("Fourth and fifth are the start and stop number of which graphs to parse.");
@@ -396,7 +397,7 @@ public class ParseTester {
         System.err.println(sj.toString());
     }
 
-    public static void parseInstanceWithIrtg(List<IrtgInducer.TrainingInstance> corpus, InterpretedTreeAutomaton irtg, int i, Writer resultWriter, boolean printOutput, int internalIterations, CpuTimeStopwatch internalSw) {
+    private static void parseInstanceWithIrtg(List<IrtgInducer.TrainingInstance> corpus, InterpretedTreeAutomaton irtg, int i, Writer resultWriter, boolean printOutput, int internalIterations, CpuTimeStopwatch internalSw) {
         runningNumber++;
         newAnswers = 0;
         cachedAnswers = 0;

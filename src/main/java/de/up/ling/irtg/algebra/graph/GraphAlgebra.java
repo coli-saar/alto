@@ -10,7 +10,6 @@ import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBo
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAsymptotic;
 import com.google.common.collect.Sets;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
@@ -20,13 +19,10 @@ import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.io.Writer;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -75,40 +71,46 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public static final String OP_FORGET_EXCEPT = "fe_";
     public static final String OP_FORGET = "f_";
 
-    public final Int2ObjectMap<SGraph> constantLabelInterpretations;
-    Set<String> sources;
+    private Int2ObjectMap<SGraph> constantLabelInterpretations;
+    /**
+     * the returned map maps all constant labels in this algebra's signature to their corresponding SGraphs.
+     * This returns the original set stored in the algebra, so it must not be modified.
+     * @return
+     */
+    public Int2ObjectMap<SGraph> getAllConstantLabelInterpretations() {
+        if (constantLabelInterpretations == null) {
+            precomputeAllConstants();
+        }
+        return constantLabelInterpretations;
+    }
+    
+    private Set<String> sources;
+    /**
+     * returns the set of all source names occurring in the algebra's signature.
+     * This returns the original set stored in the algebra, so it must not be modified.
+     * @return
+     */
+    public Set<String> getAllSourceNames() {
+        if (sources == null) {
+            sources = getAllSourcesFromSignature(signature);
+        }
+        return sources;
+    }
         
-        
-    public boolean isPure = false;
-    public int mergeLabelID;
     
     public GraphAlgebra() {
         super();
-        
-        constantLabelInterpretations = new Int2ObjectOpenHashMap<>();
     }
     
     public GraphAlgebra(Signature signature) {
         super();
-        isPure = true;
         this.signature = signature;
-        for (String label : signature.getSymbols()) {
-            if (signature.getArityForLabel(label) == 2) {
-                if (label.equals(OP_MERGE)) {
-                    mergeLabelID = signature.getIdForSymbol(label);
-                } else {
-                    isPure = false;
-                }
-            }
-        }
         
         
-        constantLabelInterpretations = new Int2ObjectOpenHashMap<>();
-        precomputeAllConstants();
-        sources = getAllSourcesFromSignature(signature);
     }
     
     private void precomputeAllConstants() {
+        constantLabelInterpretations = new Int2ObjectOpenHashMap<>();
         for (int id = 1; id <= signature.getMaxSymbolId(); id++) {
             if (signature.getArity(id) == 0) {
                 String label = signature.resolveSymbolId(id);
@@ -126,15 +128,13 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
     }
     
-    
-    
+    /**
+     * given an SGraph, this returns the corresponding decomposition automaton of class c.
+     * @param value
+     * @param c
+     * @return
+     */
     public TreeAutomaton decompose(SGraph value, Class c){
-        if (sources == null) {
-            sources = getAllSourcesFromSignature(signature);
-        }
-        if (constantLabelInterpretations.isEmpty()) {
-            precomputeAllConstants();
-        }
         //try {
             if (c == SGraphDecompositionAutomaton.class){
                 return new SGraphDecompositionAutomaton(value, this, getSignature());
@@ -158,10 +158,16 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             else return null;
     }
     
-    public TreeAutomaton decompose(SGraph value, Writer writer) throws Exception{
-        if (constantLabelInterpretations.isEmpty()) {
-            precomputeAllConstants();
-        }
+    /**
+     * returns an automaton that only writes the rules in the Writer, and does not store the rules in memory.
+     * The automaton iterates through all rules on construction, and writes them immediately.
+     * this should be redone when SGraphBRDecompositionAutomatonOnlyWrite is reworked.
+     * @param value
+     * @param writer
+     * @return
+     * @throws Exception
+     */
+    public TreeAutomaton writeCompleteDecompositionAutomaton(SGraph value, Writer writer) throws Exception{
         return new SGraphBRDecompositionAutomatonOnlyWrite(value, this, getSignature(), writer);
     }
     
@@ -286,7 +292,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     
-    public static Set<String> getAllSourcesFromSignature(Signature signature) {
+    private static Set<String> getAllSourcesFromSignature(Signature signature) {
         //find all sources used in algebra:
         Set<String> ret = new HashSet<>();
         for (String symbol : signature.getSymbols())//this adds all sources from the signature, (but be careful, this is kind of a hack) should work now. Maybe better just give this a list of sources directly?

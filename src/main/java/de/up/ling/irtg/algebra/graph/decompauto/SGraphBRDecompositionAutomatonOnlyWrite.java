@@ -413,7 +413,7 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
             GraphAlgebra alg = new GraphAlgebra();
             BRUtil.makeIncompleteDecompositionAlgebra(alg, instance.graph, 3);
             Writer rtgWriter = new StringWriter();
-            SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.decompose(instance.graph, rtgWriter);
+            SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.writeCompleteDecompositionAutomaton(instance.graph, rtgWriter);
             rtgWriter.close();
             
             System.out.println(String.valueOf(auto.ruleCount));

@@ -297,7 +297,7 @@ public class IrtgInducer {
                 
                 if (doWrite) {
                     Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(ti.id) + ".rtg");
-                    SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.decompose(graph, rtgWriter);
+                    SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.writeCompleteDecompositionAutomaton(graph, rtgWriter);
                     sw.record(2 * (i - start) + 1);
                     System.err.println(sw.printTimeBefore(3 * (i - start) + 1, "Decomposition + Write time: "));
                     rtgWriter.close();
@@ -360,7 +360,7 @@ public class IrtgInducer {
 
             if (doWrite) {
                     Writer rtgWriter = new FileWriter(dumpPath + String.valueOf(instance.id) + ".rtg");
-                    SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.decompose(graph, rtgWriter);
+                    SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.writeCompleteDecompositionAutomaton(graph, rtgWriter);
                     sw.record(1);
                     rtgWriter.close();
                     return auto.foundFinalState;

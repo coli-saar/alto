@@ -10,17 +10,12 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
-import org.apache.commons.lang3.tuple.Pair;
 import org.jgrapht.UndirectedGraph;
 import org.jgrapht.alg.BlockCutpointGraph;
 import org.jgrapht.graph.DefaultEdge;
@@ -31,13 +26,13 @@ import org.jgrapht.graph.DefaultEdge;
  */
 public class SplitManager {
     
-    public final IntSet nonSplitVertices;
+    private final IntSet nonSplitVertices;
     
     private final IntSet allInBEdges;
     private final IntSet allBVertices;
     
     
-    public final BlockCutpointGraph<Integer, Integer> bcg;
+    private final BlockCutpointGraph<Integer, Integer> bcg;
     
     private final Map<DefaultEdge, IntSet> bcgEdge2BoundaryEdges;
     private final Map<DefaultEdge, IntSet> bcgEdge2incidentGraphEdges;
@@ -187,7 +182,7 @@ public class SplitManager {
     
     /**
      * provides a map that assigns to each cut vertex the set of components which the vertex cuts this component into.
-     * @param storedComponents
+     * @param storedComponents if a component occurs in the result, such that an equal component was stored earlier, this earlier component is used instead of a new copy.
      * @param graphInfo
      * @return
      */
@@ -221,7 +216,12 @@ public class SplitManager {
         return ret;
     }
     
-    
+    /**
+     * computes for every non-cut vertex v from this component a new component c(v) by adding v as a source, and then returns the map v->c(v).
+     * @param storedComponents if a component occurs in the result, such that an equal component was stored earlier, this earlier component is used instead of a new copy.
+     * @param graphInfo
+     * @return
+     */
     public Int2ObjectMap<BRepComponent> getAllNonSplits(Map<BRepComponent, BRepComponent> storedComponents, GraphInfo graphInfo) {
         Int2ObjectMap<BRepComponent> ret = new Int2ObjectOpenHashMap<>();
         

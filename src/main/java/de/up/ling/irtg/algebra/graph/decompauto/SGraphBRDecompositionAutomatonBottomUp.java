@@ -250,7 +250,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         } else {
             //ParseTester.averageLogger.increaseValue("ConstantRulesChecked");
             List<Rule> rules = new ArrayList<>();
-            SGraph sgraph = algebra.constantLabelInterpretations.get(labelId);//IsiAmrParser.parse(new StringReader(label));
+            SGraph sgraph = algebra.getAllConstantLabelInterpretations().get(labelId);//IsiAmrParser.parse(new StringReader(label));
 
             if (sgraph == null) {
 //                    System.err.println("Unparsable operation: " + label);
@@ -356,10 +356,54 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return false;
     }
     
+    private Boolean algebraIsPure;
+    private int mergeLabelID;
+    
+    /**
+     * Is true iff the merge operation is the only binary operation in the algebras signature.
+     * @return 
+     */
+    private boolean isAlgebraPure() {
+        if (algebraIsPure == null) {
+            
+            algebraIsPure = true;
+            for (String label : signature.getSymbols()) {
+                if (signature.getArityForLabel(label) == 2) {
+                    if (label.equals(OP_MERGE)) {
+                        mergeLabelID = signature.getIdForSymbol(label);
+                    } else {
+                        algebraIsPure = false;
+                    }
+                }
+            }
+        }
+        return algebraIsPure;
+    }
+    
+    /**
+     * returns the ID of the merge label in the algebra.
+     * @return 
+     */
+    private int getMergeLabelID() {
+        if (algebraIsPure == null) {
+            
+            algebraIsPure = true;
+            for (String label : signature.getSymbols()) {
+                if (signature.getArityForLabel(label) == 2) {
+                    if (label.equals(OP_MERGE)) {
+                        mergeLabelID = signature.getIdForSymbol(label);
+                    } else {
+                        algebraIsPure = false;
+                    }
+                }
+            }
+        }
+        return mergeLabelID;
+    }
     
     @Override
     public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
-        if (algebra.isPure) {
+        if (isAlgebraPure()) {
             return new MPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto); //To change body of generated methods, choose Tools | Templates.
         } else {
             return new ImpureMPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto);
@@ -375,7 +419,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
         @Override
         public IntCollection getPartners(int labelID, int stateID) {
-            if (labelID == algebra.mergeLabelID) {
+            if (labelID == getMergeLabelID()) {
                 return mpf.getAllMergePartners(stateID);
             } else {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
