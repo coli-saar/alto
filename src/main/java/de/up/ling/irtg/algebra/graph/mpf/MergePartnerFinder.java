@@ -8,7 +8,7 @@ package de.up.ling.irtg.algebra.graph.mpf;
 import it.unimi.dsi.fastutil.ints.IntList;
 
 /**
- *
+ * structure that stores found subgraphs, and, given a new subgraph, returns those among the stored graphs that can potentially be merged with it.
  * @author jonas
  */
 public abstract class MergePartnerFinder {
@@ -37,10 +37,19 @@ public abstract class MergePartnerFinder {
         }
     }*/
 
-    public abstract void insert(int rep);
+    /**
+     * stores the graph
+     * @param graph
+     */
+    public abstract void insert(int graph);
             
-    public abstract IntList getAllMergePartners(int rep);
+    public abstract IntList getAllMergePartners(int graph);
     
+    /**
+     * prints all stored graphs, and the structure how they are stored, via System.out
+     * @param prefix
+     * @param indent
+     */
     public abstract void print(String prefix, int indent);
 
 }

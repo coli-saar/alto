@@ -7,7 +7,6 @@ package de.up.ling.irtg.algebra.graph.decompauto;
 
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
-import de.up.ling.irtg.algebra.graph.mpf.BolinasMPF;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.graph.BRComparator;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
@@ -42,7 +41,8 @@ public class SGraphBRDecompAutoInstruments {
     public SGraphBRDecompAutoInstruments(SGraphBRDecompositionAutomatonBottomUp auto, int sourceCount, int nodeCount, boolean doBolinas){
         this.auto = auto;
         if (doBolinas){
-            mpFinder = new BolinasMPF(0, sourceCount, nodeCount, auto);
+            throw new java.lang.UnsupportedOperationException("This is no longer supported");
+            //mpFinder = new BolinasMPF(0, sourceCount, nodeCount, auto);
         } else {
             mpFinder = new DynamicMergePartnerFinder(0, sourceCount, nodeCount, auto);
         }

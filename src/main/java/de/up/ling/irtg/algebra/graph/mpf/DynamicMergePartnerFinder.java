@@ -36,7 +36,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         
     }
 
-    public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto, IntSet vertices)//maybe give expected size of finalSet as parameter?
+    private DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto, IntSet vertices)//maybe give expected size of finalSet as parameter?
     {
         this.auto = auto;
         

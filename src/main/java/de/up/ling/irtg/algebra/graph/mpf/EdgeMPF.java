@@ -6,7 +6,6 @@
 package de.up.ling.irtg.algebra.graph.mpf;
 
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
-import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -27,7 +26,6 @@ class EdgeMPF extends MergePartnerFinder{
     private final MergePartnerFinder[] children;
     private final StorageMPF storeHere;
     private final int parentEdge;
-    private IntSet vertices;
     
     EdgeMPF(IntSet vertices, SGraphBRDecompositionAutomatonBottomUp auto) {
         currentIndex = -1;
@@ -41,7 +39,6 @@ class EdgeMPF extends MergePartnerFinder{
         children = new MergePartnerFinder[local2GlobalEdgeIDs.length];
         parentEdge = -1;
         storeHere = new StorageMPF(auto);
-        this.vertices = vertices;//DEBUGGING
     }
     
     private EdgeMPF(int[] local2Global, Int2IntMap global2Local, int currentIndex, SGraphBRDecompositionAutomatonBottomUp auto, int parentEdge) {

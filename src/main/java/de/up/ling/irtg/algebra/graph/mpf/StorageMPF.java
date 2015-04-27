@@ -10,10 +10,10 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 
 /**
- *
+ * simply puts everything inserted in a set, and returns the whole set when asked for partners. 
  * @author jonas
  */
-public class StorageMPF extends MergePartnerFinder{
+class StorageMPF extends MergePartnerFinder{
     private final IntList finalSet;//list is fine, since every subgraph gets sorted in at most once.
     private final SGraphBRDecompositionAutomatonBottomUp auto;
     
