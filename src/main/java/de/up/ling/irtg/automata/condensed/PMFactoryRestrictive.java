@@ -9,7 +9,6 @@ import com.google.common.primitives.Ints;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.BinaryPartnerFinder;
 import de.up.ling.irtg.algebra.graph.ParseTester;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAsymptotic;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -318,18 +317,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
              System.err.println("With loop(no duplicates): " + withLoopLabels.size());
              System.err.println("Without loop: " + noLoopCount);
              System.err.println("Without loop(no duplicates): " + edgeOnlyLabels.size());*/
-        } else if (rhs instanceof SGraphBRDecompositionAutomatonTopDown) {
-            SGraphBRDecompositionAutomatonTopDown rhsTopDown = (SGraphBRDecompositionAutomatonTopDown) rhs;
-            for (int constant : matcherConstants) {
-                if (!rhsTopDown.storedConstants[constant].isEmpty()) {
-                    IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constant);
-                    if (matchingLabelSetIDs != null) {
-                        matchingLabelSetIDs.stream().forEach((labelSetID) -> {
-                            addTermToRestrictiveMatcher(labelSetID);
-                        });
-                    }
-                }
-            }
         } else if (rhs instanceof SGraphBRDecompositionAutomatonTopDownAsymptotic) {
             SGraphBRDecompositionAutomatonTopDownAsymptotic rhsTopDown = (SGraphBRDecompositionAutomatonTopDownAsymptotic) rhs;
             for (int constant : matcherConstants) {

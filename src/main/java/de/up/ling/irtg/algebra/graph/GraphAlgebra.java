@@ -13,7 +13,6 @@ import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDown;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
@@ -150,8 +149,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 
             } else if (c == SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas.class) {
                 return new SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas(value, this, getSignature());
-            } else if (c == SGraphBRDecompositionAutomatonTopDown.class) {
-                return new SGraphBRDecompositionAutomatonTopDown(value, this, getSignature());
             } else if (c == SGraphBRDecompositionAutomatonTopDownAsymptotic.class) {
                 return new SGraphBRDecompositionAutomatonTopDownAsymptotic(value, this, getSignature());
             }
