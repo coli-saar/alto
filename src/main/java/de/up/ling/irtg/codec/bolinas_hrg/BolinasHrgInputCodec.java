@@ -11,12 +11,14 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecUtilities;
 import de.up.ling.irtg.codec.ExceptionErrorStrategy;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -109,9 +111,15 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             if (endpoint == null) {
                 endpoint = r.getLhsNonterminal().getNonterminal();
             }
-
+            
             SortedSet<String> certainOuter = new TreeSet<>(r.getLhsNonterminal().getEndpoints());
-
+            
+            if(r.getRhsGraph().edgeSet().size() < 1 && r.getRhsNonterminals().size() < 1)
+            {
+                handleSingleNode(r, stso, ta, certainOuter, hom);
+                continue;
+            }
+            
             List<EdgeTree> edges = new ArrayList<>();
             Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>();
             for (NonterminalWithHyperedge nwh : r.getRhsNonterminals()) {
@@ -159,6 +167,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                         uncertainOuter.add(s);
                     }
                 }
+                
                 uncertainOuter.addAll(certainOuter);
                 
                 for (int i = 0; i < edges.size(); ++i) {
@@ -192,7 +201,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             NonterminalWithHyperedge nwh = r.getLhsNonterminal();
 
             edges.get(0).transform(ta, hom, stso, makeLHS(nwh),
-                    new HashSet<>(), nwh.getEndpoints(), r.getWeight());
+                    new HashSet<>(), nwh.getEndpoints(), r.getWeight(), r);
             if (endpoint.equals(r.getLhsNonterminal().getNonterminal())) {
                 ta.addFinalState(ta.getIdForState(makeLHS(nwh)));
             }
@@ -203,6 +212,33 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         ita.addInterpretation("Graph", in);
 
         return ita;
+    }
+
+    private void handleSingleNode(BolinasRule r, StringSource stso,
+            ConcreteTreeAutomaton<String> ta, SortedSet<String> certainOuter,
+            Homomorphism hom) throws IllegalStateException 
+    {
+        if(r.getRhsGraph().vertexSet().size() != 1)
+        {
+            throw new IllegalStateException("A rule has no right hand side edges and"
+                    + "more or less than 1 right hand side vertix, the rule is: "+r);
+        }
+        
+        String nonterminal = makeLHS(r.getLhsNonterminal());
+        String label = stso.get();
+        
+        Rule rule = ta.createRule(nonterminal, label, new String[] {});
+        rule.setWeight(r.getWeight());
+        ta.addRule(rule);
+        
+        GraphNode gn = r.getRhsGraph().vertexSet().iterator().next();
+        
+        String s = "("+gn.getName()+"<0>"+(gn.getLabel() != null ?
+                " / "+gn.getLabel() : "");
+        s = s +")";
+        
+        Tree<String> t = Tree.create(s);
+        hom.add(label, t);
     }
 
     /**
@@ -277,7 +313,8 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * @param nameToNode
      * @return
      */
-    private String doTerm(BolinasHrgParser.TermContext term, BolinasRule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
+    private String doTerm(BolinasHrgParser.TermContext term, BolinasRule rule, 
+            Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
         BolinasHrgParser.NodeContext nodeContext = term.node();
         String nodename = doNode(nodeContext, rule, externalNodeNames, nameToNode);
 
@@ -301,7 +338,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         // otherwise, create new node
         String nodename = (id == null) ? util.gensym("u") : id.getText();
-        String nodelabel = (label == null) ? nodename : label.getText();
+        String nodelabel = (label == null) ? null : label.getText();
 
         GraphNode gnode = new GraphNode(nodename, nodelabel);
         rule.getRhsGraph().addVertex(gnode);
@@ -351,11 +388,6 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 default:
                     throw new ParseException("Cannot convert hyperedge with " + childNodes.size() + " endpoints.");
             }
-
-            GraphNode srcn = nameToNode.get(src);
-            GraphNode tgtn = nameToNode.get(tgt);
-            GraphEdge e = rule.getRhsGraph().addEdge(srcn, tgtn);
-            e.setLabel(edgelabel);
         } else {
             // nonterminal hyperedge
             String ntLabel = edgelabel.substring(0, edgelabel.length() - 1);

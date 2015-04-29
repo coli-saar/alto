@@ -147,19 +147,20 @@ class EdgeTree {
      */
     void transform(ConcreteTreeAutomaton<String> ta, Homomorphism hom,
             StringSource stso, String nonterminalName,
-            HashSet<GraphNode> seenNodes, List<String> ordering, double weight) {
-        
+            Set<GraphNode> seenNodes, List<String> ordering, double weight,
+            BolinasRule br) 
+    {
         if(this.de != null)
         {
-            handleEdge(stso, ta, nonterminalName, seenNodes, ordering, hom, weight);
+            handleEdge(stso, ta, nonterminalName, seenNodes, ordering, hom, weight, br);
         }
         else if(this.nont != null)
         {
-            makeNonterminal(stso, ta, nonterminalName, weight, hom);
+            makeNonterminal(stso, ta, nonterminalName, weight, hom, seenNodes, br);
         }
         else
         {
-            handleCombination(stso, ta, hom, seenNodes, nonterminalName, ordering, weight);
+            handleCombination(stso, ta, hom, seenNodes, nonterminalName, ordering, weight, br);
         }
     }
 
@@ -172,7 +173,9 @@ class EdgeTree {
      * @param hom 
      */
     private void makeNonterminal(StringSource stso, ConcreteTreeAutomaton<String> ta,
-            String nonterminalName, double weight, Homomorphism hom) {
+            String nonterminalName, double weight, Homomorphism hom,
+            Set<GraphNode> seenNodes, BolinasRule br) 
+    {
         String label = stso.get();
         String right = BolinasHrgInputCodec.makeLHS(nont);
         
@@ -180,6 +183,40 @@ class EdgeTree {
         ta.addRule(r);
         
         Tree<String> main = Tree.create("?1");
+        
+        int i = 0;
+        for(String s : nont.getEndpoints())
+        {
+            GraphNode g = null;
+            for(GraphNode gn : br.getRhsGraph().vertexSet())
+            {
+                if(gn.getName().equals(s))
+                {
+                    g = gn;
+                    break;
+                }
+            }
+            
+            if(g == null || g.getLabel() == null)
+            {
+                ++i;
+                continue;
+            }
+            
+            String k = "("+s;
+            k += " <"+i+">";
+            if(!seenNodes.contains(g))
+            {
+               k += " / "+g.getLabel();
+               seenNodes.add(g);
+            }
+            k += ")";
+            Tree<String> t = Tree.create(k);
+            main = Tree.create("merge", t, main);
+            //TODO
+            ++i;
+        }
+        
         main = rename(this.nont.getEndpoints(),this.nodes, main);
         
         hom.add(label, main);
@@ -194,8 +231,8 @@ class EdgeTree {
      * @param nonterminalName 
      */
     private void handleCombination(final StringSource stso, final ConcreteTreeAutomaton<String> ta,
-            final Homomorphism hom, final HashSet<GraphNode> seenNodes, final String nonterminalName,
-            final List<String> outer, final double weight) {
+            final Homomorphism hom, final Set<GraphNode> seenNodes, final String nonterminalName,
+            final List<String> outer, final double weight, BolinasRule br) {
         
         final String left = stso.get();
         final String right = stso.get();
@@ -225,8 +262,8 @@ class EdgeTree {
         
         hom.add(label, main);
         
-        this.first.transform(ta, hom, stso, left, seenNodes, null, 1.0);
-        this.second.transform(ta, hom, stso, right, seenNodes, null, 1.0);
+        this.first.transform(ta, hom, stso, left, seenNodes, null, 1.0, br);
+        this.second.transform(ta, hom, stso, right, seenNodes, null, 1.0, br);
     }
 
     /**
@@ -239,7 +276,8 @@ class EdgeTree {
      * @param hom 
      */
     private void handleEdge(StringSource stso, ConcreteTreeAutomaton<String> ta, String nonterminalName,
-            HashSet<GraphNode> seenNodes, List<String> ordering, Homomorphism hom, double weight) {
+            Set<GraphNode> seenNodes, List<String> ordering, Homomorphism hom,
+            double weight, BolinasRule br) {
         String label = stso.get();
         
         Rule r = ta.createRule(nonterminalName, label, new String[] {},weight);
@@ -247,7 +285,7 @@ class EdgeTree {
         
         String s = "(";
         
-        s += addNode(seenNodes, ordering,this.de.getSource());
+        s += addNode(seenNodes, ordering, this.de.getSource());
         s += " :"+this.de.getLabel()+" ";
         s += "("+addNode(seenNodes, ordering,this.de.getTarget())+")";
         
@@ -264,7 +302,7 @@ class EdgeTree {
      * @param ordering
      * @return 
      */
-    private String addNode(HashSet<GraphNode> seenNodes, List<String> ordering,
+    private String addNode(Set<GraphNode> seenNodes, List<String> ordering,
             GraphNode n) {
         String s = convert(n);
         if(this.nodes.contains(n.getName()))
@@ -281,11 +319,12 @@ class EdgeTree {
             }
         }
         
-        if(!seenNodes.contains(n))
+        if(!seenNodes.contains(n) && n.getLabel() != null)
         {
             seenNodes.add(n);
-            s += " / "+n.getName();
+            s += " / "+n.getLabel();
         }
+        
         return s;
     }
 
