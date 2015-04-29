@@ -388,6 +388,11 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 default:
                     throw new ParseException("Cannot convert hyperedge with " + childNodes.size() + " endpoints.");
             }
+
+            GraphNode srcn = nameToNode.get(src);
+            GraphNode tgtn = nameToNode.get(tgt);
+            GraphEdge e = rule.getRhsGraph().addEdge(srcn, tgtn);
+            e.setLabel(edgelabel);
         } else {
             // nonterminal hyperedge
             String ntLabel = edgelabel.substring(0, edgelabel.length() - 1);
