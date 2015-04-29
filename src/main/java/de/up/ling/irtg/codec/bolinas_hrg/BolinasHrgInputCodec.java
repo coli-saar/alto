@@ -358,8 +358,16 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         // check if external node
         if (node.externalMarker() != null) {
             TerminalNode n = node.externalMarker().INT_NUMBER();
-            int num = (n == null) ? (nextMarker++) : Integer.parseInt(n.getText());
-            externalNodeNames.put(num, nodename);
+            
+            if( n == null ) {
+                externalNodeNames.put(nextMarker++, nodename);
+            } else {
+                externalNodeNames.put(Integer.parseInt(n.getText())-1, nodename);
+            }
+            
+            
+//            int num = (n == null) ? (nextMarker++) : Integer.parseInt(n.getText());
+//            externalNodeNames.put(num, nodename);
         }
 
         return nodename;

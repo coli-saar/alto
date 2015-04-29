@@ -11,16 +11,16 @@ STAR : '*';
 
 NAME: [a-zA-Z_] ([a-zA-Z0-9_']*);
 NAME_WITH_DOLLAR: [a-zA-Z_] ([a-zA-Z0-9_]*);
+QUOTED_NAME: ['] (~['])* [']; 
+DOUBLE_QUOTED_NAME: ["] (~["])* ["];
 INT_NUMBER : [0-9]+;
 FLOAT_NUMBER: (([0-9]+)? '.')? [0-9]+ ([eE][-+]?[0-9]+)?;
-EDGELABEL: [:] ((~[ \t\n])+);
+EDGELABEL: [:] ((~[ \t\n)])+);
 
 WS: [ \n\t\r]+ -> skip;
 
 COMMENT
-    :   ( '//' ~[\r\n]* '\r'? '\n'
-        | '/*' .*? '*/'
-        ) -> skip
+    :   ( '#' ~[\r\n]* '\r'? '\n' ) -> skip
     ;
 
 
@@ -41,7 +41,7 @@ externalMarker: STAR INT_NUMBER?;
 
 nonterminal: NAME;
 id: NAME|INT_NUMBER;
-label: NAME|INT_NUMBER;
+label: NAME|INT_NUMBER|QUOTED_NAME|DOUBLE_QUOTED_NAME;
 weight: FLOAT_NUMBER;
 
 edgelabel: EDGELABEL;
