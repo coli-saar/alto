@@ -55,6 +55,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  */
 @CodecMetadata(name = "bolinas_hrg", description = "Hyperedge replacement grammar (Bolinas format)", extension = "hrg", type = InterpretedTreeAutomaton.class)
 public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
+    private boolean convertUnaryEdgesToNodeLabels = true;
 
     private static final String TEST = "N_1_0_1_2 -> ( 0. :boy :N_0_0_1$  ( 1.*0 :N_0_0$ ) :N_0_0_2$  2.*1 );	0.0022123893805309734\n"
             + "N_0_0_1 -> (. :ARG1 .);0.0001";
@@ -71,6 +72,16 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         InputStream is = new ByteArrayInputStream(TEST.getBytes());
         InterpretedTreeAutomaton irtg = new BolinasHrgInputCodec().read(is);
     }
+
+    public boolean isConvertUnaryEdgesToNodeLabels() {
+        return convertUnaryEdgesToNodeLabels;
+    }
+
+    public void setConvertUnaryEdgesToNodeLabels(boolean convertUnaryEdgesToNodeLabels) {
+        this.convertUnaryEdgesToNodeLabels = convertUnaryEdgesToNodeLabels;
+    }
+    
+    
 
     public static InterpretedTreeAutomaton create(String input) throws IOException {
         InputStream is = new ByteArrayInputStream(input.getBytes());
@@ -354,6 +365,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return nodename;
     }
 
+    
     private void doEdge(BolinasHrgParser.EdgeWithChildrenContext ewcc, String nodename, BolinasRule rule, Map<Integer, String> externalNodeNames, Map<String, GraphNode> nameToNode) {
         List<String> childNodes = new ArrayList<>();
 
@@ -372,32 +384,36 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         if (!edgelabel.endsWith("$")) {
             // "real" edge
-            String src, tgt;
-
             switch (childNodes.size()) {
                 case 1:
-                    src = nodename;
-                    tgt = nodename;
+                    if (convertUnaryEdgesToNodeLabels) {
+                        GraphNode srcn = nameToNode.get(nodename);
+                        srcn.setLabel(edgelabel);
+                    } else {
+                        addEdge(nodename, nodename, edgelabel, rule, nameToNode);
+                    }
                     break;
 
                 case 2:
-                    src = childNodes.get(0);
-                    tgt = childNodes.get(1);
+                    addEdge(childNodes.get(0), childNodes.get(1), edgelabel, rule, nameToNode);
                     break;
 
                 default:
                     throw new ParseException("Cannot convert hyperedge with " + childNodes.size() + " endpoints.");
             }
 
-            GraphNode srcn = nameToNode.get(src);
-            GraphNode tgtn = nameToNode.get(tgt);
-            GraphEdge e = rule.getRhsGraph().addEdge(srcn, tgtn);
-            e.setLabel(edgelabel);
         } else {
             // nonterminal hyperedge
             String ntLabel = edgelabel.substring(0, edgelabel.length() - 1);
             NonterminalWithHyperedge nt = new NonterminalWithHyperedge(ntLabel, childNodes);
             rule.getRhsNonterminals().add(nt);
         }
+    }
+
+    private void addEdge(String src, String tgt, String edgelabel, BolinasRule rule, Map<String, GraphNode> nameToNode) {
+        GraphNode srcn = nameToNode.get(src);
+        GraphNode tgtn = nameToNode.get(tgt);
+        GraphEdge e = rule.getRhsGraph().addEdge(srcn, tgtn);
+        e.setLabel(edgelabel);
     }
 }
