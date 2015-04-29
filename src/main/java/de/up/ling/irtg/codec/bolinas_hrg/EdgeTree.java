@@ -17,7 +17,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
@@ -434,7 +433,7 @@ class EdgeTree {
                 from.put(block, current);
                 from.put(s, goal);
                 
-                main = Tree.create("s_"+from+"_"+goal, main);
+                main = Tree.create("s_"+current+"_"+goal, main);
             }
             else
             {
