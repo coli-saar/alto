@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph.decompauto;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.algebra.graph.mpf.MergePartnerFinder;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.graph.BRComparator;

@@ -214,6 +214,14 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 }
 
                 return childrenValues.get(0).renameSource(parts[1], parts[2]);
+            } else if (label.startsWith(OP_SWAP)) {
+                String[] parts = label.split("_");
+
+                if (parts.length == 2) {
+                    parts = new String[]{"r", "root", parts[1]};
+                }
+
+                return childrenValues.get(0).swapSources(parts[1], parts[2]);
             } else if (label.equals(OP_FORGET_ALL)) {
                 // forget all sources
                 return childrenValues.get(0).forgetSourcesExcept(Collections.EMPTY_SET);

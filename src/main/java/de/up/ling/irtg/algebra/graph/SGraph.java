@@ -312,6 +312,38 @@ public class SGraph{
 
         return ret;
     }
+    
+    public SGraph swapSources(String sourceName1, String sourceName2) {
+        if ((!sourceToNodename.containsKey(sourceName1))||(!sourceToNodename.containsKey(sourceName2))) {
+            Logging.get().fine(() -> "swapSources(" + sourceName1 + "," + sourceName2 + "): old source does not exist in graph " + this);
+            return null;
+        }
+
+        if (sourceName1.equals(sourceName2)) {
+            return this;
+        }
+
+        // make fast, shallow copy of sgraph; this is okay if this sgraph
+        // is not modified after making the copy
+        SGraph ret = new SGraph();
+        shallowCopyInto(ret);
+
+        // rename the source
+        ret.sourceToNodename = new HashMap<>();
+        ret.sourceToNodename.putAll(sourceToNodename);
+        String nodenameForSource1 = ret.sourceToNodename.remove(sourceName1);
+        String nodenameForSource2 = ret.sourceToNodename.remove(sourceName2);
+        ret.sourceToNodename.put(sourceName2, nodenameForSource1);
+        ret.sourceToNodename.put(sourceName1, nodenameForSource2);
+
+        ret.nodenameToSources = HashMultimap.create(nodenameToSources);
+        ret.nodenameToSources.remove(nodenameForSource1, sourceName1);
+        ret.nodenameToSources.remove(nodenameForSource2, sourceName2);
+        ret.nodenameToSources.put(nodenameForSource1, sourceName2);
+        ret.nodenameToSources.put(nodenameForSource2, sourceName1);
+
+        return ret;
+    }
 
     /**
      * Forgets all sources except for the specified set. All "a"-sources
