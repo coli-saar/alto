@@ -97,8 +97,20 @@ class EdgeMPF extends MergePartnerFinder{
                 ret.addAll(children[i].getAllMergePartners(rep));
             }
         }
+        /*auto.getStateForId(rep).getInBoundaryEdges().forEach(edgeID -> {
+            if (children[edgeID] != null) {
+                ret.addAll(children[edgeID].getAllMergePartners(rep));
+            }
+        });*/
         return ret;
     }
+    
+    /*private IntList getAllMergePartners(IntList remainingNotInRep) {//does not quite work, since children are general MergePartnerFinder
+        IntList ret = new IntArrayList();
+        for (int i : remainingNotInRep) {
+            ret.addAll(children[global2LocalEdgeIDs[i]].getAllMergePartners(remainingNotInRep);
+        }
+    }*/
 
     @Override
     public void print(String prefix, int indent) {
