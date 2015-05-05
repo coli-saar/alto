@@ -24,6 +24,7 @@ class EdgeMPF extends MergePartnerFinder{
     private final int currentIndex;
     private final SGraphBRDecompositionAutomatonBottomUp auto;
     private final MergePartnerFinder[] children;
+    private final boolean[] childIsEdgeMPF;
     private final StorageMPF storeHere;
     private final int parentEdge;
     
@@ -37,6 +38,7 @@ class EdgeMPF extends MergePartnerFinder{
         }
         this.auto = auto;
         children = new MergePartnerFinder[local2GlobalEdgeIDs.length];
+        childIsEdgeMPF = new boolean[local2GlobalEdgeIDs.length];
         parentEdge = -1;
         storeHere = new StorageMPF(auto);
     }
@@ -47,6 +49,7 @@ class EdgeMPF extends MergePartnerFinder{
         this.currentIndex = currentIndex;
         this.auto = auto;
         children = new MergePartnerFinder[local2GlobalEdgeIDs.length - currentIndex];
+        childIsEdgeMPF = new boolean[local2GlobalEdgeIDs.length - currentIndex];
         this.parentEdge = parentEdge;
         storeHere = new StorageMPF(auto);
     }
@@ -76,9 +79,11 @@ class EdgeMPF extends MergePartnerFinder{
             MergePartnerFinder targetChild = children[childIndex];
             if (targetChild == null) {
                 if (currentIndex == local2GlobalEdgeIDs.length - 1) {
+                    childIsEdgeMPF[childIndex]=false;
                     targetChild = new StorageMPF(auto);
                 } else {
                     targetChild = new EdgeMPF(local2GlobalEdgeIDs, global2LocalEdgeIDs, localEdgeID, auto, nextEdge);
+                    childIsEdgeMPF[childIndex]=true;
                 }
                 children[childIndex] = targetChild;
             }
@@ -91,11 +96,24 @@ class EdgeMPF extends MergePartnerFinder{
     @Override
     public IntList getAllMergePartners(int rep) {
         IntList ret = new IntArrayList();
-        ret.addAll(storeHere.getAllMergePartners(rep));
-        for (int i = 0; i < children.length; i++) {
-            if (children[i] != null && !auto.getStateForId(rep).getInBoundaryEdges().contains(local2GlobalEdgeIDs[i+currentIndex+1])) {//this is not optimized yet! this does not give the theoretic result.
-                ret.addAll(children[i].getAllMergePartners(rep));
+        IntList repNonEdgesLocal = new IntArrayList();
+        BoundaryRepresentation bRep = auto.getStateForId(rep);
+        for (int localID = 0; localID<local2GlobalEdgeIDs.length; localID++) {
+            if (!bRep.getInBoundaryEdges().contains(local2GlobalEdgeIDs[localID])) {
+                repNonEdgesLocal.add(localID);
             }
+        }
+        ret.addAll(storeHere.getAllMergePartners(rep));
+        int listIndex = 0;
+        for (int i : repNonEdgesLocal) {
+            if (children[i] != null) {
+                if (childIsEdgeMPF[i]) {
+                    ret.addAll(((EdgeMPF)children[i]).getAllMergePartners(rep, repNonEdgesLocal.subList(listIndex+1, repNonEdgesLocal.size())));
+                } else {
+                    ret.addAll(children[i].getAllMergePartners(rep));
+                }
+            }
+            listIndex++;
         }
         /*auto.getStateForId(rep).getInBoundaryEdges().forEach(edgeID -> {
             if (children[edgeID] != null) {
@@ -105,12 +123,23 @@ class EdgeMPF extends MergePartnerFinder{
         return ret;
     }
     
-    /*private IntList getAllMergePartners(IntList remainingNotInRep) {//does not quite work, since children are general MergePartnerFinder
+    private IntList getAllMergePartners(int rep, IntList remainingRepNonEdgesLocal) {//does not quite work, since children are general MergePartnerFinder
         IntList ret = new IntArrayList();
-        for (int i : remainingNotInRep) {
-            ret.addAll(children[global2LocalEdgeIDs[i]].getAllMergePartners(remainingNotInRep);
+        ret.addAll(storeHere.getAllMergePartners(rep));
+        int listIndex = 0;
+        for (int i : remainingRepNonEdgesLocal) {
+            int childID = i-currentIndex-1;
+            if (children[childID]!= null) {
+                if (childIsEdgeMPF[childID]) {
+                    ret.addAll(((EdgeMPF)children[childID]).getAllMergePartners(rep, remainingRepNonEdgesLocal.subList(listIndex+1, remainingRepNonEdgesLocal.size())));
+                } else {
+                    ret.addAll(children[childID].getAllMergePartners(rep));
+                }
+            }
+            listIndex++;
         }
-    }*/
+        return ret;
+    }
 
     @Override
     public void print(String prefix, int indent) {
