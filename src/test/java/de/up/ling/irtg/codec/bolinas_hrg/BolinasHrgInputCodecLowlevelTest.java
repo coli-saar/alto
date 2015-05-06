@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph_teichmann
  */
-public class BolinasHrgInputCodecTest {
+public class BolinasHrgInputCodecLowlevelTest {
     
     
     private final static String LINE =
@@ -32,7 +32,7 @@ public class BolinasHrgInputCodecTest {
      */
     @Test
     public void testCreate() throws Exception {
-        InterpretedTreeAutomaton ita = BolinasHrgInputCodec.create(LINE);
+        InterpretedTreeAutomaton ita = new BolinasHrgInputCodec().read(LINE);
         
         Homomorphism  hom = ita.getInterpretation("Graph").getHomomorphism();
         

@@ -24,6 +24,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,6 +47,15 @@ import org.antlr.v4.runtime.tree.TerminalNode;
  * one or two endpoints. Edges with one endpoint are translated into loops.
  * Nonterminal hyperedges are treated differently, and may still have an
  * arbitrary number of endpoints.<p>
+ * 
+ * The codec allows you to specify external nodes of the graph on the right-hand
+ * side of a rule either with an anonymous marker (".*") or with an explicit marker ("*.2").
+ * The Bolinas documentation does not specify precisely how anonymous and explicit
+ * markers can be mixed, so we recommend against mixing both kinds in the same rule.
+ * Anonymous markers are translated into external nodes in ascending order, from
+ * left to right in the rule. Explicit markers are translated into external nodes
+ * in ascending order; note that it is okay to use e.g. *.1 and *.3 but not *.2.
+ * The root of the RHS graph is always translated into the first external node.<p>
  *
  * A note of caution: This class is not thread-safe. If you want to use it in a
  * multi-threaded environment, you should make a separate codec object for each
@@ -82,11 +92,11 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
     
     
-
-    public static InterpretedTreeAutomaton create(String input) throws IOException {
-        InputStream is = new ByteArrayInputStream(input.getBytes());
-        return new BolinasHrgInputCodec().read(is);
-    }
+//   // why does this method exist? see InputCodec#read
+//    public static InterpretedTreeAutomaton create(String input) throws IOException {
+//        InputStream is = new ByteArrayInputStream(input.getBytes());
+//        return new BolinasHrgInputCodec().read(is);
+//    }
 
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws ParseException, IOException {
@@ -308,13 +318,17 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         // iterate over term and write HRG rule into ret, storing external nodenames
         nextMarker = 0;
         String nodename = doTerm(ruleContext.term(), ret, externalNodeNames, nameToNode);
-        externalNodeNames.put(-1, nodename);
+        externalNodeNames.put(-100, nodename);  // root node is always the first in the list of external nodes
 
         // build LHS nonterminal with endpoints
         String lhsNonterminalSymbol = ruleContext.nonterminal().getText();
-        List<String> listOfExternalNodes = new ArrayList<>();
-        for (int i = 0; i < externalNodeNames.size(); i++) {
-            listOfExternalNodes.add(externalNodeNames.get(i - 1));
+        
+        List<Integer> markers = new ArrayList<>(externalNodeNames.keySet());  // sort the node markers that were used in the RHS
+        Collections.sort(markers);
+        
+        List<String> listOfExternalNodes = new ArrayList<>(); // create external nodes, in ascending order of node markers (note they need not be contiguous numbers)
+        for (int i = 0; i < markers.size(); i++) {
+            listOfExternalNodes.add(externalNodeNames.get(markers.get(i)));
         }
 
         NonterminalWithHyperedge lhs = new NonterminalWithHyperedge(lhsNonterminalSymbol, listOfExternalNodes);
@@ -377,7 +391,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             if( n == null ) {
                 externalNodeNames.put(nextMarker++, nodename);
             } else {
-                externalNodeNames.put(Integer.parseInt(n.getText())-1, nodename);
+                externalNodeNames.put(Integer.parseInt(n.getText()), nodename);
             }
             
             
