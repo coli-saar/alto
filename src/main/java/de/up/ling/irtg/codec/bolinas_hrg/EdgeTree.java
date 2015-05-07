@@ -100,11 +100,23 @@ class EdgeTree {
         first = et1;
         second = et2;
         
-        this.nodes = new TreeSet<>(et1.nodes);
+        this.nodes = new TreeSet<>();
         
-        this.nodes.addAll(et2.nodes);
+        for(String node : et1.nodes)
+        {
+            if(outer.contains(node) || !et2.nodes.contains(node))
+            {
+                nodes.add(node);
+            }
+        }
         
-        this.nodes.retainAll(outer);
+        for(String node : et2.nodes)
+        {
+            if(outer.contains(node) || !et1.nodes.contains(node))
+            {
+                nodes.add(node);
+            }
+        }
     }
     
     /**

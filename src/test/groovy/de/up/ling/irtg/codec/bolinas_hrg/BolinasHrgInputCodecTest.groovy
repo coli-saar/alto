@@ -89,7 +89,7 @@ N_2 -> (. :ARG1 .*2 ); 0.112
     }
 
     @Test
-    public void testBoyGirl()
+    public void testWideGrammar()
     {
         InterpretedTreeAutomaton irtg = phrg(BOY_GIRL_GRAMMAR);
         
@@ -100,29 +100,9 @@ N_2 -> (. :ARG1 .*2 ); 0.112
         //TODO
     } 
     
-    /**
-     * Example Grammar taken from the bolinas toolkit. The original license
-     * agreement statement from the bolinas toolkit (applicable only to the string assigned to BOY_GIRL_GRAMMAR)
-     * is as follows:
-     * 
-     * Bolinas is provided under the MIT License (MIT)
-     *
-     * Copyright (C) 2013 Jacob Andreas, Daniel Bauer, David Chiang, Karl Moritz Hermann, Kevin Knight
-     *
-     * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-     *
-     * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-     *
-     * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    */
-    private static final BOY_GIRL_GRAMMAR = """# Example from Figure 3
-T -> (. :want' :arg0 (x. :E\$) :arg1 (. :T\$ x.));
-T -> (. :believe' :arg0 (. :girl') :arg1 (. :T\$ .*)); 
-T -> (. :want' :arg1 .*);
-E -> (. :boy');
-
-#Example from Figure 4
-T -> (. :want' :arg0 (x. :E\$) :arg1 (. :X\$ x.));
-X -> (. :believe' :arg0 (x. :girl') :arg1 (. :Y\$ x. .*)); 
-Y -> (. :want' :arg0 .*2 :arg1 .*1);""";
+    //TODO add tests that check for problem with c
+    private static final BOY_GIRL_GRAMMAR = '''T -> (a. :believe' :arg0 (x. :girl') :arg1 (b. :T$ x. c.*)); ''';
+    
+    private static final testGraph = '''
+    '''
 }
