@@ -91,7 +91,7 @@ N_2 -> (. :ARG1 .*2 ); 0.112
     @Test
     public void testWideGrammar()
     {
-        InterpretedTreeAutomaton irtg = phrg(BOY_GIRL_GRAMMAR);
+        InterpretedTreeAutomaton irtg = phrg(WIDE_GRAMMAR);
         
         assertEquals(irtg.getAutomaton().getFinalStates().size(),1);
         
@@ -101,7 +101,11 @@ N_2 -> (. :ARG1 .*2 ); 0.112
     } 
     
     //TODO add tests that check for problem with c
-    private static final BOY_GIRL_GRAMMAR = '''T -> (a. :believe' :arg0 (x. :girl') :arg1 (b. :T$ x. c.*)); ''';
+    private static final WIDE_GRAMMAR = '''#COMMENT
+T -> (. :want' :arg0 (x. :E$) :arg1 (. :T$ x.));
+T -> (a. :believe' :arg0 (x. :girl') :arg1 (b. :T$ x. c.*));
+T -> (. :want' :arg0 .*1 :arg1 .*2 );
+E -> (. :boy');''';
     
     private static final testGraph = '''
     '''
