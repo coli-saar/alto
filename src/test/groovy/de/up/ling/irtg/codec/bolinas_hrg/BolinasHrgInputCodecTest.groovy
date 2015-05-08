@@ -17,6 +17,8 @@ import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.up.ling.irtg.algebra.*;
+import de.up.ling.irtg.algebra.Algebra
+import de.up.ling.irtg.algebra.graph.GraphAlgebra
 import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
 
@@ -93,20 +95,14 @@ N_2 -> (. :ARG1 .*2 ); 0.112
     {
         InterpretedTreeAutomaton irtg = phrg(WIDE_GRAMMAR);
         
-        assertEquals(irtg.getAutomaton().getFinalStates().size(),1);
-        
-        
-        System.out.println(irtg.toString());
-        //TODO
+        assertEquals(irtg.getAutomaton().getFinalStates().size(),1);  
+        assertEquals(irtg.getAutomaton().countTrees(),1);
     } 
     
     //TODO add tests that check for problem with c
     private static final WIDE_GRAMMAR = '''#COMMENT
-T -> (. :want' :arg0 (x. :E$) :arg1 (. :T$ x.));
-T -> (a. :believe' :arg0 (x. :girl') :arg1 (b. :T$ x. c.*));
-T -> (. :want' :arg0 .*1 :arg1 .*2 );
-E -> (. :boy');''';
-    
-    private static final testGraph = '''
-    '''
+T -> (. :want :arg0 (x. :E$) :arg1 (. :T$ x.));
+T -> (a. :believe :arg0 (x. :girl) :arg1 (b. :T$ x. c.*));
+T -> (. :want :arg0 .*1 :arg1 .*2 );
+E -> (. :boy);''';
 }
