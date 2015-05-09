@@ -596,14 +596,13 @@ public class SGraph{
             visitedNodes.add(node.getName());
         }
     }
-
-    /**
-     * Returns a string representation of this s-graph.
-     * 
-     * @return 
-     */
-    @Override
-    public String toString() {
+    
+    
+    public static interface NodeRepresentationAppender {
+        public void append(GraphNode node, Set<String> visitedNodes, StringBuilder buf);
+    }
+    
+    public static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph, NodeRepresentationAppender nra) {
         StringBuilder buf = new StringBuilder();
         Set<String> visitedNodes = new HashSet<>();
 
@@ -613,9 +612,9 @@ public class SGraph{
                 buf.append("; ");
             }
 
-            appendFullRepr(edge.getSource(), visitedNodes, buf);
+            nra.append(edge.getSource(), visitedNodes, buf);
             buf.append(" -" + edge.getLabel() + "-> ");
-            appendFullRepr(edge.getTarget(), visitedNodes, buf);
+            nra.append(edge.getTarget(), visitedNodes, buf);
         }
 
         for (GraphNode node : graph.vertexSet()) {
@@ -626,13 +625,67 @@ public class SGraph{
                     buf.append("; ");
                 }
 
-                appendFullRepr(node, visitedNodes, buf);
+                nra.append(node, visitedNodes, buf);
             }
         }
 
         buf.append("]");
 
         return buf.toString();
+    }
+    
+    public static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph) {
+        return graphToString(graph, (node, visitedNodes, buf) -> {
+            buf.append(node.getName());
+
+            if (!visitedNodes.contains(node.getName())) {
+                if (node.getLabel() != null) {
+                    buf.append("/" + node.getLabel());
+                }
+
+                visitedNodes.add(node.getName());
+            }
+        });
+    }
+
+    /**
+     * Returns a string representation of this s-graph.
+     * 
+     * @return 
+     */
+    @Override
+    public String toString() {
+        return graphToString(graph, this::appendFullRepr);
+        
+//        StringBuilder buf = new StringBuilder();
+//        Set<String> visitedNodes = new HashSet<>();
+//
+//        buf.append("[");
+//        for (GraphEdge edge : graph.edgeSet()) {
+//            if (!visitedNodes.isEmpty()) {
+//                buf.append("; ");
+//            }
+//
+//            appendFullRepr(edge.getSource(), visitedNodes, buf);
+//            buf.append(" -" + edge.getLabel() + "-> ");
+//            appendFullRepr(edge.getTarget(), visitedNodes, buf);
+//        }
+//
+//        for (GraphNode node : graph.vertexSet()) {
+//            String nodename = node.getName();
+//
+//            if (!visitedNodes.contains(nodename)) {
+//                if (!visitedNodes.isEmpty()) {
+//                    buf.append("; ");
+//                }
+//
+//                appendFullRepr(node, visitedNodes, buf);
+//            }
+//        }
+//
+//        buf.append("]");
+//
+//        return buf.toString();
     }
 
     /**

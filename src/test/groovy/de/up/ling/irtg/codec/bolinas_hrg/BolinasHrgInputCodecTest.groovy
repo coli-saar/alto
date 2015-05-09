@@ -64,6 +64,27 @@ N_2 -> (. :ARG1 .*2 ); 0.112
         
         assertAmrInHrgLanguage(hrg, I_NEED_SHEEP)
     }
+
+    @Test
+    public void testWideGrammar() {
+        InterpretedTreeAutomaton irtg = phrg(WIDE_GRAMMAR);
+        
+        assertEquals(irtg.getAutomaton().getFinalStates().size(),1);  
+        assertEquals(irtg.getAutomaton().countTrees(),1);
+        
+        System.err.println(irtg)
+    } 
+    
+    @Test
+    public void testCGrammarLanguage() {
+        System.err.println("\n\n\nXXXXXXX\n\n");
+        assertAmrInHrgLanguage(CHRISTOPH_C_GRAMMAR, SMART_BOY_GIRL)
+    }
+    
+    
+    
+    
+    /************** utility functions ***************/
     
     
     /**
@@ -79,6 +100,16 @@ N_2 -> (. :ARG1 .*2 ); 0.112
   :ARG0 (i / i)
   :ARG1 (s / sheep))""";
     
+    private static final String SMART_BOY_GIRL = """
+       (a / want\n\
+        :arg0 (b / boy :mod (c / smart))
+	:arg1 (d / believe\n\
+                :arg0 (e / girl)\n\
+                :arg1 (f / want	\n\
+                        :arg0 (b)\n\
+                        :arg1 (b) )))
+""";
+    
     private void assertAmrInHrgLanguage(String hrg, String amr) {
         InterpretedTreeAutomaton irtg = phrg(hrg);        
         TreeAutomaton chart = irtg.parse(["Graph":amr])        
@@ -89,15 +120,6 @@ N_2 -> (. :ARG1 .*2 ); 0.112
         BolinasHrgInputCodec ic = new BolinasHrgInputCodec();
         return ic.read(hrg);
     }
-
-    @Test
-    public void testWideGrammar()
-    {
-        InterpretedTreeAutomaton irtg = phrg(WIDE_GRAMMAR);
-        
-        assertEquals(irtg.getAutomaton().getFinalStates().size(),1);  
-        assertEquals(irtg.getAutomaton().countTrees(),1);
-    } 
     
     //TODO add tests that check for problem with c
     private static final WIDE_GRAMMAR = '''#COMMENT
@@ -105,4 +127,12 @@ T -> (. :want :arg0 (x. :E$) :arg1 (. :T$ x.));
 T -> (a. :believe :arg0 (x. :girl) :arg1 (b. :T$ x. c.*));
 T -> (. :want :arg0 .*1 :arg1 .*2 );
 E -> (. :boy);''';
+    
+    private static final CHRISTOPH_C_GRAMMAR = '''#COMMENT
+T -> (. :want :arg0 (x. :E$) :arg1 (. :T$ x.));
+T -> (a. :believe :arg0 (x. :girl) :arg1 (b. :T$ c. c.*));
+T -> (. :want :arg0 .* :arg1 .* );
+E -> (. :boy :K$);
+K -> (. :mod .short :K$);
+K -> (. :mod .smart);''';
 }
