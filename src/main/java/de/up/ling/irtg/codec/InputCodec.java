@@ -7,9 +7,7 @@ package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.util.ProgressListener;
-import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -19,7 +17,7 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
- * An <i>input codec</i> for reading objects of
+ * An input codec for reading objects of
  * class <code>E</code> from an input stream.
  * 
  * @author koller

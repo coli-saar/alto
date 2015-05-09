@@ -26,7 +26,7 @@ import java.util.function.Predicate;
  *
  * @author koller
  */
-public class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
+class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
 
     private final List<Rule> rules;
     private boolean dirty;

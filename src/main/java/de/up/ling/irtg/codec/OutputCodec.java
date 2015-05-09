@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.ServiceLoader;
 
 /**
- *
+ * An output codec for writing objects of class <code>E</code>
+ * to an output stream in a specific format.
+ * 
  * @author koller
  */
 public abstract class OutputCodec<E> {

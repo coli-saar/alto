@@ -9,7 +9,7 @@ package de.up.ling.irtg.codec.bolinas_hrg;
  *
  * @author christoph_teichmann
  */
-public class StringSource {
+class StringSource {
     /**
      * 
      */

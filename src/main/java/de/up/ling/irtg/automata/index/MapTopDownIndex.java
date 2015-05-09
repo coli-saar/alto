@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * A top-down rule index that organizes the rules in a two-level
+ * hashmap. 
+ * 
  * @author koller
  */
 public class MapTopDownIndex implements TopDownRuleIndex, Serializable {

@@ -240,6 +240,9 @@
         <version>2.9.1</version>
         <configuration>
           <excludePackageNames>de.up.ling.irtg.algebra.lambda:de.up.ling.irtg.maxent</excludePackageNames>
+	  <sourceFileExcludes>
+	    <sourceFileExclude>**/de/up/ling/irtg/codec/*Listener*</sourceFileExclude>
+	  </sourceFileExcludes>
 
           <show>public</show>
 
@@ -253,8 +256,8 @@
               <location>http://fastutil.di.unimi.it/docs/</location>
             </offlineLink>
             <offlineLink>
-              <url>https://irtg.ci.cloudbees.com/job/basics/javadoc/</url>
-              <location>https://irtg.ci.cloudbees.com/job/basics/javadoc/</location>
+              <url>http://tcl.ling.uni-potsdam.de/jenkins/job/basics/javadoc</url>
+              <location>http://tcl.ling.uni-potsdam.de/jenkins/job/basics/javadoc</location>
             </offlineLink>
             <offlineLink>
               <url>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</url>

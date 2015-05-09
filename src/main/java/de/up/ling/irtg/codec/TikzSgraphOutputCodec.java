@@ -15,7 +15,16 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 /**
- *
+ * An output codec that encodes s-graphs as Latex code, using
+ * the <a href="http://www.texample.net/tikz/">TikZ</a> package.
+ * You can copy and poste the generated code into your Latex document
+ * and have it typeset.<p>
+ * 
+ * The generated TikZ code relies on TikZ's graph layout capabilities,
+ * and requires that you compile your document with <a href-"http://www.luatex.org/">Luatex</a>.
+ * Alternatively, you can remove the "layered layout" option from the tikzpicture
+ * and specify the node coordinates by hand.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "tikz-sgraph", description = "tikz-sgraph", type = SGraph.class)

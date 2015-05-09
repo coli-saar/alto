@@ -27,7 +27,8 @@ import org.jgrapht.alg.FloydWarshallShortestPaths;
 
 /**
  * An output codec for storing an s-graph in a format that
- * the Bolinas tool can read.
+ * the <a href="http://www.isi.edu/publications/licensed-sw/bolinas/">Bolinas tool</a>
+ * can read.
  * 
  * @author koller
  */
@@ -100,19 +101,20 @@ public class BolinasGraphOutputCodec extends OutputCodec<SGraph> {
 
     /**
      * Reads an AMR-Bank from a file and outputs it in Bolinas format.
+     * The input filename is given as the first command-line argument;
      * 
      * @param args
      * @throws ParseException
      * @throws IOException 
      */
     public static void main(String[] args) throws ParseException, IOException {
-        Reader corpusReader = new FileReader("corpora-and-grammars/corpora/amr-bank-v1.3.txt");
+        Reader corpusReader = new FileReader(args[1]);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         List<IrtgInducer.TrainingInstance> corpus = inducer.getCorpus();
         
         BolinasGraphOutputCodec oc = new BolinasGraphOutputCodec();
         
-        OutputStream o = new FileOutputStream("corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt");
+        OutputStream o = new FileOutputStream(args[1]);
         
         for( IrtgInducer.TrainingInstance inst : corpus ) {
             oc.write(inst.graph, o);

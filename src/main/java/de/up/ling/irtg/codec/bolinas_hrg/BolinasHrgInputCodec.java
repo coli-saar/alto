@@ -38,13 +38,30 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
  * An input codec for reading hyperedge replacement grammars (HRGs) in the input
- * format for the Bolinas parser. The codec reads a monolingual graph grammar
- * and converts it into an IRTG with a single interpretation over the {@link GraphAlgebra}
- * .<p>
+ * format for the <a href="http://www.isi.edu/publications/licensed-sw/bolinas/">Bolinas parser</a>. 
+ * The codec reads a monolingual graph grammar
+ * and converts it into an IRTG with a single interpretation, called "Graph",
+ * over the {@link GraphAlgebra}.<p>
  *
  * Because the graph algebra only represents graphs (and not hypergraphs), the
- * conversion will only be successful if every ordinary edge in the rules has
- * one or two endpoints. Edges with one endpoint are translated into loops.
+ * conversion will only be successful if every ordinary hyperedge in the rules (i.e.,
+ * every hyperedge that is not labeled with a nonterminal) has
+ * one or two endpoints. These hyperedges are translated as follows:
+ * <ul>
+ *   <li> Hyperedges with two endpoints are translated into ordinary labeled edges.</li>
+ *   <li> By default, hyperedges with a single endpoint (and label L) are translated 
+ * into node labels (i.e., the source node of the edge is taken to carry the
+ * label L).</li>
+ *   <li> You can call {@link #setConvertUnaryEdgesToNodeLabels(boolean) } to switch
+ * to a behavior where hyperedges with a single endpoint are translated into loops,
+ * i.e. into edges from the source node to itself with the given edge label.</li>
+ * </ul><p>
+ * 
+ * Whether you want the loop encoding of unary edges or the node label encoding
+ * depends on how you represent node labels in the graphs you're trying to parse.
+ * The unmodified AMR-Bank uses node labels, which is why the node-label encoding
+ * is the default behvior of the codec.<p>
+ * 
  * Nonterminal hyperedges are treated differently, and may still have an
  * arbitrary number of endpoints.<p>
  * 
@@ -78,15 +95,30 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     private int nextMarker;
 
-    public static void main(String[] args) throws Exception {
-        InputStream is = new ByteArrayInputStream(TEST.getBytes());
-        InterpretedTreeAutomaton irtg = new BolinasHrgInputCodec().read(is);
-    }
+//    public static void main(String[] args) throws Exception {
+//        InputStream is = new ByteArrayInputStream(TEST.getBytes());
+//        InterpretedTreeAutomaton irtg = new BolinasHrgInputCodec().read(is);
+//    }
 
+    /**
+     * Returns the current behavior with respect to encoding non-nonterminal
+     * unary hyperedges.
+     * 
+     * @see #setConvertUnaryEdgesToNodeLabels(boolean) 
+     * @return 
+     */
     public boolean isConvertUnaryEdgesToNodeLabels() {
         return convertUnaryEdgesToNodeLabels;
     }
 
+    /**
+     * Select how the codec should encode non-nonterminal hyperedges with single endpoints.
+     * If the argument is "true" (the default), unary hyperedges are encoded as
+     * node labels. If the argument is "false", unary hyperedges are encoded as
+     * labeled loops.
+     * 
+     * @param convertUnaryEdgesToNodeLabels 
+     */
     public void setConvertUnaryEdgesToNodeLabels(boolean convertUnaryEdgesToNodeLabels) {
         this.convertUnaryEdgesToNodeLabels = convertUnaryEdgesToNodeLabels;
     }

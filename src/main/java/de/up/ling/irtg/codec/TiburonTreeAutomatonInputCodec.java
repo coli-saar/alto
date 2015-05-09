@@ -20,8 +20,10 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 
 /**
  * A codec for reading weighted tree automata in the format used by
- * the Tiburon toolkit (http://www.isi.edu/licensed-sw/tiburon/).
- * The rules have the following form:
+ * the <a href="http://www.isi.edu/licensed-sw/tiburon/">Tiburon toolkit</a>,
+ * a tool for working with tree automata from ISI.
+ * The rules have the following form:<p>
+ * 
  * <pre>q -> NP(x1 x2)  # 0.8</pre>
  * 
  * where q, x1, and x2 are states and NP is a terminal symbol. The
