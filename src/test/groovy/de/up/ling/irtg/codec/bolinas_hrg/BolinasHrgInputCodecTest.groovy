@@ -75,7 +75,7 @@ N_2 -> (. :ARG1 .*2 ); 0.112
         System.err.println(irtg)
     } 
     
-    @Test
+    //@Test
     public void testCGrammarLanguage() {
         System.err.println("\n\n\nXXXXXXX\n\n");
         assertAmrInHrgLanguage(CHRISTOPH_C_GRAMMAR, SMART_BOY_GIRL)
