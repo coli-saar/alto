@@ -449,12 +449,12 @@ public class ParseTester {
                 Logger.getLogger(ParseTester.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (printOutput) {
-            if (useTopDown) {
+            /*if (useTopDown) {
                 for (Object o: rhs.getStateInterner().getKnownObjects()) {
                     BRepTopDown br = (BRepTopDown)o;
                     br.writeStats();
                 }
-            }
+            }*/
             long languageSize;
             if (computeLanguageSize) {
                 languageSize = chart.countTrees();
