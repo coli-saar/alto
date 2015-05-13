@@ -21,6 +21,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -33,7 +34,7 @@ import java.util.Set;
 public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositionAutomatonMPFTrusting {
 
     
-    private boolean actuallyWrite = false;
+    private boolean actuallyWrite = true;
     
     
     private final int flushThreshold = 10000;
@@ -386,6 +387,7 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
                 }
                 if (actuallyWrite) {
                     writeRule(it.next());
+                    writer.flush();
                 } else {
                     it.next();
                 }
@@ -402,28 +404,21 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
     public static void main(String[] args) throws Exception {
         Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
         IrtgInducer inducer = new IrtgInducer(corpusReader);
-        GraphAlgebra graphAlgebra = new GraphAlgebra();
-        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
-        ));
-        //Writer resWriter = new FileWriter("logs/fromKetos/DecompFinalStatesFoundComplete2");
-        //resWriter.write("success, i, origNumber\n");
-        for (int i = 1551; i<1552; i++) {
+        //inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
+        //));
+        
+        
+        
+        for (int i = 2; i<3; i++) {
             System.out.println(i);
             IrtgInducer.TrainingInstance instance = inducer.getCorpus().get(i);
             GraphAlgebra alg = new GraphAlgebra();
             BRUtil.makeIncompleteDecompositionAlgebra(alg, instance.graph, 3);
-            Writer rtgWriter = new StringWriter();
+            Writer rtgWriter = new PrintWriter(System.err);
             SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.writeCompleteDecompositionAutomaton(instance.graph, rtgWriter);
             rtgWriter.close();
             
             System.out.println(String.valueOf(auto.ruleCount));
-            /*if (auto.foundFinalState) {
-                resWriter.write("1");
-            } else {
-                resWriter.write("0");
-            }
-            resWriter.write(","+i+","+instance.id+"\n");
-            resWriter.flush();*/
         }
         
         //resWriter.close();

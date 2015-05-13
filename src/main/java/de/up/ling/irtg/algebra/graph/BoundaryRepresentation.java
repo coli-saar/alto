@@ -540,7 +540,7 @@ public class BoundaryRepresentation {
      */
     public boolean isMergeableMPF(BoundaryRepresentation other) {
         return (commonNodesHaveCommonSourceNames(other)
-                //&& hasCommonSourceNode(other)// always true with current MPF!
+                && hasCommonSourceNode(other)// NOT always true with current MPF!
                 //&& sourceNodesAgree(other)// always true with MPF!
                 && edgesDisjoint(other) //always true with edge-MPF! //may be false when using multiple sources!
                 && !hasSourcesInsideOther(other)
