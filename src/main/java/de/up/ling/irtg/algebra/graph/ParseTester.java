@@ -87,15 +87,16 @@ public class ParseTester {
         //countNodesAndDegrees();
         
         
-        if (args.length < 9) {
-            System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibel (type 'bol') or all (type 'all') graphs.");
+        if (args.length < 10) {
+            System.out.println("This method needs 10 arguments: First is choosing between only bolinas compatibel (type 'bol') or all (type 'all') graphs.");
             System.out.println("Second is 'bottomup' or 'topdown'");
             System.out.println("Third is how the corpus should be sorted. 'n' for node count, 'd' for degree (and nodecount within degree), 'no' for n sorting.");
             System.out.println("Fourth and fifth are the start and stop number of which graphs to parse.");
             System.out.println("Sixth is the number of graphs to parse at warmup.");
             System.out.println("Seventh is the number of iterations per graph.");
             System.out.println("Eighth is 'true' to compute language sizes, 'false' otherwise.");
-            System.out.println("Last argument is the grammar to use for parsing (Corpus is always amr bank 1.3)");
+            System.out.println("Ninth argument is the grammar to use for parsing");
+            System.out.println("Last argument is the path of the corpus to be parsed");
         } else {
             try {
                 componentWriter = new FileWriter("COMPONENTS_"+args[0]+"_"+args[1]+"_"+args[3]+"_"+args[4]);
@@ -122,14 +123,17 @@ public class ParseTester {
                     parseAll(start, stop, warmupStop, internalIterations);
                 }
             } catch (java.lang.Exception e) {
-                System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibal (type 'bol') or all (type 'all') graphs.");
+                System.out.println("AN ERROR OCCURED: "+e.toString());
+                System.out.println();
+                System.out.println("This method needs 10 arguments: First is choosing between only bolinas compatibel (type 'bol') or all (type 'all') graphs.");
                 System.out.println("Second is 'bottomup' or 'topdown'");
                 System.out.println("Third is how the corpus should be sorted. 'n' for node count, 'd' for degree (and nodecount within degree), 'no' for n sorting.");
                 System.out.println("Fourth and fifth are the start and stop number of which graphs to parse.");
                 System.out.println("Sixth is the number of graphs to parse at warmup.");
                 System.out.println("Seventh is the number of iterations per graph.");
                 System.out.println("Eighth is 'true' to compute language sizes, 'false' otherwise.");
-                System.out.println("Last argument is the grammar to use for parsing (Corpus is always amr bank 1.3)");
+                System.out.println("Ninth argument is the grammar to use for parsing");
+                System.out.println("Last argument is the path of the corpus to be parsed");
             }
         }
        
