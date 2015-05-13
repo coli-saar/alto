@@ -387,7 +387,6 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
                 }
                 if (actuallyWrite) {
                     writeRule(it.next());
-                    writer.flush();
                 } else {
                     it.next();
                 }
@@ -402,19 +401,28 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
 
     //finds out which parses have a final state, set actuallyWrite to false for that.
     public static void main(String[] args) throws Exception {
-        Reader corpusReader = new FileReader("corpora/amr-bank-v1.3.txt");
+        if (args.length<5) {
+            System.out.println("Need four arguments: corpusPath sourceCount startIndex stopIndex targetFolderPath");
+            return;
+        }
+        String corpusPath = args[0];
+        int sourceCount = Integer.valueOf(args[1]);
+        int start = Integer.valueOf(args[2]);
+        int stop = Integer.valueOf(args[3]);
+        String targetPath = args[4];
+        Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
-        //inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
-        //));
+        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
+        ));
         
         
         
-        for (int i = 2; i<3; i++) {
+        for (int i = start; i<stop; i++) {
             System.out.println(i);
             IrtgInducer.TrainingInstance instance = inducer.getCorpus().get(i);
             GraphAlgebra alg = new GraphAlgebra();
-            BRUtil.makeIncompleteDecompositionAlgebra(alg, instance.graph, 3);
-            Writer rtgWriter = new PrintWriter(System.err);
+            BRUtil.makeIncompleteDecompositionAlgebra(alg, instance.graph, sourceCount);
+            Writer rtgWriter = new FileWriter(targetPath+String.valueOf(instance.id)+".rtg");
             SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.writeCompleteDecompositionAutomaton(instance.graph, rtgWriter);
             rtgWriter.close();
             
