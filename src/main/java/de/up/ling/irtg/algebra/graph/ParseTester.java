@@ -48,7 +48,7 @@ public class ParseTester {
     static public boolean useTopDown = false;
     static String sortBy = "n";
     static boolean computeLanguageSize = true;
-    static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
+    static String corpusPath;
     static String grammarPath = 
             //"corpora-and-grammars/grammars/sgraph_bolinas_comparison/larger_grammar/rulesLexicalized.txt";
             //"corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
@@ -108,6 +108,7 @@ public class ParseTester {
                 computeLanguageSize = Boolean.parseBoolean(args[7]);
                 System.out.println(computeLanguageSize);
                 grammarPath = args[8];
+                corpusPath = args[9];
                 useTopDown = args[1].equals("topdown");
                 if (args[0].equals("bol")) {
                     System.out.println("Now parsing bolinas compatible from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (useTopDown ? "top down" : "bottom up"));
@@ -265,8 +266,8 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             //runningNumber = 0;
-            averageLogger = new AverageLogger();
-            averageLogger.activate();
+            //averageLogger = new AverageLogger();
+            //averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
                 System.out.println("i = " + i);
@@ -338,8 +339,8 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             runningNumber = 0;
-            averageLogger = new AverageLogger();
-            averageLogger.activate();
+            //averageLogger = new AverageLogger();
+            //averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
                 System.out.println("i = " + i);
