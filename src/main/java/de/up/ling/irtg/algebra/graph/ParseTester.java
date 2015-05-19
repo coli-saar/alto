@@ -45,7 +45,6 @@ public class ParseTester {
     static int runningNumber = 0;
     static String logDescription = "TOPDOWNSubtreesTypeds";
     
-    static public boolean useTopDown = false;
     static String sortBy = "n";
     static boolean computeLanguageSize = true;
     static String corpusPath;
@@ -109,9 +108,9 @@ public class ParseTester {
                 System.out.println(computeLanguageSize);
                 grammarPath = args[8];
                 corpusPath = args[9];
-                useTopDown = args[1].equals("topdown");
+                GraphAlgebra.useTopDownAutomaton = args[1].equals("topdown");
                 if (args[0].equals("bol")) {
-                    System.out.println("Now parsing bolinas compatible from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (useTopDown ? "top down" : "bottom up"));
+                    System.out.println("Now parsing bolinas compatible from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (GraphAlgebra.useTopDownAutomaton ? "top down" : "bottom up"));
                     parseBolinasCompatible(start, stop, warmupStop, internalIterations);
                 } else if (args[0].equals("count")) {
                     System.out.println("now counting degrees");
@@ -120,7 +119,7 @@ public class ParseTester {
                     System.out.println("now counting average numbers");
                     getAverages(start, stop);
                 } else {
-                    System.out.println("Now parsing all graphs from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (useTopDown ? "top down" : "bottom up"));
+                    System.out.println("Now parsing all graphs from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (GraphAlgebra.useTopDownAutomaton ? "top down" : "bottom up"));
                     parseAll(start, stop, warmupStop, internalIterations);
                 }
             } catch (java.lang.Exception e) {
@@ -620,9 +619,9 @@ public class ParseTester {
             //System.out.println(ti.graph.toIsiAmrString());
             Map<String, Object> input = new HashMap<>();
             input.put("int", ti.graph);
-            useTopDown = true;
+            GraphAlgebra.useTopDownAutomaton = true;
             long languageSize1 = irtg.parseInputObjects(input).countTrees();
-            useTopDown = false;
+            GraphAlgebra.useTopDownAutomaton = false;
             long languageSize2 = irtg.parseInputObjects(input).countTrees();
             long diff = languageSize1-languageSize2;
             if (diff != 0) {
