@@ -9,6 +9,7 @@ package de.up.ling.irtg.codec.bolinas_hrg;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphEdgeFactory;
 import de.up.ling.irtg.algebra.graph.GraphNode;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import java.util.ArrayList;
 import java.util.List;
 import org.jgrapht.DirectedGraph;
@@ -59,6 +60,6 @@ class BolinasRule {
 
     @Override
     public String toString() {
-        return lhsNonterminal + " -> " + rhsGraph + " " + rhsNonterminals + " {" + weight + "}";
+        return lhsNonterminal + " -> " + SGraph.graphToString(rhsGraph) + " " + rhsNonterminals + " {" + weight + "}";
     }
 }

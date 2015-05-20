@@ -13,7 +13,11 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 /**
- *
+ * An output codec that encodes Tree objects as Latex code,
+ * using the the <a href="https://www.ctan.org/pkg/tikz-qtree">tikz-qtree</a>
+ * package. You can copy and paste this code into your Latex
+ * document and have it typeset.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "tikz-qtree", description = "tikz-qtree", type = Tree.class)

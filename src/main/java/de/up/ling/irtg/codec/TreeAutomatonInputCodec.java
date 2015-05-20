@@ -17,7 +17,19 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 /**
- *
+ * An input codec that reads a top-down tree automaton.
+ * Rules take the following form:<p>
+ * 
+ * <pre>
+ * S! -> r(NP, VP) [0.3]
+ * </pre>
+ * 
+ * where S, NP, and VP are states and r is a terminal symbol.
+ * S is a final state, as indicated by the exclamation mark.
+ * Each rule can optionally be assigned a weight in square brackets;
+ * in the example, the weight is 0.3. Rules that do not have an
+ * explicit weight get a default weight of 1.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "auto", description = "Tree automata", extension = "auto", type = TreeAutomaton.class)

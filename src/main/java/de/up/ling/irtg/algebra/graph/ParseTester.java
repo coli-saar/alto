@@ -45,10 +45,9 @@ public class ParseTester {
     static int runningNumber = 0;
     static String logDescription = "TOPDOWNSubtreesTypeds";
     
-    static public boolean useTopDown = false;
     static String sortBy = "n";
     static boolean computeLanguageSize = true;
-    static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
+    static String corpusPath;
     static String grammarPath = 
             //"corpora-and-grammars/grammars/sgraph_bolinas_comparison/larger_grammar/rulesLexicalized.txt";
             //"corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
@@ -87,15 +86,16 @@ public class ParseTester {
         //countNodesAndDegrees();
         
         
-        if (args.length < 9) {
-            System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibel (type 'bol') or all (type 'all') graphs.");
+        if (args.length < 10) {
+            System.out.println("This method needs 10 arguments: First is choosing between only bolinas compatibel (type 'bol') or all (type 'all') graphs.");
             System.out.println("Second is 'bottomup' or 'topdown'");
             System.out.println("Third is how the corpus should be sorted. 'n' for node count, 'd' for degree (and nodecount within degree), 'no' for n sorting.");
             System.out.println("Fourth and fifth are the start and stop number of which graphs to parse.");
             System.out.println("Sixth is the number of graphs to parse at warmup.");
             System.out.println("Seventh is the number of iterations per graph.");
             System.out.println("Eighth is 'true' to compute language sizes, 'false' otherwise.");
-            System.out.println("Last argument is the grammar to use for parsing (Corpus is always amr bank 1.3)");
+            System.out.println("Ninth argument is the grammar to use for parsing");
+            System.out.println("Last argument is the path of the corpus to be parsed");
         } else {
             try {
                 componentWriter = new FileWriter("COMPONENTS_"+args[0]+"_"+args[1]+"_"+args[3]+"_"+args[4]);
@@ -107,9 +107,10 @@ public class ParseTester {
                 computeLanguageSize = Boolean.parseBoolean(args[7]);
                 System.out.println(computeLanguageSize);
                 grammarPath = args[8];
-                useTopDown = args[1].equals("topdown");
+                corpusPath = args[9];
+                GraphAlgebra.useTopDownAutomaton = args[1].equals("topdown");
                 if (args[0].equals("bol")) {
-                    System.out.println("Now parsing bolinas compatible from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (useTopDown ? "top down" : "bottom up"));
+                    System.out.println("Now parsing bolinas compatible from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (GraphAlgebra.useTopDownAutomaton ? "top down" : "bottom up"));
                     parseBolinasCompatible(start, stop, warmupStop, internalIterations);
                 } else if (args[0].equals("count")) {
                     System.out.println("now counting degrees");
@@ -118,18 +119,21 @@ public class ParseTester {
                     System.out.println("now counting average numbers");
                     getAverages(start, stop);
                 } else {
-                    System.out.println("Now parsing all graphs from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (useTopDown ? "top down" : "bottom up"));
+                    System.out.println("Now parsing all graphs from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (GraphAlgebra.useTopDownAutomaton ? "top down" : "bottom up"));
                     parseAll(start, stop, warmupStop, internalIterations);
                 }
             } catch (java.lang.Exception e) {
-                System.out.println("This method needs 6 arguments: First is choosing between only bolinas compatibal (type 'bol') or all (type 'all') graphs.");
+                System.out.println("AN ERROR OCCURED: "+e.toString());
+                System.out.println();
+                System.out.println("This method needs 10 arguments: First is choosing between only bolinas compatibel (type 'bol') or all (type 'all') graphs.");
                 System.out.println("Second is 'bottomup' or 'topdown'");
                 System.out.println("Third is how the corpus should be sorted. 'n' for node count, 'd' for degree (and nodecount within degree), 'no' for n sorting.");
                 System.out.println("Fourth and fifth are the start and stop number of which graphs to parse.");
                 System.out.println("Sixth is the number of graphs to parse at warmup.");
                 System.out.println("Seventh is the number of iterations per graph.");
                 System.out.println("Eighth is 'true' to compute language sizes, 'false' otherwise.");
-                System.out.println("Last argument is the grammar to use for parsing (Corpus is always amr bank 1.3)");
+                System.out.println("Ninth argument is the grammar to use for parsing");
+                System.out.println("Last argument is the path of the corpus to be parsed");
             }
         }
        
@@ -261,8 +265,8 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             //runningNumber = 0;
-            averageLogger = new AverageLogger();
-            averageLogger.activate();
+            //averageLogger = new AverageLogger();
+            //averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
                 System.out.println("i = " + i);
@@ -334,8 +338,8 @@ public class ParseTester {
 
         for (int j = 0; j < iterations; j++) {
             runningNumber = 0;
-            averageLogger = new AverageLogger();
-            averageLogger.activate();
+            //averageLogger = new AverageLogger();
+            //averageLogger.activate();
             //averageLogger.deactivate();
             for (int i = start; i < stop; i++) {
                 System.out.println("i = " + i);
@@ -449,12 +453,12 @@ public class ParseTester {
                 Logger.getLogger(ParseTester.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (printOutput) {
-            if (useTopDown) {
+            /*if (useTopDown) {
                 for (Object o: rhs.getStateInterner().getKnownObjects()) {
                     BRepTopDown br = (BRepTopDown)o;
                     br.writeStats();
                 }
-            }
+            }*/
             long languageSize;
             if (computeLanguageSize) {
                 languageSize = chart.countTrees();
@@ -615,9 +619,9 @@ public class ParseTester {
             //System.out.println(ti.graph.toIsiAmrString());
             Map<String, Object> input = new HashMap<>();
             input.put("int", ti.graph);
-            useTopDown = true;
+            GraphAlgebra.useTopDownAutomaton = true;
             long languageSize1 = irtg.parseInputObjects(input).countTrees();
-            useTopDown = false;
+            GraphAlgebra.useTopDownAutomaton = false;
             long languageSize2 = irtg.parseInputObjects(input).countTrees();
             long diff = languageSize1-languageSize2;
             if (diff != 0) {

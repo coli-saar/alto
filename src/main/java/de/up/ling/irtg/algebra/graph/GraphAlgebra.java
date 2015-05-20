@@ -69,6 +69,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public static final String OP_FORGET_ALL_BUT_ROOT = "fr";
     public static final String OP_FORGET_EXCEPT = "fe_";
     public static final String OP_FORGET = "f_";
+    
+    public static boolean useTopDownAutomaton = false;
 
     private Int2ObjectMap<SGraph> constantLabelInterpretations;
     /**
@@ -124,7 +126,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     @Override
     public TreeAutomaton decompose(SGraph value) {
-        return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
+        if (useTopDownAutomaton)
+            return decompose(value, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
+        else
+            return decompose(value, SGraphBRDecompositionAutomatonBottomUp.class);
     }
     
     /**

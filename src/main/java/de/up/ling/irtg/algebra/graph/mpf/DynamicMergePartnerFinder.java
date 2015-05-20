@@ -23,6 +23,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
     private final int sourceNr;
     private final int sourcesRemaining;
     private final SGraphBRDecompositionAutomatonBottomUp auto;
+    private final int botIndex = 0;//the index for the children if the source is not assigned
 
     public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto)//maybe give expected size of finalSet as parameter?
     {
@@ -31,7 +32,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         this.vertices = new IntOpenHashSet();
 
         sourceNr = currentSource;
-        children = new MergePartnerFinder[nrNodes];
+        children = new MergePartnerFinder[nrNodes+1];
         sourcesRemaining = nrSources;
         
     }
@@ -43,7 +44,7 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
         this.vertices = vertices;
 
         sourceNr = currentSource;
-        children = new MergePartnerFinder[nrNodes];
+        children = new MergePartnerFinder[nrNodes+1];
         sourcesRemaining = nrSources;
         
     }
@@ -52,49 +53,46 @@ public class DynamicMergePartnerFinder extends MergePartnerFinder {
     public void insert(int rep) {
         
         int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
-        if (vNr != -1) {
-            insertInto(vNr, rep);
-        } else {
-            for (int v = 0; v < children.length; v++) {
-                insertInto(v, rep);
-            }
-        }
+        insertInto(vNr, rep);//if source is not assigned, vNr is -1.
     }
 
     private void insertInto(int vNr, int rep) {
-        
-        if (children[vNr] == null) {
+        int index = vNr+1;//if source is not assigned, then index=0=botIndex.
+        if (children[index] == null) {
+            IntSet newVertices = new IntOpenHashSet();
+            newVertices.addAll(vertices);
+            if (vNr!= -1) {
+                newVertices.add(vNr);
+            }
             if (sourcesRemaining == 1) {
-                IntSet newVertices = new IntOpenHashSet();
-                newVertices.addAll(vertices);
-                newVertices.add(vNr);
-                //children[vNr] = new StorageMPF(auto);
-                children[vNr] = new EdgeMPF(newVertices, auto);
+                //children[index] = new StorageMPF(auto);
+                children[index] = new EdgeMPF(newVertices, auto);
             } else {
-                IntSet newVertices = new IntOpenHashSet();
-                newVertices.addAll(vertices);
-                newVertices.add(vNr);
-                children[vNr] = new DynamicMergePartnerFinder(sourceNr + 1, sourcesRemaining - 1, children.length, auto, newVertices);
+                children[index] = new DynamicMergePartnerFinder(sourceNr + 1, sourcesRemaining - 1, children.length-1, auto, newVertices);
             }
         }
         
-        children[vNr].insert(rep);
+        children[index].insert(rep);
     }
 
     @Override
     public IntList getAllMergePartners(int rep) {
         int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
+        int index = vNr+1;
         IntList ret = new IntArrayList();//list is fine, since the two lists we get bottom up are disjoint anyway.
         
         
         if (vNr != -1) {
-            if (!(children[vNr] == null)) {
-                ret.addAll(children[vNr].getAllMergePartners(rep));
+            if (children[index] != null) {
+                ret.addAll(children[index].getAllMergePartners(rep));
+            }
+            if (children[botIndex] != null){
+                ret.addAll(children[botIndex].getAllMergePartners(rep));
             }
         } else {
-            for (MergePartnerFinder children1 : children) {
-                if (children1 != null) {
-                    ret.addAll(children1.getAllMergePartners(rep));
+            for (MergePartnerFinder child : children) {
+                if (child != null) {
+                    ret.addAll(child.getAllMergePartners(rep));
                 }
             }
         }

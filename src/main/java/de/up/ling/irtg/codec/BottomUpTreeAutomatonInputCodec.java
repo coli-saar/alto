@@ -20,22 +20,25 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 
 /**
  * A codec for reading tree automata written in Thomas Hanneforth's format
- * for weighted bottom-up tree automata. Rules are written in the following format:
+ * for weighted bottom-up tree automata. Rules are written in the following format:<p>
+ * 
  * <pre>TOP(q1,q2) -> q0	&lt;35133&gt;</pre>
+ * 
  * where TOP is the terminal symbol, and q0, q1, q2 are states. Each rule
  * may optionally be followed by a weight in angle brackets. If no weight is
  * specified, the codec assumes a rule weight of 1.<p>
  * 
  * The final states of the automaton are listed before the first 
- * rule, i.e.:
+ * rule, i.e.:<p>
+ * 
  * <pre>q0
- * q1</pre><p>
+ *q1</pre><p>
  * 
  * The comment character is #; everything following a # symbol on the same line
  * is ignored by the codec.<p>
  * 
  * Note that the codec is currently limited in that one can write symbols like
- * """ and ""&lt;" in the original file format. But the codec will only accept
+ * " and &lt; in the original file format. But the codec will only accept
  * symbols that start and end with " and have no " in between (and analogously
  * for ').
  * 

@@ -7,7 +7,8 @@
 package de.up.ling.irtg.codec;
 
 /**
- *
+ * An exception that occurred while parsing an input representation.
+ * 
  * @author koller
  */
 public class ParseException extends RuntimeException {

@@ -1,5 +1,14 @@
 grammar BolinasHrg;
 
+@lexer::members {
+    boolean ignore=true;
+}
+
+
+//NODE_WITH_DOT: { ignore = false; } (NODE_NAME? DOT NODE_LABEL? NODE_EXTERNAL_MARKER?) { ignore = true; };
+//NODE_WITHOUT_DOT: { ignore = false; } (NODE_LABEL NODE_EXTERNAL_MARKER?) { ignore = true; };
+
+
 ARROW    : '->';
 SEMICOLON : ';';
 //COLON : ':';
@@ -17,22 +26,35 @@ INT_NUMBER : [0-9]+;
 FLOAT_NUMBER: (([0-9]+)? '.')? [0-9]+ ([eE][-+]?[0-9]+)?;
 EDGELABEL: [:] ((~[ \t\n)])+);
 
-WS: [ \n\t\r]+ -> skip;
+//NODE_NAME: (NAME|INT_NUMBER);
+//NODE_LABEL: (NAME|INT_NUMBER|QUOTED_NAME|DOUBLE_QUOTED_NAME);
+//NODE_EXTERNAL_MARKER: (STAR INT_NUMBER?);
+
+
+//NODE_COMPLEX: { ignore = false; }  (((NAME|INT_NUMBER)? DOT (NAME|INT_NUMBER|QUOTED_NAME|DOUBLE_QUOTED_NAME)? (STAR INT_NUMBER?)?) | ((NAME|INT_NUMBER) (STAR INT_NUMBER?)?)) { ignore = true; } ;
+
+
+WS: [ \n\t\r]+ ;
+//{ if(ignore) skip(); } ;
+//skip;
 
 COMMENT
     :   ( '#' ~[\r\n]* '\r'? '\n' ) -> skip
     ;
 
 
-hrg: hrgRule+;
+hrg: WS* (hrgRule WS*)+;
 
-hrgRule: nonterminal ARROW term SEMICOLON weight?;
+hrgRule: nonterminal WS* ARROW  WS* term WS* SEMICOLON WS* weight?;
 
-term: OPBK node edgeWithChildren* CLBK;
+term: OPBK WS* node WS* (edgeWithChildren WS*)* CLBK;
+
+//node: NODE_WITH_DOT | NODE_WITHOUT_DOT;
+//{ ignore = false; }  ((id? DOT label? externalMarker?) | (label externalMarker?)) { ignore = true; } ;
 
 node: (id? DOT label? externalMarker?) | (label externalMarker?);
 
-edgeWithChildren: edgelabel child*;
+edgeWithChildren: edgelabel WS* (child WS*)*;
 // COLON (edgelabel|nonterminalEdgelabel)
 child: node | term;
 

@@ -100,11 +100,23 @@ class EdgeTree {
         first = et1;
         second = et2;
         
-        this.nodes = new TreeSet<>(et1.nodes);
+        this.nodes = new TreeSet<>();
         
-        this.nodes.addAll(et2.nodes);
+        for(String node : et1.nodes)
+        {
+            if(outer.contains(node) || !et2.nodes.contains(node))
+            {
+                nodes.add(node);
+            }
+        }
         
-        this.nodes.retainAll(outer);
+        for(String node : et2.nodes)
+        {
+            if(outer.contains(node) || !et1.nodes.contains(node))
+            {
+                nodes.add(node);
+            }
+        }
     }
     
     /**
@@ -212,7 +224,6 @@ class EdgeTree {
             k += ")";
             Tree<String> t = Tree.create(k);
             main = Tree.create("merge", t, main);
-            //TODO
             ++i;
         }
         
@@ -362,6 +373,13 @@ class EdgeTree {
         return rename(from,to,main);
     }
 
+    /**
+     * 
+     * @param combined
+     * @param outer
+     * @param main
+     * @return 
+     */
     private Tree<String> rename(SortedSet<String> combined, List<String> outer, Tree<String> main) {
         BiMap<String,Integer> from = HashBiMap.create();
         int i = 0;
@@ -380,6 +398,13 @@ class EdgeTree {
         return rename(from,to,main);
     }
     
+    /**
+     * 
+     * @param combined
+     * @param outer
+     * @param main
+     * @return 
+     */
     private Tree<String> rename(List<String> combined, SortedSet<String> outer, Tree<String> main) {
         BiMap<String,Integer> from = HashBiMap.create();
         int i = 0;
@@ -414,7 +439,9 @@ class EdgeTree {
         {
             if(!to.containsKey(s))
             {
-                main = Tree.create("f_"+from.get(s), main);
+                Integer source = from.get(s);
+                main = Tree.create("f_"+source, main);
+                from.remove(s);
                 continue;
             }
             Integer current = from.get(s);
