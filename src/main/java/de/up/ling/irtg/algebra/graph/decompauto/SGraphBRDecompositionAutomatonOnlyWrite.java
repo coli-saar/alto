@@ -15,10 +15,13 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -399,12 +402,12 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
         return res;
     }
 
-    //finds out which parses have a final state, set actuallyWrite to false for that.
     public static void main(String[] args) throws Exception {
         if (args.length<5) {
-            System.out.println("Need four arguments: corpusPath sourceCount startIndex stopIndex targetFolderPath");
+            System.out.println("Need six arguments: corpusPath sourceCount startIndex stopIndex targetFolderPath 'onlyBolinas'/'all'");
             return;
         }
+        
         String corpusPath = args[0];
         int sourceCount = Integer.valueOf(args[1]);
         int start = Integer.valueOf(args[2]);
@@ -412,10 +415,22 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
         String targetPath = args[4];
         Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
+        
+        String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
+        Reader bolinasReader = new FileReader(bolinasCorpusPath);
+        BufferedReader br = new BufferedReader(bolinasReader);
+        int removedCount = 0;
+        for (int i = 0; i<inducer.getCorpus().size(); i++) {
+            if (br.readLine().startsWith("()")) {
+                inducer.getCorpus().remove(i-removedCount);
+                removedCount++;
+            }
+        }
+        
         inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
         ));
         
-        
+        IntList successfull = new IntArrayList();
         
         for (int i = start; i<stop; i++) {
             System.out.println(i);
@@ -425,9 +440,15 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
             Writer rtgWriter = new FileWriter(targetPath+String.valueOf(instance.id)+".rtg");
             SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.writeCompleteDecompositionAutomaton(instance.graph, rtgWriter);
             rtgWriter.close();
+            if (auto.foundFinalState) {
+                successfull.add(instance.id);
+            }
+            
+                
             
             System.out.println(String.valueOf(auto.ruleCount));
         }
+        System.out.println(String.valueOf(successfull.size()) + " graphs were parsed successfully, out of " + String.valueOf(stop-start));
         
         //resWriter.close();
         
