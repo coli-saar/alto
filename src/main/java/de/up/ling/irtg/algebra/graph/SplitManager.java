@@ -59,16 +59,17 @@ public class SplitManager {
         Set<Integer> cutpoints = bcg.getCutpoints();
         
         for (int v : compGraph.vertexSet()) {
-            if (!cutpoints.contains(v%graphInfo.getNrNodes()) && !bVertices.contains(v%graphInfo.getNrNodes())) {//careful, this does currently not allow multiple source names on one node!
+            if (!cutpoints.contains(v%graphInfo.getNrNodes()) && !bVertices.contains(v%graphInfo.getNrNodes())) {//careful, this does currently not allow multiple source names on one node! //are the cutpoints always the % values?
                 nonSplitVertices.add(v%graphInfo.getNrNodes());
             }
         }
         
+        //Step 1        
         Map<UndirectedGraph<Integer, Integer>, Set<DefaultEdge>> node2Degree = new HashMap<>();
         Queue<DefaultEdge> agenda = new LinkedList<>();
         for (UndirectedGraph<Integer, Integer> c : bcg.vertexSet()) {
             node2Degree.put(c, new HashSet<>(bcg.edgesOf(c)));
-            if (bcg.degreeOf(c) == 1) {
+            if (bcg.degreeOf(c) == 1) {//then we have a leaf
                 DefaultEdge e = bcg.edgesOf(c).iterator().next();
                 addToAgenda(e, c, agenda);
             }

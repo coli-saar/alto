@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.graph.BRUtil;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
@@ -22,22 +23,28 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositionAutomatonMPFTrusting {
 
     
-    private boolean actuallyWrite = true;
+    private static boolean actuallyWrite = true;
     
     
     private final int flushThreshold = 10000;
@@ -384,10 +391,10 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
         while (it.hasNext()) {
             try{
                 ruleCount++;
-                double variable = Math.log10(ruleCount);
-                if ((variable == Math.floor(variable)) && !Double.isInfinite(variable)) {
-                    System.out.println(String.valueOf(ruleCount));
-                }
+                //double variable = Math.log10(ruleCount);
+                //if ((variable == Math.floor(variable)) && !Double.isInfinite(variable)) {
+                    //System.out.println(String.valueOf(ruleCount));
+                //}
                 if (actuallyWrite) {
                     writeRule(it.next());
                 } else {
@@ -402,9 +409,36 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
         return res;
     }
 
+    /*
+    //translates all those graphs in a corpus (args[0]) which have an ID s.t. there is a file starting with "ID_" in the folder given by args[1] to bolinas format and writes it in a file given by args[2]
+    public static void main(String[] args) throws Exception {
+        File folder = new File(args[1]);
+        File[] listOfFiles = folder.listFiles();
+        
+        IntList idList = new IntArrayList();
+        for (File f : listOfFiles) {
+            idList.add(Integer.valueOf(f.getName().split("_")[0]));
+        }
+        System.out.println(idList);
+        
+        
+        Reader corpusReader = new FileReader(args[0]);
+        IrtgInducer inducer = new IrtgInducer(corpusReader);
+        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
+        ));
+        
+        FileOutputStream stream = new FileOutputStream(args[2]);
+        for (int i = 0; i<inducer.getCorpus().size(); i++) {
+            if (idList.contains(inducer.getCorpus().get(i).id)) {
+                new BolinasGraphOutputCodec().write(inducer.getCorpus().get(i).graph, stream);
+            }
+        }
+        stream.close();
+    }*/
+    
     public static void main(String[] args) throws Exception {
         if (args.length<5) {
-            System.out.println("Need six arguments: corpusPath sourceCount startIndex stopIndex targetFolderPath 'onlyBolinas'/'all'");
+            System.out.println("Need eight arguments: corpusPath sourceCount startIndex stopIndex maxNodes maxPerNodeCount targetFolderPath 'onlyBolinas'/'all'");
             return;
         }
         
@@ -412,32 +446,83 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
         int sourceCount = Integer.valueOf(args[1]);
         int start = Integer.valueOf(args[2]);
         int stop = Integer.valueOf(args[3]);
-        String targetPath = args[4];
+        int maxNodes = Integer.valueOf(args[4]);
+        if (maxNodes == 0) {
+            maxNodes = 256;//this is arbitrarily chosen.
+        }
+        int maxPerNodeCount = Integer.valueOf(args[5]);
+        if (maxPerNodeCount == 0) {
+            maxPerNodeCount = Integer.MAX_VALUE;
+        }
+        String targetPath = args[6];
+        boolean onlyBolinas = args.length>=8 && args[7].equals("onlyBolinas");
+        
         Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         
-        String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
-        Reader bolinasReader = new FileReader(bolinasCorpusPath);
-        BufferedReader br = new BufferedReader(bolinasReader);
-        int removedCount = 0;
+        BolinasGraphOutputCodec bolCodec = new BolinasGraphOutputCodec();
+        IntList[] graphsToParse = new IntList[maxNodes];
+        
+        actuallyWrite = false;
+        
         for (int i = 0; i<inducer.getCorpus().size(); i++) {
-            if (br.readLine().startsWith("()")) {
-                inducer.getCorpus().remove(i-removedCount);
-                removedCount++;
+            IrtgInducer.TrainingInstance instance = inducer.getCorpus().get(i);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bolCodec.write(instance.graph, stream);
+            if (!(onlyBolinas && stream.toString().startsWith("()\n")) && instance.graph.getAllNodeNames().size()<=maxNodes) {
+                GraphAlgebra alg = new GraphAlgebra();
+                BRUtil.makeIncompleteDecompositionAlgebra(alg, instance.graph, sourceCount);
+                
+                Writer rtgWriter = new StringWriter();
+                SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.writeCompleteDecompositionAutomaton(instance.graph, rtgWriter);
+                rtgWriter.close();
+                if (auto.foundFinalState) {
+                    int n = instance.graph.getAllNodeNames().size();
+                    if (graphsToParse[n-1]==null) {
+                        graphsToParse[n-1]=new IntArrayList();
+                    }
+                    graphsToParse[n-1].add(i);
+                }
             }
         }
         
-        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
+        //add the instances we want to parse to our custom corpus.
+        List<IrtgInducer.TrainingInstance> corpus = new ArrayList<>();
+        Random r = new Random();
+        for (int i = 0; i<maxNodes; i++) {
+            System.out.println("Adding " +Math.min(graphsToParse[i].size(), maxPerNodeCount) + " graphs with " + (i+1) + " nodes.");
+            if (graphsToParse[i].size()<=maxPerNodeCount) {
+                for (int target : graphsToParse[i]) {
+                    corpus.add(inducer.getCorpus().get(target));
+                }
+            } else {
+                for (int k = 0; k<maxPerNodeCount; k++) {
+                    int targetIndex = r.nextInt(graphsToParse[i].size());
+                    int target = graphsToParse[i].remove(targetIndex);
+                    
+                    corpus.add(inducer.getCorpus().get(target));
+                }
+            }
+        }
+        System.out.println("Chosen IDs:");
+        corpus.forEach(instance-> System.out.println(instance.id));
+        System.out.println("---------------------");
+        
+        corpus.sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
         ));
+        
+        actuallyWrite = true;
         
         IntList successfull = new IntArrayList();
         
+        stop = Math.min(corpus.size(), stop);
+        
         for (int i = start; i<stop; i++) {
             System.out.println(i);
-            IrtgInducer.TrainingInstance instance = inducer.getCorpus().get(i);
+            IrtgInducer.TrainingInstance instance = corpus.get(i);
             GraphAlgebra alg = new GraphAlgebra();
             BRUtil.makeIncompleteDecompositionAlgebra(alg, instance.graph, sourceCount);
-            Writer rtgWriter = new FileWriter(targetPath+String.valueOf(instance.id)+".rtg");
+            Writer rtgWriter = new FileWriter(targetPath+String.valueOf(instance.id)+"_"+instance.graph.getAllNodeNames().size()+"nodes"+".rtg");
             SGraphBRDecompositionAutomatonOnlyWrite auto = (SGraphBRDecompositionAutomatonOnlyWrite) alg.writeCompleteDecompositionAutomaton(instance.graph, rtgWriter);
             rtgWriter.close();
             if (auto.foundFinalState) {
@@ -446,7 +531,7 @@ public class SGraphBRDecompositionAutomatonOnlyWrite extends SGraphBRDecompositi
             
                 
             
-            System.out.println(String.valueOf(auto.ruleCount));
+            //System.out.println(String.valueOf(auto.ruleCount));
         }
         System.out.println(String.valueOf(successfull.size()) + " graphs were parsed successfully, out of " + String.valueOf(stop-start));
         
