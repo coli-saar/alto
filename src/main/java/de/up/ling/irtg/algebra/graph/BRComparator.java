@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
 import it.unimi.dsi.fastutil.ints.IntComparator;
 /**
  * Comparator to decide which boundary representation is closer to the final graph.

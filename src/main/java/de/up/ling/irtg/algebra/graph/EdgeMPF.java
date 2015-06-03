@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph.mpf;
+package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
+import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonBottomUp;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;

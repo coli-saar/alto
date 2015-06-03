@@ -18,11 +18,6 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompAutoInstruments;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -265,7 +260,8 @@ public class IrtgInducer {
     
     
     public void parseInstance(int i, int start, int nrSources, int size, boolean doBolinas, boolean doWrite, boolean onlyAccept, String dumpPath, List<String> labels, CpuTimeStopwatch sw, IntList failed) throws Exception {
-        TrainingInstance ti = corpus.get(i);
+        throw new UnsupportedOperationException("currently not supported!");
+        /*TrainingInstance ti = corpus.get(i);
             System.out.println("i= " + String.valueOf(i) + "/" + String.valueOf(size-1) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
             System.err.println("i= " + String.valueOf(i) + "/" + String.valueOf(size-1) + "; graph "+ti.id+ "; n= " + ti.graph.getAllNodeNames().size());
             
@@ -327,13 +323,13 @@ public class IrtgInducer {
 
             labels.add(graph.toString());
             labels.add("<- " + String.valueOf(i)+", ID = " + String.valueOf(ti.id) + "(line above is decomp + write (if applicable)time);");
-            labels.add("filler time");
+            labels.add("filler time");*/
     }
     
     public static boolean parseInstance(TrainingInstanceSerializable instance, int nrSources, boolean doBolinas, boolean doWrite, boolean onlyAccept, String dumpPath, CpuTimeStopwatch sw) throws Exception {
+        throw new UnsupportedOperationException("currently not supported!");
         
-        
-        sw.record(0);
+        /*sw.record(0);
         SGraph graph = new GraphAlgebra().parseString(instance.graph);
 
         GraphAlgebra alg = new GraphAlgebra();
@@ -378,7 +374,7 @@ public class IrtgInducer {
 
             //System.err.println(sw.printTimeBefore(2, "Write time (" + instance.id+"): "));
             
-        }
+        }*/
     }
 
     public IrtgInducer(Reader corpusReader) {

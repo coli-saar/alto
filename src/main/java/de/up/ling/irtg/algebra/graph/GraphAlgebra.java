@@ -4,15 +4,9 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonStoreTopDownExplicit;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonBottomUp;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAsymptotic;
 import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonOnlyWrite;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
@@ -146,14 +140,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             } else if (c == SGraphBRDecompositionAutomatonBottomUp.class) {
                 return new SGraphBRDecompositionAutomatonBottomUp(value, this, getSignature());
                 
-            } else if (c == SGraphBRDecompositionAutomatonMPFTrusting.class) {
-                return new SGraphBRDecompositionAutomatonMPFTrusting(value, this, getSignature());
-                
-            } else if (c == SGraphBRDecompositionAutomatonStoreTopDownExplicit.class) {
-                return new SGraphBRDecompositionAutomatonStoreTopDownExplicit(value, this, getSignature());
-                
-            } else if (c == SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas.class) {
-                return new SGraphBRDecompositionAutomatonStoreTopDownExplicitBolinas(value, this, getSignature());
             } else if (c == SGraphBRDecompositionAutomatonTopDownAsymptotic.class) {
                 return new SGraphBRDecompositionAutomatonTopDownAsymptotic(value, this, getSignature());
             }
@@ -161,16 +147,18 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     /**
-     * returns an automaton that only writes the rules in the Writer, and does not store the rules in memory.
-     * The automaton iterates through all rules on construction, and writes them immediately.
-     * this should be redone when SGraphBRDecompositionAutomatonOnlyWrite is reworked.
+     * Writes (nearly) all the rules in the decomposition automaton of the SGraph value into in the Writer, and does not store the rules in memory.
+     * Iterates through the rules in bottom up order.
+     * There are no rename operations on states only reachable via rename.
+     * Rules of the form c-> m(a, b) and c-> m(b,a) are both written into the writer (this is different from previous implementations).
      * @param value
      * @param writer
      * @return
      * @throws Exception
      */
-    public TreeAutomaton writeCompleteDecompositionAutomaton(SGraph value, Writer writer) throws Exception{
-        return new SGraphBRDecompositionAutomatonOnlyWrite(value, this, getSignature(), writer);
+    public boolean writeCompleteDecompositionAutomaton(SGraph value, Writer writer) throws Exception{
+        SGraphBRDecompositionAutomatonBottomUp botupAutomaton = new SGraphBRDecompositionAutomatonBottomUp(value, this, getSignature());
+        return botupAutomaton.writeAutomatonRestricted(writer);
     }
     
 

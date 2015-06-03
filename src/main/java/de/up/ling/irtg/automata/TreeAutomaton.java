@@ -12,11 +12,11 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
+import com.google.common.collect.Sets;
 import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
-import de.up.ling.irtg.algebra.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.condensed.CondensedBottomUpIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
@@ -29,12 +29,12 @@ import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
-import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
+import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -66,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
@@ -116,6 +115,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected IntSet allStates;        // TODO - remove these!                                        // subset of stateInterner.keySet() that actually occurs in this automaton; allows for sharing interners across automata to preserve state IDs
     protected boolean isExplicit;
     private Int2ObjectMap<List<Iterable<Rule>>> rulesForRhsState;             // state -> all rules that have this state as child
+    protected boolean doStore = true;
 
     protected Signature signature;
     private Predicate<Rule> filter = null;
@@ -194,6 +194,24 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public Signature getSignature() {
         return signature;
+    }
+
+    /**
+     * returns whether storeRule actually stores the rule or does nothing.
+     *
+     * @return
+     */
+    public boolean isDoStore() {
+        return doStore;
+    }
+
+    /**
+     * sets whether storeRule actually stores the rule or does nothing.
+     *
+     * @param doStore
+     */
+    public void setDoStore(boolean doStore) {
+        this.doStore = doStore;
     }
 
     /**
@@ -420,7 +438,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected void addFinalState(int state) {
         finalStates.add(state);
     }
-    
 
     /**
      * *********** RULE CACHING ************
@@ -431,6 +448,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * The method normalizes states of the automaton, in such a way that states
      * that are equals() are also ==. The method destructively modifies the
      * states that are mentioned in the rule object to these normalized states.
+     *
+     * This function does nothing if doStore is false.
      *
      * @param rule
      */
@@ -443,9 +462,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
         // Thus please take care to never use explicitRulesTopDown and explicitRulesBottomUp
         // directly, but only through their getter methods (which ensure that all
         // rules in the to-do list have been processed).
-        unprocessedUpdatesForBottomUp.add(rule);
-        explicitRulesTopDown.add(rule);
-        rulesForRhsState = null;
+        if (doStore) {
+            unprocessedUpdatesForBottomUp.add(rule);
+            explicitRulesTopDown.add(rule);
+            rulesForRhsState = null;
+        }
     }
 
 //
@@ -1241,8 +1262,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * are replaced by their string representations. Thus the states of the
      * returned automaton are always strings. This is mostly useful for testing,
      * when automata with string states are read from string literals.
-     * 
-     * @return 
+     *
+     * @return
      */
     public ConcreteTreeAutomaton<String> asConcreteTreeAutomatonWithStringStates() {
         ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
@@ -2629,33 +2650,33 @@ public abstract class TreeAutomaton<State> implements Serializable {
         getExplicitRulesBottomUp().printStatistics();
     }
 
-    /** 
+    /**
      * Creates a new rule. Note that this method only creates the rule object;
      * it does not add it to the automaton. For a more convenient (if slightly
-     * less efficient) alternative,
-     * consider {@link #createRule(java.lang.Object, java.lang.String, State[], double) }.
-     * 
+     * less efficient) alternative, consider {@link #createRule(java.lang.Object, java.lang.String, State[], double)
+     * }.
+     *
      * @param parent
      * @param label
      * @param children
      * @param weight
-     * @return 
+     * @return
      */
     public Rule createRule(int parent, int label, int[] children, double weight) {
         return new Rule(parent, label, children, weight);
     }
 
-    /** 
+    /**
      * Creates a new rule. Note that this method only creates the rule object;
      * it does not add it to the automaton. For a more convenient (if slightly
-     * less efficient) alternative,
-     * consider {@link #createRule(java.lang.Object, java.lang.String, java.util.List, double) }.
-     * 
+     * less efficient) alternative, consider {@link #createRule(java.lang.Object, java.lang.String, java.util.List, double)
+     * }.
+     *
      * @param parent
      * @param label
      * @param children
      * @param weight
-     * @return 
+     * @return
      */
     public Rule createRule(int parent, int label, List<Integer> children, double weight) {
         return new Rule(parent, label, intListToArray(children), weight);
@@ -2773,12 +2794,162 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public TreeAutomaton<Set<State>> determinize() {
         return determinize(null);
     }
-    
-    
- 
+
     /**
-     * This returns an object that stores and finds possible partners for a given state given a binary rule, for pattern matching. (see i.e. automata.condensed.PMFactoryRestrictive.) Only a dummy in TreeAutomaton, needs implementation in more advanced decomposition automata.
-     * @return 
+     * Iterates through all rules top-down, applying processingFunction to each
+     * rule found.
+     *
+     * @param processingFunction
+     */
+    public void processAllRulesTopDown(Consumer<Rule> processingFunction) {
+        BitSet seenStates = new BitSet();
+        IntPriorityQueue agenda = new IntArrayFIFOQueue();
+
+        for (int finalState : getFinalStates()) {
+            seenStates.set(finalState);
+            agenda.enqueue(finalState);
+        }
+
+        while (!agenda.isEmpty()) {
+            int state = agenda.dequeue();
+
+            for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
+                Iterable<Rule> rules = getRulesTopDown(label, state);
+
+                for (Rule rule : rules) {
+                    processingFunction.accept(rule);
+
+                    for (int child : rule.getChildren()) {
+                        if (!seenStates.get(child)) {
+                            seenStates.set(child);
+                            agenda.enqueue(child);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Iterates through all rules top-down, applying processingFunction to each
+     * rule found. Returns true if a final state was found.
+     * @param processingFunction
+     * @return
+     */
+    public boolean processAllRulesBottomUp(Consumer<Rule> processingFunction) {
+        boolean ret = false;
+        
+        
+        //initialize agenda by processing constants
+        IntList agenda = new IntArrayList();
+        IntSet seen = new IntOpenHashSet();
+        Int2ObjectMap<IntList> symbols = new Int2ObjectOpenHashMap<>();
+        
+        Map<String, Integer> symbolsFromAuto = getSignature().getSymbolsWithArities();
+        int j = 0;
+        for (String s : symbolsFromAuto.keySet()) {
+            int arity = symbolsFromAuto.get(s);
+            IntList symbolsHere = symbols.get(arity);
+            if (symbolsHere == null) {
+                symbolsHere = new IntArrayList();
+                symbols.put(arity, symbolsHere);
+            }
+            symbolsHere.add(getSignature().getIdForSymbol(s));
+        }
+        IntList constants = symbols.get(0);
+        if (constants != null) {
+            for (int c : constants) {
+                //try {
+                Iterator<Rule> it = getRulesBottomUp(c, new int[]{}).iterator();
+                while (it.hasNext()) {
+                    Rule rule = it.next();
+                    
+                    processingFunction.accept(rule);
+                    
+                    int parent = rule.getParent();
+                    if (!agenda.contains(parent)) {
+                        agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
+                    }
+
+                }
+            }
+        }
+        seen.addAll(Sets.newHashSet(agenda));
+
+        //now iterate
+        Int2ObjectMap<IntList> labelsToIterate = new Int2ObjectOpenHashMap<>(symbols);
+        labelsToIterate.remove(0);//already checked constants above
+        
+        BinaryPartnerFinder bpFinder = makeNewBinaryPartnerFinder(this);
+
+        for (int i = 0; i < agenda.size(); i++) {
+            int a = agenda.get(i);
+            if (getFinalStates().contains(a)) {
+                ret = true;
+            }
+
+            
+            for (int arity : labelsToIterate.keySet()) {
+                
+                for (int label : symbols.get(arity)) {
+                    
+                    //find all rules
+                    List<Iterable<Rule>> foundRules = new ArrayList<>();
+                    switch (arity) {
+                        case 1: 
+                            foundRules.add(getRulesBottomUp(label, new int[]{a}));
+                            break;
+                        case 2:
+                            IntCollection partnerList = bpFinder.getPartners(label, a);
+                            for (int p : partnerList) {
+                                foundRules.add(getRulesBottomUp(label, new int[]{a,p}));
+                                foundRules.add(getRulesBottomUp(label, new int[]{p,a}));
+                            }
+                        break;
+                        default:
+                            int[] children = new int[arity];
+                            Set[] partners = new Set[arity-1];
+                            Arrays.fill(partners, seen);
+                            TupleIterator<Integer> partnerIterator = new TupleIterator<>(Integer.class, partners);
+                            while (partnerIterator.hasNext()) {
+                                Integer[] partnerTuple = partnerIterator.next();
+                                for (int pos = 0; pos<arity; pos++) {
+                                    System.arraycopy(partnerTuple, 0, children, 0, pos);
+                                    children[pos]=a;
+                                    System.arraycopy(partnerTuple, pos, children, pos+1, pos);
+                                }
+                                foundRules.add(getRulesBottomUp(label, children));
+                            }
+                    }
+                    
+                    //process found rules and add newfound states to agenda
+                    foundRules.forEach(ruleIt -> {
+                        ruleIt.forEach(rule -> {
+                            int newState = rule.getParent();
+                            if (!seen.contains(newState)) {
+                                seen.add(newState);
+                                agenda.add(newState);
+                            }
+                            processingFunction.accept(rule);
+                        });
+                    });
+                }
+            }
+            
+            bpFinder.addState(a);
+        }
+        
+        return ret;
+    }
+
+    /**
+     * This returns an object that stores and finds possible partners for a
+     * given state given a binary rule, for pattern matching. (see i.e.
+     * automata.condensed.PMFactoryRestrictive.) Only a dummy in TreeAutomaton,
+     * needs implementation in more advanced decomposition automata.
+     *
+     * @return
      */
     public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
         return new BinaryPartnerFinder.DummyBinaryPartnerFinder();

@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.algebra.graph.decompauto;
+package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.automata.Rule;
 

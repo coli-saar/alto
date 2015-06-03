@@ -164,7 +164,7 @@ public class SplitManager {
     
     private void addToAgenda(DefaultEdge e, UndirectedGraph<Integer, Integer> origin, Queue<DefaultEdge> agenda) {
         bcgEdge2Start.put(e, origin);
-        if (bcg.getEdgeSource(e) == origin) {//actually want to test if this is the same instance!
+        if (bcg.getEdgeSource(e) == origin) {//actually yes, we do want to test if this is the same instance.
             bcgEdge2End.put(e, bcg.getEdgeTarget(e));
         } else {
             bcgEdge2End.put(e, bcg.getEdgeSource(e));
@@ -195,9 +195,9 @@ public class SplitManager {
             Set<BRepComponent> components = new HashSet<>();
             for (DefaultEdge e : bcg.edgesOf(cutVertex2BcgNode.get(cutVertex))) {
                 
-                if (!bcgEdge2BoundaryEdges.containsKey(e)) {
+                /*if (!bcgEdge2BoundaryEdges.containsKey(e)) {
                     System.err.println();
-                }
+                }*/
                 IntSet newInBEdges = new IntOpenHashSet(bcgEdge2BoundaryEdges.get(e));
                 newInBEdges.addAll(bcgEdge2incidentGraphEdges.get(e));
                 

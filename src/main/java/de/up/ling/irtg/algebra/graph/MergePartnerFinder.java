@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph.mpf;
+package de.up.ling.irtg.algebra.graph;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 

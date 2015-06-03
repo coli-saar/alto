@@ -14,14 +14,10 @@ import de.up.ling.irtg.*
 import de.up.ling.irtg.util.*
 import de.up.ling.irtg.util.CpuTimeStopwatch
 import de.up.ling.irtg.algebra.*
-import de.up.ling.irtg.algebra.graph.BoundaryRepresentation
-import de.up.ling.irtg.algebra.graph.BoundaryRepresentation
-import de.up.ling.irtg.algebra.graph.GraphAlgebra
-import de.up.ling.irtg.algebra.graph.SGraph
 import de.up.ling.irtg.signature.Signature
 import java.nio.charset.Charset
 import static de.up.ling.irtg.util.TestingTools.*;
-import de.up.ling.irtg.algebra.graph.decompauto.*
+import de.up.ling.irtg.algebra.graph.*
 
 
 class PatternMatchingInvhomAutomatonTest {

@@ -5,8 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompAutoInstruments;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonMPFTrusting;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
@@ -487,20 +485,21 @@ public class BRUtil {
     }
 
     private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
-        SGraphBRDecompositionAutomatonMPFTrusting auto = (SGraphBRDecompositionAutomatonMPFTrusting) alg.decompose(graph, SGraphBRDecompositionAutomatonMPFTrusting.class);
-        SGraphBRDecompAutoInstruments instr = new SGraphBRDecompAutoInstruments(auto, auto.completeGraphInfo.getNrSources(), graph.getGraph().vertexSet().size(), false);
+        SGraphBRDecompositionAutomatonBottomUp auto = (SGraphBRDecompositionAutomatonBottomUp) alg.decompose(graph, SGraphBRDecompositionAutomatonBottomUp.class);
         
         if (onlyCheckAcceptance) {
-            if (instr.doesAccept(alg)) {
+            throw new UnsupportedOperationException("Currently not supported!");
+            /*if (instr.doesAccept(alg)) {
                 System.out.println("Accepted!");
             } else {
                 System.out.println("Not accepted!");
-            }
+            }*/
         } else {
             if (cleanVersion) {
-                instr.iterateThroughRulesBottomUp1Clean(alg);
+                auto.processAllRulesBottomUp(rule-> {});
             } else {
-                instr.iterateThroughRulesBottomUp1(alg, showSteps, makeRulesTopDown);
+                throw new UnsupportedOperationException("Currently not supported!");
+                //instr.iterateThroughRulesBottomUp1(alg, showSteps, makeRulesTopDown);
             }
         }
         

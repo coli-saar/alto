@@ -7,9 +7,9 @@ package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.primitives.Ints;
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.algebra.BinaryPartnerFinder;
+import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.algebra.graph.ParseTester;
-import de.up.ling.irtg.algebra.graph.decompauto.SGraphBRDecompositionAutomatonTopDownAsymptotic;
+import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonTopDownAsymptotic;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph.decompauto;
+package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.algebra.graph.BRepComponent;
 import de.up.ling.irtg.algebra.graph.BRepTopDown;
