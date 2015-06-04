@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;

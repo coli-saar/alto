@@ -25,7 +25,7 @@ import java.util.Set;
  * Compactly represents the information of an s-graph needed for our algorithms.
  * @author jonas
  */
-public class GraphInfo {
+class GraphInfo {
     private final SGraph graph;
 
     

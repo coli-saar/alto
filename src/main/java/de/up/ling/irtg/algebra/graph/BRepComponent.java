@@ -22,9 +22,9 @@ import org.jgrapht.graph.SimpleGraph;
 
 /**
  * A subgraph defined by boundary vertices, and in-boundary edges, such that all its vertices are connected without crossing a boundary vertex.
- * @author jonas
+ * @author groschwitz
  */
-public class BRepComponent {
+class BRepComponent {
     
     private final IntSet bVertices;
 

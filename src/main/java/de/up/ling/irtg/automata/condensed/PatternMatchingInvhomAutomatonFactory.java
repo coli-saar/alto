@@ -5,31 +5,21 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
-import de.up.ling.irtg.algebra.graph.GraphAlgebra;
-import de.up.ling.irtg.algebra.graph.ParseTester;
-import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonBottomUp;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
-import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.io.FileInputStream;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -257,7 +247,6 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
                             int numVariables = arityForLabelSetID.get(labelSetID);
 
                             if (numVariables == 0) {
-                                ParseTester.invhomRules++;
                                 ret.add(new CondensedRule(parentState, labelSetID, new int[0], 1));
                             } else {
                                 /*int[] childStates = new int[numVariables];
@@ -271,8 +260,6 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
                                 forAllMatches(seedList, intersStateID, term, rightmostVariableForLabelSetID[labelSetID], rhs, intersectionAutomaton, mapperIntersToHom,
                                                             childStates -> {
                                                                 ret.add(new CondensedRule(parentState, labelSetID, childStates, 1));
-                                                                ParseTester.averageLogger.increaseValue("invhom rules count");
-                                                                ParseTester.invhomRules++;
                                                                     });
 
     //                            forAllMatchesRestrictive2(intersStateID, term, null, seed, rhs, intersectionAutomaton, mapperIntersToHom, 
@@ -352,7 +339,7 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
     
 
     
-    public static void main(String[] args) throws Exception {
+    /*public static void main(String[] args) throws Exception {
 
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrgTestingCleanS.irtg"));
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism();
@@ -383,7 +370,7 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
          ruleCount++;
          }
          System.err.println("rule count: " + ruleCount);*/
-        CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhom(rhs);
+        /*CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhom(rhs);
         //System.err.println(f.restrictiveMatcher);
         //System.err.println(f.matcherChild2Rule);
         TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String, BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
@@ -501,5 +488,5 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
 
          numSent++;
          } while (true);*/
-    }
+    //}
 }

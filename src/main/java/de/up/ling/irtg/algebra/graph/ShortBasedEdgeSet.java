@@ -17,9 +17,9 @@ import java.util.function.IntConsumer;
 
 /**
  *
- * @author jonas
+ * @author groschwitz
  */
-public class ShortBasedEdgeSet extends IdBasedEdgeSet {
+class ShortBasedEdgeSet extends IdBasedEdgeSet {
 
     /**
      *

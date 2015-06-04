@@ -22,9 +22,9 @@ import org.jgrapht.graph.DefaultEdge;
 
 /**
  *
- * @author jonas
+ * @author groschwitz
  */
-public class SplitManager {
+class SplitManager {
     
     private final IntSet nonSplitVertices;
     

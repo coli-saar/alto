@@ -13,7 +13,6 @@ import com.google.common.collect.Sets;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

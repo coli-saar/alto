@@ -14,7 +14,7 @@ import java.util.function.IntConsumer;
  *
  * @author jonas
  */
-public abstract class IdBasedEdgeSet {
+abstract class IdBasedEdgeSet {
 
     /**
      * adds an edge given by its source and target node.

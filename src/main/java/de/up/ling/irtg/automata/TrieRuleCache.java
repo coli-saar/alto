@@ -3,10 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.automata.IntTrie;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.util.ArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;

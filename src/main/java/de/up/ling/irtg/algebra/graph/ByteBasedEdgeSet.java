@@ -17,9 +17,9 @@ import java.util.function.IntConsumer;
 
 /**
  *
- * @author jonas
+ * @author groschwitz
  */
-public class ByteBasedEdgeSet extends IdBasedEdgeSet {
+class ByteBasedEdgeSet extends IdBasedEdgeSet {
 
     /**
      *

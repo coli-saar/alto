@@ -31,7 +31,7 @@ import org.apache.commons.lang3.tuple.Pair;
  *
  * @author jonas
  */
-public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomaton<BRepTopDown>{
+public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTopDown>{
 
     public final GraphInfo completeGraphInfo;
     
@@ -46,7 +46,7 @@ public class SGraphBRDecompositionAutomatonTopDownAsymptotic extends TreeAutomat
     
     private final Map<BRepComponent, BRepComponent> storedComponents;
     
-    public SGraphBRDecompositionAutomatonTopDownAsymptotic(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
+    public SGraphBRDecompositionAutomatonTopDown(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
         super(signature);
         this.algebra = algebra;
         //getStateInterner().setTrustingMode(true);

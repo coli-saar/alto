@@ -8,8 +8,6 @@ package de.up.ling.irtg.automata.condensed;
 import com.google.common.primitives.Ints;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
-import de.up.ling.irtg.algebra.graph.ParseTester;
-import de.up.ling.irtg.algebra.graph.SGraphBRDecompositionAutomatonTopDownAsymptotic;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -20,7 +18,6 @@ import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
 import de.up.ling.irtg.util.ArrayInt2ObjectMap;
 import de.up.ling.irtg.util.ArrayMap;
-import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.IntArrayTupleIterator;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.tree.Tree;
@@ -317,7 +314,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
              System.err.println("With loop(no duplicates): " + withLoopLabels.size());
              System.err.println("Without loop: " + noLoopCount);
              System.err.println("Without loop(no duplicates): " + edgeOnlyLabels.size());*/
-        } else if (rhs instanceof SGraphBRDecompositionAutomatonTopDownAsymptotic) {
+        /*} else if (rhs instanceof SGraphBRDecompositionAutomatonTopDownAsymptotic) {
             SGraphBRDecompositionAutomatonTopDownAsymptotic rhsTopDown = (SGraphBRDecompositionAutomatonTopDownAsymptotic) rhs;
             for (int constant : matcherConstants) {
                 if (!rhsTopDown.storedConstants[constant].isEmpty()) {
@@ -328,7 +325,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                         }
                     }
                 }
-            }
+            }*/
         } else {
             for (Rule constRuleMatcher : matcherConstantRules) {
                 IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constRuleMatcher.getLabel());
@@ -339,7 +336,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 }
             }
         }
-        ParseTester.termCount = startStateIDs.size();
         //System.err.println("posOfStartStateRepInRules size: " + posOfStartStateRepInRules.size());
     }
 
@@ -432,8 +428,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                     }
                     Pair<String, State> intersParent = new ImmutablePair(matcher.getStateForId(matcherState), rhs.getStateForId(rhsState));
                     String label = rhs.getSignature().resolveSymbolId(rhsLabel);
-                    ParseTester.averageLogger.increaseValue("intersection rules count");
-                    ParseTester.intersectionRules++;
                     intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, label, children));
 
                     outerRes = true;
@@ -536,7 +530,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                         for (int i = 0; i < arity; i++) {
                             children.add(new ImmutablePair(matcher.getStateForId(matcherChildren[i]), rhs.getStateForId(rhsChildren[i])));
                         }
-                        ParseTester.averageLogger.increaseValue("intersection rule count");
                         intersectionAuto.addRule(intersectionAuto.createRule(intersState, matcher.getSignature().resolveSymbolId(matcherLabel), children));
                     }
                 }
@@ -669,7 +662,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 int rhsParent = constRuleRhs.getParent();
                 Pair<String, State> parent = makeDuoStateAndPutOnAgenda(matcherParent, rhsParent, rhs, matcherState2RhsState, agenda, seen);
                 Rule intersRule = intersectionAutomaton.createRule(parent, constRuleMatcher.getLabel(matcher), new Pair[0]);
-                ParseTester.intersectionRules++;
                 intersectionAutomaton.addRule(intersRule);
             }
         }
@@ -710,8 +702,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 for (int j = 0; j < arity; j++) {
                     intersChildren[j] = new ImmutablePair(matcher.getStateForId(matcherRule.getChildren()[j]), rhs.getStateForId(rhsProcessedChildIDs[j]));
                 }
-                ParseTester.averageLogger.increaseValue("intersection rules count");
-                ParseTester.intersectionRules++;
                 intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, matcherRule.getLabel(matcher), intersChildren));
 
             }

@@ -38,7 +38,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author jonas
+ * @author groschwitz
  */
 public class ParseTester {
 

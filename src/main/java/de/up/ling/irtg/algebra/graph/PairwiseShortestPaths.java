@@ -10,7 +10,7 @@ import org.jgrapht.DirectedGraph;
  *
  * @author jonas
  */
-public class PairwiseShortestPaths {//this class computes (and stores) pairwise shortest paths and their last edge in the constructor.
+class PairwiseShortestPaths {//this class computes (and stores) pairwise shortest paths and their last edge in the constructor.
     private int[][] pwShortestPaths;
     private int[][] edges;
     private final int graphSize;
@@ -109,8 +109,4 @@ public class PairwiseShortestPaths {//this class computes (and stores) pairwise 
         return edges[startNode][endNode];
     }
     
-    public int getGraphSize()
-    {
-        return graphSize;
-    }
 }
