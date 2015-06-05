@@ -8,7 +8,7 @@ import com.bric.window.WindowMenu;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
-import static de.up.ling.irtg.gui.GuiMain.log;
+import static de.up.ling.irtg.gui.Alto.log;
 import static de.up.ling.irtg.util.Util.formatTimeSince;
 import de.up.ling.tree.Tree;
 import java.awt.Component;
@@ -39,7 +39,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         derivationViewers.add(new JDerivationViewer());
         miRemoveView.setEnabled(false);
         
-        if( ! GuiMain.isMac() ) {
+        if( ! Alto.isMac() ) {
             miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
             miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
             miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
@@ -397,15 +397,15 @@ public class JLanguageViewer extends javax.swing.JFrame {
     }//GEN-LAST:event_handleResize
 
     private void miOpenIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenIrtgActionPerformed
-        GuiMain.loadIrtg(this);
+        Alto.loadIrtg(this);
     }//GEN-LAST:event_miOpenIrtgActionPerformed
 
     private void miOpenAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenAutomatonActionPerformed
-        GuiMain.loadAutomaton(this);
+        Alto.loadAutomaton(this);
     }//GEN-LAST:event_miOpenAutomatonActionPerformed
 
     private void miQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miQuitActionPerformed
-        GuiMain.quit();
+        Alto.quit();
     }//GEN-LAST:event_miQuitActionPerformed
 
     private void miAddViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAddViewActionPerformed
@@ -467,11 +467,11 @@ public class JLanguageViewer extends javax.swing.JFrame {
     }//GEN-LAST:event_miCloseWindowActionPerformed
 
     private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
-        GuiMain.closeAllWindows();
+        Alto.closeAllWindows();
     }//GEN-LAST:event_miCloseAllWindowsActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        GuiMain.showDecompositionDialog(this);
+        Alto.showDecompositionDialog(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

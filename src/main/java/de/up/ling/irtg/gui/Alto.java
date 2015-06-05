@@ -60,10 +60,12 @@ import org.simplericity.macify.eawt.DefaultApplication;
  *
  * @author koller
  */
-public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
+public class Alto extends javax.swing.JFrame implements ApplicationListener {
+    // Class is named Alto, because as of MacOS Mavericks, that determines
+    // the name in the menu bar.
 
     private static File previousDirectory;
-    private static GuiMain app;
+    private static Alto app;
     private static ExecutorService executorService = Executors.newFixedThreadPool(1);
 
     static {
@@ -73,11 +75,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     /**
      * Creates new form GuiMain
      */
-    public GuiMain() {
+    public Alto() {
         initComponents();
         jMenuBar1.add(new WindowMenu(this));
 
-        if (!GuiMain.isMac()) {
+        if (!Alto.isMac()) {
             miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
             miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
             miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
@@ -85,7 +87,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    public static GuiMain getApplication() {
+    public static Alto getApplication() {
         return app;
     }
 
@@ -117,7 +119,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenuItem5 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("IRTG GUI");
+        setTitle("Alto GUI");
 
         log.setEditable(false);
         log.setColumns(20);
@@ -242,7 +244,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
     public static void closeAllWindows() {
         for (Window window : WindowList.getWindows(false, false)) {
-            if (!(window instanceof GuiMain)) {
+            if (!(window instanceof Alto)) {
                 window.setVisible(false);
             }
         }
@@ -534,7 +536,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void log(final String log) {
-        final GuiMain x = app;
+        final Alto x = app;
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -564,8 +566,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         // tooltips stay visible forever
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
 
-        final GuiMain guiMain = new GuiMain();
-        GuiMain.app = guiMain;
+        final Alto guiMain = new Alto();
+        Alto.app = guiMain;
 
         Application application = new DefaultApplication();
         application.addApplicationListener(guiMain);
