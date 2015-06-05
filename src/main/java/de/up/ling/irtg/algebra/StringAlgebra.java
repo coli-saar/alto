@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
@@ -97,23 +98,9 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         return symbols;
     }
 
-//    @Override
-//    public Signature getSignature() {
-//        return signature;
-//    }
-
     @Override
     public JComponent visualize(List<String> object) {
         return new JLabel(StringTools.join(object, " "));
-    }
-
-    @Override
-    public Map<String, String> getRepresentations(List<String> object) {
-        Map<String, String> ret = new LinkedHashMap<String, String>(); // LinkedHashMap -> predictable order of keys
-
-        ret.put("text", StringTools.join(object, " "));
-
-        return ret;
     }
 
     private class CkyAutomaton extends TreeAutomaton<Span> {

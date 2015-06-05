@@ -4,3 +4,4 @@ de.up.ling.irtg.codec.TreeAutomatonInputCodec
 de.up.ling.irtg.codec.BottomUpTreeAutomatonInputCodec
 de.up.ling.irtg.codec.TiburonTreeAutomatonInputCodec
 de.up.ling.irtg.codec.TemplateIrtgInputCodec
+de.up.ling.irtg.codec.IsiAmrInputCodec

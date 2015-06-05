@@ -31,18 +31,9 @@ public class JDerivationTree extends JDerivationDisplayable {
         jsp.setBackground(Color.white);
         add(jsp);
         
-        String tikz;
-        
-        try {
-            tikz = new TikzQtreeOutputCodec().asString(derivationTree);
-        } catch(IOException e) {
-            GuiUtils.showError(this, e);
-            tikz = "(error)";
-        }
-        
-        PopupMenu.create("text", derivationTree.toString(),
-                         "tikz-qtree", tikz)
-                 .addAsMouseListener(jsp);
+        PopupMenu.b().add("text", derivationTree.toString())
+                .add("tikz-qtree", new TikzQtreeOutputCodec().asStringSupplier(derivationTree))
+                .build().addAsMouseListener(jsp);
     }
 
     /**

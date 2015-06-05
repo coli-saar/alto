@@ -13,7 +13,11 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 /**
- *
+ * Encodes a tree as a series of instructions for the
+ * tikz-qtree tree drawing package. You can copy and paste
+ * the resulting string into Latex and compile it.
+ * (Don't forget to \\usepackage{tikz-qtree})
+ * 
  * @author koller
  */
 @CodecMetadata(name = "tikz-qtree", description = "tikz-qtree", type = Tree.class)

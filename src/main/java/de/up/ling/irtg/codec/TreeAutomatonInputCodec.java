@@ -17,7 +17,19 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 /**
- *
+ * A codec for reading tree automata. A string representation of a
+ * tree automaton consists of a list of rules, one per line. Rules look
+ * like this:<p>
+ * 
+ * <code>A! -&gt; f(B,C,D)</code><p>
+ * 
+ * Here A,B,C,D are states (= nonterminal symbols) and f is a three-place symbol
+ * from the signature of the tree automaton. The exclamation mark after S
+ * says that S is a final state (= start symbol).<p>
+ * 
+ * Drop the brackets if f is a zero-place symbol, i.e. a rule for leaves
+ * looks like this: <code>D -&gt; a</code>.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "auto", description = "Tree automata", extension = "auto", type = TreeAutomaton.class)

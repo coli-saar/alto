@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import java.io.StringReader;
 import java.util.Collections;
@@ -144,11 +145,7 @@ public class GraphAlgebra extends Algebra<SGraph> {
      */
     @Override
     public SGraph parseString(String representation) throws ParserException {
-        try {
-            return IsiAmrParser.parse(new StringReader(representation));
-        } catch (ParseException ex) {
-            throw new ParserException(ex);
-        }
+        return new IsiAmrInputCodec().read(representation);
     }
 
     /**
@@ -165,13 +162,13 @@ public class GraphAlgebra extends Algebra<SGraph> {
         return SGraphDrawer.makeComponent(graph);
     }
 
-    @Override
-    public Map<String, String> getRepresentations(SGraph object) {
-        Map<String, String> ret = super.getRepresentations(object);
-
-        ret.put("ISI-style AMR", object.toIsiAmrString());
-
-        return ret;
-    }
+//    @Override
+//    public Map<String, String> getRepresentations(SGraph object) {
+//        Map<String, String> ret = super.getRepresentations(object);
+//
+//        ret.put("ISI-style AMR", object.toIsiAmrString());
+//
+//        return ret;
+//    }
 
 }

@@ -6,10 +6,9 @@
 package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.ProgressListener;
-import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -17,10 +16,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
- * An <i>input codec</i> for reading objects of
- * class <code>E</code> from an input stream.
+ * Reconstructs an object from a representation. Representations will
+ * typically be strings, but you could also implement an input codec
+ * for binary representations.<p>
+ * 
+ * The codec will attempt to decode the representation into an object
+ * of the class specified
+ * by the type parameter E. For instance, a {@link IrtgInputCodec}
+ * will decode a string representation into an {@link InterpretedTreeAutomaton},
+ * whereas a {@link TreeAutomatonInputCodec} will decode a string into
+ * a {@link TreeAutomaton}.<p>
+ * 
+ * Concrete input codec implementations must implement the abstract method
+ * {@link #read(java.io.InputStream) }, which reads data from an input stream
+ * and decodes it into an object. This class then
+ * provides a number of convenience methods that make use of the concrete
+ * implementation of read.<p>
+ * 
+ * Input codecs can be <i>registered</i> by adding them to the file
+ * src/main/resources/META-INF/services/de.up.ling.codec.InputCodec.
+ * Input codecs that are suitable for a given class of objects can then
+ * be found using {@link #getInputCodecs(java.lang.Class) }. <p>
+ * 
+ * In order to be discovered correctly, each input codec needs to be annotated
+ * with {@link CodecMetadata}, such as the type of E and a filename extension.
  * 
  * @author koller
  */
@@ -55,10 +78,15 @@ public abstract class InputCodec<E> {
      * @param s
      * @return
      * @throws ParseException
-     * @throws IOException 
      */
-    public E read(String s) throws ParseException, IOException {
-        return read(new ByteArrayInputStream(s.getBytes()));
+    public E read(String s) throws ParseException {
+        try {
+            return read(new ByteArrayInputStream(s.getBytes()));
+        } catch (IOException ex) {
+            // this should never happen -- no IO exceptions when reading from strings
+            Logger.getLogger(InputCodec.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
     }
 
     /**

@@ -9,13 +9,13 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.codec.TikzQtreeOutputCodec;
-import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
-import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -64,19 +64,10 @@ public class JInterpretation extends JDerivationDisplayable {
         });
         JComponent treePanel = sp(rawTreePanel);
         termPanel.add(treePanel);
-
-        String tikz;
-
-        try {
-            tikz = new TikzQtreeOutputCodec().asString(term);
-        } catch (IOException e) {
-            GuiUtils.showError(this, e);
-            tikz = "(error)";
-        }
-
-        PopupMenu.create("text", term.toString(),
-                "tikz-qtree", tikz)
-                .addAsMouseListener(rawTreePanel);
+        
+        PopupMenu.b().add("text", term.toString())
+                .add("tikz-qtree", new TikzQtreeOutputCodec().asStringSupplier(term))
+                .build().addAsMouseListener(rawTreePanel);
 
         // value panel
         valuePanel.removeAll();
@@ -87,14 +78,15 @@ public class JInterpretation extends JDerivationDisplayable {
             final Object value = alg.evaluate(term);
             valueComponent = alg.visualize(value);
 
-            Map<String, String> popupEntries = alg.getRepresentations(value);
-            for (OutputCodec codec : OutputCodec.getInputCodecs(value.getClass())) {
-                popupEntries.put(codec.getMetadata().description(), codec.asString(value));
+            Map<String, Supplier<String>> popupEntries = new LinkedHashMap<>(); //alg.getRepresentations(value);
+            for (OutputCodec codec : OutputCodec.getOutputCodecs(value.getClass())) {
+                popupEntries.put(codec.getMetadata().description(), codec.asStringSupplier(value));
             }
 
             new PopupMenu(popupEntries).addAsMouseListener(valueComponent);
         } catch (Exception e) {
             valueComponent = makeErrorComponent(e);
+            e.printStackTrace(System.err);
         }
 
         valuePanel.add(sp(valueComponent));
