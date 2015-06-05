@@ -7,14 +7,19 @@ package de.up.ling.irtg.algebra.graph;
 
 import org.jgrapht.DirectedGraph;
 /**
- *
- * @author jonas
+ * Utility class to precompute and store, the lengths and ending edges of the shortest paths between two nodes, for all pairs of nodes.
+ * @author groschwitz
  */
 class PairwiseShortestPaths {//this class computes (and stores) pairwise shortest paths and their last edge in the constructor.
     private int[][] pwShortestPaths;
     private int[][] edges;
     private final int graphSize;
     
+    /**
+     * Initializes and then runs the Floyd-Warshall algorithm, runtime O(n^3).
+     * @param wholeGraph
+     * @param graphInfo 
+     */
     public PairwiseShortestPaths(SGraph wholeGraph, GraphInfo graphInfo)
     {
         graphSize = wholeGraph.getGraph().vertexSet().size();
@@ -93,13 +98,20 @@ class PairwiseShortestPaths {//this class computes (and stores) pairwise shortes
         edges = newE;
     }
     
+    /**
+     * Returns the precomputed distance between {@code node1} and {@code node2}.
+     * @param node1
+     * @param node2
+     * @return 
+     */
     public Integer getDistance(int node1, int node2)
     {
         return pwShortestPaths[node1][node2];
     }
     
     /**
-     * returns the edge of shortest path between the nodes which is incident to endNode.
+     * Returns the last edge on the shortest path from {@code startNode} to {@code endNode}.
+     * Precomputed, has constant runtime.
      * @param startNode
      * @param endNode
      * @return

@@ -4,13 +4,13 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import java.util.function.Function;
 import org.jgrapht.Graph;
 import org.jgrapht.experimental.equivalence.EquivalenceComparator;
 
 /**
- * A node of an s-graph. Each node has a name, and
+ * A node of an s-graph. Each node is identified via a name, and
  * may have a label. Unlabeled nodes have a label of <code>null</code>.
+ * 
  * 
  * @author koller
  */
@@ -37,10 +37,15 @@ public class GraphNode {
         this.label = label;
     }
 
-    public String repr() {
+    /**
+     * Returns a string representation of the node, for debugging.
+     * @return 
+     */
+    String repr() {
         return name + ":" + (label == null ? "<null>" : label);
     }
-    public static Function<GraphNode, String> reprF = f -> f.repr();
+    
+//    public static Function<GraphNode, String> reprF = f -> f.repr();
     
     
 //            new Function<GraphNode, String>() {
@@ -49,20 +54,24 @@ public class GraphNode {
 //        }
 //    };
     
-    public static final Function<GraphNode, String> nameF = f -> f.getName();
+//    public static final Function<GraphNode, String> nameF = f -> f.getName();
 //            new Function<GraphNode, String>() {
 //        public String apply(GraphNode f) {
 //            return f.getName();
 //        }
 //    };
     
-    public static final Function<GraphNode, String> labelF = f -> f.getLabel();
+//    public static final Function<GraphNode, String> labelF = f -> f.getLabel();
 //            new Function<GraphNode, String>() {
 //        public String apply(GraphNode f) {
 //            return (f.getLabel() == null) ? ("(" + f.getName() + ")") : f.getLabel();
 //        }
 //    };
 
+    /**
+     * Returns the node's label.
+     * @return 
+     */
     @Override
     public String toString() {
         return label;
@@ -75,6 +84,11 @@ public class GraphNode {
         return hash;
     }
 
+    /**
+     * Returns true iff both nodes have the same name.
+     * @param obj
+     * @return 
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {

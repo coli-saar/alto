@@ -11,13 +11,14 @@ import java.util.List;
 import java.util.function.IntConsumer;
 
 /**
- *
- * @author jonas
+ * An interface for in-boundary edge sets based on their integer ID.
+ * There are implementations using Bytes and shorts instead of integers in an effort to save memory.
+ * @author groschwitz
  */
-abstract class IdBasedEdgeSet {
+abstract interface IdBasedEdgeSet {
 
     /**
-     * adds an edge given by its source and target node.
+     * Adds an edge given by its source and target node.
      * @param source
      * @param target
      * @param graphInfo this is needed to find the corresponding edge id.
@@ -25,13 +26,13 @@ abstract class IdBasedEdgeSet {
     public abstract void add(int source, int target, GraphInfo graphInfo);
     
     /**
-     * adds the edge.
+     * Adds the edge.
      * @param edge
      */
     public abstract void add(int edge);
 
     /**
-     * returns true iff an edge with the given source and target node is contained in this set.
+     * Returns true iff an edge with the given source and target node is contained in this set.
      * @param source
      * @param target
      * @param graphInfo
@@ -40,14 +41,14 @@ abstract class IdBasedEdgeSet {
     public abstract boolean contains(int source, int target, GraphInfo graphInfo);
 
     /**
-     * returns true iff this set contains the given edge.
+     * Returns true iff this set contains the given edge.
      * @param edge
      * @return
      */
     public abstract boolean contains(int edge);
 
     /**
-     * removes the edge with the given source and target node from this set.
+     * Removes the edge with the given source and target node from this set.
      * @param source
      * @param target
      * @param graphInfo
@@ -55,27 +56,27 @@ abstract class IdBasedEdgeSet {
     public abstract void remove(int source, int target, GraphInfo graphInfo);
 
     /**
-     * returns true iff this set and the other set are disjoint. 
+     * Returns true iff this set and the other set are disjoint. 
      * @param other
      * @return
      */
     public abstract boolean disjunt(IdBasedEdgeSet other);
 
     /**
-     * adds all edges of other to this set.
+     * Adds all edges of other to this set.
      * @param other
      */
     public abstract void addAll(IdBasedEdgeSet other);
 
     /**
-     * adds the given edge to this set.
+     * Adds the given edge to this set.
      * @param edge
      * @param graphInfo
      */
     public abstract void add(GraphEdge edge, GraphInfo graphInfo);
 
     /**
-     * returns true iff this set contains the given edge
+     * Returns true iff this set contains the given edge
      * @param edge
      * @param graphInfo
      * @return
@@ -83,14 +84,14 @@ abstract class IdBasedEdgeSet {
     public abstract boolean contains(GraphEdge edge, GraphInfo graphInfo);
 
     /**
-     * returns true iff this set contains all the edges in the array
+     * Returns true iff this set contains all the edges in the array
      * @param other
      * @return
      */
     public abstract boolean containsAll(int[] other);
 
     /**
-     * computes the summand for a BoundaryRepresentation's EdgeID corresponding to node vNr, with source assigned to it.
+     * Computes the summand for a BoundaryRepresentation's EdgeID corresponding to node vNr, with source assigned to it.
      * @param vNr
      * @param source
      * @param graphInfo
@@ -124,7 +125,10 @@ abstract class IdBasedEdgeSet {
      */
     public abstract long smartAddIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo);
     
-    @Override
+    /**
+     * Clones the set.
+     * @return 
+     */
     public abstract IdBasedEdgeSet clone();
     
     /**

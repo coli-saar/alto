@@ -221,7 +221,11 @@ public class SGraph{
         return nameToNode.containsKey(name);
     }
 
-    public boolean hasNamedNode() {
+    /**
+     * Returns true iff at least one node in the graph has a label.
+     * @return 
+     */
+    public boolean hasLabelledNode() {
         Iterator<GraphNode> it = nameToNode.values().iterator();
         boolean ret = false;
         while (it.hasNext()) {
@@ -601,6 +605,12 @@ public class SGraph{
         public void append(GraphNode node, Set<String> visitedNodes, StringBuilder buf);
     }
     
+    /**
+     * Returns a string representation of the graph.
+     * @param graph
+     * @param nra
+     * @return 
+     */
     public static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph, NodeRepresentationAppender nra) {
         StringBuilder buf = new StringBuilder();
         Set<String> visitedNodes = new HashSet<>();
@@ -633,6 +643,12 @@ public class SGraph{
         return buf.toString();
     }
     
+    /**
+     * Returns a string representation of the graph.
+     * @param graph
+     * @param nra
+     * @return 
+     */
     public static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph) {
         return graphToString(graph, (node, visitedNodes, buf) -> {
             buf.append(node.getName());
@@ -755,7 +771,12 @@ public class SGraph{
         }
     }
 
-    boolean isIdenticalExceptSources(SGraph other) {
+    /**
+     * Checks whether this graph is identical to the other graph, ignoring source assignments.
+     * @param other
+     * @return 
+     */
+    public boolean isIdenticalExceptSources(SGraph other) {
         if (this == other) {
             return true;
         } else if (!nameToNode.keySet().equals(other.nameToNode.keySet())) {
@@ -1059,7 +1080,7 @@ public class SGraph{
     /**
      * Checks whether two s-graphs are isomorphic. This corresponds to
      * evaluating {@link #equals(java.lang.Object) } in the mode where
-     * "equals means isomorphy" is true.
+     * "equals means isomorphy" is true. Does not check edge labels.
      * 
      * @param other
      * @return 
@@ -1094,6 +1115,15 @@ public class SGraph{
         }
     }
     
+    /**
+     * Checks whether two s-graphs are isomorphic. This corresponds to
+     * evaluating {@link #equals(java.lang.Object) } in the mode where
+     * "equals means isomorphy" is true. Also compares whether edges are
+     * labelled equally.
+     * 
+     * @param other
+     * @return 
+     */
     public boolean isIsomorphicAlsoEdges(SGraph other) {
         GraphIsomorphismInspector iso
                 = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(

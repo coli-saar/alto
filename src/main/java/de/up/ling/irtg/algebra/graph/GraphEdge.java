@@ -45,11 +45,11 @@ public class GraphEdge{
         return target;
     }
     
-    public String repr() {
+    String repr() {
         return source.getName() + " -" + (label == null ? "-" : label) + "-> " + (target.getName());
     }
     
-    public static final Function<GraphEdge,String> reprF =
+    static final Function<GraphEdge,String> reprF =
         new Function<GraphEdge, String>() {
             public String apply(GraphEdge f) {
                 return f.repr();
@@ -68,6 +68,10 @@ public class GraphEdge{
         return label.toString();
     }
 
+    /**
+     * Based on source and target.
+     * @return 
+     */
     @Override
     public int hashCode() {
         int hash = 5;
@@ -76,6 +80,11 @@ public class GraphEdge{
         return hash;
     }
 
+    /**
+     * Only checks whether source and target are equal, the label is not checked.
+     * @param obj
+     * @return 
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {

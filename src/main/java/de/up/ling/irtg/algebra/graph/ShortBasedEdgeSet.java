@@ -16,22 +16,23 @@ import java.util.StringJoiner;
 import java.util.function.IntConsumer;
 
 /**
- *
+ * The set of in-boundary edges of a {@code BoundaryRepresentation}.
+ * Uses {@code byte} instead of {@code int} to save memory.
  * @author groschwitz
  */
-class ShortBasedEdgeSet extends IdBasedEdgeSet {
+class ShortBasedEdgeSet implements IdBasedEdgeSet {
 
-    /**
-     *
-     */
-    static int idCounter = 0;
+    //static int idCounter = 0;
     //private final String ID;
     private final ShortArraySet edges;
 
-    public ShortBasedEdgeSet() {
+    /**
+     * Creates a new empty edge set.
+     */
+    ShortBasedEdgeSet() {
         edges = new ShortArraySet();
         //ID = "ID"+String.valueOf(idCounter);//for debugging
-        idCounter++;
+        //idCounter++;
         //System.err.println(ID + " created from scratch");
     }
 
@@ -39,7 +40,7 @@ class ShortBasedEdgeSet extends IdBasedEdgeSet {
         edges = input.edges.clone();
         //edges = cloneLongSet(input.edges);
         //ID = "ID"+String.valueOf(idCounter);
-        idCounter++;
+        //idCounter++;
         //System.err.println(ID + " created by cloning from " + input.ID);
     }
 

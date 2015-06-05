@@ -21,7 +21,8 @@ import org.jgrapht.alg.BlockCutpointGraph;
 import org.jgrapht.graph.DefaultEdge;
 
 /**
- *
+ * Manages how an s-component is split, were a node promoted to a source.
+ * Precomputes all behavior when initialized.
  * @author groschwitz
  */
 class SplitManager {
@@ -43,6 +44,21 @@ class SplitManager {
     private final Map<DefaultEdge, UndirectedGraph<Integer, Integer>> bcgEdge2Start;
     private final Map<DefaultEdge, UndirectedGraph<Integer, Integer>> bcgEdge2End;
     
+    /**
+     * Initializes the {@code SplitManager} for a component C, including
+     * precomputation. This includes computing the biconnected components,
+     * the block-cutpoint graph and annotating its edges with the effects of
+     * promoting a cutpoint to a source node.
+     * 
+     * @param compGraph This is the modified graph where each source node has 
+     * one copy for each incident edge, and each copy is only incident to that
+     * edge. This simulates the splitting effect of the source nodes with
+     * respect to edge equivalence.
+     * @param inBEdges The in-boundary edges of C.
+     * @param bVertices The boundary nodes of C.
+     * @param graphInfo The {@code GraphInfo} for the complete graph, of which
+     * C is a part.
+     */
     public SplitManager(UndirectedGraph<Integer, Integer> compGraph, IntSet inBEdges, IntSet bVertices, GraphInfo graphInfo) {
         nonSplitVertices = new IntOpenHashSet();
         bcgEdge2Start = new HashMap<>();
@@ -182,17 +198,20 @@ class SplitManager {
     
     
     /**
-     * provides a map that assigns to each cut vertex the set of components which the vertex cuts this component into.
-     * @param storedComponents if a component occurs in the result, such that an equal component was stored earlier, this earlier component is used instead of a new copy.
+     * provides a map that assigns to each cut vertex the set of components
+     * which the vertex cuts this component into.
+     * @param storedComponents if a component occurs in the result, such that an
+     * equal component was stored earlier, this earlier instance is used
+     * instead of a new copy.
      * @param graphInfo
      * @return
      */
-    public Int2ObjectMap<Set<BRepComponent>> getAllSplits(Map<BRepComponent, BRepComponent> storedComponents, GraphInfo graphInfo) {
-        Int2ObjectMap<Set<BRepComponent>> ret = new Int2ObjectOpenHashMap<>();
+    public Int2ObjectMap<Set<SComponent>> getAllSplits(Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
+        Int2ObjectMap<Set<SComponent>> ret = new Int2ObjectOpenHashMap<>();
         
         for (int cutVertex : bcg.getCutpoints()) {
             
-            Set<BRepComponent> components = new HashSet<>();
+            Set<SComponent> components = new HashSet<>();
             for (DefaultEdge e : bcg.edgesOf(cutVertex2BcgNode.get(cutVertex))) {
                 
                 /*if (!bcgEdge2BoundaryEdges.containsKey(e)) {
@@ -206,7 +225,7 @@ class SplitManager {
                 IntSet newBVertices = new IntOpenHashSet(bcgEdge2BVertices.get(e));
                 newBVertices.add(cutVertex);
                 
-                components.add(BRepComponent.makeComponent(newBVertices, newInBEdges, storedComponents, graphInfo));
+                components.add(SComponent.makeComponent(newBVertices, newInBEdges, storedComponents, graphInfo));
                 
             }
             
@@ -218,13 +237,16 @@ class SplitManager {
     }
     
     /**
-     * computes for every non-cut vertex v from this component a new component c(v) by adding v as a source, and then returns the map v->c(v).
-     * @param storedComponents if a component occurs in the result, such that an equal component was stored earlier, this earlier component is used instead of a new copy.
+     * computes for every non-cut vertex v from this component a new component
+     * c(v) by adding v as a source, and then returns the map v->c(v).
+     * @param storedComponents if a component occurs in the result, such that an
+     * equal component was stored earlier, this earlier instance is used instead
+     * of a new copy.
      * @param graphInfo
      * @return
      */
-    public Int2ObjectMap<BRepComponent> getAllNonSplits(Map<BRepComponent, BRepComponent> storedComponents, GraphInfo graphInfo) {
-        Int2ObjectMap<BRepComponent> ret = new Int2ObjectOpenHashMap<>();
+    public Int2ObjectMap<SComponent> getAllNonSplits(Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
+        Int2ObjectMap<SComponent> ret = new Int2ObjectOpenHashMap<>();
         
         for (int v : nonSplitVertices) {
             IntSet newInBEdges = new IntOpenHashSet(allInBEdges);
@@ -233,7 +255,7 @@ class SplitManager {
             }
             IntSet newBVertices = new IntOpenHashSet(allBVertices);
             newBVertices.add(v);
-            ret.put(v, BRepComponent.makeComponent(newBVertices, newInBEdges, storedComponents, graphInfo));
+            ret.put(v, SComponent.makeComponent(newBVertices, newInBEdges, storedComponents, graphInfo));
         }
         return ret;
     }

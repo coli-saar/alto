@@ -3,10 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.script;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.graph.SComponent;
+import de.up.ling.irtg.algebra.graph.SComponentRepresentation;
+import de.up.ling.irtg.algebra.graph.GraphAlgebra;
+import de.up.ling.irtg.algebra.graph.GraphInfo;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.util.AverageLogger;
@@ -37,24 +42,25 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * Helper class to evaluate parsing performance in the s-graph algebra.
  * @author groschwitz
  */
-public class ParseTester {
+public class SGraphParsingEvaluation {
 
-    static int runningNumber = 0;
-    static String logDescription = "TOPDOWNSubtreesTypeds";
+    private static int runningNumber = 0;
+    private static String logDescription = "TOPDOWNSubtreesTypeds";
     
-    static String sortBy = "n";
-    static boolean computeLanguageSize = true;
-    static String corpusPath;
-    static String grammarPath = 
+    private static String sortBy = "n";
+    private static boolean computeLanguageSize = true;
+    private static String corpusPath;
+    private static String grammarPath = 
             //"corpora-and-grammars/grammars/sgraph_bolinas_comparison/larger_grammar/rulesLexicalized.txt";
             //"corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
             //"corpora-and-grammars/grammars/LittlePrinceSubtreesTyped.txt";//deprecated!
             "corpora-and-grammars/grammars/sgraph_bolinas_comparison/small_grammar/rules.txt";
-    static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
-    static String sortedBolinasCorpusPath = "corpora-and-grammars/corpora/sorted-bolinas-amr-bank-v1.3.txt";
+    private static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
+    private static String sortedBolinasCorpusPath = "corpora-and-grammars/corpora/sorted-bolinas-amr-bank-v1.3.txt";
+    private static boolean useTopDown;
     
     public static int cachedAnswers;
     public static int newAnswers;
@@ -69,6 +75,7 @@ public class ParseTester {
 
     /**
      * Benchmarks the s-graph parsing algorithm. Execute without arguments to get more detailed instructions.
+     * The interpretation corresponding to the s-graph algebra must be named <i>int</i>.
      * @param args
      * @throws Exception
      */
@@ -94,7 +101,7 @@ public class ParseTester {
             System.out.println("Sixth is the number of graphs to parse at warmup.");
             System.out.println("Seventh is the number of iterations per graph.");
             System.out.println("Eighth is 'true' to compute language sizes, 'false' otherwise.");
-            System.out.println("Ninth argument is the grammar to use for parsing");
+            System.out.println("Ninth argument is the grammar to use for parsing. The s-graph interpretation must be named 'int'");
             System.out.println("Last argument is the path of the corpus to be parsed");
         } else {
             try {
@@ -108,9 +115,9 @@ public class ParseTester {
                 System.out.println(computeLanguageSize);
                 grammarPath = args[8];
                 corpusPath = args[9];
-                GraphAlgebra.useTopDownAutomaton = args[1].equals("topdown");
+                useTopDown = args[1].equals("topdown");
                 if (args[0].equals("bol")) {
-                    System.out.println("Now parsing bolinas compatible from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (GraphAlgebra.useTopDownAutomaton ? "top down" : "bottom up"));
+                    System.out.println("Now parsing bolinas compatible from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (useTopDown ? "top down" : "bottom up"));
                     parseBolinasCompatible(start, stop, warmupStop, internalIterations);
                 } else if (args[0].equals("count")) {
                     System.out.println("now counting degrees");
@@ -119,7 +126,7 @@ public class ParseTester {
                     System.out.println("now counting average numbers");
                     getAverages(start, stop);
                 } else {
-                    System.out.println("Now parsing all graphs from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (GraphAlgebra.useTopDownAutomaton ? "top down" : "bottom up"));
+                    System.out.println("Now parsing all graphs from " + start + " to " + stop +"("+internalIterations+" iterations), "+ (useTopDown ? "top down" : "bottom up"));
                     parseAll(start, stop, warmupStop, internalIterations);
                 }
             } catch (java.lang.Exception e) {
@@ -132,7 +139,7 @@ public class ParseTester {
                 System.out.println("Sixth is the number of graphs to parse at warmup.");
                 System.out.println("Seventh is the number of iterations per graph.");
                 System.out.println("Eighth is 'true' to compute language sizes, 'false' otherwise.");
-                System.out.println("Ninth argument is the grammar to use for parsing");
+                System.out.println("Ninth argument is the grammar to use for parsing. The s-graph interpretation must be named 'int'");
                 System.out.println("Last argument is the path of the corpus to be parsed");
             }
         }
@@ -418,6 +425,7 @@ public class ParseTester {
         for (int j = 0; j < internalIterations; j++) {
             Map<String, Object> input = new HashMap<>();
             input.put("int", ti.graph);
+            ((GraphAlgebra)irtg.getInterpretation("int").getAlgebra()).setUseTopDownAutomaton(useTopDown);
             chart = irtg.parseInputObjects(input);
             
             //chart.viterbi();
@@ -439,7 +447,7 @@ public class ParseTester {
             sj.add(String.valueOf(ti.graph.getAllNodeNames().size()));
             sj.add(String.valueOf(ti.graph.getGraph().edgeSet().size()));
             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("int").getAlgebra();
-            sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).getMaxDegree()));
+            sj.add(String.valueOf(new GraphInfo(ti.graph, alg).getMaxDegree()));
             sj.add(String.valueOf(internalSw.getTimeBefore(1) / 1000000));
             sj.add(String.valueOf(languageSize));
             sj.add(String.valueOf(cachedAnswers));
@@ -450,7 +458,7 @@ public class ParseTester {
             try {
                 resultWriter.write(sj.toString() + "\n");
             } catch (IOException ex) {
-                Logger.getLogger(ParseTester.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(SGraphParsingEvaluation.class.getName()).log(Level.SEVERE, null, ex);
             }
         } else if (printOutput) {
             /*if (useTopDown) {
@@ -472,7 +480,7 @@ public class ParseTester {
             sj.add(String.valueOf(ti.graph.getAllNodeNames().size()));
             sj.add(String.valueOf(ti.graph.getGraph().edgeSet().size()));
             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("int").getAlgebra();
-            sj.add(String.valueOf(new GraphInfo(ti.graph, alg, alg.getSignature()).getMaxDegree()));
+            sj.add(String.valueOf(new GraphInfo(ti.graph, alg).getMaxDegree()));
             sj.add(String.valueOf(internalSw.getTimeBefore(1) / 1000000));
             sj.add(String.valueOf(languageSize));
             sj.add(String.valueOf(cachedAnswers));
@@ -509,7 +517,7 @@ public class ParseTester {
     
     private static int getMaxDeg(SGraph graph) {
         GraphAlgebra alg = new GraphAlgebra();
-        GraphInfo graphInfo = new GraphInfo(graph, alg, alg.getSignature());
+        GraphInfo graphInfo = new GraphInfo(graph, alg);
         return graphInfo.getMaxDegree();
     }
     
@@ -571,7 +579,7 @@ public class ParseTester {
         for (int i = start; i < stop; i++) {
             IrtgInducer.TrainingInstance ti = inducer.getCorpus().get(i);
             System.err.println("i = " + i);
-            GraphInfo graphInfo = new GraphInfo(ti.graph, alg, alg.getSignature());
+            GraphInfo graphInfo = new GraphInfo(ti.graph, alg);
             int maxDeg = graphInfo.getMaxDegree();
             int n = graphInfo.getNrNodes();
             System.err.println("   maxDeg = "+maxDeg);
@@ -596,13 +604,10 @@ public class ParseTester {
         sortCorpus(inducer.getCorpus());
 
         
-        int warmupIterations = 1;
-        int iterations = 1;
 
 
         //System.out.println(String.valueOf(size));
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
-        CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
 
         InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
 
@@ -619,9 +624,9 @@ public class ParseTester {
             //System.out.println(ti.graph.toIsiAmrString());
             Map<String, Object> input = new HashMap<>();
             input.put("int", ti.graph);
-            GraphAlgebra.useTopDownAutomaton = true;
+            ((GraphAlgebra)irtg.getInterpretation("int").getAlgebra()).setUseTopDownAutomaton(true);
             long languageSize1 = irtg.parseInputObjects(input).countTrees();
-            GraphAlgebra.useTopDownAutomaton = false;
+            ((GraphAlgebra)irtg.getInterpretation("int").getAlgebra()).setUseTopDownAutomaton(false);
             long languageSize2 = irtg.parseInputObjects(input).countTrees();
             long diff = languageSize1-languageSize2;
             if (diff != 0) {
@@ -634,25 +639,25 @@ public class ParseTester {
     }
     
     private static int getD(SGraph graph, GraphAlgebra alg) {
-        Map<BRepComponent, BRepComponent> storedComponents = new HashMap<>();
-        GraphInfo completeGraphInfo = new GraphInfo(graph, alg, alg.getSignature());
-        Set<BRepTopDown> completeGraphStates = new HashSet<>();
+        Map<SComponent, SComponent> storedComponents = new HashMap<>();
+        GraphInfo completeGraphInfo = new GraphInfo(graph, alg);
+        Set<SComponentRepresentation> completeGraphStates = new HashSet<>();
         SGraph bareCompleteGraph = graph.forgetSourcesExcept(new HashSet<>());
-        completeGraphStates.add(new BRepTopDown(bareCompleteGraph, storedComponents, completeGraphInfo));
+        completeGraphStates.add(new SComponentRepresentation(bareCompleteGraph, storedComponents, completeGraphInfo));
         for (int source = 0; source < completeGraphInfo.getNrSources(); source++) {
-            Set<BRepTopDown> newHere = new HashSet<>();
-            for (BRepTopDown oldRep : completeGraphStates) {
-                for (BRepComponent comp : oldRep.getComponents()) {
-                    Int2ObjectMap<BRepComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
+            Set<SComponentRepresentation> newHere = new HashSet<>();
+            for (SComponentRepresentation oldRep : completeGraphStates) {
+                for (SComponent comp : oldRep.getComponents()) {
+                    Int2ObjectMap<SComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
                     for (int v : nonsplitChildren.keySet()) {
-                        BRepTopDown child = oldRep.forgetReverse(source, v, comp, nonsplitChildren.get(v));
+                        SComponentRepresentation child = oldRep.forgetReverse(source, v, comp, nonsplitChildren.get(v));
                         if (child != null) {
                             newHere.add(child);
                         }
                     }
-                    Int2ObjectMap<Set<BRepComponent>> splitChildren = comp.getAllSplits(storedComponents, completeGraphInfo);
+                    Int2ObjectMap<Set<SComponent>> splitChildren = comp.getAllSplits(storedComponents, completeGraphInfo);
                     for (int v : splitChildren.keySet()) {
-                        BRepTopDown child = oldRep.forgetReverse(source, v, comp, splitChildren.get(v));
+                        SComponentRepresentation child = oldRep.forgetReverse(source, v, comp, splitChildren.get(v));
                         if (child != null) {
                             newHere.add(child);
                         }
@@ -662,7 +667,7 @@ public class ParseTester {
             completeGraphStates.addAll(newHere);
         }
         int max = 0;
-        for (BRepTopDown completeRep : completeGraphStates) {
+        for (SComponentRepresentation completeRep : completeGraphStates) {
             max = Math.max(completeRep.getComponents().size(), max);
         }
         return max;

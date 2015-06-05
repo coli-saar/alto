@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.algebra.graph.ParseTester;
+import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.MapFactory;

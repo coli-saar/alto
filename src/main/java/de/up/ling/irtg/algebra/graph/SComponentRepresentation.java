@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Arrays;
@@ -18,30 +19,39 @@ import java.util.Set;
 import java.util.StringJoiner;
 
 /**
- *
- * @author jonas
+ * An s-component representation for s-graphs, used as states in the top-down automaton.
+ * @author groschwitz
  */
-public class BRepTopDown {
+public class SComponentRepresentation {
     
     private final int[] sourceToNodename;
     private final BitSet isSourceNode;
-    private final Set<BRepComponent> components;
+    private final Set<SComponent> components;
 
-    public Set<BRepComponent> getComponents() {
+    public Set<SComponent> getComponents() {
         return components;
     }
     
-    
-    public BRepTopDown(SGraph completeGraph, GraphAlgebra alg) {
+    /**
+     * Creates a component representation of the complete (input) graph.
+     * @param completeGraph
+     * @param alg
+     */
+    public SComponentRepresentation(SGraph completeGraph, GraphAlgebra alg) {
         components = new HashSet<>();
-        GraphInfo complGraphInfo = new GraphInfo(completeGraph, alg, alg.getSignature());
-        sourceToNodename = new int[complGraphInfo.getSourceCount()];
+        GraphInfo complGraphInfo = new GraphInfo(completeGraph, alg);
+        sourceToNodename = new int[complGraphInfo.getNrSources()];
         Arrays.fill(sourceToNodename, -1);
         isSourceNode = new BitSet();
     }
     
-    
-    public BRepTopDown(int[] sourceToNodename, Set<BRepComponent> components) {
+    /**
+     * Creates an s-component representation defined by the given source assignment sourceToNodename and the set of s-components.
+     * It is assumed that this is only called for compatible sets of source nodes and sets of s-components.
+     * @param sourceToNodename
+     * @param components
+     */
+    public SComponentRepresentation(int[] sourceToNodename, Set<SComponent> components) {
         this.sourceToNodename = sourceToNodename;
         this.components = components;
         isSourceNode = new BitSet();
@@ -52,34 +62,42 @@ public class BRepTopDown {
         }
     }
     
+    /**
+     * Writes statistics into componentWriter and averageLogger of SGraphParsingEvaluation.
+     */
     public void writeStats() {
         int numberEdges = 0;
-        for (BRepComponent comp : components) {
+        for (SComponent comp : components) {
             numberEdges+=comp.getInBEdges().size();
         }
         try {
-            ParseTester.componentWriter.write(components.size()+","+numberEdges+"\n");
+            SGraphParsingEvaluation.componentWriter.write(components.size()+","+numberEdges+"\n");
         } catch (java.lang.Exception e) {
             System.out.println(e.toString());
         }
         if (isConnected()) {
-            ParseTester.averageLogger.increaseValue("Connected states");
+            SGraphParsingEvaluation.averageLogger.increaseValue("Connected states");
         } else {
-            ParseTester.averageLogger.increaseValue("Unconnected states");
+            SGraphParsingEvaluation.averageLogger.increaseValue("Unconnected states");
         }
     }
     
-    public BRepTopDown(SGraph graph, Map<BRepComponent, BRepComponent> storedComponents, GraphInfo completeGraphInfo) {
+    /**
+     * Creates an s-component representation of the s-graph {@code graph}, with respect to the supergraph represented by {@code completeGraphInfo}.
+     * Checks with {@code storedComponents} whether any of the s-components in the new representation is already stored, in which case it uses the already stored object.
+     * @param graph
+     * @param storedComponents
+     * @param completeGraphInfo
+     */
+    public SComponentRepresentation(SGraph graph, Map<SComponent, SComponent> storedComponents, GraphInfo completeGraphInfo) {
         components = new HashSet<>();
         sourceToNodename = new int[completeGraphInfo.getNrSources()];
         isSourceNode = new BitSet();
 
-        for (int j = 0; j < sourceToNodename.length; j++) {//use array.fill
-            sourceToNodename[j] = -1;
-        }
+        Arrays.fill(sourceToNodename, -1);
 
         if (graph.getAllSources().isEmpty()) {
-            components.add(BRepComponent.makeComponent(new IntOpenHashSet(), new IntOpenHashSet(), storedComponents, completeGraphInfo));
+            components.add(SComponent.makeComponent(new IntOpenHashSet(), new IntOpenHashSet(), storedComponents, completeGraphInfo));
         } else {
         
 
@@ -106,7 +124,7 @@ public class BRepTopDown {
                         IntSet edgeSet = new IntOpenHashSet();
                         edgeSet.add(completeGraphInfo.getEdge(vNr,vNr));
 
-                        components.add(BRepComponent.makeComponent(vSet, edgeSet, storedComponents, completeGraphInfo));
+                        components.add(SComponent.makeComponent(vSet, edgeSet, storedComponents, completeGraphInfo));
                     }
                 }
 
@@ -146,7 +164,7 @@ public class BRepTopDown {
 
 
                         }
-                        components.add(BRepComponent.makeComponent(bVertices, bEdges, storedComponents, completeGraphInfo));
+                        components.add(SComponent.makeComponent(bVertices, bEdges, storedComponents, completeGraphInfo));
                     }
                 }
             }
@@ -164,16 +182,20 @@ public class BRepTopDown {
         }
         return ret;
     }*/
-    
+
+    /**
+     * Returns true iff the sub-s-graph corresponding to this s-component representation is connected.
+     * @return
+     */
     public boolean isConnected() {
-        Set<BRepComponent> found = new HashSet<>();
-        Set<BRepComponent> change = new HashSet<>();
+        Set<SComponent> found = new HashSet<>();
+        Set<SComponent> change = new HashSet<>();
         change.add(components.iterator().next());
         while (!change.isEmpty()) {
             found.addAll(change);
             change = new HashSet<>();
-            for (BRepComponent seed : found) {
-                for (BRepComponent test : components) {
+            for (SComponent seed : found) {
+                for (SComponent test : components) {
                     if (!found.contains(test) && seed.sharesVertex(test)) {
                         change.add(test);
                     }
@@ -183,11 +205,22 @@ public class BRepTopDown {
         return found.size() == components.size();
     }
     
+    /**
+     * Returns the source node to which {@code source} is assigned in this representation.
+     * @param source
+     * @return
+     */
     public int getSourceNode(int source) {
         return sourceToNodename[source];
     }
     
-    public BRepTopDown renameReverse(int from, int to) {
+    /**
+     * Returns the unique s-component representation C such that renaming source name {@code from} to source name {@code to} in C yields this representation.
+     * @param from
+     * @param to
+     * @return
+     */
+    public SComponentRepresentation renameReverse(int from, int to) {
         //keep in mind that this is REVERTING the rename from "from" to "to"
         if (from == to) {
             return this;
@@ -197,41 +230,67 @@ public class BRepTopDown {
             int[] newSource2Nodename = Arrays.copyOf(sourceToNodename, sourceToNodename.length);
             newSource2Nodename[to] = -1;
             newSource2Nodename[from] = sourceToNodename[to];
-            return new BRepTopDown(newSource2Nodename, components);
+            return new SComponentRepresentation(newSource2Nodename, components);
         }
     }
     
-    public BRepTopDown forgetReverse(int source, int vNr, BRepComponent oldComponent, Set<BRepComponent> replacingComponents) {
+    /**
+     * Returns the unique s-component representation C such that forgetting source name {@code source} in C yields this representation, and {@code source} is assigned to node {@code vNr} in C.
+     * This function is meant for the case where promoting {@code vNr} to a source splits the s-component {@source oldComponent} it is contained in, and {@source oldComponent}, as well as 
+     * the components {@source replacingComponents} which replace {@source oldComponent} after the promotion, are already known.
+     * @param source
+     * @param vNr
+     * @param oldComponent
+     * @param replacingComponents
+     * @return
+     */
+    public SComponentRepresentation forgetReverse(int source, int vNr, SComponent oldComponent, Set<SComponent> replacingComponents) {
         if (sourceToNodename[source] != -1) {
             return null;
         } else {
             int[] newSource2Nodename = Arrays.copyOf(sourceToNodename, sourceToNodename.length);
             newSource2Nodename[source] = vNr;
-            Set<BRepComponent> newComponents = new HashSet<>(components);
+            Set<SComponent> newComponents = new HashSet<>(components);
             newComponents.remove(oldComponent);
             newComponents.addAll(replacingComponents);
-            return new BRepTopDown(newSource2Nodename, newComponents);
+            return new SComponentRepresentation(newSource2Nodename, newComponents);
         }
     }
     
-    public BRepTopDown forgetReverse(int source, int vNr, BRepComponent oldComponent, BRepComponent replacingComponent) {
+    
+    /**
+     * Returns the unique s-component representation C such that forgetting source name {@code source} in C yields this representation, and {@code source} is assigned to node {@code vNr} in C.
+     * This function is meant for the case where promoting {@code vNr} to a source does not split the s-component {@source oldComponent} it is contained in, and {@source oldComponent}, as well as 
+     * the component {@source replacingComponent} which replace {@source oldComponent} after the promotion, are already known.
+     * @param source
+     * @param vNr
+     * @param oldComponent
+     * @param replacingComponents
+     * @return
+     */
+    public SComponentRepresentation forgetReverse(int source, int vNr, SComponent oldComponent, SComponent replacingComponent) {
         if (sourceToNodename[source] != -1) {
             return null;
         } else {
             int[] newSource2Nodename = Arrays.copyOf(sourceToNodename, sourceToNodename.length);
             newSource2Nodename[source] = vNr;
-            Set<BRepComponent> newComponents = new HashSet<>(components);
+            Set<SComponent> newComponents = new HashSet<>(components);
             newComponents.remove(oldComponent);
             newComponents.add(replacingComponent);
-            return new BRepTopDown(newSource2Nodename, newComponents);
+            return new SComponentRepresentation(newSource2Nodename, newComponents);
         }
     }
     
-    
-    public BRepTopDown getChildFromComponents(Set<BRepComponent> childComponents) {
+    /**
+     * Returns the s-component representation which is equal to this one, but contains only a subset {@source childComponents} of the components and has its source assignment restricted accordingly.
+     * This is used in the top-down merge operation.
+     * @param childComponents
+     * @return
+     */
+    public SComponentRepresentation getChildFromComponents(Set<SComponent> childComponents) {
         int[] childSource2Nodename = new int[sourceToNodename.length];
         IntSet totalBVertices = new IntOpenHashSet();
-        for (BRepComponent comp : childComponents) {
+        for (SComponent comp : childComponents) {
             totalBVertices.addAll(comp.getBVertices());
         }
         for (int source = 0; source < sourceToNodename.length; source++) {
@@ -242,12 +301,16 @@ public class BRepTopDown {
                 childSource2Nodename[source] = -1;
             }
         }
-        return new BRepTopDown(childSource2Nodename, childComponents);
+        return new SComponentRepresentation(childSource2Nodename, childComponents);
     }
     
     
     
-    
+    /**
+     * Returns true iff the source assignments and the set of components are equal.
+     * @param other
+     * @return 
+     */
     @Override
     public boolean equals(Object other) {
         if (other == null) {
@@ -256,13 +319,18 @@ public class BRepTopDown {
         if (other == this) {
             return true;
         }
-        if (!(other instanceof BRepTopDown)) {
+        if (!(other instanceof SComponentRepresentation)) {
             return false;
         }
-        BRepTopDown f = (BRepTopDown) other;
+        SComponentRepresentation f = (SComponentRepresentation) other;
         return (Arrays.equals(sourceToNodename, f.sourceToNodename) && components.equals(f.components));
     }
 
+    /**
+     * Based on the source assignment and the set of components are equal.
+     * @param other
+     * @return 
+     */
     @Override
     public int hashCode() {
         int hash = 7;
@@ -274,7 +342,7 @@ public class BRepTopDown {
     @Override
     public String toString() {
         StringJoiner sj = new StringJoiner(" || ");
-        for (BRepComponent comp : components) {
+        for (SComponent comp : components) {
             sj.add(comp.toString());
         }
         return Arrays.toString(sourceToNodename)+" {"+sj.toString()+"}";

@@ -5,17 +5,9 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.algebra.graph.BRepComponent;
-import de.up.ling.irtg.algebra.graph.BRepTopDown;
-import de.up.ling.irtg.algebra.graph.GraphAlgebra;
-import de.up.ling.irtg.algebra.graph.GraphEdge;
-import de.up.ling.irtg.algebra.graph.GraphInfo;
-import de.up.ling.irtg.algebra.graph.GraphNode;
-import de.up.ling.irtg.algebra.graph.ParseTester;
-import de.up.ling.irtg.algebra.graph.SGraph;
+import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
@@ -28,30 +20,34 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- *
- * @author jonas
+ * A top-down decomposition automaton for the s-graph algebra, using
+ * {@code SComponentRepresentation}s as states.
+ * @author grpschwitz
  */
-public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTopDown>{
+public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SComponentRepresentation>{
 
-    public final GraphInfo completeGraphInfo;
-    
-    final GraphAlgebra algebra;
-    
-    public final Set<BRepTopDown>[] storedConstants;
+    private final GraphInfo completeGraphInfo;
     
     
-    final Int2ObjectMap<Int2ObjectMap<List<Rule>>> storedRules;
+    private final Set<SComponentRepresentation>[] storedConstants;
+    
+    
+    private final Int2ObjectMap<Int2ObjectMap<List<Rule>>> storedRules;
     
     //final Long2ObjectMap<Long2IntMap> storedStates;
     
-    private final Map<BRepComponent, BRepComponent> storedComponents;
+    private final Map<SComponent, SComponent> storedComponents;
     
-    public SGraphBRDecompositionAutomatonTopDown(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
-        super(signature);
-        this.algebra = algebra;
+    /**
+     * Initializes a decomposition automaton for {@code completeGraph} with respect to {@code algebra}.
+     * @param completeGraph
+     * @param algebra 
+     */
+    public SGraphBRDecompositionAutomatonTopDown(SGraph completeGraph, GraphAlgebra algebra) {
+        super(algebra.getSignature());
         //getStateInterner().setTrustingMode(true);
 
-        completeGraphInfo = new GraphInfo(completeGraph, algebra, signature);
+        completeGraphInfo = new GraphInfo(completeGraph, algebra);
         storedComponents = new HashMap<>(); 
         
         
@@ -73,7 +69,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
 //                    System.err.println(" -> make terminal rule, parent = " + matchedSubgraph);
                     if (!hasCrossingEdgesFromNodes(matchedSubgraph.getAllNonSourceNodenames(), matchedSubgraph)) {
                         matchedSubgraph.setEqualsMeansIsomorphy(false);
-                        storedConstants[labelID].add(new BRepTopDown(matchedSubgraph, storedComponents, completeGraphInfo));
+                        storedConstants[labelID].add(new SComponentRepresentation(matchedSubgraph, storedComponents, completeGraphInfo));
                         //System.err.println("found constant: "+labelID+"/"+matchedSubgraph.toIsiAmrString());
                     } else {
 //                        System.err.println("match " + matchedSubgraph + " has crossing edges from nodes");
@@ -82,23 +78,23 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
                 
             }
         }
-        Set<BRepTopDown> completeGraphStates = new HashSet<>();
+        Set<SComponentRepresentation> completeGraphStates = new HashSet<>();
         SGraph bareCompleteGraph = completeGraph.forgetSourcesExcept(new HashSet<>());
-        completeGraphStates.add(new BRepTopDown(bareCompleteGraph, storedComponents, completeGraphInfo));
+        completeGraphStates.add(new SComponentRepresentation(bareCompleteGraph, storedComponents, completeGraphInfo));
         for (int source = 0; source < completeGraphInfo.getNrSources(); source++) {
-            Set<BRepTopDown> newHere = new HashSet<>();
-            for (BRepTopDown oldRep : completeGraphStates) {
-                for (BRepComponent comp : oldRep.getComponents()) {
-                    Int2ObjectMap<BRepComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
+            Set<SComponentRepresentation> newHere = new HashSet<>();
+            for (SComponentRepresentation oldRep : completeGraphStates) {
+                for (SComponent comp : oldRep.getComponents()) {
+                    Int2ObjectMap<SComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
                     for (int v : nonsplitChildren.keySet()) {
-                        BRepTopDown child = oldRep.forgetReverse(source, v, comp, nonsplitChildren.get(v));
+                        SComponentRepresentation child = oldRep.forgetReverse(source, v, comp, nonsplitChildren.get(v));
                         if (child != null) {
                             newHere.add(child);
                         }
                     }
-                    Int2ObjectMap<Set<BRepComponent>> splitChildren = comp.getAllSplits(storedComponents, completeGraphInfo);
+                    Int2ObjectMap<Set<SComponent>> splitChildren = comp.getAllSplits(storedComponents, completeGraphInfo);
                     for (int v : splitChildren.keySet()) {
-                        BRepTopDown child = oldRep.forgetReverse(source, v, comp, splitChildren.get(v));
+                        SComponentRepresentation child = oldRep.forgetReverse(source, v, comp, splitChildren.get(v));
                         if (child != null) {
                             newHere.add(child);
                         }
@@ -107,7 +103,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
             }
             completeGraphStates.addAll(newHere);
         }
-        for (BRepTopDown completeRep : completeGraphStates) {
+        for (SComponentRepresentation completeRep : completeGraphStates) {
             int x = addState(completeRep);
             finalStates.add(x);
         }
@@ -129,11 +125,11 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
         if (rulesHere != null) {
             List<Rule> rules = rulesHere.get(labelId);
             if (rules != null) {
-                ParseTester.cachedAnswers+=rules.size();
+                SGraphParsingEvaluation.cachedAnswers+=rules.size();
                 switch (signature.getArity(labelId)) {
-                    case 0: ParseTester.averageLogger.increaseValue("constants recognised"); break;
-                    case 1: ParseTester.averageLogger.increaseValue("unaries recognised"); break;
-                    case 2: ParseTester.averageLogger.increaseValue("merges recognised"); break;
+                    case 0: SGraphParsingEvaluation.averageLogger.increaseValue("constants recognised"); break;
+                    case 1: SGraphParsingEvaluation.averageLogger.increaseValue("unaries recognised"); break;
+                    case 2: SGraphParsingEvaluation.averageLogger.increaseValue("merges recognised"); break;
                 }
                 return rules;
             }
@@ -141,94 +137,94 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
 
         String label = signature.resolveSymbolId(labelId);
         //List<BoundaryRepresentation> children = Arrays.stream(childStates).mapToObj(q -> getStateForId(q)).collect(Collectors.toList());
-        BRepTopDown parent = getStateForId(parentState);
+        SComponentRepresentation parent = getStateForId(parentState);
         List<Rule> rules = new ArrayList<>();
         
         if (label.equals(GraphAlgebra.OP_MERGE)) {
-            ParseTester.averageLogger.increaseValue("merge tests");
-            Set<BRepComponent> parentComponents = parent.getComponents();
+            SGraphParsingEvaluation.averageLogger.increaseValue("merge tests");
+            Set<SComponent> parentComponents = parent.getComponents();
             
             getAllNonemptyComponentDistributions(parentComponents).forEach(pair -> {
-                BRepTopDown child0 = parent.getChildFromComponents(pair.getLeft());
-                BRepTopDown child1 = parent.getChildFromComponents(pair.getRight());
-                rules.add(makeRule(parentState, labelId, new BRepTopDown[]{child0, child1}));
-                rules.add(makeRule(parentState, labelId, new BRepTopDown[]{child1, child0}));
+                SComponentRepresentation child0 = parent.getChildFromComponents(pair.getLeft());
+                SComponentRepresentation child1 = parent.getChildFromComponents(pair.getRight());
+                rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{child0, child1}));
+                rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{child1, child0}));
                 if (!child0.isConnected() || !child1.isConnected()) {
-                    ParseTester.averageLogger.increaseValueBy("total disconnected merge rules", 2);
+                    SGraphParsingEvaluation.averageLogger.increaseValueBy("total disconnected merge rules", 2);
                 }
             });
-            ParseTester.averageLogger.increaseValueBy("total merge rules", rules.size());
+            SGraphParsingEvaluation.averageLogger.increaseValueBy("total merge rules", rules.size());
             
             
             
-        } else if (label.startsWith(GraphAlgebra.OP_MERGE)) {
-            ParseTester.averageLogger.increaseValue("comibed rename-merge tests");
-            List<BRepTopDown[]> allSplits = new ArrayList<>();
-            Set<BRepComponent> parentComponents = parent.getComponents();
+        } else if (label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
+            SGraphParsingEvaluation.averageLogger.increaseValue("comibed rename-merge tests");
+            List<SComponentRepresentation[]> allSplits = new ArrayList<>();
+            Set<SComponent> parentComponents = parent.getComponents();
             
             getAllNonemptyComponentDistributions(parentComponents).forEach(pair -> {
-                BRepTopDown child0 = parent.getChildFromComponents(pair.getLeft());
-                BRepTopDown child1 = parent.getChildFromComponents(pair.getRight());
-                allSplits.add(new BRepTopDown[]{child0, child1});
-                allSplits.add(new BRepTopDown[]{child1, child0});
+                SComponentRepresentation child0 = parent.getChildFromComponents(pair.getLeft());
+                SComponentRepresentation child1 = parent.getChildFromComponents(pair.getRight());
+                allSplits.add(new SComponentRepresentation[]{child0, child1});
+                allSplits.add(new SComponentRepresentation[]{child1, child0});
             });
-            for (BRepTopDown[] childStates : allSplits) {
+            for (SComponentRepresentation[] childStates : allSplits) {
                 
-                String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
+                String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_COMBINEDMERGE.length());
                 int[] renameSources = completeGraphInfo.getlabelSources(signature.getIdForSymbol(renameLabel));
                 
-                BRepTopDown renamedRight = childStates[1].renameReverse(renameSources[0], renameSources[1]);
+                SComponentRepresentation renamedRight = childStates[1].renameReverse(renameSources[0], renameSources[1]);
                 if (renamedRight != null) {
-                    rules.add(makeRule(parentState, labelId, new BRepTopDown[]{childStates[0], renamedRight}));
+                    rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{childStates[0], renamedRight}));
                 }
                 
             }
         } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
-            ParseTester.averageLogger.increaseValue("forget tests");
+            SGraphParsingEvaluation.averageLogger.increaseValue("forget tests");
             int forgottenSource = completeGraphInfo.getlabelSources(labelId)[0];
             
             if (parent.getSourceNode(forgottenSource) == -1) {
-                ParseTester.averageLogger.increaseValue("successfull forget tests");
-                for (BRepComponent comp : parent.getComponents()) {
-                    Int2ObjectMap<BRepComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
+                SGraphParsingEvaluation.averageLogger.increaseValue("successfull forget tests");
+                for (SComponent comp : parent.getComponents()) {
+                    Int2ObjectMap<SComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
                     for (int v : nonsplitChildren.keySet()) {
-                        BRepTopDown child = parent.forgetReverse(forgottenSource, v, comp, nonsplitChildren.get(v));
+                        SComponentRepresentation child = parent.forgetReverse(forgottenSource, v, comp, nonsplitChildren.get(v));
                         if (child != null) {
-                            rules.add(makeRule(parentState, labelId, new BRepTopDown[]{child}));
+                            rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{child}));
                         }
                     }
-                    Int2ObjectMap<Set<BRepComponent>> splitChildren = comp.getAllSplits(storedComponents, completeGraphInfo);
+                    Int2ObjectMap<Set<SComponent>> splitChildren = comp.getAllSplits(storedComponents, completeGraphInfo);
                     for (int v : splitChildren.keySet()) {
-                        BRepTopDown child = parent.forgetReverse(forgottenSource, v, comp, splitChildren.get(v));
+                        SComponentRepresentation child = parent.forgetReverse(forgottenSource, v, comp, splitChildren.get(v));
                         if (child != null) {
-                            rules.add(makeRule(parentState, labelId, new BRepTopDown[]{child}));
+                            rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{child}));
                         }
                     }
                 }
-                ParseTester.averageLogger.increaseValueBy("total forget rules", rules.size());
+                SGraphParsingEvaluation.averageLogger.increaseValueBy("total forget rules", rules.size());
             }
             //else just dont add a rule
             
             
         } else if (label.startsWith(GraphAlgebra.OP_RENAME)) {
-            ParseTester.averageLogger.increaseValue("rename tests");
+            SGraphParsingEvaluation.averageLogger.increaseValue("rename tests");
             int[] renamedSources = completeGraphInfo.getlabelSources(labelId);
-            BRepTopDown child = parent.renameReverse(renamedSources[0], renamedSources[1]);
+            SComponentRepresentation child = parent.renameReverse(renamedSources[0], renamedSources[1]);
             if (child != null) {
-                ParseTester.averageLogger.increaseValue("successfull rename tests");
-                rules.add(makeRule(parentState, labelId, new BRepTopDown[]{child}));
+                SGraphParsingEvaluation.averageLogger.increaseValue("successfull rename tests");
+                rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{child}));
             }
             
             
         } else {
-            ParseTester.averageLogger.increaseValue("constant tests");
+            SGraphParsingEvaluation.averageLogger.increaseValue("constant tests");
             if (storedConstants[labelId].contains(parent)) {
-            ParseTester.averageLogger.increaseValue("constants found");
-                rules.add(makeRule(parentState, labelId, new BRepTopDown[0]));
+            SGraphParsingEvaluation.averageLogger.increaseValue("constants found");
+                rules.add(makeRule(parentState, labelId, new SComponentRepresentation[0]));
             }
         }
         
-        ParseTester.newAnswers+= rules.size();
+        SGraphParsingEvaluation.newAnswers+= rules.size();
         return memoize(rules, labelId, parentState);
         
     }
@@ -238,7 +234,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
     
     
     
-    Rule makeRule(int parentState, int labelId, BRepTopDown[] children) {
+    private Rule makeRule(int parentState, int labelId, SComponentRepresentation[] children) {
         int[] childStates = new int[children.length];
         
         for (int i = 0; i<children.length; i++) {
@@ -267,7 +263,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
     
     @Override
     public boolean isBottomUpDeterministic() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return false;
     }
     
     @Override
@@ -275,7 +271,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
+    private boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
         for (String nodename : nodenames) {
             if (!subgraph.isSourceNode(nodename)) {
                 GraphNode node = completeGraphInfo.getSGraph().getNode(nodename);
@@ -307,40 +303,40 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
     
     
     
-    private List<Pair<Set<BRepComponent>, Set<BRepComponent>>> getAllNonemptyComponentDistributions(Set<BRepComponent> components) {
+    private List<Pair<Set<SComponent>, Set<SComponent>>> getAllNonemptyComponentDistributions(Set<SComponent> components) {
         if (components.isEmpty()) {
             return new ArrayList<>();
         } else {
-            Set<BRepComponent> input = new HashSet<>(components);
-            BRepComponent comp = components.iterator().next();
+            Set<SComponent> input = new HashSet<>(components);
+            SComponent comp = components.iterator().next();
             input.remove(comp);
-            Set<BRepComponent> with = new HashSet<>();
+            Set<SComponent> with = new HashSet<>();
             with.add(comp);
             
             return getAllNonemptyComponentDistributionsRecursive(input, new ImmutablePair<>(with, new HashSet<>()));
         }
     }
     
-    private List<Pair<Set<BRepComponent>, Set<BRepComponent>>> getAllNonemptyComponentDistributionsRecursive(Set<BRepComponent> todo, Pair<Set<BRepComponent>, Set<BRepComponent>> decided) {
+    private List<Pair<Set<SComponent>, Set<SComponent>>> getAllNonemptyComponentDistributionsRecursive(Set<SComponent> todo, Pair<Set<SComponent>, Set<SComponent>> decided) {
         if (todo.isEmpty()) {
-            List<Pair<Set<BRepComponent>, Set<BRepComponent>>> ret = new ArrayList<>();
+            List<Pair<Set<SComponent>, Set<SComponent>>> ret = new ArrayList<>();
             if (!decided.getRight().isEmpty() && !decided.getLeft().isEmpty()) {
                 ret.add(decided);
             }
             return ret;
         } else {
-            Set<BRepComponent> newTodo = new HashSet<>(todo);
-            BRepComponent comp = todo.iterator().next();
+            Set<SComponent> newTodo = new HashSet<>(todo);
+            SComponent comp = todo.iterator().next();
             newTodo.remove(comp);
-            Set<BRepComponent> withLeft = new HashSet<>(decided.getLeft());
-            Set<BRepComponent> withRight = new HashSet<>(decided.getRight());
-            Set<BRepComponent> withoutLeft = new HashSet<>(decided.getLeft());
-            Set<BRepComponent> withoutRight = new HashSet<>(decided.getRight());
+            Set<SComponent> withLeft = new HashSet<>(decided.getLeft());
+            Set<SComponent> withRight = new HashSet<>(decided.getRight());
+            Set<SComponent> withoutLeft = new HashSet<>(decided.getLeft());
+            Set<SComponent> withoutRight = new HashSet<>(decided.getRight());
             withLeft.add(comp);
             withoutRight.add(comp);
-            Pair<Set<BRepComponent>, Set<BRepComponent>> newDecidedWith = new ImmutablePair<>(withLeft, withRight);
-            Pair<Set<BRepComponent>, Set<BRepComponent>> newDecidedWithout = new ImmutablePair<>(withoutLeft, withoutRight);
-            List<Pair<Set<BRepComponent>, Set<BRepComponent>>> ret = getAllNonemptyComponentDistributionsRecursive(newTodo, newDecidedWith);
+            Pair<Set<SComponent>, Set<SComponent>> newDecidedWith = new ImmutablePair<>(withLeft, withRight);
+            Pair<Set<SComponent>, Set<SComponent>> newDecidedWithout = new ImmutablePair<>(withoutLeft, withoutRight);
+            List<Pair<Set<SComponent>, Set<SComponent>>> ret = getAllNonemptyComponentDistributionsRecursive(newTodo, newDecidedWith);
             ret.addAll(getAllNonemptyComponentDistributionsRecursive(newTodo, newDecidedWithout));
             return ret;
         }
@@ -355,67 +351,5 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<BRepTop
     public boolean supportsTopDownQueries() {
         return true; //To change body of generated methods, choose Tools | Templates.
     }
-    
-    
-    
-    static String corpusPath = "corpora-and-grammars/corpora/amr-bank-v1.3.txt";
-    static String grammarPath = "corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
-    
-    /*public static void main(String[] args) throws Exception {
-        Reader corpusReader = new FileReader(corpusPath);
-        IrtgInducer inducer = new IrtgInducer(corpusReader);
-        inducer.getCorpus().sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()));
-
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammarPath));
-        PatternMatchingInvhomAutomatonFactory pm = new PMFactoryRestrictive(irtg.getInterpretation("int").getHomomorphism(), irtg.getInterpretation("int").getAlgebra());
-        
-        
-        int start = 0;//maybe start later to get to interesting graphs sooner
-        int stop = 200;//inducer.getCorpus().size();
-
-        int iterations = 1;
-        int internalIterations = 1;
-
-
-        CpuTimeStopwatch sw = new CpuTimeStopwatch();
-        CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
-
-
-
-        sw.record(0);
-
-        for (int j = 0; j < iterations; j++) {
-            for (int i = start; i < stop; i++) {
-                System.err.println("i = " + i+":");
-                parseInstance(inducer.getCorpus(), pm, (GraphAlgebra)irtg.getInterpretation("int").getAlgebra(), i, null, internalIterations, internalSw);
-            }
-        }
-        sw.record(1);
-
-        sw.printMilliseconds("parsing trees from " + start + " to " + stop + "(" + (iterations * internalIterations) + " iterations)");
-
-    }
-        
-       
-
-    public static void parseInstance(List<IrtgInducer.TrainingInstance> corpus, PatternMatchingInvhomAutomatonFactory pm, GraphAlgebra alg, int i, Writer resultWriter, int internalIterations, CpuTimeStopwatch internalSw) {
-        IrtgInducer.TrainingInstance ti = corpus.get(i);
-        if (ti == null) {
-            return;
-        }
-        internalSw.record(0);
-        TreeAutomaton chart = null;
-//        System.err.println("\n" + ti.graph);
-        for (int j = 0; j < internalIterations; j++) {
-            SGraphBRDecompositionAutomatonTopDownAsymptotic rhs = (SGraphBRDecompositionAutomatonTopDownAsymptotic)alg.decompose(ti.graph, SGraphBRDecompositionAutomatonTopDownAsymptotic.class);
-            chart = pm.invhom(rhs);
-            
-            //chart.viterbi();
-        }
-        internalSw.record(1);
-        internalSw.printMilliseconds("time: ");
-        System.err.println(ti.graph.toIsiAmrString());
-        System.err.println(chart.countTrees());
-    }*/
     
 }

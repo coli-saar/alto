@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET_ALL;
 import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET_ALL_BUT_ROOT;
@@ -141,7 +142,7 @@ public class BoundaryRepresentation {
     }
 
     private static long getEdgeIDSummand(GraphEdge edge, int vNr, int source, GraphInfo completeGraphInfo) {
-        return getEdgeIDSummand(completeGraphInfo.getEdge(edge), vNr, source, completeGraphInfo);
+        return getEdgeIDSummand(completeGraphInfo.getEdgeId(edge), vNr, source, completeGraphInfo);
     }
 
     private static long getEdgeIDSummand(int edgeSource, int edgeTarget, int vNr, int source, GraphInfo completeGraphInfo) {
@@ -518,7 +519,7 @@ public class BoundaryRepresentation {
             //ParseTester.averageLogger.increaseValue("commonNodeWithNoCommonSource");//.4
             return false;
         } else if (hasSourcesInsideOther(other) || other.hasSourcesInsideOther(this)) {
-            ParseTester.averageLogger.increaseValue("notDisjoint");//0
+            SGraphParsingEvaluation.averageLogger.increaseValue("notDisjoint");//0
             return false;
         } else {
             return true;
@@ -747,7 +748,7 @@ public class BoundaryRepresentation {
         //try {
         if (label == null) {
             return null;
-        } else if (label.equals(OP_MERGE)) {
+        } else if (label.equals(OP_MERGE)|| label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
             return null;//do not use this for merge!
         } else if (label.startsWith(OP_RENAME)) {
             int[] labelSources = completeGraphInfo.getlabelSources(labelId);
@@ -861,7 +862,7 @@ public class BoundaryRepresentation {
         if (label == null) {
             return null;
 
-        } else if (label.equals(OP_MERGE)) {
+        } else if (label.equals(OP_MERGE)||label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
             return null;//do not use this for merge!
 
         } else if (label.startsWith(OP_RENAME)) {
@@ -1046,34 +1047,6 @@ public class BoundaryRepresentation {
         return sj.toString();
     }
 
-    /**
-     * returns a new BoundaryRepresentation which is the result of the bolinasmerge operation applied to this and the other BoundaryRepresentation.
-     * The exact type of bolinasmerge operation is defined by the labelId.
-     * @param other
-     * @param labelId
-     * @return
-     */
-    public BoundaryRepresentation applyBolinasMerge(BoundaryRepresentation other, int labelId) {
-        BoundaryRepresentation mp2 = other.rename(completeGraphInfo.getBOLINASROOTSOURCENR(), completeGraphInfo.getBOLINASSUBROOTSOURCENR(), false);
-
-        if (mp2 == null) {
-            return null;
-        }
-
-        int mergeSource = completeGraphInfo.getlabelSources(labelId)[0];
-        BoundaryRepresentation mp1 = rename(mergeSource, completeGraphInfo.getBOLINASSUBROOTSOURCENR(), false);
-        if (mp1 == null) {
-            return null;
-        }
-
-        if (mp1.isMergeable(mp2)) {
-            BoundaryRepresentation mRes = mp1.merge(mp2);
-            BoundaryRepresentation ret = mRes.rename(completeGraphInfo.getBOLINASSUBROOTSOURCENR(), mergeSource, false);
-            return ret;//note that ret is possibly null
-        } else {
-            return null;
-        }
-    }
     
     /**
      * returns all source names used in this subgraph.

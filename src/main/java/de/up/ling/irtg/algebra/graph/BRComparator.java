@@ -54,6 +54,14 @@ public class BRComparator implements IntComparator{
      //   }
     }
     
+    /**
+     * returns 1 if rep1 is larger than rep2, in this case if it has more sources, or if equal sources then if it has less inner nodes.
+     * returns -1 in the symmetric case
+     * in the other results, simply rep1-rep2 is returned, i.e. 0 iff the ints are identical.
+     * @param rep1
+     * @param rep2
+     * @return
+     */
     @Override
     public int compare (Integer rep1, Integer rep2){
         return compare ((int)rep1, (int)rep2);

@@ -30,7 +30,7 @@ import javax.swing.JComponent;
 /**
  * The algebra of s-graphs. The values of this algebra are s-graphs,
  * i.e. objects of class {@link SGraph} (which see). The algebra interprets
- * the following operations (where G, G1, G2 are s-graphs):
+ * the following operations (where G, G1, G2 are s-graphs, and a, b are source names):
  * <ul>
  *  <li>The operation <code>merge(G1,G2)</code>, <i>merges</i> the
  *      two graphs using {@link SGraph#merge(de.up.ling.irtg.algebra.graph.SGraph) }.</li>
@@ -39,17 +39,20 @@ import javax.swing.JComponent;
  *      it does not have an a-source. The operation f_a_b forgets both
  *      a and b.</li>
  *  <li>The <i>forget-all</i> operation <code>f(G)</code> forgets
- *      all sources of G.</li>
+ *      all sources of G. This is currently not supported in the automata using {@code BoundaryRepresentations}.</li>
  *  <li>The <i>forget-except</i> operation <code>fe_a(G)</code> forgets
  *      all sources except a. The operation fe_a_b forgets all sources
- *      except a and b.</li>
+ *      except a and b. This is currently not supported in the automata using {@code BoundaryRepresentations}.</li>
  *  <li>The <i>forget-except-root</i> operation <code>fr(G)</code>
  *      forgets all sources except for <code>root</code>. It is equivalent
- *      to <code>fe_root</code>.</li>
+ *      to <code>fe_root</code>. This is currently not supported in the automata using {@code BoundaryRepresentations}.</li>
  *  <li>The <i>rename</i> operation <code>r_a_b(G)</code> renames
  *      the a-source of G into b, using {@link SGraph#renameSource(java.lang.String, java.lang.String) }.
  *      The operation <code>r_a</code> is an abbreviation for
  *      <code>r_root_a</code>.</li>
+ *  <li>The combined merge and rename operation <code>merge_a_b(G1,G2)</code>, first applies
+ *      the <i>rename</i> from a to b in G2 and then <i>merges</i> the
+ *      result with G1. This is currently <i>only</i> supported in the automata using {@code BoundaryRepresentations}.</li>
  * </ul>
  * 
  * Any other string is interpreted as a constant which denotes
@@ -61,7 +64,7 @@ import javax.swing.JComponent;
 public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     // operation symbols of this algebra
     public static final String OP_MERGE = "merge";
-    public static final String OP_BOLINASMERGE = "m_";
+    public static final String OP_COMBINEDMERGE = "merge_";
     public static final String OP_RENAME = "r_";
     public static final String OP_SWAP = "s_";
     public static final String OP_FORGET_ALL = "f";
@@ -69,7 +72,25 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     public static final String OP_FORGET_EXCEPT = "fe_";
     public static final String OP_FORGET = "f_";
     
-    public static boolean useTopDownAutomaton = false;
+    private boolean useTopDownAutomaton = false;
+
+    /**
+     * Describes whether this algebra uses top-down or bottom-up decomposition automata.
+     * @return 
+     */
+    public boolean usesTopDownAutomaton() {
+        return useTopDownAutomaton;
+    }
+    
+    /**
+     * Sets whether this algebra uses top-down or bottom-up decomposition automata.
+     * @return 
+     */
+    public void setUseTopDownAutomaton(boolean useTopDownAutomaton) {
+        this.useTopDownAutomaton= useTopDownAutomaton;
+    }
+    
+    
 
     private Int2ObjectMap<SGraph> constantLabelInterpretations;
     /**
@@ -85,6 +106,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     private Set<String> sources;
+    
     /**
      * returns the set of all source names occurring in the algebra's signature.
      * This returns the original set stored in the algebra, so it must not be modified.
@@ -97,11 +119,17 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         return sources;
     }
         
-    
+    /**
+     * Creates an empty graph algebra.
+     */
     public GraphAlgebra() {
         super();
     }
     
+    /**
+     * Creates a graph algebra with the given signature.
+     * @param signature 
+     */
     public GraphAlgebra(Signature signature) {
         super();
         this.signature = signature;
@@ -109,6 +137,9 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         
     }
     
+    /**
+     * Computes s-graphs for all constant symbols and stores them for future reference. 
+     */
     private void precomputeAllConstants() {
         constantLabelInterpretations = new Int2ObjectOpenHashMap<>();
         for (int id = 1; id <= signature.getMaxSymbolId(); id++) {
@@ -123,6 +154,11 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         }
     }
     
+    /**
+     * Returns a bottom-up or a top-down decomposition automaton for {@code value} depending on {@code useTopDownAutomaton}.
+     * @param value
+     * @return 
+     */
     @Override
     public TreeAutomaton decompose(SGraph value) {
         if (useTopDownAutomaton)
@@ -143,10 +179,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return new SGraphDecompositionAutomaton(value, this, getSignature());
                 
             } else if (c == SGraphBRDecompositionAutomatonBottomUp.class) {
-                return new SGraphBRDecompositionAutomatonBottomUp(value, this, getSignature());
+                return new SGraphBRDecompositionAutomatonBottomUp(value, this);
                 
             } else if (c == SGraphBRDecompositionAutomatonTopDown.class) {
-                return new SGraphBRDecompositionAutomatonTopDown(value, this, getSignature());
+                return new SGraphBRDecompositionAutomatonTopDown(value, this);
             }
             else return null;
     }
@@ -162,11 +198,17 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * @throws Exception
      */
     public boolean writeCompleteDecompositionAutomaton(SGraph value, Writer writer) throws Exception{
-        SGraphBRDecompositionAutomatonBottomUp botupAutomaton = new SGraphBRDecompositionAutomatonBottomUp(value, this, getSignature());
+        SGraphBRDecompositionAutomatonBottomUp botupAutomaton = new SGraphBRDecompositionAutomatonBottomUp(value, this);
         return botupAutomaton.writeAutomatonRestricted(writer);
     }
     
-
+    /**
+     * Returns all sources that are forgotten if {@code opString} is applied to {@code sgraph}.
+     * Only works if {@code opString} is one of the forget operations (includeing forget all etc).
+     * @param opString
+     * @param sgraph
+     * @return 
+     */
     static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {
         if ( opString.startsWith(OP_FORGET) || opString.startsWith(OP_FORGET_EXCEPT)) {
             String[] parts = opString.split("_");
@@ -199,7 +241,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 return null;
             } else if (label.equals(OP_MERGE)) {
                 return childrenValues.get(0).merge(childrenValues.get(1));
-            } else if (label.startsWith(OP_MERGE)) {
+            } else if (label.startsWith(OP_COMBINEDMERGE)) {
                 String[] parts = label.split("_");
                 
                 return childrenValues.get(0).merge(childrenValues.get(1).renameSource(parts[1], parts[2]));
@@ -294,7 +336,11 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         return ret;
     }
     
-    
+    /**
+     * Returns the set of all source names appearing in {@code signature}.
+     * @param signature
+     * @return 
+     */
     private static Set<String> getAllSourcesFromSignature(Signature signature) {
         //find all sources used in algebra:
         Set<String> ret = new HashSet<>();
@@ -319,9 +365,10 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                     } 
                     ret.add(parts[i]);
                 }
-            } else if (symbol.startsWith(GraphAlgebra.OP_BOLINASMERGE)){
-                ret.add(GraphInfo.getBOLINASROOTSTRING());
-                ret.add(GraphInfo.getBOLINASSUBROOTSTRING());
+            } else if (symbol.startsWith(OP_COMBINEDMERGE)){
+                String[] parts = symbol.split("_");
+                ret.add(parts[1]);
+                ret.add(parts[2]);
             } else if (signature.getArityForLabel(symbol) == 0) {
                 String[] parts = symbol.split("<");
                 for (int i = 1; i<parts.length; i++) {//do not want the first element in parts!
@@ -635,7 +682,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     private static final int[] testSourceNrs = new int[]{2, 2, 3, 4, 3};
 
     /**
-     * Main for testing purposes.
+     * Main for internal testing purposes.
      * Computes decomposition algebras and corresponding complete decomposition automata for strings defined in the source code.
      * Further parameters can be set in the source code.
      * @param args no arguments

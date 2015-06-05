@@ -5,15 +5,14 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.automata.RuleCache;
 import de.up.ling.irtg.automata.BinaryRuleCache;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_MERGE;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.induction.IrtgInducer;
-import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -43,30 +42,36 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+
+/**
+ * A bottom-up decomposition automaton for the s-graph algebra, using
+ * {@code BoundaryRepresentation}s as states.
+ * 
+ * @author groschwitz
+ */
 public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<BoundaryRepresentation> {
     private final RuleCache storedRules;    
-    final GraphInfo completeGraphInfo;    
-    final GraphAlgebra algebra;
-    public Map<BoundaryRepresentation, Set<Rule>> rulesTopDown;
-    public Map<String, Integer> decompLengths;
-    public MergePartnerFinder startStateMPF;
+    private final GraphInfo completeGraphInfo;    
+    private final GraphAlgebra algebra;
     
-    Long2ObjectMap<Long2IntMap> storedStates;
+    private Long2ObjectMap<Long2IntMap> storedStates;
 
-    public SGraphBRDecompositionAutomatonBottomUp(SGraph completeGraph, GraphAlgebra algebra, Signature signature) {
-        super(signature);
+    /**
+     * Initializes a decomposition automaton for {@code completeGraph} with respect to {@code algebra}.
+     * @param completeGraph
+     * @param algebra 
+     */
+    public SGraphBRDecompositionAutomatonBottomUp(SGraph completeGraph, GraphAlgebra algebra) {
+        super(algebra.getSignature());
         
         this.algebra = algebra;
-        //getStateInterner().setTrustingMode(true);
 
-        completeGraphInfo = new GraphInfo(completeGraph, algebra, signature);
+        completeGraphInfo = new GraphInfo(completeGraph, algebra);
         storedRules = new BinaryRuleCache();
         
-        //storedRulesTopDown = new Int2ObjectOpenHashMap<>();
         
         
         
@@ -75,29 +80,10 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         Long2IntMap edgeIDMap = new Long2IntOpenHashMap();
         edgeIDMap.defaultReturnValue(-1);
         
-        startStateMPF = new DynamicMergePartnerFinder(0, completeGraphInfo.getNrSources(), completeGraphInfo.getNrNodes(), this);
-        //BoundaryRepresentation completeRep = new BoundaryRepresentation(completeGraph, completeGraphInfo);
-        //int x = addState(completeRep);
-        //finalStates.add(x);
         
     }
-    
-    void preinitialize() {
-        //override this in child instances
-    }
 
-    Rule makeRule(BoundaryRepresentation parent, int labelId, int[] childStates) {
-
-        /*StringBuilder message = new StringBuilder();
-         message.append(parent.toString(this)+" from " + signature.resolveSymbolId(labelId));
-         for (int i = 0; i<childStates.length; i++){
-         message.append(" __ "+getStateForId(childStates[i]).toString(this));
-         }
-         System.out.println(message);
-         SGraph graph = parent.getGraph(completeGraph, this);
-         System.out.println("sgraph: " + graph.toIsiAmrString());*/
-        
-        
+    private Rule makeRule(BoundaryRepresentation parent, int labelId, int[] childStates) {
         int parentState = addState(parent);
         
         // add final state if needed
@@ -108,8 +94,15 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return createRule(parentState, labelId, childStates, 1);
     }
 
-    
-        @Override
+
+    /**
+     * Adds the state {@code stateBR} and assigns it an ID. This uses a custom,
+     * more efficient way of storing states than the default implementation,
+     * using properties of boundary representations.
+     * @param stateBR
+     * @return 
+     */
+    @Override
     protected int addState(BoundaryRepresentation stateBR) {
         int stateID = -1;
         Long2IntMap edgeIDMap = storedStates.get(stateBR.vertexID);
@@ -139,9 +132,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return sing(makeRule(parent, labelId, childStates));
     }
 
-    public void makeTrusting() {
-        this.stateInterner.setTrustingMode(true);
-    }
 
     
 
@@ -150,15 +140,15 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         Iterable<Rule> cachedResult = storedRules.get(labelId, childStates);
         
         if( cachedResult != null ) {
-            ParseTester.cachedAnswers++;
+            SGraphParsingEvaluation.cachedAnswers++;
             switch (signature.getArity(labelId)) {
-                case 0: ParseTester.averageLogger.increaseValue("constants recognised"); break;
-                case 1: ParseTester.averageLogger.increaseValue("unaries recognised"); break;
-                case 2: ParseTester.averageLogger.increaseValue("merges recognised"); break;
+                case 0: SGraphParsingEvaluation.averageLogger.increaseValue("constants recognised"); break;
+                case 1: SGraphParsingEvaluation.averageLogger.increaseValue("unaries recognised"); break;
+                case 2: SGraphParsingEvaluation.averageLogger.increaseValue("merges recognised"); break;
             }
             return cachedResult;
         }
-        ParseTester.newAnswers++;
+        SGraphParsingEvaluation.newAnswers++;
         //ParseTester.averageLogger.increaseValue("TotalRulesChecked");
         
         String label = signature.resolveSymbolId(labelId);
@@ -171,12 +161,12 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         if (label == null) {
             return Collections.EMPTY_LIST;
         } else if (label.equals(GraphAlgebra.OP_MERGE)) {
-            ParseTester.averageLogger.increaseValue("MergeRulesChecked");
+            SGraphParsingEvaluation.averageLogger.increaseValue("MergeRulesChecked");
             if (children.size() <2) {
                 System.err.println("trying to merge less than 2!");
             }
             if (!children.get(0).isMergeable(children.get(1))) { // ensure result is connected
-                ParseTester.averageLogger.increaseValue("MergeFail");
+                SGraphParsingEvaluation.averageLogger.increaseValue("MergeFail");
                 return Collections.EMPTY_LIST;
             } else {
                 BoundaryRepresentation result = children.get(0).merge(children.get(1));
@@ -190,21 +180,21 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                     return cacheRules(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
                 }
             }
-        } else if (label.startsWith(GraphAlgebra.OP_MERGE)) {
+        } else if (label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
             if (children.size() <2) {
                 System.err.println("trying to merge less than 2!");
             }
-            ParseTester.averageLogger.increaseValue("CombinedMergeRulesChecked");
-            String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_MERGE.length()+1);
+            SGraphParsingEvaluation.averageLogger.increaseValue("CombinedMergeRulesChecked");
+            String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_COMBINEDMERGE.length());
 
             BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true);
             if (tempResult == null) {
-                ParseTester.averageLogger.increaseValue("m1RenameFail");
+                SGraphParsingEvaluation.averageLogger.increaseValue("m1RenameFail");
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             }
 
             if (!children.get(0).isMergeable(tempResult)) { // ensure result is connected
-                ParseTester.averageLogger.increaseValue("m1MergeFail");
+                SGraphParsingEvaluation.averageLogger.increaseValue("m1MergeFail");
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
                 BoundaryRepresentation result = children.get(0).merge(tempResult);
@@ -287,7 +277,14 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         }
     }
 
-    
+    /**
+     * This caches found rules for future reference, if the same bottom-up
+     * question is asked again.
+     * @param rules
+     * @param labelID
+     * @param children
+     * @return 
+     */
     protected Iterable<Rule> cacheRules(Iterable<Rule> rules, int labelID, int[] children) {
         Iterable<Rule> ret = rules;
         if (doStore) {
@@ -297,7 +294,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
     
 
-    boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
+    private boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
         for (String nodename : nodenames) {
             if (!subgraph.isSourceNode(nodename)) {
                 GraphNode node = completeGraphInfo.getSGraph().getNode(nodename);
@@ -327,8 +324,16 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return false;
     }
 
+    /**
+     * Makes all rules explicit, and then answers the question.
+     * Use is discouraged, use top-down automaton instead.
+     * @param labelId
+     * @param parentState
+     * @return 
+     */
     @Override
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
+        makeAllRulesExplicit();
         return getRulesTopDownFromExplicit(labelId, parentState);
     }
 
@@ -346,10 +351,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     public boolean supportsBottomUpQueries() {
         return true;
     }
-
-    boolean doBolinas(){
-        return false;
-    }
+    
     
     private Boolean algebraIsPure;
     private int mergeLabelID;
@@ -364,7 +366,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             algebraIsPure = true;
             for (String label : signature.getSymbols()) {
                 if (signature.getArityForLabel(label) == 2) {
-                    if (label.equals(OP_MERGE)) {
+                    if (label.equals(GraphAlgebra.OP_MERGE)) {
                         mergeLabelID = signature.getIdForSymbol(label);
                     } else {
                         algebraIsPure = false;
@@ -385,7 +387,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             algebraIsPure = true;
             for (String label : signature.getSymbols()) {
                 if (signature.getArityForLabel(label) == 2) {
-                    if (label.equals(OP_MERGE)) {
+                    if (label.equals(GraphAlgebra.OP_MERGE)) {
                         mergeLabelID = signature.getIdForSymbol(label);
                     } else {
                         algebraIsPure = false;
@@ -441,7 +443,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
         @Override
         public IntCollection getPartners(int labelID, int stateID) {
-            if (signature.resolveSymbolId(labelID).equals(OP_MERGE)) {
+            if (signature.resolveSymbolId(labelID).equals(GraphAlgebra.OP_MERGE)) {
                 return mpf.getAllMergePartners(stateID);
             } else {
                 return backupset;
@@ -617,6 +619,15 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         putIntInSetByInt(r, l, second2FirstIndex);
     }
 
+    /**
+     * Writes all rules in this decomposition automaton, with one restriction:
+     * There are no rename operations on states only reachable via rename.
+     * Rules of the form c-> m(a, b) and c-> m(b,a) are both written into the
+     * writer (this is different from previous implementations).
+     * @param writer
+     * @return
+     * @throws Exception 
+     */
     public boolean writeAutomatonRestricted(Writer writer) throws Exception {
         stateInterner.setTrustingMode(true);
         count = 0;
@@ -639,7 +650,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return ret;
     }
     
-    public void writeRule(Writer writer, Rule rule) throws Exception {
+    private void writeRule(Writer writer, Rule rule) throws Exception {
 
         
         boolean found = false;
@@ -761,7 +772,27 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return String.valueOf(stateId)+"_"+getStateForId(stateId).allSourcesToString();
     }
 
-    
+    /**
+     * Writes the decomposition automata for all specified graphs in the corpus,
+     * with one restriction: There are no rename operations on states only
+     * reachable via rename. Rules of the form c-> m(a, b) and c-> m(b,a) are
+     * both written into the writer (this is different from previous
+     * implementations).
+     * Output files are formatted CORPUSID_NODECOUNTnodes.rtg
+     * @param targetFolderPath The folder into which the automata are written.
+     * @param inducer The inducer containing the corpus.
+     * @param startIndex At which index to start (graphs are ordered by node count)
+     * @param stopIndex At which index to stop (graphs are ordered by node count)
+     * @param sourceCount How many sources to use in decomposition.
+     * @param maxNodes A hard cap on the number of nodes allowed per graph
+     * (violating graphs are not parsed). 0 for no restriction.
+     * @param maxPerNodeCount If for a node count n this is less then the number
+     * of graphs with n nodes, then {@code maxPerNodeCount} many are chosen
+     * randomly.
+     * @param onlyBolinas Whether only graphs expressible in the Bolinas format
+     * should be examined.
+     * @throws Exception
+     */
     public static void writeDecompositionAutomata(String targetFolderPath, IrtgInducer inducer, int startIndex, int stopIndex, int sourceCount, int maxNodes, int maxPerNodeCount, boolean onlyBolinas) throws Exception {
         
         
@@ -777,7 +808,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 GraphAlgebra.makeIncompleteDecompositionAlgebra(alg, instance.graph, sourceCount);
                 
                 Writer rtgWriter = new StringWriter();
-                SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(instance.graph, alg, alg.getSignature());
+                SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(instance.graph, alg);
                 botupAuto.actuallyWrite = false;
                 boolean foundFinalState = botupAuto.writeAutomatonRestricted(rtgWriter);
                 rtgWriter.close();
@@ -829,7 +860,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             GraphAlgebra alg = new GraphAlgebra();
             GraphAlgebra.makeIncompleteDecompositionAlgebra(alg, instance.graph, sourceCount);
             Writer rtgWriter = new FileWriter(targetFolderPath+String.valueOf(instance.id)+"_"+instance.graph.getAllNodeNames().size()+"nodes"+".rtg");
-            SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(instance.graph, alg, alg.getSignature());
+            SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(instance.graph, alg);
             boolean foundFinalState = botupAuto.writeAutomatonRestricted(rtgWriter);
             rtgWriter.close();
             if (foundFinalState) {
@@ -841,6 +872,26 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
     }
     
+    /**
+     * Writes the decomposition automata for a given corpus.
+     * Calls {@code writeDecompositionAutomata} with the given arguments.
+     * Call without arguments to receive help.
+     * Takes eight arguments:
+     * 1. The path to the the corpus.
+     * 2. How many sources to use in decomposition.
+     * 3. At which index to start (inclusive, graphs are ordered by node count)
+     * 4. At which index to stop (exclusive, graphs are ordered by node count)
+     * Here indices are 0-based.
+     * 5. A hard cap on the number of nodes allowed per graph
+     * (violating graphs are not parsed). 0 for no restriction.
+     * 6. A parameter k. If for a node count n, k is less then the number
+     * of graphs with n nodes, then k are chosen randomly.
+     * 7. targetFolderPath: The folder into which the automata are written.
+     * 8. 'onlyBolinas' or 'all', depending on whether only graphs expressible
+     * in the Bolinas format should be examined.
+     * @param args
+     * @throws Exception 
+     */
     public static void main(String[] args) throws Exception {
         if (args.length<5) {
             System.out.println("Need eight arguments: corpusPath sourceCount startIndex stopIndex maxNodes maxPerNodeCount targetFolderPath 'onlyBolinas'/'all'");
