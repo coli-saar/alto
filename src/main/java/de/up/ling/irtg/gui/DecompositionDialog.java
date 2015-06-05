@@ -7,6 +7,7 @@ package de.up.ling.irtg.gui;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.util.GuiUtils;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -30,6 +31,7 @@ public class DecompositionDialog extends javax.swing.JDialog {
 
         initComponents();
         setTitle("Compute decomposition automaton");
+        getRootPane().setDefaultButton(okButton);
 
         algebras = new ArrayList<Algebra>();
 
@@ -101,8 +103,6 @@ public class DecompositionDialog extends javax.swing.JDialog {
 
         jLabel3.setText("Value");
 
-        tfValue.setText("jTextField1");
-
         okButton.setText("Ok");
         okButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -119,7 +119,11 @@ public class DecompositionDialog extends javax.swing.JDialog {
 
         jLabel1.setText("Options");
 
-        tfOptions.setText("jTextField1");
+        tfOptions.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfOptionsActionPerformed(evt);
+            }
+        });
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -183,12 +187,11 @@ public class DecompositionDialog extends javax.swing.JDialog {
             TreeAutomaton auto = alg.decompose(alg.parseString(tfValue.getText()));
 
             JTreeAutomaton jta = new JTreeAutomaton(auto, null);
+            jta.setTitle("Decompositions of " + tfValue.getText());
             jta.pack();
             jta.setVisible(true);
-        } catch (ParserException ex) {
-            Logger.getLogger(DecompositionDialog.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
-            Logger.getLogger(DecompositionDialog.class.getName()).log(Level.SEVERE, null, ex);
+            GuiUtils.showError(this, "Error while computing decomposition grammar", ex);
         }
     }//GEN-LAST:event_okButtonActionPerformed
 
@@ -199,6 +202,10 @@ public class DecompositionDialog extends javax.swing.JDialog {
     private void cancelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelButtonActionPerformed
         setVisible(false);
     }//GEN-LAST:event_cancelButtonActionPerformed
+
+    private void tfOptionsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfOptionsActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_tfOptionsActionPerformed
 
     /**
      * @param args the command line arguments

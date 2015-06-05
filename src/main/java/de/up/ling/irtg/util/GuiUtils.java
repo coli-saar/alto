@@ -81,7 +81,8 @@ public class GuiUtils {
 
     static public void showError(Component parent, String label, Throwable error) {
         SwingUtilities.invokeLater(() -> {
-            String s = label + ":\n" + error.getMessage() + "\n(" + error.getClass() + ")";
+            String err = error.getMessage() == null ? error.toString() : (error.getMessage() + "\n(" + error.getClass() + ")");            
+            String s = label + ":\n" + err;
             JOptionPane.showMessageDialog(parent, s, "Error", JOptionPane.ERROR_MESSAGE);
 //            error.printStackTrace(System.err);
 

@@ -106,9 +106,6 @@
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="tfValue">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="jTextField1"/>
-      </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="okButton">
       <Properties>
@@ -132,9 +129,9 @@
       </Properties>
     </Component>
     <Component class="javax.swing.JTextField" name="tfOptions">
-      <Properties>
-        <Property name="text" type="java.lang.String" value="jTextField1"/>
-      </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="tfOptionsActionPerformed"/>
+      </Events>
     </Component>
   </SubComponents>
 </Form>

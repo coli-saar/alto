@@ -116,7 +116,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
-        jMenuItem5 = new javax.swing.JMenuItem();
+        miComputeDecompositionAutomaton = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Alto GUI");
@@ -178,13 +178,13 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 
         jMenu2.setText("Tools");
 
-        jMenuItem5.setText("Compute decomposition automaton ...");
-        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+        miComputeDecompositionAutomaton.setText("Compute decomposition automaton ...");
+        miComputeDecompositionAutomaton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem5ActionPerformed(evt);
+                miComputeDecompositionAutomatonActionPerformed(evt);
             }
         });
-        jMenu2.add(jMenuItem5);
+        jMenu2.add(miComputeDecompositionAutomaton);
 
         jMenuBar1.add(jMenu2);
 
@@ -226,9 +226,9 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         closeAllWindows();
     }//GEN-LAST:event_miCloseAllWindowsActionPerformed
 
-    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+    private void miComputeDecompositionAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miComputeDecompositionAutomatonActionPerformed
         showDecompositionDialog(this);
-    }//GEN-LAST:event_jMenuItem5ActionPerformed
+    }//GEN-LAST:event_miComputeDecompositionAutomatonActionPerformed
 
     private void miLoadTemplateIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadTemplateIrtgActionPerformed
         loadTemplateIrtg(this);
@@ -604,11 +604,11 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JTextArea log;
     private javax.swing.JMenuItem miCloseAllWindows;
+    private javax.swing.JMenuItem miComputeDecompositionAutomaton;
     private javax.swing.JMenuItem miLoadAutomaton;
     private javax.swing.JMenuItem miLoadIrtg;
     private javax.swing.JMenuItem miLoadTemplateIrtg;

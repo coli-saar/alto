@@ -72,12 +72,12 @@
             <Property name="text" type="java.lang.String" value="Tools"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItem5">
+            <MenuItem class="javax.swing.JMenuItem" name="miComputeDecompositionAutomaton">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Compute decomposition automaton ..."/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem5ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miComputeDecompositionAutomatonActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
