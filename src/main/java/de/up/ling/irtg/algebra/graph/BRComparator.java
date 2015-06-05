@@ -10,7 +10,7 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
  * Comparator to decide which boundary representation is closer to the final graph.
  * @author jonas
  */
-public class BRComparator implements IntComparator{
+class BRComparator implements IntComparator{
     private final SGraphBRDecompositionAutomatonBottomUp auto;
     
     /**

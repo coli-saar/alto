@@ -27,6 +27,7 @@ public class SComponentRepresentation {
     private final int[] sourceToNodename;
     private final BitSet isSourceNode;
     private final Set<SComponent> components;
+    private final GraphInfo completeGraphInfo;
 
     public Set<SComponent> getComponents() {
         return components;
@@ -39,8 +40,8 @@ public class SComponentRepresentation {
      */
     public SComponentRepresentation(SGraph completeGraph, GraphAlgebra alg) {
         components = new HashSet<>();
-        GraphInfo complGraphInfo = new GraphInfo(completeGraph, alg);
-        sourceToNodename = new int[complGraphInfo.getNrSources()];
+        completeGraphInfo = new GraphInfo(completeGraph, alg);
+        sourceToNodename = new int[completeGraphInfo.getNrSources()];
         Arrays.fill(sourceToNodename, -1);
         isSourceNode = new BitSet();
     }
@@ -51,7 +52,7 @@ public class SComponentRepresentation {
      * @param sourceToNodename
      * @param components
      */
-    public SComponentRepresentation(int[] sourceToNodename, Set<SComponent> components) {
+    public SComponentRepresentation(int[] sourceToNodename, Set<SComponent> components, GraphInfo completeGraphInfo) {
         this.sourceToNodename = sourceToNodename;
         this.components = components;
         isSourceNode = new BitSet();
@@ -60,6 +61,7 @@ public class SComponentRepresentation {
                 isSourceNode.set(v);
             }
         }
+        this.completeGraphInfo = completeGraphInfo;
     }
     
     /**
@@ -93,6 +95,7 @@ public class SComponentRepresentation {
         components = new HashSet<>();
         sourceToNodename = new int[completeGraphInfo.getNrSources()];
         isSourceNode = new BitSet();
+        this.completeGraphInfo = completeGraphInfo;
 
         Arrays.fill(sourceToNodename, -1);
 
@@ -230,7 +233,7 @@ public class SComponentRepresentation {
             int[] newSource2Nodename = Arrays.copyOf(sourceToNodename, sourceToNodename.length);
             newSource2Nodename[to] = -1;
             newSource2Nodename[from] = sourceToNodename[to];
-            return new SComponentRepresentation(newSource2Nodename, components);
+            return new SComponentRepresentation(newSource2Nodename, components, completeGraphInfo);
         }
     }
     
@@ -253,7 +256,7 @@ public class SComponentRepresentation {
             Set<SComponent> newComponents = new HashSet<>(components);
             newComponents.remove(oldComponent);
             newComponents.addAll(replacingComponents);
-            return new SComponentRepresentation(newSource2Nodename, newComponents);
+            return new SComponentRepresentation(newSource2Nodename, newComponents, completeGraphInfo);
         }
     }
     
@@ -277,7 +280,7 @@ public class SComponentRepresentation {
             Set<SComponent> newComponents = new HashSet<>(components);
             newComponents.remove(oldComponent);
             newComponents.add(replacingComponent);
-            return new SComponentRepresentation(newSource2Nodename, newComponents);
+            return new SComponentRepresentation(newSource2Nodename, newComponents, completeGraphInfo);
         }
     }
     
@@ -301,7 +304,7 @@ public class SComponentRepresentation {
                 childSource2Nodename[source] = -1;
             }
         }
-        return new SComponentRepresentation(childSource2Nodename, childComponents);
+        return new SComponentRepresentation(childSource2Nodename, childComponents, completeGraphInfo);
     }
     
     
@@ -339,13 +342,22 @@ public class SComponentRepresentation {
         return hash;
     }
     
+    
+    
     @Override
     public String toString() {
-        StringJoiner sj = new StringJoiner(" || ");
-        for (SComponent comp : components) {
-            sj.add(comp.toString());
+        StringJoiner sjs = new StringJoiner(", ");//to write down source nodes
+        for (int source = 0; source < sourceToNodename.length; source++) {
+            int node = sourceToNodename[source];
+            if (node > -1) {
+                sjs.add(completeGraphInfo.getNodeForInt(node)+"<"+completeGraphInfo.getSourceForInt(source)+">");
+            }
         }
-        return Arrays.toString(sourceToNodename)+" {"+sj.toString()+"}";
+        StringJoiner sjc = new StringJoiner("+");
+        for (SComponent comp : components) {
+            sjc.add(comp.toStringOnlyEdges(completeGraphInfo));
+        }
+        return "["+sjs.toString()+" | "+sjc.toString()+"]";
     }
     
 }

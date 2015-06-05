@@ -44,10 +44,10 @@ class PatternMatchingInvhomAutomatonTest {
         assert ! auto.accepts(pt("a"))        
     }
     
-    //@Test//need to fix this.
+    //@Test//need to fix this! I think it depends on the invhom format, maybe?
     public void testInvhomCfg() {
         InterpretedTreeAutomaton cfg = pi(CFG)
-        PatternMatchingInvhomAutomatonFactory f = new PMFactoryNonrestrictive(cfg.getInterpretation("i").getHomomorphism(), cfg.getInterpretation("i").getAlgebra())
+        PatternMatchingInvhomAutomatonFactory f = new PMFactoryRestrictive(cfg.getInterpretation("i").getHomomorphism())
         f.computeMatcherFromHomomorphism()
         
         Algebra alg = cfg.getInterpretation("i").getAlgebra()
@@ -75,7 +75,7 @@ class PatternMatchingInvhomAutomatonTest {
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism()
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
         
-        PatternMatchingInvhomAutomatonFactory f = new PMFactoryRestrictive(hom, alg)
+        PatternMatchingInvhomAutomatonFactory f = new PMFactoryRestrictive(hom)
         f.computeMatcherFromHomomorphism()
         
         String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"
@@ -94,20 +94,20 @@ class PatternMatchingInvhomAutomatonTest {
         assertEquals(pa(intersectionGold), finalIntAut.asConcreteTreeAutomatonWithStringStates());
     }
     
-//    @Test // TODO - PUT IT BACK //should have a hand made explicit rhs automaton here? so that this does not depend on the graph side working.
+    @Test //should have a hand made explicit rhs automaton here? so that this does not depend on the graph side working.
     public void testPatternMatchingInvhomTopDown() {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream(HRGCleanS.getBytes( Charset.defaultCharset() ) ))
         Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism()
         GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
         
-        PatternMatchingInvhomAutomatonFactory f = new PMFactoryRestrictive(hom, alg)
+        PatternMatchingInvhomAutomatonFactory f = new PMFactoryRestrictive(hom)
         f.computeMatcherFromHomomorphism()
         
         String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"
         
         SGraph sgraph = alg.parseString(input)
         
-        TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonTopDownAsymptotic.class)
+        TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonTopDown.class)
         
         CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhom(rhs)
         TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
@@ -115,7 +115,7 @@ class PatternMatchingInvhomAutomatonTest {
         //System.err.println(intersectionGold)
         //System.err.println(finalIntAut.toString())
         
-        assertEquals(pa(intersectionGold), finalIntAut.asConcreteTreeAutomatonWithStringStates());
+        assertEquals(pa(intersectionGoldTopDown), finalIntAut.asConcreteTreeAutomatonWithStringStates());
         
 //        assertEquals(intersectionGold, finalIntAut.toString());
     }
@@ -168,7 +168,11 @@ VP -> go
 'VP,[g<subj> {go_g}, go<root> {go_g, go_go}]' -> go [1.0]
 'S,[w<root> {w_b, w_go, w_g, w_w}]'! -> want3('NP,[b<root> {b_b}]', 'NP,[g<root> {g_g}]', 'VP,[g<subj> {go_g}, go<root> {go_g, go_go}]') [1.0]\n\
 """
-    
+    public static final String intersectionGoldTopDown = """'NP,[g<root> | (g_g)]' -> girl [1.0]
+'NP,[b<root> | (b_b)]' -> boy [1.0]
+'VP,[go<root>, g<subj> | (go_go)+(go_g)]' -> go [1.0]
+'S,[w<root> | (w_b)+(w_g,w_go)+(w_w)]'! -> want3('NP,[b<root> | (b_b)]', 'NP,[g<root> | (g_g)]', 'VP,[go<root>, g<subj> | (go_go)+(go_g)]') [1.0]\n\
+"""
     
     private static final String CFG = '''\n\
 interpretation i: de.up.ling.irtg.algebra.StringAlgebra

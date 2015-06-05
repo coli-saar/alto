@@ -243,9 +243,38 @@ public class SComponent {
         
     } 
 
+    /**
+     * Returns a string representing this component with node and edge names.
+     * Use this over the default {@code toString()} function for readability.
+     * @param completeGraphInfo
+     * @return
+     */
+    public String toString(GraphInfo completeGraphInfo) {
+       StringJoiner sjv = new StringJoiner(",");
+        for (int v : bVertices) {
+            sjv.add(completeGraphInfo.getNodeForInt(v));
+        }
+        StringJoiner sje = new StringJoiner(",");
+        for (int e : inBEdges) {
+            sje.add(completeGraphInfo.getNodeForInt(completeGraphInfo.getEdgeSource(e))
+            + "_" + completeGraphInfo.getNodeForInt(completeGraphInfo.getEdgeTarget(e)));
+        }
+        return ("({"+sjv.toString()+"}|{"+sje.toString()+"})");
+   }
     
     
-    
+    /**
+     * Returns a string containing the names of in-boundary edges of this
+     * component.
+     */
+    String toStringOnlyEdges(GraphInfo completeGraphInfo) {
+        StringJoiner sje = new StringJoiner(",");
+        for (int e : inBEdges) {
+            sje.add(completeGraphInfo.getNodeForInt(completeGraphInfo.getEdgeSource(e))
+            + "_" + completeGraphInfo.getNodeForInt(completeGraphInfo.getEdgeTarget(e)));
+        }
+        return ("("+sje.toString()+")");
+    }
     
     @Override
     public String toString() {
@@ -257,7 +286,7 @@ public class SComponent {
         for (int e : inBEdges) {
             sje.add(String.valueOf(e));
         }
-        return "("+sjv.toString()+"/"+sje.toString()+")";
+        return "("+sjv.toString()+"|"+sje.toString()+")";
     }
     
     

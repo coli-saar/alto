@@ -214,17 +214,17 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         } else if (label.startsWith(GraphAlgebra.OP_RENAME)
                 || label.startsWith(GraphAlgebra.OP_SWAP)
                 || label.startsWith(GraphAlgebra.OP_FORGET)
-                || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
+                /*|| label.startsWith(GraphAlgebra.OP_FORGET_ALL)
                 || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
-                || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
+                || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)*/) {
             //ParseTester.averageLogger.increaseValue("UnaryRulesChecked");
-            if (label.startsWith(GraphAlgebra.OP_RENAME)) {
-                //ParseTester.averageLogger.increaseValue("RenameRulesChecked");
+            /*if (label.startsWith(GraphAlgebra.OP_RENAME)) {
+                ParseTester.averageLogger.increaseValue("RenameRulesChecked");
             } else if (label.startsWith(GraphAlgebra.OP_SWAP)) {
-                //ParseTester.averageLogger.increaseValue("SwapRulesChecked");
+                ParseTester.averageLogger.increaseValue("SwapRulesChecked");
             } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
-               // ParseTester.averageLogger.increaseValue("ForgetRulesChecked");
-            }
+                ParseTester.averageLogger.increaseValue("ForgetRulesChecked");
+            }*/
             BoundaryRepresentation arg = children.get(0);
 
             for (Integer sourceToForget : arg.getForgottenSources(label, labelId))//check if we may forget.
@@ -242,13 +242,13 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
                 //result.setEqualsMeansIsomorphy(false);//is this a problem??
-                if (label.startsWith(GraphAlgebra.OP_RENAME)) {
-                    //ParseTester.averageLogger.increaseValue("successfull renames");
+                /*if (label.startsWith(GraphAlgebra.OP_RENAME)) {
+                    ParseTester.averageLogger.increaseValue("successfull renames");
                 } else if (label.startsWith(GraphAlgebra.OP_SWAP)) {
-                   // ParseTester.averageLogger.increaseValue("successfull swaps");
+                   ParseTester.averageLogger.increaseValue("successfull swaps");
                 } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
-                   // ParseTester.averageLogger.increaseValue("successfull forgets");
-                }
+                   ParseTester.averageLogger.increaseValue("successfull forgets");
+                }*/
                 return cacheRules(sing(result, labelId, childStates), labelId, childStates);//sing(result, labelId, childStates);
             }
         } else {
@@ -278,7 +278,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
 
     /**
-     * This caches found rules for future reference, if the same bottom-up
+     * This caches rules for future reference, if the same bottom-up
      * question is asked again.
      * @param rules
      * @param labelID
@@ -324,18 +324,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return false;
     }
 
-    /**
-     * Makes all rules explicit, and then answers the question.
-     * Use is discouraged, use top-down automaton instead.
-     * @param labelId
-     * @param parentState
-     * @return 
-     */
-    @Override
-    public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
-        makeAllRulesExplicit();
-        return getRulesTopDownFromExplicit(labelId, parentState);
-    }
+
 
     @Override
     public boolean isBottomUpDeterministic() {
@@ -405,6 +394,11 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         } else {
             return new ImpureMPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto);
         }
+    }
+
+    @Override
+    public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
+        throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
     }
     
     private class MPFBinaryPartnerFinder extends BinaryPartnerFinder{

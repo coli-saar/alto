@@ -6,7 +6,6 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.primitives.Ints;
-import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -42,12 +41,14 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
+ * Produces pattern matcher automata to compute the inverse of decomposition
+ * automata under homomorphism.
  *
- * @author jonas
+ * @author groschwitz
  * @param <State>
  */
-public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonFactory<String, State>{
-    
+public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonFactory<String, State> {
+
     protected ConcreteTreeAutomaton<String> matcher;
     private Set<Rule> matcherConstantRules;
     private IntSet matcherConstants;
@@ -69,15 +70,13 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
     private IntList genericStartStateIDs;
     private Int2IntMap startStateIdToLabelSetID;
 
-    
-
-    public PMFactoryRestrictive(Homomorphism hom, Algebra rhsAlgebra) {
-        super(hom, rhsAlgebra);
+    public PMFactoryRestrictive(Homomorphism hom) {
+        super(hom);
     }
 
     @Override
-    protected void computeMatcherFromHomomorphism()  {
-        
+    protected void computeMatcherFromHomomorphism() {
+
         labelSetID2TopDownStartRules = new Int2ObjectOpenHashMap();
         matcherChild2Rule = new ArrayMap<>();
         posOfStartStateRepInRules = new ArrayList<>();
@@ -99,9 +98,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         matcherParentToChildren = new ArrayInt2ObjectMap<>();
 
         //CpuTimeStopwatch sw = new CpuTimeStopwatch();
-
         //sw.record(0);
-
         //take care of start states
         for (int labelSetID = 1; labelSetID <= hom.getMaxLabelSetID(); labelSetID++) {
             String startState = "q" + labelSetID + "/";
@@ -154,15 +151,14 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         //System.err.println("count of start state pos in constant free term rules: " + posOfStartStateRepInRulesFromConstantFreeTerms.size());
         //sw.record(1);
         //writeRestrictiveMatcherLog(sw);
-
         //System.err.println(Iterables.size(restrictiveMatcher.getRuleSet()) + " rules");
         //sw.printMilliseconds("add rules");
 //        for (int parent : matcherParentToChildren.keySet()) {
 //            System.err.println(nondetMatcher.getStateForId(parent) + " -> " + Arrays.stream(matcherParentToChildren.get(parent)).mapToObj(nondetMatcher::getStateForId).collect(Collectors.toList()));
 //        }
     }
-    
-        private void recordMatcherStates(String matcherState, Tree<HomomorphismSymbol> term, TreeAutomaton<String> nondetMatcher) {
+
+    private void recordMatcherStates(String matcherState, Tree<HomomorphismSymbol> term, TreeAutomaton<String> nondetMatcher) {
         int arity = term.getChildren().size();
         int[] children = new int[arity];
 
@@ -174,8 +170,8 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
 
         matcherParentToChildren.put(nondetMatcher.getIdForState(matcherState), children);
     }
-    
-        private void addTermToRestrictiveMatcher(int labelSetID) {
+
+    private void addTermToRestrictiveMatcher(int labelSetID) {
         List<Pair<Rule, Integer>> startStatesHere = labelSetID2StartStateRules.get(labelSetID);
         if (startStatesHere != null) {
             posOfStartStateRepInRules.addAll(startStatesHere);
@@ -192,8 +188,8 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
          restrictiveMatcher.addRule(pair.getLeft());
          }*/
     }
-        
-         private Pair<String, State> makeDuoStateAndPutOnAgenda(int matcherStateID, int rhsStateID, TreeAutomaton<State> rhs, Int2ObjectMap<BinaryPartnerFinder> matcherStateToRhsState, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen) {
+
+    private Pair<String, State> makeDuoStateAndPutOnAgenda(int matcherStateID, int rhsStateID, TreeAutomaton<State> rhs, Int2ObjectMap<BinaryPartnerFinder> matcherStateToRhsState, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen) {
         /*if (isStartState.get(matcherStateID)) {
          IntSet matchingStateIDs = rhsState2MatchingStartStates.get(rhsStateID);
          if (matchingStateIDs == null) {
@@ -239,33 +235,33 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
 
      //do not use this!!
     /*private void adjustRestrictiveMatcher(TreeAutomaton<State> rhs) {
-        posOfStartStateRepInRules = new ArrayList<>();
-        restrictiveMatcher.removeAllRules();
-        SignatureMapper mapper = rhs.getSignature().getMapperTo(restrictiveMatcher.getSignature());
-        List<Pair<IntSet, Integer>> prevConsts2LabelID = constants2LabelSetID;
+     posOfStartStateRepInRules = new ArrayList<>();
+     restrictiveMatcher.removeAllRules();
+     SignatureMapper mapper = rhs.getSignature().getMapperTo(restrictiveMatcher.getSignature());
+     List<Pair<IntSet, Integer>> prevConsts2LabelID = constants2LabelSetID;
 
-        for (Rule constRuleMatcher : matcherConstantRules) {
-            debugCounterConst++;
-            Iterable<Rule> rulesFound = rhs.getRulesBottomUp(mapper.remapBackward(constRuleMatcher.getLabel()), new int[0]);
-            if (rulesFound.iterator().hasNext()) {
-                List<Pair<IntSet, Integer>> tempConsts2LabelID = new ArrayList<>();
-                for (Pair<IntSet, Integer> pair : prevConsts2LabelID) {
-                    IntSet constants = pair.getLeft();
-                    int labelSetID = pair.getRight();
-                    IntSet newConstants = new IntOpenHashSet(constants);
-                    int constID = constRuleMatcher.getLabel();
-                    newConstants.remove(constID);
-                    if (newConstants.isEmpty()) {
-                        addTermToRestrictiveMatcher(labelSetID);
-                    } else {
-                        tempConsts2LabelID.add(new ImmutablePair(newConstants, labelSetID));
-                    }
-                }
-                prevConsts2LabelID = tempConsts2LabelID;
-            }
-        }
-    }*/
-        @Override
+     for (Rule constRuleMatcher : matcherConstantRules) {
+     debugCounterConst++;
+     Iterable<Rule> rulesFound = rhs.getRulesBottomUp(mapper.remapBackward(constRuleMatcher.getLabel()), new int[0]);
+     if (rulesFound.iterator().hasNext()) {
+     List<Pair<IntSet, Integer>> tempConsts2LabelID = new ArrayList<>();
+     for (Pair<IntSet, Integer> pair : prevConsts2LabelID) {
+     IntSet constants = pair.getLeft();
+     int labelSetID = pair.getRight();
+     IntSet newConstants = new IntOpenHashSet(constants);
+     int constID = constRuleMatcher.getLabel();
+     newConstants.remove(constID);
+     if (newConstants.isEmpty()) {
+     addTermToRestrictiveMatcher(labelSetID);
+     } else {
+     tempConsts2LabelID.add(new ImmutablePair(newConstants, labelSetID));
+     }
+     }
+     prevConsts2LabelID = tempConsts2LabelID;
+     }
+     }
+     }*/
+    @Override
     protected void adjustMatcher(TreeAutomaton<State> rhs) {
         posOfStartStateRepInRules = new ArrayList<>();
         //restrictiveMatcher.removeAllRules();
@@ -314,18 +310,18 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
              System.err.println("With loop(no duplicates): " + withLoopLabels.size());
              System.err.println("Without loop: " + noLoopCount);
              System.err.println("Without loop(no duplicates): " + edgeOnlyLabels.size());*/
-        /*} else if (rhs instanceof SGraphBRDecompositionAutomatonTopDownAsymptotic) {
-            SGraphBRDecompositionAutomatonTopDownAsymptotic rhsTopDown = (SGraphBRDecompositionAutomatonTopDownAsymptotic) rhs;
-            for (int constant : matcherConstants) {
-                if (!rhsTopDown.storedConstants[constant].isEmpty()) {
-                    IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constant);
-                    if (matchingLabelSetIDs != null) {
-                        for (int labelSetID : matchingLabelSetIDs) {
-                            addTermToRestrictiveMatcher(labelSetID);
-                        }
-                    }
-                }
-            }*/
+            /*} else if (rhs instanceof SGraphBRDecompositionAutomatonTopDownAsymptotic) {
+             SGraphBRDecompositionAutomatonTopDownAsymptotic rhsTopDown = (SGraphBRDecompositionAutomatonTopDownAsymptotic) rhs;
+             for (int constant : matcherConstants) {
+             if (!rhsTopDown.storedConstants[constant].isEmpty()) {
+             IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constant);
+             if (matchingLabelSetIDs != null) {
+             for (int labelSetID : matchingLabelSetIDs) {
+             addTermToRestrictiveMatcher(labelSetID);
+             }
+             }
+             }
+             }*/
         } else {
             for (Rule constRuleMatcher : matcherConstantRules) {
                 IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constRuleMatcher.getLabel());
@@ -383,7 +379,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
 
         return intersectionAutomaton;
     }
-    
+
     private Pair<IntList, Boolean> intersectTerm(int rhsState, int matcherState, TreeAutomaton<State> rhs, SignatureMapper mapper, ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton, Int2ObjectMap<Int2ObjectMap<Pair<IntList, Boolean>>> seen) {
         Int2ObjectMap<Pair<IntList, Boolean>> seenRhs = seen.get(rhsState);
         if (seenRhs != null) {
@@ -440,7 +436,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             return retPair;
         }
     }
-    
+
     private ConcreteTreeAutomaton<Pair<String, State>> intersectWithMatcherTopDown_OLD(TreeAutomaton<State> rhs) {//old version, for runtime comparison
         ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton = new ConcreteTreeAutomaton<>(rhs.getSignature());
         SignatureMapper mapper = rhs.getSignature().getMapperTo(matcher.getSignature());
@@ -466,7 +462,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         //System.err.println(results);
         return intersectionAutomaton;
     }
-    
+
     //returns 0 if the input state is definitely inaccessible, 1 if pending (i.e. still depending on other states) and 2 if accessible.
     //could turn "seen" into a IntInt2BooleanMap or sth like that.
     private int intersect(int matcherParentID, int rhsParentID, TreeAutomaton<State> rhs, ConcreteTreeAutomaton<Pair<String, State>> intersectionAuto, IntInt2IntMap seen, SignatureMapper mapper) {
@@ -549,7 +545,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             }
         }
     }
-    
+
     @Override
     protected ConcreteTreeAutomaton<Pair<String, State>> intersectWithMatcherBottomUp(TreeAutomaton<State> rhs) {
         ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton = new ConcreteTreeAutomaton<>(rhs.getSignature());
@@ -598,7 +594,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         return intersectionAutomaton;
     }
 
-    
     private void processStatePairBottomUp(TreeAutomaton<State> rhs, Pair<Rule, Integer> ruleAndPos, SignatureMapper mapper, int rhsChildID, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen, ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton) {
         Rule matcherRule = ruleAndPos.getLeft();
         int pos = ruleAndPos.getRight();
@@ -717,9 +712,10 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
     protected String getMatcherStateForID(int matcherStateID) {
         return matcher.getStateForId(matcherStateID);
     }
-    
+
     // immutable IntList that contains a single element
     private static class MySingletonIntList extends AbstractIntList {
+
         private int[] valueArray;
 
         public MySingletonIntList(int value) {
@@ -779,45 +775,42 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
 
         return isEmpty;
     }
-    
-    
 
     /*private void forAllMatchesRestrictive(int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, int[] childStates, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom, Consumer<int[]> fn) {
-//      System.err.println("dfs for " + rhsAuto.getStateForId(rhsState) + "@" + nondetMatcher.getStateForId(matcherState) + " at " + HomomorphismSymbol.toStringTree(term, hom.getTargetSignature()));
+     //      System.err.println("dfs for " + rhsAuto.getStateForId(rhsState) + "@" + nondetMatcher.getStateForId(matcherState) + " at " + HomomorphismSymbol.toStringTree(term, hom.getTargetSignature()));
 
-        if (intersState < 1) {
-            System.err.println("Terrible error in PatternMatchingInvhomAutomatonFactory#forAllMatchesRestrictive: intersState is " + intersState);
-        }
+     if (intersState < 1) {
+     System.err.println("Terrible error in PatternMatchingInvhomAutomatonFactory#forAllMatchesRestrictive: intersState is " + intersState);
+     }
 
-        if (term.getChildren().isEmpty()) {
-            if (term.getLabel().isVariable()) {
-//                System.err.println("var " + term.getLabel().getValue() + " -> " + rhsAuto.getStateForId(rhsState));
+     if (term.getChildren().isEmpty()) {
+     if (term.getLabel().isVariable()) {
+     //                System.err.println("var " + term.getLabel().getValue() + " -> " + rhsAuto.getStateForId(rhsState));
 
-                childStates[term.getLabel().getValue()] = rhsAuto.getIdForState(intersectionAuto.getStateForId(intersState).getRight());
+     childStates[term.getLabel().getValue()] = rhsAuto.getIdForState(intersectionAuto.getStateForId(intersState).getRight());
 
-                if (term == rightmostVariable) {
-//                    System.err.println("done!");
-                    fn.accept(childStates);
-                }
-            }
-        } else {
+     if (term == rightmostVariable) {
+     //                    System.err.println("done!");
+     fn.accept(childStates);
+     }
+     }
+     } else {
 
-//            System.err.println("term label is " + term.getLabel() + ", value = " + term.getLabel().getValue() + ", str=" + hom.getTargetSignature().resolveSymbolId(term.getLabel().getValue()));
-//            System.err.println("  in rhsauto sig: " + rhsAuto.getSignature().resolveSymbolId(term.getLabel().getValue()));
-            Iterable<Rule> rules = intersectionAuto.getRulesTopDown(mapperintersToHom.remapBackward(term.getLabel().getValue()), intersState);
-            /*for (Rule rule : rules) {
-             for (int child : rule.getChildren()) {
-             System.err.println(intersectionAuto.getStateForId(child));
-             }
-             }*/
-           /* for (Rule rule : rules) {
-                for (int i = 0; i < rule.getChildren().length; i++) {
-                    forAllMatchesRestrictive(rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, childStates, rhsAuto, intersectionAuto, mapperintersToHom, fn);
-                }
-            }
-        }
-    }*/
-
+     //            System.err.println("term label is " + term.getLabel() + ", value = " + term.getLabel().getValue() + ", str=" + hom.getTargetSignature().resolveSymbolId(term.getLabel().getValue()));
+     //            System.err.println("  in rhsauto sig: " + rhsAuto.getSignature().resolveSymbolId(term.getLabel().getValue()));
+     Iterable<Rule> rules = intersectionAuto.getRulesTopDown(mapperintersToHom.remapBackward(term.getLabel().getValue()), intersState);
+     /*for (Rule rule : rules) {
+     for (int child : rule.getChildren()) {
+     System.err.println(intersectionAuto.getStateForId(child));
+     }
+     }*/
+    /* for (Rule rule : rules) {
+     for (int i = 0; i < rule.getChildren().length; i++) {
+     forAllMatchesRestrictive(rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, childStates, rhsAuto, intersectionAuto, mapperintersToHom, fn);
+     }
+     }
+     }
+     }*/
     @Override
     protected List<int[]> forAllMatches(List<int[]> prevList, int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom, Consumer<int[]> fn) {
 //      System.err.println("dfs for " + rhsAuto.getStateForId(rhsState) + "@" + nondetMatcher.getStateForId(matcherState) + " at " + HomomorphismSymbol.toStringTree(term, hom.getTargetSignature()));
@@ -867,7 +860,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             return ret;
         }
     }
-    
+
     //
     private IntSet addMatcherTransitions(int labelSetID, Tree<HomomorphismSymbol> rhs, String parent, List<String> startStates, ConcreteTreeAutomaton<String> auto, Signature signature) {
         String sym = signature.resolveSymbolId(rhs.getLabel().getValue());
@@ -920,8 +913,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             return ret;
         }
     }
-    
-    
+
     /**
      * Adds a rule that has children during the construction of the restrictive
      * matcher. The references to matcherChild2Rule are added immediately,
@@ -975,33 +967,30 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         storedRules.add(new ImmutablePair(rule, pos));
     }
 
-    
     /*private void writeRestrictiveMatcherLog(CpuTimeStopwatch sw) {
-        if (logTitle.equals("")) {
-            return;
-        }
-        try {
-            logWriter = new FileWriter("logs/" + logTitle + Date.from(Instant.now()) + ".txt");
+     if (logTitle.equals("")) {
+     return;
+     }
+     try {
+     logWriter = new FileWriter("logs/" + logTitle + Date.from(Instant.now()) + ".txt");
 
-            logWriter.write("Matcher setup time: " + String.valueOf(sw.getTimeBefore(1) / 1000000) + "\n");
-            logWriter.write("Number start states (final states in restrictive matcher): " + startStates.size() + "\n");
-            logWriter.write("Total number states in restrictive matcher: " + restrictiveMatcher.getAllStates().size() + "\n");
-            logWriter.write("Size child2Rule#keySet: " + matcherChild2Rule.keySet().size() + "\n");
-            logWriter.write("Entries in posOfStartStateRepInRules: " + posOfStartStateRepInRules.size() + "\n");
-            int ruleCount = 0;
-            for (Rule r : restrictiveMatcher.getRuleSet()) {
-                ruleCount++;
-            }
-            logWriter.write("Total number rules in restrictive matchter: " + ruleCount + "\n");
-            logWriter.write("Number label sets: " + hom.getMaxLabelSetID() + "\n");
-            logWriter.write("Average number rules per label: " + labelSetID2StartStateRules.values().stream().mapToInt(set -> set.size()).average().getAsDouble() + "\n\n\n\n");
-            logWriter.write(restrictiveMatcher.toString());
+     logWriter.write("Matcher setup time: " + String.valueOf(sw.getTimeBefore(1) / 1000000) + "\n");
+     logWriter.write("Number start states (final states in restrictive matcher): " + startStates.size() + "\n");
+     logWriter.write("Total number states in restrictive matcher: " + restrictiveMatcher.getAllStates().size() + "\n");
+     logWriter.write("Size child2Rule#keySet: " + matcherChild2Rule.keySet().size() + "\n");
+     logWriter.write("Entries in posOfStartStateRepInRules: " + posOfStartStateRepInRules.size() + "\n");
+     int ruleCount = 0;
+     for (Rule r : restrictiveMatcher.getRuleSet()) {
+     ruleCount++;
+     }
+     logWriter.write("Total number rules in restrictive matchter: " + ruleCount + "\n");
+     logWriter.write("Number label sets: " + hom.getMaxLabelSetID() + "\n");
+     logWriter.write("Average number rules per label: " + labelSetID2StartStateRules.values().stream().mapToInt(set -> set.size()).average().getAsDouble() + "\n\n\n\n");
+     logWriter.write(restrictiveMatcher.toString());
 
-            logWriter.close();
-        } catch (java.lang.Exception e) {
-            System.err.println("could not write restrictive matcher log!");
-        }
-    }*/
-
-    
+     logWriter.close();
+     } catch (java.lang.Exception e) {
+     System.err.println("could not write restrictive matcher log!");
+     }
+     }*/
 }

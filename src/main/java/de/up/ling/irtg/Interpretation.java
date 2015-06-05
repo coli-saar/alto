@@ -51,7 +51,7 @@ public class Interpretation<E> implements Serializable {
         // and bottom up queries.
         if (hom.isNonDeleting()) {
             if (pmFactory == null) {
-                pmFactory = new PMFactoryRestrictive(hom, algebra);
+                pmFactory = new PMFactoryRestrictive(hom);
             }
             Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching.");
             return pmFactory.invhom(decompositionAutomaton);

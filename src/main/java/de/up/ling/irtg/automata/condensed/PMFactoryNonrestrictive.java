@@ -34,10 +34,10 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- * Currently not working!!
- * @author jonas
+ * Currently not working.
+ * @author groschwitz
  */
-public class PMFactoryNonrestrictive<State> extends PatternMatchingInvhomAutomatonFactory<Set<String>, State>{
+class PMFactoryNonrestrictive<State> extends PatternMatchingInvhomAutomatonFactory<Set<String>, State>{
     private TreeAutomaton<Set<String>> matcher;
     private ConcreteTreeAutomaton<String> nondetMatcher;
     private List<IntSet> detMatcherStatesToNondet = new ArrayList<>();
@@ -45,8 +45,8 @@ public class PMFactoryNonrestrictive<State> extends PatternMatchingInvhomAutomat
     private Int2ObjectMap<int[]> matcherParentToChildren;
     private Int2IntMap startStateIdToLabelSetID;
     
-    public PMFactoryNonrestrictive(Homomorphism hom, Algebra rhsAlgebra) {
-        super(hom, rhsAlgebra);
+    public PMFactoryNonrestrictive(Homomorphism hom) {
+        super(hom);
     }
 
     @Override

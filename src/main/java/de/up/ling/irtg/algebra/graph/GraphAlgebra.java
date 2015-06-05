@@ -38,6 +38,26 @@ import javax.swing.JComponent;
  *      a-source of G. The resulting s-graph is like G, except that
  *      it does not have an a-source. The operation f_a_b forgets both
  *      a and b.</li>
+ *  <li>The <i>rename</i> operation <code>r_a_b(G)</code> renames
+ *      the a-source of G into b, using {@link SGraph#renameSource(java.lang.String, java.lang.String) }.
+ *      The operation <code>r_a</code> is an abbreviation for
+ *      <code>r_root_a</code>.</li>
+ * <li>The <i>swap</i> operation <code>s_a_b(G)</code> renames
+ *      the a-source of G into b and the b-source into a.</li>
+ *  <li>The <i>combined merge and rename</i> operation <code>merge_a_b(G1,G2)</code>,
+ *      first applies the rename from a to b in G2 and then <i>merges</i>
+ *      the result with G1.
+ * </ul>
+ * 
+ * Any other string is interpreted as a constant which denotes
+ * an s-graph. The strings are parsed using {@link #parseString(java.lang.String) },
+ * i.e. they are expected to be in the extended ISI AMR format syntax.
+ * 
+ * @author koller
+ */
+
+/*
+ * Old operations:
  *  <li>The <i>forget-all</i> operation <code>f(G)</code> forgets
  *      all sources of G. This is currently not supported in the top-down
  *      automaton.</li>
@@ -49,31 +69,17 @@ import javax.swing.JComponent;
  *      forgets all sources except for <code>root</code>. It is equivalent
  *      to <code>fe_root</code>. This is currently not supported in the top-down
  *      automaton.</li>
- *  <li>The <i>rename</i> operation <code>r_a_b(G)</code> renames
- *      the a-source of G into b, using {@link SGraph#renameSource(java.lang.String, java.lang.String) }.
- *      The operation <code>r_a</code> is an abbreviation for
- *      <code>r_root_a</code>.</li>
- *  <li>The combined merge and rename operation <code>merge_a_b(G1,G2)</code>, first applies
- *      the <i>rename</i> from a to b in G2 and then <i>merges</i> the
- *      result with G1. This is currently <i>only</i> supported in the
- *      automata using {@code BoundaryRepresentations}.</li>
- * </ul>
- * 
- * Any other string is interpreted as a constant which denotes
- * an s-graph. The strings are parsed using {@link #parseString(java.lang.String) },
- * i.e. they are expected to be in the extended ISI AMR format syntax.
- * 
- * @author koller
- */
+*/
+
 public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     // operation symbols of this algebra
     public static final String OP_MERGE = "merge";
     public static final String OP_COMBINEDMERGE = "merge_";
     public static final String OP_RENAME = "r_";
     public static final String OP_SWAP = "s_";
-    public static final String OP_FORGET_ALL = "f";
-    public static final String OP_FORGET_ALL_BUT_ROOT = "fr";
-    public static final String OP_FORGET_EXCEPT = "fe_";
+    //public static final String OP_FORGET_ALL = "f";
+    //public static final String OP_FORGET_ALL_BUT_ROOT = "fr";
+    //public static final String OP_FORGET_EXCEPT = "fe_";
     public static final String OP_FORGET = "f_";
     
     private boolean useTopDownAutomaton = false;
@@ -214,7 +220,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * @return 
      */
     static Iterable<String> getForgottenSources(String opString, SGraph sgraph) {
-        if ( opString.startsWith(OP_FORGET) || opString.startsWith(OP_FORGET_EXCEPT)) {
+        if ( opString.startsWith(OP_FORGET)) { //|| opString.startsWith(OP_FORGET_EXCEPT)) {
             String[] parts = opString.split("_");
             Set<String> sources = new HashSet<>();
 
@@ -222,18 +228,18 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 sources.add(parts[i]);
             }
 
-            if (opString.startsWith(OP_FORGET_EXCEPT)) {
+            /*if (opString.startsWith(OP_FORGET_EXCEPT)) {
                 sources = Sets.difference(sgraph.getAllSources(), sources);
-            }
+            }*/
 
             return sources;
-        } else if (opString.equals(OP_FORGET_ALL)) {
+        } /*else if (opString.equals(OP_FORGET_ALL)) {
             return sgraph.getAllSources();
         } else if( opString.equals(OP_FORGET_ALL_BUT_ROOT)) {
             Set<String> sources = new HashSet<>(sgraph.getAllSources());
             sources.remove("root");
             return sources;
-        } else {
+        }*/ else {
             return Collections.EMPTY_LIST;
         }
     }
@@ -266,13 +272,14 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                 }
 
                 return childrenValues.get(0).swapSources(parts[1], parts[2]);
-            } else if (label.equals(OP_FORGET_ALL)) {
+            /*} else if (label.equals(OP_FORGET_ALL)) {
                 // forget all sources
                 return childrenValues.get(0).forgetSourcesExcept(Collections.EMPTY_SET);
             } else if (label.equals(OP_FORGET_ALL_BUT_ROOT)) {
                 // forget all sources, except "root"
                 return childrenValues.get(0).forgetSourcesExcept(Collections.singleton("root"));
-            } else if (label.startsWith(OP_FORGET_EXCEPT) || label.startsWith(OP_FORGET)) {
+            */
+            } else if (/*label.startsWith(OP_FORGET_EXCEPT) || */label.startsWith(OP_FORGET)) {
                 // forget all sources, except ...
                 String[] parts = label.split("_");
                 Set<String> retainedSources = new HashSet<>();
@@ -350,7 +357,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         Set<String> ret = new HashSet<>();
         for (String symbol : signature.getSymbols())//this adds all sources from the signature, (but be careful, this is kind of a hack) should work now. Maybe better just give this a list of sources directly?
         {
-            if (symbol.startsWith(GraphAlgebra.OP_FORGET) || symbol.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
+            if (symbol.startsWith(GraphAlgebra.OP_FORGET)/* || symbol.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)*/) {
                 String[] parts = symbol.split("_");
                 for (int i = 1; i<parts.length; i++) {
                     if (parts[i].equals("")) {
@@ -382,9 +389,9 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
                     }
                     ret.addAll(smallerParts);
                 }
-            } else if (symbol.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)) {
+            } /*else if (symbol.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)) {
                 ret.add("root");
-            }
+            }*/
         }
         return ret;
 

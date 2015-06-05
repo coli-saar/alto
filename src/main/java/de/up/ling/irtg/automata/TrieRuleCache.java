@@ -13,7 +13,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
  *
  * @author koller
  */
-public class TrieRuleCache implements RuleCache {
+class TrieRuleCache implements RuleCache {
     private final IntTrie<Int2ObjectMap<Iterable<Rule>>> storedRules;
 
     public TrieRuleCache() {

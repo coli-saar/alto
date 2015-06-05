@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -25,7 +24,8 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
 /**
- *
+ * Produces pattern matcher automata to compute the inverse of decomposition
+ * automata under homomorphism.
  * @author koller
  * @param <MatcherState>
  * @param <State>
@@ -47,7 +47,12 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
     public Writer logWriter;
     public String logTitle = "";
 
-    public PatternMatchingInvhomAutomatonFactory(Homomorphism hom, Algebra rhsAlgebra) {
+    /**
+     * Initializes a new {@code PatternMatchingInvhomAutomatonFactory} with
+     * respect to the homomorphism {@code hom}.
+     * @param hom 
+     */
+    public PatternMatchingInvhomAutomatonFactory(Homomorphism hom) {
         this.hom = hom;
         initialize(true);
 
@@ -146,6 +151,12 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
     
     protected abstract void adjustMatcher(TreeAutomaton<State> rhs);
    
+    /**
+     * Computes the image under inverse homomorphism of the decomposition
+     * automaton {@code rhs}.
+     * @param rhs
+     * @return
+     */
     public CondensedTreeAutomaton<State> invhom(TreeAutomaton<State> rhs) {
         if (!computeCompleteMatcher) {
             adjustMatcher(rhs);

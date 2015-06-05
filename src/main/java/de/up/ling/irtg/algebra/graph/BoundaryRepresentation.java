@@ -6,12 +6,6 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.script.SGraphParsingEvaluation;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET_ALL;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET_ALL_BUT_ROOT;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_FORGET_EXCEPT;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_MERGE;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_RENAME;
 import org.jgrapht.DirectedGraph;
 import java.util.Set;
 import java.util.HashSet;
@@ -19,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Collection;
 import java.util.List;
-import static de.up.ling.irtg.algebra.graph.GraphAlgebra.OP_SWAP;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.MutableBoolean;
 import de.up.ling.irtg.util.NumbersCombine;
@@ -463,8 +456,8 @@ public class BoundaryRepresentation {
     }
 
     /**
-     * returns a new BoundaryRepresentation that is the result of swapping the two given sources.
-     * returns null if one of the sources is not assigned in the graph.
+     * Returns a new BoundaryRepresentation that is the result of swapping the two given sources.
+     * Returns null if one of the sources is not assigned in the graph.
      * @param oldSource
      * @param newSource
      * @return 
@@ -748,19 +741,19 @@ public class BoundaryRepresentation {
         //try {
         if (label == null) {
             return null;
-        } else if (label.equals(OP_MERGE)|| label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
+        } else if (label.equals(GraphAlgebra.OP_MERGE)|| label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
             return null;//do not use this for merge!
-        } else if (label.startsWith(OP_RENAME)) {
+        } else if (label.startsWith(GraphAlgebra.OP_RENAME)) {
             int[] labelSources = completeGraphInfo.getlabelSources(labelId);
             if (labelSources == null) {
                 System.err.println("error");
             }
             return rename(labelSources[0], labelSources[1], allowSelfRename);
-        } else if (label.startsWith(OP_SWAP)) {
+        } else if (label.startsWith(GraphAlgebra.OP_SWAP)) {
             int[] labelSources = completeGraphInfo.getlabelSources(labelId);
 
             return swap(labelSources[0], labelSources[1]);
-        } else if (label.equals(OP_FORGET_ALL)) {
+        /*} else if (label.equals(OP_FORGET_ALL)) {
             if (sourcesAllBottom) {
                 return null;
             } else {
@@ -780,7 +773,8 @@ public class BoundaryRepresentation {
             }
 
             return forgetSourcesExcept(retainedSources, completeGraphInfo);
-        } else if (label.startsWith(OP_FORGET)) {
+        */
+        } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
             int[] labelSources = completeGraphInfo.getlabelSources(labelId);
             Set<Integer> retainedSources = new HashSet<>();
 
@@ -803,51 +797,8 @@ public class BoundaryRepresentation {
         //}
     }
 
-    /**
-     * Returns a new BoundaryRepresentation B, such that applying the rename or swap operation given by label results in this BoundaryRepresentation.
-     * @param label
-     * @param labelId
-     * @param allowSelfRename
-     * @return
-     */
-    public BoundaryRepresentation applyRenameReverse(String label, int labelId, boolean allowSelfRename)//maybe this should be in algebra? This should probably be int-based? i.e. make new int-based algebra for BR  -- only call this after checking if forget is allowed!!
-    {
-        //try {
-        if (label == null) {
-            return null;
-        } else if (label.startsWith(OP_RENAME)) {
-            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
 
-            return rename(labelSources[1], labelSources[0], allowSelfRename);//changing order of 1 and 0 here makes the difference.
-        } else if (label.startsWith(OP_SWAP)) {
-            int[] labelSources = completeGraphInfo.getlabelSources(labelId);
 
-            return swap(labelSources[1], labelSources[0]);
-        } else {
-            return null;//do not call this for constant symbols!
-        }
-        //} catch (ParseException ex) {
-        //    throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
-        //}
-    }
-
-    public BoundaryRepresentation forgetReverse(int forgottenSource, int vNr) {
-        IdBasedEdgeSet newInBoundaryEdges = inBoundaryEdges.clone();
-        int[] newSourceToNodename = sourceToNode.clone();
-        newSourceToNodename[forgottenSource] = vNr;
-        BitSet newIsSourceNode = (BitSet) isSourceNode.clone();
-        long newVertexID = vertexID + getVertexIDSummand(vNr, forgottenSource, completeGraphInfo.getNrNodes());
-
-        long newEdgeID = edgeID;
-        //now add inBoundaryEdges where necessary
-        int nrNewInnerNodes = 0;
-        if (!arrayContains(sourceToNode, vNr)) {
-            newIsSourceNode.set(vNr);
-            nrNewInnerNodes = 1;
-            newEdgeID += newInBoundaryEdges.smartAddIncident(vNr, forgottenSource, inBoundaryEdges, this, completeGraphInfo);
-        }
-        return new BoundaryRepresentation(newInBoundaryEdges, newSourceToNodename, innerNodeCount + nrNewInnerNodes, newIsSourceNode.isEmpty(), newIsSourceNode, newEdgeID, newVertexID, completeGraphInfo);
-    }
 
     /**
      * given a label, if the label is a forget operation, this returns the indices of all sources that are forgotten if that operation is applied to this BoundaryRepresentation.
@@ -862,16 +813,16 @@ public class BoundaryRepresentation {
         if (label == null) {
             return null;
 
-        } else if (label.equals(OP_MERGE)||label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
+        } else if (label.equals(GraphAlgebra.OP_MERGE)||label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
             return null;//do not use this for merge!
 
-        } else if (label.startsWith(OP_RENAME)) {
+        } else if (label.startsWith(GraphAlgebra.OP_RENAME)) {
             return new IntOpenHashSet();
 
-        } else if (label.startsWith(OP_SWAP)) {
+        } else if (label.startsWith(GraphAlgebra.OP_SWAP)) {
             return new IntOpenHashSet();
 
-        } else if (label.equals(OP_FORGET_ALL)) {
+        /*} else if (label.equals(OP_FORGET_ALL)) {
             // forget all sources
             IntSet ret = new IntOpenHashSet();
             for (int source = 0; source < sourceToNode.length; source++) {
@@ -890,8 +841,8 @@ public class BoundaryRepresentation {
                 }
             }
             return ret;
-
-        } else if (label.startsWith(OP_FORGET)) {
+        */
+        } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
             int[] labelSources = completeGraphInfo.getlabelSources(labelId);
             IntSet deletedSources = new IntOpenHashSet();
             for (int i = 0; i < labelSources.length; i++) {
@@ -900,7 +851,7 @@ public class BoundaryRepresentation {
 
             return deletedSources;
 
-        } else if (label.startsWith(OP_FORGET_EXCEPT)) {
+        /*} else if (label.startsWith(OP_FORGET_EXCEPT)) {
             int[] labelSources = completeGraphInfo.getlabelSources(labelId);
             IntSet deletedSources = new IntOpenHashSet();
 
@@ -911,7 +862,7 @@ public class BoundaryRepresentation {
             }
 
             return deletedSources;
-
+        */
         } else {
             return null;//do not call this for constant symbols!
         }

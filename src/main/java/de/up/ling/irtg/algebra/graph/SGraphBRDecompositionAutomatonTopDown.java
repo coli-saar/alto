@@ -268,7 +268,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
     
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
     }
     
     private boolean hasCrossingEdgesFromNodes(Iterable<String> nodenames, SGraph subgraph) {
