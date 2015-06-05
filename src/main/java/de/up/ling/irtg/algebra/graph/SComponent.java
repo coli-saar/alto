@@ -35,14 +35,14 @@ public class SComponent {
      * Returns the set of boundary vertices of the component.
      * @return
      */
-    public IntSet getBVertices() {
+    IntSet getBVertices() {
         return bVertices;
     }
     /**
      * Returns the set of inboundary edges of this BRepComponent, encoded according to GraphInfo.
      * @return
      */
-    public IntSet getInBEdges() {
+    IntSet getInBEdges() {
         return inBEdges;
     }   
     
@@ -60,6 +60,8 @@ public class SComponent {
     
     /**
      * Returns true iff the set of boundary vertices is identical, and the smallest in-boundary edge is equal (the two imply that the components are identical, if they are on the same graph).
+     * @param other
+     * @return 
      */
     @Override
     public boolean equals(Object other) {
@@ -151,6 +153,7 @@ public class SComponent {
     
     /**
      * Based on the set of boundary vertices and the smallest in-boundary edge.
+     * @return 
      */
     @Override
     public int hashCode() {
@@ -170,18 +173,20 @@ public class SComponent {
      * @param graphInfo
      * @return
      */
-    public static SComponent makeComponent(IntSet bVertices, IntSet inBEdges, Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
+    static SComponent makeComponent(IntSet bVertices, IntSet inBEdges, Map<SComponent, SComponent> storedComponents, GraphInfo graphInfo) {
         SComponent ret = new SComponent(bVertices, inBEdges);
-        SComponent storedC = storedComponents.get(ret);
-        if (storedC != null) {
-            return storedC;
-        } else {
-            storedComponents.put(ret, ret);
-            if (bVertices.size() < graphInfo.getNrSources()) {
-                ret.computeSplitManager(graphInfo);
+        if (storedComponents != null) {
+            SComponent storedC = storedComponents.get(ret);
+            if (storedC != null) {
+                return storedC;
+            } else {
+                storedComponents.put(ret, ret);
+                if (bVertices.size() < graphInfo.getNrSources()) {
+                    ret.computeSplitManager(graphInfo);
+                }
             }
-            return ret;
         }
+        return ret;
     }
     
     /**
@@ -214,7 +219,7 @@ public class SComponent {
      * @param other
      * @return
      */
-    public boolean sharesVertex(SComponent other) {
+    boolean sharesVertex(SComponent other) {
         return !Sets.intersection(bVertices, other.bVertices).isEmpty();
     }
     

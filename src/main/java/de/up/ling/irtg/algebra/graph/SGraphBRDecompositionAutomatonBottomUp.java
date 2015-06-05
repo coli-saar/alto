@@ -798,8 +798,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bolCodec.write(instance.graph, stream);
             if (!(onlyBolinas && stream.toString().startsWith("()\n")) && instance.graph.getAllNodeNames().size()<=maxNodes) {
-                GraphAlgebra alg = new GraphAlgebra();
-                GraphAlgebra.makeIncompleteDecompositionAlgebra(alg, instance.graph, sourceCount);
+                GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(instance.graph, sourceCount);
                 
                 Writer rtgWriter = new StringWriter();
                 SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(instance.graph, alg);
@@ -851,8 +850,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         for (int i = startIndex; i<stop; i++) {
             System.out.println(i);
             IrtgInducer.TrainingInstance instance = corpus.get(i);
-            GraphAlgebra alg = new GraphAlgebra();
-            GraphAlgebra.makeIncompleteDecompositionAlgebra(alg, instance.graph, sourceCount);
+            GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(instance.graph, sourceCount);
             Writer rtgWriter = new FileWriter(targetFolderPath+String.valueOf(instance.id)+"_"+instance.graph.getAllNodeNames().size()+"nodes"+".rtg");
             SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(instance.graph, alg);
             boolean foundFinalState = botupAuto.writeAutomatonRestricted(rtgWriter);

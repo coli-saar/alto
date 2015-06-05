@@ -122,7 +122,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * This returns the original set stored in the algebra, so it must not be modified.
      * @return
      */
-    public Set<String> getAllSourceNames() {
+    Set<String> getAllSourceNames() {
         if (sources == null) {
             sources = getAllSourcesFromSignature(signature);
         }
@@ -323,6 +323,15 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             throw new ParserException(ex);
         }
     }
+    
+    public static SGraph parseStringStatic(String representation) throws ParserException {
+        
+        try {
+            return IsiAmrParser.parse(new StringReader(representation));
+        } catch (ParseException ex) {
+            throw new ParserException(ex);
+        }
+    }
 
     /**
      * Returns a Swing component that visualizes an object of this algebra.
@@ -403,14 +412,16 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * Creates a GraphAlgebra based on graph with nrSources many sources (named 1,..,nrSources).
      * The resulting algebra contains as constants all atomic subgraphs (single edges, and single labled nodes), with all possible source combinations.
      * Further, the merge operation and all possible versions of forget and rename.
-     * @param alg empty GraphAlgebra, carries the result.
+     * It is encouraged to use {@code makeIncompleteDecompositionAlgebra} instead,
+     * since the result is equally expressive and is smaller (due to less spurious constants).
      * @param graph
      * @param nrSources
      * @throws Exception
+     * @return
      */
-    public static void makeCompleteDecompositionAlgebra(GraphAlgebra alg, SGraph graph, int nrSources) throws Exception//only add empty algebra!!
+    public static GraphAlgebra makeCompleteDecompositionAlgebra(SGraph graph, int nrSources) throws Exception//only add empty algebra!!
     {
-        Signature sig = alg.getSignature();
+        Signature sig = new Signature();
         Set<String> sources = new HashSet<>();
         for (int i = 0; i < nrSources; i++) {
             sources.add(String.valueOf(i));
@@ -449,6 +460,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         }
 
         sig.addSymbol("merge", 2);
+        return new GraphAlgebra(sig);
     }
 
     /**
@@ -456,14 +468,14 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * The resulting algebra contains as constants all atomic subgraphs (single edges, and single labled nodes), but only one source is used for nodes,
      * and one more source for edges (both possibilities to name the vertices incident to the edge with these two sources are included).
      * Further, the merge operation and all possible versions of forget and rename.
-     * @param alg empty GraphAlgebra, carries the result.
      * @param graph
      * @param nrSources
      * @throws Exception
+     * @return
      */
-    public static void makeIncompleteDecompositionAlgebra(GraphAlgebra alg, SGraph graph, int nrSources) throws Exception//only add empty algebra!!
+    public static GraphAlgebra makeIncompleteDecompositionAlgebra(SGraph graph, int nrSources) throws Exception//only add empty algebra!!
     {
-        Signature sig = alg.getSignature();
+        Signature sig = new Signature();
         Set<String> sources = new HashSet<>();
         for (int i = 0; i < nrSources; i++) {
             sources.add(String.valueOf(i));
@@ -511,11 +523,12 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             }
         }
         sig.addSymbol("merge", 2);
+        return new GraphAlgebra(sig);
     }
 
     
     /**
-     * Writes an irtg file based on graph with nrSources many sources (named 1,..,nrSources).
+     * Writes an irtg file based on a graph with nrSources many sources (named 1,..,nrSources).
      * The resulting irtg represents a GraphAlgebra which contains as constants all atomic subgraphs (single edges, and single labled nodes), but only one source is used for nodes,
      * and one more source for edges (both possibilities to name the vertices incident to the edge with these two sources are included).
      * Further, the merge operation and all possible versions of forget and rename.
@@ -762,9 +775,8 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
              GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
              SGraph graph = alg.parseString(input);*/
             //activate this to automatically create algebra that has atomic subgraphs:
-            GraphAlgebra alg = new GraphAlgebra();
-            SGraph graph = alg.parseString(input);
-            makeIncompleteDecompositionAlgebra(alg, graph, nrSources);
+            SGraph graph = GraphAlgebra.parseStringStatic(input);
+            GraphAlgebra alg = makeIncompleteDecompositionAlgebra(graph, nrSources);
 
             stopTime = System.currentTimeMillis();
             elapsedTime = stopTime - startTime;
@@ -841,11 +853,9 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         GraphAlgebra[] doesAcceptAlg = new GraphAlgebra[testset.length];
         SGraph[] graph = new SGraph[testset.length];
         for (int i = 0; i < testset.length; i++) {
-            alg[i] = new GraphAlgebra();
-            doesAcceptAlg[i] = new GraphAlgebra();
-            graph[i] = alg[i].parseString(testset[i]);
-            makeIncompleteDecompositionAlgebra(alg[i], graph[i], testSourceNrs[i]);
-            makeIncompleteDecompositionAlgebra(doesAcceptAlg[i], graph[i], doesAcceptSourcesCount);
+            graph[i] = GraphAlgebra.parseStringStatic(testset[i]);
+            alg[i] = makeIncompleteDecompositionAlgebra(graph[i], testSourceNrs[i]);
+            doesAcceptAlg[i] = makeIncompleteDecompositionAlgebra(graph[i], doesAcceptSourcesCount);
         }
 
         //warmup

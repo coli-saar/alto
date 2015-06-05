@@ -213,7 +213,7 @@ public class SComponentRepresentation {
      * @param source
      * @return
      */
-    public int getSourceNode(int source) {
+    int getSourceNode(int source) {
         return sourceToNodename[source];
     }
     
@@ -223,7 +223,7 @@ public class SComponentRepresentation {
      * @param to
      * @return
      */
-    public SComponentRepresentation renameReverse(int from, int to) {
+    SComponentRepresentation renameReverse(int from, int to) {
         //keep in mind that this is REVERTING the rename from "from" to "to"
         if (from == to) {
             return this;
@@ -268,7 +268,7 @@ public class SComponentRepresentation {
      * @param source
      * @param vNr
      * @param oldComponent
-     * @param replacingComponents
+     * @param replacingComponent
      * @return
      */
     public SComponentRepresentation forgetReverse(int source, int vNr, SComponent oldComponent, SComponent replacingComponent) {
@@ -290,7 +290,7 @@ public class SComponentRepresentation {
      * @param childComponents
      * @return
      */
-    public SComponentRepresentation getChildFromComponents(Set<SComponent> childComponents) {
+    SComponentRepresentation getChildFromComponents(Set<SComponent> childComponents) {
         int[] childSource2Nodename = new int[sourceToNodename.length];
         IntSet totalBVertices = new IntOpenHashSet();
         for (SComponent comp : childComponents) {
