@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.util;
 
+import com.ezware.dialog.task.TaskDialogs;
 import de.saar.basic.StringTools;
 import java.awt.Component;
 import java.awt.Frame;
@@ -76,17 +77,21 @@ public class GuiUtils {
     }
 
     static public void showError(Component parent, Exception error) {
-        showError(parent, "Error", error);
+        TaskDialogs.showException(error);
+        
+        
+//        showError(parent, "Error", error);
     }
 
     static public void showError(Component parent, String label, Throwable error) {
-        SwingUtilities.invokeLater(() -> {
-            String err = error.getMessage() == null ? error.toString() : (error.getMessage() + "\n(" + error.getClass() + ")");            
-            String s = label + ":\n" + err;
-            JOptionPane.showMessageDialog(parent, s, "Error", JOptionPane.ERROR_MESSAGE);
-//            error.printStackTrace(System.err);
+        TaskDialogs.showException(error);
+        
+//        SwingUtilities.invokeLater(() -> {
+//            String err = error.getMessage() == null ? error.toString() : (error.getMessage() + "\n(" + error.getClass() + ")");            
+//            String s = label + ":\n" + err;
+//            JOptionPane.showMessageDialog(parent, s, "Error", JOptionPane.ERROR_MESSAGE);
 
-        });
+//        });
 
 //        try {
 //            throw new Exception();

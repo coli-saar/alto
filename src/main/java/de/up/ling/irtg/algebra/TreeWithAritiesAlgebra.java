@@ -5,10 +5,13 @@
 package de.up.ling.irtg.algebra;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import de.up.ling.tree.TreeVisitor;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,11 +34,15 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
 
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
-        Tree<String> ret = TreeParser.parse(representation);
-        
-        signature.addAllSymbols(addArities(ret));
-        
-        return ret;
+        try {
+            Tree<String> ret = TreeParser.parse(representation);
+            
+            signature.addAllSymbols(addArities(ret));
+            
+            return ret;
+        } catch (ParseException ex) {
+            throw new ParserException(ex);
+        }
     }
     
     

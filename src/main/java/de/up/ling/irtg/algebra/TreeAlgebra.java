@@ -14,14 +14,13 @@ import java.util.List;
 import javax.swing.JComponent;
 
 /**
- * The tree algebra. The elements of this algebra are the ranked
- * trees over a given signature. Any string f can be used as a tree-combining
- * operation of an arbitrary arity; the term f(t1,...,tn) evaluates
- * to the tree f(t1,...,tn). Care must be taken that only ranked
- * trees can be described; the parseString method will infer the arity
- * of each symbol f that you use, and will throw an exception if you
- * try to use f with two different arities.
- * 
+ * The tree algebra. The elements of this algebra are the ranked trees over a
+ * given signature. Any string f can be used as a tree-combining operation of an
+ * arbitrary arity; the term f(t1,...,tn) evaluates to the tree f(t1,...,tn).
+ * Care must be taken that only ranked trees can be described; the parseString
+ * method will infer the arity of each symbol f that you use, and will throw an
+ * exception if you try to use f with two different arities.
+ *
  * @author koller
  */
 public class TreeAlgebra extends Algebra<Tree<String>> {
@@ -31,7 +30,7 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
     public Tree<String> evaluate(Tree<String> t) {
         return t;
     }
-    
+
     @Override
     protected Tree<String> evaluate(String label, List<Tree<String>> childrenValues) {
         return Tree.create(label, childrenValues);
@@ -46,16 +45,19 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
 //    public Signature getSignature() {
 //        return signature;
 //    }
-
     @Override
     public JComponent visualize(Tree<String> object) {
         return new TreePanel(object);
     }
-    
+
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
-        Tree<String> ret = TreeParser.parse(representation);
-        signature.addAllSymbols(ret);
-        return ret;
+        try {
+            Tree<String> ret = TreeParser.parse(representation);
+            signature.addAllSymbols(ret);
+            return ret;
+        } catch (Exception e) {
+            throw new ParserException(e);
+        }
     }
 }
