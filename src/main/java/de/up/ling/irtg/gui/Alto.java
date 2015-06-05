@@ -61,7 +61,7 @@ import org.simplericity.macify.eawt.DefaultApplication;
  * @author koller
  */
 public class Alto extends javax.swing.JFrame implements ApplicationListener {
-    // Class is named Alto, because as of MacOS Mavericks, that determines
+    // Class is named Alto because as of MacOS Mavericks, that determines
     // the name in the menu bar.
 
     private static File previousDirectory;
@@ -558,11 +558,19 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
      * @param args the command line arguments
      */
     public static void main(String args[]) throws Exception {
+        // enable Mac integration
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
+        
+        
+        // set uncaught exception handler
+        Thread.setDefaultUncaughtExceptionHandler((thread,exception) -> {
+            GuiUtils.showError(exception);
+        });
+        
+        
         // tooltips stay visible forever
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
 

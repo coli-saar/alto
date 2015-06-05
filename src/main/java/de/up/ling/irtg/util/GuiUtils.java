@@ -82,6 +82,10 @@ public class GuiUtils {
         
 //        showError(parent, "Error", error);
     }
+    
+    static public void showError(Throwable error) {
+        TaskDialogs.showException(error);
+    }
 
     static public void showError(Component parent, String label, Throwable error) {
         TaskDialogs.showException(error);
