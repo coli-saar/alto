@@ -251,7 +251,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             NonterminalWithHyperedge nwh = r.getLhsNonterminal();
 
             edges.get(0).transform(ta, hom, stso, makeLHS(nwh),
-                    new HashSet<>(), nwh.getEndpoints(), r.getWeight(), r);
+                    nwh.getEndpoints(), r.getWeight(), r);
             if (endpoint.equals(r.getLhsNonterminal().getNonterminal())
                     && r.getLhsNonterminal().getEndpoints().size() == 1) {
                 ta.addFinalState(ta.getIdForState(makeLHS(nwh)));

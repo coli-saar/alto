@@ -17,10 +17,12 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
@@ -158,151 +160,22 @@ class EdgeTree {
      */
     void transform(ConcreteTreeAutomaton<String> ta, Homomorphism hom,
             StringSource stso, String nonterminalName,
-            Set<GraphNode> seenNodes, List<String> ordering, double weight,
+            List<String> ordering, double weight,
             BolinasRule br) 
     {
-        if(this.de != null)
-        {
-            handleEdge(stso, ta, nonterminalName, seenNodes, ordering, hom, weight, br);
-        }
-        else if(this.nont != null)
-        {
-            makeNonterminal(stso, ta, nonterminalName, weight, hom, seenNodes, br);
-        }
-        else
-        {
-            handleCombination(stso, ta, hom, seenNodes, nonterminalName, ordering, weight, br);
-        }
-    }
+      Set<GraphNode> seenNodes = new HashSet<>();
+      AtomicInteger variableNumbers = new AtomicInteger();
+      List<String> l = new ArrayList<>();
 
-    /**
-     * 
-     * @param stso
-     * @param ta
-     * @param nonterminalName
-     * @param weight
-     * @param hom 
-     */
-    private void makeNonterminal(StringSource stso, ConcreteTreeAutomaton<String> ta,
-            String nonterminalName, double weight, Homomorphism hom,
-            Set<GraphNode> seenNodes, BolinasRule br) 
-    {
-        String label = stso.get();
-        String right = BolinasHrgInputCodec.makeLHS(nont);
+      Tree<String> image = transform(variableNumbers,seenNodes,l, br);
+      
+      String label = stso.get();
+      Rule r = ta.createRule(nonterminalName, label,
+              l.toArray(new String[l.size()]), weight);
+      
+      ta.addRule(r);
         
-        Rule r = ta.createRule(nonterminalName, label, new String[] {right},weight);
-        ta.addRule(r);
-        
-        Tree<String> main = Tree.create("?1");
-        
-        int i = 0;
-        for(String s : nont.getEndpoints())
-        {
-            GraphNode g = null;
-            for(GraphNode gn : br.getRhsGraph().vertexSet())
-            {
-                if(gn.getName().equals(s))
-                {
-                    g = gn;
-                    break;
-                }
-            }
-            
-            if(g == null || g.getLabel() == null)
-            {
-                ++i;
-                continue;
-            }
-            
-            String k = "("+s;
-            k += " <"+i+">";
-            if(!seenNodes.contains(g))
-            {
-               k += " / "+g.getLabel();
-               seenNodes.add(g);
-            }
-            k += ")";
-            Tree<String> t = Tree.create(k);
-            main = Tree.create("merge", t, main);
-            ++i;
-        }
-        
-        main = rename(this.nont.getEndpoints(),this.nodes, main);
-        
-        hom.add(label, main);
-    }
-
-    /**
-     * 
-     * @param stso
-     * @param ta
-     * @param hom
-     * @param seenNodes
-     * @param nonterminalName 
-     */
-    private void handleCombination(final StringSource stso, final ConcreteTreeAutomaton<String> ta,
-            final Homomorphism hom, final Set<GraphNode> seenNodes, final String nonterminalName,
-            final List<String> outer, final double weight, BolinasRule br) {
-        
-        final String left = stso.get();
-        final String right = stso.get();
-        
-        String label = stso.get();
-        
-        Rule r = ta.createRule(nonterminalName, label, new String[] {left,right}, weight);
-        ta.addRule(r);
-        
-        SortedSet<String> combined = new TreeSet<>();
-        combined.addAll(this.first.nodes);
-        combined.addAll(this.second.nodes);
-        
-        Tree<String> lr = rename(first.nodes,combined,Tree.create("?1"));
-        Tree<String> rr = rename(second.nodes,combined,Tree.create("?2"));
-        
-        Tree<String> main = Tree.create("merge", lr, rr);
-        
-        if(outer == null)
-        {
-            main = rename(combined,this.nodes,main);
-        }
-        else
-        {
-            main = rename(combined,outer,main);
-        }
-        
-        hom.add(label, main);
-        
-        this.first.transform(ta, hom, stso, left, seenNodes, null, 1.0, br);
-        this.second.transform(ta, hom, stso, right, seenNodes, null, 1.0, br);
-    }
-
-    /**
-     * 
-     * @param stso
-     * @param ta
-     * @param nonterminalName
-     * @param seenNodes
-     * @param ordering
-     * @param hom 
-     */
-    private void handleEdge(StringSource stso, ConcreteTreeAutomaton<String> ta, String nonterminalName,
-            Set<GraphNode> seenNodes, List<String> ordering, Homomorphism hom,
-            double weight, BolinasRule br) {
-        String label = stso.get();
-        
-        Rule r = ta.createRule(nonterminalName, label, new String[] {},weight);
-        ta.addRule(r);
-        
-        String s = "(";
-        
-        s += addNode(seenNodes, ordering, this.de.getSource());
-        s += " :"+this.de.getLabel()+" ";
-        s += "("+addNode(seenNodes, ordering,this.de.getTarget())+")";
-        
-        s += ")";
-        
-        Tree<String> h = Tree.create(s);
-        hom.add(label, h);
+      hom.add(label, this.rename(nodes, ordering, image));
     }
 
     /**
@@ -312,7 +185,7 @@ class EdgeTree {
      * @param ordering
      * @return 
      */
-    private String addNode(Set<GraphNode> seenNodes, List<String> ordering,
+    private String addNode(Set<GraphNode> seenNodes, List<String> ordering, 
             GraphNode n) {
         String s = convert(n);
         if(this.nodes.contains(n.getName()))
@@ -355,7 +228,7 @@ class EdgeTree {
      * @param string
      * @return 
      */
-    private Tree<String> rename(SortedSet<String> f, SortedSet<String> t, Tree<String> main) {
+    private static Tree<String> rename(SortedSet<String> f, SortedSet<String> t, Tree<String> main) {
         BiMap<String,Integer> from = HashBiMap.create();
         int i = 0;
         for(String s : f)
@@ -380,7 +253,7 @@ class EdgeTree {
      * @param main
      * @return 
      */
-    private Tree<String> rename(SortedSet<String> combined, List<String> outer, Tree<String> main) {
+    private static Tree<String> rename(SortedSet<String> combined, List<String> outer, Tree<String> main) {
         BiMap<String,Integer> from = HashBiMap.create();
         int i = 0;
         for(String s : combined)
@@ -405,7 +278,7 @@ class EdgeTree {
      * @param main
      * @return 
      */
-    private Tree<String> rename(List<String> combined, SortedSet<String> outer, Tree<String> main) {
+    private static Tree<String> rename(List<String> combined, SortedSet<String> outer, Tree<String> main) {
         BiMap<String,Integer> from = HashBiMap.create();
         int i = 0;
         for(String s : combined)
@@ -430,7 +303,7 @@ class EdgeTree {
      * @param main
      * @return 
      */
-    private Tree<String> rename(BiMap<String,Integer> from, BiMap<String,Integer> to,
+    private static Tree<String> rename(BiMap<String,Integer> from, BiMap<String,Integer> to,
                         Tree<String> main)
     {
         Collection<String> c = new ArrayList<>(from.keySet());
@@ -504,5 +377,74 @@ class EdgeTree {
      */
     boolean disjoint(EdgeTree et2) {
         return Collections.disjoint(nodes, et2.nodes);
+    }
+
+    /**
+     * 
+     * @param variableNumbers
+     * @param seenNodes
+     * @param br
+     * @return 
+     */
+    private Tree<String> transform(AtomicInteger variableNumbers,
+            Set<GraphNode> seenNodes, List<String> rhs, BolinasRule br) {
+        if(this.de != null)
+        {
+            return this.handleEdge(seenNodes, br);
+        }
+        else if(this.nont != null)
+        {
+            return this.handleNonterminal(seenNodes,rhs, variableNumbers, br);
+        }
+        else if(this.first != null && this.second != null)
+        {
+            return this.handleCombination(variableNumbers,seenNodes,rhs, br);
+        }
+        
+        throw new IllegalStateException("This Edgetree somehow ended up without structure");
+    }
+
+    /**
+     * 
+     */
+    private Tree<String> handleEdge(Set<GraphNode> seenNodes, BolinasRule br) {
+        //TODO
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * 
+     * @param seenNodes
+     * @param rhs
+     * @param variableNumbers
+     * @return 
+     */
+    private Tree<String> handleNonterminal(Set<GraphNode> seenNodes, List<String> rhs,
+            AtomicInteger variableNumbers, BolinasRule br) {
+        //TODO
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    /**
+     * 
+     * @param variableNumbers
+     * @param seenNodes
+     * @param rhs
+     * @return 
+     */
+    private Tree<String> handleCombination(AtomicInteger variableNumbers,
+            Set<GraphNode> seenNodes, List<String> rhs, BolinasRule br) {
+        Tree<String> tl = this.first.transform(variableNumbers, seenNodes, rhs, br);
+        Tree<String> tr = this.second.transform(variableNumbers, seenNodes, rhs, br);
+        
+        SortedSet<String> middle = new TreeSet<>(this.first.nodes);
+        middle.addAll(this.second.nodes);
+        
+        tl = rename(this.first.nodes, middle, tl);
+        tr = rename(this.second.nodes, middle, tr);
+        
+        Tree<String> ret = Tree.create("merge", tl,tr);
+        
+        return rename(middle,this.nodes,ret);
     }
 }
