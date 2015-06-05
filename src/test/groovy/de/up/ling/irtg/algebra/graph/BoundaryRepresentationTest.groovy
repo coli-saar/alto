@@ -40,7 +40,7 @@ class BoundaryRepresentationTest {
         sig.addSymbol("(u<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp>))", 0);
         GraphAlgebra alg = new GraphAlgebra(sig);
         SGraph input = pg("(u<root> / want-01  :ARG0 (b<subj> / boy)  :ARG1 (g<vcomp>))")
-        BoundaryRepresentation br = new BoundaryRepresentation(input, new GraphInfo(input, alg, sig))
+        BoundaryRepresentation br = new BoundaryRepresentation(input, new GraphInfo(input, alg))
         assertEquals(br.toString(), "[b<subj> {u_b, b_b}, u<root> {u_b, u_g, u_u}, g<vcomp> {u_g}]")
     }
     
@@ -52,7 +52,7 @@ class BoundaryRepresentationTest {
         SGraph sgraph = alg.parseString(input)
         TreeAutomaton<BoundaryRepresentation> chart = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class)
         chart.makeAllRulesExplicit()
-        GraphInfo graphInfo = new GraphInfo(sgraph, alg, alg.getSignature())
+        GraphInfo graphInfo = new GraphInfo(sgraph, alg)
         
         for (BoundaryRepresentation br : chart.getStateInterner().getKnownObjects()) {
             assert (br.edgeID == br.computeEdgeID(graphInfo))

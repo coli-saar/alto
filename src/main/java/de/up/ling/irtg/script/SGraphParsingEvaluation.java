@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,18 +49,12 @@ import java.util.logging.Logger;
 public class SGraphParsingEvaluation {
 
     private static int runningNumber = 0;
-    private static String logDescription = "TOPDOWNSubtreesTypeds";
     
-    private static String sortBy = "n";
+    private static String sortBy;
     private static boolean computeLanguageSize = true;
     private static String corpusPath;
-    private static String grammarPath = 
-            //"corpora-and-grammars/grammars/sgraph_bolinas_comparison/larger_grammar/rulesLexicalized.txt";
-            //"corpora-and-grammars/grammars/sgraph_bolinas_comparison/lexicalized/rules.txt";
-            //"corpora-and-grammars/grammars/LittlePrinceSubtreesTyped.txt";//deprecated!
-            "corpora-and-grammars/grammars/sgraph_bolinas_comparison/small_grammar/rules.txt";
-    private static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
-    private static String sortedBolinasCorpusPath = "corpora-and-grammars/corpora/sorted-bolinas-amr-bank-v1.3.txt";
+    private static String grammarPath;
+    private final static String bolinasCorpusPath = "corpora-and-grammars/corpora/bolinas-amr-bank-v1.3.txt";
     private static boolean useTopDown;
     
     public static int cachedAnswers;
@@ -373,7 +368,7 @@ public class SGraphParsingEvaluation {
     }
 
     private static Writer setupResultWriter() throws Exception {
-        Writer resultWriter = new FileWriter("logs/resultsParseTester"+logDescription + ".txt");// + (new Date()).toString()
+        Writer resultWriter = new FileWriter("logs/resultsParseTester"+(new Date()).toString()+".txt");
         StringJoiner sj = new StringJoiner(",");
         sj.add("Original number");
         sj.add("Ordering number");
@@ -638,6 +633,12 @@ public class SGraphParsingEvaluation {
         }
     }
     
+    /**
+     * Computes the s-separability, brute force.
+     * @param graph
+     * @param alg
+     * @return 
+     */
     private static int getD(SGraph graph, GraphAlgebra alg) {
         Map<SComponent, SComponent> storedComponents = new HashMap<>();
         GraphInfo completeGraphInfo = new GraphInfo(graph, alg);

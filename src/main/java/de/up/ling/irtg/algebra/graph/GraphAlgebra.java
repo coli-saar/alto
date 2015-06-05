@@ -39,20 +39,24 @@ import javax.swing.JComponent;
  *      it does not have an a-source. The operation f_a_b forgets both
  *      a and b.</li>
  *  <li>The <i>forget-all</i> operation <code>f(G)</code> forgets
- *      all sources of G. This is currently not supported in the automata using {@code BoundaryRepresentations}.</li>
+ *      all sources of G. This is currently not supported in the top-down
+ *      automaton.</li>
  *  <li>The <i>forget-except</i> operation <code>fe_a(G)</code> forgets
  *      all sources except a. The operation fe_a_b forgets all sources
- *      except a and b. This is currently not supported in the automata using {@code BoundaryRepresentations}.</li>
+ *      except a and b. This is currently not supported in the top-down
+ *      automaton.</li>
  *  <li>The <i>forget-except-root</i> operation <code>fr(G)</code>
  *      forgets all sources except for <code>root</code>. It is equivalent
- *      to <code>fe_root</code>. This is currently not supported in the automata using {@code BoundaryRepresentations}.</li>
+ *      to <code>fe_root</code>. This is currently not supported in the top-down
+ *      automaton.</li>
  *  <li>The <i>rename</i> operation <code>r_a_b(G)</code> renames
  *      the a-source of G into b, using {@link SGraph#renameSource(java.lang.String, java.lang.String) }.
  *      The operation <code>r_a</code> is an abbreviation for
  *      <code>r_root_a</code>.</li>
  *  <li>The combined merge and rename operation <code>merge_a_b(G1,G2)</code>, first applies
  *      the <i>rename</i> from a to b in G2 and then <i>merges</i> the
- *      result with G1. This is currently <i>only</i> supported in the automata using {@code BoundaryRepresentations}.</li>
+ *      result with G1. This is currently <i>only</i> supported in the
+ *      automata using {@code BoundaryRepresentations}.</li>
  * </ul>
  * 
  * Any other string is interpreted as a constant which denotes
