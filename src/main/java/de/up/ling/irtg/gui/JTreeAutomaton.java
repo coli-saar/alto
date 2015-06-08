@@ -504,7 +504,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 //                        } catch (ParserException ex) {
 //                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
                         } catch (Exception ex) {
-                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs, ex);
+                            showError(new Exception("An error occurred while parsing the input objects " + inputs, ex));
                         }
 
                         if (chart != null) {

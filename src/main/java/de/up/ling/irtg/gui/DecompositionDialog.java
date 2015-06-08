@@ -191,7 +191,7 @@ public class DecompositionDialog extends javax.swing.JDialog {
             jta.pack();
             jta.setVisible(true);
         } catch (Exception ex) {
-            GuiUtils.showError(this, "Error while computing decomposition grammar", ex);
+            GuiUtils.showError(new Exception("Error while computing decomposition grammar", ex));
         }
     }//GEN-LAST:event_okButtonActionPerformed
 

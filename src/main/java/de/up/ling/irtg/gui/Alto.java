@@ -328,7 +328,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                 return corpus;
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while reading the corpus " + file.getName(), e);
+            showError(new Exception("An error occurred while reading the corpus " + file.getName(), e));
         }
 
         return null;
@@ -345,7 +345,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                 log("Read maximum entropy weights from " + file.getName() + ", " + Util.formatTimeSince(start));
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while reading the maxent weights file " + file.getName(), e);
+            showError(new Exception("An error occurred while reading the maxent weights file " + file.getName(), e));
         }
     }
 
@@ -380,7 +380,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                             });
                 }
             } catch (Exception e) {
-                showError(parent, "An error occurred while reading the corpus " + file.getName(), e);
+                showError(new Exception("An error occurred while reading the corpus " + file.getName(), e));
             }
         }
     }
@@ -476,7 +476,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                 }
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while attempting to parse " + file.getName(), e);
+            showError(new Exception("An error occurred while attempting to parse " + file.getName(), e));
         }
     }
 
@@ -502,7 +502,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                     jta.pack();
                     jta.setVisible(true);
                 } catch (Exception ex) {
-                    showError(parent, "An error occurred while instantiating the Template IRTG", ex);
+                    showError(new Exception("An error occurred while instantiating the Template IRTG", ex));
                 }
             }
         });
@@ -563,13 +563,13 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        
-        
+
         // set uncaught exception handler
-        Thread.setDefaultUncaughtExceptionHandler((thread,exception) -> {
+        Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> {
             GuiUtils.showError(exception);
         });
-        
+
+
         
         // tooltips stay visible forever
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);

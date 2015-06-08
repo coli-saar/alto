@@ -51,7 +51,7 @@ public class MaxentWeightsFrame extends JTableDialog<JTreeAutomaton.FtWeight> {
                 ((MaximumEntropyIrtg) irtg).writeWeights(new FileWriter(file));
                 Alto.log("Saved maxent weights, " + Util.formatTimeSince(start));
             } catch (IOException e) {
-                showError(this, "An error occurred while saving the maxent weights to " + file.getName(), e);
+                showError(new Exception("An error occurred while saving the maxent weights to " + file.getName(), e));
             }
         }
     }

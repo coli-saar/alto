@@ -6,7 +6,6 @@
 package de.up.ling.irtg.util;
 
 import com.ezware.dialog.task.TaskDialogs;
-import de.saar.basic.StringTools;
 import java.awt.Component;
 import java.awt.Frame;
 import javax.swing.JOptionPane;
@@ -63,7 +62,7 @@ public class GuiUtils {
                     andThen.accept(result, time);
                 });
             } catch (Throwable e) {
-                showError(parent, description + " error", e);
+                showError(new Exception(description + " error", e));
             } finally {
                 progressBar.setVisible(false);
             }
@@ -75,33 +74,8 @@ public class GuiUtils {
             JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
         });
     }
-
-    static public void showError(Component parent, Exception error) {
-        TaskDialogs.showException(error);
-        
-        
-//        showError(parent, "Error", error);
-    }
     
     static public void showError(Throwable error) {
         TaskDialogs.showException(error);
-    }
-
-    static public void showError(Component parent, String label, Throwable error) {
-        TaskDialogs.showException(error);
-        
-//        SwingUtilities.invokeLater(() -> {
-//            String err = error.getMessage() == null ? error.toString() : (error.getMessage() + "\n(" + error.getClass() + ")");            
-//            String s = label + ":\n" + err;
-//            JOptionPane.showMessageDialog(parent, s, "Error", JOptionPane.ERROR_MESSAGE);
-
-//        });
-
-//        try {
-//            throw new Exception();
-//        } catch (Exception e) {
-//            System.err.println("showError at: ");
-//            e.printStackTrace(System.err);
-//        }
     }
 }
