@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -34,7 +33,6 @@ import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.antlr.v4.runtime.tree.Trees;
 
 /**
  * An input codec for reading hyperedge replacement grammars (HRGs) in the input
@@ -146,33 +144,52 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
 
     /**
-     *
-     * @param hrg
-     * @return
+     * This method turns a given HRG grammar into an IRTG.
+     * 
+     * @param hrg the grammar that needs to be translated.
+     * @return 
      */
     private InterpretedTreeAutomaton makeIrtg(BolinasHrgGrammar hrg) {
+        // create the automaton, algebra and homomorphisms that we will
+        // build up step by step.
         ConcreteTreeAutomaton<String> ta = new ConcreteTreeAutomaton<>();
         GraphAlgebra ga = new GraphAlgebra();
         Homomorphism hom = new Homomorphism(ta.getSignature(), ga.getSignature());
 
+        // this is where we get our lables from, the prefix used for names
+        // does not really matter
         StringSource stso = new StringSource("INS");
 
+        // this variable keeps track of the name of the starting non-terminal
         String endpoint = null;
 
         for (BolinasRule r : hrg.getRules()) {
+            // the first time we see a non-terminal it must be the start non-
+            // terminal
             if (endpoint == null) {
                 endpoint = r.getLhsNonterminal().getNonterminal();
             }
 
+            // this set keeps track of nodes that always have to be sources 
+            // because they are endpoints
             SortedSet<String> certainOuter = new TreeSet<>(r.getLhsNonterminal().getEndpoints());
 
+            // sometimes we process rules that are just a single node with possibly
+            // a name, in this case we can skip the whole edge processing and
+            // use this specific method
             if (r.getRhsGraph().edgeSet().size() < 1 && r.getRhsNonterminals().size() < 1) {
                 handleSingleNode(r, stso, ta, certainOuter, hom, endpoint);
                 continue;
             }
 
+            // here we store the edges we use
             List<EdgeTree> edges = new ArrayList<>();
+            // we find out how many nodes we have to keep track of at any
+            // point by counting how often a node occurs (if it is active in
+            // more than one EdgeTree, then we cannot ignore it)
             Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>();
+            
+            // in the beginning we can just count over edges
             for (NonterminalWithHyperedge nwh : r.getRhsNonterminals()) {
                 for (String s : nwh.getEndpoints()) {
                     counts.addTo(s, 1);
@@ -184,6 +201,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 counts.addTo(ge.getTarget().getName(), 1);
             }
 
+            // this set will now contain all the nodes that must be tracked
             SortedSet<String> uncertainOuter = new TreeSet<>();
             for (String s : counts.keySet()) {
                 if (1 < counts.get(s)) {
@@ -195,6 +213,8 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
             uncertainOuter.addAll(certainOuter);
 
+            // now we start creating EdgeTrees to represent all the elements
+            // of the RHS, here the tracked nodes a given to the new EdgeTrees
             for (NonterminalWithHyperedge nwh : r.getRhsNonterminals()) {
                 edges.add(new EdgeTree(nwh, uncertainOuter));
             }
@@ -203,12 +223,15 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 edges.add(new EdgeTree(ge, uncertainOuter));
             }
 
+            // now we create EdgeTrees that correspond to merges until we
+            // have only one such tree left
             while (edges.size() > 1) {
 
                 int first = -1;
                 int second = -1;
                 int score = -Integer.MIN_VALUE;
 
+                // first we compute nodes that cannot be eliminated by a merge
                 uncertainOuter.clear();
                 counts.clear();
 
@@ -224,6 +247,8 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
                 uncertainOuter.addAll(certainOuter);
 
+                // now we attempt to find the two EdgeTrees that, when merged,
+                // will eliminate as many nodes as possible
                 for (int i = 0; i < edges.size(); ++i) {
                     EdgeTree et1 = edges.get(i);
 
@@ -245,22 +270,33 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                     }
                 }
 
+                // then we remove those EdgeTrees and add a new one that
+                // represents their merge
                 EdgeTree t = edges.remove(second);
                 EdgeTree o = edges.remove(first);
 
                 edges.add(new EdgeTree(o, t, uncertainOuter));
             }
 
+            // here we create the LHS
             NonterminalWithHyperedge nwh = r.getLhsNonterminal();
 
+            // and then add the translation of our complete RHS representation
+            // to the grammar and the interpretation
             edges.get(0).transform(ta, hom, stso, makeLHS(nwh),
                     nwh.getEndpoints(), r.getWeight(), r);
+            
+            // the LHS can only be a starting symbol if it not only matches 
+            // the name of the start symbol, but also has only 1 external node
+            // at the root
             if (endpoint.equals(r.getLhsNonterminal().getNonterminal())
                     && r.getLhsNonterminal().getEndpoints().size() == 1) {
                 ta.addFinalState(ta.getIdForState(makeLHS(nwh)));
             }
         }
 
+        // now we can turn the automaton and its interpretation into a complete
+        // IRTG and return it
         InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(ta);
         Interpretation in = new Interpretation(ga, hom);
         ita.addInterpretation("Graph", in);
@@ -269,7 +305,8 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
 
     /**
-     *
+     * This method handles RHSs that only consist of a single node + name.
+     * 
      * @param r
      * @param stso
      * @param ta
@@ -280,27 +317,36 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private void handleSingleNode(BolinasRule r, StringSource stso,
             ConcreteTreeAutomaton<String> ta, SortedSet<String> certainOuter,
             Homomorphism hom, String endpoint) throws IllegalStateException {
+        // if there is no node, then something went very wrong
         if (r.getRhsGraph().vertexSet().size() != 1) {
             throw new IllegalStateException("A rule has no right hand side edges and"
                     + "more or less than 1 right hand side vertix, the rule is: " + r);
         }
 
+        // create a LHS
         String nonterminal = makeLHS(r.getLhsNonterminal());
+        // create a label for the rule
         String label = stso.get();
 
+        // crate a rule
         Rule rule = ta.createRule(nonterminal, label, new String[]{});
         rule.setWeight(r.getWeight());
         ta.addRule(rule);
 
+        // construct the string corresponding to the single node
         GraphNode gn = r.getRhsGraph().vertexSet().iterator().next();
 
+        // this node must be the external node at position 0, because every
+        // bolinas rule has at least one external node
         String s = "(" + gn.getName() + "<0>" + (gn.getLabel() != null
                 ? " / " + gn.getLabel() : "");
         s = s + ")";
 
+        // create a tree for the homomorphism
         Tree<String> t = Tree.create(s);
         hom.add(label, t);
 
+        // maybe create a final state
         if (endpoint.equals(r.getLhsNonterminal().getNonterminal())
                 && r.getLhsNonterminal().getEndpoints().size() == 1) {
             ta.addFinalState(ta.getIdForState(makeLHS(r.getLhsNonterminal())));
@@ -308,7 +354,8 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
 
     /**
-     *
+     * This method allows us create a new LHS symbol in a uniform way.
+     * 
      * @param nwh
      * @return
      */
