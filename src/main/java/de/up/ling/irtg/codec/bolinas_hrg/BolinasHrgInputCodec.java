@@ -178,6 +178,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                     counts.addTo(s, 1);
                 }
             }
+            
             for (GraphEdge ge : r.getRhsGraph().edgeSet()) {
                 counts.addTo(ge.getSource().getName(), 1);
                 counts.addTo(ge.getTarget().getName(), 1);
@@ -189,6 +190,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                     uncertainOuter.add(s);
                 }
             }
+            
             counts.clear();
 
             uncertainOuter.addAll(certainOuter);
@@ -196,6 +198,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             for (NonterminalWithHyperedge nwh : r.getRhsNonterminals()) {
                 edges.add(new EdgeTree(nwh, uncertainOuter));
             }
+            
             for (GraphEdge ge : r.getRhsGraph().edgeSet()) {
                 edges.add(new EdgeTree(ge, uncertainOuter));
             }

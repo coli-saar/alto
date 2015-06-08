@@ -175,7 +175,7 @@ class EdgeTree {
       
       ta.addRule(r);
         
-      hom.add(label, this.rename(nodes, ordering, image));
+      hom.add(label, rename(nodes, ordering, image));
     }
 
     /**
@@ -408,8 +408,22 @@ class EdgeTree {
      * 
      */
     private Tree<String> handleEdge(Set<GraphNode> seenNodes, BolinasRule br) {
-        //TODO
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        StringBuilder sb = new StringBuilder();
+        sb.append("(");
+        
+        sb.append(this.addNode(seenNodes, null, this.de.getSource()));
+        
+        sb.append(" :");
+        sb.append(this.de.getLabel());
+        
+        sb.append(" (");
+        sb.append(this.addNode(seenNodes, null, this.de.getTarget()));
+        sb.append(")");
+        
+        sb.append(" )");
+        
+        Tree<String> t = Tree.create(sb.toString());
+        return t;
     }
 
     /**
