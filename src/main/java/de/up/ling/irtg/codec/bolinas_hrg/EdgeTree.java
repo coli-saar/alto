@@ -25,39 +25,56 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- *
+ * This class represents a collection of both normal and non-terminal edges in
+ * the right hand side of a HRG rule, organized into a tree in order to convert
+ * them more easily into an expression in the s-graph algebra.
+ * 
+ * It is possible to create trees, ask how many sources could be forgotten if
+ * two trees that represent portions of a RHS where merged and to construct the
+ * homomorphic image that corresponds to a given tree. For the latter task
+ * the class also makes a list of the necessary non-terminals accessible.
+ * 
  * @author christoph_teichmann
  */
 class EdgeTree {
    
     /**
-     * 
+     * If this tree represents a single non-terminal edge, then it is stored
+     * here.
      */
     private final NonterminalWithHyperedge nont;
     
     /**
-     * 
+     * If this tree represents the combination of two edge trees, then this will
+     * hold the first of these trees.
      */
-    final EdgeTree first;
+    private final EdgeTree first;
     
     /**
-     * 
+     * If this tree represents the combination of two edge trees, then this will
+     * hold the second of these trees.
      */
-    final EdgeTree second;
+    private final EdgeTree second;
     
     /**
-     * 
+     * If the tree represents a single edge, then it is contained here.
      */
     private final GraphEdge de;
     
     /**
+     * This contains all the nodes that are still active.
      * 
+     * The active nodes are those that still occur at positions in the RHS that
+     * have not been subsumed by this tree.
      */
     private final   SortedSet<String> nodes;   
     
     /**
+     * Constructs a new instance representing a single non-terminal edge.
      * 
-     * @param nont 
+     * @param nont the edge
+     * @param outer all the nodes that might need tracking if they are incident
+     * to the edge.
      */
     EdgeTree(NonterminalWithHyperedge nont, Set<String> outer)
     {
@@ -72,8 +89,11 @@ class EdgeTree {
     }
     
     /**
+     * Constructs a new instance representing a single edge.
      * 
-     * @param ge 
+     * @param ge the edge
+     * @param outer all the nodes that might need tracking if they are incident
+     * to the edge.
      */
     EdgeTree(GraphEdge ge, Set<String> outer)
     {
@@ -90,9 +110,12 @@ class EdgeTree {
     }
     
     /**
+     * Creates an instance that represents the merge of two subgraphs.
      * 
-     * @param et1
-     * @param et2 
+     * @param et1 the first subgraphs representation.
+     * @param et2 the second subgraphs representation.
+     * @param outer all the nodes that might need tracking if they are incident
+     * to the edge.
      */
     EdgeTree(EdgeTree et1, EdgeTree et2, Set<String> outer)
     {
@@ -122,9 +145,12 @@ class EdgeTree {
     }
     
     /**
+     * Returns the number of nodes that could be eliminated if the two graphs
+     * where merged.
      * 
      * @param other
-     * @param held
+     * @param held nodes that cannot be eliminated, because they are needed
+     * elsewhere
      * @return 
      */
     int joinSize(EdgeTree other, Set<String> held)
@@ -138,6 +164,8 @@ class EdgeTree {
     }
     
     /**
+     * This will add +1 to the given counter for every node that is still active
+     * after the construction of this subgraph.
      * 
      * @param counter 
      */
@@ -150,44 +178,56 @@ class EdgeTree {
     }
 
     /**
+     * Adds a rule corresponding to this subgraph in the given rule to the
+     * given automaton and homomorphism.
      * 
-     * @param ta
-     * @param hom
-     * @param stso
-     * @param nonterminalName
-     * @param seenNodes
-     * @param ordering 
+     * @param ta automaton to which rules are added.
+     * @param hom the homomorphism to which rules are added.
+     * @param stso a source for unique strings used to generate labels
+     * @param nonterminalName the name of the LHS symbol
+     * @param ordering the nodes that are external nodes of the rule, in the
+     * order in which they are external.
+     * @param weight the weight of the rule
+     * @param br the rule to be converted.
      */
     void transform(ConcreteTreeAutomaton<String> ta, Homomorphism hom,
             StringSource stso, String nonterminalName,
             List<String> ordering, double weight,
             BolinasRule br) 
     {
+      // create a container for nodes we have already seen (so we do not add
+      //  names twice)
       Set<GraphNode> seenNodes = new HashSet<>();
+      // used to keep track of the number of non-terminals we have introduced
+      // important to compute the variables for the homomorphism
       AtomicInteger variableNumbers = new AtomicInteger();
       List<String> l = new ArrayList<>();
 
+      // first we generate the homomorphic image of the RHS
       Tree<String> image = transform(variableNumbers,seenNodes,l, br);
       
+      // then we create a rule that has the appropriate child non-terminals
       String label = stso.get();
       Rule r = ta.createRule(nonterminalName, label,
               l.toArray(new String[l.size()]), weight);
-      
       ta.addRule(r);
         
+      // before we can use the image, we have to add operations that rename the
+      // sources to fit with our intended external nodes
       hom.add(label, rename(nodes, ordering, image));
     }
 
     /**
+     * Returns a string representation for a single graph node.
      * 
-     * @param s
-     * @param seenNodes
-     * @param ordering
+     * @param seenNodes contains a node if its name is generated elsewhere
+     * @param ordering legacy variable that is not used in the current version
+     * @param n the node we want to represent
      * @return 
      */
     private String addNode(Set<GraphNode> seenNodes, List<String> ordering, 
             GraphNode n) {
-        String s = convert(n);
+        String s = n.getName();
         if(this.nodes.contains(n.getName()))
         {
             if(ordering != null && ordering.contains(n.getName()))
@@ -212,20 +252,11 @@ class EdgeTree {
     }
 
     /**
-     * 
-     * @param source
-     * @param seenNodes
-     * @return 
-     */
-    private String convert(GraphNode node) {
-        return node.getName();
-    }
-
-    /**
-     * 
-     * @param from
-     * @param to
-     * @param string
+     * This method simply converts the arguments into a digestible form for the
+     * main rename method.
+     * @param from original source assignments
+     * @param to goal source assignments
+     * @param main tree to extend
      * @return 
      */
     private static Tree<String> rename(SortedSet<String> f, SortedSet<String> t, Tree<String> main) {
@@ -247,10 +278,11 @@ class EdgeTree {
     }
 
     /**
-     * 
-     * @param combined
-     * @param outer
-     * @param main
+     * This method simply converts the arguments into a digestible form for the
+     * main rename method.
+     * @param combined original source assignments
+     * @param outer goal source assignments
+     * @param main tree to extend
      * @return 
      */
     private static Tree<String> rename(SortedSet<String> combined, List<String> outer, Tree<String> main) {
@@ -272,11 +304,11 @@ class EdgeTree {
     }
     
     /**
-     * 
-     * @param combined
-     * @param outer
-     * @param main
-     * @return 
+     * This method simply converts the arguments into a digestible form for the
+     * main rename method.
+     * @param combined original source assignments
+     * @param outer goal source assignments
+     * @param main tree to extend
      */
     private static Tree<String> rename(List<String> combined, SortedSet<String> outer, Tree<String> main) {
         BiMap<String,Integer> from = HashBiMap.create();
@@ -297,6 +329,9 @@ class EdgeTree {
     }
     
     /**
+     * This method takes the input tree and assumes that the source assignments
+     * are as in from; then builds a more complicated tree that adds operations
+     * to get the source assignments as in to.
      * 
      * @param from
      * @param to
@@ -347,6 +382,7 @@ class EdgeTree {
     }
     
     /**
+     * Converts this tree into a more readable form for debugging.
      * 
      * @return 
      */
@@ -371,6 +407,8 @@ class EdgeTree {
     }
 
     /**
+     * Returns true if the two subgraphs share no source nodes and should
+     * therefor not be merged.
      * 
      * @param et2
      * @return 
@@ -380,10 +418,14 @@ class EdgeTree {
     }
 
     /**
+     * Used to recursively transform smaller portions of the subgraph.
      * 
-     * @param variableNumbers
-     * @param seenNodes
-     * @param br
+     * @param variableNumbers keeps track of the variables we have already
+     * planned for.
+     * @param seenNodes keeps track of the nodes for which we have already
+     * generated the labels.
+     * @param br the rule we are converting, necessary to look up e.g. node
+     * labels.
      * @return 
      */
     private Tree<String> transform(AtomicInteger variableNumbers,
@@ -405,7 +447,11 @@ class EdgeTree {
     }
 
     /**
+     * Returns a tree that represents a single edge.
      * 
+     * @param seenNodes
+     * @param br
+     * @return 
      */
     private Tree<String> handleEdge(Set<GraphNode> seenNodes, BolinasRule br) {
         StringBuilder sb = new StringBuilder();
@@ -427,6 +473,7 @@ class EdgeTree {
     }
 
     /**
+     * Returns a tree that represents a single nonterminal edge.
      * 
      * @param seenNodes
      * @param rhs
@@ -443,6 +490,10 @@ class EdgeTree {
         
         Tree<String> main = Tree.create("?"+num);
         
+        // everything that follows is for the case where we have labels for
+        // nodes that are only realized by nonterminals edges, which means
+        // we have to merge them in step by step, since non-terminal edges do
+        // not correspond to anything other than a variable in the homomorphism
         int i = 0;
         for(String s : nont.getEndpoints())
         {
@@ -473,10 +524,17 @@ class EdgeTree {
             ++i;
         }
         
+        // here we convert the node labeling from that of the non-terminal to
+        // the order used for the rest of the graph.
         return rename(this.nont.getEndpoints(),this.nodes, main);
     }
 
     /**
+     * This handles all cases where two subgraphs are merged in order to
+     * generate a larger portion.
+     * 
+     * Part of this process includes calling the children in order to have them
+     * compute their representation first.
      * 
      * @param variableNumbers
      * @param seenNodes
@@ -485,17 +543,22 @@ class EdgeTree {
      */
     private Tree<String> handleCombination(AtomicInteger variableNumbers,
             Set<GraphNode> seenNodes, List<String> rhs, BolinasRule br) {
+        
+        // get the children
         Tree<String> tl = this.first.transform(variableNumbers, seenNodes, rhs, br);
         Tree<String> tr = this.second.transform(variableNumbers, seenNodes, rhs, br);
         
+        // get them to agree on a source labeling
         SortedSet<String> middle = new TreeSet<>(this.first.nodes);
         middle.addAll(this.second.nodes);
         
         tl = rename(this.first.nodes, middle, tl);
         tr = rename(this.second.nodes, middle, tr);
         
+        // create the tree for the merge
         Tree<String> ret = Tree.create("merge", tl,tr);
         
+        // have it forget sources that are no longer needed.
         return rename(middle,this.nodes,ret);
     }
 }
