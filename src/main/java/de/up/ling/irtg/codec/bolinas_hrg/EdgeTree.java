@@ -435,8 +435,45 @@ class EdgeTree {
      */
     private Tree<String> handleNonterminal(Set<GraphNode> seenNodes, List<String> rhs,
             AtomicInteger variableNumbers, BolinasRule br) {
-        //TODO
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
+        String nt = BolinasHrgInputCodec.makeLHS(this.nont);
+        int num = variableNumbers.incrementAndGet();
+        
+        rhs.add(nt);
+        
+        Tree<String> main = Tree.create("?"+num);
+        
+        int i = 0;
+        for(String s : nont.getEndpoints())
+        {
+            GraphNode g = null;
+            for(GraphNode gn : br.getRhsGraph().vertexSet())
+            {
+                if(gn.getName().equals(s))
+                {
+                    g = gn;
+                    break;
+                }
+            }
+            
+            if(g == null || g.getLabel() == null || seenNodes.contains(g))
+            {
+                ++i;
+                continue;
+            }
+            
+            String k = "("+s;
+            k += " <"+i+">";
+            k += " / "+g.getLabel();
+            seenNodes.add(g);
+            k += ")";
+            
+            Tree<String> t = Tree.create(k);
+            main = Tree.create("merge", t, main);
+            ++i;
+        }
+        
+        return rename(this.nont.getEndpoints(),this.nodes, main);
     }
 
     /**
