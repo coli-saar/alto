@@ -62,7 +62,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
     private Int2ObjectMap<BinaryPartnerFinder> matcherState2RhsState;
     private Int2ObjectMap<Rule> labelSetID2TopDownStartRules;
     private Int2ObjectMap<Rule> matcherParent2Rule;
-    private List<String> startStates;
+    //private List<String> startStates;
     private BitSet isStartState;
     private final String startStateRepresentative = "q";
     private int startStateRepresentativeID;
@@ -83,7 +83,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         posOfStartStateRepInRulesFromConstantFreeTerms = new ArrayList<>();
         matcherConstantRules = new HashSet<>();
         matcherConstants = new IntOpenHashSet();
-        startStates = new ArrayList<>();
+        //startStates = new ArrayList<>();
         startStateIDs = new IntArrayList();
         genericStartStateIDs = new IntArrayList();
         isStartState = new BitSet();
@@ -116,7 +116,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             String prefix = "q" + labelSetID;
             String matchingStartState = prefix + "/";
 
-            IntSet constantIDsHere = addMatcherTransitions(labelSetID, rhs, matchingStartState, startStates, matcher, hom.getTargetSignature());
+            IntSet constantIDsHere = addMatcherTransitions(labelSetID, rhs, matchingStartState, matcher, hom.getTargetSignature());
             //if (rightmostVariableForLabelSetID[labelSetID] != null) {//this checks whether there actually is a variable in the term (otherwise, all rules have already been added)
             if (computeCompleteMatcher) {
                 addTermToRestrictiveMatcher(labelSetID);//add rest of rules now
@@ -178,7 +178,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         }
 
         String startState = "q" + labelSetID + "/";
-        startStates.add(startState);
+        //startStates.add(startState);
         int matchingStartStateId = matcher.getIdForState(startState);
         startStateIDs.add(matchingStartStateId);
         //restrictiveMatcher.addFinalState(matchingStartStateId);
@@ -862,7 +862,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
     }
 
     //
-    private IntSet addMatcherTransitions(int labelSetID, Tree<HomomorphismSymbol> rhs, String parent, List<String> startStates, ConcreteTreeAutomaton<String> auto, Signature signature) {
+    private IntSet addMatcherTransitions(int labelSetID, Tree<HomomorphismSymbol> rhs, String parent, ConcreteTreeAutomaton<String> auto, Signature signature) {
         String sym = signature.resolveSymbolId(rhs.getLabel().getValue());
         List<Tree<HomomorphismSymbol>> children = rhs.getChildren();
 
@@ -906,7 +906,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
 
             IntSet ret = new IntOpenHashSet();
             for (int i = 0; i < children.size(); i++) {
-                IntSet resI = addMatcherTransitions(labelSetID, children.get(i), parent + (i + 1), startStates, auto, signature);
+                IntSet resI = addMatcherTransitions(labelSetID, children.get(i), parent + (i + 1), auto, signature);
 
                 ret.addAll(resI);
             }

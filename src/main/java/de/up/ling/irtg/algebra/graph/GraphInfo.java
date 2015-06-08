@@ -119,8 +119,9 @@ public class GraphInfo {
             }
         }
         for (int vNr = 0; vNr < n; vNr ++){
-            if (!seenLoops.contains(vNr)) {
-                edgeSourceList.add(vNr);//so this means we always have loops for every vertex? see also in construction of BRepComponent for empty BR.
+            String vLabel = completeGraph.getNode(intToNodename[vNr]).getLabel();
+            if (!( seenLoops.contains(vNr) || vLabel == null || vLabel.equals("") )) {
+                edgeSourceList.add(vNr);
                 edgeTargetList.add(vNr);
                 edgesBySourceAndTarget[vNr][vNr] = edgeId;
                 edgeList.add(edgeId);
@@ -205,7 +206,10 @@ public class GraphInfo {
                     tempList.add(edgesBySourceAndTarget[getIntForNode(e.getSource().getName())][getIntForNode(e.getTarget().getName())]);
                 }
             }
-            tempList.add(edgesBySourceAndTarget[vNr][vNr]);
+            int loop = edgesBySourceAndTarget[vNr][vNr];
+            if (loop > -1) {
+                tempList.add(loop);
+            }
             res[vNr] = tempList.toIntArray();
         }
         return res;

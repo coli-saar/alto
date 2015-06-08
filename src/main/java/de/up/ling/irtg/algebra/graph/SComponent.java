@@ -18,7 +18,7 @@ import java.util.Set;
 import java.util.StringJoiner;
 import org.jgrapht.EdgeFactory;
 import org.jgrapht.UndirectedGraph;
-import org.jgrapht.graph.SimpleGraph;
+import org.jgrapht.graph.Multigraph;
 
 /**
  * A subgraph defined by boundary vertices, and in-boundary edges, such that all its vertices are connected without crossing a boundary vertex.
@@ -85,11 +85,13 @@ public class SComponent {
     
     private UndirectedGraph<Integer, Integer> computeCompGraph(GraphInfo graphInfo) {
         if (bVertices.isEmpty()) {
-            UndirectedGraph<Integer, Integer> ret = new SimpleGraph<>(new GraphInfoEdgeFactory(graphInfo));
+            UndirectedGraph<Integer, Integer> ret = new Multigraph<>(new GraphInfoEdgeFactory(graphInfo));
             for (int v = 0; v < graphInfo.getNrNodes(); v++) {
                 ret.addVertex(v);
-                ret.addVertex(v+graphInfo.getNrNodes());
-                ret.addEdge(v, v+graphInfo.getNrNodes());
+                if (graphInfo.getEdge(v, v)>-1) {
+                    ret.addVertex(v+graphInfo.getNrNodes());
+                    ret.addEdge(v, v+graphInfo.getNrNodes());
+                }
             }
             for (int edge = 0; edge < graphInfo.getNrEdges(); edge++) {
                 int v1 = graphInfo.getEdgeSource(edge);
@@ -100,7 +102,7 @@ public class SComponent {
             }
             return ret;
         } else {
-            UndirectedGraph<Integer, Integer> ret = new SimpleGraph<>(new GraphInfoEdgeFactory(graphInfo));
+            UndirectedGraph<Integer, Integer> ret = new Multigraph<>(new GraphInfoEdgeFactory(graphInfo));
             int startingEdge = inBEdges.iterator().nextInt();
             Queue<Integer> agenda = new LinkedList<>();
             agenda.add(startingEdge);
@@ -232,17 +234,19 @@ public class SComponent {
             this.graphInfo = graphInfo;
         }
         
+        /**
+         * Note that {@code v} must be the source, and {@code v1} must be the target.
+         * @param v
+         * @param v1
+         * @return 
+         */
         @Override
         public Integer createEdge(Integer v, Integer v1) {
             try {
                 return graphInfo.getEdge(v%graphInfo.getNrNodes(),v1%graphInfo.getNrNodes());
             } catch (java.lang.Exception e) {
-                try {
-                    return graphInfo.getEdge(v1%graphInfo.getNrNodes(),v%graphInfo.getNrNodes());
-                } catch (java.lang.Exception e2) {
-                    System.err.println("error in creating edge in compGraph!");
-                    return 0;
-                }
+                System.err.println("error in creating edge in compGraph!");
+                return 0;
             }
         }
         

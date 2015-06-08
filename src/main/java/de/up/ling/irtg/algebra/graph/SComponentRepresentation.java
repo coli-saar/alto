@@ -122,12 +122,12 @@ public class SComponentRepresentation {
                 GraphNode v = graph.getNode(vName);
                 if (v.getLabel() != null) {
                     if (!v.getLabel().equals("")) {
-                        IntSet vSet = new IntOpenHashSet();
-                        vSet.add(vNr);
-                        IntSet edgeSet = new IntOpenHashSet();
-                        edgeSet.add(completeGraphInfo.getEdge(vNr,vNr));
+                        IntSet vSingleton = new IntOpenHashSet();
+                        vSingleton.add(vNr);
+                        IntSet loopSingleton = new IntOpenHashSet();
+                        loopSingleton.add(completeGraphInfo.getEdge(vNr,vNr));
 
-                        components.add(SComponent.makeComponent(vSet, edgeSet, storedComponents, completeGraphInfo));
+                        components.add(SComponent.makeComponent(vSingleton, loopSingleton, storedComponents, completeGraphInfo));
                     }
                 }
 
