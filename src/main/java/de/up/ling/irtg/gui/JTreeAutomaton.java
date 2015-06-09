@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -684,7 +685,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             
             if (outputCorpusFile != null) {
                 final FileWriter w = new FileWriter(outputCorpusFile);
-                final CorpusWriter cw = new CorpusWriter(irtg, annotationsInOrder, true, w);
+                String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
+                final CorpusWriter cw = new CorpusWriter(irtg, annotationsInOrder, true, s, w);
 
                 GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Bulk parsing of input corpus ...",
                         listener -> {

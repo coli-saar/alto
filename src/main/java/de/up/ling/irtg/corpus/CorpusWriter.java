@@ -22,13 +22,13 @@ public class CorpusWriter implements Consumer<Instance> {
     private InterpretedTreeAutomaton irtg;
     private List<String> interpretationsInOrder;
 
-    public CorpusWriter(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, boolean isAnnotated, Writer writer) throws IOException {
+    public CorpusWriter(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, boolean isAnnotated, String comment, Writer writer) throws IOException {
         this.writer = writer;
         this.isAnnotated = isAnnotated;
         this.irtg = irtg;
         this.interpretationsInOrder = interpretationsInOrder;
 
-        writer.write(makeHeader(irtg, interpretationsInOrder, isAnnotated) + "\n");
+        writer.write(makeHeader(irtg, interpretationsInOrder, isAnnotated, comment) + "\n");
     }
 
     public void writeInstance(Instance inst) throws IOException {
@@ -47,11 +47,18 @@ public class CorpusWriter implements Consumer<Instance> {
         writer.write("\n");
     }
 
-    private static String makeHeader(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, boolean annotated) {
+    private static String makeHeader(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, boolean annotated, String comment) {
         StringBuffer buf = new StringBuffer();
 
         buf.append("# IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
         buf.append("# \n");
+        
+        if( comment != null ) {
+            for( String line : comment.split("\n")) {
+                buf.append("# " + line + "\n");
+            }
+            buf.append("# \n");
+        }
 
         for (String interp : interpretationsInOrder) {
             buf.append("# interpretation " + interp + ": " + irtg.getInterpretations().get(interp).getAlgebra().getClass() + "\n");

@@ -368,6 +368,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
             try {
                 long start = System.nanoTime();
                 final Corpus corpus = irtg.readCorpus(new FileReader(file));
+                corpus.setSource(file.getAbsolutePath());
                 log("Read unannotated corpus from " + file.getName() + ", " + Util.formatTimeSince(start));
 
                 File chartsFile = chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);

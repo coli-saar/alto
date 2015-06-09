@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
  * @author koller
  */
 public class Corpus implements Iterable<Instance> {
+
     static String CORPUS_VERSION = "1.0";
     private static Pattern WHITESPACE_PATTERN = Pattern.compile("\\s*");
     private static Pattern UNANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG unannotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
@@ -42,6 +43,7 @@ public class Corpus implements Iterable<Instance> {
     private Charts charts;
     private boolean isAnnotated;
     private static final boolean DEBUG = false;
+    private String source; // explains where this corpus came from
 
     public Corpus() {
         instances = new ArrayList<Instance>();
@@ -96,11 +98,17 @@ public class Corpus implements Iterable<Instance> {
         }
     }
 
-    
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
 
     public void writeCorpus(Writer writer, InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder) throws IOException {
-        CorpusWriter cw = new CorpusWriter(irtg, interpretationsInOrder, isAnnotated, writer);
-        
+        CorpusWriter cw = new CorpusWriter(irtg, interpretationsInOrder, isAnnotated, null, writer);
+
         for (Instance inst : instances) {
             cw.writeInstance(inst);
         }
@@ -170,7 +178,6 @@ public class Corpus implements Iterable<Instance> {
 //        if (interpretationOrder.size() != irtg.getInterpretations().size()) {
 //            throw new CorpusReadingException("Corpus file specified interpretation order incompletely: " + interpretationOrder);
 //        }
-
         ret.isAnnotated = annotated;
 
         // read actual corpus
@@ -181,6 +188,8 @@ public class Corpus implements Iterable<Instance> {
 
             Matcher commentMatcher = COMMENT_PATTERN.matcher(line);
             if (commentMatcher.matches()) {
+                line = readNextLine(br);
+                lineNumber++;
                 continue;
             }
 
