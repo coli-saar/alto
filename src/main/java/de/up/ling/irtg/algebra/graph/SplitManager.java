@@ -202,7 +202,8 @@ class SplitManager {
      * which the vertex cuts this component into.
      * @param storedComponents if a component occurs in the result, such that an
      * equal component was stored earlier, this earlier instance is used
-     * instead of a new copy.
+     * instead of a new copy. The map is an identity map, to retrieve the stored
+     * component after testing for equality.
      * @param graphInfo
      * @return
      */
@@ -241,7 +242,8 @@ class SplitManager {
      * c(v) by adding v as a source, and then returns the map v->c(v).
      * @param storedComponents if a component occurs in the result, such that an
      * equal component was stored earlier, this earlier instance is used instead
-     * of a new copy.
+     * of a new copy. The map is an identity map, to retrieve the stored
+     * component after testing for equality.
      * @param graphInfo
      * @return
      */

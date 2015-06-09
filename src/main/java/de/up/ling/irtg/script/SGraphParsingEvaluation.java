@@ -13,15 +13,15 @@ import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.induction.IrtgInducer;
 import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
-import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -297,29 +297,28 @@ public class SGraphParsingEvaluation {
         Reader corpusReader = new FileReader(corpusPath);
         IrtgInducer inducer = new IrtgInducer(corpusReader);
         //no sorting yet!
-
-        Reader bolinasReader = new FileReader(bolinasCorpusPath);
-        BufferedReader br = new BufferedReader(bolinasReader);
-        int removedCount = 0;
-        for (int i = 0; i<inducer.getCorpus().size(); i++) {
-            if (br.readLine().startsWith("()")) {
-                inducer.getCorpus().remove(i-removedCount);
-                removedCount++;
+        
+        //only keep bolinas compatible.
+        BolinasGraphOutputCodec bolCodec = new BolinasGraphOutputCodec();
+        List<IrtgInducer.TrainingInstance> corpus = new ArrayList<>();
+        for (IrtgInducer.TrainingInstance instance : inducer.getCorpus()) {
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            bolCodec.write(instance.graph, stream);
+            if (!(stream.toString().startsWith("()\n"))) {
+                corpus.add(instance);
             }
         }
 
         
-        sortCorpus(inducer.getCorpus());
+        sortCorpus(corpus);
         
         int warmupIterations = 1;
         int iterations = 1;
 
-        IntList failed = new IntArrayList();
 
         //System.out.println(String.valueOf(size));
         CpuTimeStopwatch sw = new CpuTimeStopwatch();
         CpuTimeStopwatch internalSw = new CpuTimeStopwatch();
-        List<String> labels = new ArrayList<>();
 
         InterpretedTreeAutomaton irtg = loadIrtg(grammarPath);
 
@@ -329,7 +328,7 @@ public class SGraphParsingEvaluation {
             for (int i = start; i < warmupStop; i++) {
                 //System.err.println(inducer.getCorpus().get(i).id);
                 System.out.println("warmup, i = " + i);
-                parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, false, 1, internalSw);
+                parseInstanceWithIrtg(corpus, irtg, i, null, false, 1, internalSw);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
         }
@@ -346,7 +345,7 @@ public class SGraphParsingEvaluation {
             for (int i = start; i < stop; i++) {
                 System.out.println("i = " + i);
                 //System.out.println(inducer.getCorpus().get(i).graph.toIsiAmrString());
-                parseInstanceWithIrtg(inducer.getCorpus(), irtg, i, null, true, internalIterations, internalSw);
+                parseInstanceWithIrtg(corpus, irtg, i, null, true, internalIterations, internalSw);
                 //inducer.parseInstance(i, start, nrSources, stop, bolinas, doWrite,onlyAccept, dumpPath, labels, sw, failed);
             }
             averageLogger.setDefaultCount((stop - start) * internalIterations);

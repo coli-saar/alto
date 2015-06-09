@@ -2,6 +2,7 @@
 package de.up.ling.irtg.algebra;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.TreeVisitor;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
@@ -157,7 +158,11 @@ public class PtbTreeAlgebra extends TreeAlgebra {
         // if there's neither an exception nor a tree,
         // the input is possibly a tree as a string
         if (ret == null) {
-            ret = TreeParser.parse(representation);
+            try {
+                ret = TreeParser.parse(representation);
+            } catch (ParseException ex) {
+                throw new ParserException(ex);
+            }
         }
         
         signature.addAllSymbols(ret);

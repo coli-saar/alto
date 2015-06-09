@@ -39,11 +39,11 @@ import java.util.Set;
  */
 public class TestingTools {
 
-    public static Tree<String> pt(String s) {
+    public static Tree<String> pt(String s) throws de.up.ling.tree.ParseException {
         return TreeParser.parse(s);
     }
 
-    public static Tree<Integer> pti(String s, Signature sig) {
+    public static Tree<Integer> pti(String s, Signature sig) throws de.up.ling.tree.ParseException {
         return sig.addAllSymbols(pt(s));
     }
 
@@ -53,7 +53,7 @@ public class TestingTools {
     }
 
     // sig = target signature of homomorphism
-    public static Tree<HomomorphismSymbol> pth(String s, Signature sig) {
+    public static Tree<HomomorphismSymbol> pth(String s, Signature sig) throws de.up.ling.tree.ParseException {
         return HomomorphismSymbol.treeFromNames(pt(s), sig);
     }
 
@@ -73,11 +73,11 @@ public class TestingTools {
         return IsiAmrParser.parse(new StringReader(s));
     }
 
-    public static Homomorphism hom(Map<String, String> mappings, Signature sourceSignature) {
+    public static Homomorphism hom(Map<String, String> mappings, Signature sourceSignature) throws de.up.ling.tree.ParseException {
         return hom(mappings, sourceSignature, new Signature());
     }
 
-    public static Homomorphism hom(Map<String, String> mappings, Signature sourceSignature, Signature targetSignature) {
+    public static Homomorphism hom(Map<String, String> mappings, Signature sourceSignature, Signature targetSignature) throws de.up.ling.tree.ParseException {
         Homomorphism ret = new Homomorphism(sourceSignature, targetSignature);
 
         for (String sym : mappings.keySet()) {
@@ -87,7 +87,7 @@ public class TestingTools {
         return ret;
     }
 
-    public static Homomorphism hom(Map<String, String> mappings) {
+    public static Homomorphism hom(Map<String, String> mappings) throws de.up.ling.tree.ParseException {
         return hom(mappings, new Signature());
     }
 
