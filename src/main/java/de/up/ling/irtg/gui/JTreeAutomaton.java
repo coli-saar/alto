@@ -12,6 +12,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.CorpusWriter;
 import static de.up.ling.irtg.gui.Alto.log;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
@@ -24,6 +25,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -677,20 +679,26 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     private void miBulkParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miBulkParseActionPerformed
         Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
+            try {
             File outputCorpusFile = Alto.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
-
+            
             if (outputCorpusFile != null) {
+                final FileWriter w = new FileWriter(outputCorpusFile);
+                final CorpusWriter cw = new CorpusWriter(irtg, annotationsInOrder, true, w);
 
                 GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Bulk parsing of input corpus ...",
                         listener -> {
-                            Corpus resultCorpus = irtg.bulkParse(inputCorpus, listener);
-                            List<String> interpretationOrder = new ArrayList<>(irtg.getInterpretations().keySet());
-                            resultCorpus.writeCorpus(new FileWriter(outputCorpusFile), irtg, interpretationOrder);
+                            irtg.bulkParse(inputCorpus, cw, listener);
+                            w.flush();
+                            w.close();
                             return null;
                         },
                         (result, time) -> {
                             Alto.log("Finished bulk parsing, " + Util.formatTime(time));
                         });
+            }
+            } catch(IOException e) {
+                GuiUtils.showError(e);
             }
         });
     }//GEN-LAST:event_miBulkParseActionPerformed

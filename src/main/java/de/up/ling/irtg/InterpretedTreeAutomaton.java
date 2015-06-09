@@ -12,8 +12,6 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.binarization.BkvBinarizer;
-import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.ParseException;
@@ -22,7 +20,6 @@ import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -35,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import org.apache.commons.math3.special.Gamma;
 
 /**
@@ -668,12 +666,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         return Corpus.readCorpus(reader, this);
     }
 
-//    public InterpretedTreeAutomaton binarize(Map<String, RegularSeed> regularSeeds, Map<String, Algebra> newAlgebras) {
-//        BkvBinarizer binarizer = new BkvBinarizer(regularSeeds);
-//        return null;
-//    }
-    public Corpus bulkParse(Corpus input, ProgressListener listener) {
-        Corpus ret = new Corpus();
+    public void bulkParse(Corpus input, Consumer<Instance> corpusConsumer, ProgressListener listener) {
         int N = input.getNumberOfInstances();
         int i = 0;
 
@@ -682,24 +675,24 @@ public class InterpretedTreeAutomaton implements Serializable {
         }
 
         for (Instance inst : input) {
-            TreeAutomaton chart = parseInputObjects(inst.getInputObjects());
-            Tree t = chart.viterbi();
+            TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
+            Tree<Integer> t = chart.viterbiRaw();
+            Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t);
 
             Map<String, Object> values = new HashMap<>();
             for (String intp : getInterpretations().keySet()) {
-                values.put(intp, getInterpretation(intp).interpret(t));
+                values.put(intp, getInterpretation(intp).interpret(tWithStrings));
             }
 
             Instance parsedInst = new Instance();
             parsedInst.setInputObjects(values);
-            ret.addInstance(inst);
+            parsedInst.setDerivationTree(t);
+            corpusConsumer.accept(parsedInst);
 
             if (listener != null) {
                 listener.accept(i++, N, null);
             }
         }
-
-        return ret;
     }
 
     /**

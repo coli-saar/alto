@@ -252,14 +252,14 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 
     /**
      * Allows the user to select a file name for saving a file. If the selected
-     * file already exists, the user is queried for whether the file should be overwritten.
-     * The method returns a File object for the selected file if the file does
-     * not exist, or if it exists and is to be overwritten. Otherwise it
-     * returns null.
-     * 
+     * file already exists, the user is queried for whether the file should be
+     * overwritten. The method returns a File object for the selected file if
+     * the file does not exist, or if it exists and is to be overwritten.
+     * Otherwise it returns null.
+     *
      * @param filter
      * @param parent
-     * @return 
+     * @return
      */
     public static File chooseFileForSaving(FileFilter filter, Component parent) {
         JFileChooser fc = new JFileChooser(previousDirectory);
@@ -278,12 +278,10 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                     log("Canceled writing to file " + selected.getName());
                     return null;
                 }
-
-                previousDirectory = selected.getParentFile();
-                return selected;
-            } else {
-                return null;
             }
+
+            previousDirectory = selected.getParentFile();
+            return selected;
         } else {
             return null;
         }

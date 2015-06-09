@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
  * @author koller
  */
 public class Corpus implements Iterable<Instance> {
-    private static String CORPUS_VERSION = "1.0";
+    static String CORPUS_VERSION = "1.0";
     private static Pattern WHITESPACE_PATTERN = Pattern.compile("\\s*");
     private static Pattern UNANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG unannotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
     private static Pattern ANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG annotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
@@ -96,32 +96,13 @@ public class Corpus implements Iterable<Instance> {
         }
     }
 
-    public static String makeHeader(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, boolean annotated) {
-        StringBuffer buf = new StringBuffer();
-
-        buf.append("# IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + CORPUS_VERSION + "\n");
-        buf.append("# \n");
-
-        for (String interp : interpretationsInOrder) {
-            buf.append("# interpretation " + interp + ": " + irtg.getInterpretations().get(interp).getAlgebra().getClass() + "\n");
-        }
-
-        return buf.toString();
-    }
+    
 
     public void writeCorpus(Writer writer, InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder) throws IOException {
-        writer.write(makeHeader(irtg, interpretationsInOrder, isAnnotated) + "\n");
-
+        CorpusWriter cw = new CorpusWriter(irtg, interpretationsInOrder, isAnnotated, writer);
+        
         for (Instance inst : instances) {
-            for (String interp : interpretationsInOrder) {
-                writer.write(inst.getInputObjects().get(interp).toString() + "\n");
-            }
-
-            if (isAnnotated) {
-                writer.write(irtg.getAutomaton().getSignature().resolve(inst.getDerivationTree()) + "\n");
-            }
-
-            writer.write("\n");
+            cw.writeInstance(inst);
         }
     }
 
@@ -184,10 +165,11 @@ public class Corpus implements Iterable<Instance> {
             break;
         }
 
-        // check metadata
-        if (interpretationOrder.size() != irtg.getInterpretations().size()) {
-            throw new CorpusReadingException("Corpus file specified interpretation order incompletely: " + interpretationOrder);
-        }
+        // remove this check -- it can be okay that corpus does not specify all interpretations
+//        // check metadata
+//        if (interpretationOrder.size() != irtg.getInterpretations().size()) {
+//            throw new CorpusReadingException("Corpus file specified interpretation order incompletely: " + interpretationOrder);
+//        }
 
         ret.isAnnotated = annotated;
 
