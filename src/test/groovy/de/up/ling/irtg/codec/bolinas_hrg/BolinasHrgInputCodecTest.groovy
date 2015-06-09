@@ -71,13 +71,10 @@ N_2 -> (. :ARG1 .*2 ); 0.112
         
         assertEquals(irtg.getAutomaton().getFinalStates().size(),1);  
         assertEquals(irtg.getAutomaton().countTrees(),1);
-        
-        System.err.println(irtg)
     } 
     
     //@Test
     public void testCGrammarLanguage() {
-        System.err.println("\n\n\nXXXXXXX\n\n");
         assertAmrInHrgLanguage(CHRISTOPH_C_GRAMMAR, SMART_BOY_GIRL)
     }
     
@@ -121,18 +118,9 @@ N_2 -> (. :ARG1 .*2 ); 0.112
         return ic.read(hrg);
     }
     
-    //TODO add tests that check for problem with c
     private static final WIDE_GRAMMAR = '''#COMMENT
 T -> (. :want :arg0 (x. :E$) :arg1 (. :T$ x.));
 T -> (a. :believe :arg0 (x. :girl) :arg1 (b. :T$ x. c.*));
 T -> (. :want :arg0 .*1 :arg1 .*2 );
 E -> (. :boy);''';
-    
-    private static final CHRISTOPH_C_GRAMMAR = '''#COMMENT
-T -> (. :want :arg0 (x. :E$) :arg1 (. :T$ x.));
-T -> (a. :believe :arg0 (x. :girl) :arg1 (b. :T$ c. c.*));
-T -> (. :want :arg0 .* :arg1 .* );
-E -> (. :boy :K$);
-K -> (. :mod .short :K$);
-K -> (. :mod .smart);''';
 }
