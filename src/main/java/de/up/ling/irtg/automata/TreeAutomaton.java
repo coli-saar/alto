@@ -122,6 +122,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected List<Rule> unprocessedUpdatesForRulesForRhsState;
     protected boolean explicitIsBottomUpDeterministic = true;
     protected Interner<State> stateInterner;
+    protected boolean hasStoredConstants = false;
 
     public TreeAutomaton(Signature signature) {
 //        MapFactory factory = depth -> {
@@ -675,6 +676,27 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Iterator<Rule> getRuleIterator() {
         return Iterators.concat(new RuleIterator(this));
     }
+    
+    /**
+     * Returns true if the 
+     * @return 
+     */
+    public boolean hasStoredConstants() {
+        return hasStoredConstants;
+    }
+    
+    /**
+     * If this automaton has stored states for all the constants in its
+     * signature, more precisely if hasStoredConstants() returns true,
+     * then this returns the states corresponding to the constant described
+     * by the label ID in the signature. 
+     * @param labelID
+     * @return 
+     */
+    public Set<State> getStoredConstantsForID(int labelID) {
+        throw new UnsupportedOperationException("This automaton does not pre-store constants!");
+    }
+    
 
 //    
 //    public Iterable<Rule> getRuleIterable() {

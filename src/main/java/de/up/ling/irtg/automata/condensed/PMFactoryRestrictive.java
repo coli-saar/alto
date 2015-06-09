@@ -290,38 +290,18 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                         });
                     }
                 }
-                /*String constLabel = constRuleMatcher.getLabel(restrictiveMatcher);
-                 try {
-                 SGraph constGraph = new GraphAlgebra().parseString(constLabel);
-                 if (constGraph.hasNamedNode()) {
-                 withLoopLabels.add(constLabel);
-                 loopCount++;
-                 } else {
-                 noLoopCount++;
-                 //System.err.println(constLabel);
-                 edgeOnlyLabels.add(constLabel);
-                 }
-
-                 } catch (ParserException ex) {
-                 Logger.getLogger(PatternMatchingInvhomAutomatonFactory.class.getName()).log(Level.SEVERE, null, ex);
-                 }*/
             }
-            /*System.err.println("With loop: " + loopCount);
-             System.err.println("With loop(no duplicates): " + withLoopLabels.size());
-             System.err.println("Without loop: " + noLoopCount);
-             System.err.println("Without loop(no duplicates): " + edgeOnlyLabels.size());*/
-            /*} else if (rhs instanceof SGraphBRDecompositionAutomatonTopDownAsymptotic) {
-             SGraphBRDecompositionAutomatonTopDownAsymptotic rhsTopDown = (SGraphBRDecompositionAutomatonTopDownAsymptotic) rhs;
-             for (int constant : matcherConstants) {
-             if (!rhsTopDown.storedConstants[constant].isEmpty()) {
-             IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constant);
-             if (matchingLabelSetIDs != null) {
-             for (int labelSetID : matchingLabelSetIDs) {
-             addTermToRestrictiveMatcher(labelSetID);
-             }
-             }
-             }
-             }*/
+        } else if (rhs.hasStoredConstants()) {
+            for (int constant : matcherConstants) {
+                if (!rhs.getStoredConstantsForID(constant).isEmpty()) {
+                    IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constant);
+                    if (matchingLabelSetIDs != null) {
+                        for (int labelSetID : matchingLabelSetIDs) {
+                            addTermToRestrictiveMatcher(labelSetID);
+                        }
+                    }
+                }
+            }
         } else {
             for (Rule constRuleMatcher : matcherConstantRules) {
                 IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constRuleMatcher.getLabel());

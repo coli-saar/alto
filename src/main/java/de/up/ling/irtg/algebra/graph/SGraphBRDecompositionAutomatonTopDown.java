@@ -30,6 +30,13 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
     
     
     private final Set<SComponentRepresentation>[] storedConstants;
+
+    @Override
+    public Set<SComponentRepresentation> getStoredConstantsForID(int labelID) {
+        return storedConstants[labelID];
+    }
+    
+   
     
     
     private final Int2ObjectMap<Int2ObjectMap<List<Rule>>> storedRules;
@@ -47,6 +54,8 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
         super(algebra.getSignature());
         //getStateInterner().setTrustingMode(true);
 
+        hasStoredConstants = true;//this speeds up the pattern matching.
+        
         completeGraphInfo = new GraphInfo(completeGraph, algebra);
         storedComponents = new HashMap<>(); 
         
