@@ -360,7 +360,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
      * @return
      */
     static String makeLHS(NonterminalWithHyperedge nwh) {
-        return nwh.getNonterminal() + "__" + nwh.getEndpoints().size();
+        return nwh.getNonterminal() + "$" + nwh.getEndpoints().size();
     }
 
     /**

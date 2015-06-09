@@ -79,7 +79,7 @@ public class BkvBinarizer {
         int ruleNumber = 1;
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
 //            log("\n\n\nbinarizing rule: " + rule.toString(irtg.getAutomaton()));
-
+            
             RuleBinarization rb = binarizeRule(rule, irtg);
 
             if (debug) {
@@ -192,12 +192,13 @@ public class BkvBinarizer {
             Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
 
             TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);  // this is G_i
+            
             binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
 
             if (debug) {
                 System.err.println("\nG(" + interpretation + "):\n" + binarizationTermsHere);
             }
-
+            
             if (debug) {
                 for (Tree t : binarizationTermsHere.language()) {
                     System.err.println("   " + t);
@@ -240,8 +241,9 @@ public class BkvBinarizer {
         assert commonVariableTrees != null;
 
         Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
+        
         ret.xi = xiFromVartree(commonVariableTree, irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel()));
-
+        //TODO
         if (debug) {
             System.err.println("\nvartree = " + commonVariableTree);
         }
@@ -268,6 +270,13 @@ public class BkvBinarizer {
     }
 
     private Tree<String> xiFromVartree(Tree<String> vartree, final String originalLabel) {
+        //special case for vartree from unary rules
+        //TODO: this is a total hack that needs to be reviewed by Alexander
+        if(vartree.getChildren().isEmpty() && isNumber(vartree.getLabel()))
+        {
+            return Tree.create(gensym(originalLabel + "_br"), vartree);
+        }
+        
         return vartree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
