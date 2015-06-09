@@ -22,6 +22,7 @@ import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -54,10 +55,11 @@ import org.apache.commons.math3.special.Gamma;
  * @author koller
  */
 public class InterpretedTreeAutomaton implements Serializable {
+
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;
-    
+
     /**
      * Constructs a new IRTG with the given derivation tree automaton.
      *
@@ -197,21 +199,19 @@ public class InterpretedTreeAutomaton implements Serializable {
      */
     public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
 //        Logging.get().fine(() -> "parseInputObjects: " + inputs);
-        
+
         TreeAutomaton ret = automaton;
 
         for (String interpName : inputs.keySet()) {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
-            
-//            Logging.get().fine(() -> "Input: " + input);
 
+//            Logging.get().fine(() -> "Input: " + input);
             TreeAutomaton interpParse = interp.parse(input);
-            
+
 //            Logging.get().finest(() -> "invhom(decomp): " + interpParse);
-            
             ret = ret.intersect(interpParse);
-            
+
 //            Logging.get().finest(() -> ("Intersect: " + ret));
         }
 
@@ -570,7 +570,7 @@ public class InterpretedTreeAutomaton implements Serializable {
             logLikelihood += Math.log(likelihoodHere);
 
             if (listener != null) {
-                listener.accept(i+1, parses.size(), null);
+                listener.accept(i + 1, parses.size(), null);
 //                listener.update(iteration, i);
             }
         }
@@ -668,9 +668,38 @@ public class InterpretedTreeAutomaton implements Serializable {
         return Corpus.readCorpus(reader, this);
     }
 
-    public InterpretedTreeAutomaton binarize(Map<String, RegularSeed> regularSeeds, Map<String, Algebra> newAlgebras) {
-        BkvBinarizer binarizer = new BkvBinarizer(regularSeeds);
-        return null;
+//    public InterpretedTreeAutomaton binarize(Map<String, RegularSeed> regularSeeds, Map<String, Algebra> newAlgebras) {
+//        BkvBinarizer binarizer = new BkvBinarizer(regularSeeds);
+//        return null;
+//    }
+    public Corpus bulkParse(Corpus input, ProgressListener listener) {
+        Corpus ret = new Corpus();
+        int N = input.getNumberOfInstances();
+        int i = 0;
+
+        if (listener != null) {
+            listener.accept(i++, N, null);
+        }
+
+        for (Instance inst : input) {
+            TreeAutomaton chart = parseInputObjects(inst.getInputObjects());
+            Tree t = chart.viterbi();
+
+            Map<String, Object> values = new HashMap<>();
+            for (String intp : getInterpretations().keySet()) {
+                values.put(intp, getInterpretation(intp).interpret(t));
+            }
+
+            Instance parsedInst = new Instance();
+            parsedInst.setInputObjects(values);
+            ret.addInstance(inst);
+
+            if (listener != null) {
+                listener.accept(i++, N, null);
+            }
+        }
+
+        return ret;
     }
 
     /**

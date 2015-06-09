@@ -250,6 +250,17 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
+    /**
+     * Allows the user to select a file name for saving a file. If the selected
+     * file already exists, the user is queried for whether the file should be overwritten.
+     * The method returns a File object for the selected file if the file does
+     * not exist, or if it exists and is to be overwritten. Otherwise it
+     * returns null.
+     * 
+     * @param filter
+     * @param parent
+     * @return 
+     */
     public static File chooseFileForSaving(FileFilter filter, Component parent) {
         JFileChooser fc = new JFileChooser(previousDirectory);
         fc.setFileFilter(filter);
@@ -258,8 +269,21 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File selected = fc.getSelectedFile();
-            previousDirectory = selected.getParentFile();
-            return selected;
+
+            if (selected.exists()) {
+                int response = JOptionPane.showConfirmDialog(parent, "The file " + selected.getName() + " already exists. Do you want to replace the existing file?",
+                        "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+                if (response != JOptionPane.YES_OPTION) {
+                    log("Canceled writing to file " + selected.getName());
+                    return null;
+                }
+
+                previousDirectory = selected.getParentFile();
+                return selected;
+            } else {
+                return null;
+            }
         } else {
             return null;
         }
@@ -270,16 +294,6 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 
         try {
             if (file != null) {
-                if (file.exists()) {
-                    int response = JOptionPane.showConfirmDialog(parent, "The file " + file.getName() + " already exists. Do you want to replace the existing file?",
-                            "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
-                    if (response != JOptionPane.YES_OPTION) {
-                        log("Canceled writing " + objectDescription + " to file " + file.getName());
-                        return false;
-                    }
-                }
-
                 long start = System.nanoTime();
 
                 PrintWriter w = new PrintWriter(new FileWriter(file));
@@ -569,8 +583,6 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
             GuiUtils.showError(exception);
         });
 
-
-        
         // tooltips stay visible forever
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
 

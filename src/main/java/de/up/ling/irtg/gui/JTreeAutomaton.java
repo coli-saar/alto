@@ -22,11 +22,14 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.awt.Color;
 import java.awt.Component;
+import java.io.File;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.JTable;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
@@ -66,8 +69,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
 //        new WindowMenu(this).get
         this.automaton = automaton;
-        
-        if( automaton.isEmpty() ) {
+
+        if (automaton.isEmpty()) {
             miShowLanguage.setEnabled(false);
         }
 
@@ -175,6 +178,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     public void setParsingEnabled(boolean enabled) {
         miParse.setEnabled(enabled);
+        miBulkParse.setEnabled(enabled);
 
         miTrainEM.setEnabled(enabled);
         miTrainML.setEnabled(enabled);
@@ -212,6 +216,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu4 = new javax.swing.JMenu();
         miShowLanguage = new javax.swing.JMenuItem();
         miParse = new javax.swing.JMenuItem();
+        miBulkParse = new javax.swing.JMenuItem();
         miBinarize = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
         miTrainML = new javax.swing.JMenuItem();
@@ -347,6 +352,15 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         });
         jMenu4.add(miParse);
+
+        miBulkParse.setText("Bulk Parse ...");
+        miBulkParse.setEnabled(false);
+        miBulkParse.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miBulkParseActionPerformed(evt);
+            }
+        });
+        jMenu4.add(miBulkParse);
 
         miBinarize.setText("Binarize ...");
         miBinarize.setEnabled(false);
@@ -661,6 +675,26 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         Alto.saveIrtg(irtg, this);
     }//GEN-LAST:event_miSaveIrtgActionPerformed
 
+    private void miBulkParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miBulkParseActionPerformed
+        Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
+            File outputCorpusFile = Alto.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
+
+            if (outputCorpusFile != null) {
+
+                GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Bulk parsing of input corpus ...",
+                        listener -> {
+                            Corpus resultCorpus = irtg.bulkParse(inputCorpus, listener);
+                            List<String> interpretationOrder = new ArrayList<>(irtg.getInterpretations().keySet());
+                            resultCorpus.writeCorpus(new FileWriter(outputCorpusFile), irtg, interpretationOrder);
+                            return null;
+                        },
+                        (result, time) -> {
+                            Alto.log("Finished bulk parsing, " + Util.formatTime(time));
+                        });
+            }
+        });
+    }//GEN-LAST:event_miBulkParseActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
@@ -677,6 +711,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator5;
     private javax.swing.JTable jTable1;
     private javax.swing.JMenuItem miBinarize;
+    private javax.swing.JMenuItem miBulkParse;
     private javax.swing.JMenuItem miCloseAllWindows;
     private javax.swing.JMenuItem miCloseWindow;
     private javax.swing.JMenuItem miLoadMaxentWeights;
