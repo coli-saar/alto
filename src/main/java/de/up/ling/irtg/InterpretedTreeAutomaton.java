@@ -17,6 +17,7 @@ import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
+import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
@@ -666,6 +667,22 @@ public class InterpretedTreeAutomaton implements Serializable {
         return Corpus.readCorpus(reader, this);
     }
 
+    /**
+     * Reads inputs for this IRTG from a corpus and parses them.
+     * The input corpus must be suitable for this IRTG (i.e., use a subset
+     * of the interpretations it defines). If the corpus has charts attached,
+     * these will be used; otherwise, each instance is parsed. We then
+     * compute the best derivation tree from each chart using Viterbi, and map
+     * it to all interpretations of the IRTG. This yields a "completed"
+     * {@link Instance} (consisting of the derivation tree and values on all
+     * interpretations), which we write to the given corpusConsumer (e.g.,
+     * a {@link CorpusWriter}). If a non-null value is passed as the
+     * "listener", it is notified after each instance has been written.
+     * 
+     * @param input
+     * @param corpusConsumer
+     * @param listener 
+     */
     public void bulkParse(Corpus input, Consumer<Instance> corpusConsumer, ProgressListener listener) {
         int N = input.getNumberOfInstances();
         int i = 0;
