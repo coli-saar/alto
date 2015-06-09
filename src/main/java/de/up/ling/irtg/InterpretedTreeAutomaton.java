@@ -21,6 +21,7 @@ import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -692,6 +693,9 @@ public class InterpretedTreeAutomaton implements Serializable {
         }
 
         for (Instance inst : input) {
+            CpuTimeStopwatch sw = new CpuTimeStopwatch();
+            sw.record(0);
+            
             TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
             Tree<Integer> t = chart.viterbiRaw();
             Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t);
@@ -700,10 +704,13 @@ public class InterpretedTreeAutomaton implements Serializable {
             for (String intp : getInterpretations().keySet()) {
                 values.put(intp, getInterpretation(intp).interpret(tWithStrings));
             }
+            
+            sw.record(1);
 
             Instance parsedInst = new Instance();
             parsedInst.setInputObjects(values);
             parsedInst.setDerivationTree(t);
+            parsedInst.setComment("parse_time=" + sw.getTimeBefore(1)/1000000 + "ms");
             corpusConsumer.accept(parsedInst);
 
             if (listener != null) {

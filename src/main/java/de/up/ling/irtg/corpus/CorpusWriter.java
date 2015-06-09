@@ -32,6 +32,10 @@ public class CorpusWriter implements Consumer<Instance> {
     }
 
     public void writeInstance(Instance inst) throws IOException {
+        if( inst.getComment() != null ) {
+            writer.write("# " + inst.getComment() + "\n");
+        }
+        
         for (String interp : interpretationsInOrder) {
             writer.write(inst.getInputObjects().get(interp).toString() + "\n");
         }

@@ -16,6 +16,7 @@ public class Instance {
     private Map<String, Object> inputObjects;
     private Tree<Integer> derivationTree;        // may be null if corpus was unannotated
     private TreeAutomaton chart;                 // may be null if corpus was unparsed
+    private String comment;                      // may be null if instance had no comment
 
     public Instance() {
     }
@@ -54,6 +55,16 @@ public class Instance {
         
         return copy;
     }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
+    }
+    
+    
     
 
     @Override
