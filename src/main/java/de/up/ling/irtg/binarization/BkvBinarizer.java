@@ -270,23 +270,22 @@ public class BkvBinarizer {
     }
 
     private Tree<String> xiFromVartree(Tree<String> vartree, final String originalLabel) {
-        //special case for vartree from unary rules
-        //TODO: this is a total hack that needs to be reviewed by Alexander
-        if(vartree.getChildren().isEmpty() && isNumber(vartree.getLabel()))
-        {
+        //special case for vartree from unary rules, we need to make sure that
+        // we do not confuse them with the leafs of larger variable trees
+        if (vartree.getChildren().isEmpty() && isNumber(vartree.getLabel())) {
             return Tree.create(gensym(originalLabel + "_br"), vartree);
-        }
-        
-        return vartree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
-            @Override
-            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                if (childrenValues.isEmpty() && isNumber(node.getLabel())) {
-                    return node;
-                } else {
-                    return Tree.create(gensym(originalLabel + "_br"), childrenValues);
+        } else {
+            return vartree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
+                @Override
+                public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
+                    if (childrenValues.isEmpty() && isNumber(node.getLabel())) {
+                        return node;
+                    } else {
+                        return Tree.create(gensym(originalLabel + "_br"), childrenValues);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
