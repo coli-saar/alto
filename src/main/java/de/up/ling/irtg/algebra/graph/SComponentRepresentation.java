@@ -34,7 +34,8 @@ public class SComponentRepresentation {
     }
     
     /**
-     * Creates a component representation of the complete (input) graph.
+     * Creates a component representation of the complete (input) graph
+     * without sources.
      * @param completeGraph
      * @param alg
      */
@@ -51,6 +52,7 @@ public class SComponentRepresentation {
      * It is assumed that this is only called for compatible sets of source nodes and sets of s-components.
      * @param sourceToNodename
      * @param components
+     * @param completeGraphInfo
      */
     public SComponentRepresentation(int[] sourceToNodename, Set<SComponent> components, GraphInfo completeGraphInfo) {
         this.sourceToNodename = sourceToNodename;

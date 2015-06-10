@@ -676,27 +676,28 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public Iterator<Rule> getRuleIterator() {
         return Iterators.concat(new RuleIterator(this));
     }
-    
+
     /**
-     * Returns true if the 
-     * @return 
+     * Returns true if the
+     *
+     * @return
      */
     public boolean hasStoredConstants() {
         return hasStoredConstants;
     }
-    
+
     /**
      * If this automaton has stored states for all the constants in its
-     * signature, more precisely if hasStoredConstants() returns true,
-     * then this returns the states corresponding to the constant described
-     * by the label ID in the signature. 
+     * signature, more precisely if hasStoredConstants() returns true, then this
+     * returns the states corresponding to the constant described by the label
+     * ID in the signature.
+     *
      * @param labelID
-     * @return 
+     * @return
      */
     public Set<State> getStoredConstantsForID(int labelID) {
         throw new UnsupportedOperationException("This automaton does not pre-store constants!");
     }
-    
 
 //    
 //    public Iterable<Rule> getRuleIterable() {
@@ -1357,7 +1358,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public ConcreteTreeAutomaton asConcreteTreeAutomatonBottomUp() {
-        return new UniversalAutomaton(getSignature()).intersect(this).asConcreteTreeAutomaton();
+        ConcreteTreeAutomaton ret = new ConcreteTreeAutomaton(getSignature());
+        processAllRulesBottomUp(rule -> ret.addRule(ret.createRule(getStateForId(rule.getParent()), rule.getLabel(this), getStatesFromIds(rule.getChildren()))));
+        finalStates.stream().forEach(finalState -> ret.addFinalState(finalState));
+        return ret;
+        //return new UniversalAutomaton(getSignature()).intersect(this).asConcreteTreeAutomaton();
     }
 
     /**
@@ -1666,6 +1671,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 };
             }
         };
+        
 
 //        List<State> ret = new ArrayList<State>();
 //
@@ -1676,6 +1682,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        return ret;
     }
 
+    
+    protected State[] getStatesFromIds(int[] states) {
+        Object[] ret = new Object[states.length];
+        for (int i = 0; i<states.length; i++) {
+            ret[i] = getStateForId(states[i]);
+        }
+        return (State[]) ret;
+    }
+    
     /**
      * Runs the automaton bottom-up on the given tree, using symbol IDs, and
      * returns the set of possible states for the root. The nodes of the tree
@@ -2877,7 +2892,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 Iterable<Rule> rules = getRulesTopDown(label, state);
 
                 for (Rule rule : rules) {
-                    processingFunction.accept(rule);
+                    if (processingFunction != null) {
+                        processingFunction.accept(rule);
+                    }
 
                     for (int child : rule.getChildren()) {
                         if (!seenStates.get(child)) {
@@ -2894,18 +2911,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
     /**
      * Iterates through all rules top-down, applying processingFunction to each
      * rule found. Returns true if a final state was found.
+     *
      * @param processingFunction
      * @return
      */
     public boolean processAllRulesBottomUp(Consumer<Rule> processingFunction) {
         boolean ret = false;
-        
-        
+
         //initialize agenda by processing constants
         IntList agenda = new IntArrayList();
         IntSet seen = new IntOpenHashSet();
         Int2ObjectMap<IntList> symbols = new Int2ObjectOpenHashMap<>();
-        
+
         Map<String, Integer> symbolsFromAuto = getSignature().getSymbolsWithArities();
         int j = 0;
         for (String s : symbolsFromAuto.keySet()) {
@@ -2924,9 +2941,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 Iterator<Rule> it = getRulesBottomUp(c, new int[]{}).iterator();
                 while (it.hasNext()) {
                     Rule rule = it.next();
-                    
-                    processingFunction.accept(rule);
-                    
+
+                    if (processingFunction != null) {
+                        processingFunction.accept(rule);
+                    }
+
                     int parent = rule.getParent();
                     if (!agenda.contains(parent)) {
                         agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
@@ -2940,7 +2959,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         //now iterate
         Int2ObjectMap<IntList> labelsToIterate = new Int2ObjectOpenHashMap<>(symbols);
         labelsToIterate.remove(0);//already checked constants above
-        
+
         BinaryPartnerFinder bpFinder = makeNewBinaryPartnerFinder(this);
 
         for (int i = 0; i < agenda.size(); i++) {
@@ -2949,40 +2968,39 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 ret = true;
             }
 
-            
             for (int arity : labelsToIterate.keySet()) {
-                
+
                 for (int label : symbols.get(arity)) {
-                    
+
                     //find all rules
                     List<Iterable<Rule>> foundRules = new ArrayList<>();
                     switch (arity) {
-                        case 1: 
+                        case 1:
                             foundRules.add(getRulesBottomUp(label, new int[]{a}));
                             break;
                         case 2:
                             IntCollection partnerList = bpFinder.getPartners(label, a);
                             for (int p : partnerList) {
-                                foundRules.add(getRulesBottomUp(label, new int[]{a,p}));
-                                foundRules.add(getRulesBottomUp(label, new int[]{p,a}));
+                                foundRules.add(getRulesBottomUp(label, new int[]{a, p}));
+                                foundRules.add(getRulesBottomUp(label, new int[]{p, a}));
                             }
-                        break;
+                            break;
                         default:
                             int[] children = new int[arity];
-                            Set[] partners = new Set[arity-1];
+                            Set[] partners = new Set[arity - 1];
                             Arrays.fill(partners, seen);
                             TupleIterator<Integer> partnerIterator = new TupleIterator<>(Integer.class, partners);
                             while (partnerIterator.hasNext()) {
                                 Integer[] partnerTuple = partnerIterator.next();
-                                for (int pos = 0; pos<arity; pos++) {
+                                for (int pos = 0; pos < arity; pos++) {
                                     System.arraycopy(partnerTuple, 0, children, 0, pos);
-                                    children[pos]=a;
-                                    System.arraycopy(partnerTuple, pos, children, pos+1, pos);
+                                    children[pos] = a;
+                                    System.arraycopy(partnerTuple, pos, children, pos + 1, pos);
                                 }
                                 foundRules.add(getRulesBottomUp(label, children));
                             }
                     }
-                    
+
                     //process found rules and add newfound states to agenda
                     foundRules.forEach(ruleIt -> {
                         ruleIt.forEach(rule -> {
@@ -2991,15 +3009,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
                                 seen.add(newState);
                                 agenda.add(newState);
                             }
-                            processingFunction.accept(rule);
+                            if (processingFunction != null) {
+                                processingFunction.accept(rule);
+                            }
                         });
                     });
                 }
             }
-            
+
             bpFinder.addState(a);
         }
-        
+
         return ret;
     }
 

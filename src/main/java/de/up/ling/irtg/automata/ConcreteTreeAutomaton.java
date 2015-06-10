@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 /**
  *
  * @author koller
+ * @param <State>
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public ConcreteTreeAutomaton() {

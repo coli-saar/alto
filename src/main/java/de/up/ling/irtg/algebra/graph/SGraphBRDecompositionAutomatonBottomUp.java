@@ -328,7 +328,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
     @Override
     public boolean isBottomUpDeterministic() {
-        return false;
+        return true;
     }
 
     @Override
@@ -340,6 +340,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     public boolean supportsBottomUpQueries() {
         return true;
     }
+    
     
     
     private Boolean algebraIsPure;
