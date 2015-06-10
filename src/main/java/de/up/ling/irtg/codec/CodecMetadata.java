@@ -29,5 +29,6 @@ public @interface CodecMetadata {
         String description();
 	String extension() default "";
         Class type();
+        boolean displayInPopup() default true;
 	boolean experimental() default false;
 }

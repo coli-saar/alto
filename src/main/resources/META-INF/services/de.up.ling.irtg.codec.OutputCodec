@@ -1,8 +1,6 @@
 de.up.ling.irtg.codec.ToStringOutputCodec
-de.up.ling.irtg.codec.ListOutputCodec
 de.up.ling.irtg.codec.TikzQtreeOutputCodec
 de.up.ling.irtg.codec.TikzSgraphOutputCodec
-<<<<<<< local
-de.up.ling.irtg.codec.BolinasGraphOutputCodec=======
+de.up.ling.irtg.codec.BolinasGraphOutputCodec
 de.up.ling.irtg.codec.SgraphAmrOutputCodec
-de.up.ling.irtg.codec.SgraphAmrWithSourcesOutputCodec>>>>>>> other
+de.up.ling.irtg.codec.SgraphAmrWithSourcesOutputCodec

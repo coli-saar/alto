@@ -9,7 +9,6 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.ToStringOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -20,12 +19,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
@@ -221,7 +217,23 @@ public abstract class Algebra<E> implements Serializable {
      * @return 
      */
     public JComponent visualize(E object) {
-        return new JLabel(object.toString());
+        return new JLabel(representAsString(object));
+    }
+    
+    /**
+     * Returns a string representation of this object. The default
+     * implementation simply calls the object's {@link Object#toString() }
+     * method. Concrete algebras may overwrite this implementation for
+     * algebra-specific string representations. Whenever Alto knows to
+     * which algebra an object belongs, it will attempt to call this method
+     * instead of the generic toString to produce algebra-specific
+     * string representations.
+     * 
+     * @param object
+     * @return 
+     */
+    public String representAsString(E object) {
+        return object.toString();
     }
     
     

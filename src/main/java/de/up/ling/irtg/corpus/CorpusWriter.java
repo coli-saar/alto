@@ -8,6 +8,7 @@ package de.up.ling.irtg.corpus;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -22,13 +23,14 @@ public class CorpusWriter implements Consumer<Instance> {
     private InterpretedTreeAutomaton irtg;
     private List<String> interpretationsInOrder;
 
-    public CorpusWriter(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, boolean isAnnotated, String comment, Writer writer) throws IOException {
+    public CorpusWriter(InterpretedTreeAutomaton irtg, boolean isAnnotated, String comment, Writer writer) throws IOException {
         this.writer = writer;
         this.isAnnotated = isAnnotated;
         this.irtg = irtg;
-        this.interpretationsInOrder = interpretationsInOrder;
+        this.interpretationsInOrder = new ArrayList<>(irtg.getInterpretations().keySet()); // fix some order of interpretations
+//        this.interpretationsInOrder = interpretationsInOrder;
 
-        writer.write(makeHeader(irtg, interpretationsInOrder, isAnnotated, comment) + "\n");
+        writer.write(makeHeader(comment) + "\n");
     }
 
     public void writeInstance(Instance inst) throws IOException {
@@ -37,7 +39,8 @@ public class CorpusWriter implements Consumer<Instance> {
         }
         
         for (String interp : interpretationsInOrder) {
-            writer.write(inst.getInputObjects().get(interp).toString() + "\n");
+            String repr = irtg.getInterpretation(interp).getAlgebra().representAsString(inst.getInputObjects().get(interp));
+            writer.write(repr + "\n");
         }
 
         if (isAnnotated) {
@@ -47,10 +50,10 @@ public class CorpusWriter implements Consumer<Instance> {
         writer.write("\n");
     }
 
-    private static String makeHeader(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, boolean annotated, String comment) {
+    private String makeHeader(String comment) {
         StringBuffer buf = new StringBuffer();
 
-        buf.append("# IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
+        buf.append("# IRTG " + (isAnnotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
         buf.append("# \n");
         
         if( comment != null ) {

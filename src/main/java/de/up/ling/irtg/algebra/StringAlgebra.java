@@ -17,11 +17,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
@@ -98,10 +95,17 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         return symbols;
     }
 
+//    @Override
+//    public JComponent visualize(List<String> object) {
+//        return new JLabel(StringTools.join(object, " "));
+//    }
+
     @Override
-    public JComponent visualize(List<String> object) {
-        return new JLabel(StringTools.join(object, " "));
+    public String representAsString(List<String> object) {
+        return StringTools.join(object, " ");
     }
+    
+    
 
     private class CkyAutomaton extends TreeAutomaton<Span> {
 

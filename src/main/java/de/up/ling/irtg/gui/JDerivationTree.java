@@ -5,11 +5,9 @@
 package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.codec.TikzQtreeOutputCodec;
-import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import java.awt.Color;
-import java.io.IOException;
 import javax.swing.JScrollPane;
 
 /**
