@@ -303,6 +303,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 }
             }
         } else {
+            //in this case, no presorting of constants is done.
             for (Rule constRuleMatcher : matcherConstantRules) {
                 IntList matchingLabelSetIDs = constants2LabelSetIDSimplified.get(constRuleMatcher.getLabel());
                 if (matchingLabelSetIDs != null) {

@@ -15,10 +15,16 @@ import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -328,7 +334,23 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
 
         @Override
         public void makeAllRulesCondensedExplicit() {
-            //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            Queue<Integer> agenda = new LinkedList<>();
+            IntSet seen = new IntOpenHashSet();
+            agenda.addAll(finalStates);
+            seen.addAll(finalStates);
+            while (!agenda.isEmpty()) {
+                int stateID = agenda.poll();
+                Iterable<CondensedRule> res = getCondensedRulesByParentState(stateID);
+                for (CondensedRule rule : res) {
+                    storeRule(rule);
+                    for (int child : rule.getChildren()) {
+                        if (!seen.contains(child)) {
+                            seen.add(child);
+                            agenda.add(child);
+                        }
+                    }
+                }
+            }
         }
     }
     

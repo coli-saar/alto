@@ -44,7 +44,7 @@ class PatternMatchingInvhomAutomatonTest {
         assert ! auto.accepts(pt("a"))        
     }
     
-    //@Test//need to fix this! I think it depends on the invhom format, maybe?
+    @Test
     public void testInvhomCfg() {
         InterpretedTreeAutomaton cfg = pi(CFG)
         PatternMatchingInvhomAutomatonFactory f = new PMFactoryRestrictive(cfg.getInterpretation("i").getHomomorphism())
@@ -87,9 +87,6 @@ class PatternMatchingInvhomAutomatonTest {
         CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhom(rhs)
         TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
         
-//        System.err.println("*****")
-//        System.err.println(intersectionGold)
-//        System.err.println(finalIntAut.toString())
         
         assertEquals(pa(intersectionGold), finalIntAut.asConcreteTreeAutomatonWithStringStates());
     }
@@ -112,12 +109,9 @@ class PatternMatchingInvhomAutomatonTest {
         CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhom(rhs)
         TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String,BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
         
-        //System.err.println(intersectionGold)
-        //System.err.println(finalIntAut.toString())
         
         assertEquals(pa(intersectionGoldTopDown), finalIntAut.asConcreteTreeAutomatonWithStringStates());
         
-//        assertEquals(intersectionGold, finalIntAut.toString());
     }
     
     
