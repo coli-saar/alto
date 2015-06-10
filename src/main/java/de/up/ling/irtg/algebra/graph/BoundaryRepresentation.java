@@ -21,9 +21,9 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.BitSet;
+import java.util.Objects;
 import java.util.StringJoiner;
 //import org.apache.commons.lang.mutable.MutableBoolean;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * A boundary representation of a sub-sgraph. With support for bottom up operations.
@@ -954,7 +954,10 @@ public class BoundaryRepresentation {
     @Override
     public int hashCode() {
         //return new HashCodeBuilder(19, 43).append(inBoundaryEdges).append(sourceToNodename).toHashCode();
-        return new HashCodeBuilder(19, 43).append(edgeID).append(vertexID).toHashCode();
+        int hash = 7;
+        hash = 43 * hash + Objects.hashCode(edgeID);
+        hash = 43 * hash + Objects.hashCode(edgeID);
+        return hash;
     }
 
     private long calculateSourceCountAndMax() {

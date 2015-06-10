@@ -6,6 +6,7 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.primitives.Ints;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -37,8 +38,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Produces pattern matcher automata to compute the inverse of decomposition
@@ -126,7 +125,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                     genericStartStateIDs.add(matcher.getIdForState(matchingStartState));
                 }
             } else {
-                //constants2LabelSetID.add(new ImmutablePair(res, labelSetID));//add rest of rules only later when necessary
+                //constants2LabelSetID.add(new Pair(res, labelSetID));//add rest of rules only later when necessary
                 /*if (constantIDsHere.isEmpty()) {
                  posOfStartStateRepInRulesFromConstantFreeTerms.addAll(labelSetID2StartStateRules.get(labelSetID));
                  for (Pair<Rule, Integer> pair : labelSetID2StartStateRules.get(labelSetID)) {
@@ -221,16 +220,16 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         if (agenda != null) {
             Pair intPair;
             if (isStartState.get(matcherStateID)) {
-                intPair = new ImmutablePair(startStateRepresentativeID, rhsStateID);
+                intPair = new Pair(startStateRepresentativeID, rhsStateID);
             } else {
-                intPair = new ImmutablePair(matcherStateID, rhsStateID);
+                intPair = new Pair(matcherStateID, rhsStateID);
             }
             if (!seen.contains(intPair)) {
                 agenda.add(intPair);
                 seen.add(intPair);
             }
         }
-        return new ImmutablePair(matcher.getStateForId(matcherStateID), rhs.getStateForId(rhsStateID));
+        return new Pair(matcher.getStateForId(matcherStateID), rhs.getStateForId(rhsStateID));
     }
 
      //do not use this!!
@@ -254,7 +253,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
      if (newConstants.isEmpty()) {
      addTermToRestrictiveMatcher(labelSetID);
      } else {
-     tempConsts2LabelID.add(new ImmutablePair(newConstants, labelSetID));
+     tempConsts2LabelID.add(new Pair(newConstants, labelSetID));
      }
      }
      prevConsts2LabelID = tempConsts2LabelID;
@@ -376,7 +375,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             //System.err.println("found q");
             IntList ret = new IntArrayList();
             ret.add(rhsState);
-            Pair<IntList, Boolean> retPair = new ImmutablePair(ret, true);
+            Pair<IntList, Boolean> retPair = new Pair(ret, true);
             seenRhs.put(matcherState, retPair);
             return retPair;
         } else {
@@ -401,9 +400,9 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 if (innerRes) {
                     List<Pair<String, State>> children = new ArrayList<>();
                     for (int i = 0; i < rhsRule.getArity(); i++) {
-                        children.add(new ImmutablePair(matcher.getStateForId(matcherRule.getChildren()[i]), rhs.getStateForId(rhsRule.getChildren()[i])));
+                        children.add(new Pair(matcher.getStateForId(matcherRule.getChildren()[i]), rhs.getStateForId(rhsRule.getChildren()[i])));
                     }
-                    Pair<String, State> intersParent = new ImmutablePair(matcher.getStateForId(matcherState), rhs.getStateForId(rhsState));
+                    Pair<String, State> intersParent = new Pair(matcher.getStateForId(matcherState), rhs.getStateForId(rhsState));
                     String label = rhs.getSignature().resolveSymbolId(rhsLabel);
                     intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, label, children));
 
@@ -412,7 +411,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 }
 
             }
-            Pair<IntList, Boolean> retPair = new ImmutablePair(outerCarryover, outerRes);
+            Pair<IntList, Boolean> retPair = new Pair(outerCarryover, outerRes);
             seenRhs.put(matcherState, retPair);
             return retPair;
         }
@@ -451,7 +450,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         if (prevState != -1) {
             return prevState;
         } else {
-            Pair<String, State> intersState = makeDuoStateAndPutOnAgenda(matcherParentID, rhsParentID, rhs, null, null, null);//just returns a new ImmutablePair in this case.
+            Pair<String, State> intersState = makeDuoStateAndPutOnAgenda(matcherParentID, rhsParentID, rhs, null, null, null);//just returns a new Pair in this case.
             if (startStateIdToLabelSetID.containsKey(matcherParentID)) {
                 seen.put(rhsParentID, matcherParentID, intersectionAuto.addState(intersState));//if we arrive at a start state of a rule later, we want to always answer "yes".
                 //if however we meet an internal state of a rule twice, we want to pursue further (note that the algorithm still terminates).
@@ -505,7 +504,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                     if (minRes > 0) {
                         List<Pair<String, State>> children = new ArrayList<>();
                         for (int i = 0; i < arity; i++) {
-                            children.add(new ImmutablePair(matcher.getStateForId(matcherChildren[i]), rhs.getStateForId(rhsChildren[i])));
+                            children.add(new Pair(matcher.getStateForId(matcherChildren[i]), rhs.getStateForId(rhsChildren[i])));
                         }
                         intersectionAuto.addRule(intersectionAuto.createRule(intersState, matcher.getSignature().resolveSymbolId(matcherLabel), children));
                     }
@@ -676,7 +675,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 Pair<String, State> intersParent = makeDuoStateAndPutOnAgenda(matcherRule.getParent(), rhsRule.getParent(), rhs, matcherState2RhsState, agenda, seen);
                 Pair<String, State>[] intersChildren = new Pair[arity];
                 for (int j = 0; j < arity; j++) {
-                    intersChildren[j] = new ImmutablePair(matcher.getStateForId(matcherRule.getChildren()[j]), rhs.getStateForId(rhsProcessedChildIDs[j]));
+                    intersChildren[j] = new Pair(matcher.getStateForId(matcherRule.getChildren()[j]), rhs.getStateForId(rhsProcessedChildIDs[j]));
                 }
                 intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, matcherRule.getLabel(matcher), intersChildren));
 
@@ -919,7 +918,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             if (childID == startStateRepresentativeID) {
                 storeRuleTemp(rule, labelSetID, pos);
             } else {
-                matcherChild2Rule.put(childID, new ImmutablePair(rule, pos));
+                matcherChild2Rule.put(childID, new Pair(rule, pos));
                 if (!isStartState.get(rule.getParent())) {
                     //matcherAuto.addRule(rule);//added rule already
                 } else {
@@ -945,7 +944,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             storedRules = new ArrayList<>();
             labelSetID2StartStateRules.put(labelSetID, storedRules);
         }
-        storedRules.add(new ImmutablePair(rule, pos));
+        storedRules.add(new Pair(rule, pos));
     }
 
     /*private void writeRestrictiveMatcherLog(CpuTimeStopwatch sw) {

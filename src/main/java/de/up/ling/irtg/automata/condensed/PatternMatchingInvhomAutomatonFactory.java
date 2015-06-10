@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -26,8 +27,6 @@ import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Produces pattern matcher automata to compute the inverse of decomposition
@@ -252,7 +251,7 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
 
             List<CondensedRule> ret = new ArrayList<>();
             for (int matcherStateIDUnprocessed : startStateIDs) {
-                Pair<String, State> intersState = new ImmutablePair(getMatcherStateForID(matcherStateIDUnprocessed), rhs.getStateForId(parentState));
+                Pair<String, State> intersState = new Pair(getMatcherStateForID(matcherStateIDUnprocessed), rhs.getStateForId(parentState));
                 int intersStateID = intersectionAutomaton.getIdForState(intersState);
                 if (intersStateID > 0 ) {
                     //int innerIntersStateID = intersectionAutomaton.getIdForState(new ImmutablePair(restrictiveMatcher.getStateForId(matcherStateIDUnprocessed), intersState.getRight()));

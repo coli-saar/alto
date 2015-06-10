@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -16,8 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * A top-down decomposition automaton for the s-graph algebra, using
@@ -322,7 +321,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
             Set<SComponent> with = new HashSet<>();
             with.add(comp);
             
-            return getAllNonemptyComponentDistributionsRecursive(input, new ImmutablePair<>(with, new HashSet<>()));
+            return getAllNonemptyComponentDistributionsRecursive(input, new Pair<>(with, new HashSet<>()));
         }
     }
     
@@ -343,8 +342,8 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
             Set<SComponent> withoutRight = new HashSet<>(decided.getRight());
             withLeft.add(comp);
             withoutRight.add(comp);
-            Pair<Set<SComponent>, Set<SComponent>> newDecidedWith = new ImmutablePair<>(withLeft, withRight);
-            Pair<Set<SComponent>, Set<SComponent>> newDecidedWithout = new ImmutablePair<>(withoutLeft, withoutRight);
+            Pair<Set<SComponent>, Set<SComponent>> newDecidedWith = new Pair<>(withLeft, withRight);
+            Pair<Set<SComponent>, Set<SComponent>> newDecidedWithout = new Pair<>(withoutLeft, withoutRight);
             List<Pair<Set<SComponent>, Set<SComponent>>> ret = getAllNonemptyComponentDistributionsRecursive(newTodo, newDecidedWith);
             ret.addAll(getAllNonemptyComponentDistributionsRecursive(newTodo, newDecidedWithout));
             return ret;

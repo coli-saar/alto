@@ -6,7 +6,7 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.collect.Iterables;
-import de.up.ling.irtg.algebra.Algebra;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * Currently not working.
