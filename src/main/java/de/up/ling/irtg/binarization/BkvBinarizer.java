@@ -243,7 +243,7 @@ public class BkvBinarizer {
         Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
         
         ret.xi = xiFromVartree(commonVariableTree, irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel()));
-        //TODO
+        
         if (debug) {
             System.err.println("\nvartree = " + commonVariableTree);
         }
@@ -695,6 +695,10 @@ public class BkvBinarizer {
 
         return StringTools.join(reprs, "+");
     }
+    
+    /**
+     * 
+     */
     private static Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
     // Collects the set of string representations of the forks in the
