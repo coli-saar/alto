@@ -72,12 +72,12 @@
             <Property name="text" type="java.lang.String" value="Tools"/>
           </Properties>
           <SubComponents>
-            <MenuItem class="javax.swing.JMenuItem" name="jMenuItem5">
+            <MenuItem class="javax.swing.JMenuItem" name="miComputeDecompositionAutomaton">
               <Properties>
                 <Property name="text" type="java.lang.String" value="Compute decomposition automaton ..."/>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jMenuItem5ActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miComputeDecompositionAutomatonActionPerformed"/>
               </Events>
             </MenuItem>
           </SubComponents>
@@ -87,7 +87,7 @@
   </NonVisualComponents>
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="3"/>
-    <Property name="title" type="java.lang.String" value="IRTG GUI"/>
+    <Property name="title" type="java.lang.String" value="Alto GUI"/>
   </Properties>
   <SyntheticProperties>
     <SyntheticProperty name="menuBar" type="java.lang.String" value="jMenuBar1"/>

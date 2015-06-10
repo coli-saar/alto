@@ -11,8 +11,10 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import de.saar.basic.StringTools;
+import de.up.ling.irtg.codec.SgraphAmrOutputCodec;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -525,63 +527,56 @@ public class SGraph{
         return prefix + "_" + (nextGensym++);
     }
 
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("[-a-zA-z0-9]+");
-
-    private static String p(String s) {
-        if (TOKEN_PATTERN.matcher(s).matches()) {
-            return s;
-        } else {
-            return "\"" + s + "\"";
-        }
-    }
-
-    private void toAmrVisit(GraphNode u, Set<GraphNode> visitedNodes, StringBuilder ret) {
-        if (visitedNodes.contains(u)) {
-            ret.append(u.getName());
-        } else {
-            boolean nameShown = false;
-
-            visitedNodes.add(u);
-
-            if (!u.getName().startsWith("_")) { // suppress anonymous nodes
-                ret.append("(");
-                ret.append(p(u.getName()));
-                nameShown = true;
-            }
-
-            if (u.getLabel() != null) {
-                if (nameShown) {
-                    ret.append(" / ");
-                }
-                ret.append(p(u.getLabel()));
-            }
-
-            for (GraphEdge e : graph.outgoingEdgesOf(u)) {
-                ret.append("  :" + e.getLabel() + " ");
-                toAmrVisit(e.getTarget(), visitedNodes, ret);
-            }
-
-            if (nameShown) {
-                ret.append(")");
-            }
-        }
-    }
+//    private static final Pattern TOKEN_PATTERN = Pattern.compile("[-a-zA-z0-9]+");
+//
+//    private static String p(String s) {
+//        if (TOKEN_PATTERN.matcher(s).matches()) {
+//            return s;
+//        } else {
+//            return "\"" + s + "\"";
+//        }
+//    }
+//
+//    private void toAmrVisit(GraphNode u, Set<GraphNode> visitedNodes, StringBuilder ret) {
+//        if (visitedNodes.contains(u)) {
+//            ret.append(u.getName());
+//        } else {
+//            boolean nameShown = false;
+//
+//            visitedNodes.add(u);
+//
+//            if (!u.getName().startsWith("_")) { // suppress anonymous nodes
+//                ret.append("(");
+//                ret.append(p(u.getName()));
+//                nameShown = true;
+//            }
+//
+//            if (u.getLabel() != null) {
+//                if (nameShown) {
+//                    ret.append(" / ");
+//                }
+//                ret.append(p(u.getLabel()));
+//            }
+//
+//            for (GraphEdge e : graph.outgoingEdgesOf(u)) {
+//                ret.append("  :" + e.getLabel() + " ");
+//                toAmrVisit(e.getTarget(), visitedNodes, ret);
+//            }
+//
+//            if (nameShown) {
+//                ret.append(")");
+//            }
+//        }
+//    }
 
     /**
      * Returns a string representation of this s-graph in the format
-     * of the ISI AMR-Bank. Note that this method is currently broken
-     * and will only print a part of the s-graph.
+     * of the ISI AMR-Bank. 
      * 
      * @return 
      */
     public String toIsiAmrString() {
-        final StringBuilder buf = new StringBuilder();
-        final Set<GraphNode> visitedNodes = new HashSet<GraphNode>();
-
-        // TODO - make sure all nodes are shown
-        toAmrVisit(graph.vertexSet().iterator().next(), visitedNodes, buf);
-
-        return buf.toString();
+        return new SgraphAmrOutputCodec().asString(this);
     }
 
     private void appendFullRepr(GraphNode node, Set<String> visitedNodes, StringBuilder buf) {

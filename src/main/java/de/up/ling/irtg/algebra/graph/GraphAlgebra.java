@@ -5,25 +5,22 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Sets;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import java.io.FileInputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import javax.swing.JComponent;
 
@@ -315,22 +312,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      */
     @Override
     public SGraph parseString(String representation) throws ParserException {
-//        System.err.println("parse string: " + representation);
-        
-        try {
-            return IsiAmrParser.parse(new StringReader(representation));
-        } catch (ParseException ex) {
-            throw new ParserException(ex);
-        }
-    }
-    
-    public static SGraph parseStringStatic(String representation) throws ParserException {
-        
-        try {
-            return IsiAmrParser.parse(new StringReader(representation));
-        } catch (ParseException ex) {
-            throw new ParserException(ex);
-        }
+        return new IsiAmrInputCodec().read(representation);
     }
 
     /**
@@ -347,14 +329,14 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         return SGraphDrawer.makeComponent(graph);
     }
 
-    @Override
-    public Map<String, String> getRepresentations(SGraph object) {
-        Map<String, String> ret = super.getRepresentations(object);
-
-        ret.put("ISI-style AMR", object.toIsiAmrString());
-
-        return ret;
-    }
+//    @Override
+//    public Map<String, String> getRepresentations(SGraph object) {
+//        Map<String, String> ret = super.getRepresentations(object);
+//
+//        ret.put("ISI-style AMR", object.toIsiAmrString());
+//
+//        return ret;
+//    }
     
     /**
      * Returns the set of all source names appearing in {@code signature}.
@@ -403,7 +385,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             }*/
         }
         return ret;
-
     }
 
     
@@ -705,209 +686,209 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     private static final String[] testset = new String[]{testString1, testString3, testString5sub1, testString5, testString6};
     private static final int[] testSourceNrs = new int[]{2, 2, 3, 4, 3};
 
-    /**
-     * Main for internal testing purposes.
-     * Computes decomposition algebras and corresponding complete decomposition automata for strings defined in the source code.
-     * Further parameters can be set in the source code.
-     * @param args no arguments
-     * @throws Exception
-     */
-    public static void main(String[] args) throws Exception {
-        
-        boolean testIRTG = false;
-        boolean writeFile = false;
-        
-        
-        if (testIRTG) {
-            InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/testString5sub1_3sources.irtg"));
-            for (int i = 0; i<1000; i++){
-                
-                Map<String, String> map = new HashMap<>();
-                map.put("graph", testString5sub1);
-
-                long startTime = System.currentTimeMillis();
-               
-                //irtg.getInterpretation("graph").
-                TreeAutomaton chart = irtg.parse(map);
-                System.err.println(chart);
-                System.err.println(chart.viterbi());
-               
-                long stopTime = System.currentTimeMillis();
-                long elapsedTime = stopTime - startTime;
-                System.out.println("IRTG parse time is " + elapsedTime + "ms");
-                
-//                System.err.println("chart:\n" + chart);
-            }
-            return;
-        }
-        
-        if (writeFile) {
-            //String failedSet = "{1394, 487, 1101, 996, 1428, 1496, 702, 1553, 1254, 1206, 1163, 738, 1438, 1273, 1018, 1464, 752, 1476, 1074, 1184, 1050, 919, 966, 1328, 1416, 832, 1378, 1181, 1469, 1360, 1156, 1083, 847, 661, 1198, 1429, 1554, 1148, 547, 1540, 1423, 1461, 1418, 1207, 1182, 569, 477, 687, 1435, 1460, 691, 883, 1453, 1458, 1382, 1012, 1069, 622, 1539, 1347, 1291, 1551, 620, 1321, 1045, 1185, 900, 1229, 1520, 1175, 1057, 1406, 1137, 1203, 1121, 1068, 1094, 1052, 1403, 1282, 1383, 1271, 1252, 802, 612, 1104, 1245, 667, 1216, 921, 1341, 1512, 867, 1266, 1170, 1119, 611, 1221, 1389, 1401, 920, 1112, 1343, 1089, 1305, 886, 1223, 1233, 1547, 1358, 529, 1534, 1498, 1146, 916, 1502, 1518, 1142, 1208, 1317, 1220, 963, 849, 1171, 962, 1419, 1374, 1244, 662, 563, 817, 1543, 1392, 1196, 1376, 1532, 1436, 891, 1519, 600, 1209, 775, 1448, 1346, 1525, 1414, 1299, 1147, 1351, 740, 1549, 1516, 1463, 458, 1508, 1381, 1310, 1556, 1313, 351, 1410, 1082, 1215, 590, 1421, 1471, 995, 1397, 1332, 1167, 1307, 1224, 1320, 1342, 1467, 1262, 1548, 736, 1440, 791, 1153, 873, 1177, 1366, 861, 677, 1269, 721, 1493, 1214, 1046, 1492, 1186, 1488, 1517, 1380, 1125, 1412, 917, 1363, 1323, 1350, 1174, 1248, 1225, 880, 1510, 1319, 1139, 1480, 1090, 1155, 947, 1396, 1490, 1300, 1415, 1427, 1297, 1031, 1338, 645, 1481, 707, 1546, 655, 1398, 1511, 1115, 1459, 792, 1086, 927, 1240, 161, 911, 1081, 753, 603, 1432, 1456, 1422, 964, 1053, 1530, 1352, 722, 689, 1356, 711, 528, 1442, 1316, 1281, 1559, 1446, 1293, 1377, 1533, 1336, 1222, 990, 968, 1088, 1085, 1251, 651, 833, 932, 1242, 1437, 1509, 1550, 1286, 1478, 1395, 1495, 850, 1337, 1426, 1409, 1191, 1388, 977, 1306, 804, 1103, 1091, 1558, 974, 1193, 837, 1491, 1150, 1117, 1066, 1189, 1055, 512, 1541, 1044, 1303, 656, 953, 1560, 1362, 1249, 1048, 630, 856, 1040, 1387, 1335, 1212, 1309, 1371, 1523, 1375, 1361, 1288, 1267, 1204, 1477, 1368, 1263, 939, 1487, 1236, 1494, 1314, 1187, 1065, 831, 1312, 1454, 660, 1391, 1538, 1284, 820, 751, 1058, 523, 1239, 1124, 1535, 866, 1093, 1035, 1296, 1330, 1544, 1536, 425, 1199, 1470, 1434, 1130, 806, 918, 1552, 1322, 1238, 907, 870, 1301, 1344, 737, 1499, 1183, 1445, 875, 1290, 1154, 859, 1064, 787, 1327, 901, 1450, 467, 386, 1545, 815, 1127, 1515, 1507, 1036, 1384, 1424, 1059, 717, 1504, 902, 1526, 1108, 1529, 1152, 1276, 1482, 1468, 1272, 1399, 1329, 895, 1261, 1555, 1032, 1275, 762, 1514, 1027, 1024, 672, 1302, 1439, 462, 1506, 1537, 1527, 1443, 686, 1056, 445, 1462, 1022, 1136, 1168, 1339, 1017, 1557, 757, 909, 816, 1311, 1486, 1413, 1047, 1062, 391, 1542, 1260, 1522, 1497, 969, 1379, 1500}";
-            //String[] parts = failedSet.split(",");
-            //System.out.println(parts.length);
-            writeFile();
-            return;
-        }
-        
-
-        String input = testString7;
-        int nrSources = 4;
-        int repetitions = 10;
-        boolean onlyCheckAcceptance = false;
-        boolean doBenchmark = true;
-        boolean cleanVersion = true;
-        boolean showSteps = false;
-        boolean makeRulesTopDown = false;
-        Set<Integer> noFullDecomposition = new HashSet<>();
-        //noFullDecomposition.add(3);
-        //noFullDecomposition.add(4);
-
-        long startTime = System.currentTimeMillis();
-        long stopTime;
-        long elapsedTime;
-
-        if (input.equals(TESTSET)) {
-            runTest(noFullDecomposition);
-        } else {
-            //activate this to create algebra from IRTG:
-            /*InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
-
-             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
-             SGraph graph = alg.parseString(input);*/
-            //activate this to automatically create algebra that has atomic subgraphs:
-            SGraph graph = GraphAlgebra.parseStringStatic(input);
-            GraphAlgebra alg = makeIncompleteDecompositionAlgebra(graph, nrSources);
-
-            stopTime = System.currentTimeMillis();
-            elapsedTime = stopTime - startTime;
-            System.out.println("Setup time for  GraphAlgebra is " + elapsedTime + "ms");
-            startTime = System.currentTimeMillis();
-
-            runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
-
-            if (doBenchmark) {
-                stopTime = System.currentTimeMillis();
-                long elapsedTime0 = stopTime - startTime;
-                startTime = System.currentTimeMillis();
-
-                for (int i = 0; i < repetitions; i++) {
-                    runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
-                }
-
-                stopTime = System.currentTimeMillis();
-                long elapsedTime1 = stopTime - startTime;
-
-                startTime = System.currentTimeMillis();
-
-                for (int i = 0; i < repetitions; i++) {
-                    runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
-                }
-
-                stopTime = System.currentTimeMillis();
-                long elapsedTime2 = stopTime - startTime;
-                System.out.println("Decomposition time for first run is " + elapsedTime0 + "ms");
-                System.out.println("Decomposition time for next " + repetitions + " is " + elapsedTime1 + "ms");
-                System.out.println("Decomposition time for further next " + repetitions + " is " + elapsedTime2 + "ms");
-
-            }
-        }
-
-        //auto.printAllRulesTopDown();
-        //auto.printShortestDecompositionsTopDown();
-        //String res = auto.toStringBottomUp();
-        //System.out.println(res);
-    }
-
-    private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
-        SGraphBRDecompositionAutomatonBottomUp auto = (SGraphBRDecompositionAutomatonBottomUp) alg.decompose(graph, SGraphBRDecompositionAutomatonBottomUp.class);
-        
-        if (onlyCheckAcceptance) {
-            throw new UnsupportedOperationException("Currently not supported!");
-            /*if (instr.doesAccept(alg)) {
-                System.out.println("Accepted!");
-            } else {
-                System.out.println("Not accepted!");
-            }*/
-        } else {
-            if (cleanVersion) {
-                auto.processAllRulesBottomUp(rule-> {});
-            } else {
-                throw new UnsupportedOperationException("Currently not supported!");
-                //instr.iterateThroughRulesBottomUp1(alg, showSteps, makeRulesTopDown);
-            }
-        }
-        
-    }
-
-    private static void runTest(Set<Integer> noFullDecomposition) throws Exception {
-        int nrRepetitions = 10;
-        int warmupRepetitions= 5;
-        int doesAcceptSourcesCount = 4;
-
-        long startTime;
-        long stopTime;
-        long elapsedTime;
-        System.out.println("Starting test with " + nrRepetitions + " repetitions.");
-
-        GraphAlgebra[] alg = new GraphAlgebra[testset.length];
-        GraphAlgebra[] doesAcceptAlg = new GraphAlgebra[testset.length];
-        SGraph[] graph = new SGraph[testset.length];
-        for (int i = 0; i < testset.length; i++) {
-            graph[i] = GraphAlgebra.parseStringStatic(testset[i]);
-            alg[i] = makeIncompleteDecompositionAlgebra(graph[i], testSourceNrs[i]);
-            doesAcceptAlg[i] = makeIncompleteDecompositionAlgebra(graph[i], doesAcceptSourcesCount);
-        }
-
-        //warmup
-        for (int i = 0; i < testset.length; i++) {
-            for (int j = 0; j < warmupRepetitions; j++) {
-                runIteration(graph[i], doesAcceptAlg[i], true, true, false, false);
-            }
-            if (!noFullDecomposition.contains(i)) {
-                for (int j = 0; j < warmupRepetitions; j++) {
-                    runIteration(graph[i], alg[i], false, true, false, false);
-                }
-            }
-        }
-
-        //actual test
-        for (int i = 0; i < testset.length; i++) {
-
-            startTime = System.currentTimeMillis();
-            for (int j = 0; j < nrRepetitions; j++) {
-                runIteration(graph[i], doesAcceptAlg[i], true, true, false, false);
-            }
-            stopTime = System.currentTimeMillis();
-            elapsedTime = stopTime - startTime;
-            System.out.println("doesAccept for i=" + i + "; Time =" + elapsedTime);
-
-            if (!noFullDecomposition.contains(i)) {
-                startTime = System.currentTimeMillis();
-                for (int j = 0; j < nrRepetitions; j++) {
-                    runIteration(graph[i], alg[i], false, true, false, false);
-                }
-                stopTime = System.currentTimeMillis();
-                elapsedTime = stopTime - startTime;
-                System.out.println("iterateThroughRules1 for i=" + i + "; Time =" + elapsedTime);
-            }
-        }
-    }
-
-    private static void writeFile() throws Exception {
-        String filename = "examples/testString5sub1_3SourcesNew.irtg";
-        PrintWriter writer = new PrintWriter(filename);
-        writer.println("interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra");
-        writer.println();
-        
-        GraphAlgebra alg = new GraphAlgebra();
-        SGraph graph = alg.parseString(testString5sub1);
-        writeIncompleteDecompositionIRTG(alg, graph, 4, writer);
-
-       /*for (int i = 0; i < testset.length; i++) {;
-        }*/
-
-        writer.close();
-    }
+//    /**
+//     * Main for internal testing purposes.
+//     * Computes decomposition algebras and corresponding complete decomposition automata for strings defined in the source code.
+//     * Further parameters can be set in the source code.
+//     * @param args no arguments
+//     * @throws Exception
+//     */
+//    public static void main(String[] args) throws Exception {
+//        
+//        boolean testIRTG = false;
+//        boolean writeFile = false;
+//        
+//        
+//        if (testIRTG) {
+//            InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/testString5sub1_3sources.irtg"));
+//            for (int i = 0; i<1000; i++){
+//                
+//                Map<String, String> map = new HashMap<>();
+//                map.put("graph", testString5sub1);
+//
+//                long startTime = System.currentTimeMillis();
+//               
+//                //irtg.getInterpretation("graph").
+//                TreeAutomaton chart = irtg.parse(map);
+//                System.err.println(chart);
+//                System.err.println(chart.viterbi());
+//               
+//                long stopTime = System.currentTimeMillis();
+//                long elapsedTime = stopTime - startTime;
+//                System.out.println("IRTG parse time is " + elapsedTime + "ms");
+//                
+////                System.err.println("chart:\n" + chart);
+//            }
+//            return;
+//        }
+//        
+//        if (writeFile) {
+//            //String failedSet = "{1394, 487, 1101, 996, 1428, 1496, 702, 1553, 1254, 1206, 1163, 738, 1438, 1273, 1018, 1464, 752, 1476, 1074, 1184, 1050, 919, 966, 1328, 1416, 832, 1378, 1181, 1469, 1360, 1156, 1083, 847, 661, 1198, 1429, 1554, 1148, 547, 1540, 1423, 1461, 1418, 1207, 1182, 569, 477, 687, 1435, 1460, 691, 883, 1453, 1458, 1382, 1012, 1069, 622, 1539, 1347, 1291, 1551, 620, 1321, 1045, 1185, 900, 1229, 1520, 1175, 1057, 1406, 1137, 1203, 1121, 1068, 1094, 1052, 1403, 1282, 1383, 1271, 1252, 802, 612, 1104, 1245, 667, 1216, 921, 1341, 1512, 867, 1266, 1170, 1119, 611, 1221, 1389, 1401, 920, 1112, 1343, 1089, 1305, 886, 1223, 1233, 1547, 1358, 529, 1534, 1498, 1146, 916, 1502, 1518, 1142, 1208, 1317, 1220, 963, 849, 1171, 962, 1419, 1374, 1244, 662, 563, 817, 1543, 1392, 1196, 1376, 1532, 1436, 891, 1519, 600, 1209, 775, 1448, 1346, 1525, 1414, 1299, 1147, 1351, 740, 1549, 1516, 1463, 458, 1508, 1381, 1310, 1556, 1313, 351, 1410, 1082, 1215, 590, 1421, 1471, 995, 1397, 1332, 1167, 1307, 1224, 1320, 1342, 1467, 1262, 1548, 736, 1440, 791, 1153, 873, 1177, 1366, 861, 677, 1269, 721, 1493, 1214, 1046, 1492, 1186, 1488, 1517, 1380, 1125, 1412, 917, 1363, 1323, 1350, 1174, 1248, 1225, 880, 1510, 1319, 1139, 1480, 1090, 1155, 947, 1396, 1490, 1300, 1415, 1427, 1297, 1031, 1338, 645, 1481, 707, 1546, 655, 1398, 1511, 1115, 1459, 792, 1086, 927, 1240, 161, 911, 1081, 753, 603, 1432, 1456, 1422, 964, 1053, 1530, 1352, 722, 689, 1356, 711, 528, 1442, 1316, 1281, 1559, 1446, 1293, 1377, 1533, 1336, 1222, 990, 968, 1088, 1085, 1251, 651, 833, 932, 1242, 1437, 1509, 1550, 1286, 1478, 1395, 1495, 850, 1337, 1426, 1409, 1191, 1388, 977, 1306, 804, 1103, 1091, 1558, 974, 1193, 837, 1491, 1150, 1117, 1066, 1189, 1055, 512, 1541, 1044, 1303, 656, 953, 1560, 1362, 1249, 1048, 630, 856, 1040, 1387, 1335, 1212, 1309, 1371, 1523, 1375, 1361, 1288, 1267, 1204, 1477, 1368, 1263, 939, 1487, 1236, 1494, 1314, 1187, 1065, 831, 1312, 1454, 660, 1391, 1538, 1284, 820, 751, 1058, 523, 1239, 1124, 1535, 866, 1093, 1035, 1296, 1330, 1544, 1536, 425, 1199, 1470, 1434, 1130, 806, 918, 1552, 1322, 1238, 907, 870, 1301, 1344, 737, 1499, 1183, 1445, 875, 1290, 1154, 859, 1064, 787, 1327, 901, 1450, 467, 386, 1545, 815, 1127, 1515, 1507, 1036, 1384, 1424, 1059, 717, 1504, 902, 1526, 1108, 1529, 1152, 1276, 1482, 1468, 1272, 1399, 1329, 895, 1261, 1555, 1032, 1275, 762, 1514, 1027, 1024, 672, 1302, 1439, 462, 1506, 1537, 1527, 1443, 686, 1056, 445, 1462, 1022, 1136, 1168, 1339, 1017, 1557, 757, 909, 816, 1311, 1486, 1413, 1047, 1062, 391, 1542, 1260, 1522, 1497, 969, 1379, 1500}";
+//            //String[] parts = failedSet.split(",");
+//            //System.out.println(parts.length);
+//            writeFile();
+//            return;
+//        }
+//        
+//
+//        String input = testString7;
+//        int nrSources = 4;
+//        int repetitions = 10;
+//        boolean onlyCheckAcceptance = false;
+//        boolean doBenchmark = true;
+//        boolean cleanVersion = true;
+//        boolean showSteps = false;
+//        boolean makeRulesTopDown = false;
+//        Set<Integer> noFullDecomposition = new HashSet<>();
+//        //noFullDecomposition.add(3);
+//        //noFullDecomposition.add(4);
+//
+//        long startTime = System.currentTimeMillis();
+//        long stopTime;
+//        long elapsedTime;
+//
+//        if (input.equals(TESTSET)) {
+//            runTest(noFullDecomposition);
+//        } else {
+//            //activate this to create algebra from IRTG:
+//            /*InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
+//
+//             GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
+//             SGraph graph = alg.parseString(input);*/
+//            //activate this to automatically create algebra that has atomic subgraphs:
+//            SGraph graph = new IsiAmrInputCodec().read(input);
+//            GraphAlgebra alg = makeIncompleteDecompositionAlgebra(graph, nrSources);
+//
+//            stopTime = System.currentTimeMillis();
+//            elapsedTime = stopTime - startTime;
+//            System.out.println("Setup time for  GraphAlgebra is " + elapsedTime + "ms");
+//            startTime = System.currentTimeMillis();
+//
+//            runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
+//
+//            if (doBenchmark) {
+//                stopTime = System.currentTimeMillis();
+//                long elapsedTime0 = stopTime - startTime;
+//                startTime = System.currentTimeMillis();
+//
+//                for (int i = 0; i < repetitions; i++) {
+//                    runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
+//                }
+//
+//                stopTime = System.currentTimeMillis();
+//                long elapsedTime1 = stopTime - startTime;
+//
+//                startTime = System.currentTimeMillis();
+//
+//                for (int i = 0; i < repetitions; i++) {
+//                    runIteration(graph, alg, onlyCheckAcceptance, cleanVersion, showSteps, makeRulesTopDown);
+//                }
+//
+//                stopTime = System.currentTimeMillis();
+//                long elapsedTime2 = stopTime - startTime;
+//                System.out.println("Decomposition time for first run is " + elapsedTime0 + "ms");
+//                System.out.println("Decomposition time for next " + repetitions + " is " + elapsedTime1 + "ms");
+//                System.out.println("Decomposition time for further next " + repetitions + " is " + elapsedTime2 + "ms");
+//
+//            }
+//        }
+//
+//        //auto.printAllRulesTopDown();
+//        //auto.printShortestDecompositionsTopDown();
+//        //String res = auto.toStringBottomUp();
+//        //System.out.println(res);
+//    }
+//
+//    private static void runIteration(SGraph graph, GraphAlgebra alg, boolean onlyCheckAcceptance, boolean cleanVersion, boolean showSteps, boolean makeRulesTopDown) {
+//        SGraphBRDecompositionAutomatonBottomUp auto = (SGraphBRDecompositionAutomatonBottomUp) alg.decompose(graph, SGraphBRDecompositionAutomatonBottomUp.class);
+//        
+//        if (onlyCheckAcceptance) {
+//            throw new UnsupportedOperationException("Currently not supported!");
+//            /*if (instr.doesAccept(alg)) {
+//                System.out.println("Accepted!");
+//            } else {
+//                System.out.println("Not accepted!");
+//            }*/
+//        } else {
+//            if (cleanVersion) {
+//                auto.processAllRulesBottomUp(rule-> {});
+//            } else {
+//                throw new UnsupportedOperationException("Currently not supported!");
+//                //instr.iterateThroughRulesBottomUp1(alg, showSteps, makeRulesTopDown);
+//            }
+//        }
+//        
+//    }
+//
+//    private static void runTest(Set<Integer> noFullDecomposition) throws Exception {
+//        int nrRepetitions = 10;
+//        int warmupRepetitions= 5;
+//        int doesAcceptSourcesCount = 4;
+//
+//        long startTime;
+//        long stopTime;
+//        long elapsedTime;
+//        System.out.println("Starting test with " + nrRepetitions + " repetitions.");
+//
+//        GraphAlgebra[] alg = new GraphAlgebra[testset.length];
+//        GraphAlgebra[] doesAcceptAlg = new GraphAlgebra[testset.length];
+//        SGraph[] graph = new SGraph[testset.length];
+//        for (int i = 0; i < testset.length; i++) {
+//            graph[i] = new IsiAmrInputCodec().read(testset[i]);
+//            alg[i] = makeIncompleteDecompositionAlgebra(graph[i], testSourceNrs[i]);
+//            doesAcceptAlg[i] = makeIncompleteDecompositionAlgebra(graph[i], doesAcceptSourcesCount);
+//        }
+//
+//        //warmup
+//        for (int i = 0; i < testset.length; i++) {
+//            for (int j = 0; j < warmupRepetitions; j++) {
+//                runIteration(graph[i], doesAcceptAlg[i], true, true, false, false);
+//            }
+//            if (!noFullDecomposition.contains(i)) {
+//                for (int j = 0; j < warmupRepetitions; j++) {
+//                    runIteration(graph[i], alg[i], false, true, false, false);
+//                }
+//            }
+//        }
+//
+//        //actual test
+//        for (int i = 0; i < testset.length; i++) {
+//
+//            startTime = System.currentTimeMillis();
+//            for (int j = 0; j < nrRepetitions; j++) {
+//                runIteration(graph[i], doesAcceptAlg[i], true, true, false, false);
+//            }
+//            stopTime = System.currentTimeMillis();
+//            elapsedTime = stopTime - startTime;
+//            System.out.println("doesAccept for i=" + i + "; Time =" + elapsedTime);
+//
+//            if (!noFullDecomposition.contains(i)) {
+//                startTime = System.currentTimeMillis();
+//                for (int j = 0; j < nrRepetitions; j++) {
+//                    runIteration(graph[i], alg[i], false, true, false, false);
+//                }
+//                stopTime = System.currentTimeMillis();
+//                elapsedTime = stopTime - startTime;
+//                System.out.println("iterateThroughRules1 for i=" + i + "; Time =" + elapsedTime);
+//            }
+//        }
+//    }
+//
+//    private static void writeFile() throws Exception {
+//        String filename = "examples/testString5sub1_3SourcesNew.irtg";
+//        PrintWriter writer = new PrintWriter(filename);
+//        writer.println("interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra");
+//        writer.println();
+//        
+//        GraphAlgebra alg = new GraphAlgebra();
+//        SGraph graph = alg.parseString(testString5sub1);
+//        writeIncompleteDecompositionIRTG(alg, graph, 4, writer);
+//
+//       /*for (int i = 0; i < testset.length; i++) {;
+//        }*/
+//
+//        writer.close();
+//    }
     
     
 }

@@ -58,8 +58,8 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
             Tree<String> ret = TreeParser.parse(representation);
             signature.addAllSymbols(ret);
             return ret;
-        } catch (ParseException ex) {
-            throw new ParserException(ex);
+        } catch (Exception e) {
+            throw new ParserException(e);
         }
     }
 }

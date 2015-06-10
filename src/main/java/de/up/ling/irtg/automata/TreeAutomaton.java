@@ -838,6 +838,45 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Tree<String> viterbi() {
+        return getSignature().resolve(viterbiRaw());
+//        // run Viterbi algorithm bottom-up, saving rules as backpointers
+//
+//        Int2ObjectMap<Pair<Double, Rule>> map
+//                = evaluateInSemiring2(new ViterbiWithBackpointerSemiring(),
+//                        rule -> new Pair(rule.getWeight(), rule));
+//
+//        // find final state with highest weight
+//        int bestFinalState = 0;
+//        double weightBestFinalState = Double.POSITIVE_INFINITY;
+//
+//        for (int s : getFinalStates()) {
+//            Pair<Double, Rule> result = map.get(s);
+//
+//            // ignore final states that (for some crazy reason) can't
+//            // be expanded
+//            if (result.right != null) {
+//                if (map.get(s).left < weightBestFinalState) {
+//                    bestFinalState = s;
+//                    weightBestFinalState = map.get(s).left;
+//                }
+//            }
+//        }
+//        
+//        //getSignature().resolveSymbolId(
+//
+//        // extract best tree from backpointers
+//        return extractTreeFromViterbi(bestFinalState, map);
+    }
+    
+    /**
+     * Computes the highest-weighted tree in the language of this (weighted)
+     * automaton, using the Viterbi algorithm. If the language is empty, return
+     * null. Unlike {@link #viterbi() }, this method returns a tree whose nodes
+     * are labeled with label IDs, as opposed to the labels (Strings) themselves.
+     *
+     * @return
+     */
+    public Tree<Integer> viterbiRaw() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
 
         Int2ObjectMap<Pair<Double, Rule>> map
@@ -860,28 +899,27 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 }
             }
         }
+        
+        //getSignature().resolveSymbolId(
 
         // extract best tree from backpointers
         return extractTreeFromViterbi(bestFinalState, map);
     }
+    
 
-    private Tree<String> extractTreeFromViterbi(int state, Int2ObjectMap<Pair<Double, Rule>> map) {
-//        System.err.println("et " + getStateForId(state));
-
+    private Tree<Integer> extractTreeFromViterbi(int state, Int2ObjectMap<Pair<Double, Rule>> map) {
         if (map.containsKey(state)) {
 //            System.err.println("bp: " + map.get(state));
 //            System.err.println(" = " + map.get(state).right.toString(this));
 
             Rule backpointer = map.get(state).right;
-            List<Tree<String>> childTrees = new ArrayList<Tree<String>>();
+            List<Tree<Integer>> childTrees = new ArrayList<>();
 
             for (int child : backpointer.getChildren()) {
                 childTrees.add(extractTreeFromViterbi(child, map));
             }
 
-            Tree<String> ret = Tree.create(getSignature().resolveSymbolId(backpointer.getLabel()), childTrees);
-//            System.err.println(getStateForId(state) + " -> " + ret);
-            return ret;
+            return Tree.create(backpointer.getLabel(), childTrees);
         }
 
 //        System.err.println(getStateForId(state) + " -> null");

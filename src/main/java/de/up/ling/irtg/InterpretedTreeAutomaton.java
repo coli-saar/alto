@@ -12,17 +12,16 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.WeightedTree;
-import de.up.ling.irtg.binarization.BkvBinarizer;
-import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.ParseException;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
+import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -35,6 +34,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import org.apache.commons.math3.special.Gamma;
 
 /**
@@ -55,6 +56,7 @@ import org.apache.commons.math3.special.Gamma;
  * @author koller
  */
 public class InterpretedTreeAutomaton implements Serializable {
+
     protected TreeAutomaton<String> automaton;
     protected Map<String, Interpretation> interpretations;
     protected boolean debug = false;
@@ -207,9 +209,6 @@ public class InterpretedTreeAutomaton implements Serializable {
 
 //            Logging.get().fine(() -> "Input: " + input);
             TreeAutomaton interpParse = interp.parse(input);
-            //System.err.println(interpParse);
-//            Logging.get().finest(() -> "invhom(decomp): " + interpParse);
-
             ret = ret.intersect(interpParse);
 
 //            Logging.get().finest(() -> ("Intersect: " + ret));
@@ -690,9 +689,74 @@ public class InterpretedTreeAutomaton implements Serializable {
         return Corpus.readCorpus(reader, this);
     }
 
-    public InterpretedTreeAutomaton binarize(Map<String, RegularSeed> regularSeeds, Map<String, Algebra> newAlgebras) {
-        BkvBinarizer binarizer = new BkvBinarizer(regularSeeds);
-        return null;
+    /**
+     * Reads all inputs for this IRTG from a corpus and parses them. 
+     * This behaves like {@link #bulkParse(de.up.ling.irtg.corpus.Corpus, java.util.function.Predicate, java.util.function.Consumer, de.up.ling.irtg.util.ProgressListener) }
+     * with an instance filter that always returns true.
+     * @param input
+     * @param corpusConsumer
+     * @param listener 
+     */
+    public void bulkParse(Corpus input, Consumer<Instance> corpusConsumer, ProgressListener listener) {
+        bulkParse(input, null, corpusConsumer, listener);
+    }
+
+    /**
+     * Reads inputs for this IRTG from a corpus and parses them. The input
+     * corpus must be suitable for this IRTG (i.e., use a subset of the
+     * interpretations it defines). If the corpus has charts attached, these
+     * will be used; otherwise, each instance for which the "filter" is true is parsed. We then compute the
+     * best derivation tree from each chart using Viterbi, and map it to all
+     * interpretations of the IRTG. This yields a "completed" {@link Instance}
+     * (consisting of the derivation tree and values on all interpretations),
+     * which we write to the given corpusConsumer (e.g., a
+     * {@link CorpusWriter}). If a non-null value is passed as the "listener",
+     * it is notified after each instance has been written.<p>
+     * 
+     * Note that the output corpus may contain fewer instances than the
+     * input corpus, if the "filter" returned false on some of the
+     * input instances.
+     *
+     * @param input
+     * @param filter
+     * @param corpusConsumer
+     * @param listener
+     */
+    public void bulkParse(Corpus input, Predicate<Instance> filter, Consumer<Instance> corpusConsumer, ProgressListener listener) {
+        int N = input.getNumberOfInstances();
+        int i = 0;
+
+        if (listener != null) {
+            listener.accept(i++, N, null);
+        }
+
+        for (Instance inst : input) {
+            if ((filter == null) || filter.test(inst)) {
+                CpuTimeStopwatch sw = new CpuTimeStopwatch();
+                sw.record(0);
+
+                TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
+                Tree<Integer> t = chart.viterbiRaw();
+                Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t);
+
+                Map<String, Object> values = new HashMap<>();
+                for (String intp : getInterpretations().keySet()) {
+                    values.put(intp, getInterpretation(intp).interpret(tWithStrings));
+                }
+
+                sw.record(1);
+
+                Instance parsedInst = new Instance();
+                parsedInst.setInputObjects(values);
+                parsedInst.setDerivationTree(t);
+                parsedInst.setComment("parse_time=" + sw.getTimeBefore(1) / 1000000 + "ms");
+                corpusConsumer.accept(parsedInst);
+
+                if (listener != null) {
+                    listener.accept(i++, N, null);
+                }
+            }
+        }
     }
 
     /**

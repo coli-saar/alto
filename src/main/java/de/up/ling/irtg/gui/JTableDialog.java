@@ -155,11 +155,11 @@ public class JTableDialog<E> extends javax.swing.JFrame {
     }//GEN-LAST:event_miCloseWindowActionPerformed
 
     private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
-        GuiMain.closeAllWindows();
+        Alto.closeAllWindows();
     }//GEN-LAST:event_miCloseAllWindowsActionPerformed
 
     private void miQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miQuitActionPerformed
-        GuiMain.quit();
+        Alto.quit();
     }//GEN-LAST:event_miQuitActionPerformed
     // Variables declaration - do not modify//GEN-BEGIN:variables
     protected javax.swing.JMenu fileMenu;

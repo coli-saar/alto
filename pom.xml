@@ -3,10 +3,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.up.ling</groupId>
-  <artifactId>irtg</artifactId>
+  <artifactId>alto</artifactId>
   <packaging>jar</packaging>
   <version>1.1-SNAPSHOT</version>
-  <name>irtg</name>
+  <name>alto</name>
   <url>http://maven.apache.org</url>
 
   <properties>
@@ -21,7 +21,7 @@
     <dependency>
       <groupId>de.saar.coli</groupId>
       <artifactId>basics</artifactId>
-      <version>[1.2.34,)</version>
+      <version>1.2.35</version>
     </dependency>
 
     <dependency>
@@ -90,19 +90,26 @@
       <version>${antlr.version}</version>
     </dependency>
 
-        <dependency>
-        <groupId>jgraph</groupId>
-        <artifactId>jgraph</artifactId>
-        <version>5.13.0.0</version>
-        </dependency>
-
-<!--
     <dependency>
-      <groupId>org.tinyjee.jgraphx</groupId>
-      <artifactId>jgraphx</artifactId>
-      <version>2.0.0.1</version>
+      <groupId>jgraph</groupId>
+      <artifactId>jgraph</artifactId>
+      <version>5.13.0.0</version>
     </dependency>
--->
+
+    <dependency>
+      <groupId>com.ezware.oxbow</groupId>
+      <artifactId>task-dialog</artifactId>
+      <version>1.3.5</version>
+    </dependency>
+
+    <dependency>
+	<groupId>com.miglayout</groupId>
+	<artifactId>miglayout</artifactId>
+	<version>3.7.4</version>
+    </dependency>
+
+  
+  
 
 
     <dependency>
@@ -124,6 +131,9 @@
       <artifactId>swing-layout</artifactId>
       <version>1.0.3</version>
     </dependency>
+    
+    
+    
     <dependency>
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-lang3</artifactId>
@@ -356,7 +366,7 @@
             <configuration>
               <archive>
                 <manifest>
-                  <mainClass>de.up.ling.irtg.gui.GuiMain</mainClass>
+                  <mainClass>de.up.ling.irtg.gui.Alto</mainClass>
                 </manifest>
               </archive>
               <descriptorRefs>
@@ -407,23 +417,34 @@
 
 
   <repositories>
-      <repository>
-          <snapshots>
-            <enabled>false</enabled>
-          </snapshots>
-          <id>tcl-artifactory-release</id>
-          <name>tcl-artifactory-release</name>
-          <url>http://tcl.ling.uni-potsdam.de/artifactory/release</url>
-        </repository>
-        <repository>
-          <snapshots>
-            <enabled>true</enabled>
-          </snapshots>
-          <id>tcl-artifactory-snapshots</id>
-          <name>tcl-artifactory-snapshots</name>
-          <url>http://tcl.ling.uni-potsdam.de/artifactory/snapshots</url>
-        </repository>
+    <repository>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <id>tcl-artifactory-release</id>
+      <name>tcl-artifactory-release</name>
+      <url>http://tcl.ling.uni-potsdam.de/artifactory/release</url>
+    </repository>
+    
+    <repository>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <id>tcl-artifactory-snapshots</id>
+      <name>tcl-artifactory-snapshots</name>
+      <url>http://tcl.ling.uni-potsdam.de/artifactory/snapshots</url>
+    </repository>
 
+    <repository>
+      <id>tcl-artifactory-external</id>
+      <name>tcl-artifactory-external</name>
+      <url>http://tcl.ling.uni-potsdam.de/artifactory/external</url>
+    </repository>
+
+
+    
+
+    <!-- legacy repositories -->
 
     <repository>
       <id>tcl-releases</id>
@@ -468,41 +489,3 @@
   </distributionManagement>
 </project>
 
-
-
-
-
-
-<!--
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.3</version>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-            <configuration>
-              <minimizeJar>true</minimizeJar>
-              <filters>
-                <filter>
-                  <artifact>*:*</artifact>
-                  <excludes>
-                    <exclude>META-INF/*.SF</exclude>
-                    <exclude>META-INF/*.DSA</exclude>
-                    <exclude>META-INF/*.RSA</exclude>                                       
-                  </excludes>
-                </filter>
-              </filters>
-              <transformers>
-                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                  <mainClass>de.up.ling.irtg.gui.GuiMain</mainClass>
-                </transformer>
-              </transformers>
-            </configuration>
-          </execution>
-        </executions>
-      </plugin>
--->

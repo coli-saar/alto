@@ -60,10 +60,12 @@ import org.simplericity.macify.eawt.DefaultApplication;
  *
  * @author koller
  */
-public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
+public class Alto extends javax.swing.JFrame implements ApplicationListener {
+    // Class is named Alto because as of MacOS Mavericks, that determines
+    // the name in the menu bar.
 
     private static File previousDirectory;
-    private static GuiMain app;
+    private static Alto app;
     private static ExecutorService executorService = Executors.newFixedThreadPool(1);
 
     static {
@@ -73,11 +75,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     /**
      * Creates new form GuiMain
      */
-    public GuiMain() {
+    public Alto() {
         initComponents();
         jMenuBar1.add(new WindowMenu(this));
 
-        if (!GuiMain.isMac()) {
+        if (!Alto.isMac()) {
             miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
             miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
             miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
@@ -85,7 +87,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    public static GuiMain getApplication() {
+    public static Alto getApplication() {
         return app;
     }
 
@@ -114,10 +116,10 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
-        jMenuItem5 = new javax.swing.JMenuItem();
+        miComputeDecompositionAutomaton = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setTitle("IRTG GUI");
+        setTitle("Alto GUI");
 
         log.setEditable(false);
         log.setColumns(20);
@@ -176,13 +178,13 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         jMenu2.setText("Tools");
 
-        jMenuItem5.setText("Compute decomposition automaton ...");
-        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
+        miComputeDecompositionAutomaton.setText("Compute decomposition automaton ...");
+        miComputeDecompositionAutomaton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem5ActionPerformed(evt);
+                miComputeDecompositionAutomatonActionPerformed(evt);
             }
         });
-        jMenu2.add(jMenuItem5);
+        jMenu2.add(miComputeDecompositionAutomaton);
 
         jMenuBar1.add(jMenu2);
 
@@ -224,9 +226,9 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         closeAllWindows();
     }//GEN-LAST:event_miCloseAllWindowsActionPerformed
 
-    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
+    private void miComputeDecompositionAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miComputeDecompositionAutomatonActionPerformed
         showDecompositionDialog(this);
-    }//GEN-LAST:event_jMenuItem5ActionPerformed
+    }//GEN-LAST:event_miComputeDecompositionAutomatonActionPerformed
 
     private void miLoadTemplateIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadTemplateIrtgActionPerformed
         loadTemplateIrtg(this);
@@ -242,12 +244,23 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
     public static void closeAllWindows() {
         for (Window window : WindowList.getWindows(false, false)) {
-            if (!(window instanceof GuiMain)) {
+            if (!(window instanceof Alto)) {
                 window.setVisible(false);
             }
         }
     }
 
+    /**
+     * Allows the user to select a file name for saving a file. If the selected
+     * file already exists, the user is queried for whether the file should be
+     * overwritten. The method returns a File object for the selected file if
+     * the file does not exist, or if it exists and is to be overwritten.
+     * Otherwise it returns null.
+     *
+     * @param filter
+     * @param parent
+     * @return
+     */
     public static File chooseFileForSaving(FileFilter filter, Component parent) {
         JFileChooser fc = new JFileChooser(previousDirectory);
         fc.setFileFilter(filter);
@@ -256,6 +269,17 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         if (returnVal == JFileChooser.APPROVE_OPTION) {
             File selected = fc.getSelectedFile();
+
+            if (selected.exists()) {
+                int response = JOptionPane.showConfirmDialog(parent, "The file " + selected.getName() + " already exists. Do you want to replace the existing file?",
+                        "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+
+                if (response != JOptionPane.YES_OPTION) {
+                    log("Canceled writing to file " + selected.getName());
+                    return null;
+                }
+            }
+
             previousDirectory = selected.getParentFile();
             return selected;
         } else {
@@ -268,16 +292,6 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
         try {
             if (file != null) {
-                if (file.exists()) {
-                    int response = JOptionPane.showConfirmDialog(parent, "The file " + file.getName() + " already exists. Do you want to replace the existing file?",
-                            "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
-
-                    if (response != JOptionPane.YES_OPTION) {
-                        log("Canceled writing " + objectDescription + " to file " + file.getName());
-                        return false;
-                    }
-                }
-
                 long start = System.nanoTime();
 
                 PrintWriter w = new PrintWriter(new FileWriter(file));
@@ -326,7 +340,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 return corpus;
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while reading the corpus " + file.getName(), e);
+            showError(new Exception("An error occurred while reading the corpus " + file.getName(), e));
         }
 
         return null;
@@ -343,7 +357,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 log("Read maximum entropy weights from " + file.getName() + ", " + Util.formatTimeSince(start));
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while reading the maxent weights file " + file.getName(), e);
+            showError(new Exception("An error occurred while reading the maxent weights file " + file.getName(), e));
         }
     }
 
@@ -354,6 +368,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
             try {
                 long start = System.nanoTime();
                 final Corpus corpus = irtg.readCorpus(new FileReader(file));
+                corpus.setSource(file.getAbsolutePath());
                 log("Read unannotated corpus from " + file.getName() + ", " + Util.formatTimeSince(start));
 
                 File chartsFile = chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);
@@ -378,7 +393,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                             });
                 }
             } catch (Exception e) {
-                showError(parent, "An error occurred while reading the corpus " + file.getName(), e);
+                showError(new Exception("An error occurred while reading the corpus " + file.getName(), e));
             }
         }
     }
@@ -474,7 +489,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 }
             }
         } catch (Exception e) {
-            showError(parent, "An error occurred while attempting to parse " + file.getName(), e);
+            showError(new Exception("An error occurred while attempting to parse " + file.getName(), e));
         }
     }
 
@@ -500,7 +515,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                     jta.pack();
                     jta.setVisible(true);
                 } catch (Exception ex) {
-                    showError(parent, "An error occurred while instantiating the Template IRTG", ex);
+                    showError(new Exception("An error occurred while instantiating the Template IRTG", ex));
                 }
             }
         });
@@ -534,7 +549,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void log(final String log) {
-        final GuiMain x = app;
+        final Alto x = app;
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -556,16 +571,22 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
      * @param args the command line arguments
      */
     public static void main(String args[]) throws Exception {
+        // enable Mac integration
         System.setProperty("apple.laf.useScreenMenuBar", "true");
         System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
+        // set uncaught exception handler
+        Thread.setDefaultUncaughtExceptionHandler((thread, exception) -> {
+            GuiUtils.showError(exception);
+        });
+
         // tooltips stay visible forever
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
 
-        final GuiMain guiMain = new GuiMain();
-        GuiMain.app = guiMain;
+        final Alto guiMain = new Alto();
+        Alto.app = guiMain;
 
         Application application = new DefaultApplication();
         application.addApplicationListener(guiMain);
@@ -602,11 +623,11 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JMenuItem jMenuItem5;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
     private javax.swing.JTextArea log;
     private javax.swing.JMenuItem miCloseAllWindows;
+    private javax.swing.JMenuItem miComputeDecompositionAutomaton;
     private javax.swing.JMenuItem miLoadAutomaton;
     private javax.swing.JMenuItem miLoadIrtg;
     private javax.swing.JMenuItem miLoadTemplateIrtg;
