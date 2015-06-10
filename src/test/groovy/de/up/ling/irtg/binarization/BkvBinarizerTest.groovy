@@ -15,6 +15,7 @@ import de.up.ling.tree.*
 import de.up.ling.irtg.*
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.automata.*
+import de.up.ling.irtg.codec.bolinas_hrg.BolinasHrgInputCodec
 import de.up.ling.irtg.algebra.*
 import de.up.ling.irtg.signature.*
 import de.up.ling.irtg.util.*
@@ -233,6 +234,50 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         BkvBinarizer bin = new BkvBinarizer(["tree": tis, "string":sis])
         
         InterpretedTreeAutomaton b = bin.binarize(irtg, ["string": sa, "tree":ta])
+    }
+    
+    @Test
+    public void testBinarizationWithUnaryRules()
+    {
+        String hrg = '''T -> (.want :arg0 (x. :E$) :arg1 (. :T$ x.));
+T -> (. :believe' :arg0 (. :girl') :arg1 (. :T$ .*)); 
+T -> (.want :arg1 .*);
+E -> (. :boy');
+T -> (.want :arg0 (x. :E$) :arg1 (. :X$ x.));
+X -> (. :believe' :arg0 (x. :girl') :arg1 (. :Y$ x. .*)); 
+Y -> (.want :arg0 .*2 :arg1 .*1);
+        ''';
+        BolinasHrgInputCodec ic = new BolinasHrgInputCodec();
+        InterpretedTreeAutomaton irta = ic.read(hrg);
+        
+        int p = 0;
+        Iterator<Rule> it = irta.getAutomaton().getRuleIterator();
+        while(it.hasNext())
+        {
+            it.next();
+            ++p;
+        }
+        assertEquals(p,7);
+        
+        Algebra al = irta.getInterpretation("Graph").getAlgebra();
+        assertFalse(al == null);
+        
+        RegularSeed rs = IdentitySeed.fromInterp(irta, "Graph");
+        assertFalse(rs == null);
+        
+        BkvBinarizer bin = new BkvBinarizer(["Graph": rs]);
+        assertFalse(bin == null);
+        
+        InterpretedTreeAutomaton result = bin.binarize(irta, ["Graph": al])
+        
+        p = 0;
+        it = result.getAutomaton().getRuleIterator();
+        while(it.hasNext())
+        {
+            it.next();
+            ++p;
+        }
+        assertEquals(p,7);
     }
     
     @Test
