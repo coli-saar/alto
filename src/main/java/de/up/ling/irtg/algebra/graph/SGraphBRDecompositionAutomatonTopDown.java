@@ -6,9 +6,9 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.util.AverageLogger;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
@@ -133,11 +133,10 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
         if (rulesHere != null) {
             List<Rule> rules = rulesHere.get(labelId);
             if (rules != null) {
-                SGraphParsingEvaluation.cachedAnswers+=rules.size();
                 switch (signature.getArity(labelId)) {
-                    case 0: SGraphParsingEvaluation.averageLogger.increaseValue("constants recognised"); break;
-                    case 1: SGraphParsingEvaluation.averageLogger.increaseValue("unaries recognised"); break;
-                    case 2: SGraphParsingEvaluation.averageLogger.increaseValue("merges recognised"); break;
+                    case 0: AverageLogger.increaseValue("constants recognised"); break;
+                    case 1: AverageLogger.increaseValue("unaries recognised"); break;
+                    case 2: AverageLogger.increaseValue("merges recognised"); break;
                 }
                 return rules;
             }
@@ -149,7 +148,7 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
         List<Rule> rules = new ArrayList<>();
         
         if (label.equals(GraphAlgebra.OP_MERGE)) {
-            SGraphParsingEvaluation.averageLogger.increaseValue("merge tests");
+            AverageLogger.increaseValue("merge tests");
             Set<SComponent> parentComponents = parent.getComponents();
             
             getAllNonemptyComponentDistributions(parentComponents).forEach(pair -> {
@@ -158,15 +157,15 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
                 rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{child0, child1}));
                 rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{child1, child0}));
                 if (!child0.isConnected() || !child1.isConnected()) {
-                    SGraphParsingEvaluation.averageLogger.increaseValueBy("total disconnected merge rules", 2);
+                    AverageLogger.increaseValueBy("total disconnected merge rules", 2);
                 }
             });
-            SGraphParsingEvaluation.averageLogger.increaseValueBy("total merge rules", rules.size());
+            AverageLogger.increaseValueBy("total merge rules", rules.size());
             
             
             
         } else if (label.startsWith(GraphAlgebra.OP_COMBINEDMERGE)) {
-            SGraphParsingEvaluation.averageLogger.increaseValue("comibed rename-merge tests");
+            AverageLogger.increaseValue("comibed rename-merge tests");
             List<SComponentRepresentation[]> allSplits = new ArrayList<>();
             Set<SComponent> parentComponents = parent.getComponents();
             
@@ -188,11 +187,11 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
                 
             }
         } else if (label.startsWith(GraphAlgebra.OP_FORGET)) {
-            SGraphParsingEvaluation.averageLogger.increaseValue("forget tests");
+            AverageLogger.increaseValue("forget tests");
             int forgottenSource = completeGraphInfo.getlabelSources(labelId)[0];
             
             if (parent.getSourceNode(forgottenSource) == -1) {
-                SGraphParsingEvaluation.averageLogger.increaseValue("successfull forget tests");
+                AverageLogger.increaseValue("successfull forget tests");
                 for (SComponent comp : parent.getComponents()) {
                     Int2ObjectMap<SComponent> nonsplitChildren = comp.getAllNonSplits(storedComponents, completeGraphInfo);
                     for (int v : nonsplitChildren.keySet()) {
@@ -209,30 +208,29 @@ public class SGraphBRDecompositionAutomatonTopDown extends TreeAutomaton<SCompon
                         }
                     }
                 }
-                SGraphParsingEvaluation.averageLogger.increaseValueBy("total forget rules", rules.size());
+                AverageLogger.increaseValueBy("total forget rules", rules.size());
             }
             //else just dont add a rule
             
             
         } else if (label.startsWith(GraphAlgebra.OP_RENAME)) {
-            SGraphParsingEvaluation.averageLogger.increaseValue("rename tests");
+            AverageLogger.increaseValue("rename tests");
             int[] renamedSources = completeGraphInfo.getlabelSources(labelId);
             SComponentRepresentation child = parent.renameReverse(renamedSources[0], renamedSources[1]);
             if (child != null) {
-                SGraphParsingEvaluation.averageLogger.increaseValue("successfull rename tests");
+                AverageLogger.increaseValue("successfull rename tests");
                 rules.add(makeRule(parentState, labelId, new SComponentRepresentation[]{child}));
             }
             
             
         } else {
-            SGraphParsingEvaluation.averageLogger.increaseValue("constant tests");
+            AverageLogger.increaseValue("constant tests");
             if (storedConstants[labelId].contains(parent)) {
-            SGraphParsingEvaluation.averageLogger.increaseValue("constants found");
+            AverageLogger.increaseValue("constants found");
                 rules.add(makeRule(parentState, labelId, new SComponentRepresentation[0]));
             }
         }
         
-        SGraphParsingEvaluation.newAnswers+= rules.size();
         return memoize(rules, labelId, parentState);
         
     }

@@ -18,10 +18,10 @@ import java.util.function.Consumer;
  */
 public class CorpusWriter implements Consumer<Instance> {
 
-    private Writer writer;
-    private boolean isAnnotated;
-    private InterpretedTreeAutomaton irtg;
-    private List<String> interpretationsInOrder;
+    private final Writer writer;
+    private final boolean isAnnotated;
+    private final InterpretedTreeAutomaton irtg;
+    private final List<String> interpretationsInOrder;
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, boolean isAnnotated, String comment, Writer writer) throws IOException {
         this.writer = writer;
@@ -49,9 +49,10 @@ public class CorpusWriter implements Consumer<Instance> {
 
         writer.write("\n");
     }
+    
 
     private String makeHeader(String comment) {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder buf = new StringBuilder();
 
         buf.append("# IRTG " + (isAnnotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
         buf.append("# \n");

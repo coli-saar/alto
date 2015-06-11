@@ -2960,7 +2960,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         Int2ObjectMap<IntList> labelsToIterate = new Int2ObjectOpenHashMap<>(symbols);
         labelsToIterate.remove(0);//already checked constants above
 
-        BinaryPartnerFinder bpFinder = makeNewBinaryPartnerFinder(this);
+        BinaryPartnerFinder bpFinder = makeNewBinaryPartnerFinder();
 
         for (int i = 0; i < agenda.size(); i++) {
             int a = agenda.get(i);
@@ -3034,7 +3034,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
-    public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
+    public BinaryPartnerFinder makeNewBinaryPartnerFinder() {
         return new BinaryPartnerFinder.DummyBinaryPartnerFinder();
     }
 }

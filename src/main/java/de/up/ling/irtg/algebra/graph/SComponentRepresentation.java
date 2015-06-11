@@ -6,6 +6,7 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.script.SGraphParsingEvaluation;
+import de.up.ling.irtg.util.AverageLogger;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Arrays;
@@ -80,9 +81,9 @@ public class SComponentRepresentation {
             System.out.println(e.toString());
         }
         if (isConnected()) {
-            SGraphParsingEvaluation.averageLogger.increaseValue("Connected states");
+            AverageLogger.increaseValue("Connected states");
         } else {
-            SGraphParsingEvaluation.averageLogger.increaseValue("Unconnected states");
+            AverageLogger.increaseValue("Unconnected states");
         }
     }
     

@@ -6,6 +6,7 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.script.SGraphParsingEvaluation;
+import de.up.ling.irtg.util.AverageLogger;
 import org.jgrapht.DirectedGraph;
 import java.util.Set;
 import java.util.HashSet;
@@ -512,7 +513,7 @@ public class BoundaryRepresentation {
             //ParseTester.averageLogger.increaseValue("commonNodeWithNoCommonSource");//.4
             return false;
         } else if (hasSourcesInsideOther(other) || other.hasSourcesInsideOther(this)) {
-            SGraphParsingEvaluation.averageLogger.increaseValue("notDisjoint");//0
+            AverageLogger.increaseValue("notDisjoint");//0
             return false;
         } else {
             return true;

@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -317,5 +318,10 @@ public class Corpus implements Iterable<Instance> {
         }
 
         return ret;
+    }
+    
+    
+    public void sort(Comparator<Instance> comparator) {
+        instances.sort(comparator);
     }
 }

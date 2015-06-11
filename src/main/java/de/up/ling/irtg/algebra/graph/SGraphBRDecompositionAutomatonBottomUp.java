@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.automata.RuleCache;
 import de.up.ling.irtg.automata.BinaryRuleCache;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
@@ -13,6 +12,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.induction.IrtgInducer;
+import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -140,15 +140,13 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         Iterable<Rule> cachedResult = storedRules.get(labelId, childStates);
         
         if( cachedResult != null ) {
-            SGraphParsingEvaluation.cachedAnswers++;
             switch (signature.getArity(labelId)) {
-                case 0: SGraphParsingEvaluation.averageLogger.increaseValue("constants recognised"); break;
-                case 1: SGraphParsingEvaluation.averageLogger.increaseValue("unaries recognised"); break;
-                case 2: SGraphParsingEvaluation.averageLogger.increaseValue("merges recognised"); break;
+                case 0: AverageLogger.increaseValue("constants recognised"); break;
+                case 1: AverageLogger.increaseValue("unaries recognised"); break;
+                case 2: AverageLogger.increaseValue("merges recognised"); break;
             }
             return cachedResult;
         }
-        SGraphParsingEvaluation.newAnswers++;
         //ParseTester.averageLogger.increaseValue("TotalRulesChecked");
         
         String label = signature.resolveSymbolId(labelId);
@@ -161,12 +159,12 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         if (label == null) {
             return Collections.EMPTY_LIST;
         } else if (label.equals(GraphAlgebra.OP_MERGE)) {
-            SGraphParsingEvaluation.averageLogger.increaseValue("MergeRulesChecked");
+            AverageLogger.increaseValue("MergeRulesChecked");
             if (children.size() <2) {
                 System.err.println("trying to merge less than 2!");
             }
             if (!children.get(0).isMergeable(children.get(1))) { // ensure result is connected
-                SGraphParsingEvaluation.averageLogger.increaseValue("MergeFail");
+                AverageLogger.increaseValue("MergeFail");
                 return Collections.EMPTY_LIST;
             } else {
                 BoundaryRepresentation result = children.get(0).merge(children.get(1));
@@ -184,17 +182,17 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             if (children.size() <2) {
                 System.err.println("trying to merge less than 2!");
             }
-            SGraphParsingEvaluation.averageLogger.increaseValue("CombinedMergeRulesChecked");
+            AverageLogger.increaseValue("CombinedMergeRulesChecked");
             String renameLabel = GraphAlgebra.OP_RENAME+label.substring(GraphAlgebra.OP_COMBINEDMERGE.length());
 
             BoundaryRepresentation tempResult = children.get(1).applyForgetRename(renameLabel, signature.getIdForSymbol(renameLabel), true);
             if (tempResult == null) {
-                SGraphParsingEvaluation.averageLogger.increaseValue("m1RenameFail");
+                AverageLogger.increaseValue("m1RenameFail");
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             }
 
             if (!children.get(0).isMergeable(tempResult)) { // ensure result is connected
-                SGraphParsingEvaluation.averageLogger.increaseValue("m1MergeFail");
+                AverageLogger.increaseValue("m1MergeFail");
                 return cacheRules(Collections.EMPTY_LIST, labelId, childStates);//Collections.EMPTY_LIST;
             } else {
                 BoundaryRepresentation result = children.get(0).merge(tempResult);
@@ -389,11 +387,11 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
     
     @Override
-    public BinaryPartnerFinder makeNewBinaryPartnerFinder(TreeAutomaton auto) {
+    public BinaryPartnerFinder makeNewBinaryPartnerFinder() {
         if (isAlgebraPure()) {
-            return new MPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto); //To change body of generated methods, choose Tools | Templates.
+            return new MPFBinaryPartnerFinder(this); //To change body of generated methods, choose Tools | Templates.
         } else {
-            return new ImpureMPFBinaryPartnerFinder((SGraphBRDecompositionAutomatonBottomUp)auto);
+            return new ImpureMPFBinaryPartnerFinder(this);
         }
     }
 
@@ -775,7 +773,8 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * implementations).
      * Output files are formatted CORPUSID_NODECOUNTnodes.rtg
      * @param targetFolderPath The folder into which the automata are written.
-     * @param inducer The inducer containing the corpus.
+     * @param Corpus The corpus to parse. The graph interpretation must be
+     * labeled "graph".
      * @param startIndex At which index to start (graphs are ordered by node count)
      * @param stopIndex At which index to stop (graphs are ordered by node count)
      * @param sourceCount How many sources to use in decomposition.

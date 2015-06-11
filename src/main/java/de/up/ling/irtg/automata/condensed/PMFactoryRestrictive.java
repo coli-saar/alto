@@ -210,7 +210,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
 
             BinaryPartnerFinder rhsStateIDs = matcherStateToRhsState.get(matcherStoreID);
             if (rhsStateIDs == null) {
-                rhsStateIDs = rhs.makeNewBinaryPartnerFinder(rhs);
+                rhsStateIDs = rhs.makeNewBinaryPartnerFinder();
                 matcherStateToRhsState.put(matcherStoreID, rhsStateIDs);
             }
             rhsStateIDs.addState(rhsStateID);
