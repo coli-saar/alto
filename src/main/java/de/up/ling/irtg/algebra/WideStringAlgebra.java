@@ -77,18 +77,18 @@ public class WideStringAlgebra extends StringAlgebra {
             if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
 
                 if (concatArities.containsKey(label)) {
                     int arity = concatArities.get(label);
 
                     if (childStates.length != arity) {
-                        return new HashSet<Rule>();
+                        return new HashSet<>();
                     }
 
                     for (int i = 0; i < arity - 1; i++) {
                         if (getStateForId(childStates[i]).end != getStateForId(childStates[i + 1]).start) {
-                            return new HashSet<Rule>();
+                            return new HashSet<>();
                         }
                     }
 

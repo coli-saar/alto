@@ -28,21 +28,29 @@ public class TupleIterator<T> implements Iterator<T[]>{
         iterators = new Iterator[tuple.length];
         isEmpty = false;
         for (int i = 0; i<tuple.length; i++) {
+            iterators[i] = tuple[i].iterator();
             if (iterators[i].hasNext()) {
                 current[i] = (T)iterators[i].next();
             } else {
                 isEmpty = true;
             }
         }
+        if (tuple.length == 0) {
+            isEmpty = true;
+        }
     }
 
     @Override
     public boolean hasNext() {
-        int increaseIndex = tuple.length-1;
-        while (!iterators[increaseIndex].hasNext()) {
-            increaseIndex--;
+        if (isEmpty) {
+            return false;
+        } else {
+            int increaseIndex = tuple.length-1;
+            while (increaseIndex >= 0 && !iterators[increaseIndex].hasNext()) {
+                increaseIndex--;
+            }
+            return increaseIndex>-1;
         }
-        return (!isEmpty) && increaseIndex>-1;
     }
 
     

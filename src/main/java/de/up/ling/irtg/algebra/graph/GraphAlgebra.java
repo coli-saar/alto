@@ -195,17 +195,40 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     /**
-     * Writes (nearly) all the rules in the decomposition automaton of the SGraph value into in the Writer, and does not store the rules in memory.
+     * Writes (nearly) all the rules in the decomposition automaton of the
+     * SGraph value (with respect to the signature in this algebra) into the
+     * Writer, and does not store the rules in memory.
      * Iterates through the rules in bottom up order.
      * There are no rename operations on states only reachable via rename.
-     * Rules of the form c-> m(a, b) and c-> m(b,a) are both written into the writer (this is different from previous implementations).
+     * Rules of the form c-> m(a, b) and c-> m(b,a) are both written into the
+     * writer (this is different from previous implementations).
      * @param value
      * @param writer
      * @return
      * @throws Exception
      */
-    public boolean writeCompleteDecompositionAutomaton(SGraph value, Writer writer) throws Exception{
+    public boolean writeRestrictedAutomaton(SGraph value, Writer writer) throws Exception{
         SGraphBRDecompositionAutomatonBottomUp botupAutomaton = new SGraphBRDecompositionAutomatonBottomUp(value, this);
+        return botupAutomaton.writeAutomatonRestricted(writer);
+    }
+    
+    /**
+     * Writes (nearly) all the rules in the decomposition automaton of the
+     * SGraph value (with respect to the incomplete decomposition algebra)
+     * into the Writer, and does not store the rules in memory.
+     * Iterates through the rules in bottom up order.
+     * There are no rename operations on states only reachable via rename.
+     * Rules of the form c-> m(a, b) and c-> m(b,a) are both written into the
+     * writer (this is different from previous implementations).
+     * @param value
+     * @param sourceCount
+     * @param writer
+     * @return
+     * @throws Exception
+     */
+    public static boolean writeRestrictedDecompositionAutomaton(SGraph value, int sourceCount, Writer writer) throws Exception{
+        GraphAlgebra alg = makeIncompleteDecompositionAlgebra(value, sourceCount);
+        SGraphBRDecompositionAutomatonBottomUp botupAutomaton = new SGraphBRDecompositionAutomatonBottomUp(value, alg);
         return botupAutomaton.writeAutomatonRestricted(writer);
     }
     

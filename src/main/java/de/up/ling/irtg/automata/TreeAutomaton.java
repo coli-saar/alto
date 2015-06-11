@@ -2971,7 +2971,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
             for (int arity : labelsToIterate.keySet()) {
 
                 for (int label : symbols.get(arity)) {
-
                     //find all rules
                     List<Iterable<Rule>> foundRules = new ArrayList<>();
                     switch (arity) {
@@ -2986,18 +2985,22 @@ public abstract class TreeAutomaton<State> implements Serializable {
                             }
                             break;
                         default:
-                            int[] children = new int[arity];
                             Set[] partners = new Set[arity - 1];
                             Arrays.fill(partners, seen);
                             TupleIterator<Integer> partnerIterator = new TupleIterator<>(Integer.class, partners);
                             while (partnerIterator.hasNext()) {
                                 Integer[] partnerTuple = partnerIterator.next();
                                 for (int pos = 0; pos < arity; pos++) {
-                                    System.arraycopy(partnerTuple, 0, children, 0, pos);
+                                    int[] children = new int[arity];
+                                    for (int k = 0; k<pos; k++) {
+                                        children[k] = partnerTuple[k];
+                                    }
                                     children[pos] = a;
-                                    System.arraycopy(partnerTuple, pos, children, pos + 1, pos);
+                                    for (int k = pos; k<partnerTuple.length; k++) {
+                                        children[k+1] = partnerTuple[k];
+                                    }
+                                    foundRules.add(getRulesBottomUp(label, children));
                                 }
-                                foundRules.add(getRulesBottomUp(label, children));
                             }
                     }
 

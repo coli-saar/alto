@@ -19,8 +19,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
 
 /**
  * The binary string algebra. The elements of this algebra are lists of strings,

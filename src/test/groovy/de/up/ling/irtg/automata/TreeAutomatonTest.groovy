@@ -8,18 +8,25 @@ package de.up.ling.irtg.automata
 
 import org.junit.*
 import java.util.*
+import java.util.function.Consumer
+import java.util.function.Function
 import java.io.*
 import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.up.ling.tree.*
 import it.unimi.dsi.fastutil.ints.*
 import de.up.ling.irtg.*
+import de.up.ling.irtg.InterpretedTreeAutomaton
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.algebra.*
+import de.up.ling.irtg.algebra.StringAlgebra
 import de.up.ling.irtg.signature.*
 import com.google.common.collect.*
 import static org.junit.Assert.*
 import static de.up.ling.irtg.util.TestingTools.*;
+import java.io.StringReader;
+import java.nio.charset.Charset
+
 
 /**
  *
@@ -650,6 +657,71 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assertEquals(["s01", "s12", "s23", "s02", "s13", "s03"], states)
     }
     
+    @Test
+    public void testProcessAllRules() {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream(wideString_IRTG.getBytes( Charset.defaultCharset() ) ))
+        List<String> input = new ArrayList<>();
+        input.add("a");
+        input.add("b");
+        input.add("c");
+        input.add("d");
+        TreeAutomaton auto = irtg.getInterpretation("string").getAlgebra().decompose(input)
+        Set<Rule> rulesFound = new HashSet<>()
+        //auto.processAllRulesTopDown(null)
+        auto.processAllRulesBottomUp(new Consumer<Rule>() {
+            @Override
+            public void accept(Rule rule) {
+                rulesFound.add(rule);
+            }
+        })
+        StringAlgebra.Span span1 = new StringAlgebra.Span(0,1);
+        StringAlgebra.Span span2 = new StringAlgebra.Span(1,2);
+        StringAlgebra.Span span3 = new StringAlgebra.Span(2,3);
+        StringAlgebra.Span span4 = new StringAlgebra.Span(3,4);
+        StringAlgebra.Span span12 = new StringAlgebra.Span(0,2);
+        StringAlgebra.Span span13 = new StringAlgebra.Span(0,3);
+        StringAlgebra.Span span14 = new StringAlgebra.Span(0,4);
+        Rule gold1 = auto.createRule(span1,"a",new StringAlgebra.Span[0])
+        StringAlgebra.Span[] children2 = new StringAlgebra.Span[2];
+        children2[0] = span1;
+        children2[1] = span2;
+        Rule gold2 = auto.createRule(span12,"conc2",children2)
+        StringAlgebra.Span[] children3 = new StringAlgebra.Span[3];
+        children3[0] = span1;
+        children3[1] = span2;
+        children3[2] = span3;
+        Rule gold3 = auto.createRule(span13,"conc3",children3)
+        StringAlgebra.Span[] children4 = new StringAlgebra.Span[4];
+        children4[0] = span1;
+        children4[1] = span2;
+        children4[2] = span3;
+        children4[3] = span4;
+        Rule gold4 = auto.createRule(span14,"conc4",children4)
+        assert(rulesFound.contains(gold1))
+        assert(rulesFound.contains(gold2))
+        assert(rulesFound.contains(gold3))
+        assert(rulesFound.contains(gold4))
+        
+        //now top down (use new automaton, to not just get stored rules)
+        auto = irtg.getInterpretation("string").getAlgebra().decompose(input)
+        rulesFound = new HashSet<>()
+        auto.processAllRulesTopDown(new Consumer<Rule>() {
+            @Override
+            public void accept(Rule rule) {
+                rulesFound.add(rule);
+            }
+        })
+        gold1 = auto.createRule(span1,"a",new StringAlgebra.Span[0])
+        gold2 = auto.createRule(span12,"conc2",children2)
+        gold3 = auto.createRule(span13,"conc3",children3)
+        gold4 = auto.createRule(span14,"conc4",children4)
+        assert(rulesFound.contains(gold1))
+        assert(rulesFound.contains(gold2))
+        assert(rulesFound.contains(gold3))
+        assert(rulesFound.contains(gold4))
+    
+    }
+    
     
     /*
     def "testing whether automaton is bottom-up deterministic"() {
@@ -714,5 +786,27 @@ S -> r2
 S -> r3
    [i] b
 """;
+    
+    private static final String wideString_IRTG = """
+    interpretation string: de.up.ling.irtg.algebra.WideStringAlgebra
+
+    A! -> r1(B,C,D) [2]
+    [string]  conc3(?1, ?2, ?3)
+
+    A! -> r5(B,C,D) [2]
+    [string] conc4(?3, a, ?1, ?2)
+
+    A! -> r6(B,C) [1]
+    [string] conc2(?1,?2)
+
+    B -> r2
+    [string] b
+
+    C -> r3
+    [string] c
+
+    D -> r4
+    [string] d
+    """
 }
 
