@@ -283,11 +283,14 @@ public class SGraphParsingEvaluation {
             //averageLogger = new AverageLogger();
             //averageLogger.activate();
             //averageLogger.deactivate();
-            int i = start;
+            int i = 0;
             Iterator<Instance> it = inputCorpus.iterator();
             while (i<stop && it.hasNext()) {
-                System.out.println("i = " + i);
-                parseInstanceWithIrtg(it.next(), irtg, null, true, internalIterations, internalSw);
+                Instance instance = it.next();
+                if (i>= start) {
+                    System.out.println("i = " + i);
+                    parseInstanceWithIrtg(instance , irtg, null, true, internalIterations, internalSw);
+                }
                 i++;
             }
             AverageLogger.setDefaultCount((stop-start)*internalIterations);

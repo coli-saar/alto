@@ -91,7 +91,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     /**
      * Sets whether this algebra uses top-down or bottom-up decomposition automata.
-     * @return 
+     * @param useTopDownAutomaton
      */
     public void setUseTopDownAutomaton(boolean useTopDownAutomaton) {
         this.useTopDownAutomaton= useTopDownAutomaton;
