@@ -5,11 +5,17 @@
  */
 package de.up.ling.irtg.codec;
 
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.ParseException;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.induction.IrtgInducer;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.CorpusReadingException;
+import de.up.ling.irtg.corpus.Instance;
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.FileReader;
@@ -102,22 +108,29 @@ public class BolinasGraphOutputCodec extends OutputCodec<SGraph> {
     /**
      * Reads an AMR-Bank from a file and outputs it in Bolinas format.
      * The input filename is given as the first command-line argument;
+     * The AMR bank must be in the Alto Corpus format and contain a "graph"
+     * and "string" interpretation.
      * 
      * @param args
      * @throws ParseException
      * @throws IOException 
+     * @throws de.up.ling.irtg.corpus.CorpusReadingException 
      */
-    public static void main(String[] args) throws ParseException, IOException {
+    public static void main(String[] args) throws ParseException, IOException, CorpusReadingException {
         Reader corpusReader = new FileReader(args[1]);
-        IrtgInducer inducer = new IrtgInducer(corpusReader);
-        List<IrtgInducer.TrainingInstance> corpus = inducer.getCorpus();
+        InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(null);
+        Interpretation graphInt = new Interpretation(new GraphAlgebra(), null);
+        Interpretation stringInt = new Interpretation(new StringAlgebra(), null);
+        irtg.addInterpretation("graph", graphInt);
+        irtg.addInterpretation("string", stringInt);
+        Corpus corpus = Corpus.readCorpus(corpusReader, irtg);
         
         BolinasGraphOutputCodec oc = new BolinasGraphOutputCodec();
         
         OutputStream o = new FileOutputStream(args[1]);
         
-        for( IrtgInducer.TrainingInstance inst : corpus ) {
-            oc.write(inst.graph, o);
+        for( Instance inst : corpus ) {
+            oc.write((SGraph)inst.getInputObjects().get("graph"), o);
         }
         
         o.flush();

@@ -1,5 +1,0 @@
-finalACLTesting starting 11th may: (de699db) revised 11th may: df3fc93
-
-may 13th: created decomposition automata in /data/csuserb/parsingResultsMay1267/ with version 8ef4213
-
-update May 15th: 61dd37a (this is used on the May1267 tests)

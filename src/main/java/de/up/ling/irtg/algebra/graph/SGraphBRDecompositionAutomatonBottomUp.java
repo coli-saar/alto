@@ -5,13 +5,17 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.RuleCache;
 import de.up.ling.irtg.automata.BinaryRuleCache;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
-import de.up.ling.irtg.induction.IrtgInducer;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -41,6 +45,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -773,7 +778,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * implementations).
      * Output files are formatted CORPUSID_NODECOUNTnodes.rtg
      * @param targetFolderPath The folder into which the automata are written.
-     * @param Corpus The corpus to parse. The graph interpretation must be
+     * @param corpus The corpus to parse. The graph interpretation must be
      * labeled "graph".
      * @param startIndex At which index to start (graphs are ordered by node count)
      * @param stopIndex At which index to stop (graphs are ordered by node count)
@@ -787,79 +792,89 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * should be examined.
      * @throws Exception
      */
-    public static void writeDecompositionAutomata(String targetFolderPath, IrtgInducer inducer, int startIndex, int stopIndex, int sourceCount, int maxNodes, int maxPerNodeCount, boolean onlyBolinas) throws Exception {
+    public static void writeDecompositionAutomata(String targetFolderPath, Corpus corpus, int startIndex, int stopIndex, int sourceCount, int maxNodes, int maxPerNodeCount, boolean onlyBolinas) throws Exception {
         
         
         BolinasGraphOutputCodec bolCodec = new BolinasGraphOutputCodec();
-        IntList[] graphsToParse = new IntList[maxNodes];
+        List<Instance>[] graphsToParse = new List[maxNodes];
         
-        for (int i = 0; i<inducer.getCorpus().size(); i++) {
-            IrtgInducer.TrainingInstance instance = inducer.getCorpus().get(i);
+        int id = 1;
+        for (Instance instance : corpus) {
+            instance.setComment(String.valueOf(id));
+            SGraph graph = (SGraph)instance.getInputObjects().get("graph");
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            bolCodec.write(instance.graph, stream);
-            if (!(onlyBolinas && stream.toString().startsWith("()\n")) && instance.graph.getAllNodeNames().size()<=maxNodes) {
-                GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(instance.graph, sourceCount);
+            bolCodec.write(graph, stream);
+            if (!(onlyBolinas && stream.toString().startsWith("()\n")) && graph.getAllNodeNames().size()<=maxNodes) {
+                GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(graph, sourceCount);
                 
                 Writer rtgWriter = new StringWriter();
-                SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(instance.graph, alg);
+                SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(graph, alg);
                 botupAuto.actuallyWrite = false;
                 boolean foundFinalState = botupAuto.writeAutomatonRestricted(rtgWriter);
                 rtgWriter.close();
                 if (foundFinalState) {
-                    int n = instance.graph.getAllNodeNames().size();
+                    int n = graph.getAllNodeNames().size();
                     if (graphsToParse[n-1]==null) {
-                        graphsToParse[n-1]=new IntArrayList();
+                        graphsToParse[n-1]=new ArrayList<>();
                     }
-                    graphsToParse[n-1].add(i);
+                    graphsToParse[n-1].add(instance);
                 }
             }
+            id++;
         }
         
         //add the instances we want to parse to our custom corpus.
-        List<IrtgInducer.TrainingInstance> corpus = new ArrayList<>();
+        Corpus corpusToParse = new Corpus();
         Random r = new Random();
         for (int i = 0; i<maxNodes; i++) {
             if (graphsToParse[i] != null) {
                 System.out.println("Adding " +Math.min(graphsToParse[i].size(), maxPerNodeCount) + " graphs with " + (i+1) + " nodes.");
                 if (graphsToParse[i].size()<=maxPerNodeCount) {
-                    for (int target : graphsToParse[i]) {
-                        corpus.add(inducer.getCorpus().get(target));
+                    for (Instance target : graphsToParse[i]) {
+                        corpusToParse.addInstance(target);
                     }
                 } else {
                     for (int k = 0; k<maxPerNodeCount; k++) {
                         int targetIndex = r.nextInt(graphsToParse[i].size());
-                        int target = graphsToParse[i].remove(targetIndex);
+                        Instance target = graphsToParse[i].remove(targetIndex);
 
-                        corpus.add(inducer.getCorpus().get(target));
+                        corpusToParse.addInstance(target);
                     }
                 }
             }
         }
         System.out.println("Chosen IDs:");
-        corpus.forEach(instance-> System.out.println(instance.id));
+        corpusToParse.forEach(instance-> System.out.println(instance.getComment()));
         System.out.println("---------------------");
         
-        corpus.sort(Comparator.comparingInt(inst -> inst.graph.getAllNodeNames().size()
+        corpusToParse.sort(Comparator.comparingInt(instance -> ((SGraph)instance.getInputObjects().get("graph")).getAllNodeNames().size()
         ));
         
         
         IntList successfull = new IntArrayList();
         
-        int stop = Math.min(corpus.size(), stopIndex);
-        
-        for (int i = startIndex; i<stop; i++) {
-            System.out.println(i);
-            IrtgInducer.TrainingInstance instance = corpus.get(i);
-            GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(instance.graph, sourceCount);
-            Writer rtgWriter = new FileWriter(targetFolderPath+String.valueOf(instance.id)+"_"+instance.graph.getAllNodeNames().size()+"nodes"+".rtg");
-            SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(instance.graph, alg);
-            boolean foundFinalState = botupAuto.writeAutomatonRestricted(rtgWriter);
-            rtgWriter.close();
-            if (foundFinalState) {
-                successfull.add(instance.id);
+        Iterator<Instance> it = corpusToParse.iterator();
+        int i = 0;
+        int instancesTried = 0;
+        while (it.hasNext()) {
+            Instance instance = it.next();
+            if (i>= startIndex && i < stopIndex) {
+                instancesTried++;
+                System.out.println(i);
+                SGraph graph = (SGraph)instance.getInputObjects().get("graph");
+                int instanceID = Integer.valueOf(instance.getComment());
+                GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(graph, sourceCount);
+                Writer rtgWriter = new FileWriter(targetFolderPath+String.valueOf(instanceID)+"_"+graph.getAllNodeNames().size()+"nodes"+".rtg");
+                SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(graph, alg);
+                boolean foundFinalState = botupAuto.writeAutomatonRestricted(rtgWriter);
+                rtgWriter.close();
+                if (foundFinalState) {
+                    successfull.add(instanceID);
+                }
             }
+            i++;
         }
-        System.out.println(String.valueOf(successfull.size()) + " graphs were parsed successfully, out of " + String.valueOf(stop-startIndex));
+        System.out.println(String.valueOf(successfull.size()) + " graphs were parsed successfully, out of " + String.valueOf(instancesTried));
         
         
     }
@@ -869,7 +884,8 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * Calls {@code writeDecompositionAutomata} with the given arguments.
      * Call without arguments to receive help.
      * Takes eight arguments:
-     * 1. The path to the the corpus.
+     * 1. The path to the the corpus. It should have "graph" and "string"
+     * interpretations.
      * 2. How many sources to use in decomposition.
      * 3. At which index to start (inclusive, graphs are ordered by node count)
      * 4. At which index to stop (exclusive, graphs are ordered by node count)
@@ -906,8 +922,13 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         boolean onlyBolinas = args.length>=8 && args[7].equals("onlyBolinas");
         
         Reader corpusReader = new FileReader(corpusPath);
-        IrtgInducer inducer = new IrtgInducer(corpusReader);
-        writeDecompositionAutomata(targetPath, inducer, start, stop, sourceCount, maxNodes, maxPerNodeCount, onlyBolinas);
+        InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(null);
+        Interpretation graphInt = new Interpretation(new GraphAlgebra(), null);
+        Interpretation stringInt = new Interpretation(new StringAlgebra(), null);
+        irtg.addInterpretation("graph", graphInt);
+        irtg.addInterpretation("string", stringInt);
+        Corpus corpus = Corpus.readCorpus(corpusReader, irtg);
+        writeDecompositionAutomata(targetPath, corpus, start, stop, sourceCount, maxNodes, maxPerNodeCount, onlyBolinas);
     }
     
     
