@@ -162,7 +162,9 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     /**
-     * Returns a bottom-up or a top-down decomposition automaton for {@code value} depending on {@code useTopDownAutomaton}.
+     * Returns a bottom-up or a top-down decomposition automaton for the s-graph
+     * {@code value} (which one can be set via {@code setUseTopDownAutomaton}, 
+     * default is bottom-up).
      * @param value
      * @return 
      */
@@ -175,7 +177,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     /**
-     * given an SGraph, this returns the corresponding decomposition automaton of class c.
+     * Given an SGraph, this returns the corresponding decomposition automaton of class c.
      * @param value
      * @param c
      * @return
@@ -199,9 +201,9 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * SGraph value (with respect to the signature in this algebra) into the
      * Writer, and does not store the rules in memory.
      * Iterates through the rules in bottom up order.
-     * There are no rename operations on states only reachable via rename.
-     * Rules of the form c-> m(a, b) and c-> m(b,a) are both written into the
-     * writer (this is different from previous implementations).
+     * To avoid cycles, there are no rename operations on states only reachable
+     * via rename. Rules of the form c-> m(a, b) and c-> m(b,a) are both written
+     * into the writer.
      * @param value
      * @param writer
      * @return
@@ -217,9 +219,9 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      * SGraph value (with respect to the incomplete decomposition algebra)
      * into the Writer, and does not store the rules in memory.
      * Iterates through the rules in bottom up order.
-     * There are no rename operations on states only reachable via rename.
-     * Rules of the form c-> m(a, b) and c-> m(b,a) are both written into the
-     * writer (this is different from previous implementations).
+     * To avoid cycles, there are no rename operations on states only reachable
+     * via rename. Rules of the form c-> m(a, b) and c-> m(b,a) are both written
+     * into the writer.
      * @param value
      * @param sourceCount
      * @param writer
@@ -413,11 +415,14 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     
     /**
-     * Creates a GraphAlgebra based on graph with nrSources many sources (named 1,..,nrSources).
-     * The resulting algebra contains as constants all atomic subgraphs (single edges, and single labled nodes), with all possible source combinations.
-     * Further, the merge operation and all possible versions of forget and rename.
-     * It is encouraged to use {@code makeIncompleteDecompositionAlgebra} instead,
-     * since the result is equally expressive and is smaller (due to less spurious constants).
+     * Creates a GraphAlgebra based on {@code graph} with {@code nrSources} many
+     * sources (named 1,..,nrSources).
+     * The resulting algebra contains as constants all atomic subgraphs (single
+     * edges, and single labled nodes), with all possible source combinations.
+     * Further, the merge operation and all possible versions of forget and
+     * rename. It is encouraged to use {@code makeIncompleteDecompositionAlgebra}
+     * instead, since its result is equally expressive and smaller (due to
+     * less spurious constants).
      * @param graph
      * @param nrSources
      * @throws Exception
@@ -468,10 +473,14 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
 
     /**
-     * Creates a GraphAlgebra based on graph with nrSources many sources (named 1,..,nrSources).
-     * The resulting algebra contains as constants all atomic subgraphs (single edges, and single labled nodes), but only one source is used for nodes,
-     * and one more source for edges (both possibilities to name the vertices incident to the edge with these two sources are included).
-     * Further, the merge operation and all possible versions of forget and rename.
+     * Creates a GraphAlgebra based on {@code graph} with {@code nrSources} many
+     * sources (named 1,..,nrSources).
+     * The resulting algebra contains as constants all atomic subgraphs (single
+     * edges, and single labled nodes), but only one source is used for nodes,
+     * and one more source for edges (both possibilities to name the vertices
+     * incident to the edge with these two sources are included).
+     * Further, the merge operation and all possible versions of forget and 
+     * rename.
      * @param graph
      * @param nrSources
      * @throws Exception
@@ -532,19 +541,22 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 
     
     /**
-     * Writes an irtg file based on a graph with nrSources many sources (named 1,..,nrSources).
-     * The resulting irtg represents a GraphAlgebra which contains as constants all atomic subgraphs (single edges, and single labled nodes), but only one source is used for nodes,
-     * and one more source for edges (both possibilities to name the vertices incident to the edge with these two sources are included).
+     * Writes an IRTG grammar file based on {@code graph} with {@code nrSources}
+     * many sources (named 1,..,nrSources). The resulting irtg represents a
+     * GraphAlgebra which contains as constants all atomic subgraphs (single
+     * edges, and single labled nodes), but only one source is used for nodes,
+     * and one more source for edges (both possibilities to name the vertices
+     * incident to the edge with these two sources are included).
      * Further, the merge operation and all possible versions of forget and rename.
      * The one final state is S, the one nonfinal state is X.
-     * 
-     * @todo Keep this only until a more elegant solution based on makeIncompleteDecompositionAlgebra is found.
      * 
      * @param alg empty GraphAlgebra, carries the result.
      * @param graph
      * @param nrSources
      * @throws Exception
      */
+    // @todo Keep this only until a more elegant solution based on
+    // makeIncompleteDecompositionAlgebra is found.
     public static void writeIncompleteDecompositionIRTG(GraphAlgebra alg, SGraph graph, int nrSources, PrintWriter writer) throws Exception//only add empty algebra!!
     {
         String terminal = "S!";

@@ -917,8 +917,11 @@ public class BoundaryRepresentation {
     }
 
     /**
-     * compares based on edgeID and vertexID.
-     * Given two BoundaryRepresentations are based on the same GraphInfo, this returns true iff the sub-sgraphs represented by the BoundaryRepresentations are identical.
+     * Compares based on edgeID and vertexID.
+     * Given two BoundaryRepresentations that are part of the same supergraph, 
+     * i.e. based on the same GraphInfo,
+     * this returns true iff the sub-sgraphs represented by the
+     * BoundaryRepresentations are identical.
      * @param other
      * @return 
      */
@@ -974,7 +977,9 @@ public class BoundaryRepresentation {
     }
 
     /**
-     * Prints all source names used in this BoundaryRepresentation, as well as source count an largest source, in a readable fashion.
+     * Prints all source names used in this BoundaryRepresentation, as well as
+     * the source count and the largest source name (by index), in a readable
+     * fashion.
      */
     public void printSources() {
         String res = "Sources: ";
@@ -989,7 +994,9 @@ public class BoundaryRepresentation {
     }
 
     /**
-     * Returns all sources in a consecutive string, in order of their index, and thus provides a signature of this BoundaryRepresentation concerning its sources.
+     * Returns all source names in a consecutive string, in order of their
+     * index, and thus provides a signature of this BoundaryRepresentation
+     * concerning its source names.
      * @return
      */
     public String allSourcesToString() {
