@@ -298,8 +298,6 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
             return ret;
         }
         
-        
-        
 
         // Returns the ID for a labelset, but does not add it! Returns 0 if it is not 
         // represented in the interner

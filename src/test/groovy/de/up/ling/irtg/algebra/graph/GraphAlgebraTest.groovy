@@ -78,7 +78,7 @@ class GraphAlgebraTest {
             hasParse = interpParse.getFinalStates().size() > 0
         } else {
             for (Integer i : interpParse.getFinalStates()){
-                if (!interpParse.getRulesTopDown(i).iterator().hasNext()){
+                if (interpParse.getRulesTopDown(i).iterator().hasNext()){
                     hasParse = true;
                 }
             }

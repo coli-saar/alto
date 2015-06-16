@@ -724,9 +724,11 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
     }
 
     // cache for singleton IntLists that we have seen before
-    private Int2ObjectMap<MySingletonIntList> singletonCache = new ArrayMap<MySingletonIntList>();
+    private final Int2ObjectMap<MySingletonIntList> singletonCache = new ArrayMap<>();
 
-    //given a rule matcherRule and a position pos of the currently examined state, this returns the known possible rhs children in rhsChildIDs which match the matcher-childstates of the rule.
+    /**
+     * given a rule matcherRule and a position pos of the currently examined state, this returns the known possible rhs children in rhsChildIDs which match the matcher-childstates of the rule.
+     * */
     private boolean collectRhsChildIDs(List<IntCollection> rhsChildIDs, int arity, int pos, int rhsChildID, Rule matcherRule, int rhsLabelID) {
         boolean isEmpty = false;
         for (int j = 0; j < arity; j++) {
@@ -741,6 +743,14 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                     jSet = x;
                 }
             } else {
+                /**
+                 * This part should be updated for arities larger
+                 * than 2. However, for the moment it is ok since the s-graph algebra
+                 * only uses arities up to 2, and for all other algebras, the
+                 * BinaryPartnerFinder simply returns the set of all seen states,
+                 * and thus works for all arities (it does exactly what it should,
+                 * just has an inappropriate name).
+                 */
                 BinaryPartnerFinder rhsPartnerFinder = matcherState2RhsState.get(matcherRule.getChildren()[j]);
                 if (rhsPartnerFinder != null) {
                     IntCollection knownRhsChildIDs = rhsPartnerFinder.getPartners(rhsLabelID, rhsChildID);
