@@ -10,12 +10,21 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import de.up.ling.tree.TreeVisitor;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * A tree algebra in which the operation symbols are marked with their arities.
+ * For instance, a valid term over this algebra is <code>f_2(g_1(a_0), b_0)</code>.
+ * Observe that each symbol has a prefix "_k", where k is the number of children
+ * in the tree. 
+ * 
+ * The tree algebra. The elements of this algebra are the ranked trees over a
+ * given signature. Any string f can be used as a tree-combining operation of an
+ * arbitrary arity; the term f(t1,...,tn) evaluates to the tree f(t1,...,tn).
+ * Care must be taken that only ranked trees can be described; the parseString
+ * method will infer the arity of each symbol f that you use, and will throw an
+ * exception if you try to use f with two different arities.
  *
  * @author koller
  */

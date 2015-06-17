@@ -6,7 +6,6 @@ package de.up.ling.irtg.algebra;
 
 import de.up.ling.irtg.automata.SingletonAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import de.up.ling.tree.TreeParser;
