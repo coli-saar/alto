@@ -15,16 +15,27 @@ import java.util.regex.Pattern;
 
 /**
  * A tree algebra in which the operation symbols are marked with their arities.
- * For instance, a valid term over this algebra is <code>f_2(g_1(a_0), b_0)</code>.
- * Observe that each symbol has a prefix "_k", where k is the number of children
- * in the tree. 
+ * The <i>values</i> of this algebra are arbitrary trees, i.e. trees such as
+ * <code>f(f(a), b)</code>. Note that f occurs twice in the tree: once with arity
+ * 2 and once with arity 1. Such a tree would not be allowed as a term over
+ * an algebra, which must be consistent with the ranked signature over the algebra,
+ * so f can only have arity 1 or 2, but not both. Thus an ordinary {@link TreeAlgebra}
+ * cannot represent this tree.<p>
  * 
- * The tree algebra. The elements of this algebra are the ranked trees over a
- * given signature. Any string f can be used as a tree-combining operation of an
- * arbitrary arity; the term f(t1,...,tn) evaluates to the tree f(t1,...,tn).
- * Care must be taken that only ranked trees can be described; the parseString
- * method will infer the arity of each symbol f that you use, and will throw an
- * exception if you try to use f with two different arities.
+ * The TreeWithAritiesAlgebra circumvents this problem by annotating every
+ * operation symbol in the algebra with its arity, thus separating the
+ * one-place and the two-place f into two different symbols. The (unique)
+ * term in this algebra that evaluates to f(f(a),b) is <code>f_2(f_1(a_0), b_0)</code>.
+ * Observe that each symbol has a suffix "_k", where k is the number of children
+ * in the tree. These symbols disappear when then term is evaluated
+ * to a tree.<p>
+ * 
+ * Many trees that arise in practice should be represented as values of this
+ * algebra and not the {@link TreeAlgebra}. For instance, the parse trees in the
+ * Penn Treebank have NP nodes with one children, two children, and so on.
+ * Thus when you write a grammar that generates PTB-style parse trees,
+ * you'll want to use a {@link TreeWithAritiesAlgebra} instead of a
+ * {@link TreeAlgebra}.
  *
  * @author koller
  */
