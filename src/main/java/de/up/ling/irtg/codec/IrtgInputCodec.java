@@ -101,8 +101,11 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         } catch (ParseException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new ParseException("Unexpected parsing error: " + e.toString());
+            if( e.getMessage() != null ) {
+                throw new ParseException(e.getMessage(), e);
+            } else {
+                throw new ParseException("Parsing error: " + e.toString(), e);
+            }
         }
     }
 

@@ -61,8 +61,8 @@ public class GuiUtils {
                 SwingUtilities.invokeLater(() -> {
                     andThen.accept(result, time);
                 });
-            } catch (Throwable e) {
-                showError(new Exception(description + " error", e));
+            } catch (Exception e) {
+                showError(e);
             } finally {
                 progressBar.setVisible(false);
             }
