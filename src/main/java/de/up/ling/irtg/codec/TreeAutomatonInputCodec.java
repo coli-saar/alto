@@ -17,41 +17,22 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 /**
-<<<<<<< local
  * An input codec that reads a top-down tree automaton.
  * Rules take the following form:<p>
-=======
- * A codec for reading tree automata. A string representation of a
- * tree automaton consists of a list of rules, one per line. Rules look
- * like this:<p>
->>>>>>> other
  * 
-<<<<<<< local
  * <pre>
- * S! -> r(NP, VP) [0.3]
+ * S! -&gt; r(NP, VP) [0.3]
  * </pre>
-=======
- * <code>A! -&gt; f(B,C,D)</code><p>
->>>>>>> other
  * 
-<<<<<<< local
  * where S, NP, and VP are states and r is a terminal symbol.
  * S is a final state, as indicated by the exclamation mark.
  * Each rule can optionally be assigned a weight in square brackets;
  * in the example, the weight is 0.3. Rules that do not have an
  * explicit weight get a default weight of 1.
-=======
- * Here A,B,C,D are states (= nonterminal symbols) and f is a three-place symbol
- * from the signature of the tree automaton. The exclamation mark after S
- * says that S is a final state (= start symbol).<p>
->>>>>>> other
  * 
-<<<<<<< local
-=======
- * Drop the brackets if f is a zero-place symbol, i.e. a rule for leaves
+ * Drop the brackets if r is a zero-place symbol, i.e. a rule for leaves
  * looks like this: <code>D -&gt; a</code>.
  * 
->>>>>>> other
  * @author koller
  */
 @CodecMetadata(name = "auto", description = "Tree automata", extension = "auto", type = TreeAutomaton.class)

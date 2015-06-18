@@ -19,17 +19,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
-<<<<<<< local
- * An output codec for writing objects of class <code>E</code>
- * to an output stream in a specific format.
-=======
  * Generates a representation of some object. Representations will
  * typically be strings, but you could also implement an output codec
  * for binary representations.<p>
->>>>>>> other
- * 
-<<<<<<< local
-=======
+ *
  * The objects that a codec can encode must be of the class specified
  * by the type parameter E. For instance, a {@link TikzQtreeOutputCodec}
  * will encode objects of class {@link Tree} as strings, whereas a
@@ -54,7 +47,6 @@ import java.util.logging.Logger;
  * with {@link CodecMetadata}. Most importantly, the "type" field of that annotation
  * specifies the class that the codec can encode.
  * 
->>>>>>> other
  * @author koller
  */
 public abstract class OutputCodec<E> {

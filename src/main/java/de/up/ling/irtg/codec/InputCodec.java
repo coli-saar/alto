@@ -20,10 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
-<<<<<<< local
- * An input codec for reading objects of
- * class <code>E</code> from an input stream.
-=======
  * Reconstructs an object from a representation. Representations will
  * typically be strings, but you could also implement an input codec
  * for binary representations.<p>
@@ -48,7 +44,6 @@ import java.util.logging.Logger;
  * 
  * In order to be discovered correctly, each input codec needs to be annotated
  * with {@link CodecMetadata}, such as the type of E and a filename extension.
->>>>>>> other
  * 
  * @author koller
  */
