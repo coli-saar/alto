@@ -13,19 +13,19 @@ package de.up.ling.irtg.algebra.graph;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.*;
 import java.io.*;
-import org.jgrapht.*;
-import org.jgrapht.graph.*;
-import de.up.ling.tree.*;
 
 /**
- * test
+ * Utility class to parse AMR style graphs.
  */
 public class IsiAmrParser {
     private SGraph graph = null;
 
+	
+	/**
+ 	 * Parses the s-graph represented as a string in {@code reader}
+	 */
 	public static SGraph parse(Reader reader) throws ParseException {
 		IsiAmrParser parser = new IsiAmrParser(new ByteArrayInputStream(new byte[]{}));
 

@@ -22,10 +22,12 @@ public class ViterbiWithBackpointerSemiring implements Semiring<Pair<Double,Rule
     }
 
     // Multiply. Rule backpointer is passed on from first argument.
+    @Override
     public Pair<Double, Rule> multiply(Pair<Double, Rule> x, Pair<Double, Rule> y) {
         return new Pair<Double, Rule>(x.left * y.left, x.right);
     }
 
+    @Override
     public Pair<Double, Rule> zero() {
         return new Pair<Double, Rule>(Double.NEGATIVE_INFINITY, null);
     }
