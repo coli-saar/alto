@@ -29,7 +29,7 @@ class PtbTreeInputCodecTest {
     @Test
     public void testPierreVinkenTree() {
         String pierre = """
-        ( (S
+        (S
     (NP-SBJ
       (NP (NNP Pierre) (NNP Vinken) )
       (, ,)
@@ -43,7 +43,7 @@ class PtbTreeInputCodecTest {
         (PP-CLR (IN as)
           (NP (DT a) (JJ nonexecutive) (NN director) ))
         (NP-TMP (NNP Nov.) (CD 29) )))
-    (. .) ))""";
+    (. .) )""";
         
         Tree gold = pt("""
 S(NP-SBJ(NP(NNP(Pierre), NNP(Vinken)), ','(','), ADJP(NP(CD('61'), NNS(years)), JJ(old)), ','(',')),
@@ -55,5 +55,44 @@ S(NP-SBJ(NP(NNP(Pierre), NNP(Vinken)), ','(','), ADJP(NP(CD('61'), NNS(years)), 
         
         assertEquals(gold, result)
     }
+    
+    @Test
+    public void testReadTwoTrees() {
+        InputCodec c = new PtbTreeInputCodec();
+        InputStream is = new ByteArrayInputStream(TWO_TREES.getBytes());
+        List trees = c.readCorpus(is);
+        
+        assert trees.size() == 2;
+    }
+    
+    private static final String TWO_TREES = """
+    
+( (S 
+    (NP-SBJ 
+      (NP (NNP Pierre) (NNP Vinken) )
+      (, ,) 
+      (ADJP 
+        (NP (CD 61) (NNS years) )
+        (JJ old) )
+      (, ,) )
+    (VP (MD will) 
+      (VP (VB join) 
+        (NP (DT the) (NN board) )
+        (PP-CLR (IN as) 
+          (NP (DT a) (JJ nonexecutive) (NN director) ))
+        (NP-TMP (NNP Nov.) (CD 29) )))
+    (. .) ))
+( (S 
+    (NP-SBJ (NNP Mr.) (NNP Vinken) )
+    (VP (VBZ is) 
+      (NP-PRD 
+        (NP (NN chairman) )
+        (PP (IN of) 
+          (NP 
+            (NP (NNP Elsevier) (NNP N.V.) )
+            (, ,) 
+            (NP (DT the) (NNP Dutch) (VBG publishing) (NN group) )))))
+    (. .) ))
+    """;
 }
 

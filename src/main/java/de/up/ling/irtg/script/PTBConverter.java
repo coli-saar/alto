@@ -24,6 +24,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.GZIPInputStream;
 
+/*
+ * Note: This class is outdated, but I keep it around (as non-public)
+ * because it contains much more fine-grained functionality than the
+ * CorpusConverter, for sorting and filtering and such. This functionality
+ * should be merged into CC and generalized. - AK
+*/
+
 /**
  * This reads a file of the Penn Treebank and converts
  * it into a corpus that is suitable for working with the
@@ -41,7 +48,7 @@ import java.util.zip.GZIPInputStream;
  * 
  * @author Danilo Baumgarten
  */
-public class PTBConverter {
+ class PTBConverter {
     private static final Logger log = Logger.getLogger(PTBConverter.class.getName());
     private static final int TOKEN_SIZE = 15;
     private static final boolean CONVERT = false;
