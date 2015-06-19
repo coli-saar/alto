@@ -47,9 +47,7 @@ public class PennTreebankConverter {
         for (String filename : args) {
             System.err.println("Processing " + filename + " ...");
             InputStream corpus = new FileInputStream(filename);
-            Iterator<Tree<String>> instanceIt = codec.readCorpus(corpus).iterator();
-            
-            converter.convert(instanceIt);
+            codec.readCorpus(corpus).forEach(converter);
         }
 
         w.flush();
