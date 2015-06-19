@@ -5,6 +5,7 @@
 package de.up.ling.irtg;
 
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.InverseHomAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
@@ -14,6 +15,7 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  *
@@ -101,5 +103,4 @@ public class Interpretation<E> implements Serializable {
     public void setPmLogName(String name) {
         pmFactory.logTitle = name;
     }
-    
 }

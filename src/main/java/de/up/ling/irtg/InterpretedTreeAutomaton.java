@@ -10,6 +10,7 @@ import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.InputCodec;
@@ -828,5 +829,26 @@ public class InterpretedTreeAutomaton implements Serializable {
 
     public static InterpretedTreeAutomaton read(InputStream r) throws IOException, ParseException {
         return new IrtgInputCodec().read(r);
+    }
+    
+    
+    
+    /**
+     * Creates an empty IRTG for the given algebras.
+     * The IRTG contains a tree automaton with no rules,
+     * and one interpretation for each entry of the
+     * given map, with the given name and the given algebra.
+     * 
+     * @param algebras
+     * @return 
+     */
+    public static InterpretedTreeAutomaton forAlgebras(Map<String, Algebra> algebras) {
+        InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
+
+        for (String i : algebras.keySet()) {
+            irtg.addInterpretation(i, new Interpretation(algebras.get(i), new Homomorphism(irtg.getAutomaton().getSignature(), algebras.get(i).getSignature())));
+        }
+
+        return irtg;
     }
 }

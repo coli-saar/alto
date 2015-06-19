@@ -37,14 +37,14 @@ import java.util.function.Function;
  * @author koller
  */
 public class CorpusConverter<E> {
-    private Map<String, Function<E, ? extends Object>> conv;
-    private InterpretedTreeAutomaton irtg;
-    private CorpusWriter cw;
+    private final Map<String, Function<E, ? extends Object>> conv;
+    private final InterpretedTreeAutomaton irtg;
+    private final CorpusWriter cw;
 
     public CorpusConverter(String inputCorpusName, Map<String, Algebra> algebras, Map<String, Function<E, ? extends Object>> conv, Writer writer) throws IOException {
         this.conv = conv;
 
-        irtg = makeIrtg(algebras);
+        irtg = InterpretedTreeAutomaton.forAlgebras(algebras);
         cw = new CorpusWriter(irtg, false, "Converted from " + inputCorpusName + "\non " + new Date().toString(), writer);
     }
 
@@ -57,15 +57,6 @@ public class CorpusConverter<E> {
         });
     }
 
-    private InterpretedTreeAutomaton makeIrtg(Map<String, Algebra> algebras) {
-        InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
-
-        for (String i : algebras.keySet()) {
-            irtg.addInterpretation(i, new Interpretation(algebras.get(i), new Homomorphism(irtg.getAutomaton().getSignature(), algebras.get(i).getSignature())));
-        }
-
-        return irtg;
-    }
 
     private void convert(Iterator<E> corpus, CorpusWriter writer, Function<E, Instance> conv) throws ParseException, IOException {
         while (corpus.hasNext()) {
