@@ -9,10 +9,11 @@ package de.up.ling.irtg.algebra;
 import java.util.List;
 
 /**
- *
+ * An experimental algebra for LCFRS. Expect bugs when using this.
+ * 
  * @author koller
  */
-public class LcfrsAlgebra extends TupleAlgebra<List<String>> {
+class LcfrsAlgebra extends TupleAlgebra<List<String>> {
     public LcfrsAlgebra() {
         super(new StringAlgebra());
     }

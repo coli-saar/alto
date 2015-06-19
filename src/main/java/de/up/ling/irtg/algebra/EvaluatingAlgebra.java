@@ -26,9 +26,14 @@ import java.util.Set;
  * of E. They implement 
  * {@link TreeAutomaton#getRulesBottomUp(int, java.util.List) } by simply
  * applying the algebra operation specified by the terminal symbol
- * to the algebra objects specified by the child states. Notice that
+ * to the algebra objects specified by the child states.<p>
+ * 
+ * Notice that
  * the decomposition automata do not implement {@link TreeAutomaton#getRulesTopDown(int, int) },
- * so you need to avoid using methods that access rules top-down.<p>
+ * so you need to avoid using methods that access rules top-down.
+ * You should also expect that a parser using these generic
+ * decomposition automata are not particularly efficient.<p>
+ * 
  * 
  * See {@link SetAlgebra} for a use case of this class.
  * 

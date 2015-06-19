@@ -80,7 +80,7 @@ public class InterpretedTreeAutomaton implements Serializable {
     public void addInterpretation(String name, Interpretation interp) {
         interpretations.put(name, interp);
     }
-
+    
     /**
      * Adds all interpretations in the map, with their respective names.
      *
