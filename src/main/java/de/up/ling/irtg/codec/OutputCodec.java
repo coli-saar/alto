@@ -22,7 +22,7 @@ import java.util.logging.Logger;
  * Generates a representation of some object. Representations will
  * typically be strings, but you could also implement an output codec
  * for binary representations.<p>
- * 
+ *
  * The objects that a codec can encode must be of the class specified
  * by the type parameter E. For instance, a {@link TikzQtreeOutputCodec}
  * will encode objects of class {@link Tree} as strings, whereas a

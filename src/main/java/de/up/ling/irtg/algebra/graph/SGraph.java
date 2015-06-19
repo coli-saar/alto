@@ -20,6 +20,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -45,7 +46,7 @@ import org.jgrapht.graph.DefaultDirectedGraph;
  * 
  * @author koller
  */
-public class SGraph {
+public class SGraph{
     private DirectedGraph<GraphNode, GraphEdge> graph;
     private Map<String, GraphNode> nameToNode;
     private Map<String, String> sourceToNodename;
@@ -55,6 +56,11 @@ public class SGraph {
     private boolean hasCachedHashcode;
     private int cachedHashcode;
     private boolean equalsMeansIsomorphy;
+    private Map<String, Set<String>> incomingEdgeLabels;
+    private Map<String, Set<String>> outgoingEdgeLabels;
+    private Map<String, String[]> incomingEdgeLabelsAsList;
+    private Map<String, String[]> outgoingEdgeLabelsAsList;
+    private List<String> allNodeNames;
 
     /**
      * Creates an empty s-graph.
@@ -67,6 +73,12 @@ public class SGraph {
         hasCachedHashcode = false;
         equalsMeansIsomorphy = true;
     }
+    
+    private void invalidate() {
+        hasCachedHashcode = false;
+        incomingEdgeLabels = null;
+        outgoingEdgeLabels = null;
+    }
 
     /**
      * Creates an s-graph with the given underlying graph, and no sources.
@@ -78,7 +90,7 @@ public class SGraph {
 
         sourceToNodename = new HashMap<>();
         nodenameToSources = HashMultimap.create();
-        hasCachedHashcode = false;
+        invalidate();
         equalsMeansIsomorphy = true;
 
         nameToNode = new HashMap<>();
@@ -111,7 +123,7 @@ public class SGraph {
             nameToNode.put(name, u);
         }
 
-        hasCachedHashcode = false;
+        invalidate();
         return u;
     }
 
@@ -129,7 +141,7 @@ public class SGraph {
         GraphNode u = new GraphNode(anonymousName, label);
         graph.addVertex(u);
         nameToNode.put(anonymousName, u);
-        hasCachedHashcode = false;
+        invalidate();
         return u;
     }
 
@@ -151,7 +163,7 @@ public class SGraph {
 //            System.err.println("graph was: " + this);
         } else {
             e.setLabel(label);
-            hasCachedHashcode = false;
+            invalidate();
         }
 
         return e;
@@ -167,7 +179,7 @@ public class SGraph {
     public void addSource(String sourceName, String nodename) {
         sourceToNodename.put(sourceName, nodename);
         nodenameToSources.put(nodename, sourceName);
-        hasCachedHashcode = false;
+        invalidate();
     }
 
     /**
@@ -211,6 +223,21 @@ public class SGraph {
         return nameToNode.containsKey(name);
     }
 
+    /**
+     * Returns true iff at least one node in the graph has a label.
+     * @return 
+     */
+    public boolean hasLabelledNode() {
+        Iterator<GraphNode> it = nameToNode.values().iterator();
+        boolean ret = false;
+        while (it.hasNext()) {
+            if (it.next().getLabel()!=null) {
+                ret = true;
+            }
+        }
+        return ret;
+    }
+    
     /**
      * Merges this s-graph with another s-graph. The merge operation
      * combines two s-graphs into one. The resulting s-graph contains all
@@ -287,6 +314,38 @@ public class SGraph {
         ret.nodenameToSources = HashMultimap.create(nodenameToSources);
         ret.nodenameToSources.remove(nodenameForSource, oldName);
         ret.nodenameToSources.put(nodenameForSource, newName);
+
+        return ret;
+    }
+    
+    public SGraph swapSources(String sourceName1, String sourceName2) {
+        if ((!sourceToNodename.containsKey(sourceName1))||(!sourceToNodename.containsKey(sourceName2))) {
+            Logging.get().fine(() -> "swapSources(" + sourceName1 + "," + sourceName2 + "): old source does not exist in graph " + this);
+            return null;
+        }
+
+        if (sourceName1.equals(sourceName2)) {
+            return this;
+        }
+
+        // make fast, shallow copy of sgraph; this is okay if this sgraph
+        // is not modified after making the copy
+        SGraph ret = new SGraph();
+        shallowCopyInto(ret);
+
+        // rename the source
+        ret.sourceToNodename = new HashMap<>();
+        ret.sourceToNodename.putAll(sourceToNodename);
+        String nodenameForSource1 = ret.sourceToNodename.remove(sourceName1);
+        String nodenameForSource2 = ret.sourceToNodename.remove(sourceName2);
+        ret.sourceToNodename.put(sourceName2, nodenameForSource1);
+        ret.sourceToNodename.put(sourceName1, nodenameForSource2);
+
+        ret.nodenameToSources = HashMultimap.create(nodenameToSources);
+        ret.nodenameToSources.remove(nodenameForSource1, sourceName1);
+        ret.nodenameToSources.remove(nodenameForSource2, sourceName2);
+        ret.nodenameToSources.put(nodenameForSource1, sourceName2);
+        ret.nodenameToSources.put(nodenameForSource2, sourceName1);
 
         return ret;
     }
@@ -535,14 +594,19 @@ public class SGraph {
             visitedNodes.add(node.getName());
         }
     }
-
+    
+    
+    public static interface NodeRepresentationAppender {
+        public void append(GraphNode node, Set<String> visitedNodes, StringBuilder buf);
+    }
+    
     /**
-     * Returns a string representation of this s-graph.
-     * 
+     * Returns a string representation of the graph.
+     * @param graph
+     * @param nra
      * @return 
      */
-    @Override
-    public String toString() {
+    public static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph, NodeRepresentationAppender nra) {
         StringBuilder buf = new StringBuilder();
         Set<String> visitedNodes = new HashSet<>();
 
@@ -552,9 +616,9 @@ public class SGraph {
                 buf.append("; ");
             }
 
-            appendFullRepr(edge.getSource(), visitedNodes, buf);
+            nra.append(edge.getSource(), visitedNodes, buf);
             buf.append(" -" + edge.getLabel() + "-> ");
-            appendFullRepr(edge.getTarget(), visitedNodes, buf);
+            nra.append(edge.getTarget(), visitedNodes, buf);
         }
 
         for (GraphNode node : graph.vertexSet()) {
@@ -565,13 +629,73 @@ public class SGraph {
                     buf.append("; ");
                 }
 
-                appendFullRepr(node, visitedNodes, buf);
+                nra.append(node, visitedNodes, buf);
             }
         }
 
         buf.append("]");
 
         return buf.toString();
+    }
+    
+    /**
+     * Returns a string representation of the graph.
+     * @param graph
+     * @param nra
+     * @return 
+     */
+    public static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph) {
+        return graphToString(graph, (node, visitedNodes, buf) -> {
+            buf.append(node.getName());
+
+            if (!visitedNodes.contains(node.getName())) {
+                if (node.getLabel() != null) {
+                    buf.append("/" + node.getLabel());
+                }
+
+                visitedNodes.add(node.getName());
+            }
+        });
+    }
+
+    /**
+     * Returns a string representation of this s-graph.
+     * 
+     * @return 
+     */
+    @Override
+    public String toString() {
+        return graphToString(graph, this::appendFullRepr);
+        
+//        StringBuilder buf = new StringBuilder();
+//        Set<String> visitedNodes = new HashSet<>();
+//
+//        buf.append("[");
+//        for (GraphEdge edge : graph.edgeSet()) {
+//            if (!visitedNodes.isEmpty()) {
+//                buf.append("; ");
+//            }
+//
+//            appendFullRepr(edge.getSource(), visitedNodes, buf);
+//            buf.append(" -" + edge.getLabel() + "-> ");
+//            appendFullRepr(edge.getTarget(), visitedNodes, buf);
+//        }
+//
+//        for (GraphNode node : graph.vertexSet()) {
+//            String nodename = node.getName();
+//
+//            if (!visitedNodes.contains(nodename)) {
+//                if (!visitedNodes.isEmpty()) {
+//                    buf.append("; ");
+//                }
+//
+//                appendFullRepr(node, visitedNodes, buf);
+//            }
+//        }
+//
+//        buf.append("]");
+//
+//        return buf.toString();
     }
 
     /**
@@ -642,7 +766,12 @@ public class SGraph {
         }
     }
 
-    boolean isIdenticalExceptSources(SGraph other) {
+    /**
+     * Checks whether this graph is identical to the other graph, ignoring source assignments.
+     * @param other
+     * @return 
+     */
+    public boolean isIdenticalExceptSources(SGraph other) {
         if (this == other) {
             return true;
         } else if (!nameToNode.keySet().equals(other.nameToNode.keySet())) {
@@ -812,6 +941,33 @@ public class SGraph {
         foreachMatchingSubgraph(subgraph, s -> ret.add(s));
         return ret;
     }
+    
+    private void recomputeAdjacencyCache() {
+        if( incomingEdgeLabels == null ) {
+            incomingEdgeLabels = new HashMap<>();
+            outgoingEdgeLabels = new HashMap<>();
+            incomingEdgeLabelsAsList = new HashMap<>();
+            outgoingEdgeLabelsAsList = new HashMap<>();
+            
+            String[] x = new String[0];
+            
+            for( GraphNode node : graph.vertexSet() ) {
+                String nodename = node.getName();
+                Set<String> out = Util.mapToSet(getGraph().outgoingEdgesOf(node), e -> e.getLabel());
+                outgoingEdgeLabels.put(nodename, out);                
+                outgoingEdgeLabelsAsList.put(nodename, out.toArray(x));
+                
+                Set<String> in = Util.mapToSet(getGraph().incomingEdgesOf(node), e -> e.getLabel());
+                incomingEdgeLabels.put(nodename, in);
+                
+                incomingEdgeLabelsAsList.put(nodename, in.toArray(x));
+            }
+            
+            allNodeNames = Util.mapToList(graph.vertexSet(), u -> u.getName());
+        }
+    }
+    
+    
 
     /**
      * Applies the given function "fn" to all sub-s-graphs of this s-graph
@@ -823,9 +979,12 @@ public class SGraph {
      * @param fn 
      */
     public void foreachMatchingSubgraph(SGraph subgraph, Consumer<SGraph> fn) {
-        Map<String, Set<String>> possibleNodeRenamings = new HashMap<>();
+        Map<String, Collection<String>> possibleNodeRenamings = new HashMap<>();
 
         ensureNodeIndices();
+        recomputeAdjacencyCache();
+        
+        subgraph.recomputeAdjacencyCache();
         
 //        System.err.println("\nmatch complete graph: " + this);
 //        System.err.println("   - subgraph: " + subgraph);
@@ -834,40 +993,60 @@ public class SGraph {
         for (String nodename : subgraph.getAllNodeNames()) {
             GraphNode node = subgraph.getNode(nodename);
             String nodelabel = node.getLabel();
-            Set<String> possibleRenamingsHere = null; // node names in "this" that nodename might correspond to
             
-//            System.err.println("possible renamings for subgraph node " + nodename);
+            String[] outgoingEdgeLabelsOfNode = subgraph.outgoingEdgeLabelsAsList.get(nodename);
+            String[] incomingEdgeLabelsOfNode = subgraph.incomingEdgeLabelsAsList.get(nodename);
+            
+            Collection<String> maybePossibleRenamingsHere = (nodelabel == null) ? allNodeNames : labelToNodename.get(nodelabel);
+            List<String> actuallyPossibleRenamingsHere = new ArrayList<>();
+            
+            renamedNodeLoop:
+            for( String renamedNode : maybePossibleRenamingsHere ) {                
+                Set<String> outgoingEdgeLabelsOfRenamed = outgoingEdgeLabels.get(renamedNode);
+                Set<String> incomingEdgeLabelsOfRenamed = incomingEdgeLabels.get(renamedNode);
 
-            if (nodelabel == null) {
-                possibleRenamingsHere = Util.mapSet(graph.vertexSet(), x -> x.getName());
-            } else {
-                List<String> possibleNodenames = labelToNodename.get(nodelabel);
-                possibleRenamingsHere = new HashSet<String>(possibleNodenames);
+                // only collect node if its outgoing edges cover all the outgoing edge labels of node to match
+                for( int i = 0; i < outgoingEdgeLabelsOfNode.length; i++ ) {
+                    if( ! outgoingEdgeLabelsOfRenamed.contains(outgoingEdgeLabelsOfNode[i]) ) {
+                        continue renamedNodeLoop;
+                    }
+                }
+                
+                // same for incoming edge labels
+                for( int i = 0; i < incomingEdgeLabelsOfNode.length; i++ ) {
+                    if( ! incomingEdgeLabelsOfRenamed.contains(incomingEdgeLabelsOfNode[i])) {
+                        continue renamedNodeLoop;
+                    }
+                }
+                
+                actuallyPossibleRenamingsHere.add(renamedNode);
             }
+            
+            
             
 //            System.err.println("- initial guess: " + possibleRenamingsHere);
 
-            // filter out node renamings that don't have correct adjacent edge labels
-            for (GraphEdge e : subgraph.graph.outgoingEdgesOf(node)) {
-                possibleRenamingsHere.removeIf(renamedNodeName
-                        -> !getGraph().outgoingEdgesOf(getNode(renamedNodeName))
-                        .stream()
-                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
-                );
-            }
-            
-//            System.err.println("- after outgoing edge filter: " + possibleRenamingsHere);
-
-            for (GraphEdge e : subgraph.graph.incomingEdgesOf(node)) {
-                possibleRenamingsHere.removeIf(renamedNodeName -> !getGraph().incomingEdgesOf(getNode(renamedNodeName))
-                        .stream()
-                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
-                );
-            }
+//            // filter out node renamings that don't have correct adjacent edge labels
+//            for (GraphEdge e : subgraph.graph.outgoingEdgesOf(node)) {
+//                maybePossibleRenamingsHere.removeIf(renamedNodeName
+//                        -> !getGraph().outgoingEdgesOf(getNode(renamedNodeName))
+//                        .stream()
+//                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
+//                );
+//            }
+//            
+////            System.err.println("- after outgoing edge filter: " + possibleRenamingsHere);
+//
+//            for (GraphEdge e : subgraph.graph.incomingEdgesOf(node)) {
+//                maybePossibleRenamingsHere.removeIf(renamedNodeName -> !getGraph().incomingEdgesOf(getNode(renamedNodeName))
+//                        .stream()
+//                        .anyMatch(re -> re.getLabel().equals(e.getLabel()))
+//                );
+//            }
             
 //            System.err.println("- after incoming edge filter: " + possibleRenamingsHere);
 
-            possibleNodeRenamings.put(nodename, possibleRenamingsHere);
+            possibleNodeRenamings.put(nodename, actuallyPossibleRenamingsHere);
         }
 
         // iterate over all combinations
@@ -875,7 +1054,7 @@ public class SGraph {
         _foreachMatchingSubgraph(nodesInOrder, 0, possibleNodeRenamings, new HashMap<String, String>(), subgraph, fn);
     }
 
-    private void _foreachMatchingSubgraph(List<String> nodes, int pos, Map<String, Set<String>> possibleRenamings, Map<String, String> selectedRenaming, SGraph subgraph, Consumer<SGraph> fn) {
+    private void _foreachMatchingSubgraph(List<String> nodes, int pos, Map<String, Collection<String>> possibleRenamings, Map<String, String> selectedRenaming, SGraph subgraph, Consumer<SGraph> fn) {
         if (pos == nodes.size()) {
             // check that this is actually a subgraph
             if (containsAsSubgraph(subgraph.getGraph(), selectedRenaming)) {
@@ -896,7 +1075,7 @@ public class SGraph {
     /**
      * Checks whether two s-graphs are isomorphic. This corresponds to
      * evaluating {@link #equals(java.lang.Object) } in the mode where
-     * "equals means isomorphy" is true.
+     * "equals means isomorphy" is true. Does not check edge labels.
      * 
      * @param other
      * @return 
@@ -908,6 +1087,45 @@ public class SGraph {
                         other.getGraph(),
                         new GraphNode.NodeLabelEquivalenceComparator(),
                         null);
+
+        if (!iso.isIsomorphic()) {
+            return false;
+        } else {
+            while (iso.hasNext()) {
+                final IsomorphismRelation<GraphNode, GraphEdge> ir = (IsomorphismRelation<GraphNode, GraphEdge>) iso.next();
+                
+                Map<String, String> rewrittenSources = new HashMap<>();                
+                for( String source : sourceToNodename.keySet() ) {
+                    GraphNode newNode = ir.getVertexCorrespondence(getNode(sourceToNodename.get(source)), true);
+                    String newNodename = newNode.getName();
+                    rewrittenSources.put(source, newNodename);
+                }
+                
+                if (rewrittenSources.equals(other.sourceToNodename)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+    
+    /**
+     * Checks whether two s-graphs are isomorphic. This corresponds to
+     * evaluating {@link #equals(java.lang.Object) } in the mode where
+     * "equals means isomorphy" is true. Also compares whether edges are
+     * labelled equally.
+     * 
+     * @param other
+     * @return 
+     */
+    public boolean isIsomorphicAlsoEdges(SGraph other) {
+        GraphIsomorphismInspector iso
+                = AdaptiveIsomorphismInspectorFactory.createIsomorphismInspector(
+                        getGraph(),
+                        other.getGraph(),
+                        new GraphNode.NodeLabelEquivalenceComparator(),
+                        new GraphEdge.EdgeLabelEquivalenceComparator());
 
         if (!iso.isIsomorphic()) {
             return false;

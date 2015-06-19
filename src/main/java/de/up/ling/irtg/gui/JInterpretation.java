@@ -7,6 +7,7 @@ package de.up.ling.irtg.gui;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.codec.TikzQtreeOutputCodec;
 import de.up.ling.tree.Tree;
@@ -64,7 +65,7 @@ public class JInterpretation extends JDerivationDisplayable {
         });
         JComponent treePanel = sp(rawTreePanel);
         termPanel.add(treePanel);
-        
+
         PopupMenu.b().add("text", term.toString())
                 .add("tikz-qtree", new TikzQtreeOutputCodec().asStringSupplier(term))
                 .build().addAsMouseListener(rawTreePanel);
@@ -78,9 +79,15 @@ public class JInterpretation extends JDerivationDisplayable {
             final Object value = alg.evaluate(term);
             valueComponent = alg.visualize(value);
 
-            Map<String, Supplier<String>> popupEntries = new LinkedHashMap<>(); //alg.getRepresentations(value);
+            Map<String, Supplier<String>> popupEntries = new LinkedHashMap<>();
+
+            OutputCodec oc = new AlgebraStringRepresentationOutputCodec(alg);
+            popupEntries.put(oc.getMetadata().description(), oc.asStringSupplier(value));
+
             for (OutputCodec codec : OutputCodec.getOutputCodecs(value.getClass())) {
-                popupEntries.put(codec.getMetadata().description(), codec.asStringSupplier(value));
+                if (codec.getMetadata().displayInPopup()) {
+                    popupEntries.put(codec.getMetadata().description(), codec.asStringSupplier(value));
+                }
             }
 
             new PopupMenu(popupEntries).addAsMouseListener(valueComponent);

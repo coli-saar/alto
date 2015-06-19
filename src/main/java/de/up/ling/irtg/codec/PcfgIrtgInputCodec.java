@@ -28,8 +28,10 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 /**
  * An input codec for context-free grammars, with or without rule probabilities.
  * The first line of a file that this codec will read contains the start symbol of the grammar.
- * Then one rule is specified on each line, in the following form:
+ * Then one rule is specified on each line, in the following form:<p>
+ * 
  * <pre>A -> B c D [0.3]</pre>
+ * 
  * Rule probabilities may optionally be specified in square brackets for each rule.
  * Rules without explicit probabilities receive weight 1; this can be used
  * to specify an ordinary, non-probabilistic context-free grammar.<p>
@@ -114,7 +116,7 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             String terminal = gensym("r");
             auto.addRule(auto.createRule(rule.lhs, terminal, rhsNonterminals, rule.weight));
             stringHom.add(terminal, Util.makeBinaryTree("*", homLeaves));
-            treeHom.add(terminal, Util.makeTreeWithArities(Tree.create(rule.lhs, Util.mapList(homLeaves, Tree::create))));
+            treeHom.add(terminal, Util.makeTreeWithArities(Tree.create(rule.lhs, Util.mapToList(homLeaves, Tree::create))));
         }
 
         auto.addFinalState(auto.addState(startsym));

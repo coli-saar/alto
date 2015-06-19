@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.MapFactory;
@@ -84,10 +85,14 @@ public class IntTrie<E> implements Serializable {
     }
 
     public E get(int[] key) {
+        //ParseTester.averageLogger.increaseCount("IntTrieGet1");
+        //ParseTester.averageLogger.increaseValue("IntTrieGet1");
         return get(0, key);
     }
 
     private E get(int index, int[] key) {
+        //ParseTester.averageLogger.increaseCount("IntTrieGet2");
+        //ParseTester.averageLogger.increaseValue("IntTrieGet2");
         if (index == key.length) {
             return value;
         } else {

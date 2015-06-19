@@ -5,6 +5,8 @@
 package de.up.ling.irtg.algebra.graph;
 
 import java.util.function.Function;
+import org.jgrapht.Graph;
+import org.jgrapht.experimental.equivalence.EquivalenceComparator;
 
 
 /**
@@ -14,9 +16,12 @@ import java.util.function.Function;
  * 
  * @author koller
  */
-public class GraphEdge {
+public class GraphEdge{
+
     private GraphNode source;
+    
     private GraphNode target;
+    
     private String label;
 
     public GraphEdge(GraphNode source, GraphNode target) {
@@ -40,11 +45,11 @@ public class GraphEdge {
         return target;
     }
     
-    public String repr() {
+    String repr() {
         return source.getName() + " -" + (label == null ? "-" : label) + "-> " + (target.getName());
     }
     
-    public static final Function<GraphEdge,String> reprF =
+    static final Function<GraphEdge,String> reprF =
         new Function<GraphEdge, String>() {
             public String apply(GraphEdge f) {
                 return f.repr();
@@ -63,6 +68,10 @@ public class GraphEdge {
         return label.toString();
     }
 
+    /**
+     * Based on source and target.
+     * @return 
+     */
     @Override
     public int hashCode() {
         int hash = 5;
@@ -71,6 +80,11 @@ public class GraphEdge {
         return hash;
     }
 
+    /**
+     * Only checks whether source and target are equal, the label is not checked.
+     * @param obj
+     * @return 
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -89,5 +103,23 @@ public class GraphEdge {
         return true;
     }
     
+    
+    static class EdgeLabelEquivalenceComparator implements EquivalenceComparator<GraphEdge, Graph<GraphNode, GraphEdge>> {
+        public boolean equivalenceCompare(GraphEdge e, GraphEdge e1, Graph<GraphNode, GraphEdge> c, Graph<GraphNode, GraphEdge> c1) {
+            if (e.label == null) {
+                return e1.label == null;
+            } else {
+                return e.label.equals(e1.label);
+            }
+        }
+
+        public int equivalenceHashcode(GraphEdge e, Graph<GraphNode, GraphEdge> c) {
+            if (e.label == null) {
+                return -1;
+            } else {
+                return e.label.hashCode();
+            }
+        }
+    }
     
 }

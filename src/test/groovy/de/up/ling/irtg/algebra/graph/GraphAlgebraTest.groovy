@@ -41,6 +41,8 @@ class GraphAlgebraTest {
         assertEquals(gold, alg.evaluate(term))
     }
     
+    
+    
     @Test
     public void testEvaluate2() {
         GraphAlgebra alg = new GraphAlgebra();
@@ -50,7 +52,39 @@ class GraphAlgebraTest {
         
         assertEquals(gold, alg.evaluate(term))
     }
+ 
+
+    @Test
+    public void testLoopGraph() {
+        InterpretedTreeAutomaton irtg = pi(HRGSimple)//could be any irtg really
+        try {
+            SGraph graph = (SGraph)irtg.parseString("graph","(b<root> :boy b)")//just checking if an error occurs
+            assert true;
+        } catch (java.lang.Exception e) {
+            assert false;
+        }
+        
+    }
     
+    @Test
+    public void testInterpretationHasParse() {
+        InterpretedTreeAutomaton irtg = pi(HRGSimple)
+        Interpretation interp = irtg.getInterpretation("graph")
+        SGraph graph = (SGraph)irtg.parseString("graph","(g<root> / go :ARG0 (b<subj> / boy))")
+        TreeAutomaton interpParse = interp.parse(graph)
+        interpParse.makeAllRulesExplicit()
+        boolean hasParse = false
+        if (interpParse.supportsBottomUpQueries()) {
+            hasParse = interpParse.getFinalStates().size() > 0
+        } else {
+            for (Integer i : interpParse.getFinalStates()){
+                if (interpParse.getRulesTopDown(i).iterator().hasNext()){
+                    hasParse = true;
+                }
+            }
+        }
+        assert hasParse;
+    }
     
     
     @Test
@@ -61,14 +95,16 @@ class GraphAlgebraTest {
         assertEquals(new HashSet([pt("want2(boy,go)")]), chart.language())
     }
     
+    
     @Test
     public void testParseGraphWithCoref() {
         InterpretedTreeAutomaton irtg = pi(COREF);
         TreeAutomaton chart = irtg.parse(["graph":"(u91<root> / want-01  :ARG0 (u92<coref1> / bill)  :ARG1 (u93 / like-01           :ARG0 (u94 / girl)	  :ARG1 u92)  :dummy u94)"])
-        
-        assertEquals(new HashSet([pt("want3(bill, girl, like(bill))"), pt("want3(bill, girl, like(him))"), pt("want3(him, girl, like(bill))")]),
+//        System.err.println(chart);
+        assertEquals(new HashSet([pt("want3(bill, girl, like(him))"), pt("want3(him, girl, like(bill))")]),
                      chart.language())
     }
+
     
     @Test
     public void testParseGraphWithoutSources() {
@@ -157,5 +193,21 @@ VP -> go
 
 
     """;
+
+    public static final String HRGSimple = """\n\
+
+interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+
+S! -> go(NP)
+[graph]  merge('(g<root> / go  :ARG0 (s<subj>))', r_subj(?1))
+
+
+NP -> boy
+[graph]  '(x<root> / boy)'
+
+
+    """;
 }
+
 

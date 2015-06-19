@@ -5,9 +5,11 @@
  */
 
 package de.up.ling.irtg.automata.condensed;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -156,6 +158,57 @@ public class CondensedRule {
 
         ret.append(" [" + weight + "]");
         return ret.toString();
+    }
+    
+    
+    private int hashcode = -1;
+    
+    private int computeHashCode() {
+        int hash = 7;
+        hash = 73 * hash + this.parent;
+        hash = 73 * hash + this.labelSetID;
+        hash = 73 * hash + Arrays.hashCode(this.children);
+        return hash;
+    }
+
+    @Override
+    public int hashCode() {
+        if( hashcode == -1 ) {
+            hashcode = computeHashCode();
+        }
+        
+        return hashcode;
+    }
+
+    /**
+     * Compares two rules for equality. Rule weights are ignored
+     * in the comparison. Notice that this implementation of equals
+     * is only meaningful if the two rules belong to the same
+     * automaton, as otherwise states might be encoded by different
+     * interners.
+     * 
+     * @param obj
+     * @return 
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final CondensedRule other = (CondensedRule) obj;
+        if (this.parent != other.parent) {
+            return false;
+        }
+        if (this.labelSetID != other.labelSetID) {
+            return false;
+        }
+        if (!Arrays.equals(this.children, other.children)) {
+            return false;
+        }
+        return true;
     }
     
 }

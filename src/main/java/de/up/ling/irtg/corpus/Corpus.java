@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -34,19 +35,19 @@ import java.util.regex.Pattern;
 public class Corpus implements Iterable<Instance> {
 
     static String CORPUS_VERSION = "1.0";
-    private static Pattern WHITESPACE_PATTERN = Pattern.compile("\\s*");
-    private static Pattern UNANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG unannotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
-    private static Pattern ANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG annotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
-    private static Pattern COMMENT_PATTERN = Pattern.compile("\\s*#.*");
-    private static Pattern INTERPRETATION_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*interpretation\\s+([^: ]+)\\s*:\\s*(\\S+).*", Pattern.CASE_INSENSITIVE);
-    private List<Instance> instances;
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s*");
+    private static final Pattern UNANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG unannotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern ANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*IRTG annotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
+    private static final Pattern COMMENT_PATTERN = Pattern.compile("\\s*#.*");
+    private static final Pattern INTERPRETATION_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*interpretation\\s+([^: ]+)\\s*:\\s*(\\S+).*", Pattern.CASE_INSENSITIVE);
+    private final List<Instance> instances;
     private Charts charts;
     private boolean isAnnotated;
     private static final boolean DEBUG = false;
     private String source; // explains where this corpus came from
 
     public Corpus() {
-        instances = new ArrayList<Instance>();
+        instances = new ArrayList<>();
         charts = null;
         isAnnotated = false;
     }
@@ -77,6 +78,7 @@ public class Corpus implements Iterable<Instance> {
         return instances.size();
     }
 
+    @Override
     public Iterator<Instance> iterator() {
         if (hasCharts()) {
             return new ZipIterator<Instance, TreeAutomaton, Instance>(instances.iterator(), charts.iterator()) {
@@ -106,8 +108,8 @@ public class Corpus implements Iterable<Instance> {
         this.source = source;
     }
 
-    public void writeCorpus(Writer writer, InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder) throws IOException {
-        CorpusWriter cw = new CorpusWriter(irtg, interpretationsInOrder, isAnnotated, null, writer);
+    public void writeCorpus(Writer writer, InterpretedTreeAutomaton irtg) throws IOException {
+        CorpusWriter cw = new CorpusWriter(irtg, isAnnotated, null, writer);
 
         for (Instance inst : instances) {
             cw.writeInstance(inst);
@@ -316,5 +318,10 @@ public class Corpus implements Iterable<Instance> {
         }
 
         return ret;
+    }
+    
+    
+    public void sort(Comparator<Instance> comparator) {
+        instances.sort(comparator);
     }
 }

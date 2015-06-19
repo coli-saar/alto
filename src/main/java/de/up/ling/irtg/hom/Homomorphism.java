@@ -416,9 +416,8 @@ public class Homomorphism implements Serializable {
     private void checkNondeleting() {
         if (nondeleting == null) {
             for (int label : labelToLabelSet.keySet()) {
-                int labelSetIdForlabel = labelToLabelSet.get(label);
-                Tree<HomomorphismSymbol> rhs = get(labelSetIdForlabel);
-                Set<HomomorphismSymbol> variables = new HashSet<HomomorphismSymbol>();
+                Tree<HomomorphismSymbol> rhs = get(label);
+                Set<HomomorphismSymbol> variables = new HashSet<>();
                 
                 for (HomomorphismSymbol l : rhs.getLeafLabels()) {
                     if (l.isVariable()) {
@@ -452,7 +451,7 @@ public class Homomorphism implements Serializable {
      */
     public SignatureMapper getSignatureMapper() {
         if (signatureMapper == null) {
-            signatureMapper = new SignatureMapper(srcSignature, tgtSignature);
+            signatureMapper = srcSignature.getMapperTo(tgtSignature);
         }
 
         return signatureMapper;

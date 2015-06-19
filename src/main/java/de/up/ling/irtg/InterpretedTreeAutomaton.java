@@ -209,14 +209,34 @@ public class InterpretedTreeAutomaton implements Serializable {
 
 //            Logging.get().fine(() -> "Input: " + input);
             TreeAutomaton interpParse = interp.parse(input);
-
-//            Logging.get().finest(() -> "invhom(decomp): " + interpParse);
             ret = ret.intersect(interpParse);
 
 //            Logging.get().finest(() -> ("Intersect: " + ret));
         }
 
-        return ret.reduceTopDown();
+//        Map<Integer, Double> inside = ret.inside();
+//        double sum = 0;
+//        for (int q : ret.getFinalStates()) {
+//            double w = inside.get(q);
+//            System.err.println("inside for final state " + ret.getStateForId(q) + ": " + w);
+//            sum += w;
+//        }
+//        System.err.println("--- total = " + sum);
+
+        ret = ret.reduceTopDown();
+        
+        /*  // for debugging: print weighted language
+        Iterator<WeightedTree> it = ret.sortedLanguageIterator();
+        int i = 1;
+        while(it.hasNext()) {
+            WeightedTree wt = it.next();
+            System.err.println(i + ". " + ret.getSignature().resolve(wt.getTree()));
+            System.err.println("P = " + wt.getWeight() + "\n");
+            i++;
+        }
+*/
+        
+        return ret;
     }
 
     /**

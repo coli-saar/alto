@@ -39,16 +39,21 @@ public class Signature implements Serializable {
     }
     
     public SignatureMapper getMapperTo(Signature other) {
-        if( equals(other)) {
-            return new IdentitySignatureMapper(this);
-        } else {
-            return new SignatureMapper(this, other);
-        }
+        return interner.getMapperTo(other.interner);
+    }
+    
+    public SignatureMapper getIdentityMapper() {
+        return new IdentitySignatureMapper(interner);
     }
     
     public void clear() {
         interner.clear();
     }
+    
+    // deliberately only package-visible
+//    Interner<String> getInterner() {
+//        return interner;
+//    }
     
     public Collection<String> getSymbols() {
         return interner.getKnownObjects();

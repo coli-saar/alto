@@ -92,7 +92,7 @@ Y -> r8(X,X)
         TreeAutomaton auto1 = pa("q1 -> a\n q2 ! -> f(q1,q1) ");       
         CondensedTreeAutomaton auto2 = pac("p1! -> {f}(p2,p3) \n p2 -> {a}  \n p3 -> {a}");
         
-        TreeAutomaton intersect = auto1.intersectCondensed(auto2, new SignatureMapper(auto1.getSignature(), auto2.getSignature()));
+        TreeAutomaton intersect = auto1.intersectCondensed(auto2, auto1.getSignature().getMapperTo(auto2.getSignature()));
         intersect.getStateInterner().setTrustingMode(false); // important!
 
         assert intersect.getSignature() == auto1.getSignature();
@@ -114,7 +114,7 @@ Y -> r8(X,X)
         TreeAutomaton auto1 = pa("q1! -> f(q2, q3)\n q2 -> a\n q3 -> a\n q3 -> b");
         TreeAutomaton auto2 = pac("p1! -> {f}(p2,p2)\n p2 -> {a}");
         
-        TreeAutomaton intersect = auto1.intersectCondensed(auto2, new SignatureMapper(auto1.getSignature(), auto2.getSignature()));
+        TreeAutomaton intersect = auto1.intersectCondensed(auto2, auto1.getSignature().getMapperTo(auto2.getSignature()));
         
         assertEquals(new HashSet([pt("f(a,a)")]), intersect.language());
     }
@@ -166,7 +166,7 @@ Y -> r8(X,X)
     public void testIntersectionFinalStates() {
         TreeAutomaton auto1 = pa("q1! -> f(q2, q3)\n q2 -> a\n q3 -> a\n q3 -> b\n qqqq! -> xxxx");
         CondensedTreeAutomaton auto2 = pac("p1! -> {f}(p2,p2)\n p2 -> {a}");
-        TreeAutomaton intersect = auto1.intersectCondensed(auto2, new SignatureMapper(auto1.getSignature(), auto2.getSignature()));
+        TreeAutomaton intersect = auto1.intersectCondensed(auto2, auto1.getSignature().getMapperTo(auto2.getSignature()));
         
         assertEquals(new HashSet(["q1,p1"]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it).toString() }));
     }
@@ -190,7 +190,7 @@ Y -> r8(X,X)
     public void testIntersectWeights() {
         TreeAutomaton auto1 = pa("q1 -> a  [0.5]\n q2! -> f(q1,q1) ");
         CondensedTreeAutomaton auto2 = pac("p1! -> {f}(p2,p3) \n p2 -> {a} [0.4]\n p3 -> {a} [0.6]");
-        TreeAutomaton intersect = auto1.intersectCondensed(auto2, new SignatureMapper(auto1.getSignature(), auto2.getSignature()));
+        TreeAutomaton intersect = auto1.intersectCondensed(auto2, auto1.getSignature().getMapperTo(auto2.getSignature()));
         
         Set rulesForA = rbu("a", [], intersect);
         
@@ -206,7 +206,7 @@ Y -> r8(X,X)
     public void testIntersectWeightsViaExplicit() {
         TreeAutomaton auto1 = pa("q1 -> a  [0.5]\n q2! -> f(q1,q1) ");
         CondensedTreeAutomaton auto2 = pac("p1! -> {f}(p2,p3) \n p2 -> {a} [0.4]\n p3 -> {a} [0.6]");
-        TreeAutomaton intersect = auto1.intersectCondensed(auto2, new SignatureMapper(auto1.getSignature(), auto2.getSignature()));
+        TreeAutomaton intersect = auto1.intersectCondensed(auto2, auto1.getSignature().getMapperTo(auto2.getSignature()));
         
         intersect.makeAllRulesExplicit();        
         Set rulesForA = rbu("a", [], intersect);

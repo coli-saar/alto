@@ -23,7 +23,7 @@ public class ListOutputCodec extends OutputCodec<List> {
     @Override
     public void write(List list, OutputStream ostream) throws IOException, UnsupportedOperationException {
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
-        w.write(StringTools.join(Util.mapList(list, x -> x.toString()), " "));
+        w.write(StringTools.join(Util.mapToList(list, x -> x.toString()), " "));
         w.flush();
     }
     

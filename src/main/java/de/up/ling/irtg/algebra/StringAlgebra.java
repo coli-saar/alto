@@ -17,13 +17,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
 
 /**
  * The binary string algebra. The elements of this algebra are lists of strings,
@@ -98,10 +93,17 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         return symbols;
     }
 
+//    @Override
+//    public JComponent visualize(List<String> object) {
+//        return new JLabel(StringTools.join(object, " "));
+//    }
+
     @Override
-    public JComponent visualize(List<String> object) {
-        return new JLabel(StringTools.join(object, " "));
+    public String representAsString(List<String> object) {
+        return StringTools.join(object, " ");
     }
+    
+    
 
     private class CkyAutomaton extends TreeAutomaton<Span> {
 
@@ -165,7 +167,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
                     Span span = new Span(getStateForId(childStates[0]).start, getStateForId(childStates[1]).end);
                     int spanState = addState(span);
-                    Rule rule = createRule(spanState, label, childStates, 1);
+                    Rule rule = createRule(spanState, label, Arrays.copyOf(childStates, childStates.length), 1);  // contents of childStates may change in the future, clone it to be on the safe side
                     ret.add(rule);
                     storeRule(rule);
 

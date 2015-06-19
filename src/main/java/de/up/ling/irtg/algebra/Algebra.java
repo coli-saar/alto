@@ -217,7 +217,23 @@ public abstract class Algebra<E> implements Serializable {
      * @return 
      */
     public JComponent visualize(E object) {
-        return new JLabel(object.toString());
+        return new JLabel(representAsString(object));
+    }
+    
+    /**
+     * Returns a string representation of this object. The default
+     * implementation simply calls the object's {@link Object#toString() }
+     * method. Concrete algebras may overwrite this implementation for
+     * algebra-specific string representations. Whenever Alto knows to
+     * which algebra an object belongs, it will attempt to call this method
+     * instead of the generic toString to produce algebra-specific
+     * string representations.
+     * 
+     * @param object
+     * @return 
+     */
+    public String representAsString(E object) {
+        return object.toString();
     }
     
     
@@ -234,6 +250,10 @@ public abstract class Algebra<E> implements Serializable {
             }
         });
     }
+    
+    
+
+    
     
     
     protected class EvaluatingDecompositionAutomaton extends TreeAutomaton<E> {

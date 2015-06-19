@@ -33,7 +33,22 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
 /**
- * An input codec for IRTGs. See any file in the examples subdirectory
+ * An input codec for IRTGs. Input files must first specify interpretations
+ * and define the algebras that these interpretations go into, using the
+ * <code>interpretation</code> keyword. They then
+ * list a tree automaton, rule by rule, and annotate each rule with the homomorphic images
+ * of the terminaly symbol on each interpretation, e.g. like this:<p>
+ * 
+ * <pre>
+ * S! -> r1(NP,VP)
+ * [german] *(?1,?2)
+ * [english] *(?2,?1)
+ * </pre><p>
+ * 
+ * The exclamation mark after the S indicates that S is a final state
+ * of the tree automaton.<p>
+ * 
+ * See any file in the examples subdirectory
  * with the extension "irtg"
  * for an example of an IRTG in this format.
  * 

@@ -489,14 +489,25 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         return new Pair<List<String>, List<String>>(words, null);
     }
 
+//    @Override
+//    public JComponent visualize(Pair<List<String>, List<String>> object) {
+//        if (object.right == null) {
+//            return new JLabel(StringTools.join(object.left, " "));
+//        } else {
+//            return new JLabel("[" + StringTools.join(object.left, " ") + " / " + StringTools.join(object.right, " ") + "]");
+//        }
+//    }
+
     @Override
-    public JComponent visualize(Pair<List<String>, List<String>> object) {
+    public String representAsString(Pair<List<String>, List<String>> object) {
         if (object.right == null) {
-            return new JLabel(StringTools.join(object.left, " "));
+            return StringTools.join(object.left, " ");
         } else {
-            return new JLabel("[" + StringTools.join(object.left, " ") + " / " + StringTools.join(object.right, " ") + "]");
+            return "[" + StringTools.join(object.left, " ") + " / " + StringTools.join(object.right, " ") + "]";
         }
     }
+    
+    
 
     public static <E, F> int _arity(Pair<E, F> pair) {
         return pair.right == null ? 1 : 2;

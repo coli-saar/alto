@@ -1,0 +1,3316 @@
+interpretation int: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+N_0 -> l_14711(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / lugubrious)')
+
+N_2 -> l_38235(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / overcome-01)')
+
+N_2 -> l_39654(N_3)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> :prep-for (v<1>))')
+
+N_2 -> l_21788(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / they)')
+
+N_3 -> l_34274	[1.0458473324356477E-4]
+[int] '(u<root> / fair)'
+
+N_2 -> l_7566	[5.522645001790545E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / answer-01)')
+
+N_2 -> l_38394	[0.0015187273754923999]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / go-02)')
+
+N_1 -> l_2273(N_1)	[6.858024603163264E-4]
+[int] merge_root_1(?1,'(u<root> / amr-unknown)')
+
+N_0! -> l_14372(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / desert)')
+
+N_2 -> l_45499(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / ahead)')
+
+N_2 -> l_43126	[6.903306252238182E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / engine)')
+
+N_1 -> l_17922(N_4)	[1.714506150790816E-4]
+[int] merge(?1,'(u<root> / matter)')
+
+N_0 -> l_14372(N_2)	[3.4663997538856173E-4]
+[int] merge_root_1(?1,'(u<root> / desert)')
+
+N_1 -> l_10717(N_1)	[0.058521809946993186]
+[int] merge_root_1(?1,'(u<root> / red)')
+
+N_1 -> l_18239(N_1)	[0.0010287036904744896]
+[int] merge_root_1(?1,'(u<root> / also)')
+
+N_2 -> l_16370	[0.002209058000716218]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / fault-01)')
+
+N_2 -> l_27567(N_4)	[0.005816035517510668]
+[int] merge(?1,'(u<root> / make-01)')
+
+N_1 -> l_26544(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / digest-01)')
+
+N_1 -> l_44340(N_1)	[0.007315226243374148]
+[int] merge_root_1(?1,'(u<root> / life)')
+
+N_0 -> l_47267(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / riddle)')
+
+N_0 -> l_6824(N_2)	[1.9065198646370896E-4]
+[int] merge_root_1(?1,'(u<root> / fox)')
+
+N_0! -> l_7560(N_2)	[7.366099477006937E-5]
+[int] merge_root_1(?1,'(u<root> / that)')
+
+N_2 -> l_44753(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / deal)')
+
+N_0 -> l_3882(N_2)	[2.946439790802775E-4]
+[int] merge_root_1(?1,'(u<root> / even)')
+
+N_2 -> l_17988	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / command-02)')
+
+N_2 -> l_46332(N_4)	[7.334762893003068E-5]
+[int] merge(?1,'(u<root> / smile-01)')
+
+N_2 -> l_19775(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / astronomer)')
+
+N_2 -> l_7074(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / spot)')
+
+N_1 -> l_8914(N_1)	[0.0018859567658698975]
+[int] merge_root_1(?1,'(u<root> / fox)')
+
+N_2 -> l_11597(N_4)	[1.7258265630595452E-4]
+[int] merge(?1,'(u<root> / tame-01)')
+
+N_2 -> l_22745(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / tiny)')
+
+N_1 -> l_36318(N_1)	[4.5720164021088427E-4]
+[int] merge_root_1(?1,'(u<root> / caravan-01)')
+
+N_0! -> l_174	[4.332999692357022E-6]
+[int] '(u<root> / amr-unknown)'
+
+N_2 -> l_50916	[1.3806612504476364E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / idea)')
+
+N_0 -> l_38092(N_2)	[6.932799507771235E-5]
+[int] merge_root_1(?1,'(u<root> / sweet)')
+
+N_2 -> l_5787(N_3)	[3.883109766883977E-5]
+[int] merge('(u<root> :degree (v<1>))',?1)
+
+N_3 -> l_255	[0.015060201587073326]
+[int] '(u<root> / little)'
+
+N_3 -> l_29350	[2.0916946648712954E-4]
+[int] '(u<root> / tiger)'
+
+N_3 -> l_20297	[0.002072085027388127]
+[int] '(u<root> / again)'
+
+N_3 -> l_6118	[0.011419345561031729]
+[int] '(u<root> / it)'
+
+N_3 -> l_41131	[1.3073091655445596E-5]
+[int] '(u<root> / lip)'
+
+N_2 -> l_38788	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / comfort-01)')
+
+N_0 -> l_13412(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / indeed)')
+
+N_0! -> l_34740	[4.332999692357022E-6]
+[int] '(u<root> / anywhere)'
+
+N_0 -> l_32285(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / actual)')
+
+N_2 -> l_42348	[1.7258265630595452E-4]
+[int] merge('(u<root> :duration (v<1>))','(u<root> / wait-01)')
+
+N_2 -> l_22953(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / find-01)')
+
+N_1 -> l_31356	[1.1430041005272107E-4]
+[int] merge('(u<root> :prep-against (v<1>))','(u<root> / flatten-01)')
+
+N_3 -> l_38051	[2.0916946648712954E-4]
+[int] '(u<root> / One)'
+
+N_2 -> l_32144	[1.3806612504476364E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / embarrass-01)')
+
+N_2 -> l_38526	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / happy)')
+
+N_1 -> l_37854(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / magnificence)')
+
+N_4 -> l_7745	[0.00420620102309246]
+[int] '(u<root> :purpose (v<1>))'
+
+N_0! -> l_22603(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / thorn)')
+
+N_1 -> l_3676(N_1)	[9.429783829349487E-4]
+[int] merge_root_1(?1,'(u<root> / even)')
+
+N_0 -> l_44150(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / expect-01)')
+
+N_0! -> l_16041	[4.332999692357022E-6]
+[int] '(u<root> / child)'
+
+N_2 -> l_31746(N_4)	[0.0012425951254028725]
+[int] merge(?1,'(u<root> / begin-01)')
+
+N_3 -> l_21971	[6.536545827722798E-6]
+[int] '(u<root> / what)'
+
+N_2 -> l_13934	[0.0016567935005371635]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / much)')
+
+N_3 -> l_11184	[5.2292366621782385E-5]
+[int] '(u<root> / garden)'
+
+N_2 -> l_42876	[6.903306252238182E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / wait-01)')
+
+N_0! -> l_20061(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / nobody)')
+
+N_2 -> l_16721	[0.004694248251521964]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / name)')
+
+N_0 -> l_9128(N_2)	[0.002218495842486795]
+[int] merge_root_1(?1,'(u<root> / double)')
+
+N_3 -> l_19734	[8.366778659485182E-4]
+[int] '(u<root> / arrange-01)'
+
+N_1 -> l_26041(N_4)	[2.8575102513180267E-5]
+[int] merge(?1,'(u<root> / fancy-01)')
+
+N_0! -> l_10621(N_2)	[3.0330997846499154E-5]
+[int] merge_root_1(?1,'(u<root> / flower)')
+
+N_2 -> l_70148	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / remember-01)')
+
+N_1 -> l_18238(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / raise-03)')
+
+N_0 -> l_16823(N_2)	[0.008068045427168775]
+[int] merge_root_1(?1,'(u<root> / we)')
+
+N_3 -> l_40738	[2.2224255814257514E-4]
+[int] '(u<root> / queer)'
+
+N_2 -> l_36655	[2.7613225008952727E-4]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / thorn)')
+
+N_1 -> l_40963(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / telescope)')
+
+N_0! -> l_7526(N_2)	[1.2565699107835364E-4]
+[int] merge_root_1(?1,'(u<root> / he)')
+
+N_0 -> l_29544(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / tame-01)')
+
+N_2 -> l_8055(N_3)	[8.629132815297727E-6]
+[int] merge('(u<root> :duration (v<1>))',?1)
+
+N_1 -> l_1062(N_3,N_3)	[1.4287551256590133E-5]
+[int] merge(?1,?2)
+
+N_2 -> l_24572	[2.7613225008952727E-4]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / monetary-quantity)')
+
+N_2 -> l_38121(N_2)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / picture)')
+
+N_2 -> l_11499	[3.451653126119091E-5]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / before)')
+
+N_0 -> l_18289(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / thunderstruck)')
+
+N_2 -> l_23593(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / breathe-01)')
+
+N_0 -> l_9478(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / seed)')
+
+N_0 -> l_24850(N_2)	[5.546239606216988E-4]
+[int] merge_root_1(?1,'(u<root> / general)')
+
+N_2 -> l_27744(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / room)')
+
+N_0! -> l_10114	[4.332999692357022E-6]
+[int] '(u<root> / sheep)'
+
+N_2 -> l_64070	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / neglect-01)')
+
+N_2 -> l_44409	[0.001104529000358109]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / there)')
+
+N_0 -> l_28474(N_2)	[3.4663997538856173E-4]
+[int] merge_root_1(?1,'(u<root> / 4)')
+
+N_2 -> l_42277	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / forbid-01)')
+
+N_1 -> l_55836	[0.007315226243374148]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / have-rel-role-91)')
+
+N_2 -> l_22431	[0.03572460985533259]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / temporal-quantity)')
+
+N_2 -> l_8745(N_4)	[0.0016567935005371635]
+[int] merge(?1,'(u<root> / volcano)')
+
+N_3 -> l_50991	[6.536545827722798E-6]
+[int] '(u<root> / 21)'
+
+N_1 -> l_12820(N_4)	[0.009715534854481291]
+[int] merge(?1,'(u<root> / boa)')
+
+N_1 -> l_19383(N_4)	[0.007315226243374148]
+[int] merge(?1,'(u<root> / comfort-01)')
+
+N_0! -> l_28474(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 4)')
+
+N_2 -> l_44676(N_4)	[7.766219533767953E-5]
+[int] merge(?1,'(u<root> / picture-01)')
+
+N_2 -> l_27039	[5.522645001790545E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / important)')
+
+N_1 -> l_20679(N_4)	[0.014630452486748297]
+[int] merge(?1,'(u<root> / rat)')
+
+N_0 -> l_18373(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / 31)')
+
+N_3 -> l_37055	[1.0458473324356477E-4]
+[int] '(u<root> / marvel-01)'
+
+N_3 -> l_21151	[0.00679800766083171]
+[int] '(u<root> / tie-01)'
+
+N_3 -> l_306	[1.2419437072673316E-4]
+[int] '(u<root> / imperative)'
+
+N_2 -> l_45754	[1.7258265630595454E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / copy)')
+
+N_2 -> l_8194	[8.801715471603681E-4]
+[int] '(u<root> :op2 (v<1>))'
+
+N_2 -> l_35224(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / correct)')
+
+N_2 -> l_44759(N_3)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> :prep-among (v<1>))')
+
+N_2 -> l_35057	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / infest-01)')
+
+N_2 -> l_8188(N_3)	[3.883109766883977E-5]
+[int] merge('(u<root> :op1 (v<1>))',?1)
+
+N_2 -> l_46449(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / plan-01)')
+
+N_2 -> l_42119(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / worth)')
+
+N_1 -> l_34629(N_1)	[0.058521809946993186]
+[int] merge_root_1(?1,'(u<root> / cold)')
+
+N_0 -> l_18367(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / 26)')
+
+N_2 -> l_54519	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / muzzle-01)')
+
+N_1 -> l_15416(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / flower)')
+
+N_2 -> l_33836	[1.3806612504476364E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / age-01)')
+
+N_2 -> l_45862(N_4)	[0.004418116001432436]
+[int] merge(?1,'(u<root> / admire-01)')
+
+N_2 -> l_22137	[2.7613225008952727E-4]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / person)')
+
+N_2 -> l_35858(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / knowledge)')
+
+N_1 -> l_8857(N_4)	[0.0010287036904744896]
+[int] merge(?1,'(u<root> / clean-03)')
+
+N_3 -> l_30917	[1.0458473324356477E-4]
+[int] '(u<root> / indulgent)'
+
+N_2 -> l_34348	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / angry)')
+
+N_0 -> l_15258(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / sudden)')
+
+N_3 -> l_17198	[0.0025100335978455544]
+[int] '(u<root> / mystery)'
+
+N_1 -> l_1090(N_4,N_3)	[1.4287551256590133E-4]
+[int] merge(?1,?2)
+
+N_2 -> l_19885	[6.903306252238182E-5]
+[int] merge('(u<root> :name (v<1>))','(u<root> / country)')
+
+N_1 -> l_27961(N_1)	[4.8577674272406453E-4]
+[int] merge_root_1(?1,'(u<root> / heart)')
+
+N_1 -> l_31634	[9.144032804217685E-4]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / collect-01)')
+
+N_0 -> l_25171(N_2)	[0.0012479039113988224]
+[int] merge_root_1(?1,'(u<root> / hand)')
+
+N_2 -> l_16978	[4.314566407648864E-6]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / seem-01)')
+
+N_0 -> l_20393(N_2)	[1.7331998769428087E-4]
+[int] merge_root_1(?1,'(u<root> / clear)')
+
+N_2 -> l_36777(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / smile)')
+
+N_2 -> l_9698(N_4)	[0.0017646576607283852]
+[int] merge(?1,'(u<root> / need-01)')
+
+N_2 -> l_33082	[1.7258265630595454E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / flush-03)')
+
+N_0! -> l_6081(N_2)	[2.166499846178511E-5]
+[int] merge_root_1(?1,'(u<root> / this)')
+
+N_0 -> l_9884(N_2)	[2.773119803108494E-4]
+[int] merge_root_1(?1,'(u<root> / firm)')
+
+N_1 -> l_49685	[1.1430041005272107E-4]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / go-01)')
+
+N_2 -> l_47664	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / talk-01)')
+
+N_2 -> l_22788(N_4)	[0.0022004288679009203]
+[int] merge(?1,'(u<root> / live-01)')
+
+N_1 -> l_34835(N_1)	[2.8575102513180267E-5]
+[int] merge_root_1(?1,'(u<root> / reproach-01)')
+
+N_2 -> l_4244(N_4)	[0.0011390455316193]
+[int] merge(?1,'(u<root> / possible)')
+
+N_1 -> l_34733	[2.8575102513180267E-5]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / phew)')
+
+N_2 -> l_24929(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / glad)')
+
+N_2 -> l_56294	[3.451653126119091E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / airplane)')
+
+N_2 -> l_46416	[5.522645001790545E-4]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / until)')
+
+N_0 -> l_19535(N_2)	[0.003917031721890747]
+[int] merge_root_1(?1,'(u<root> / 1)')
+
+N_0 -> l_17458(N_2)	[3.119759778497056E-4]
+[int] merge_root_1(?1,'(u<root> / water)')
+
+N_1 -> l_14326(N_1)	[2.571759226186224E-4]
+[int] merge_root_1(?1,'(u<root> / next)')
+
+N_2 -> l_24555	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / shame-01)')
+
+N_3 -> l_20291	[0.01523015177859412]
+[int] '(u<root> / yawn-01)'
+
+N_1 -> l_18850(N_4)	[5.143518452372448E-4]
+[int] merge(?1,'(u<root> / shell)')
+
+N_2 -> l_27209	[0.004418116001432436]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / leave-02)')
+
+N_2 -> l_27692	[0.0011390455316193]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / use-01)')
+
+N_0! -> l_13737(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 13)')
+
+N_2 -> l_28153(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / wealth)')
+
+N_0 -> l_28754(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / 28)')
+
+N_2 -> l_45006(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / side)')
+
+N_2 -> l_4853(N_1)	[0.0011865057621034375]
+[int] f_root(?1)
+
+N_3 -> l_18882	[4.967774829069327E-4]
+[int] '(u<root> / true)'
+
+N_2 -> l_64596	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / depend-01)')
+
+N_2 -> l_49484(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / consequence)')
+
+N_2 -> l_16079	[1.3806612504476364E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / care-01)')
+
+N_3 -> l_31070	[1.0458473324356477E-4]
+[int] '(u<root> / weigh-01)'
+
+N_1 -> l_19940(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / 1909)')
+
+N_2 -> l_46598	[4.141983751342909E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / lamp)')
+
+N_0 -> l_26245(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / instead)')
+
+N_0 -> l_22425(N_2)	[6.932799507771235E-5]
+[int] merge_root_1(?1,'(u<root> / 30)')
+
+N_0! -> l_12672(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / sand)')
+
+N_1 -> l_21975(N_4)	[0.004572016402108843]
+[int] merge(?1,'(u<root> / good-42)')
+
+N_2 -> l_2255(N_2,N_3)	[8.629132815297727E-6]
+[int] merge(?1,?2)
+
+N_1 -> l_59823	[0.003657613121687074]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / watch-02)')
+
+N_2 -> l_20107	[3.451653126119091E-5]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / petal)')
+
+N_0 -> l_6081(N_2)	[0.04768899461408138]
+[int] merge_root_1(?1,'(u<root> / this)')
+
+N_1 -> l_4780(N_1)	[0.001828806560843537]
+[int] merge_root_1(?1,'(u<root> / jungle)')
+
+N_2 -> l_39192	[0.001104529000358109]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / cast-01)')
+
+N_0 -> l_33974(N_2)	[0.002218495842486795]
+[int] merge_root_1(?1,'(u<root> / about-to)')
+
+N_2 -> l_8265	[0.017905450591742783]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / and)')
+
+N_2 -> l_46025(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / occupation)')
+
+N_2 -> l_49313(N_2)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / guide-01)')
+
+N_1 -> l_41267(N_4)	[5.7150205026360533E-5]
+[int] merge(?1,'(u<root> / switchman)')
+
+N_2 -> l_17009(N_4)	[0.001104529000358109]
+[int] merge(?1,'(u<root> / indifferent-41)')
+
+N_2 -> l_10231(N_4)	[1.5532439067535907E-4]
+[int] merge(?1,'(u<root> / worry-01)')
+
+N_0 -> l_5790(N_2)	[0.07128651093865772]
+[int] merge_root_1(?1,'(u<root> / much)')
+
+N_0 -> l_7560(N_2)	[0.03312144964837707]
+[int] merge_root_1(?1,'(u<root> / that)')
+
+N_0 -> l_622(N_1,N_3)	[6.932799507771235E-5]
+[int] merge_root_1(?1,?2)
+
+N_2 -> l_20657	[0.001104529000358109]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / sunshine)')
+
+N_2 -> l_22905(N_4)	[8.629132815297726E-5]
+[int] merge(?1,'(u<root> / everything)')
+
+N_2 -> l_36580	[3.451653126119091E-5]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / go-01)')
+
+N_1 -> l_41805(N_1)	[0.001828806560843537]
+[int] merge_root_1(?1,'(u<root> / idle)')
+
+N_0 -> l_20755(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / butterfly)')
+
+N_2 -> l_24118(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / interrupt-01)')
+
+N_1 -> l_41498(N_1)	[0.0048577674272406455]
+[int] merge_root_1(?1,'(u<root> / constrictor)')
+
+N_2 -> l_9122	[0.002209058000716218]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / see-01)')
+
+N_1 -> l_68613(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / at-first)')
+
+N_0! -> l_3660(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / planet)')
+
+N_2 -> l_27000	[0.0094920460968275]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / mean-01)')
+
+N_0! -> l_42709(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 10)')
+
+N_2 -> l_8242	[0.0011908203285110864]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / volcano)')
+
+N_0 -> l_41206(N_2)	[6.932799507771235E-5]
+[int] merge_root_1(?1,'(u<root> / bucket)')
+
+N_1 -> l_22611(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / thorn)')
+
+N_0! -> l_13667(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / 12)')
+
+N_2 -> l_33121	[5.6952276580965E-4]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / beside)')
+
+N_1 -> l_49715(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / complete)')
+
+N_2 -> l_17638(N_4)	[4.228275079495886E-4]
+[int] merge(?1,'(u<root> / so)')
+
+N_2 -> l_32688(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / bolt)')
+
+N_2 -> l_29359(N_4)	[0.009802694878178218]
+[int] merge(?1,'(u<root> / eat-01)')
+
+N_3 -> l_8942	[0.004444851162851503]
+[int] '(u<root> / more)'
+
+N_0 -> l_9140(N_2)	[0.003163089775420626]
+[int] merge_root_1(?1,'(u<root> / thing)')
+
+N_2 -> l_25992(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / baobab)')
+
+N_0! -> l_46894(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / matter)')
+
+N_1 -> l_47617(N_1)	[0.003657613121687074]
+[int] merge_root_1(?1,'(u<root> / spite)')
+
+N_2 -> l_41603	[2.7613225008952727E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / fox)')
+
+N_2 -> l_44410	[0.004418116001432436]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / above)')
+
+N_2 -> l_48028	[0.008836232002864873]
+[int] merge('(u<root> :purpose (v<1>))','(u<root> / speak-01)')
+
+N_3 -> l_11881	[6.536545827722798E-6]
+[int] '(u<root> / carriage)'
+
+N_2 -> l_50697	[0.002209058000716218]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / become-01)')
+
+N_1 -> l_1739(N_1,N_3)	[0.04480576074066666]
+[int] merge_root_1(?1,?2)
+
+N_1 -> l_12997(N_1)	[5.715020502636053E-4]
+[int] merge_root_1(?1,'(u<root> / lamp)')
+
+N_2 -> l_43006(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / start-01)')
+
+N_2 -> l_46721	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / muzzle-01)')
+
+N_1 -> l_10307	[0.004171964966924319]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / sheep)')
+
+N_2 -> l_42065(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / cough-01)')
+
+N_3 -> l_37399	[4.2487547880198185E-4]
+[int] '(u<root> / rite)'
+
+N_1 -> l_18646(N_1)	[6.858024603163264E-4]
+[int] merge_root_1(?1,'(u<root> / evening)')
+
+N_2 -> l_8216(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / extinct)')
+
+N_3 -> l_4278	[0.01555697906998026]
+[int] '(u<root> / one)'
+
+N_0! -> l_10833	[1.7331998769428087E-5]
+[int] '(u<root> / no)'
+
+N_2 -> l_8266(N_3)	[0.0031366897783607238]
+[int] merge(?1,'(u<root> :op2 (v<1>))')
+
+N_0! -> l_25420(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / ephemeral)')
+
+N_2 -> l_44852	[5.522645001790545E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / day)')
+
+N_2 -> l_18639(N_4)	[0.005315545814223399]
+[int] merge(?1,'(u<root> / come-01)')
+
+N_0! -> l_33164(N_3)	[4.332999692357022E-6]
+[int] merge(?1,'(u<root> / ruin-01)')
+
+N_0 -> l_47088(N_2)	[0.00887398336994718]
+[int] merge_root_1(?1,'(u<root> / etiquette)')
+
+N_2 -> l_22000	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / disturb-01)')
+
+N_2 -> l_27811(N_4)	[1.5532439067535907E-4]
+[int] merge(?1,'(u<root> / move-01)')
+
+N_3 -> l_19470	[0.0010458473324356477]
+[int] '(u<root> / happy)'
+
+N_2 -> l_21934(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / gaze-01)')
+
+N_0 -> l_17243(N_2)	[0.015806782877718417]
+[int] merge_root_1(?1,'(u<root> / any)')
+
+N_4 -> l_6099	[9.717296092952878E-5]
+[int] '(u<root> :compared-to (v<1>))'
+
+N_2 -> l_35876(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / value-01)')
+
+N_1 -> l_29805(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / show-01)')
+
+N_2 -> l_40011	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / naive)')
+
+N_2 -> l_10830(N_2)	[8.629132815297727E-6]
+[int] merge(?1,'(u<root> / know-01)')
+
+N_2 -> l_19173	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / awake-01)')
+
+N_0! -> l_30959(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / justice)')
+
+N_1 -> l_24408(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / careful)')
+
+N_0! -> l_27339(N_0)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / forget-01)')
+
+N_0 -> l_6543(N_2)	[0.0073141034806986525]
+[int] merge_root_1(?1,'(u<root> / friend)')
+
+N_2 -> l_25518	[8.629132815297727E-6]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / matter-01)')
+
+N_3 -> l_43124	[1.3073091655445596E-5]
+[int] '(u<root> / break-01)'
+
+N_0! -> l_24329(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / courtesy)')
+
+N_1 -> l_19410(N_4)	[0.004114814761897958]
+[int] merge(?1,'(u<root> / happen-01)')
+
+N_2 -> l_42113(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / trouble)')
+
+N_3 -> l_46772	[5.2292366621782385E-5]
+[int] '(u<root> / modest)'
+
+N_0! -> l_34424(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / finger)')
+
+N_2 -> l_18316	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / stare-01)')
+
+N_1 -> l_49647	[2.8575102513180267E-5]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / chicken)')
+
+N_2 -> l_69596	[0.002209058000716218]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / smell-01)')
+
+N_2 -> l_33970	[0.004418116001432436]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / stack-01)')
+
+N_3 -> l_10464	[9.935549658138653E-4]
+[int] '(u<root> / always)'
+
+N_2 -> l_22768	[0.004038434157559336]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / planet)')
+
+N_2 -> l_15081(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / interest-01)')
+
+N_0 -> l_13935(N_2)	[0.024802090239051593]
+[int] merge_root_1(?1,'(u<root> / so)')
+
+N_2 -> l_18480	[0.004832314376566727]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / come-01)')
+
+N_2 -> l_44505(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / allow-01)')
+
+N_2 -> l_14321(N_4)	[0.0011821911956957885]
+[int] merge(?1,'(u<root> / inhabit-01)')
+
+N_2 -> l_63796	[0.008836232002864873]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / trouble-01)')
+
+N_3 -> l_25407	[0.0038696351300118964]
+[int] '(u<root> / mean-01)'
+
+N_2 -> l_33031(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / ram)')
+
+N_2 -> l_3148(N_3)	[2.977050821277716E-4]
+[int] merge('(u<root> :direction (v<1>))',?1)
+
+N_2 -> l_13280	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / equal-01)')
+
+N_3 -> l_40494	[0.01338684585517629]
+[int] '(u<root> / catastrophe)'
+
+N_0 -> l_37676(N_2)	[6.932799507771235E-5]
+[int] merge_root_1(?1,'(u<root> / herd)')
+
+N_2 -> l_10298(N_4)	[0.03537944454272068]
+[int] merge(?1,'(u<root> / sheep)')
+
+N_2 -> l_45860	[0.002209058000716218]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / same-41)')
+
+N_1 -> l_14947(N_4)	[0.003657613121687074]
+[int] merge(?1,'(u<root> / help-02)')
+
+N_0 -> l_23107(N_2)	[0.00942860733056888]
+[int] merge_root_1(?1,'(u<root> / little-by-little)')
+
+N_0 -> l_28814(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / 6)')
+
+N_0 -> l_16401(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / danger)')
+
+N_2 -> l_11796(N_4)	[0.0050048970328726815]
+[int] merge(?1,'(u<root> / love-01)')
+
+N_3 -> l_16089	[0.0025100335978455544]
+[int] '(u<root> / great)'
+
+N_2 -> l_33568(N_4)	[1.5532439067535907E-4]
+[int] merge(?1,'(u<root> / profession)')
+
+N_1 -> l_6469(N_0,N_2)	[1.4287551256590133E-4]
+[int] merge(f_root(?1),?2)
+
+N_2 -> l_13278(N_4)	[0.0011390455316193]
+[int] merge(?1,'(u<root> / frighten-01)')
+
+N_2 -> l_61651	[2.7613225008952727E-4]
+[int] merge('(u<root> :duration (v<1>))','(u<root> / live-01)')
+
+N_2 -> l_26240	[1.5532439067535907E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / same-41)')
+
+N_2 -> l_29414(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / absurd)')
+
+N_0! -> l_33778	[4.332999692357022E-6]
+[int] '(u<root> / mushroom)'
+
+N_1 -> l_45014(N_4)	[0.009201183009244046]
+[int] merge(?1,'(u<root> / want-01)')
+
+N_0 -> l_15519(N_2)	[0.003709047736657611]
+[int] merge_root_1(?1,'(u<root> / everything)')
+
+N_0 -> l_31725(N_2)	[4.6796396677455836E-4]
+[int] merge_root_1(?1,'(u<root> / already)')
+
+N_2 -> l_46327	[1.7258265630595454E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / erupt-01)')
+
+N_1 -> l_60170(N_0)	[1.714506150790816E-4]
+[int] merge(f_root(?1),'(u<root> :topic (v<1>))')
+
+N_1 -> l_47496	[5.7150205026360533E-5]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / well)')
+
+N_2 -> l_35347	[1.3806612504476364E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / way)')
+
+N_0 -> l_3596(N_2,N_4)	[7.79939944624264E-5]
+[int] merge(?1,?2)
+
+N_0 -> l_23395(N_2)	[6.239519556994112E-4]
+[int] merge_root_1(?1,'(u<root> / time)')
+
+N_3 -> l_27798	[6.536545827722798E-6]
+[int] '(u<root> / 11)'
+
+N_2 -> l_34791	[0.004418116001432436]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / sad)')
+
+N_1 -> l_6473(N_0,N_4)	[0.006372247860439199]
+[int] merge(f_root(?1),?2)
+
+N_3 -> l_5517	[8.366778659485182E-4]
+[int] '(u<root> / much)'
+
+N_1 -> l_26602(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / breeze)')
+
+N_0 -> l_42392(N_2)	[0.002218495842486795]
+[int] merge_root_1(?1,'(u<root> / down)')
+
+N_2 -> l_41557(N_4)	[0.001104529000358109]
+[int] merge(?1,'(u<root> / swallow-01)')
+
+N_0! -> l_552(N_0,N_3)	[8.665999384714044E-6]
+[int] merge_root_1(?1,?2)
+
+N_2 -> l_8079	[0.008836232002864873]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / matter-01)')
+
+N_0 -> l_19206(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / businessman)')
+
+N_2 -> l_26729(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / visible)')
+
+N_0! -> l_7081	[4.332999692357022E-6]
+[int] '(u<root> / exact)'
+
+N_2 -> l_23057	[2.8044681649717614E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / heavy)')
+
+N_2 -> l_16571	[6.903306252238182E-5]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / good)')
+
+N_1 -> l_45379(N_4)	[5.7150205026360533E-5]
+[int] merge(?1,'(u<root> / entire)')
+
+N_2 -> l_18705(N_3)	[1.423806914524125E-4]
+[int] merge(?1,'(u<root> :topic (v<1>))')
+
+N_2 -> l_30925	[0.001104529000358109]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / hurry-01)')
+
+N_0! -> l_21968	[4.332999692357022E-6]
+[int] '(u<root> / what)'
+
+N_4 -> l_16706	[0.001117489050689581]
+[int] '(u<root> :name (v<1>))'
+
+N_2 -> l_25333(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / pretty)')
+
+N_0! -> l_12295(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / 5)')
+
+N_3 -> l_31927	[1.9609637483168393E-5]
+[int] '(u<root> / order)'
+
+N_0 -> l_19644(N_2)	[0.0013172319064765345]
+[int] merge_root_1(?1,'(u<root> / 500000000)')
+
+N_3 -> l_8795	[0.026989397722667435]
+[int] '(u<root> / expressive)'
+
+N_0! -> l_8830	[4.332999692357022E-6]
+[int] '(u<root> / nothing)'
+
+N_2 -> l_31228(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / flush-03)')
+
+N_3 -> l_43465	[6.536545827722798E-6]
+[int] '(u<root> / outside)'
+
+N_2 -> l_10154	[4.012546759113443E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / contrast-01)')
+
+N_1 -> l_24434(N_1)	[4.5720164021088427E-4]
+[int] merge_root_1(?1,'(u<root> / active)')
+
+N_3 -> l_29344	[0.01422352372112481]
+[int] '(u<root> / weed)'
+
+N_0! -> l_4432(N_2)	[1.2998999077071065E-5]
+[int] merge_root_1(?1,'(u<root> / then)')
+
+N_2 -> l_8228(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / active)')
+
+N_2 -> l_28785(N_2)	[1.294369922294659E-5]
+[int] merge(?1,'(u<root> / contrast)')
+
+N_0 -> l_8259(N_2)	[0.0020105118572536582]
+[int] merge_root_1(?1,'(u<root> / 2)')
+
+N_0 -> l_13872(N_2)	[0.0017331998769428087]
+[int] merge_root_1(?1,'(u<root> / well)')
+
+N_3 -> l_44230	[2.6146183310891192E-5]
+[int] '(u<root> / light)'
+
+N_1 -> l_46267(N_4)	[4.5720164021088427E-4]
+[int] merge(?1,'(u<root> / fire)')
+
+N_2 -> l_47137(N_4)	[0.004418116001432436]
+[int] merge(?1,'(u<root> / here)')
+
+N_2 -> l_29142	[0.0013806612504476362]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / give-01)')
+
+N_2 -> l_41961	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / amuse-01)')
+
+N_0! -> l_21156(N_3)	[4.332999692357022E-6]
+[int] merge(?1,'(u<root> / contrast-01)')
+
+N_3 -> l_32686	[1.0458473324356477E-4]
+[int] '(u<root> / upset-01)'
+
+N_2 -> l_11080	[0.0036760105793168314]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / resemble-01)')
+
+N_1 -> l_41574(N_4)	[0.029260904973496593]
+[int] merge(?1,'(u<root> / fashion)')
+
+N_2 -> l_2557(N_3,N_4)	[8.629132815297727E-6]
+[int] merge(?1,?2)
+
+N_2 -> l_11558(N_3)	[4.314566407648863E-5]
+[int] merge('(u<root> :ARG4 (v<1>))',?1)
+
+N_2 -> l_9673(N_4)	[0.007041372377282945]
+[int] merge(?1,'(u<root> / see-01)')
+
+N_0 -> l_12295(N_2)	[0.0013345639052459628]
+[int] merge_root_1(?1,'(u<root> / 5)')
+
+N_2 -> l_45475(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / tragedy)')
+
+N_2 -> l_61971	[1.3806612504476364E-4]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / simplify-01)')
+
+N_0! -> l_41991(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / pencil)')
+
+N_0 -> l_39229(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / act-02)')
+
+N_1 -> l_16513(N_4)	[4.8577674272406453E-4]
+[int] merge(?1,'(u<root> / have-condition-91)')
+
+N_1 -> l_9944	[9.144032804217685E-4]
+[int] merge('(u<root> :frequency (v<1>))','(u<root> / condemn-01)')
+
+N_1 -> l_27472	[0.001828806560843537]
+[int] merge('(u<root> :prep-as (v<1>))','(u<root> / far)')
+
+N_0! -> l_15116(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / snake)')
+
+N_0 -> l_29980(N_2)	[2.773119803108494E-4]
+[int] merge_root_1(?1,'(u<root> / gold)')
+
+N_2 -> l_21838	[0.003313587001074327]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / do-02)')
+
+N_1 -> l_16597(N_4)	[0.0029718106613707477]
+[int] merge(?1,'(u<root> / resemble-01)')
+
+N_0 -> l_3899(N_2)	[0.001403891900323675]
+[int] merge_root_1(?1,'(u<root> / baobab)')
+
+N_2 -> l_50315	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / differ-02)')
+
+N_0! -> l_8499(N_2)	[7.366099477006937E-5]
+[int] merge_root_1(?1,'(u<root> / amr-unknown)')
+
+N_1 -> l_51189(N_1)	[2.8575102513180267E-5]
+[int] merge_root_1(?1,'(u<root> / railway)')
+
+N_1 -> l_31987(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / seem-01)')
+
+N_2 -> l_47641(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / wonder-01)')
+
+N_2 -> l_16073(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / choose-01)')
+
+N_2 -> l_29979(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / colour)')
+
+N_1 -> l_27997(N_4)	[5.7150205026360533E-5]
+[int] merge(?1,'(u<root> / sigh-02)')
+
+N_0 -> l_3660(N_2)	[8.319359409325481E-4]
+[int] merge_root_1(?1,'(u<root> / planet)')
+
+N_0! -> l_13309(N_2)	[8.665999384714043E-5]
+[int] merge_root_1(?1,'(u<root> / interrogative)')
+
+N_3 -> l_20625	[2.679983789366347E-4]
+[int] '(u<root> / 22)'
+
+N_1 -> l_14114(N_4)	[1.714506150790816E-4]
+[int] merge(?1,'(u<root> / tipple-00)')
+
+N_0! -> l_25946(N_2)	[1.2998999077071065E-5]
+[int] merge_root_1(?1,'(u<root> / echo-01)')
+
+N_1 -> l_3689(N_1)	[0.002914660456344387]
+[int] merge_root_1(?1,'(u<root> / you)')
+
+N_1 -> l_51233(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / one-by-one)')
+
+N_2 -> l_34316	[2.7613225008952727E-4]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / blow-01)')
+
+N_1 -> l_32025(N_4)	[5.7150205026360533E-5]
+[int] merge(?1,'(u<root> / favorable)')
+
+N_2 -> l_9108(N_4)	[0.002964107122054769]
+[int] merge(?1,'(u<root> / cause-01)')
+
+N_0 -> l_19014(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / moment)')
+
+N_2 -> l_13090	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / discourage-01)')
+
+N_2 -> l_29803(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / talk-01)')
+
+N_0 -> l_13624(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / 15)')
+
+N_0 -> l_23446(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / courage)')
+
+N_0! -> l_16823(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / we)')
+
+N_2 -> l_48148(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / reason-01)')
+
+N_0! -> l_11933(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / here)')
+
+N_0 -> l_5193(N_2)	[2.773119803108494E-4]
+[int] merge_root_1(?1,'(u<root> / balderdash)')
+
+N_1 -> l_18672(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / tomorrow)')
+
+N_2 -> l_20327(N_2)	[0.0015187273754923999]
+[int] merge(?1,'(u<root> / ordinal-entity)')
+
+N_1 -> l_20671(N_4)	[0.0028003600462916662]
+[int] merge(?1,'(u<root> / thing)')
+
+N_2 -> l_47896	[5.522645001790545E-4]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / inside)')
+
+N_2 -> l_12244	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / strange)')
+
+N_0 -> l_11569(N_2)	[0.004852959655439864]
+[int] merge_root_1(?1,'(u<root> / long)')
+
+N_0 -> l_29352(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / anyway)')
+
+N_3 -> l_22024	[1.0458473324356477E-4]
+[int] '(u<root> / 501000000)'
+
+N_3 -> l_1196(N_0)	[0.37183140941001136]
+[int] f_1(?1)
+
+N_0 -> l_37261(N_2)	[1.0399199261656852E-4]
+[int] merge_root_1(?1,'(u<root> / sky)')
+
+N_2 -> l_43040(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / white)')
+
+N_2 -> l_15571	[5.522645001790545E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / life)')
+
+N_0 -> l_21826(N_2)	[2.773119803108494E-4]
+[int] merge_root_1(?1,'(u<root> / at-all)')
+
+N_1 -> l_7994(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / that)')
+
+N_2 -> l_13917	[5.522645001790545E-4]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / that)')
+
+N_2 -> l_17402(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / disobey-01)')
+
+N_2 -> l_34418	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / thick)')
+
+N_2 -> l_51468	[5.522645001790545E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / queer)')
+
+N_0 -> l_23113(N_2)	[2.0798398523313704E-4]
+[int] merge_root_1(?1,'(u<root> / word)')
+
+N_0! -> l_6113(N_2)	[2.599799815414213E-5]
+[int] merge_root_1(?1,'(u<root> / it)')
+
+N_2 -> l_30880(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / well)')
+
+N_2 -> l_44024(N_4)	[5.522645001790545E-4]
+[int] merge(?1,'(u<root> / travel-01)')
+
+N_1 -> l_32652(N_1)	[0.0022860082010544213]
+[int] merge_root_1(?1,'(u<root> / y)')
+
+N_2 -> l_16666	[0.004694248251521964]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / tell-01)')
+
+N_0! -> l_18418(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / really)')
+
+N_2 -> l_32812(N_4)	[2.8044681649717614E-4]
+[int] merge(?1,'(u<root> / sleep-01)')
+
+N_4 -> l_4071	[0.026382458892367063]
+[int] '(u<root> :time (v<1>))'
+
+N_2 -> l_49405	[1.3806612504476364E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / flower)')
+
+N_2 -> l_44853	[0.002209058000716218]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / sunset)')
+
+N_1 -> l_18163(N_1)	[0.006343672757926019]
+[int] merge_root_1(?1,'(u<root> / interrogative)')
+
+N_2 -> l_14970	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / lonely)')
+
+N_1 -> l_23006(N_4)	[2.8575102513180267E-5]
+[int] merge(?1,'(u<root> / disappoint-01)')
+
+N_0! -> l_12868(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / lamp)')
+
+N_0! -> l_3515(N_0,N_3)	[4.332999692357022E-5]
+[int] merge(?1,?2)
+
+N_2 -> l_11568(N_4)	[0.00497038050161149]
+[int] merge(?1,'(u<root> / time)')
+
+N_2 -> l_11973	[0.00497038050161149]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / bore-02)')
+
+N_1 -> l_64736(N_0)	[1.1430041005272107E-4]
+[int] merge(f_root(?1),'(u<root> :prep-among (v<1>))')
+
+N_2 -> l_13402(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / this)')
+
+N_1 -> l_33471(N_1)	[2.8575102513180267E-5]
+[int] merge_root_1(?1,'(u<root> / condition)')
+
+N_1 -> l_43714(N_1)	[0.003657613121687074]
+[int] merge_root_1(?1,'(u<root> / time)')
+
+N_0 -> l_34024(N_0)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / thirst-01)')
+
+N_1 -> l_21600(N_1)	[4.5720164021088427E-4]
+[int] merge_root_1(?1,'(u<root> / time-to-time)')
+
+N_2 -> l_16695(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / large)')
+
+N_1 -> l_14668(N_4)	[8.57253075395408E-5]
+[int] merge(?1,'(u<root> / have-concession-91)')
+
+N_0! -> l_19206(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / businessman)')
+
+N_0 -> l_31024(N_2)	[4.1596797046627407E-4]
+[int] merge_root_1(?1,'(u<root> / wheat)')
+
+N_2 -> l_14723	[0.0025110776492516386]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / reply-01)')
+
+N_2 -> l_22055(N_4)	[3.1064878135071813E-4]
+[int] merge(?1,'(u<root> / cry-03)')
+
+N_2 -> l_20672(N_4)	[1.7258265630595452E-4]
+[int] merge(?1,'(u<root> / thing)')
+
+N_2 -> l_17176(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / dare-01)')
+
+N_2 -> l_51526(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / sigh-01)')
+
+N_1 -> l_26698(N_1)	[4.5720164021088427E-4]
+[int] merge_root_1(?1,'(u<root> / golden)')
+
+N_3 -> l_18016	[0.0017256480985188187]
+[int] '(u<root> / anything)'
+
+N_1 -> l_14091	[2.8575102513180267E-5]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / eh)')
+
+N_1 -> l_41804(N_4)	[0.003657613121687074]
+[int] merge(?1,'(u<root> / dream-01)')
+
+N_2 -> l_25327(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / exclaim-01)')
+
+N_2 -> l_38577	[1.3806612504476364E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / fault)')
+
+N_0! -> l_21691(N_2)	[1.2998999077071065E-5]
+[int] merge_root_1(?1,'(u<root> / just)')
+
+N_3 -> l_41869	[3.921927496633679E-5]
+[int] '(u<root> / suffer-01)'
+
+N_1 -> l_30137	[1.1430041005272107E-4]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / try-01)')
+
+N_2 -> l_37616	[1.3806612504476364E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / justice)')
+
+N_2 -> l_39508	[0.008836232002864873]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / run-02)')
+
+N_0! -> l_20042(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 16)')
+
+N_0 -> l_13667(N_2)	[0.0011092479212433976]
+[int] merge_root_1(?1,'(u<root> / 12)')
+
+N_1 -> l_41231	[2.8575102513180267E-5]
+[int] merge('(u<root> :part (v<1>))','(u<root> / he)')
+
+N_2 -> l_14899(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / reassure-01)')
+
+N_0! -> l_8594(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / sunset)')
+
+N_0 -> l_9731(N_2)	[8.665999384714043E-4]
+[int] merge_root_1(?1,'(u<root> / away)')
+
+N_0 -> l_13529(N_2)	[1.7331998769428087E-4]
+[int] merge_root_1(?1,'(u<root> / at-last)')
+
+N_2 -> l_41205(N_4)	[5.522645001790545E-4]
+[int] merge(?1,'(u<root> / raise-01)')
+
+N_2 -> l_19687	[1.423806914524125E-4]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / amr-unknown)')
+
+N_3 -> l_8106	[4.7063129959604144E-4]
+[int] '(u<root> / instant)'
+
+N_2 -> l_23724	[1.3806612504476364E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / have-purpose-91)')
+
+N_0! -> l_17458(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / water)')
+
+N_2 -> l_33382	[3.4516531261190905E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / box)')
+
+N_0! -> l_5928(N_2)	[1.2998999077071065E-5]
+[int] merge_root_1(?1,'(u<root> / switchman)')
+
+N_0 -> l_17511(N_2)	[0.001369227902784819]
+[int] merge_root_1(?1,'(u<root> / sheep)')
+
+N_1 -> l_29690(N_1)	[0.001828806560843537]
+[int] merge_root_1(?1,'(u<root> / rope)')
+
+N_1 -> l_32778(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / village)')
+
+N_2 -> l_43250	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / exercise-02)')
+
+N_1 -> l_26697(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / curl)')
+
+N_0! -> l_6824(N_2)	[4.332999692357022E-5]
+[int] merge_root_1(?1,'(u<root> / fox)')
+
+N_2 -> l_42478	[1.3806612504476364E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / weak-41)')
+
+N_2 -> l_31018(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / field)')
+
+N_0 -> l_14379(N_2)	[0.002218495842486795]
+[int] merge_root_1(?1,'(u<root> / river)')
+
+N_0! -> l_22099(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 24)')
+
+N_1 -> l_36317(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / pass-02)')
+
+N_2 -> l_13116	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / frighten-01)')
+
+N_2 -> l_32062(N_4)	[0.002209058000716218]
+[int] merge(?1,'(u<root> / ponder-01)')
+
+N_0 -> l_8829(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / nothing)')
+
+N_0 -> l_38053(N_2)	[0.0011092479212433976]
+[int] merge_root_1(?1,'(u<root> / Drawing)')
+
+N_2 -> l_32818	[0.001104529000358109]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / thing)')
+
+N_2 -> l_17369	[2.0709918756714544E-4]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / man)')
+
+N_1 -> l_10968	[6.572273578031461E-4]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / hum)')
+
+N_3 -> l_16957	[0.00717059077301191]
+[int] '(u<root> / beautiful)'
+
+N_2 -> l_51209	[3.451653126119091E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / petal)')
+
+N_3 -> l_19171	[5.2292366621782385E-5]
+[int] '(u<root> / scarce)'
+
+N_3 -> l_11621	[0.0016733557318970363]
+[int] '(u<root> / minister)'
+
+N_0 -> l_21728(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / absolute)')
+
+N_2 -> l_20089(N_4)	[0.008875063100533712]
+[int] merge(?1,'(u<root> / belong-01)')
+
+N_2 -> l_27992(N_4)	[0.0014151777817088271]
+[int] merge(?1,'(u<root> / leave-01)')
+
+N_0! -> l_19535(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / 1)')
+
+N_3 -> l_4129	[5.2292366621782385E-5]
+[int] '(u<root> / deep)'
+
+N_1 -> l_42600	[2.8575102513180267E-5]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / fly)')
+
+N_2 -> l_34497	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / spread-01)')
+
+N_0 -> l_12974(N_2)	[1.7331998769428087E-4]
+[int] merge_root_1(?1,'(u<root> / only)')
+
+N_1 -> l_49772(N_4)	[5.7150205026360533E-5]
+[int] merge(?1,'(u<root> / expert-41)')
+
+N_0! -> l_13397	[4.332999692357022E-6]
+[int] '(u<root> / star)'
+
+N_2 -> l_16338	[6.903306252238182E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / color)')
+
+N_2 -> l_40120	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / poetry)')
+
+N_1 -> l_38736(N_4)	[2.8575102513180267E-5]
+[int] merge(?1,'(u<root> / misunderstand-01)')
+
+N_0! -> l_4690(N_2)	[2.773119803108494E-4]
+[int] merge_root_1(?1,'(u<root> / i)')
+
+N_2 -> l_31831	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / write-01)')
+
+N_0! -> l_3577(N_1,N_3)	[1.7331998769428087E-5]
+[int] merge(?1,?2)
+
+N_3 -> l_9492	[0.0018171597401069378]
+[int] '(u<root> / certain)'
+
+N_3 -> l_128	[0.0030852496306851608]
+[int] '(u<root> / ask-01)'
+
+N_3 -> l_25775	[0.003405540376243578]
+[int] '(u<root> / day)'
+
+N_1 -> l_52445(N_1)	[4.5720164021088427E-4]
+[int] merge_root_1(?1,'(u<root> / elephant)')
+
+N_1 -> l_40061(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / eye)')
+
+N_0! -> l_3594(N_2,N_3)	[1.8198598707899492E-4]
+[int] merge(?1,?2)
+
+N_0! -> l_13465(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / star)')
+
+N_2 -> l_14847(N_4)	[0.004353397505317703]
+[int] merge(?1,'(u<root> / morning)')
+
+N_3 -> l_3700	[0.13267227066528964]
+[int] '(u<root> / -)'
+
+N_2 -> l_38707	[6.903306252238182E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / source-01)')
+
+N_2 -> l_37675	[6.903306252238182E-5]
+[int] merge('(u<root> :consist (v<1>))','(u<root> / elephant)')
+
+N_1 -> l_32995(N_1)	[9.144032804217685E-4]
+[int] merge_root_1(?1,'(u<root> / vineyard)')
+
+N_3 -> l_1198(N_1)	[0.07677173074660426]
+[int] f_1(?1)
+
+N_2 -> l_25089(N_4)	[0.0013806612504476362]
+[int] merge(?1,'(u<root> / amr-unknown)')
+
+N_1 -> l_10421(N_3)	[4.5720164021088427E-4]
+[int] merge('(u<root> :part (v<1>))',?1)
+
+N_0 -> l_692(N_2,N_3)	[0.2793398241668725]
+[int] merge_root_1(?1,?2)
+
+N_2 -> l_12258	[1.7258265630595452E-4]
+[int] merge('(u<root> :ord (v<1>))','(u<root> / planet)')
+
+N_0! -> l_12110(N_2)	[2.599799815414213E-5]
+[int] merge_root_1(?1,'(u<root> / king)')
+
+N_1 -> l_7728(N_4)	[4.5720164021088427E-4]
+[int] merge(?1,'(u<root> / gentleman)')
+
+N_2 -> l_12301(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / strange)')
+
+N_0 -> l_11268(N_2)	[0.0031197597784970556]
+[int] merge_root_1(?1,'(u<root> / ever)')
+
+N_2 -> l_33777(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / mushroom)')
+
+N_1 -> l_30983	[5.7150205026360533E-5]
+[int] merge('(u<root> :topic (v<1>))','(u<root> / minister)')
+
+N_4 -> l_166	[0.07950136389191591]
+[int] '(u<root> :domain (v<1>))'
+
+N_1 -> l_31476(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / nose)')
+
+N_3 -> l_331	[4.183389329742591E-4]
+[int] '(u<root> / plain)'
+
+N_3 -> l_35234	[6.536545827722798E-6]
+[int] '(u<root> / strict)'
+
+N_1 -> l_26033(N_4)	[0.001828806560843537]
+[int] merge(?1,'(u<root> / stop-01)')
+
+N_1 -> l_32352	[9.144032804217685E-4]
+[int] merge('(u<root> :source (v<1>))','(u<root> / get-08)')
+
+N_2 -> l_26487	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / realize-01)')
+
+N_1 -> l_22210	[0.014630452486748297]
+[int] merge('(u<root> :extent (v<1>))','(u<root> / nothing)')
+
+N_2 -> l_31160	[0.013254348004297308]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / look-01)')
+
+N_2 -> l_25292(N_4)	[0.001104529000358109]
+[int] merge(?1,'(u<root> / bite-01)')
+
+N_2 -> l_38005(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / magnificent)')
+
+N_0! -> l_28814(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 6)')
+
+N_2 -> l_58203	[1.423806914524125E-4]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / judge-01)')
+
+N_1 -> l_9953(N_3)	[8.57253075395408E-5]
+[int] merge('(u<root> :frequency (v<1>))',?1)
+
+N_0 -> l_8903(N_2)	[0.001802527872020521]
+[int] merge_root_1(?1,'(u<root> / extinct)')
+
+N_0 -> l_21324(N_2)	[0.0024958078227976447]
+[int] merge_root_1(?1,'(u<root> / grown-up)')
+
+N_0! -> l_17874(N_3)	[4.332999692357022E-6]
+[int] merge(?1,'(u<root> / merchandise-01)')
+
+N_2 -> l_36451(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / very)')
+
+N_1 -> l_13027(N_4)	[0.002057407380948979]
+[int] merge(?1,'(u<root> / light-01)')
+
+N_2 -> l_19212(N_4)	[8.283967502685818E-4]
+[int] merge(?1,'(u<root> / enough)')
+
+N_2 -> l_13396(N_4)	[2.0709918756714544E-4]
+[int] merge(?1,'(u<root> / star)')
+
+N_0! -> l_29544(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / tame-01)')
+
+N_2 -> l_8533(N_2)	[4.271420743572375E-4]
+[int] merge(?1,'(u<root> / and)')
+
+N_0 -> l_27910(N_2)	[0.0011092479212433976]
+[int] merge_root_1(?1,'(u<root> / tear-03)')
+
+N_0 -> l_8816(N_2)	[0.016188086850645832]
+[int] merge_root_1(?1,'(u<root> / too)')
+
+N_0 -> l_18532(N_2)	[5.546239606216988E-4]
+[int] merge_root_1(?1,'(u<root> / new)')
+
+N_2 -> l_40208	[1.3806612504476364E-4]
+[int] merge('(u<root> :ord (v<1>))','(u<root> / thing)')
+
+N_1 -> l_36706	[2.2860082010544213E-4]
+[int] merge('(u<root> :part (v<1>))','(u<root> / she)')
+
+N_2 -> l_35051	[1.7258265630595454E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / soil)')
+
+N_1 -> l_34214(N_1)	[2.8575102513180267E-5]
+[int] merge_root_1(?1,'(u<root> / malicious)')
+
+N_2 -> l_21565(N_4)	[0.004418116001432436]
+[int] merge(?1,'(u<root> / asteroid)')
+
+N_2 -> l_34764(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / present-01)')
+
+N_2 -> l_16560(N_4)	[0.0011304163988040022]
+[int] merge(?1,'(u<root> / evening)')
+
+N_2 -> l_9323(N_4)	[0.00728730266251893]
+[int] merge(?1,'(u<root> / prince)')
+
+N_0 -> l_27573(N_2)	[1.559879889248528E-4]
+[int] merge_root_1(?1,'(u<root> / present)')
+
+N_2 -> l_26266(N_4)	[3.1927791416601586E-4]
+[int] merge(?1,'(u<root> / demand-01)')
+
+N_2 -> l_13736(N_4)	[1.1649329300651931E-4]
+[int] merge(?1,'(u<root> / chapter)')
+
+N_1 -> l_45293	[2.8575102513180267E-5]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / screen)')
+
+N_2 -> l_22316	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / funny)')
+
+N_2 -> l_61147	[4.314566407648864E-6]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / go-18)')
+
+N_2 -> l_35158	[0.002493819383621043]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / include-91)')
+
+N_1 -> l_12904(N_2,N_1)	[1.4287551256590133E-5]
+[int] merge(f_root(?1),?2)
+
+N_0! -> l_8869(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / goodbye)')
+
+N_2 -> l_34223(N_4)	[2.9339051572012273E-4]
+[int] merge(?1,'(u<root> / nobody)')
+
+N_0 -> l_15147(N_2)	[0.00443699168497359]
+[int] merge_root_1(?1,'(u<root> / lazy)')
+
+N_0 -> l_37846(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / magnificence)')
+
+N_1 -> l_17109(N_4)	[0.015830606792301867]
+[int] merge(?1,'(u<root> / understand-01)')
+
+N_2 -> l_13536(N_4)	[0.001104529000358109]
+[int] merge(?1,'(u<root> / acquaint-01)')
+
+N_2 -> l_45563	[5.522645001790545E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / kind-41)')
+
+N_2 -> l_41840	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / complicate-01)')
+
+N_3 -> l_17509	[0.032316682572261515]
+[int] '(u<root> / draw-01)'
+
+N_2 -> l_25765(N_4)	[0.0013806612504476362]
+[int] merge(?1,'(u<root> / place)')
+
+N_1 -> l_32304(N_4)	[0.004572016402108843]
+[int] merge(?1,'(u<root> / believe-01)')
+
+N_2 -> l_42971	[0.0016567935005371635]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / have-org-role-91)')
+
+N_2 -> l_45631	[0.001104529000358109]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / change-01)')
+
+N_2 -> l_29021	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / amuse-01)')
+
+N_2 -> l_50885	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / cold)')
+
+N_0! -> l_8816(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / too)')
+
+N_2 -> l_30502	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / abandon-01)')
+
+N_1 -> l_50838(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / adjust-01)')
+
+N_2 -> l_30712	[5.522645001790545E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / well)')
+
+N_2 -> l_2249(N_2,N_0)	[8.629132815297727E-6]
+[int] merge(?1,?2)
+
+N_0 -> l_38041(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / Number)')
+
+N_2 -> l_24168	[6.903306252238182E-5]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / at)')
+
+N_0! -> l_9489	[4.332999692357022E-6]
+[int] '(u<root> / certain)'
+
+N_1 -> l_51322(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / choke-04)')
+
+N_0 -> l_35005(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / insubordinate-00)')
+
+N_0! -> l_42847(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 14)')
+
+N_2 -> l_27743(N_4)	[0.0013806612504476362]
+[int] merge(?1,'(u<root> / use-01)')
+
+N_2 -> l_45107(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / concern-02)')
+
+N_2 -> l_17505	[0.013392414129342072]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / draw-01)')
+
+N_2 -> l_17893(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / concern-01)')
+
+N_0 -> l_40912(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / admire-01)')
+
+N_2 -> l_14666(N_4)	[2.8907594931247386E-4]
+[int] merge(?1,'(u<root> / explore-01)')
+
+N_0! -> l_35708(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / ah)')
+
+N_1 -> l_7065(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / look-01)')
+
+N_2 -> l_28152	[1.3806612504476364E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / businessman)')
+
+N_2 -> l_45186	[4.314566407648864E-6]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / no)')
+
+N_0 -> l_28563(N_2)	[0.002218495842486795]
+[int] merge_root_1(?1,'(u<root> / intimate)')
+
+N_1 -> l_31838(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / eternal)')
+
+N_3 -> l_14721	[0.0019936464774554536]
+[int] '(u<root> / drink-01)'
+
+N_3 -> l_15529	[0.0067522518400376505]
+[int] '(u<root> / there)'
+
+N_1 -> l_26601(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / toss-01)')
+
+N_1 -> l_35903(N_4)	[8.57253075395408E-5]
+[int] merge(?1,'(u<root> / recommend-01)')
+
+N_1 -> l_32777(N_4)	[4.5720164021088427E-4]
+[int] merge(?1,'(u<root> / well)')
+
+N_2 -> l_27943(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / bell)')
+
+N_0 -> l_14373(N_2)	[0.01774796673989436]
+[int] merge_root_1(?1,'(u<root> / town)')
+
+N_0 -> l_35167(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / wrong)')
+
+N_2 -> l_28920(N_4)	[0.001484210844231209]
+[int] merge(?1,'(u<root> / laugh-01)')
+
+N_1 -> l_23217(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / bear-02)')
+
+N_0 -> l_23599(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / easy)')
+
+N_1 -> l_34524(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / entire)')
+
+N_2 -> l_33406	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / seem-01)')
+
+N_2 -> l_23978	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / look-02)')
+
+N_2 -> l_35958	[0.001104529000358109]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / get-03)')
+
+N_0 -> l_13293(N_2)	[1.559879889248528E-4]
+[int] merge_root_1(?1,'(u<root> / 7)')
+
+N_4 -> l_3695	[0.14088691149625537]
+[int] '(u<root> :polarity (v<1>))'
+
+N_2 -> l_13832	[2.0709918756714544E-4]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / over)')
+
+N_3 -> l_13195	[2.0916946648712954E-4]
+[int] '(u<root> / also)'
+
+N_1 -> l_54494(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / sob-01)')
+
+N_2 -> l_29579	[6.903306252238182E-5]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / time)')
+
+N_1 -> l_29567	[2.8575102513180267E-5]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / wait-01)')
+
+N_2 -> l_28392(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / naive)')
+
+N_2 -> l_36981(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / entertain-01)')
+
+N_4 -> l_19101	[0.0019226364412485337]
+[int] '(u<root> :condition (v<1>))'
+
+N_1 -> l_43665(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / anything)')
+
+N_0 -> l_3594(N_2,N_3)	[4.6796396677455836E-4]
+[int] merge(?1,?2)
+
+N_2 -> l_22116(N_4)	[0.001104529000358109]
+[int] merge(?1,'(u<root> / pursue-01)')
+
+N_0! -> l_8259(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 2)')
+
+N_2 -> l_34999(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / permit-01)')
+
+N_3 -> l_41041	[1.0458473324356477E-4]
+[int] '(u<root> / tolerate-01)'
+
+N_3 -> l_14150	[9.935549658138653E-4]
+[int] '(u<root> / mountain)'
+
+N_3 -> l_11166	[5.229236662178239E-4]
+[int] '(u<root> / bloom-01)'
+
+N_0 -> l_30018(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / inside)')
+
+N_1 -> l_14325(N_4)	[0.010287036904744896]
+[int] merge(?1,'(u<root> / planet)')
+
+N_3 -> l_12420	[4.183389329742591E-4]
+[int] '(u<root> / elephant)'
+
+N_0 -> l_13571(N_2)	[0.0011092479212433976]
+[int] merge_root_1(?1,'(u<root> / funny)')
+
+N_0! -> l_3882(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / even)')
+
+N_2 -> l_6740(N_3)	[3.4516531261190905E-4]
+[int] merge('(u<root> :poss (v<1>))',?1)
+
+N_1 -> l_10870(N_1)	[0.0024288837136203227]
+[int] merge_root_1(?1,'(u<root> / expressive)')
+
+N_2 -> l_40154	[5.522645001790545E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / bring-01)')
+
+N_2 -> l_35493	[1.3806612504476364E-4]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / around)')
+
+N_2 -> l_50600	[1.7258265630595454E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / word)')
+
+N_2 -> l_15417(N_4)	[1.5963895708300793E-4]
+[int] merge(?1,'(u<root> / flower)')
+
+N_0 -> l_4432(N_2)	[0.0014385558978625313]
+[int] merge_root_1(?1,'(u<root> / then)')
+
+N_2 -> l_20178	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / stand-01)')
+
+N_4 -> l_113	[0.21963171447807708]
+[int] '(u<root> :ARG1 (v<1>))'
+
+N_0 -> l_8869(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / goodbye)')
+
+N_1 -> l_41697(N_1)	[4.5720164021088427E-4]
+[int] merge_root_1(?1,'(u<root> / first)')
+
+N_0 -> l_18418(N_2)	[2.773119803108494E-4]
+[int] merge_root_1(?1,'(u<root> / really)')
+
+N_0 -> l_7526(N_2)	[0.02573801817260071]
+[int] merge_root_1(?1,'(u<root> / he)')
+
+N_0 -> l_29925(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / hair)')
+
+N_2 -> l_26055	[6.903306252238182E-5]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / road)')
+
+N_2 -> l_45422	[1.3806612504476364E-4]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / toss-02)')
+
+N_3 -> l_21726	[1.5687709986534715E-4]
+[int] '(u<root> / monarch)'
+
+N_2 -> l_17751(N_4)	[8.283967502685818E-4]
+[int] merge(?1,'(u<root> / go-02)')
+
+N_1 -> l_42038(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / muzzle)')
+
+N_0 -> l_3517(N_0,N_4)	[2.773119803108494E-4]
+[int] merge(?1,?2)
+
+N_1 -> l_18851(N_1)	[0.02448886285379549]
+[int] merge_root_1(?1,'(u<root> / old)')
+
+N_2 -> l_40521	[3.451653126119091E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / water)')
+
+N_2 -> l_24959	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / bore-01)')
+
+N_0 -> l_6120(N_2)	[0.0015425478904790998]
+[int] merge_root_1(?1,'(u<root> / most)')
+
+N_3 -> l_23538	[0.01380518478815055]
+[int] '(u<root> / world)'
+
+N_0! -> l_13529(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / at-last)')
+
+N_2 -> l_30158(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / try-01)')
+
+N_2 -> l_35870(N_4)	[0.004418116001432436]
+[int] merge(?1,'(u<root> / lost)')
+
+N_0 -> l_18473(N_2)	[0.006100863566838687]
+[int] merge_root_1(?1,'(u<root> / back)')
+
+N_0! -> l_28072(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / month)')
+
+N_2 -> l_25022	[0.001104529000358109]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / through)')
+
+N_0! -> l_23899(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / straight)')
+
+N_3 -> l_35641	[0.0033467114637940726]
+[int] '(u<root> / mere)'
+
+N_1 -> l_27037(N_4)	[6.858024603163264E-4]
+[int] merge(?1,'(u<root> / establish-01)')
+
+N_3 -> l_11130	[1.3073091655445596E-5]
+[int] '(u<root> / cry-01)'
+
+N_2 -> l_7519(N_4)	[0.0024506737195445546]
+[int] merge(?1,'(u<root> / answer-01)')
+
+N_3 -> l_22380	[6.536545827722798E-6]
+[int] '(u<root> / ah-01)'
+
+N_0! -> l_12145(N_2)	[1.2998999077071065E-5]
+[int] merge_root_1(?1,'(u<root> / she)')
+
+N_2 -> l_11069	[0.004418116001432436]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / plea)')
+
+N_1 -> l_40523	[1.1430041005272107E-4]
+[int] merge('(u<root> :frequency (v<1>))','(u<root> / empty-01)')
+
+N_2 -> l_15531	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / confuse-01)')
+
+N_2 -> l_42504	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / like-02)')
+
+N_2 -> l_14295(N_4)	[0.002243574531977409]
+[int] merge(?1,'(u<root> / change-01)')
+
+N_0! -> l_28121(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / tomorrow)')
+
+N_1 -> l_8988(N_4)	[0.15784886628280778]
+[int] merge(?1,'(u<root> / have-03)')
+
+N_3 -> l_18693	[3.137541997306943E-4]
+[int] '(u<root> / sad)'
+
+N_3 -> l_11172	[7.059469493940622E-4]
+[int] '(u<root> / rose)'
+
+N_1 -> l_44559(N_4)	[0.003657613121687074]
+[int] merge(?1,'(u<root> / go-15)')
+
+N_1 -> l_48298(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / far)')
+
+N_2 -> l_12267(N_3)	[3.451653126119091E-5]
+[int] merge('(u<root> :ord (v<1>))',?1)
+
+N_3 -> l_6110	[0.0014118938987881244]
+[int] '(u<root> / all)'
+
+N_2 -> l_49877(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / respond-01)')
+
+N_2 -> l_10844(N_4)	[1.294369922294659E-5]
+[int] merge(?1,'(u<root> / no)')
+
+N_3 -> l_13082	[0.0033467114637940726]
+[int] '(u<root> / yes)'
+
+N_1 -> l_6043(N_1)	[0.004000514351845237]
+[int] merge_root_1(?1,'(u<root> / this)')
+
+N_2 -> l_38059	[3.451653126119091E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / picture)')
+
+N_2 -> l_12273	[0.0030374547509847997]
+[int] '(u<root> :value (v<1>))'
+
+N_0 -> l_25090(N_2)	[0.0011092479212433976]
+[int] merge_root_1(?1,'(u<root> / game)')
+
+N_1 -> l_17802(N_4)	[0.0019431069708962581]
+[int] merge(?1,'(u<root> / order-01)')
+
+N_1 -> l_39925(N_4)	[0.003657613121687074]
+[int] merge(?1,'(u<root> / air)')
+
+N_2 -> l_41287	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / retort-01)')
+
+N_2 -> l_41927	[6.903306252238182E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / responsible-41)')
+
+N_2 -> l_38302	[1.3806612504476364E-4]
+[int] merge('(u<root> :name (v<1>))','(u<root> / person)')
+
+N_1 -> l_6715	[0.003657613121687074]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / tone)')
+
+N_2 -> l_31573(N_4)	[0.0011217872659887045]
+[int] merge(?1,'(u<root> / sound-02)')
+
+N_2 -> l_18288(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / he)')
+
+N_2 -> l_28114(N_4)	[3.14963347758367E-4]
+[int] merge(?1,'(u<root> / sit-02)')
+
+N_3 -> l_24880	[1.0458473324356477E-4]
+[int] '(u<root> / surprise-01)'
+
+N_2 -> l_31687(N_2)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / remember-01)')
+
+N_0 -> l_9324(N_2)	[0.0022531598400256513]
+[int] merge_root_1(?1,'(u<root> / dear)')
+
+N_2 -> l_16953	[0.0012771116566640634]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / beautiful)')
+
+N_1 -> l_8900(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / volcano)')
+
+N_3 -> l_26804	[5.2292366621782385E-5]
+[int] '(u<root> / land)'
+
+N_2 -> l_10897(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / airplane)')
+
+N_2 -> l_34949(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / inquire-01)')
+
+N_2 -> l_24456	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / curious-41)')
+
+N_1 -> l_4627(N_1)	[0.048006172222142846]
+[int] merge_root_1(?1,'(u<root> / i)')
+
+N_2 -> l_17662(N_4)	[0.0016567935005371635]
+[int] merge(?1,'(u<root> / hear-01)')
+
+N_0! -> l_44304(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 18)')
+
+N_1 -> l_40016(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / hard)')
+
+N_2 -> l_39093	[1.7258265630595454E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / cigarette)')
+
+N_4 -> l_4253	[0.0012077210858384292]
+[int] '(u<root> :beneficiary (v<1>))'
+
+N_3 -> l_23789	[5.2292366621782385E-5]
+[int] '(u<root> / subject)'
+
+N_2 -> l_8090(N_4)	[0.0016913100317983544]
+[int] merge(?1,'(u<root> / obey-01)')
+
+N_3 -> l_7084	[4.7063129959604144E-4]
+[int] '(u<root> / exact)'
+
+N_0 -> l_21223(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / enchant-01)')
+
+N_0 -> l_23192(N_2)	[6.932799507771235E-4]
+[int] merge_root_1(?1,'(u<root> / sun)')
+
+N_2 -> l_41035	[4.314566407648864E-6]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / wear-01)')
+
+N_0 -> l_11933(N_2)	[6.759479520076954E-4]
+[int] merge_root_1(?1,'(u<root> / here)')
+
+N_1 -> l_30811	[0.003657613121687074]
+[int] merge('(u<root> :source (v<1>))','(u<root> / you)')
+
+N_0 -> l_13465(N_2)	[0.005147603634520142]
+[int] merge_root_1(?1,'(u<root> / star)')
+
+N_1 -> l_26921	[0.001828806560843537]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / frighten-01)')
+
+N_1 -> l_49855(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / weak)')
+
+N_2 -> l_22432(N_3)	[0.004435374267063031]
+[int] merge(?1,'(u<root> :unit (v<1>))')
+
+N_2 -> l_49689	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / compose-01)')
+
+N_2 -> l_15079	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / interest-01)')
+
+N_2 -> l_13390(N_4)	[5.177479689178636E-5]
+[int] merge(?1,'(u<root> / silent)')
+
+N_0 -> l_14572(N_2)	[3.119759778497056E-4]
+[int] merge_root_1(?1,'(u<root> / location)')
+
+N_0 -> l_20190(N_2)	[2.773119803108494E-4]
+[int] merge_root_1(?1,'(u<root> / courteous)')
+
+N_2 -> l_46178	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / proud-41)')
+
+N_2 -> l_40914	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / have-frequency-91)')
+
+N_3 -> l_22656	[5.2292366621782385E-5]
+[int] '(u<root> / problem)'
+
+N_2 -> l_51145(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / glitter-01)')
+
+N_2 -> l_14408(N_3)	[4.141983751342909E-4]
+[int] merge(?1,'(u<root> :op3 (v<1>))')
+
+N_2 -> l_8255(N_3)	[2.7613225008952727E-4]
+[int] merge('(u<root> :quant (v<1>))',?1)
+
+N_0! -> l_21324(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / grown-up)')
+
+N_2 -> l_2570(N_4,N_3)	[0.162046485138476]
+[int] merge(?1,?2)
+
+N_0 -> l_25777(N_2)	[1.559879889248528E-4]
+[int] merge_root_1(?1,'(u<root> / right)')
+
+N_2 -> l_32613	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / ask-02)')
+
+N_1 -> l_37064	[1.1430041005272107E-4]
+[int] merge('(u<root> :frequency (v<1>))','(u<root> / change-01)')
+
+N_2 -> l_29920	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / consistent)')
+
+N_2 -> l_19018(N_4)	[4.487149063954818E-4]
+[int] merge(?1,'(u<root> / geographer)')
+
+N_2 -> l_27080(N_4)	[0.0020019588131490727]
+[int] merge(?1,'(u<root> / important)')
+
+N_2 -> l_11545	[1.3806612504476364E-4]
+[int] merge('(u<root> :ARG4 (v<1>))','(u<root> / sink-01)')
+
+N_0! -> l_15230(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / excite-01)')
+
+N_2 -> l_37256(N_2)	[8.629132815297727E-6]
+[int] merge(?1,'(u<root> / light-01)')
+
+N_2 -> l_13975(N_4)	[3.883109766883977E-5]
+[int] merge(?1,'(u<root> / obligate-01)')
+
+N_2 -> l_18417(N_4)	[0.0011390455316193]
+[int] merge(?1,'(u<root> / rule-03)')
+
+N_1 -> l_63615(N_0)	[5.7150205026360533E-5]
+[int] merge(f_root(?1),'(u<root> :ARG2 (v<1>))')
+
+N_0 -> l_14841(N_2)	[0.004523651678820731]
+[int] merge_root_1(?1,'(u<root> / good)')
+
+N_0 -> l_19463(N_2)	[5.546239606216988E-4]
+[int] merge_root_1(?1,'(u<root> / another)')
+
+N_2 -> l_38307	[0.002243574531977409]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / or)')
+
+N_1 -> l_40015(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / blink-01)')
+
+N_2 -> l_38651(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / silly)')
+
+N_2 -> l_13941	[3.3222161338896246E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / obligate-01)')
+
+N_2 -> l_8962(N_4)	[0.0014151777817088271]
+[int] merge(?1,'(u<root> / fear-01)')
+
+N_2 -> l_28798	[2.7613225008952727E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / study)')
+
+N_0 -> l_15736(N_2)	[3.4663997538856173E-4]
+[int] merge_root_1(?1,'(u<root> / no)')
+
+N_3 -> l_4258	[0.00724249277711686]
+[int] '(u<root> / die-01)'
+
+N_0 -> l_42893(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / no-one)')
+
+N_2 -> l_44843(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / put-09)')
+
+N_2 -> l_20139(N_4)	[0.0013806612504476362]
+[int] merge(?1,'(u<root> / satisfy-01)')
+
+N_3 -> l_23099	[6.536545827722798E-6]
+[int] '(u<root> / chance)'
+
+N_2 -> l_51683	[5.522645001790545E-4]
+[int] merge('(u<root> :duration (v<1>))','(u<root> / gaze-01)')
+
+N_2 -> l_48133	[2.7613225008952727E-4]
+[int] merge('(u<root> :duration (v<1>))','(u<root> / grow-03)')
+
+N_2 -> l_16085	[5.522645001790545E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / great)')
+
+N_1 -> l_42064(N_4)	[0.014630452486748297]
+[int] merge(?1,'(u<root> / sketch-01)')
+
+N_4 -> l_36060	[8.329110936816753E-5]
+[int] '(u<root> :prep-with (v<1>))'
+
+N_0! -> l_11274(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / geographer)')
+
+N_0 -> l_2803(N_2)	[0.024490114261201887]
+[int] merge_root_1(?1,'(u<root> / you)')
+
+N_1 -> l_31678	[2.8575102513180267E-5]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / bee)')
+
+N_2 -> l_11119	[1.7258265630595454E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / shabby)')
+
+N_2 -> l_2257(N_2,N_4)	[8.629132815297727E-6]
+[int] merge(?1,?2)
+
+N_1 -> l_21508(N_3)	[5.42926947750425E-4]
+[int] merge('(u<root> :instrument (v<1>))',?1)
+
+N_0 -> l_15116(N_2)	[0.0014558878966319593]
+[int] merge_root_1(?1,'(u<root> / snake)')
+
+N_0! -> l_13640(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / 3)')
+
+N_2 -> l_23101	[0.07068985602291898]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / reveal-01)')
+
+N_0 -> l_21789(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / both)')
+
+N_1 -> l_31368(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / windowpane)')
+
+N_2 -> l_26129	[1.3806612504476364E-4]
+[int] merge('(u<root> :ARG4 (v<1>))','(u<root> / lead-01)')
+
+N_2 -> l_15463(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / shame-01)')
+
+N_1 -> l_36190(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / rust)')
+
+N_2 -> l_28573(N_4)	[0.008836232002864873]
+[int] merge(?1,'(u<root> / listen-01)')
+
+N_2 -> l_12666	[5.522645001790545E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / track)')
+
+N_2 -> l_37047	[2.7613225008952727E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / position-01)')
+
+N_3 -> l_24166	[0.017570235184918882]
+[int] '(u<root> / sure)'
+
+N_2 -> l_6655(N_4)	[0.0026232563758505087]
+[int] merge(?1,'(u<root> / take-01)')
+
+N_2 -> l_39235	[0.004418116001432436]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / often)')
+
+N_2 -> l_4633(N_4)	[0.028493396556113094]
+[int] merge(?1,'(u<root> / say-01)')
+
+N_0 -> l_21607(N_2)	[0.0012652359101682504]
+[int] merge_root_1(?1,'(u<root> / some)')
+
+N_2 -> l_18531(N_4)	[5.522645001790545E-4]
+[int] merge(?1,'(u<root> / kind)')
+
+N_1 -> l_21117(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / consequence)')
+
+N_2 -> l_29311	[2.84761382904825E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / wait-01)')
+
+N_0 -> l_38317(N_2)	[5.546239606216988E-4]
+[int] merge_root_1(?1,'(u<root> / Sire)')
+
+N_1 -> l_21905(N_1)	[0.007315226243374148]
+[int] merge_root_1(?1,'(u<root> / at-all)')
+
+N_2 -> l_28791(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / receive-01)')
+
+N_2 -> l_21265(N_4)	[0.004487149063954818]
+[int] merge(?1,'(u<root> / house)')
+
+N_1 -> l_19742	[5.7150205026360533E-5]
+[int] merge('(u<root> :part (v<1>))','(u<root> / i)')
+
+N_3 -> l_13812	[2.0916946648712954E-4]
+[int] '(u<root> / random)'
+
+N_2 -> l_22640(N_4)	[1.7258265630595452E-4]
+[int] merge(?1,'(u<root> / opine-01)')
+
+N_2 -> l_61208	[2.7613225008952727E-4]
+[int] merge('(u<root> :duration (v<1>))','(u<root> / remain-01)')
+
+N_4 -> l_43446	[6.940925780680627E-6]
+[int] '(u<root> :prep-from (v<1>))'
+
+N_1 -> l_42228(N_4)	[0.014630452486748297]
+[int] merge(?1,'(u<root> / question-01)')
+
+N_0! -> l_692(N_2,N_3)	[0.0015382148907867428]
+[int] merge_root_1(?1,?2)
+
+N_1 -> l_36677(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / naive)')
+
+N_3 -> l_20773	[0.0058567450616396274]
+[int] '(u<root> / h)'
+
+N_0! -> l_37683(N_0)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / idea)')
+
+N_2 -> l_24053(N_4)	[5.177479689178636E-5]
+[int] merge(?1,'(u<root> / object)')
+
+N_2 -> l_29771	[4.314566407648864E-6]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / tire-01)')
+
+N_1 -> l_34682(N_1)	[0.014630452486748297]
+[int] merge_root_1(?1,'(u<root> / quiet-41)')
+
+N_3 -> l_32609	[2.0916946648712954E-4]
+[int] '(u<root> / at-least)'
+
+N_2 -> l_30512	[0.00884486113568017]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / order-01)')
+
+N_0 -> l_23734(N_2)	[5.546239606216988E-4]
+[int] merge_root_1(?1,'(u<root> / muzzle)')
+
+N_1 -> l_4010(N_1)	[0.005629295195096512]
+[int] merge_root_1(?1,'(u<root> / imperative)')
+
+N_2 -> l_25969(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / reputation)')
+
+N_0! -> l_46919(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 27)')
+
+N_0 -> l_21864(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / home)')
+
+N_1 -> l_9697(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / intoxicate-01)')
+
+N_1 -> l_10805(N_4)	[0.0215742023974511]
+[int] merge(?1,'(u<root> / know-01)')
+
+N_0 -> l_33569(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / terrible-41)')
+
+N_0! -> l_10161(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / still)')
+
+N_0! -> l_23767(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 17)')
+
+N_0! -> l_22419(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / minute)')
+
+N_0 -> l_20520(N_2)	[0.00443699168497359]
+[int] merge_root_1(?1,'(u<root> / extraordinary)')
+
+N_0 -> l_24566(N_2)	[5.546239606216988E-4]
+[int] merge_root_1(?1,'(u<root> / father)')
+
+N_2 -> l_43783	[2.7613225008952727E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / room)')
+
+N_2 -> l_20994	[3.451653126119091E-5]
+[int] merge('(u<root> :ord (v<1>))','(u<root> / disturb-01)')
+
+N_1 -> l_28389(N_1)	[2.8575102513180267E-5]
+[int] merge_root_1(?1,'(u<root> / she)')
+
+N_2 -> l_13921(N_4)	[1.9415548834419885E-4]
+[int] merge(?1,'(u<root> / that)')
+
+N_0! -> l_688(N_2,N_1)	[4.332999692357022E-6]
+[int] merge_root_1(?1,?2)
+
+N_1 -> l_39533(N_4)	[5.7150205026360533E-5]
+[int] merge(?1,'(u<root> / absent-01)')
+
+N_2 -> l_25096	[0.0011908203285110864]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / good)')
+
+N_3 -> l_16623	[1.0458473324356477E-4]
+[int] '(u<root> / figure)'
+
+N_2 -> l_6550(N_4)	[0.010182376722051318]
+[int] merge(?1,'(u<root> / look-01)')
+
+N_2 -> l_33103	[0.001104529000358109]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / bush)')
+
+N_3 -> l_19668	[0.053573529604016054]
+[int] '(u<root> / 1000000)'
+
+N_0! -> l_18633(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / horn)')
+
+N_0 -> l_37556(N_2)	[0.00443699168497359]
+[int] merge_root_1(?1,'(u<root> / year)')
+
+N_0! -> l_22360(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 8)')
+
+N_2 -> l_14710(N_4)	[0.001454008879377667]
+[int] merge(?1,'(u<root> / reply-01)')
+
+N_0! -> l_10467	[4.332999692357022E-6]
+[int] '(u<root> / flower)'
+
+N_0 -> l_17210(N_2)	[2.0798398523313704E-4]
+[int] merge_root_1(?1,'(u<root> / hat)')
+
+N_2 -> l_13364	[0.004832314376566727]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / sum-of)')
+
+N_0! -> l_20320(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / regret-01)')
+
+N_2 -> l_24971	[3.451653126119091E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / root)')
+
+N_2 -> l_36452	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / powerful)')
+
+N_0 -> l_8499(N_2)	[0.014472218972472453]
+[int] merge_root_1(?1,'(u<root> / amr-unknown)')
+
+N_2 -> l_60856(N_4)	[5.522645001790545E-4]
+[int] merge(?1,'(u<root> / describe-01)')
+
+N_1 -> l_46268(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / chimney)')
+
+N_2 -> l_47808	[5.522645001790545E-4]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / set-11)')
+
+N_1 -> l_4379(N_1)	[0.0038862139417925163]
+[int] merge_root_1(?1,'(u<root> / one)')
+
+N_1 -> l_13998(N_4)	[2.571759226186224E-4]
+[int] merge(?1,'(u<root> / desert)')
+
+N_0 -> l_21691(N_2)	[0.0027211238068002097]
+[int] merge_root_1(?1,'(u<root> / just)')
+
+N_1 -> l_25836(N_4)	[5.143518452372448E-4]
+[int] merge(?1,'(u<root> / day)')
+
+N_0! -> l_15519(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / everything)')
+
+N_2 -> l_22314(N_4)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / funny)')
+
+N_3 -> l_19131	[5.229236662178239E-4]
+[int] '(u<root> / please)'
+
+N_4 -> l_4097	[0.018414276096145703]
+[int] '(u<root> :location (v<1>))'
+
+N_0 -> l_19546(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / perhaps)')
+
+N_2 -> l_12874(N_4)	[6.903306252238181E-4]
+[int] merge(?1,'(u<root> / lucky)')
+
+N_0 -> l_4690(N_2)	[0.12875941885808126]
+[int] merge_root_1(?1,'(u<root> / i)')
+
+N_2 -> l_50584	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / echo-01)')
+
+N_2 -> l_14976	[0.004625215188999582]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / be-located-at-91)')
+
+N_0 -> l_17668(N_2)	[0.0011265799200128256]
+[int] merge_root_1(?1,'(u<root> / conceit)')
+
+N_2 -> l_19643	[5.177479689178636E-4]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / star)')
+
+N_2 -> l_29880(N_4)	[3.451653126119091E-5]
+[int] merge(?1,'(u<root> / add-01)')
+
+N_0 -> l_13640(N_2)	[0.002513139821567073]
+[int] merge_root_1(?1,'(u<root> / 3)')
+
+N_2 -> l_4855(N_2)	[4.314566407648864E-6]
+[int] f_root(?1)
+
+N_0! -> l_38618(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 20)')
+
+N_2 -> l_27620(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / grass)')
+
+N_2 -> l_1344(N_3)	[4.875460040643216E-4]
+[int] merge('(u<root> :ARG1 (v<1>))',?1)
+
+N_3 -> l_12937	[0.0029349090766475363]
+[int] '(u<root> / only)'
+
+N_0 -> l_6106(N_2)	[0.007400763474545794]
+[int] merge_root_1(?1,'(u<root> / all)')
+
+N_0! -> l_13624(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / 15)')
+
+N_1 -> l_19067(N_4)	[4.5720164021088427E-4]
+[int] merge(?1,'(u<root> / silence)')
+
+N_2 -> l_43607	[4.314566407648864E-6]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / ah-01)')
+
+N_1 -> l_3273(N_3)	[0.011087139775113943]
+[int] merge('(u<root> :mode (v<1>))',?1)
+
+N_2 -> l_46743	[0.008836232002864873]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / foot)')
+
+N_2 -> l_14032(N_4)	[0.007511660115716671]
+[int] merge(?1,'(u<root> / do-02)')
+
+N_0 -> l_13203(N_2)	[5.89287958160555E-4]
+[int] merge_root_1(?1,'(u<root> / chicken)')
+
+N_2 -> l_34948	[1.3806612504476364E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / be-temporally-at-91)')
+
+N_0! -> l_18367(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 26)')
+
+N_2 -> l_24174(N_4)	[0.002209058000716218]
+[int] merge(?1,'(u<root> / succeed-01)')
+
+N_0! -> l_19546(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / perhaps)')
+
+N_2 -> l_26061	[5.522645001790545E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / abode)')
+
+N_0 -> l_17409(N_2)	[0.00235715183264222]
+[int] merge_root_1(?1,'(u<root> / y)')
+
+N_0 -> l_12145(N_2)	[0.0401755731475343]
+[int] merge_root_1(?1,'(u<root> / she)')
+
+N_0 -> l_38821(N_2)	[0.00443699168497359]
+[int] merge_root_1(?1,'(u<root> / bank)')
+
+N_3 -> l_51002	[1.3073091655445596E-5]
+[int] '(u<root> / exchange-01)'
+
+N_1 -> l_12902(N_2,N_0)	[9.715534854481291E-4]
+[int] merge(f_root(?1),?2)
+
+N_1 -> l_36189(N_4)	[2.2860082010544213E-4]
+[int] merge(?1,'(u<root> / pulley)')
+
+N_2 -> l_20329	[0.002209058000716218]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / moment)')
+
+N_1 -> l_45961(N_4)	[0.003657613121687074]
+[int] merge(?1,'(u<root> / meet-03)')
+
+N_3 -> l_23782	[4.2487547880198185E-4]
+[int] '(u<root> / explain-01)'
+
+N_0! -> l_22629(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / bread)')
+
+N_2 -> l_12104(N_4)	[5.522645001790545E-4]
+[int] merge(?1,'(u<root> / judge-01)')
+
+N_0! -> l_11268(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / ever)')
+
+N_2 -> l_31326(N_4)	[5.522645001790545E-4]
+[int] merge(?1,'(u<root> / child)')
+
+N_2 -> l_39460	[0.03534492801145949]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / away)')
+
+N_0! -> l_16000(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / night)')
+
+N_2 -> l_23971	[5.867810314402455E-4]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / have-manner-91)')
+
+N_1 -> l_24533(N_4)	[0.002400308611107142]
+[int] merge(?1,'(u<root> / own-01)')
+
+N_2 -> l_31555	[0.001104529000358109]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / bell)')
+
+N_1 -> l_28484	[4.5720164021088427E-4]
+[int] merge('(u<root> :dayperiod (v<1>))','(u<root> / date-entity)')
+
+N_0! -> l_23478(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 23)')
+
+N_3 -> l_4669	[8.366778659485182E-4]
+[int] '(u<root> / same-41)'
+
+N_2 -> l_5253(N_3)	[7.291617228926579E-4]
+[int] merge('(u<root> :ARG2 (v<1>))',?1)
+
+N_2 -> l_18212	[1.7258265630595454E-5]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / they)')
+
+N_2 -> l_23119(N_2)	[4.314566407648864E-6]
+[int] merge(?1,'(u<root> / drop-06)')
+
+N_2 -> l_11562	[5.522645001790545E-4]
+[int] merge('(u<root> :duration (v<1>))','(u<root> / reverie)')
+
+N_0 -> l_31785(N_2)	[0.00443699168497359]
+[int] merge_root_1(?1,'(u<root> / a-little)')
+
+N_1 -> l_32651(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / forgive-01)')
+
+N_2 -> l_46067	[0.002209058000716218]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / simple)')
+
+N_2 -> l_39892	[0.07082792214796374]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / surprise-01)')
+
+N_0 -> l_6113(N_2)	[0.0016118758855568122]
+[int] merge_root_1(?1,'(u<root> / it)')
+
+N_0! -> l_14841(N_2)	[3.0330997846499154E-5]
+[int] merge_root_1(?1,'(u<root> / good)')
+
+N_2 -> l_35699(N_4)	[0.004452632532693627]
+[int] merge(?1,'(u<root> / work-01)')
+
+N_0 -> l_11802(N_2)	[0.002218495842486795]
+[int] merge_root_1(?1,'(u<root> / anyone)')
+
+N_1 -> l_20529(N_1)	[2.8575102513180267E-5]
+[int] merge_root_1(?1,'(u<root> / 1)')
+
+N_2 -> l_17452	[0.008836232002864873]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / overpower-01)')
+
+N_1 -> l_52235(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / follow-02)')
+
+N_0 -> l_37718(N_2)	[6.932799507771235E-5]
+[int] merge_root_1(?1,'(u<root> / shop)')
+
+N_0 -> l_8222(N_2)	[5.546239606216988E-4]
+[int] merge_root_1(?1,'(u<root> / other)')
+
+N_0! -> l_13079	[2.599799815414213E-5]
+[int] '(u<root> / yes)'
+
+N_1 -> l_42090(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / as-yet)')
+
+N_2 -> l_35306(N_4)	[0.001104529000358109]
+[int] merge(?1,'(u<root> / alone)')
+
+N_0! -> l_15494(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 25)')
+
+N_3 -> l_24695	[1.3073091655445596E-5]
+[int] '(u<root> / difficult)'
+
+N_2 -> l_29728(N_4)	[2.8044681649717614E-4]
+[int] merge(?1,'(u<root> / you)')
+
+N_0 -> l_22646(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / scholar)')
+
+N_0 -> l_16000(N_2)	[0.004852959655439864]
+[int] merge_root_1(?1,'(u<root> / night)')
+
+N_2 -> l_26782	[0.001104529000358109]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / secret)')
+
+N_2 -> l_42420	[0.002209058000716218]
+[int] merge('(u<root> :direction (v<1>))','(u<root> / drop-01)')
+
+N_0! -> l_3588(N_2,N_0)	[3.0330997846499154E-5]
+[int] merge(?1,?2)
+
+N_2 -> l_33726	[1.3806612504476364E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / difficult)')
+
+N_0 -> l_12110(N_2)	[0.0056588975982182705]
+[int] merge_root_1(?1,'(u<root> / king)')
+
+N_2 -> l_20519(N_4)	[0.008853490268495467]
+[int] merge(?1,'(u<root> / something)')
+
+N_2 -> l_23452(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / once)')
+
+N_1 -> l_15031	[0.003943364146818877]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / ah)')
+
+N_3 -> l_27557	[1.0458473324356477E-4]
+[int] '(u<root> / benefit-01)'
+
+N_0 -> l_46228(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / volcano)')
+
+N_0! -> l_26806(N_3)	[4.332999692357022E-6]
+[int] merge(?1,'(u<root> / tear)')
+
+N_1 -> l_19928	[4.5720164021088427E-4]
+[int] merge('(u<root> :year (v<1>))','(u<root> / date-entity)')
+
+N_3 -> l_223	[6.928738577386166E-4]
+[int] '(u<root> / i)'
+
+N_1 -> l_47027(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / appear-01)')
+
+N_2 -> l_49534	[4.314566407648864E-6]
+[int] merge('(u<root> :quant (v<1>))','(u<root> / numerical-quantity)')
+
+N_2 -> l_15315(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / stir-02)')
+
+N_3 -> l_9138	[0.036055586785718956]
+[int] '(u<root> / man)'
+
+N_0 -> l_18908(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / everyone)')
+
+N_2 -> l_48334	[0.001104529000358109]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / level)')
+
+N_3 -> l_24642	[2.6146183310891192E-5]
+[int] '(u<root> / tonight)'
+
+N_1 -> l_55516(N_4)	[0.014630452486748297]
+[int] merge(?1,'(u<root> / excuse-01)')
+
+N_4 -> l_231	[0.28034399228169055]
+[int] '(u<root> :mod (v<1>))'
+
+N_0 -> l_45428(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / off)')
+
+N_4 -> l_197	[0.1823311793326994]
+[int] '(u<root> :ARG0 (v<1>))'
+
+N_3 -> l_13400	[0.014230060266952532]
+[int] '(u<root> / star)'
+
+N_2 -> l_40687	[0.017810530130774507]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / far)')
+
+N_2 -> l_44604	[0.004418116001432436]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / patient-41)')
+
+N_0 -> l_22603(N_2)	[8.665999384714043E-5]
+[int] merge_root_1(?1,'(u<root> / thorn)')
+
+N_2 -> l_35611(N_4)	[2.7613225008952727E-4]
+[int] merge(?1,'(u<root> / around)')
+
+N_0! -> l_13293(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / 7)')
+
+N_2 -> l_28309	[3.451653126119091E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / pride-01)')
+
+N_1 -> l_29086(N_4)	[0.029318055178522952]
+[int] merge(?1,'(u<root> / sweetness)')
+
+N_2 -> l_51278	[0.008836232002864873]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / contrary-41)')
+
+N_0 -> l_11274(N_2)	[0.0011439119187822537]
+[int] merge_root_1(?1,'(u<root> / geographer)')
+
+N_2 -> l_18109	[6.903306252238182E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / old)')
+
+N_1 -> l_10716(N_4)	[0.11704361989398637]
+[int] merge(?1,'(u<root> / face)')
+
+N_1 -> l_25556(N_1)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / we)')
+
+N_2 -> l_45589	[3.451653126119091E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / desk)')
+
+N_2 -> l_34680(N_2)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / understand-01)')
+
+N_2 -> l_15570	[0.001104529000358109]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / monotonous)')
+
+N_0! -> l_8829(N_2)	[1.2998999077071065E-5]
+[int] merge_root_1(?1,'(u<root> / nothing)')
+
+N_0! -> l_6106(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / all)')
+
+N_2 -> l_28668	[1.3806612504476364E-4]
+[int] merge('(u<root> :prep-at (v<1>))','(u<root> / close)')
+
+N_4 -> l_325	[0.032087899884086536]
+[int] '(u<root> :manner (v<1>))'
+
+N_1 -> l_42563(N_1)	[0.001828806560843537]
+[int] merge_root_1(?1,'(u<root> / moralist)')
+
+N_0! -> l_30384(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / wind)')
+
+N_2 -> l_28115	[3.451653126119091E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / anniversary)')
+
+N_1 -> l_22313(N_4)	[1.1430041005272107E-4]
+[int] merge(?1,'(u<root> / nothing)')
+
+N_1 -> l_27400	[4.5720164021088427E-4]
+[int] merge('(u<root> :prep-as (v<1>))','(u<root> / walk-01)')
+
+N_2 -> l_13046(N_4)	[2.9339051572012273E-4]
+[int] merge(?1,'(u<root> / think-01)')
+
+N_1 -> l_12910(N_2,N_4)	[4.28626537697704E-5]
+[int] merge(f_root(?1),?2)
+
+N_0 -> l_17718(N_2)	[0.0012479039113988224]
+[int] merge_root_1(?1,'(u<root> / now)')
+
+N_0 -> l_20763(N_2)	[2.773119803108494E-4]
+[int] merge_root_1(?1,'(u<root> / of-course)')
+
+N_0 -> l_25420(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / ephemeral)')
+
+N_0 -> l_36833(N_2)	[1.386559901554247E-4]
+[int] merge_root_1(?1,'(u<root> / alone)')
+
+N_0 -> l_10621(N_2)	[0.019065198646370896]
+[int] merge_root_1(?1,'(u<root> / flower)')
+
+N_2 -> l_29192(N_4)	[5.522645001790545E-4]
+[int] merge(?1,'(u<root> / revive-01)')
+
+N_1 -> l_35354(N_4)	[4.5720164021088427E-4]
+[int] merge(?1,'(u<root> / set-07)')
+
+N_1 -> l_48532	[0.007315226243374148]
+[int] merge('(u<root> :source (v<1>))','(u<root> / planet)')
+
+N_2 -> l_37382(N_4)	[1.423806914524125E-4]
+[int] merge(?1,'(u<root> / hunt-01)')
+
+N_1 -> l_39149(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / coquet)')
+
+N_1 -> l_43765(N_4)	[2.8575102513180267E-5]
+[int] merge(?1,'(u<root> / step-01)')
+
+N_2 -> l_36224(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / imagine-01)')
+
+N_1 -> l_18154(N_4)	[2.2860082010544213E-4]
+[int] merge(?1,'(u<root> / look-02)')
+
+N_0 -> l_39266(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / peevish)')
+
+N_0! -> l_37669(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / idea)')
+
+N_1 -> l_15885	[0.014630452486748297]
+[int] merge('(u<root> :prep-in (v<1>))','(u<root> / confidence)')
+
+N_0! -> l_42392(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / down)')
+
+N_2 -> l_33135	[3.451653126119091E-5]
+[int] merge('(u<root> :consist (v<1>))','(u<root> / stone)')
+
+N_3 -> l_36577	[2.0916946648712954E-4]
+[int] '(u<root> / puzzle-01)'
+
+N_1 -> l_32115(N_4)	[0.003657613121687074]
+[int] merge(?1,'(u<root> / adventure)')
+
+N_2 -> l_18281	[4.314566407648864E-6]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / fault-01)')
+
+N_2 -> l_62271	[0.002209058000716218]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / war-01)')
+
+N_0! -> l_36050(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 9)')
+
+N_2 -> l_12189(N_4)	[5.522645001790545E-4]
+[int] merge(?1,'(u<root> / point)')
+
+N_0 -> l_31096(N_2)	[0.01331097505492077]
+[int] merge_root_1(?1,'(u<root> / up)')
+
+N_2 -> l_27514(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / tend-01)')
+
+N_3 -> l_19791	[4.183389329742591E-4]
+[int] '(u<root> / Turkey)'
+
+N_3 -> l_36509	[2.0916946648712954E-4]
+[int] '(u<root> / real)'
+
+N_1 -> l_31581(N_4)	[0.001828806560843537]
+[int] merge(?1,'(u<root> / any)')
+
+N_1 -> l_16484(N_4)	[6.286522552899659E-4]
+[int] merge(?1,'(u<root> / creature)')
+
+N_2 -> l_37323	[1.7258265630595454E-5]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / power)')
+
+N_3 -> l_29517	[0.0033467114637940726]
+[int] '(u<root> / reject-01)'
+
+N_1 -> l_29534(N_1)	[1.1430041005272107E-4]
+[int] merge_root_1(?1,'(u<root> / immense)')
+
+N_0 -> l_10378(N_2)	[0.011941747152135952]
+[int] merge_root_1(?1,'(u<root> / very)')
+
+N_0 -> l_67998(N_0)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / fear-01)')
+
+N_0! -> l_21826(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / at-all)')
+
+N_2 -> l_16400(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / guess-01)')
+
+N_2 -> l_44152(N_4)	[0.0012425951254028725]
+[int] merge(?1,'(u<root> / unique)')
+
+N_3 -> l_40798	[0.02677369171035258]
+[int] '(u<root> / not)'
+
+N_1 -> l_27006(N_1)	[2.2860082010544213E-4]
+[int] merge_root_1(?1,'(u<root> / tie-01)')
+
+N_1 -> l_29689	[0.003657613121687074]
+[int] merge('(u<root> :instrument (v<1>))','(u<root> / tire-01)')
+
+N_0! -> l_19014(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / moment)')
+
+N_2 -> l_47209(N_4)	[6.903306252238182E-5]
+[int] merge(?1,'(u<root> / buy-01)')
+
+N_2 -> l_29015	[4.314566407648864E-6]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / fly-01)')
+
+N_3 -> l_30923	[6.536545827722798E-6]
+[int] '(u<root> / gentle)'
+
+N_1 -> l_23307	[2.2860082010544213E-4]
+[int] merge('(u<root> :extent (v<1>))','(u<root> / away)')
+
+N_0! -> l_2797(N_3,N_3)	[2.599799815414213E-5]
+[int] merge(?1,?2)
+
+N_2 -> l_36350(N_4)	[0.03534492801145949]
+[int] merge(?1,'(u<root> / end)')
+
+N_2 -> l_27556(N_4)	[0.0012425951254028725]
+[int] merge(?1,'(u<root> / forget-01)')
+
+N_1 -> l_58411(N_2)	[5.7150205026360533E-5]
+[int] merge_root_1(?1,'(u<root> / live-01)')
+
+N_0 -> l_43005(N_2)	[1.7331998769428087E-5]
+[int] merge_root_1(?1,'(u<root> / walk-01)')
+
+N_1 -> l_54243	[0.003657613121687074]
+[int] merge('(u<root> :frequency (v<1>))','(u<root> / neglect-01)')
+
+N_2 -> l_2553(N_3,N_2)	[4.314566407648864E-6]
+[int] merge(?1,?2)
+
+N_0 -> l_44854(N_2)	[0.002218495842486795]
+[int] merge_root_1(?1,'(u<root> / 44)')
+
+N_2 -> l_50011	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / useful)')
+
+N_0 -> l_10161(N_2)	[7.279439483159797E-4]
+[int] merge_root_1(?1,'(u<root> / still)')
+
+N_1 -> l_19751	[4.5720164021088427E-4]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / Oh)')
+
+N_1 -> l_48835(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / trick-01)')
+
+N_2 -> l_13115	[0.0010009794065745363]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / say-01)')
+
+N_0 -> l_3588(N_2,N_0)	[1.386559901554247E-4]
+[int] merge(?1,?2)
+
+N_3 -> l_32551	[0.0067457152942099275]
+[int] '(u<root> / ocean)'
+
+N_2 -> l_59149	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / compute-01)')
+
+N_1 -> l_37436(N_4)	[5.7150205026360533E-5]
+[int] merge(?1,'(u<root> / exemplify-01)')
+
+N_3 -> l_43050	[5.2292366621782385E-5]
+[int] '(u<root> / rage)'
+
+N_0! -> l_2791(N_3,N_0)	[4.332999692357022E-6]
+[int] merge(?1,?2)
+
+N_3 -> l_22104	[4.183389329742591E-4]
+[int] '(u<root> / brother)'
+
+N_3 -> l_6560	[0.007059469493940622]
+[int] '(u<root> / person)'
+
+N_0 -> l_12355(N_2)	[3.4663997538856175E-5]
+[int] merge_root_1(?1,'(u<root> / rather)')
+
+N_1 -> l_33321(N_4)	[0.003657613121687074]
+[int] merge(?1,'(u<root> / wall)')
+
+N_1 -> l_30069(N_4)	[2.2860082010544213E-4]
+[int] merge(?1,'(u<root> / truth)')
+
+N_0! -> l_8096(N_2)	[3.89969972312132E-5]
+[int] merge_root_1(?1,'(u<root> / they)')
+
+N_0! -> l_9140(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / thing)')
+
+N_2 -> l_6500	[0.0019329257506266908]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / small)')
+
+N_2 -> l_4851(N_0)	[1.7258265630595454E-5]
+[int] f_root(?1)
+
+N_1 -> l_10618	[0.029260904973496593]
+[int] merge('(u<root> :part (v<1>))','(u<root> / gentleman)')
+
+N_3 -> l_20779	[1.6341364569306995E-4]
+[int] '(u<root> / flower-01)'
+
+N_2 -> l_38525	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / show-01)')
+
+N_3 -> l_38432	[1.3073091655445596E-5]
+[int] '(u<root> / 501622731)'
+
+N_0! -> l_42880(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / 19)')
+
+N_2 -> l_37388	[5.522645001790545E-4]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / person)')
+
+N_2 -> l_63199	[1.7258265630595454E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / perfect-01)')
+
+N_0 -> l_5928(N_2)	[8.665999384714044E-6]
+[int] merge_root_1(?1,'(u<root> / switchman)')
+
+N_2 -> l_46179	[3.451653126119091E-5]
+[int] merge('(u<root> :poss (v<1>))','(u<root> / baobab)')
+
+N_0! -> l_15629(N_2)	[4.332999692357022E-6]
+[int] merge_root_1(?1,'(u<root> / anymore)')
+
+N_2 -> l_24901	[6.903306252238182E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / make-05)')
+
+N_0! -> l_2803(N_2)	[8.665999384714043E-5]
+[int] merge_root_1(?1,'(u<root> / you)')
+
+N_2 -> l_37046	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / rare)')
+
+N_1 -> l_47961(N_1)	[0.001828806560843537]
+[int] merge_root_1(?1,'(u<root> / authority)')
+
+N_2 -> l_37910	[0.0011217872659887045]
+[int] merge('(u<root> :op1 (v<1>))','(u<root> / multiple)')
+
+N_0 -> l_8096(N_2)	[0.022063634433481954]
+[int] merge_root_1(?1,'(u<root> / they)')
+
+N_1 -> l_15061	[2.8575102513180267E-4]
+[int] merge('(u<root> :mode (v<1>))','(u<root> / oh)')
+
+N_1 -> l_37853(N_4)	[5.143518452372448E-4]
+[int] merge(?1,'(u<root> / simple)')
+
+N_2 -> l_16029	[4.314566407648864E-6]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / fall-04)')
+
+N_2 -> l_27107	[3.451653126119091E-5]
+[int] merge('(u<root> :ARG1 (v<1>))','(u<root> / promise-01)')
+
+N_0 -> l_16727(N_2)	[0.002773119803108494]
+[int] merge_root_1(?1,'(u<root> / Earth)')
+
+N_2 -> l_6793	[0.008076868315118672]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / have-rel-role-91)')
+
+N_3 -> l_14809	[1.3073091655445596E-5]
+[int] '(u<root> / snake)'
+
+N_4 -> l_2610	[0.011778751049815024]
+[int] '(u<root> :ARG3 (v<1>))'
+
+N_0 -> l_26788(N_2)	[0.00117857591632111]
+[int] merge_root_1(?1,'(u<root> / such)')
+
+N_2 -> l_40993(N_4)	[1.3806612504476364E-4]
+[int] merge(?1,'(u<root> / hat)')
+
+N_1 -> l_48884(N_4)	[5.715020502636053E-4]
+[int] merge(?1,'(u<root> / foolish)')
+
+N_1 -> l_20757(N_1)	[4.5720164021088427E-4]
+[int] merge_root_1(?1,'(u<root> / another)')
+
+N_2 -> l_48490	[2.7613225008952727E-4]
+[int] merge('(u<root> :degree (v<1>))','(u<root> / sick)')
+
+N_2 -> l_2253(N_2,N_2)	[4.314566407648864E-6]
+[int] merge(?1,?2)
+
+N_0 -> l_12672(N_2)	[0.0011092479212433976]
+[int] merge_root_1(?1,'(u<root> / sand)')
+
+N_2 -> l_38782(N_4)	[1.7258265630595454E-5]
+[int] merge(?1,'(u<root> / sorrow-01)')
+
+N_1 -> l_26895(N_1)	[6.858024603163264E-4]
+[int] merge_root_1(?1,'(u<root> / again)')
+
+N_0 -> l_27685(N_2)	[0.0011092479212433976]
+[int] merge_root_1(?1,'(u<root> / footstool)')
+
+N_3 -> l_13517	[0.005026603741518832]
+[int] '(u<root> / animal)'
+
+N_1 -> l_28555(N_4)	[9.144032804217685E-4]
+[int] merge(?1,'(u<root> / disturb-01)')
+
+N_1 -> l_11729(N_4)	[3.429012301581632E-4]
+[int] merge(?1,'(u<root> / make-02)')
+
+N_2 -> l_49432	[0.004418116001432436]
+[int] merge('(u<root> :ARG2 (v<1>))','(u<root> / put-01)')

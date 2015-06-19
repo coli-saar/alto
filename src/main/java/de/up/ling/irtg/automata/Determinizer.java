@@ -42,7 +42,7 @@ public class Determinizer<State> {
 
     public Determinizer(TreeAutomaton<State> originalAutomaton) {
         this.originalAutomaton = originalAutomaton;
-        ism = new IdentitySignatureMapper(originalAutomaton.getSignature());
+        ism = originalAutomaton.getSignature().getIdentityMapper();
         allStateLists.add(null); // to ensure allStateLists.get(newState) == states represented by newState
     }
     
@@ -152,7 +152,7 @@ public class Determinizer<State> {
     }
 
     private Set<State> mapStates(IntSet stateIds) {
-        return Util.mapSet(stateIds, q -> originalAutomaton.getStateForId(q));
+        return Util.mapToSet(stateIds, q -> originalAutomaton.getStateForId(q));
     }
 
     // returns sorted, duplicate-free list of parents of the rules

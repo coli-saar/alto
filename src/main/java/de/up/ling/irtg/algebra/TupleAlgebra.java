@@ -39,7 +39,7 @@ public class TupleAlgebra<E> extends Algebra<List<E>>{
             ret.addAll(childrenValues.get(1));
             return ret;
         } else {
-            List<E> firstComponents = Util.mapList(childrenValues, l -> l.get(0));
+            List<E> firstComponents = Util.mapToList(childrenValues, l -> l.get(0));
             E value = underlyingAlgebra.evaluate(label, firstComponents);
             return Lists.newArrayList(value);
         }

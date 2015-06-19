@@ -56,9 +56,7 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
     public Tree<String> parseString(String representation) throws ParserException {
         try {
             Tree<String> ret = TreeParser.parse(representation);
-            
             signature.addAllSymbols(addArities(ret));
-            
             return ret;
         } catch (ParseException ex) {
             throw new ParserException(ex);

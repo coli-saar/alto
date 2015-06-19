@@ -99,7 +99,7 @@ public class PTBConverter {
 
         log.info("Writing corpus...");
         FileWriter fw = new FileWriter(corpusFilename);
-        lc.corpus.writeCorpus(fw, lc.irtg, interpretationOrder);
+        lc.corpus.writeCorpus(fw, lc.irtg);
         fw.close();
 
         log.info("Done.");

@@ -22,11 +22,14 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
+ * A class that maps back and forth between objects and int
+ * representations of these objects. The interner guarantees
+ * that adding two objects that are equals are assigned the
+ * same numeric ID.
+ * 
  * @author koller
  */
 public class Interner<E> implements Serializable, Cloneable {
-
     protected Object2IntMap<E> objectToInt;
     protected Int2ObjectMap<E> intToObject;
     protected List<E> uncachedObjects;
@@ -34,15 +37,38 @@ public class Interner<E> implements Serializable, Cloneable {
     private boolean trustingMode;
     private int firstIndexForUncachedObjects;
 
+    /**
+     * Creates an empty interner.
+     */
     public Interner() {
         objectToInt = new Object2IntOpenHashMap<E>();
         intToObject = new Int2ObjectOpenHashMap<E>();
+//        intToObject = new ArrayMap<>();
         uncachedObjects = new ArrayList<E>();
         nextIndex = 1;
         firstIndexForUncachedObjects = 1;
         trustingMode = false;
     }
+    
+    /**
+     * Creates an object that maps back and forth between the
+     * numeric IDs in this interner and those in another interner.
+     * 
+     * @param other
+     * @return 
+     */
+    public SignatureMapper getMapperTo(Interner<E> other) {
+        if( equals(other)) {
+            return new IdentitySignatureMapper(this);
+        } else {
+            return new SignatureMapper(this, other);
+        }
+    }
 
+    /**
+     * Removes all mappings from this interner.
+     * 
+     */
     public void clear() {
         objectToInt.clear();
         intToObject.clear();
@@ -51,6 +77,19 @@ public class Interner<E> implements Serializable, Cloneable {
         firstIndexForUncachedObjects = 1;
     }
 
+    /**
+     * Add an object to the interner. Normally, the method
+     * checks whether the interner already knows about the object,
+     * and returns its old ID in this case; otherwise the
+     * object is added with the next available ID, and that new
+     * ID is returned. If you are certain that you will not attempt
+     * to add the same object twice, you can switch the interner
+     * into "trusting mode" (see {@link #setTrustingMode(boolean) })
+     * to skip the exists-check for improved efficiency.
+     * 
+     * @param object
+     * @return 
+     */
     public int addObject(E object) {
         if (trustingMode) {
             int ret = nextIndex++;
@@ -66,6 +105,7 @@ public class Interner<E> implements Serializable, Cloneable {
                 intToObject.put(ret, object);
             }
 
+            
             return ret;
         }
     }
@@ -73,14 +113,13 @@ public class Interner<E> implements Serializable, Cloneable {
     private void processUncachedObjects() {
         if (trustingMode) {
             // if we're not in trusting mode, there will be no uncached objects
-            
+
 //            System.err.println("caching " + uncachedObjects.size() + " uncached objects");
 //            try {
 //                throw new Exception();
 //            } catch (Exception e) {
 //                e.printStackTrace(System.err);
 //            }
-            
             for (int i = 0; i < uncachedObjects.size(); i++) {
                 objectToInt.put(uncachedObjects.get(i), i + firstIndexForUncachedObjects);
             }
@@ -90,6 +129,16 @@ public class Interner<E> implements Serializable, Cloneable {
         }
     }
 
+    /**
+     * Adds an object to the interner with a specific numeric ID.
+     * You should only use this if you know what you're doing.
+     * Later additions to the interner are still guaranteed not to
+     * collide with your additions.
+     * 
+     * @param index
+     * @param object
+     * @return 
+     */
     public int addObjectWithIndex(int index, E object) {
         objectToInt.put(object, index);
         intToObject.put(index, object);
@@ -101,15 +150,36 @@ public class Interner<E> implements Serializable, Cloneable {
         return index;
     }
 
+    /**
+     * Retrieves the numeric ID of the given object.
+     * If the object is not known, the method returns 0.
+     * 
+     * @param object
+     * @return 
+     */
     public int resolveObject(E object) {
         processUncachedObjects();
         return objectToInt.getInt(object);
     }
 
+    /**
+     * Retrieves the object for the given numeric ID.
+     * If the ID is not known, the method returns null.
+     * 
+     * @param index
+     * @return 
+     */
     public E resolveId(int index) {
         return intToObject.get(index);
     }
 
+    /**
+     * Returns an iterable over the objects corresponding
+     * to the given collection of numeric IDs.
+     * 
+     * @param indices
+     * @return 
+     */
     public Iterable<E> resolveIds(Collection<Integer> indices) {
         return Iterables.transform(indices, new Function<Integer, E>() {
             public E apply(Integer f) {
@@ -118,22 +188,58 @@ public class Interner<E> implements Serializable, Cloneable {
         });
     }
 
+    /**
+     * Checks whether the object is known.
+     * 
+     * @param object
+     * @return 
+     */
     public boolean isKnownObject(E object) {
         processUncachedObjects();
         return objectToInt.containsKey(object);
     }
 
+    /**
+     * Returns the set of all known objects.
+     * 
+     * @return 
+     */
     public Set<E> getKnownObjects() {
         processUncachedObjects();
         return objectToInt.keySet();
     }
     
+    /**
+     * Returns an object that is equals to "object"
+     * and identical to an object in the interner.
+     * If "object" was previously unknown to the
+     * interner, it is added.
+     * 
+     * @param object
+     * @return 
+     */
+    public E normalize(E object) {
+        int id = addObject(object);
+        return resolveId(id);
+    }
+
+    /**
+     * Returns the set of known numeric IDs.
+     * 
+     * @return 
+     */
     public IntSet getKnownIds() {
         // no need to processUncachedObjects:
         // intToObject is always filled directly
         return intToObject.keySet();
     }
 
+    /**
+     * Returns the numeric ID that will be assigned
+     * to the next object.
+     * 
+     * @return 
+     */
     public int getNextIndex() {
         return nextIndex;
     }
@@ -141,18 +247,6 @@ public class Interner<E> implements Serializable, Cloneable {
     public Map<E, Integer> getSymbolTable() {
         processUncachedObjects();
         return objectToInt;
-    }
-    
-    public <O> int[] remap(Interner<O> other, Function<E,O> reprF) {
-        processUncachedObjects();
-
-        int[] ret = new int[nextIndex];
-
-        for (int i = 1; i < nextIndex; i++) {
-            ret[i] = other.resolveObject(reprF.apply(resolveId(i)));
-        }
-
-        return ret;
     }
 
     /*
@@ -163,9 +257,18 @@ public class Interner<E> implements Serializable, Cloneable {
      * will be 0.
      */
     public int[] remap(Interner<E> other) {
-        return remap(other, x -> x);
+        processUncachedObjects();
+
+        int[] ret = new int[nextIndex];
+
+        for (int i = 1; i < nextIndex; i++) {
+            ret[i] = other.resolveObject(resolveId(i));
+        }
+
+        return ret;
     }
 
+    /*
     public static int[] remapArray(int[] ids, int[] remap) {
         int[] ret = new int[ids.length];
         for (int i = 0; i < ids.length; i++) {
@@ -173,6 +276,7 @@ public class Interner<E> implements Serializable, Cloneable {
         }
         return ret;
     }
+    */
 
     @Override
     public Object clone() {
@@ -212,9 +316,9 @@ public class Interner<E> implements Serializable, Cloneable {
      * Switches the interner to "trusting mode". In trusting mode, the interner
      * trusts the caller to never try to intern the same object twice. This can
      * be faster than if every objects is checked for equality to earlier
-     * objects, but if the same object is added to the interner in trusting
-     * mode twice, there will be two objects with the same ID. By default,
-     * interners start in trusting mode = false.
+     * objects, but if the same object is added to the interner in trusting mode
+     * twice, there will be two objects with the same ID. By default, interners
+     * start in trusting mode = false.
      *
      * @param trustingMode
      */

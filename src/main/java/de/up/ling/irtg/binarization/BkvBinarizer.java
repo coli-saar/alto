@@ -79,7 +79,6 @@ public class BkvBinarizer {
 
         int ruleNumber = 1;
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
-
             RuleBinarization rb = binarizeRule(rule, irtg);
 
             if (debug) {
@@ -198,12 +197,13 @@ public class BkvBinarizer {
             Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
 
             TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);  // this is G_i
+            
             binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
 
             if (debug) {
                 System.err.println("\nG(" + interpretation + "):\n" + binarizationTermsHere);
             }
-
+            
             if (debug) {
                 for (Tree t : binarizationTermsHere.language()) {
                     System.err.println("   " + t);
@@ -245,8 +245,9 @@ public class BkvBinarizer {
         assert commonVariableTrees != null;
 
         Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
+        
         ret.xi = xiFromVartree(commonVariableTree, irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel()));
-
+        
         if (debug) {
             System.err.println("\nvartree = " + commonVariableTree);
         }
@@ -273,16 +274,22 @@ public class BkvBinarizer {
     }
 
     private Tree<String> xiFromVartree(Tree<String> vartree, final String originalLabel) {
-        return vartree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
-            @Override
-            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                if (childrenValues.isEmpty() && isNumber(node.getLabel())) {
-                    return node;
-                } else {
-                    return Tree.create(gensym(originalLabel + "_br"), childrenValues);
+        //special case for vartree from unary rules, we need to make sure that
+        // we do not confuse them with the leafs of larger variable trees
+        if (vartree.getChildren().isEmpty() && isNumber(vartree.getLabel())) {
+            return Tree.create(gensym(originalLabel + "_br"), vartree);
+        } else {
+            return vartree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
+                @Override
+                public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
+                    if (childrenValues.isEmpty() && isNumber(node.getLabel())) {
+                        return node;
+                    } else {
+                        return Tree.create(gensym(originalLabel + "_br"), childrenValues);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     /**
@@ -699,6 +706,10 @@ public class BkvBinarizer {
 
         return StringTools.join(reprs, "+");
     }
+    
+    /**
+     * 
+     */
     private static Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
     // Collects the set of string representations of the forks in the

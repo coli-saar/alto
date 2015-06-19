@@ -20,6 +20,8 @@ import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.BufferedReader;
@@ -84,8 +86,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         finalStates = null;
 
         stateMapping = new IntInt2IntMap();
-
-        right.makeAllRulesCondensedExplicit();
+        if (!right.supportsTopDownQueries()) {//not sure if this is the right question to ask
+            right.makeAllRulesCondensedExplicit();
+        }
     }
 
     // Intersecting the two automatons using a CKY algorithm

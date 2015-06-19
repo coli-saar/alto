@@ -51,7 +51,7 @@
     <dependency>
       <groupId>it.unimi.dsi</groupId>
       <artifactId>fastutil</artifactId>
-      <version>6.5.6</version>
+      <version>6.6.1</version>
     </dependency>
 
     <dependency>
@@ -131,44 +131,56 @@
       <artifactId>swing-layout</artifactId>
       <version>1.0.3</version>
     </dependency>
+    
+    
+<!--
+    <dependency>
+	<groupId>org.apache.spark</groupId>
+	<artifactId>spark-core_2.10</artifactId>
+	<version>1.1.0</version>
+</dependency>
+
+-->
+
+
   </dependencies>
 
   <build>
 
     <plugins>
       <plugin>
-	<groupId>org.codehaus.gmaven</groupId>
-	<artifactId>gmaven-plugin</artifactId>
-	<version>1.3</version>
-	<configuration>
-	  <providerSelection>1.7</providerSelection>
-	</configuration>
-	<executions>
-	  <execution>
-	    <goals>          
-	      <goal>testCompile</goal>
-	    </goals>
-	  </execution>
-	</executions>
+        <groupId>org.codehaus.gmaven</groupId>
+        <artifactId>gmaven-plugin</artifactId>
+        <version>1.3</version>
+        <configuration>
+          <providerSelection>1.7</providerSelection>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>          
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
 
-	<dependencies>
-	  <dependency>
-	    <groupId>org.codehaus.gmaven.runtime</groupId>
-	    <artifactId>gmaven-runtime-1.7</artifactId>
-	    <version>1.3</version>
-	    <exclusions>
-	      <exclusion>
-		<groupId>org.codehaus.groovy</groupId>
-		<artifactId>groovy-all</artifactId>
-	      </exclusion>
-	    </exclusions>
-	  </dependency>
-	  <dependency>
-	    <groupId>org.codehaus.groovy</groupId>
-	    <artifactId>groovy-all</artifactId>
-	    <version>1.8.6</version>
-	  </dependency>
-	</dependencies>
+        <dependencies>
+          <dependency>
+            <groupId>org.codehaus.gmaven.runtime</groupId>
+            <artifactId>gmaven-runtime-1.7</artifactId>
+            <version>1.3</version>
+            <exclusions>
+              <exclusion>
+                <groupId>org.codehaus.groovy</groupId>
+                <artifactId>groovy-all</artifactId>
+              </exclusion>
+            </exclusions>
+          </dependency>
+          <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy-all</artifactId>
+            <version>1.8.6</version>
+          </dependency>
+        </dependencies>
       </plugin>
 
       <plugin>
@@ -194,108 +206,111 @@
         <groupId>org.antlr</groupId>
         <artifactId>antlr4-maven-plugin</artifactId>
         <version>${antlr.version}</version>
-	<executions>
-	  <execution>
+        <executions>
+          <execution>
             <goals>
-	      <goal>antlr4</goal>
+              <goal>antlr4</goal>
             </goals>
-	  </execution>
-	</executions>
+          </execution>
+        </executions>
       </plugin>
 
       <plugin>
-	<groupId>org.codehaus.mojo</groupId>
-	<artifactId>javacc-maven-plugin</artifactId>
-	<version>2.6</version>
-	<executions>
-	  <execution>
-	    <id>javacc</id>
-	    <goals>
-	      <goal>javacc</goal>
-	    </goals>
-	  </execution>
-	</executions>
-      </plugin>
-
-
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-javadoc-plugin</artifactId>
-	<version>2.9.1</version>
-	<configuration>
-	  <excludePackageNames>de.up.ling.irtg.algebra.lambda:de.up.ling.irtg.maxent</excludePackageNames>
-
-	  <show>public</show>
-
-	  <!-- Ideally, one would like to use detectLinks and link
-	  elements; but for some reason that doesn't seem to work with
-	  Java 8. Replacing with offline links temporarily. -->
-
-	  <offlineLinks>
-	    <offlineLink>
-	      <url>http://fastutil.di.unimi.it/docs/</url>
-	      <location>http://fastutil.di.unimi.it/docs/</location>
-	    </offlineLink>
-	    <offlineLink>
-	      <url>https://irtg.ci.cloudbees.com/job/basics/javadoc/</url>
-	      <location>https://irtg.ci.cloudbees.com/job/basics/javadoc/</location>
-	    </offlineLink>
-	    <offlineLink>
-	      <url>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</url>
-	      <location>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</location>
-	    </offlineLink>
-	    <offlineLink>
-	      <url>http://docs.oracle.com/javase/8/docs/api/</url>
-	      <location>http://docs.oracle.com/javase/8/docs/api/</location>
-	    </offlineLink>
-	  </offlineLinks>
-
-	  <detectLinks>false</detectLinks>
-	</configuration>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>javacc-maven-plugin</artifactId>
+        <version>2.6</version>
+        <executions>
+          <execution>
+            <id>javacc</id>
+            <goals>
+              <goal>javacc</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
 
 
       <plugin>
-	<groupId>net.alchim31.maven</groupId>
-	<artifactId>scala-maven-plugin</artifactId>
-	<version>3.1.5</version>
-	<executions>
-	  <execution>
-	    <goals>
-	      <goal>compile</goal>
-	      <goal>testCompile</goal>
-	    </goals>
-	  </execution>
-	</executions>
-	<configuration>
-	  <scalaVersion>2.10.2</scalaVersion>
-	  <compileOrder>JavaThenScala</compileOrder>
-	  <excludes>
-	    <exclude>**/*.java</exclude>
-	  </excludes>
-	  <recompileMode>modified-only</recompileMode>
-	  <jvmArgs>
-	    <jvmArg>-Xms64m</jvmArg>
-	    <jvmArg>-Xmx1024m</jvmArg>
-	  </jvmArgs>
-	  <javacArgs>
-	    <javacArg>-Xlint:unchecked</javacArg>
-	    <javacArg>-Xlint:deprecation</javacArg>
-	    <javacArg>-XX:MaxPermSize=128M</javacArg>
-	  </javacArgs>
-	</configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <configuration>
+          <excludePackageNames>de.up.ling.irtg.algebra.lambda:de.up.ling.irtg.maxent</excludePackageNames>
+	  <sourceFileExcludes>
+	    <sourceFileExclude>**/de/up/ling/irtg/codec/*Listener*</sourceFileExclude>
+	  </sourceFileExcludes>
+
+          <show>public</show>
+
+          <!-- Ideally, one would like to use detectLinks and link
+          elements; but for some reason that doesn't seem to work with
+          Java 8. Replacing with offline links temporarily. -->
+
+          <offlineLinks>
+            <offlineLink>
+              <url>http://fastutil.di.unimi.it/docs/</url>
+              <location>http://fastutil.di.unimi.it/docs/</location>
+            </offlineLink>
+            <offlineLink>
+              <url>http://tcl.ling.uni-potsdam.de/jenkins/job/basics/javadoc</url>
+              <location>http://tcl.ling.uni-potsdam.de/jenkins/job/basics/javadoc</location>
+            </offlineLink>
+            <offlineLink>
+              <url>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</url>
+              <location>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</location>
+            </offlineLink>
+            <offlineLink>
+              <url>http://docs.oracle.com/javase/8/docs/api/</url>
+              <location>http://docs.oracle.com/javase/8/docs/api/</location>
+            </offlineLink>
+          </offlineLinks>
+
+          <detectLinks>false</detectLinks>
+        </configuration>
+      </plugin>
+
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <version>3.1.5</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <scalaVersion>2.10.2</scalaVersion>
+          <compileOrder>JavaThenScala</compileOrder>
+          <excludes>
+            <exclude>**/*.java</exclude>
+          </excludes>
+          <recompileMode>modified-only</recompileMode>
+          <jvmArgs>
+            <jvmArg>-Xms64m</jvmArg>
+            <jvmArg>-Xmx1024m</jvmArg>
+          </jvmArgs>
+          <javacArgs>
+            <javacArg>-Xlint:unchecked</javacArg>
+            <javacArg>-Xlint:deprecation</javacArg>
+            <javacArg>-XX:MaxPermSize=128M</javacArg>
+          </javacArgs>
+        </configuration>
       </plugin>
 
       <!-- plugin configuration for Jenkins -->
       <plugin>
-	<groupId>org.codehaus.mojo</groupId>
-	<artifactId>findbugs-maven-plugin</artifactId>
-	<version>3.0.0</version>
-	<configuration>
-	  <findbugsXmlOutput>true</findbugsXmlOutput>
-	  <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
-	  <xmlOutput>true</xmlOutput>
-	</configuration>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>3.0.0</version>
+        <configuration>
+          <findbugsXmlOutput>true</findbugsXmlOutput>
+          <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+          <xmlOutput>true</xmlOutput>
+        </configuration>
       </plugin>
 
     </plugins>
@@ -312,9 +327,9 @@
 
     <extensions>
       <extension>
-	<groupId>org.apache.maven.wagon</groupId>
-	<artifactId>wagon-ssh-external</artifactId>
-	<version>1.0-beta-6</version>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-ssh-external</artifactId>
+        <version>1.0-beta-6</version>
       </extension>
     </extensions>
   </build>
@@ -356,6 +371,7 @@
         </plugins>
       </build>
     </profile>
+
     <profile>
       <id>zip</id>
       <activation>
@@ -421,10 +437,10 @@
       <name>TCL releases</name>
       <url>http://www.ling.uni-potsdam.de/tcl/maven2/releases</url>
       <releases>
-	<enabled>true</enabled>
+        <enabled>true</enabled>
       </releases>
       <snapshots>
-	<enabled>false</enabled>
+        <enabled>true</enabled>
       </snapshots>
     </repository>
 
@@ -434,10 +450,10 @@
       <name>TCL external libraries</name>
       <url>http://www.ling.uni-potsdam.de/tcl/maven2/external</url>
       <releases>
-	<enabled>true</enabled>
+        <enabled>true</enabled>
       </releases>
       <snapshots>
-	<enabled>true</enabled>
+        <enabled>true</enabled>
       </snapshots>
     </repository>
   </repositories>
@@ -458,5 +474,4 @@
     <downloadUrl>http://www.ling.uni-potsdam.de/tcl/maven2/releases</downloadUrl>
   </distributionManagement>
 </project>
-
 

@@ -183,7 +183,7 @@ public class TemplateInterpretedTreeAutomaton {
             if (trule.guard.isSatisfiedBy(variableAssignment, model)) {
                 String parent = instantiate(trule.lhs, variableAssignment);
                 String label = instantiate(trule.label, variableAssignment);
-                List<String> children = Util.mapList(trule.rhs, x -> instantiate(x, variableAssignment));
+                List<String> children = Util.mapToList(trule.rhs, x -> instantiate(x, variableAssignment));
                 consumer.accept(parent, label, children, trule.weight, variableAssignment);
             }
         }
@@ -357,7 +357,7 @@ public class TemplateInterpretedTreeAutomaton {
 
         @Override
         public String toString() {
-            return String.join(" and ", Util.mapList(subguards, x -> x.toString()));
+            return String.join(" and ", Util.mapToList(subguards, x -> x.toString()));
         }
     }
 

@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * Deprecated.
+ * 
  * A decomposition automaton for an s-graph using the
  * {@link GraphAlgebra}. The states of the automaton are
  * subgraphs of the s-graph that is being decomposed;
@@ -37,7 +39,7 @@ import java.util.stream.Collectors;
  * 
  * @author koller
  */
-public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
+class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
 
     private GraphAlgebra algebra;
     private SGraph completeGraph;
@@ -128,9 +130,9 @@ public class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
                 }
             } else if (label.startsWith(GraphAlgebra.OP_RENAME)
                     || label.startsWith(GraphAlgebra.OP_FORGET)
-                    || label.startsWith(GraphAlgebra.OP_FORGET_ALL)
+                    /*|| label.startsWith(GraphAlgebra.OP_FORGET_ALL)
                     || label.startsWith(GraphAlgebra.OP_FORGET_ALL_BUT_ROOT)
-                    || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)) {
+                    || label.startsWith(GraphAlgebra.OP_FORGET_EXCEPT)*/) {
 
                 SGraph arg = children.get(0);
 
