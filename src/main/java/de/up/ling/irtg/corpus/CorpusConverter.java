@@ -6,14 +6,9 @@
 package de.up.ling.irtg.corpus;
 
 import com.google.common.collect.Maps;
-import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.codec.ParseException;
-import de.up.ling.irtg.corpus.CorpusWriter;
-import de.up.ling.irtg.corpus.Instance;
-import de.up.ling.irtg.hom.Homomorphism;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Date;
@@ -22,7 +17,8 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Reads a corpus from some foreign format into an Alto corpus.
+ * Reads a corpus from some foreign format and
+ * converts it into an Alto corpus.
  * The foreign corpus contains entries of type E. The user provides
  * an Iterator<E> to walk over the entries of the foreign corpus.
  * In addition, the user provides a map that tells us, for each
