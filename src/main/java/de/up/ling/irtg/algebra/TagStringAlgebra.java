@@ -9,9 +9,6 @@ import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.signature.Signature;
-import de.up.ling.tree.Tree;
-import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.*;
@@ -425,20 +422,20 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     public TagStringAlgebra() {
 //        signature = new Signature();
 
-        createSymbol(Operation.CONC11);
-        createSymbol(Operation.CONC12);
-        createSymbol(Operation.CONC21);
-        createSymbol(Operation.WRAP21);
-        createSymbol(Operation.WRAP22);
-        createSymbol(Operation.EPSILON);
-        createSymbol(Operation.EPSILON_EPSILON);
+        createSymbol(Operation.CONC11, 2);
+        createSymbol(Operation.CONC12, 2);
+        createSymbol(Operation.CONC21, 2);
+        createSymbol(Operation.WRAP21, 2);
+        createSymbol(Operation.WRAP22, 2);
+        createSymbol(Operation.EPSILON, 0);
+        createSymbol(Operation.EPSILON_EPSILON, 0);
 
         // plus every word that we see as a nullary symbol
     }
 
-    private void createSymbol(Operation op) {
+    private void createSymbol(Operation op, int arity) {
         String name = op.label();
-        int id = signature.addSymbol(name, op.arity());
+        int id = signature.addSymbol(name, arity);
         namesToOperations.put(id, op);
     }
 
