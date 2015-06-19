@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
  * @author koller
  */
 public class BkvBinarizer {
+
     private Map<String, RegularSeed> regularSeeds;
     private int nextGensym = 0;
     private boolean debug = false;
@@ -71,14 +72,13 @@ public class BkvBinarizer {
 
         // initialize output homs
         for (String interp : interpretationNames) {
-            Homomorphism oldHom = irtg.getInterpretations().get(interp).getHomomorphism();
+//            Homomorphism oldHom = irtg.getInterpretations().get(interp).getHomomorphism();
 //            binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), oldHom.getTargetSignature()));
             binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), newAlgebras.get(interp).getSignature()));
         }
 
         int ruleNumber = 1;
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
-//            log("\n\n\nbinarizing rule: " + rule.toString(irtg.getAutomaton()));
 
             RuleBinarization rb = binarizeRule(rule, irtg);
 
@@ -110,6 +110,7 @@ public class BkvBinarizer {
                     if (debug) {
                         System.err.println("\nmake hom for " + interp);
                     }
+
                     addEntriesToHomomorphism(binarizedHom.get(interp), rb.xi, rb.binarizationTerms.get(interp));
                 }
             }
@@ -130,7 +131,6 @@ public class BkvBinarizer {
 //            System.err.println("stats for " + interp);
 //            regularSeeds.get(interp).printStats();
 //        }
-
         return ret;
     }
 
@@ -188,6 +188,12 @@ public class BkvBinarizer {
         }
 
         for (String interpretation : irtg.getInterpretations().keySet()) {
+            if (debug) {
+                System.err.println("\ninterpretation " + interpretation + ":");
+                System.err.println(" - algebra signature = " + irtg.getInterpretation(interpretation).getAlgebra().getSignature());
+                System.err.println(" - hom target signature = " + irtg.getInterpretation(interpretation).getHomomorphism().getTargetSignature());
+
+            }
             String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());            // this is alpha from the paper
             Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
 
@@ -224,7 +230,6 @@ public class BkvBinarizer {
                     System.err.println("   " + t);
                 }
             }
-
 
             if (commonVariableTrees == null) {
                 commonVariableTrees = variableTrees;
@@ -343,19 +348,18 @@ public class BkvBinarizer {
             } else {
             }
         }
-        
+
         // if the state vars(q) was added to the vartree automaton for some
         // final state q of G, then make vars(q) a final state in G'
-        for( int finalState : automaton.getFinalStates() ) {
+        for (int finalState : automaton.getFinalStates()) {
             IntSet v = vars.get(finalState);
             int q = ret.getIdForState(v);
-            
-            if( q > 0 ) {
+
+            if (q > 0) {
                 ret.addFinalState(q);
             }
         }
-        
-        
+
         return ret;
     }
 
@@ -370,12 +374,14 @@ public class BkvBinarizer {
     }
 
     private static class IntSetComparator implements Comparator<IntSet> {
+
         public int compare(IntSet o1, IntSet o2) {
             return representVarSet(o1).compareTo(representVarSet(o2));
         }
     }
 
     private static class Subtree {
+
         public Tree<String> tree;
         public IntSet vars;
         public List<IntSet> varsConstruction;
@@ -411,7 +417,13 @@ public class BkvBinarizer {
             System.err.println("makehom: " + binarizationTerm + " along " + xi);
         }
 
-        hom.getTargetSignature().addAllSymbols(binarizationTerm);
+        try {
+            hom.getTargetSignature().addAllSymbols(binarizationTerm);
+        } catch (Exception e) {
+            System.err.println(binarizationTerm);
+            System.err.println(hom.getTargetSignature());
+            System.exit(1);
+        }
 
         final Map<String, String> labelForFork = new HashMap<String, String>();  // 0+1 -> _br0, 0_1+2 -> _br1
         xi.dfs(new TreeVisitor<String, Void, IntSet>() {
@@ -584,6 +596,7 @@ public class BkvBinarizer {
     // consistent (in their variable bracketing behavior) with xi.
     // xi is a tree of the form _rb1(_rb0(0,1),2).
     private static class RuleBinarization {
+
         Tree<String> xi;
         Map<String, Tree<String>> binarizationTerms;
 

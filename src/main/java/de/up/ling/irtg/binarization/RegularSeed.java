@@ -8,6 +8,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.SingletonAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
@@ -18,7 +19,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.Set;
 
 /**
  *
@@ -94,11 +94,14 @@ public abstract class RegularSeed {
 
         // compute binarization automaton for the current node and compute map
         // that maps q to i iff q -> ?i is a rule
-
-//        System.err.println("\nbinarize " + term + ", ar=" + arity);
-        TreeAutomaton<?> autoHere = binarizeCached(term.getLabel());
-//        System.err.println(autoHere);
-
+        
+        TreeAutomaton<?> autoHere = null;
+                
+        if( term.getLabel().startsWith("?")) {
+            autoHere = new SingletonAutomaton(term);
+        } else {
+            autoHere = binarizeCached(term.getLabel());
+        }
 
         Int2IntMap variableStates = findVariableStates(autoHere, term.getLabel(), arity);
 
@@ -142,7 +145,7 @@ public abstract class RegularSeed {
             }
         }
 
-        assert finalStateHere > -1; // ensure at least one final state
+        assert finalStateHere > -1 : "found no final state when computing binarization automaton for " + term; // ensure at least one final state
         return finalStateHere;
     }
 
