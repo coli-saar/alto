@@ -309,27 +309,27 @@ Y -> (.want :arg0 .*2 :arg1 .*1);
         assertDecoding(binarized, ["left": leftObj, "right": rightObj], "right", 2.0)
     }
     
-    @Test
-    public void testThirteenPlace() {
-        InterpretedTreeAutomaton irtg = pi(THIRTEEN_IRTG)
-        
-        Algebra leftAlgebra = irtg.getInterpretation("string").getAlgebra()
-        Algebra rightAlgebra = irtg.getInterpretation("tree").getAlgebra()
-        
-        Algebra leftOutAlgebra = new StringAlgebra()
-        Algebra rightOutAlgebra = new BinarizingTreeAlgebra()
-        
-        Map newAlgebras = ["string": leftOutAlgebra, "tree": rightOutAlgebra]
-        Map seeds = ["string": new StringAlgebraSeed(leftAlgebra, leftOutAlgebra), "tree": new BinarizingAlgebraSeed(rightAlgebra,rightOutAlgebra)];
-        
-        BkvBinarizer bin = new BkvBinarizer(seeds)
-        
-        InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
-        assertBinaryGrammar(binarized)
-        
-        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "left", 1.0)        
-        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "right", 1.0)
-    }
+//    @Test
+//    public void testThirteenPlace() {
+//        InterpretedTreeAutomaton irtg = pi(THIRTEEN_IRTG)
+//        
+//        Algebra leftAlgebra = irtg.getInterpretation("string").getAlgebra()
+//        Algebra rightAlgebra = irtg.getInterpretation("tree").getAlgebra()
+//        
+//        Algebra leftOutAlgebra = new StringAlgebra()
+//        Algebra rightOutAlgebra = new BinarizingTreeAlgebra()
+//        
+//        Map newAlgebras = ["string": leftOutAlgebra, "tree": rightOutAlgebra]
+//        Map seeds = ["string": new StringAlgebraSeed(leftAlgebra, leftOutAlgebra), "tree": new BinarizingAlgebraSeed(rightAlgebra,rightOutAlgebra)];
+//        
+//        BkvBinarizer bin = new BkvBinarizer(seeds)
+//        
+//        InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
+//        assertBinaryGrammar(binarized)
+//        
+//        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "left", 1.0)        
+//        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "right", 1.0)
+//    }
     
     // test grammar from ACL-13 paper
     private static final String BIN_IRTG = """
@@ -382,13 +382,13 @@ C -> r4
 [right] c
     """;
     
-    private static final String THIRTEEN_IRTG = """
-    interpretation string: de.up.ling.irtg.algebra.WideStringAlgebra
-interpretation tree: de.up.ling.irtg.algebra.TreeWithAritiesAlgebra
-
-NP! -> r13098(CD, ',', CD, ',', CD, ',', CD, ',', CD, ',', CD, CC, CD) [1.0]
-  [string] conc13(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)
-  [tree] NP_13(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)"""
+//    private static final String THIRTEEN_IRTG = """
+//    interpretation string: de.up.ling.irtg.algebra.WideStringAlgebra
+//interpretation tree: de.up.ling.irtg.algebra.TreeWithAritiesAlgebra
+//
+//NP! -> r13098(CD, ',', CD, ',', CD, ',', CD, ',', CD, ',', CD, CC, CD) [1.0]
+//  [string] conc13(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)
+//  [tree] NP_13(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)"""
     
     private IntSet is(List ints) {
         IntSet ret = new IntOpenHashSet()

@@ -31,7 +31,7 @@ class SingletonAutomatonTest {
     @Test
     public void testTreeTopDown() {
         Tree t = pt("f(a,g(c))");
-        SingletonAutomaton sa = new SingletonAutomaton(t)        
+        SingletonAutomaton sa = new SingletonAutomaton(t)
         assertEquals(new HashSet([t]), sa.language())
     }
     
@@ -41,6 +41,22 @@ class SingletonAutomatonTest {
         SingletonAutomaton sa = new SingletonAutomaton(t)        
         assert sa.accepts(t);
     }
+    
+    
+    // these tests were needed because SingletonAutomaton used to
+    // not work when nodes had more than ten children
+    @Test
+    public void testWideTreeBottomUp() {
+        Tree t = pt("NP_13(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13)")
+        SingletonAutomaton sa = new SingletonAutomaton(t)        
+        assert sa.accepts(t); 
+    }
 
+    @Test
+    public void testWideTreeTopDown() {
+        Tree t = pt("NP_13(a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13)");
+        SingletonAutomaton sa = new SingletonAutomaton(t)
+        assertEquals(new HashSet([t]), sa.language())
+    }
 }
 
