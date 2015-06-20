@@ -51,5 +51,12 @@ class TreeAlgebraTest {
             
             assertEquals(t, a.evaluate(tw))            
         }
+        
+    @Test
+    public void testAddArities() {
+        Tree t = pt("f('?1', g('?2'), b)");
+        Tree tt = TreeWithAritiesAlgebra.addArities(t);
+        assertEquals(pt("f_3('?1', g_1('?2'), b_0)"), tt)
+    }
 }
 

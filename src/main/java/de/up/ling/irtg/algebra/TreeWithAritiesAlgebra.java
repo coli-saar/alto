@@ -5,6 +5,7 @@
 package de.up.ling.irtg.algebra;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
@@ -71,7 +72,13 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-                return Tree.create(node.getLabel() + "_" + childrenValues.size(), childrenValues);
+                String label = node.getLabel();
+                
+                if( ! HomomorphismSymbol.isVariableSymbol(label)) {
+                    label = label + "_" + childrenValues.size();
+                }
+                
+                return Tree.create(label, childrenValues);
             }           
         });
     }
@@ -86,7 +93,7 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
                     if( Integer.parseInt(m.group(2)) == childrenValues.size() ) {
                         return Tree.create(m.group(1), childrenValues);
                     } else {
-                        throw new IllegalArgumentException("Node with label " + node.getLabel() + " has " + childrenValues.size() + " children in tree");
+                        throw new IllegalArgumentException("Node with label " + node.getLabel() + " has " + childrenValues.size() + " children in tree: " + childrenValues);
                     }
                 } else {
                     throw new IllegalArgumentException("Node label " + node.getLabel() + " is not of the form label_arity");

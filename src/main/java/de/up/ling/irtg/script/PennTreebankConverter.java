@@ -16,7 +16,6 @@ import de.up.ling.irtg.algebra.WideStringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.PtbTreeInputCodec;
-import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Interner;

@@ -93,6 +93,9 @@ public class BkvBinarizer {
 
             int ruleNumber = 1;
             for (Rule rule : irtg.getAutomaton().getRuleSet()) {
+//                debug = rule.getLabel(irtg.getAutomaton()).equals("r12401");
+                
+                
                 RuleBinarization rb = binarizeRule(rule, irtg);
 
                 if (debug) {
@@ -104,6 +107,7 @@ public class BkvBinarizer {
                     if (debug) {
                         System.err.println(" -> unbinarizable, copy");
                     }
+                    
                     copyRule(rule, binarizedRtg, binarizedHom, irtg);
                 } else {
                     // else, add binarized rule to result

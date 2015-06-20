@@ -505,34 +505,53 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             final Map<String, String> options = jif.getOptions();
 
             if (inputs != null) {
-                new Thread() {
-                    @Override
-                    public void run() {
-                        TreeAutomaton chart = null;
-
-                        try {
+                GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Parsing",
+                        listener -> {
                             for (String intp : options.keySet()) {
                                 irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
                             }
 
-                            long start = System.nanoTime();
-                            chart = irtg.parse(inputs);
-                            log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
-//                        } catch (ParserException ex) {
-//                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
-                        } catch (Exception ex) {
-                            showError(new Exception("An error occurred while parsing the input objects " + inputs, ex));
-                        }
+                            return irtg.parse(inputs);
+                        },
+                        (chart, time) -> {
+                            Alto.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
+                            if (chart != null) {
+                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+                                jta.setIrtg(irtg);
+                                jta.setTitle("Parse chart: " + inputs);
+                                jta.pack();
+                                jta.setVisible(true);
+                            }
+                        });
 
-                        if (chart != null) {
-                            JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                            jta.setIrtg(irtg);
-                            jta.setTitle("Parse chart: " + inputs);
-                            jta.pack();
-                            jta.setVisible(true);
-                        }
-                    }
-                }.start();
+//                new Thread() {
+//                    @Override
+//                    public void run() {
+//                        TreeAutomaton chart = null;
+//
+//                        try {
+//                            for (String intp : options.keySet()) {
+//                                irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
+//                            }
+//
+//                            long start = System.nanoTime();
+//                            chart = irtg.parse(inputs);
+//                            log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
+////                        } catch (ParserException ex) {
+////                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
+//                        } catch (Exception ex) {
+//                            showError(new Exception("An error occurred while parsing the input objects " + inputs, ex));
+//                        }
+//
+//                        if (chart != null) {
+//                            JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+//                            jta.setIrtg(irtg);
+//                            jta.setTitle("Parse chart: " + inputs);
+//                            jta.pack();
+//                            jta.setVisible(true);
+//                        }
+//                    }
+//                }.start();
             }
         }
     }//GEN-LAST:event_miParseActionPerformed
@@ -681,25 +700,25 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miBulkParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miBulkParseActionPerformed
         Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
             try {
-            File outputCorpusFile = Alto.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
-            
-            if (outputCorpusFile != null) {
-                final FileWriter w = new FileWriter(outputCorpusFile);
-                String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
-                final CorpusWriter cw = new CorpusWriter(irtg, true, s, w);
+                File outputCorpusFile = Alto.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
 
-                GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Bulk parsing of input corpus ...",
-                        listener -> {
-                            irtg.bulkParse(inputCorpus, cw, listener);
-                            w.flush();
-                            w.close();
-                            return null;
-                        },
-                        (result, time) -> {
-                            Alto.log("Finished bulk parsing, " + Util.formatTime(time));
-                        });
-            }
-            } catch(IOException e) {
+                if (outputCorpusFile != null) {
+                    final FileWriter w = new FileWriter(outputCorpusFile);
+                    String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
+                    final CorpusWriter cw = new CorpusWriter(irtg, true, s, w);
+
+                    GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Bulk parsing of input corpus ...",
+                            listener -> {
+                                irtg.bulkParse(inputCorpus, cw, listener);
+                                w.flush();
+                                w.close();
+                                return null;
+                            },
+                            (result, time) -> {
+                                Alto.log("Finished bulk parsing, " + Util.formatTime(time));
+                            });
+                }
+            } catch (IOException e) {
                 GuiUtils.showError(e);
             }
         });
