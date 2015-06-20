@@ -473,7 +473,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                 } else if (codec.getMetadata().type() != objectClass) {
                     showError(parent, "The codec '" + codec.getMetadata().name() + "' is not suitable for reading a" + objectDescription + ".");
                 } else {
-                    String title = "Reading " + codec.getMetadata().description() + " ...";
+                    String title = "Reading " + codec.getMetadata().description();
                     ProgressBarWorker<LoadingResult<T>> worker = listener -> {
                         codec.setProgressListener(listener);
                         T result = codec.read(new FileInputStream(file));

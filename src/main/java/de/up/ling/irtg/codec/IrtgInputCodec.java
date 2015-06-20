@@ -54,7 +54,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * 
  * @author koller
  */
-@CodecMetadata(name = "irtg", description = "IRTG grammars", extension = "irtg", type = InterpretedTreeAutomaton.class)
+@CodecMetadata(name = "irtg", description = "IRTG grammar", extension = "irtg", type = InterpretedTreeAutomaton.class)
 public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
