@@ -50,7 +50,7 @@ public class WideStringAlgebra extends StringAlgebra {
 
             concatArities = new Int2IntOpenHashMap();
             for (int symId = 0; symId < signature.getMaxSymbolId(); symId++) {
-                if (symId != concatSymbolId && signature.getArity(symId) > 0) {
+                if (signature.getArity(symId) > 0) {
                     concatArities.put(symId, signature.getArity(symId));
                 }
             }
