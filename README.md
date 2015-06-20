@@ -27,3 +27,14 @@ The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://
 Alto is implemented in Java and can be downloaded [here](https://bitbucket.org/tclup/alto/downloads).
 
 See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on how to use Alto.
+
+## Screenshots ##
+
+Here are some screenshots of the Alto GUI. Here's an IRTG with one string and one graph interpretation (equivalent to a synchronous HRG):
+
+![Screen Shot 2015-05-27 at 16.18.42.png](https://bitbucket.org/repo/ny94Mo/images/1617309522-Screen%20Shot%202015-05-27%20at%2016.18.42.png)
+
+Here's the result of parsing "the boy wants to go" with this grammar:
+
+![Screen Shot 2015-05-27 at 16.23.49.png](https://bitbucket.org/repo/ny94Mo/images/1198790576-Screen%20Shot%202015-05-27%20at%2016.23.49.png)
+
