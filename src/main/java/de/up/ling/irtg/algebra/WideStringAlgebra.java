@@ -24,6 +24,7 @@ public class WideStringAlgebra extends StringAlgebra {
     private static final String WIDE_BINARY_CONCATENATION = "conc2";
     
     public WideStringAlgebra() {
+        getSignature().clear(); // remove * from StringAlgebra
         getSignature().addSymbol(WIDE_BINARY_CONCATENATION, 2);
     }
 

@@ -51,7 +51,7 @@ public class GuiUtils {
             });
         };
 
-        new Thread(() -> {
+        Thread workerThread = new Thread(() -> {
             long start = System.nanoTime();
 
             try {
@@ -66,7 +66,10 @@ public class GuiUtils {
             } finally {
                 progressBar.setVisible(false);
             }
-        }).start();
+        });
+        
+        workerThread.setName("Alto worker thread: " + description);
+        workerThread.start();
     }
 
     static public void showError(Component parent, String error) {
@@ -74,8 +77,10 @@ public class GuiUtils {
             JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
         });
     }
-    
+
     static public void showError(Throwable error) {
-        TaskDialogs.showException(error);
+        SwingUtilities.invokeLater(() -> {
+            TaskDialogs.showException(error);
+        });
     }
 }

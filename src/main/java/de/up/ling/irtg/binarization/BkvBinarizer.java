@@ -15,6 +15,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 /**
@@ -63,74 +65,81 @@ public class BkvBinarizer {
     }
 
     public InterpretedTreeAutomaton binarize(InterpretedTreeAutomaton irtg, Map<String, Algebra> newAlgebras, ProgressListener listener) {
-        ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<String>();
-        Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
-        List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
-        TreeAutomaton rtg = irtg.getAutomaton();
-        int numRules = Iterables.size(irtg.getAutomaton().getRuleSet());
-        int max = (numRules < Integer.MAX_VALUE) ? ((int) numRules) : Integer.MAX_VALUE;
+        // suppress info messages about intersection
+        Level originalLevel = Logging.get().getLevel();
+        Logging.get().setLevel(Level.WARNING);
 
-        // initialize output homs
-        for (String interp : interpretationNames) {
-//            Homomorphism oldHom = irtg.getInterpretations().get(interp).getHomomorphism();
-//            binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), oldHom.getTargetSignature()));
-            binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), newAlgebras.get(interp).getSignature()));
-        }
+        try {
 
-        int ruleNumber = 1;
-        for (Rule rule : irtg.getAutomaton().getRuleSet()) {
-            RuleBinarization rb = binarizeRule(rule, irtg);
+            ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<String>();
+            Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
+            List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
+            TreeAutomaton rtg = irtg.getAutomaton();
+            int numRules = Iterables.size(irtg.getAutomaton().getRuleSet());
+            int max = (numRules < Integer.MAX_VALUE) ? ((int) numRules) : Integer.MAX_VALUE;
 
-            if (debug) {
-                System.err.println(" -> binarization: " + rb);
+            // initialize output homs
+            for (String interp : interpretationNames) {
+                binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), newAlgebras.get(interp).getSignature()));
             }
 
-            if (rb == null) {
-                // unbinarizable => copy to result
+            int ruleNumber = 1;
+            for (Rule rule : irtg.getAutomaton().getRuleSet()) {
+                RuleBinarization rb = binarizeRule(rule, irtg);
+
                 if (debug) {
-                    System.err.println(" -> unbinarizable, copy");
-                }
-                copyRule(rule, binarizedRtg, binarizedHom, irtg);
-            } else {
-                // else, add binarized rule to result
-                String[] childStates = new String[rule.getArity()];
-                for (int i = 0; i < rule.getArity(); i++) {
-                    childStates[i] = rtg.getStateForId(rule.getChildren()[i]).toString();
+                    System.err.println(" -> binarization: " + rb);
                 }
 
-                Object parent = rtg.getStateForId(rule.getParent());
-                String newParent = addRulesToAutomaton(binarizedRtg, rb.xi, parent.toString(), childStates, rule.getWeight());
-
-                if (rtg.getFinalStates().contains(rule.getParent())) {
-                    binarizedRtg.addFinalState(binarizedRtg.getIdForState(newParent));
-                }
-
-                for (String interp : interpretationNames) {
+                if (rb == null) {
+                    // unbinarizable => copy to result
                     if (debug) {
-                        System.err.println("\nmake hom for " + interp);
+                        System.err.println(" -> unbinarizable, copy");
+                    }
+                    copyRule(rule, binarizedRtg, binarizedHom, irtg);
+                } else {
+                    // else, add binarized rule to result
+                    String[] childStates = new String[rule.getArity()];
+                    for (int i = 0; i < rule.getArity(); i++) {
+                        childStates[i] = rtg.getStateForId(rule.getChildren()[i]).toString();
                     }
 
-                    addEntriesToHomomorphism(binarizedHom.get(interp), rb.xi, rb.binarizationTerms.get(interp));
+                    Object parent = rtg.getStateForId(rule.getParent());
+                    String newParent = addRulesToAutomaton(binarizedRtg, rb.xi, parent.toString(), childStates, rule.getWeight());
+
+                    if (rtg.getFinalStates().contains(rule.getParent())) {
+                        binarizedRtg.addFinalState(binarizedRtg.getIdForState(newParent));
+                    }
+
+                    for (String interp : interpretationNames) {
+                        if (debug) {
+                            System.err.println("\nmake hom for " + interp);
+                        }
+
+                        addEntriesToHomomorphism(binarizedHom.get(interp), rb.xi, rb.binarizationTerms.get(interp));
+                    }
+                }
+
+                if (listener != null) {
+                    listener.accept(ruleNumber, max, ruleNumber + " / " + max + " rules");
+                    ruleNumber++;
                 }
             }
 
-            if (listener != null) {
-                listener.accept(ruleNumber, max, null); //"Binarized " + ruleNumber + "/" + max + " rules");
-                ruleNumber++;
+            // assemble output IRTG
+            InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(binarizedRtg);
+            for (String interp : interpretationNames) {
+                ret.addInterpretation(interp, new Interpretation(newAlgebras.get(interp), binarizedHom.get(interp)));
             }
+
+            return ret;
+
+        } finally {
+            // make sure to restore original logging level, even if 
+            // an exception occurred
+            Logging.get().setLevel(originalLevel);
         }
 
-        // assemble output IRTG
-        InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(binarizedRtg);
-        for (String interp : interpretationNames) {
-            ret.addInterpretation(interp, new Interpretation(newAlgebras.get(interp), binarizedHom.get(interp)));
-        }
-
-//        for( String interp : regularSeeds.keySet() ) {
-//            System.err.println("stats for " + interp);
-//            regularSeeds.get(interp).printStats();
-//        }
-        return ret;
     }
 
     private void copyRule(Rule rule, ConcreteTreeAutomaton<String> binarizedRtg, Map<String, Homomorphism> binarizedHom, InterpretedTreeAutomaton irtg) {
@@ -177,100 +186,105 @@ public class BkvBinarizer {
     }
 
     RuleBinarization binarizeRule(Rule rule, InterpretedTreeAutomaton irtg) {
-        TreeAutomaton commonVariableTrees = null;
-        Map<String, TreeAutomaton<String>> binarizationTermsPerInterpretation = new HashMap<String, TreeAutomaton<String>>();
-        Map<String, Int2ObjectMap<IntSet>> varPerInterpretation = new HashMap<String, Int2ObjectMap<IntSet>>();
-        RuleBinarization ret = new RuleBinarization();
+        try {
+            TreeAutomaton commonVariableTrees = null;
+            Map<String, TreeAutomaton<String>> binarizationTermsPerInterpretation = new HashMap<String, TreeAutomaton<String>>();
+            Map<String, Int2ObjectMap<IntSet>> varPerInterpretation = new HashMap<String, Int2ObjectMap<IntSet>>();
+            RuleBinarization ret = new RuleBinarization();
 
-        if (debug) {
-            System.err.println("\n\n*** BINARIZE " + rule.toString(irtg.getAutomaton()) + " ***");
-        }
-
-        for (String interpretation : irtg.getInterpretations().keySet()) {
             if (debug) {
-                System.err.println("\ninterpretation " + interpretation + ":");
-                System.err.println(" - algebra signature = " + irtg.getInterpretation(interpretation).getAlgebra().getSignature());
-                System.err.println(" - hom target signature = " + irtg.getInterpretation(interpretation).getHomomorphism().getTargetSignature());
-
+                System.err.println("\n\n*** BINARIZE " + rule.toString(irtg.getAutomaton()) + " ***");
             }
-            String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());            // this is alpha from the paper
-            Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
 
-            TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);  // this is G_i
-            
-            binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
+            for (String interpretation : irtg.getInterpretations().keySet()) {
+                if (debug) {
+                    System.err.println("\ninterpretation " + interpretation + ":");
+                    System.err.println(" - algebra signature = " + irtg.getInterpretation(interpretation).getAlgebra().getSignature());
+                    System.err.println(" - hom target signature = " + irtg.getInterpretation(interpretation).getHomomorphism().getTargetSignature());
 
-            if (debug) {
-                System.err.println("\nG(" + interpretation + "):\n" + binarizationTermsHere);
-            }
-            
-            if (debug) {
-                for (Tree t : binarizationTermsHere.language()) {
-                    System.err.println("   " + t);
+                }
+                String label = irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel());            // this is alpha from the paper
+                Tree<String> rhs = irtg.getInterpretation(interpretation).getHomomorphism().get(label);        // this is h_i(alpha)
+
+                TreeAutomaton<String> binarizationTermsHere = regularSeeds.get(interpretation).binarize(rhs);  // this is G_i
+
+                binarizationTermsPerInterpretation.put(interpretation, binarizationTermsHere);
+
+                if (debug) {
+                    System.err.println("\nG(" + interpretation + "):\n" + binarizationTermsHere);
+                }
+
+                if (debug) {
+                    for (Tree t : binarizationTermsHere.language()) {
+                        System.err.println("   " + t);
+                    }
+                }
+
+                Int2ObjectMap<IntSet> varHere = computeVar(binarizationTermsHere);                             // this is var_i
+                varPerInterpretation.put(interpretation, varHere);
+
+                if (debug) {
+                    System.err.println("\nvars(" + interpretation + "):\n");
+                    for (int q : varHere.keySet()) {
+                        System.err.println(binarizationTermsHere.getStateForId(q) + " -> " + varHere.get(q));
+                    }
+                }
+
+                TreeAutomaton<IntSet> variableTrees = vartreesForAutomaton(binarizationTermsHere, varHere);    // this is G'_i  (accepts variable trees)
+                if (debug) {
+                    System.err.println("\nG'(" + interpretation + "):\n" + variableTrees);
+                }
+
+                if (debug) {
+                    for (Tree t : variableTrees.language()) {
+                        System.err.println("   " + t);
+                    }
+                }
+
+                if (commonVariableTrees == null) {
+                    commonVariableTrees = variableTrees;
+                } else {
+                    commonVariableTrees = commonVariableTrees.intersect(variableTrees);
+                }
+
+                if (commonVariableTrees.isEmpty()) {
+                    return null;
                 }
             }
 
-            Int2ObjectMap<IntSet> varHere = computeVar(binarizationTermsHere);                             // this is var_i
-            varPerInterpretation.put(interpretation, varHere);
+            assert commonVariableTrees != null;
+
+            Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
+
+            ret.xi = xiFromVartree(commonVariableTree, irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel()));
 
             if (debug) {
-                System.err.println("\nvars(" + interpretation + "):\n");
-                for (int q : varHere.keySet()) {
-                    System.err.println(binarizationTermsHere.getStateForId(q) + " -> " + varHere.get(q));
+                System.err.println("\nvartree = " + commonVariableTree);
+            }
+            if (debug) {
+                System.err.println("xi = " + ret.xi);
+            }
+
+            for (String interpretation : irtg.getInterpretations().keySet()) {
+                // this is G''_i
+                TreeAutomaton binarizationsForThisVartree = binarizationsForVartree(binarizationTermsPerInterpretation.get(interpretation), commonVariableTree, varPerInterpretation.get(interpretation));
+                if (debug) {
+                    System.err.println("\nG''(" + interpretation + "):\n" + binarizationsForThisVartree);
                 }
-            }
 
-            TreeAutomaton<IntSet> variableTrees = vartreesForAutomaton(binarizationTermsHere, varHere);    // this is G'_i  (accepts variable trees)
-            if (debug) {
-                System.err.println("\nG'(" + interpretation + "):\n" + variableTrees);
-            }
-
-            if (debug) {
-                for (Tree t : variableTrees.language()) {
-                    System.err.println("   " + t);
+                Tree<String> binarization = binarizationsForThisVartree.viterbi();
+                if (debug) {
+                    System.err.println("\nbin(" + interpretation + "):\n" + binarization);
                 }
+
+                ret.binarizationTerms.put(interpretation, binarization);
             }
 
-            if (commonVariableTrees == null) {
-                commonVariableTrees = variableTrees;
-            } else {
-                commonVariableTrees = commonVariableTrees.intersect(variableTrees);
-            }
-
-            if (commonVariableTrees.isEmpty()) {
-                return null;
-            }
+            return ret;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Error while binarizing rule " + rule.toString(irtg.getAutomaton()), e);
         }
 
-        assert commonVariableTrees != null;
-
-        Tree<String> commonVariableTree = commonVariableTrees.viterbi();                                   // this is tau, some vartree they all have in common
-        
-        ret.xi = xiFromVartree(commonVariableTree, irtg.getAutomaton().getSignature().resolveSymbolId(rule.getLabel()));
-        
-        if (debug) {
-            System.err.println("\nvartree = " + commonVariableTree);
-        }
-        if (debug) {
-            System.err.println("xi = " + ret.xi);
-        }
-
-        for (String interpretation : irtg.getInterpretations().keySet()) {
-            // this is G''_i
-            TreeAutomaton binarizationsForThisVartree = binarizationsForVartree(binarizationTermsPerInterpretation.get(interpretation), commonVariableTree, varPerInterpretation.get(interpretation));
-            if (debug) {
-                System.err.println("\nG''(" + interpretation + "):\n" + binarizationsForThisVartree);
-            }
-
-            Tree<String> binarization = binarizationsForThisVartree.viterbi();
-            if (debug) {
-                System.err.println("\nbin(" + interpretation + "):\n" + binarization);
-            }
-
-            ret.binarizationTerms.put(interpretation, binarization);
-        }
-
-        return ret;
     }
 
     private Tree<String> xiFromVartree(Tree<String> vartree, final String originalLabel) {
@@ -706,9 +720,9 @@ public class BkvBinarizer {
 
         return StringTools.join(reprs, "+");
     }
-    
+
     /**
-     * 
+     *
      */
     private static Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 

@@ -8,7 +8,7 @@ package de.up.ling.irtg.corpus;
 import com.google.common.collect.Maps;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.codec.ParseException;
+import de.up.ling.tree.Tree;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Date;
@@ -29,8 +29,8 @@ import java.util.function.Function;
  * The {@link #convert(java.util.Iterator) } method will then traverse the
  * iterator and write the converted outputs to the writer.<p>
  * 
- * Alternatively, you can use the CorpusConverter as a Consumer in
- * the context of external iteration.
+ * Alternatively, you can use the CorpusConverter as a {@link Consumer} in
+ * the context of internal iteration.
  * 
  *
  * @author koller
@@ -39,6 +39,7 @@ public class CorpusConverter<E> implements Consumer<E> {
     private final Map<String, Function<E, ? extends Object>> conv;
     private final InterpretedTreeAutomaton irtg;
     private final CorpusWriter cw;
+    private Function<E,Tree<String>> derivationTreeMaker;
 
     public CorpusConverter(String inputCorpusName, Map<String, Algebra> algebras, Map<String, Function<E, ? extends Object>> conv, Writer writer) throws IOException {
         this.conv = conv;
@@ -47,20 +48,17 @@ public class CorpusConverter<E> implements Consumer<E> {
         cw = new CorpusWriter(irtg, false, "Converted from " + inputCorpusName + "\non " + new Date().toString(), writer);
     }
 
+    public void setDerivationTreeMaker(Function<E, Tree<String>> derivationTreeMaker) {
+        this.derivationTreeMaker = derivationTreeMaker;
+        cw.setIsAnnotated(true);
+    }
+    
     public void convert(Iterator<E> inputCorpus) throws IOException {
         while (inputCorpus.hasNext()) {
             E element = inputCorpus.next();
             accept(element);
         }
     }
-
-//    private void convert(Iterator<E> corpus, CorpusWriter writer, Function<E, Instance> conv) throws ParseException, IOException {
-//        while (corpus.hasNext()) {
-//            E element = corpus.next();
-//            Instance instance = conv.apply(element);
-//            writer.accept(instance);
-//        }
-//    }
 
     private Instance toInstance(E instanceInInputCorpus) {
         Instance inst = new Instance();
@@ -72,6 +70,13 @@ public class CorpusConverter<E> implements Consumer<E> {
     @Override
     public void accept(E element) {
         Instance instance = toInstance(element);
+        
+        if( derivationTreeMaker != null ) {
+            Tree<String> dt = derivationTreeMaker.apply(element);
+            instance.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(dt));
+//            System.exit(0);
+        }
+        
         cw.accept(instance);
     }
 }

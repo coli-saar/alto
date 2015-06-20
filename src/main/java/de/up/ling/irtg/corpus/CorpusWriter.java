@@ -19,25 +19,32 @@ import java.util.function.Consumer;
 public class CorpusWriter implements Consumer<Instance> {
 
     private final Writer writer;
-    private final boolean isAnnotated;
+    private boolean isAnnotated;
     private final InterpretedTreeAutomaton irtg;
     private final List<String> interpretationsInOrder;
+    private boolean isHeaderWritten;
+    private String comment;
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, boolean isAnnotated, String comment, Writer writer) throws IOException {
         this.writer = writer;
         this.isAnnotated = isAnnotated;
         this.irtg = irtg;
         this.interpretationsInOrder = new ArrayList<>(irtg.getInterpretations().keySet()); // fix some order of interpretations
-//        this.interpretationsInOrder = interpretationsInOrder;
+        this.comment = comment;
 
-        writer.write(makeHeader(comment) + "\n");
+        isHeaderWritten = false;
     }
 
     public void writeInstance(Instance inst) throws IOException {
-        if( inst.getComment() != null ) {
+        if (!isHeaderWritten) {
+            writer.write(makeHeader(comment) + "\n");
+            isHeaderWritten = true;
+        }
+
+        if (inst.getComment() != null) {
             writer.write("# " + inst.getComment() + "\n");
         }
-        
+
         for (String interp : interpretationsInOrder) {
             String repr = irtg.getInterpretation(interp).getAlgebra().representAsString(inst.getInputObjects().get(interp));
             writer.write(repr + "\n");
@@ -49,16 +56,15 @@ public class CorpusWriter implements Consumer<Instance> {
 
         writer.write("\n");
     }
-    
 
     private String makeHeader(String comment) {
         StringBuilder buf = new StringBuilder();
 
         buf.append("# IRTG " + (isAnnotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
         buf.append("# \n");
-        
-        if( comment != null ) {
-            for( String line : comment.split("\n")) {
+
+        if (comment != null) {
+            for (String line : comment.split("\n")) {
                 buf.append("# " + line + "\n");
             }
             buf.append("# \n");
@@ -79,4 +85,10 @@ public class CorpusWriter implements Consumer<Instance> {
             throw new RuntimeException(ex);
         }
     }
+
+    public void setIsAnnotated(boolean isAnnotated) {
+        this.isAnnotated = isAnnotated;
+    }
+    
+    
 }
