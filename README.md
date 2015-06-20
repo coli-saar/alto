@@ -19,11 +19,11 @@ Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). Its 
 	- maximum likelihood and expectation maximization (EM) training
 	- binarization
 - Supports weighted/PFCG-style and log-linear probability models for all of these grammar formalisms.
-- Built for easy extensibility: implement your own grammar formalism by adding an [Algebra](wiki/Algebras) class, and use any of the Alto algorithms directly.
+- Built for easy extensibility: implement your own grammar formalism by adding an [Algebra](https://bitbucket.org/tclup/alto/wiki/Algebras) class, and use any of the Alto algorithms directly.
 - Comes with a GUI that provides access to most of these algorithms and visualizes parsing results.
 
-The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-11). You can find more details on the [Literature](wiki/Literature) page.
+The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-11). You can find more details on the [Literature](https://bitbucket.org/tclup/alto/wiki/Literature) page.
 
 Alto is implemented in Java and can be downloaded [here](https://bitbucket.org/tclup/alto/downloads).
 
-See the [Wiki](wiki/Home) for more details on how to use Alto.
+See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on how to use Alto.
