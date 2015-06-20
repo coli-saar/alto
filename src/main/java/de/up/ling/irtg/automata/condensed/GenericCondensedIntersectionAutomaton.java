@@ -122,8 +122,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             }
         }
     }
-    
-    private int i = 0;
+
+    private int progressListenerCount = 0;
 
     /**
      * Iterate over all states in the right (condensed) automaton to find
@@ -138,12 +138,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             if (DEBUG) {
                 System.err.println("StateRight: " + q);
             }
-            
+
             visited.add(q);
-            
-            if( GuiUtils.getGlobalListener() != null ) {
-                GuiUtils.getGlobalListener().accept((i++)%500, 500, "");
-            }
 
             final IntList foundPartners = new IntArrayList();
 
@@ -202,6 +198,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
                     knownPartners.add(leftState);
                 }
+
+                if (GuiUtils.getGlobalListener() != null) {
+                    GuiUtils.getGlobalListener().accept((progressListenerCount++) % 2000, 2000, "");
+                }
+
             }
         }
     }
