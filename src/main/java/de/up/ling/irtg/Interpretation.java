@@ -13,6 +13,7 @@ import de.up.ling.irtg.automata.condensed.PMFactoryRestrictive;
 import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.Logging;
+import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import java.io.Serializable;
 import java.util.Map;

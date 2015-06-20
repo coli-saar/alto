@@ -15,6 +15,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
@@ -121,6 +122,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             }
         }
     }
+    
+    private int i = 0;
 
     /**
      * Iterate over all states in the right (condensed) automaton to find
@@ -135,7 +138,12 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             if (DEBUG) {
                 System.err.println("StateRight: " + q);
             }
+            
             visited.add(q);
+            
+            if( GuiUtils.getGlobalListener() != null ) {
+                GuiUtils.getGlobalListener().accept((i++)%500, 500, "");
+            }
 
             final IntList foundPartners = new IntArrayList();
 

@@ -17,6 +17,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -470,9 +471,12 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                 int state = agenda.remove();
                 int dequeuedLeftState = getLeftState(state);    // left component p of dequeued state
                 int dequeuedRightState = getRightState(state);  // right component q of dequeued state
-                
-                //System.out.println(right.getStateForId(dequeuedRightState));
 
+                if (GuiUtils.getGlobalListener() != null) {
+                    GuiUtils.getGlobalListener().accept((int)(iterations % 500), 500, "");
+                }
+
+                //System.out.println(right.getStateForId(dequeuedRightState));
                 List<Rule> possibleRules = rulesByChildState.get(stateToLeftState.get(state));
 
                 // iterate over all left rules in which p is a child
@@ -480,7 +484,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                     // iterate over all child positions in which the rule has p
                     for (int i = 0; i < leftRule.getArity(); i++) {
                         if (leftRule.getChildren()[i] == dequeuedLeftState) {
-                            
+
                             // Collect tuple (Q1, ..., Qn), where Qj is the set
                             // of partner states of the j-th child of the leftRule.
                             // The exception is that if j == i, i.e. we are looking
@@ -495,7 +499,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                                     partnerStates.add(partners.get(leftRule.getChildren()[j]));
                                 }
                             }
-                            
+
                             // iterate over state tuples Q1 x ... x Qn and look for right rules
                             CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
                             List<Integer> newStates = new ArrayList<Integer>();

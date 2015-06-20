@@ -17,6 +17,7 @@ import javax.swing.SwingUtilities;
  * @author koller
  */
 public class GuiUtils {
+    private static ProgressListener globalListener = null;
 
     /**
      * Execute this on the EDT.
@@ -83,4 +84,23 @@ public class GuiUtils {
             TaskDialogs.showException(error);
         });
     }
+
+    public static ProgressListener getGlobalListener() {
+        return globalListener;
+    }
+
+    /**
+     * Sets the global ProgressListener. The preferred method of
+     * giving a progress listener to a worker is to pass it as
+     * a method argument. This method is only here for cases when
+     * this would mess up the code to a terrible extent. You should
+     * avoid it whenever possible.
+     * 
+     * @return 
+     */
+    public static void setGlobalListener(ProgressListener globalListener) {
+        GuiUtils.globalListener = globalListener;
+    }
+    
+    
 }

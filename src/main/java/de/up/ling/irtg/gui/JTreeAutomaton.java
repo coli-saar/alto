@@ -504,11 +504,16 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             if (inputs != null) {
                 GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
                         listener -> {
+                            GuiUtils.setGlobalListener(listener);
+                            
                             for (String intp : options.keySet()) {
                                 irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
                             }
 
-                            return irtg.parse(inputs);
+                            TreeAutomaton chart = irtg.parse(inputs);
+                            
+                            GuiUtils.setGlobalListener(null);
+                            return chart;
                         },
                         (chart, time) -> {
                             Alto.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
