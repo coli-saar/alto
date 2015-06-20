@@ -42,7 +42,12 @@ import java.util.regex.Pattern;
 /**
  * Implements the binarization algorithm of Buechse/Koller/Vogler 2013. See the
  * following paper for details:
- * http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=binarization-13
+ * http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=binarization-13<p>
+ * 
+ * The input IRTG is binarized rule by rule. If a rule cannot be binarized,
+ * it is copied verbatim to the binarized IRTG. If the algebra does not
+ * support the operation symbols in the binarized rules, this rule will
+ * not be used when parsing with the binarized IRTG.
  *
  * @author koller
  */
@@ -80,7 +85,10 @@ public class BkvBinarizer {
 
             // initialize output homs
             for (String interp : interpretationNames) {
-                binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), newAlgebras.get(interp).getSignature()));
+                Algebra alg = newAlgebras.get(interp);
+                assert alg != null : "No output algebra defined for interpretation " + interp;
+                
+                binarizedHom.put(interp, new Homomorphism(binarizedRtg.getSignature(), alg.getSignature()));
             }
 
             int ruleNumber = 1;
@@ -145,13 +153,32 @@ public class BkvBinarizer {
     private void copyRule(Rule rule, ConcreteTreeAutomaton<String> binarizedRtg, Map<String, Homomorphism> binarizedHom, InterpretedTreeAutomaton irtg) {
         Rule transferredRule = transferRule(rule, irtg.getAutomaton(), binarizedRtg);
         binarizedRtg.addRule(transferredRule);
+        
+        String label = transferredRule.getLabel(binarizedRtg);
+        assert label.equals(rule.getLabel(irtg.getAutomaton()));
 
         if (irtg.getAutomaton().getFinalStates().contains(rule.getParent())) {
             binarizedRtg.addFinalState(transferredRule.getParent());
         }
 
         for (String interp : irtg.getInterpretations().keySet()) {
-            binarizedHom.get(interp).add(transferredRule.getLabel(), irtg.getInterpretations().get(interp).getHomomorphism().get(rule.getLabel()));
+            Homomorphism outputHom = binarizedHom.get(interp);
+            Homomorphism inputHom = irtg.getInterpretation(interp).getHomomorphism();
+            Tree<String> term = inputHom.get(label);
+            
+            outputHom.add(label, term);
+            
+            
+//            binarizedHom.get(interp).add(transferredRule.getLabel(), irtg.getInterpretations().get(interp).getHomomorphism().get(rule.getLabel()));
+        }
+        
+        if(debug) {
+            System.err.println("\ncopied rule:");
+            System.err.println("  " + transferredRule.toString(binarizedRtg));
+            for( String interp : irtg.getInterpretations().keySet()) {
+                Homomorphism hom = binarizedHom.get(interp);
+                System.err.println("  [" + interp + "] " + HomomorphismSymbol.toStringTree(hom.get(transferredRule.getLabel()), hom.getTargetSignature()));
+            }
         }
     }
 
@@ -667,7 +694,7 @@ public class BkvBinarizer {
                     String labelString = auto.getSignature().resolveSymbolId(label);
                     IntSet s = new IntOpenHashSet();
 
-                    if (labelString.startsWith("?")) {
+                    if (HomomorphismSymbol.isVariableSymbol(labelString)) {
                         s.add(HomomorphismSymbol.getVariableIndex(labelString));
                     } else {
                         for (int childState : rule.getChildren()) {

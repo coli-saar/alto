@@ -281,27 +281,29 @@ Y -> (.want :arg0 .*2 :arg1 .*1);
         assertEquals(p,7);
     }
     
-    @Test
-    public void testBinarizeTree() {
-//        Logging.get().setLevel(Level.ALL);
-//        Logging.setConsoleHandler();
-
-        InterpretedTreeAutomaton irtg = pi(SYNC_IRTG);
-        
-        Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
-        Algebra rightAlgebra = irtg.getInterpretation("right").getAlgebra()
+    private InterpretedTreeAutomaton binarizeStringTree(InterpretedTreeAutomaton irtg, String stringIntp, String treeIntp) {
+        Algebra leftAlgebra = irtg.getInterpretation(stringIntp).getAlgebra()
+        Algebra rightAlgebra = irtg.getInterpretation(treeIntp).getAlgebra()
         
         Algebra leftOutAlgebra = new StringAlgebra()
         Algebra rightOutAlgebra = new BinarizingTreeAlgebra()
         
-        Map newAlgebras = ["left": leftOutAlgebra, "right": rightOutAlgebra]
-        Map seeds = ["left": new StringAlgebraSeed(leftAlgebra, leftOutAlgebra), "right": new BinarizingAlgebraSeed(rightAlgebra,rightOutAlgebra)];
+        Map newAlgebras = [(stringIntp): leftOutAlgebra, (treeIntp): rightOutAlgebra]
+        Map seeds = [(stringIntp): new StringAlgebraSeed(leftAlgebra, leftOutAlgebra), (treeIntp): new BinarizingAlgebraSeed(rightAlgebra,rightOutAlgebra)];
         
         BkvBinarizer bin = new BkvBinarizer(seeds)
-        
+
         InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
         assertBinaryGrammar(binarized)
         
+        return binarized
+    }
+    
+    @Test
+    public void testBinarizeTree() {
+        InterpretedTreeAutomaton irtg = pi(SYNC_IRTG);
+        InterpretedTreeAutomaton binarized = binarizeStringTree(irtg, "left", "right")
+
         List leftObj = ["a", "b", "c"] 
         Object rightObj = pt("f(d, a, g(c), b)")
         
@@ -309,27 +311,23 @@ Y -> (.want :arg0 .*2 :arg1 .*1);
         assertDecoding(binarized, ["left": leftObj, "right": rightObj], "right", 2.0)
     }
     
-//    @Test
-//    public void testThirteenPlace() {
-//        InterpretedTreeAutomaton irtg = pi(THIRTEEN_IRTG)
-//        
-//        Algebra leftAlgebra = irtg.getInterpretation("string").getAlgebra()
-//        Algebra rightAlgebra = irtg.getInterpretation("tree").getAlgebra()
-//        
-//        Algebra leftOutAlgebra = new StringAlgebra()
-//        Algebra rightOutAlgebra = new BinarizingTreeAlgebra()
-//        
-//        Map newAlgebras = ["string": leftOutAlgebra, "tree": rightOutAlgebra]
-//        Map seeds = ["string": new StringAlgebraSeed(leftAlgebra, leftOutAlgebra), "tree": new BinarizingAlgebraSeed(rightAlgebra,rightOutAlgebra)];
-//        
-//        BkvBinarizer bin = new BkvBinarizer(seeds)
-//        
-//        InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
-//        assertBinaryGrammar(binarized)
-//        
-//        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "left", 1.0)        
-//        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "right", 1.0)
-//    }
+    @Test
+    public void testWeirdBug() {
+        InterpretedTreeAutomaton irtg = pi("""\n\
+interpretation string: de.up.ling.irtg.algebra.WideStringAlgebra
+interpretation tree: de.up.ling.irtg.algebra.TreeWithAritiesAlgebra\n\
+
+'.'! -> r3944 [0.009389671361502348]
+  [string] conc1('?')
+  [tree] '._1'('?')""");
+        InterpretedTreeAutomaton binarized = binarizeStringTree(irtg, "string", "tree")
+        
+        Tree st = binarized.getInterpretation("string").getHomomorphism().get("r3944_br0")
+        assertEquals(Tree.create("?"), st)
+        
+        Tree tt = binarized.getInterpretation("tree").getHomomorphism().get("r3944_br0")
+        assertEquals(pt("'._1'('?')"), tt)
+    }
     
     // test grammar from ACL-13 paper
     private static final String BIN_IRTG = """
@@ -381,14 +379,6 @@ C -> r4
 [left] c
 [right] c
     """;
-    
-//    private static final String THIRTEEN_IRTG = """
-//    interpretation string: de.up.ling.irtg.algebra.WideStringAlgebra
-//interpretation tree: de.up.ling.irtg.algebra.TreeWithAritiesAlgebra
-//
-//NP! -> r13098(CD, ',', CD, ',', CD, ',', CD, ',', CD, ',', CD, CC, CD) [1.0]
-//  [string] conc13(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)
-//  [tree] NP_13(?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13)"""
     
     private IntSet is(List ints) {
         IntSet ret = new IntOpenHashSet()
