@@ -473,7 +473,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                 } else if (codec.getMetadata().type() != objectClass) {
                     showError(parent, "The codec '" + codec.getMetadata().name() + "' is not suitable for reading a" + objectDescription + ".");
                 } else {
-                    String title = "Reading " + codec.getMetadata().description();
+                    String description = "Reading " + codec.getMetadata().description() + " ...";
                     ProgressBarWorker<LoadingResult<T>> worker = listener -> {
                         codec.setProgressListener(listener);
                         T result = codec.read(new FileInputStream(file));
@@ -485,7 +485,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                         return new LoadingResult<>(result, file);
                     };
 
-                    GuiUtils.withProgressBar(app, title, title, worker, andThen);
+                    GuiUtils.withProgressBar(app, "Grammar reading progress", description, worker, andThen);
                 }
             }
         } catch (Exception e) {

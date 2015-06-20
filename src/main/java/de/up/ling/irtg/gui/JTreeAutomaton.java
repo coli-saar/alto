@@ -13,12 +13,9 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusWriter;
-import static de.up.ling.irtg.gui.Alto.log;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
-import static de.up.ling.irtg.util.GuiUtils.showError;
 import de.up.ling.irtg.util.Util;
-import static de.up.ling.irtg.util.Util.formatTimeSince;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.awt.Color;
@@ -505,7 +502,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             final Map<String, String> options = jif.getOptions();
 
             if (inputs != null) {
-                GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Parsing",
+                GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
                         listener -> {
                             for (String intp : options.keySet()) {
                                 irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
@@ -660,7 +657,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             rsc.setVisible(true);
 
             if (rsc.getSelectedAlgebras() != null) {
-                GuiUtils.withProgressBar(JTreeAutomaton.this, "Binarizing IRTG", "Binarizing IRTG",
+                GuiUtils.withProgressBar(JTreeAutomaton.this, "Binarization", "Binarizing IRTG ...",
                         listener -> {
                             BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
                             InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);

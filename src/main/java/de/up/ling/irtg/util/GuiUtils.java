@@ -29,7 +29,7 @@ public class GuiUtils {
      * @param andThen
      */
     public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, ValueAndTimeConsumer<E> andThen) {
-        final ProgressBarDialog progressBar = new ProgressBarDialog(description, parent, false);
+        final ProgressBarDialog progressBar = new ProgressBarDialog(title, description, parent, false);
         final JProgressBar bar = progressBar.getProgressBar();
         progressBar.getProgressBar().setStringPainted(true);
         progressBar.setVisible(true);

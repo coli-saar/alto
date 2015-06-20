@@ -16,6 +16,7 @@ Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It i
 	- parsing
 	- synchronous parsing (with inputs from multiple sides of a synchronous grammar)
 	- decoding (to another side of a synchronous grammar)
+	- computing 1-best (Viterbi) and k-best derivations
 	- maximum likelihood and expectation maximization (EM) training
 	- binarization
 - Supports weighted/PFCG-style and log-linear probability models for all of these grammar formalisms.
