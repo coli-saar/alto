@@ -16,12 +16,14 @@ import de.up.ling.irtg.algebra.WideStringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.PtbTreeInputCodec;
+import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.Writer;
@@ -30,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Converts a treebank in Penn Treebank format into an Alto corpus. Specify the
@@ -74,10 +75,17 @@ public class PennTreebankConverter {
         System.err.println("Done.");
 
         // write IRTG
+        System.err.println("\nEstimate IRTG weights with Maximum Likelihood on new corpus ...");
+        
+        InterpretedTreeAutomaton irtg = dtm.irtg;
+        irtg.trainML(irtg.readCorpus(new FileReader("out.txt")));
+        
         w = new FileWriter("out.irtg");
-        w.write(dtm.irtg.toString());
+        w.write(irtg.toString());
         w.flush();
         w.close();
+        
+        System.err.println("Done.");
     }
 
     private static class DerivationTreeMaker implements Function<Tree<String>, Tree<String>> {
@@ -129,13 +137,13 @@ public class PennTreebankConverter {
                     Tree st = Tree.create("conc" + homChildren.size(), homChildren);
 //                    System.err.println("hs(" + label + ") = " + st);
                     irtg.getInterpretation("string").getHomomorphism().add(label, st);
-                    irtg.getInterpretation("tree").getHomomorphism().add(label, Tree.create(node.getLabel() + "_" + homChildren.size(), homChildren));
+                    irtg.getInterpretation("tree").getHomomorphism().add(label, TreeWithAritiesAlgebra.addArities(Tree.create(node.getLabel(), homChildren)));
 
-                    System.err.println(irtg.getInterpretation("string").getHomomorphism().get(label));
+//                    System.err.println(irtg.getInterpretation("string").getHomomorphism().get(label));
 
                     Homomorphism hom = irtg.getInterpretation("string").getHomomorphism();
                     Tree<HomomorphismSymbol> rhs = hom.get(rule.getLabel());
-                    System.err.println(hom.rhsAsString(rhs));
+//                    System.err.println(hom.rhsAsString(rhs));
 
                     if (node == derivedTree) {
                         auto.addFinalState(rule.getParent());
@@ -144,11 +152,9 @@ public class PennTreebankConverter {
                     return Tree.create(label, derivTreeChildren);
                 }
             });
-
         }
-
     }
-
+    
     private static class PtbRule {
 
         String lhs;
