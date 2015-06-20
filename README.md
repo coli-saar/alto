@@ -19,7 +19,7 @@ Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It i
 	- computing 1-best (Viterbi) and k-best derivations
 	- maximum likelihood and expectation maximization (EM) training
 	- binarization
-- Supports weighted/PCFG-style and log-linear probability models for all of these grammar formalisms.
+- Supports PCFG-style and log-linear probability models for all of these grammar formalisms.
 - Built for easy extensibility: implement your own grammar formalism by adding an [Algebra](https://bitbucket.org/tclup/alto/wiki/Algebras) class, and use any of the Alto algorithms directly.
 - Comes with a GUI that provides access to most of these algorithms and visualizes parsing results.
 
