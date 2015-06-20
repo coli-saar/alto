@@ -40,10 +40,6 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         return new SingletonAutomaton(value);
     }
 
-//    @Override
-//    public Signature getSignature() {
-//        return signature;
-//    }
     @Override
     public JComponent visualize(Tree<String> object) {
         return new TreePanel(object);

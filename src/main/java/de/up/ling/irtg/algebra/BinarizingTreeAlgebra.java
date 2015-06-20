@@ -5,6 +5,8 @@
 package de.up.ling.irtg.algebra;
 
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreePanel;
+import javax.swing.JComponent;
 
 /**
  *
@@ -17,5 +19,10 @@ public class BinarizingTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
     
     public BinarizingTreeAlgebra(String appendSymbol) {
         super(new TreeAlgebra(), appendSymbol);
+    }
+    
+    @Override
+    public JComponent visualize(Tree<String> object) {
+        return new TreePanel(object);
     }
 }

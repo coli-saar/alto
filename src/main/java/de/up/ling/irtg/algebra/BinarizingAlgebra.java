@@ -72,30 +72,46 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
 
     @Override
     public E evaluate(Tree<String> t) {
+        Tree<String> unbin = unbinarize(t);
+        return underlyingAlgebra.evaluate(unbin);
+    }
+    
+    Tree<String> unbinarize(Tree<String> t) {
         signature.addAllSymbols(t);
 
         List<Tree<String>> underlyingTerm = t.dfs(new TreeVisitor<String, Void, List<Tree<String>>>() {
             @Override
             public List<Tree<String>> combine(Tree<String> node, List<List<Tree<String>>> childrenValues) {
                 if (node.getLabel().equals(appendSymbol)) {
+                    // _@_: append children values
                     List<Tree<String>> ret = childrenValues.get(0);
                     ret.addAll(childrenValues.get(1));
                     return ret;
                 } else if (childrenValues.isEmpty()) {
+                    // leaf: create singleton list
                     Tree<String> tree = Tree.create(node.getLabel());
                     List<Tree<String>> ret = new ArrayList<Tree<String>>();
                     ret.add(tree);
                     return ret;
                 } else {
-                    Tree<String> tree = Tree.create(node.getLabel(), childrenValues.get(0));
+                    // other symbol: append children lists and put symbol on top
+                    // this covers two special cases:
+                    //  - 1 child with long values lists from _@_: children = [[a,b,c]] => f(a,b,c)
+                    //  - many children with singleton lists: children = [[a], [b], [c]] => f(a,b,c)
+                    List<Tree<String>> children = new ArrayList<>();
+                    childrenValues.forEach(l -> children.addAll(l));
+                    
+                    Tree<String> tree = Tree.create(node.getLabel(), children); // childrenValues.get(0)
                     List<Tree<String>> ret = new ArrayList<Tree<String>>();
                     ret.add(tree);
                     return ret;
                 }
             }
         });
-
-        return underlyingAlgebra.evaluate(underlyingTerm.get(0));
+        
+        assert underlyingTerm.size() == 1;
+        
+        return underlyingTerm.get(0);
     }
 
     public TreeAutomaton binarizeTreeAutomaton(TreeAutomaton<? extends Object> underlyingAutomaton) {
@@ -143,14 +159,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
         final TreeAutomaton<? extends Object> underlyingAutomaton = underlyingAlgebra.decompose(value);
         return binarizeTreeAutomaton(underlyingAutomaton);
     }
-
-//    private List<String> makeStrings(List children) {
-//        List<String> ret = new ArrayList<String>(children.size());
-//        for (Object x : children) {
-//            ret.add(x.toString());
-//        }
-//        return ret;
-//    }
+    
     private void addBinarizationRules(List<String> childrenStates, String ruleName, ConcreteTreeAutomaton<String> auto) {
         for (int start = 0; start <= childrenStates.size() - 2; start++) {
             for (int width1 = 1; start + width1 <= childrenStates.size() - 1; width1++) {
