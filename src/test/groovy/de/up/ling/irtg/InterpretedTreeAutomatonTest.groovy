@@ -56,6 +56,15 @@ class InterpretedTreeAutomatonTest {
                     pt("s(john,vp(vp(watches,np(the,woman)),pp(with,np(the,telescope))))")]),
             chart.language());
     }
+    
+    @Test
+    public void testNonbinaryRhs() {
+        InterpretedTreeAutomaton irtg = pi(wideString_IRTG)
+        Map<String, String> map = new HashMap<>()
+        map.put("string", "a b c")
+        TreeAutomaton ret = irtg.parse(map)
+        assertEquals(ret.toString(), "'B,1-2' -> r2 [1.0]\n'C,2-3' -> r3 [1.0]\n'A,0-3'! -> r1('B,1-2', 'C,2-3') [2.0]\n")
+    }
 
     @Test
     public void testDecode() {
@@ -557,4 +566,17 @@ P -> r12
 
 """;
 
+    private static final String wideString_IRTG = """
+    interpretation string: de.up.ling.irtg.algebra.WideStringAlgebra
+
+    A! -> r1(B,C) [2]
+    [string]  conc3(a, ?1, ?2)
+
+    B -> r2
+    [string] b
+
+    C -> r3
+    [string] c
+    """
+    
 }

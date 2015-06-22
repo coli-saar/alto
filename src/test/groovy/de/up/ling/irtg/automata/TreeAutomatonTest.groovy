@@ -105,35 +105,35 @@ class TreeAutomatonTest{
     
     /*@Test
     public void testEqualsWithStringStates() {
-        TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
-        TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
-        TreeAutomaton intersect = auto1.intersect(auto2);
+    TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
+    TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
+    TreeAutomaton intersect = auto1.intersect(auto2);
         
-        TreeAutomaton gold = parse("'q2,p1'! -> f('q1,p2', 'q1,p3')\n 'q1,p2' -> a\n 'q1,p3' -> a");
+    TreeAutomaton gold = parse("'q2,p1'! -> f('q1,p2', 'q1,p3')\n 'q1,p2' -> a\n 'q1,p3' -> a");
         
-        assert ! gold.equals(intersect)
-        assert ! intersect.equals(gold)
+    assert ! gold.equals(intersect)
+    assert ! intersect.equals(gold)
         
-        assert intersect.equalsWithStringStates(gold)
-        assert ! gold.equalsWithStringStates(intersect)
+    assert intersect.equalsWithStringStates(gold)
+    assert ! gold.equalsWithStringStates(intersect)
     }*/
     
-//    @Test
+    //    @Test
     public void testStringAutomata() {
-       StringAlgebra sal = new StringAlgebra();
-       sal.getSignature().addSymbol("a", 0);
-       sal.getSignature().addSymbol("b", 0);
-       sal.getSignature().addSymbol("c", 0);
+        StringAlgebra sal = new StringAlgebra();
+        sal.getSignature().addSymbol("a", 0);
+        sal.getSignature().addSymbol("b", 0);
+        sal.getSignature().addSymbol("c", 0);
 
-       List<TreeAutomaton<?>> l = new ArrayList<>();
-       List<String> words = new ArrayList<String>();
-       words.add("a");
-       words.add("b");
-       words.add("b");
-       words.add("c");
+        List<TreeAutomaton<?>> l = new ArrayList<>();
+        List<String> words = new ArrayList<String>();
+        words.add("a");
+        words.add("b");
+        words.add("b");
+        words.add("c");
 
-       TreeAutomaton t1 = sal.decompose(words);
-       assert t1.equals(t1);
+        TreeAutomaton t1 = sal.decompose(words);
+        assert t1.equals(t1);
     }
     
     @Test
@@ -175,7 +175,7 @@ class TreeAutomatonTest{
         TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
                 "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
         Homomorphism h = hom(["r1":"c(?1,?2)", "r2":"c(?1,?2)", "r3":"a", "r4":"b", "r5":"d"], 
-                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature());
+            sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature());
                             
         TreeAutomaton pre = rhs.inverseHomomorphism(h);        
         
@@ -189,7 +189,7 @@ class TreeAutomatonTest{
         TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
                 "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
         Homomorphism h = hom(["r1":"c(?1,?2)", "r2":"c(?1,?2)", "r3":"a", "r4":"b", "r5":"d"], 
-                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature());
+            sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature());
 
         TreeAutomaton gold = parse("q13 -> r1(q12,q23) \n q24 -> r1(q23,q34) \n q14! -> r1(q12,q24) \n" +
                 "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
@@ -198,7 +198,7 @@ class TreeAutomatonTest{
         TreeAutomaton pre = rhs.inverseHomomorphism(h);        
         pre.makeAllRulesExplicit();
         
-//        assertEquals(gold, pre); //TODO FIXTHIS
+        //        assertEquals(gold, pre); //TODO FIXTHIS
     }
     
     @Test
@@ -240,7 +240,7 @@ class TreeAutomatonTest{
         TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
                 "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
         Homomorphism h = hom(["r1":"c(?1,?2)", "r2":"c(?1,?2)", "r3":"a", "r4":"b", "r5":"d"], 
-                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature() );
+            sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0]), rhs.getSignature() );
 
         TreeAutomaton gold = parse("q13 -> r1(q12,q23) \n q24 -> r1(q23,q34) \n q14! -> r1(q12,q24) \n" +
                 "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
@@ -257,7 +257,7 @@ class TreeAutomatonTest{
         TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
                 "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
         Homomorphism h = hom(["r3":"a", "r4":"b", "r5":"d", "r1":"c(?1,?2)", "r2":"c(?1,?2)"], 
-                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0])); // fresh target signature
+            sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0])); // fresh target signature
         
         TreeAutomaton gold = parse("q13 -> r1(q12,q23) \n q24 -> r1(q23,q34) \n q14! -> r1(q12,q24) \n" +
                 "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
@@ -273,12 +273,12 @@ class TreeAutomatonTest{
     // TODO - currently this test fails. It also doesn't test what it was supposed to, because "intersect"
     // now goes through the right automaton top-down, but the test should go through it bottom-up.
     // Once the intersection algorithm stabilizes, we need to reactivate this test.
-//    @Test
+    //    @Test
     public void testInvHomNdDifferentSignatureBottomUp() {
         TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
                 "q14 -> c(q13,q34) \n q12 -> a \n q23 -> b \n q34 -> d ");
         Homomorphism h = hom(["r3":"a", "r4":"b", "r5":"d", "r1":"c(?1,?2)", "r2":"c(?1,?2)"], 
-                                sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0])); // fresh target signature
+            sig(["r1":2, "r2":2, "r3":0, "r4":0, "r5":0])); // fresh target signature
         
         TreeAutomaton gold = parse("q13 -> r1(q12,q23) \n q24 -> r1(q23,q34) \n q14! -> r1(q12,q24) \n" +
                 "q14 -> r1(q13,q34) \n q13 -> r2(q12,q23) \n q24 -> r2(q23,q34) \n q14! -> r2(q12,q24) \n" +
@@ -334,18 +334,18 @@ class TreeAutomatonTest{
 
         TreeAutomaton decomp = a.decompose(a.parseString("a a a"));
 
-//        System.err.println("=====================");
-//        System.err.println(decomp);
+        //        System.err.println("=====================");
+        //        System.err.println(decomp);
         
         
         TreeAutomaton inv = decomp.inverseHomomorphism(h);
         
-//        System.err.println("++++++++++++++++");
-//        System.err.println(inv);
+        //        System.err.println("++++++++++++++++");
+        //        System.err.println(inv);
         
-//        System.err.println(inv.getSignature())
+        //        System.err.println(inv.getSignature())
         
-//        System.err.println("inv language => " + inv.language())
+        //        System.err.println("inv language => " + inv.language())
         
         assertEquals(new HashSet([pt("r1(r1(r2,r2), r2)"), pt("r1(r2, r1(r2,r2))")]), inv.language())
     }
@@ -491,7 +491,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
             assert ((Math.abs(w-0.3) < 0.001) || (Math.abs(w-0.2) < 0.001)) : rulesForA;
         }
         
-//        assertEquals( new HashSet([0.4*0.5, 0.6*0.5]), new HashSet(rulesForA.collect { it.getWeight() }) )
+        //        assertEquals( new HashSet([0.4*0.5, 0.6*0.5]), new HashSet(rulesForA.collect { it.getWeight() }) )
     }
     
     @Test
@@ -626,7 +626,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         Tree gold = Tree.create(rs("s03", "f", ["s02","s23"], a),
             [Tree.create(rs("s02", "f", ["s01", "s12"], a),
                     [Tree.create(rs("s01", "a", [], a)), Tree.create(rs("s12", "a", [], a))]),
-             Tree.create(rs("s23", "a", [], a))]);
+                Tree.create(rs("s23", "a", [], a))]);
      
         assertEquals(gold, result)
     }
@@ -649,7 +649,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assertEquals(h(a.getRuleSet()), fromIterator);
     }
     
-//    @Test
+    //    @Test
     public void testBottomUpOrder() {
         TreeAutomaton a = parse("s03! -> f(s01,s13)\n s03 -> f(s02,s23)\n s13 -> f(s12, s23)\n s02 -> f(s01, s12)\n s01 -> a\n s12 -> a\n s23 -> a");
         List states = a.getStatesInBottomUpOrder().collect { a.getStateForId(it)};
@@ -669,11 +669,11 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         Set<Rule> rulesFound = new HashSet<>()
         //auto.processAllRulesTopDown(null)
         auto.processAllRulesBottomUp(new Consumer<Rule>() {
-            @Override
-            public void accept(Rule rule) {
-                rulesFound.add(rule);
-            }
-        })
+                @Override
+                public void accept(Rule rule) {
+                    rulesFound.add(rule);
+                }
+            })
         StringAlgebra.Span span1 = new StringAlgebra.Span(0,1);
         StringAlgebra.Span span2 = new StringAlgebra.Span(1,2);
         StringAlgebra.Span span3 = new StringAlgebra.Span(2,3);
@@ -706,11 +706,11 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         auto = irtg.getInterpretation("string").getAlgebra().decompose(input)
         rulesFound = new HashSet<>()
         auto.processAllRulesTopDown(new Consumer<Rule>() {
-            @Override
-            public void accept(Rule rule) {
-                rulesFound.add(rule);
-            }
-        })
+                @Override
+                public void accept(Rule rule) {
+                    rulesFound.add(rule);
+                }
+            })
         gold1 = auto.createRule(span1,"a",new StringAlgebra.Span[0])
         gold2 = auto.createRule(span12,"conc2",children2)
         gold3 = auto.createRule(span13,"conc3",children3)
@@ -725,27 +725,27 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     
     /*
     def "testing whether automaton is bottom-up deterministic"() {
-        expect:
-        pa(automaton).isBottomUpDeterministic() == gold
+    expect:
+    pa(automaton).isBottomUpDeterministic() == gold
         
-        where:
-        automaton                              | gold
-        "p1! -> f(p2,p3) \n p2 -> a\n p3 -> a" | false
-        "p1! -> f(p2,p3) \n p2 -> a\n p3 -> b" | true
+    where:
+    automaton                              | gold
+    "p1! -> f(p2,p3) \n p2 -> a\n p3 -> a" | false
+    "p1! -> f(p2,p3) \n p2 -> a\n p3 -> b" | true
     }
     
     def "running automaton on tree"() {
-        expect:
-        pa(automaton).run(pt(tree)).equals(new HashSet(gold))
+    expect:
+    pa(automaton).run(pt(tree)).equals(new HashSet(gold))
         
-        where:
-        automaton                                 | tree        | gold
-        "p1! -> f(p2,p3) \n p2 -> a\n p3 -> a"    | "f(a,a)"    | ["p1"]           // nondet
-        "p1! -> f(p2,p3) \n p2 -> a\n p3 -> a"    | "a"         | ["p2", "p3"]     // nondet
-        "p1! -> f(p2,p3) \n p2 -> a\n p3 -> b"    | "f(a,b)"    | ["p1"]           // deterministic
+    where:
+    automaton                                 | tree        | gold
+    "p1! -> f(p2,p3) \n p2 -> a\n p3 -> a"    | "f(a,a)"    | ["p1"]           // nondet
+    "p1! -> f(p2,p3) \n p2 -> a\n p3 -> a"    | "a"         | ["p2", "p3"]     // nondet
+    "p1! -> f(p2,p3) \n p2 -> a\n p3 -> b"    | "f(a,b)"    | ["p1"]           // deterministic
         
     }
-    */
+     */
     
     private static Set h(Iterable x) {
         Set ret = new HashSet();
@@ -762,9 +762,9 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         return pa(s);
     }
 
-//    private static Rule r(parent, label, children) {
-//        return new Rule(parent, label, children);
-//    }
+    //    private static Rule r(parent, label, children) {
+    //        return new Rule(parent, label, children);
+    //    }
     
     private static Rule rs(parent, String label, children, TreeAutomaton automaton) {
         return automaton.createRule(parent, label, children, 1);

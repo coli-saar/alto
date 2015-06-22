@@ -44,6 +44,9 @@ class PatternMatchingInvhomAutomatonTest {
         assert ! auto.accepts(pt("a"))        
     }
     
+        
+
+    
     @Test
     public void testInvhomCfg() {
         InterpretedTreeAutomaton cfg = pi(CFG)
@@ -113,6 +116,7 @@ class PatternMatchingInvhomAutomatonTest {
         assertEquals(pa(intersectionGoldTopDown), finalIntAut.asConcreteTreeAutomatonWithStringStates());
         
     }
+
     
     
     public static final String HRGCleanS = """\n\
@@ -248,4 +252,6 @@ t_1/2 -> a
 t_1/2 -> b
 
 ''';
+    
+    
 }
