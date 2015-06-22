@@ -14,7 +14,6 @@ import de.saar.basic.StringTools;
 import de.up.ling.irtg.codec.SgraphAmrOutputCodec;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,7 +25,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.experimental.isomorphism.AdaptiveIsomorphismInspectorFactory;
 import org.jgrapht.experimental.isomorphism.GraphIsomorphismInspector;
@@ -596,7 +594,7 @@ public class SGraph{
     }
     
     
-    public static interface NodeRepresentationAppender {
+    static interface NodeRepresentationAppender {
         public void append(GraphNode node, Set<String> visitedNodes, StringBuilder buf);
     }
     
@@ -606,7 +604,7 @@ public class SGraph{
      * @param nra
      * @return 
      */
-    public static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph, NodeRepresentationAppender nra) {
+    static String graphToString(DirectedGraph<GraphNode,GraphEdge> graph, NodeRepresentationAppender nra) {
         StringBuilder buf = new StringBuilder();
         Set<String> visitedNodes = new HashSet<>();
 
