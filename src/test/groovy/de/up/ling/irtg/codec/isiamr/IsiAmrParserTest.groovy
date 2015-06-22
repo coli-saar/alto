@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec
+package de.up.ling.irtg.codec.isiamr
 
 
 import org.junit.*

@@ -10,7 +10,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.IsiAmrInputCodec;
+import de.up.ling.irtg.codec.isiamr.IsiAmrInputCodec;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;

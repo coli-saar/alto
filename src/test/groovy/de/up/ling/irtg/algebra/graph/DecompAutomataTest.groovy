@@ -12,7 +12,6 @@ import static de.up.ling.irtg.util.TestingTools.*;
 import static org.junit.Assert.*
 import de.up.ling.irtg.InterpretedTreeAutomaton
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton
-import de.up.ling.irtg.codec.IsiAmrInputCodec
 import java.io.StringWriter
 
 import java.nio.charset.Charset
@@ -51,7 +50,7 @@ class DecompAutomataTest {
     @Test
     public void writeDecompAutoTest() {
         Writer writer = new StringWriter()
-        SGraph input = new IsiAmrInputCodec().read("(c / chapter :mod 2)")
+        SGraph input = pg("(c / chapter :mod 2)")
         GraphAlgebra.writeRestrictedDecompositionAutomaton(input, 2, writer)
 //        System.err.println(writer.toString())
 //        System.err.println(decompAutoGold)

@@ -7,9 +7,10 @@ options {
   JDK_VERSION = "1.5";
   STATIC = false;
   FORCE_LA_CHECK=true;
+  SUPPORT_CLASS_VISIBILITY_PUBLIC=false;
 }
 PARSER_BEGIN(IsiAmrParser)
-package de.up.ling.irtg.codec;
+package de.up.ling.irtg.codec.isiamr;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;

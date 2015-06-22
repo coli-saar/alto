@@ -8,6 +8,7 @@ options {
   STATIC = false;
   LOOKAHEAD=2; // speed up parser by removing this and fixing choice conflict in ctt() differently
   FORCE_LA_CHECK=true;
+  SUPPORT_CLASS_VISIBILITY_PUBLIC=false;
 }
 PARSER_BEGIN(SetParser)
 package de.up.ling.irtg.algebra;

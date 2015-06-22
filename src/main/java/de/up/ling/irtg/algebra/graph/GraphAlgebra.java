@@ -8,7 +8,7 @@ import com.google.common.collect.Sets;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.IsiAmrInputCodec;
+import de.up.ling.irtg.codec.isiamr.IsiAmrInputCodec;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;

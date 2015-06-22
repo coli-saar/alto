@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec
+package de.up.ling.irtg.codec.isiamr
 
 
 import org.junit.*
@@ -12,6 +12,7 @@ import java.util.*
 import java.io.*
 import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.automata.TreeAutomaton
+import de.up.ling.irtg.codec.SgraphAmrOutputCodec
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;

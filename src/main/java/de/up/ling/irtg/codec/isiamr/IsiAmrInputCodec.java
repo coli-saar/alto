@@ -4,9 +4,12 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec;
+package de.up.ling.irtg.codec.isiamr;
 
 import de.up.ling.irtg.algebra.graph.SGraph;
+import de.up.ling.irtg.codec.CodecMetadata;
+import de.up.ling.irtg.codec.CodecParseException;
+import de.up.ling.irtg.codec.InputCodec;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;

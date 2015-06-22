@@ -8,6 +8,7 @@ options {
   STATIC = false;
   LOOKAHEAD=2;
   FORCE_LA_CHECK=true;
+  SUPPORT_CLASS_VISIBILITY_PUBLIC=false;
 }
 PARSER_BEGIN(CondensedTreeAutomatonParser)
 package de.up.ling.irtg.automata.condensed;
