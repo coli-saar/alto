@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.algebra.graph
+package de.up.ling.irtg.codec
 
 
 import org.junit.*
@@ -26,6 +26,9 @@ import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.up.ling.irtg.algebra.*;
+import de.up.ling.irtg.algebra.graph.GraphEdge
+import de.up.ling.irtg.algebra.graph.GraphNode
+import de.up.ling.irtg.algebra.graph.SGraph
 import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
 import de.up.ling.irtg.*

@@ -45,7 +45,7 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
     private CodecUtilities util = new CodecUtilities();
 
     @Override
-    public TreeAutomaton read(InputStream is) throws ParseException, IOException {
+    public TreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         TiburonTreeAutomatonLexer l = new TiburonTreeAutomatonLexer(new ANTLRInputStream(is));
         TiburonTreeAutomatonParser p = new TiburonTreeAutomatonParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
@@ -74,7 +74,7 @@ public class TiburonTreeAutomatonInputCodec extends InputCodec<TreeAutomaton> {
 
             return automaton;
         } catch (RecognitionException e) {
-            throw new ParseException(e.getMessage());
+            throw new CodecParseException(e.getMessage());
         }
     }
 

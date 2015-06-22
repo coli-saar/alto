@@ -16,7 +16,7 @@ import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecUtilities;
 import de.up.ling.irtg.codec.ExceptionErrorStrategy;
 import de.up.ling.irtg.codec.InputCodec;
-import de.up.ling.irtg.codec.ParseException;
+import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -127,7 +127,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     }
 
     @Override
-    public InterpretedTreeAutomaton read(InputStream is) throws ParseException, IOException {
+    public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         BolinasHrgLexer l = new BolinasHrgLexer(new ANTLRInputStream(is));
         BolinasHrgParser p = new BolinasHrgParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
@@ -513,7 +513,7 @@ public class BolinasHrgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                     break;
 
                 default:
-                    throw new ParseException("Cannot convert hyperedge with " + childNodes.size() + " endpoints.");
+                    throw new CodecParseException("Cannot convert hyperedge with " + childNodes.size() + " endpoints.");
             }
 
         } else {

@@ -11,7 +11,6 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphEdge;
 import de.up.ling.irtg.algebra.graph.GraphNode;
-import de.up.ling.irtg.algebra.graph.ParseException;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
@@ -116,7 +115,7 @@ public class BolinasGraphOutputCodec extends OutputCodec<SGraph> {
      * @throws IOException 
      * @throws de.up.ling.irtg.corpus.CorpusReadingException 
      */
-    public static void main(String[] args) throws ParseException, IOException, CorpusReadingException {
+    public static void main(String[] args) throws IOException, CorpusReadingException {
         Reader corpusReader = new FileReader(args[1]);
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(null);
         Interpretation graphInt = new Interpretation(new GraphAlgebra(), null);

@@ -13,6 +13,8 @@ import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.Writer;
@@ -22,6 +24,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JComponent;
 
 /**
@@ -315,11 +319,12 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 
                 return childrenValues.get(0).forgetSourcesExcept(retainedSources);
             } else {
-                SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
+                SGraph sgraph = (new IsiAmrInputCodec()).read(new ByteArrayInputStream(label.getBytes()));
                 return sgraph.withFreshNodenames();
             }
-        } catch (ParseException ex) {
-            throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
+        } catch (de.up.ling.irtg.codec.CodecParseException | IOException ex) {
+            Logger.getLogger(GraphAlgebra.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
         }
     }
 

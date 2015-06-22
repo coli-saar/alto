@@ -275,7 +275,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
      * @throws ParserException
      * @throws AntlrIrtgBuilder.ParseException
      */
-    public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.codec.ParseException {
+    public static void main(String[] args, boolean showViterbiTrees, IntersectionCall icall) throws FileNotFoundException, ParseException, IOException, ParserException, de.up.ling.irtg.codec.CodecParseException {
         if (args.length != 5) {
             System.err.println("1. IRTG\n"
                     + "2. Sentences\n"

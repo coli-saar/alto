@@ -32,22 +32,22 @@ import org.jgrapht.graph.*;
 class SGraphTest {
     @Test
     public void testIso() {
-        SGraph g1 = IsiAmrParser.parse(new StringReader("(v / want-01  :ARG0 (b)  :ARG1 (g))"));        
-        SGraph g2 = IsiAmrParser.parse(new StringReader("(w / want-01  :ARG0 (b)  :ARG1 (g))"));
+        SGraph g1 = pg("(v / want-01  :ARG0 (b)  :ARG1 (g))");        
+        SGraph g2 = pg("(w / want-01  :ARG0 (b)  :ARG1 (g))");
         assertEquals(g1, g2);
     }
     
     @Test
     public void testIso2() {
-        SGraph g1 = IsiAmrParser.parse(new StringReader("(w / want-02  :ARG0 (b)  :ARG1 (g))"));
-        SGraph g2 = IsiAmrParser.parse(new StringReader("(w / want-01  :ARG0 (b)  :ARG1 (g))"));
+        SGraph g1 = pg("(w / want-02  :ARG0 (b)  :ARG1 (g))");
+        SGraph g2 = pg("(w / want-01  :ARG0 (b)  :ARG1 (g))");
         assertThat(g1, is(not(g2)))
     }
     
     @Test
     public void testIso3() {
-        SGraph g1 = IsiAmrParser.parse(new StringReader("(w / want-01  :ARG0 (w)  :ARG1 (g))"));
-        SGraph g2 = IsiAmrParser.parse(new StringReader("(w / want-01  :ARG0 (b)  :ARG1 (g))"));
+        SGraph g1 = pg("(w / want-01  :ARG0 (w)  :ARG1 (g))");
+        SGraph g2 = pg("(w / want-01  :ARG0 (b)  :ARG1 (g))");
         assertThat(g1, is(not(g2)))
     }
     
@@ -87,9 +87,9 @@ class SGraphTest {
     
     @Test
     public void testMergeComplex() {
-        SGraph want = IsiAmrParser.parse(new StringReader("(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))"));
-        SGraph boy = IsiAmrParser.parse(new StringReader("(x<root> / boy)"));
-        SGraph go = IsiAmrParser.parse(new StringReader("(g<root> / go-01  :ARG0 (s<subj>))"));
+        SGraph want = pg("(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))");
+        SGraph boy = pg("(x<root> / boy)");
+        SGraph go = pg("(g<root> / go-01  :ARG0 (s<subj>))");
         
         SGraph combined = want.withFreshNodenames().merge(go.withFreshNodenames().renameSource("root", "vcomp").renameSource("subj", "subj"))
                     .merge(boy.withFreshNodenames().renameSource("root", "subj"));

@@ -10,11 +10,14 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +25,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -163,7 +168,7 @@ class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
                 }
             } else {
                 List<Rule> rules = new ArrayList<Rule>();
-                SGraph sgraph = IsiAmrParser.parse(new StringReader(label));
+                SGraph sgraph = (new IsiAmrInputCodec()).read(new ByteArrayInputStream(label.getBytes()));
 
                 if (sgraph == null) {
 //                    System.err.println("Unparsable operation: " + label);
@@ -183,8 +188,9 @@ class SGraphDecompositionAutomaton extends TreeAutomaton<SGraph> {
 
                 return memoize(rules, labelId, childStates);
             }
-        } catch (ParseException ex) {
-            throw new IllegalArgumentException("Could not parse operation \"" + label + "\": " + ex.getMessage());
+        } catch (de.up.ling.irtg.codec.CodecParseException | IOException ex) {
+            Logger.getLogger(SGraphDecompositionAutomaton.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
         }
     }
 

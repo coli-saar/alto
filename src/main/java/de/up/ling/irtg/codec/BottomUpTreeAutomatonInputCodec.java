@@ -49,7 +49,7 @@ public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
 
     @Override
-    public TreeAutomaton read(InputStream is) throws ParseException, IOException {
+    public TreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         BottomUpTreeAutomatonLexer l = new BottomUpTreeAutomatonLexer(new ANTLRInputStream(is));
         BottomUpTreeAutomatonParser p = new BottomUpTreeAutomatonParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
@@ -70,7 +70,7 @@ public class BottomUpTreeAutomatonInputCodec extends InputCodec<TreeAutomaton>{
 
             return automaton;
         } catch (RecognitionException e) {
-            throw new ParseException(e.getMessage());
+            throw new CodecParseException(e.getMessage());
         }
     }
     

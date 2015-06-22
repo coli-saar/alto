@@ -58,12 +58,12 @@ public abstract class InputCodec<E> {
      * 
      * @param is
      * @return
-     * @throws ParseException if an error occurred while decoding
+     * @throws CodecParseException if an error occurred while decoding
      * the input stream into an object
      * @throws IOException if an error occurred while reading
      * data from the input stream
      */
-    public abstract E read(InputStream is) throws ParseException, IOException;
+    public abstract E read(InputStream is) throws CodecParseException, IOException;
 
     /**
      * Reads an object from a string representation.
@@ -77,9 +77,9 @@ public abstract class InputCodec<E> {
      * 
      * @param s
      * @return
-     * @throws ParseException
+     * @throws CodecParseException
      */
-    public E read(String s) throws ParseException {
+    public E read(String s) throws CodecParseException {
         try {
             return read(new ByteArrayInputStream(s.getBytes()));
         } catch (IOException ex) {

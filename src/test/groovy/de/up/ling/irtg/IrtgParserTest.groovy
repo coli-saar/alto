@@ -158,13 +158,13 @@ P -> r12
         InterpretedTreeAutomaton irtg = pi(grammarstring)
     }
 
-    @Test(expected=de.up.ling.irtg.codec.ParseException.class)
+    @Test(expected=de.up.ling.irtg.codec.CodecParseException.class)
     public void testIllegalInterpretation() {
         String grammarstring = "interpretation 1: java.lang.String";
         InterpretedTreeAutomaton irtg = pi(grammarstring)
     }
 
-    @Test(expected=de.up.ling.irtg.codec.ParseException.class)
+    @Test(expected=de.up.ling.irtg.codec.CodecParseException.class)
     public void testUndeclaredInterpretation() {
         String grammarstring = '''
             interpretation i: de.up.ling.irtg.algebra.StringAlgebra
@@ -175,7 +175,7 @@ P -> r12
         InterpretedTreeAutomaton irtg = pi(grammarstring)
     }
 
-    @Test(expected=de.up.ling.irtg.codec.ParseException.class)
+    @Test(expected=de.up.ling.irtg.codec.CodecParseException.class)
     public void testInconsistentHoms() {
         String grammarstring = '''
             interpretation i: de.up.ling.irtg.algebra.StringAlgebra
@@ -186,7 +186,7 @@ P -> r12
         InterpretedTreeAutomaton irtg = pi(grammarstring)
     }
     
-    @Test(expected=de.up.ling.irtg.codec.ParseException.class)
+    @Test(expected=de.up.ling.irtg.codec.CodecParseException.class)
     public void testTooManyVariables0() {
         String grammarstring = '''
             interpretation i: de.up.ling.irtg.algebra.StringAlgebra
@@ -197,7 +197,7 @@ P -> r12
         InterpretedTreeAutomaton irtg = pi(grammarstring)
     }
     
-    @Test(expected=de.up.ling.irtg.codec.ParseException.class)
+    @Test(expected=de.up.ling.irtg.codec.CodecParseException.class)
     public void testTooManyVariables2() {
         String grammarstring = '''
             interpretation i: de.up.ling.irtg.algebra.StringAlgebra

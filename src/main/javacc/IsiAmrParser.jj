@@ -9,17 +9,18 @@ options {
   FORCE_LA_CHECK=true;
 }
 PARSER_BEGIN(IsiAmrParser)
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.codec;
 
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.*;
 import java.io.*;
+import de.up.ling.irtg.algebra.graph.*;
 
 /**
  * Utility class to parse AMR style graphs.
  */
-public class IsiAmrParser {
+class IsiAmrParser {
     private SGraph graph = null;
 
 	

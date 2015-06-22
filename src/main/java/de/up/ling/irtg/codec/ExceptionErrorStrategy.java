@@ -77,7 +77,7 @@ public class ExceptionErrorStrategy extends DefaultErrorStrategy {
             
             buf.append("}, but got '" + tok.getText() + "'.");
 
-            throw new ParseException(buf.toString());
+            throw new CodecParseException(buf.toString());
         }
     }
 

@@ -10,7 +10,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.IrtgInputCodec;
-import de.up.ling.irtg.codec.ParseException;
+import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.TemplateIrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.maxent.FeatureFunction;
@@ -133,9 +133,9 @@ public class TemplateInterpretedTreeAutomaton {
      * @throws ClassNotFoundException
      * @throws InstantiationException
      * @throws IllegalAccessException
-     * @throws ParseException 
+     * @throws CodecParseException 
      */
-    public InterpretedTreeAutomaton instantiate(FirstOrderModel model) throws ClassNotFoundException, InstantiationException, IllegalAccessException, ParseException {
+    public InterpretedTreeAutomaton instantiate(FirstOrderModel model) throws ClassNotFoundException, InstantiationException, IllegalAccessException, CodecParseException {
         ConcreteTreeAutomaton<String> auto = new ConcreteTreeAutomaton<>();
         Map<String, Interpretation> interps = new HashMap<>();
 
@@ -213,7 +213,7 @@ public class TemplateInterpretedTreeAutomaton {
         return Util.dfs(term, (node, children) -> Tree.create(instantiate(node.getLabel(), variableAssignment), children));
     }
 
-    private Map<String, FeatureFunction> makeFeatureMap(List<FeatureDeclaration> features) throws ParseException {
+    private Map<String, FeatureFunction> makeFeatureMap(List<FeatureDeclaration> features) throws CodecParseException {
         Map<String, FeatureFunction> ret = new HashMap<>();
 
         for (FeatureDeclaration ft : features) {

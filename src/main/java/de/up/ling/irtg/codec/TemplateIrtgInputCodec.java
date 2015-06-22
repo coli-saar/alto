@@ -44,7 +44,7 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
     private TemplateInterpretedTreeAutomaton tirtg;
 
     @Override
-    public TemplateInterpretedTreeAutomaton read(InputStream is) throws ParseException, IOException {
+    public TemplateInterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         TemplateIrtgLexer l = new TemplateIrtgLexer(new ANTLRInputStream(is));
         TemplateIrtgParser p = new TemplateIrtgParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
@@ -56,14 +56,14 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
             TemplateIrtgParser.Template_irtgContext result = p.template_irtg();
             build(result);
             return tirtg;
-        } catch (ParseException e) {
+        } catch (CodecParseException e) {
             throw e;
         } catch (RecognitionException e) {
-            throw new ParseException(e.getMessage());
+            throw new CodecParseException(e.getMessage());
         }
     }
 
-    private void build(TemplateIrtgParser.Template_irtgContext context) throws ParseException {
+    private void build(TemplateIrtgParser.Template_irtgContext context) throws CodecParseException {
         for (TemplateIrtgParser.Interpretation_declContext ic : context.interpretation_decl()) {
             String id = name(ic.name(0));
             String classname = name(ic.name(1));
@@ -142,36 +142,36 @@ public class TemplateIrtgInputCodec extends InputCodec<TemplateInterpretedTreeAu
         }
     }
 
-    private static void processGuard(TemplateIrtgParser.GuardContext guard, TemplateInterpretedTreeAutomaton.TemplateRule trule) throws ParseException {
+    private static void processGuard(TemplateIrtgParser.GuardContext guard, TemplateInterpretedTreeAutomaton.TemplateRule trule) throws CodecParseException {
         List<String> variables = CodecUtilities.processList(guard.name_list(), nl -> nl.name(), TemplateIrtgInputCodec::name);
         trule.variables = variables;
         trule.guard = processGuardCondition(guard.guard_condition());
     }
 
-    private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Guard_conditionContext condition) throws ParseException {
+    private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Guard_conditionContext condition) throws CodecParseException {
         if (condition.atomic_guard_condition() != null) {
             return processGuardCondition(condition.atomic_guard_condition());
         } else if (condition.conjunctive_guard_condition() != null) {
             return processGuardCondition(condition.conjunctive_guard_condition());
         } else {
-            throw new ParseException("Invalid guard condition 1");
+            throw new CodecParseException("Invalid guard condition 1");
         }
     }
 
-    private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Atomic_guard_conditionContext condition) throws ParseException {
+    private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Atomic_guard_conditionContext condition) throws CodecParseException {
         Tree<String> guardTerm = term(condition.term());
 
         List<String> guardArgs = Util.mapToList(guardTerm.getChildren(), x -> x.getLabel());
         return new TemplateInterpretedTreeAutomaton.AtomicGuard(guardTerm.getLabel(), guardArgs);
     }
 
-    private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Conjunctive_guard_conditionContext condition) throws ParseException {
+    private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Conjunctive_guard_conditionContext condition) throws CodecParseException {
         Guard g1 = processGuardCondition(condition.atomic_or_bracketed_guard_condition());
         Guard g2 = processGuardCondition(condition.guard_condition());
         return new TemplateInterpretedTreeAutomaton.ConjGuard(g1, g2);
     }
 
-    private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Atomic_or_bracketed_guard_conditionContext condition) throws ParseException {
+    private static TemplateInterpretedTreeAutomaton.Guard processGuardCondition(TemplateIrtgParser.Atomic_or_bracketed_guard_conditionContext condition) throws CodecParseException {
         if (condition.atomic_guard_condition() != null) {
             return processGuardCondition(condition.atomic_guard_condition());
         } else {

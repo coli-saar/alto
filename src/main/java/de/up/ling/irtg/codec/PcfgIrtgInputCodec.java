@@ -56,7 +56,7 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private int nextGensym = 1;
 
     @Override
-    public InterpretedTreeAutomaton read(InputStream is) throws ParseException, IOException {
+    public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         PcfgAsIrtgLexer l = new PcfgAsIrtgLexer(new ANTLRInputStream(is));
         PcfgAsIrtgParser p = new PcfgAsIrtgParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
@@ -78,7 +78,7 @@ public class PcfgIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             irtg.addInterpretation("tree", new Interpretation(treeAlgebra, treeHom));
             return irtg;
         } catch (RecognitionException e) {
-            throw new ParseException(e.getMessage());
+            throw new CodecParseException(e.getMessage());
         } 
     }
 

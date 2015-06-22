@@ -11,24 +11,24 @@ package de.up.ling.irtg.codec;
  * 
  * @author koller
  */
-public class ParseException extends RuntimeException {
+public class CodecParseException extends RuntimeException {
 
-    public ParseException() {
+    public CodecParseException() {
     }
 
-    public ParseException(String message) {
+    public CodecParseException(String message) {
         super(message);
     }
 
-    public ParseException(String message, Throwable cause) {
+    public CodecParseException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public ParseException(Throwable cause) {
+    public CodecParseException(Throwable cause) {
         super(cause);
     }
 
-    public ParseException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public CodecParseException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
     }
     

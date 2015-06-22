@@ -4,13 +4,12 @@
  */
 package de.up.ling.irtg.script;
 
-import de.up.ling.irtg.algebra.graph.IsiAmrParser;
-import de.up.ling.irtg.algebra.graph.ParseException;
 import de.up.ling.irtg.algebra.graph.SGraph;
+import de.up.ling.irtg.codec.IsiAmrInputCodec;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.StringReader;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
@@ -33,7 +32,7 @@ public class AmrbankReader extends DefaultHandler {
     StringBuilder buf = new StringBuilder();
     String id = null;
 
-    public static void main(String[] args) throws XMLStreamException, ParseException, FileNotFoundException, ParserConfigurationException, SAXException, IOException {
+    public static void main(String[] args) throws XMLStreamException, FileNotFoundException, ParserConfigurationException, SAXException, IOException {
         SAXParserFactory parserFactor = SAXParserFactory.newInstance();
         SAXParser parser = parserFactor.newSAXParser();
 
@@ -69,9 +68,9 @@ public class AmrbankReader extends DefaultHandler {
                 try {
                     // TODO - #17 uses node name i before node i/i is declared
 //                    System.err.println("||" + x + "||");
-                    SGraph lg = IsiAmrParser.parse(new StringReader(x));
+                    SGraph lg = (new IsiAmrInputCodec()).read(new ByteArrayInputStream(x.getBytes()));
                     System.out.println(lg.toIsiAmrString());
-                } catch (Exception ex) {
+                } catch (de.up.ling.irtg.codec.CodecParseException | IOException ex) {
                     System.err.println("Exception while parsing " + id + ": " + ex);
                 }
             }

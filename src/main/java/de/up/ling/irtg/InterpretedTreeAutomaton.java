@@ -14,7 +14,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
-import de.up.ling.irtg.codec.ParseException;
+import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.CorpusWriter;
@@ -826,7 +826,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         return true;
     }
 
-    public static InterpretedTreeAutomaton read(InputStream r) throws IOException, ParseException {
+    public static InterpretedTreeAutomaton read(InputStream r) throws IOException, CodecParseException {
         return new IrtgInputCodec().read(r);
     }
 }

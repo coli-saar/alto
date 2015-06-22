@@ -5,7 +5,7 @@
 package de.up.ling.irtg.script;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.codec.ParseException;
+import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
@@ -25,7 +25,7 @@ import java.io.OutputStream;
  * @author koller
  */
 public class CorpusParser {
-    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, ParseException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, CodecParseException {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
         OutputStream ostream = new FileOutputStream(args[2]);
         Corpus corpus = Corpus.readCorpus(new FileReader(args[1]), irtg);

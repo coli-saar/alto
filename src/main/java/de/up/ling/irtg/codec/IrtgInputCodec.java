@@ -63,7 +63,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private Map<String, FeatureFunction> features = new HashMap<String, FeatureFunction>();
 
     @Override
-    public InterpretedTreeAutomaton read(InputStream is) throws IOException, ParseException {
+    public InterpretedTreeAutomaton read(InputStream is) throws IOException, CodecParseException {
         IrtgLexer l = new IrtgLexer(new ANTLRInputStream(is));
         IrtgParser p = new IrtgParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
@@ -78,14 +78,14 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             IrtgParser.IrtgContext result = p.irtg();
             InterpretedTreeAutomaton irtg = build(result);
             return irtg;
-        } catch (ParseException e) {
+        } catch (CodecParseException e) {
             throw e;
         } catch (RecognitionException e) {
-            throw new ParseException(e.getMessage());
+            throw new CodecParseException(e.getMessage());
         }
     }
 
-    private InterpretedTreeAutomaton build(IrtgParser.IrtgContext context) throws ParseException {
+    private InterpretedTreeAutomaton build(IrtgParser.IrtgContext context) throws CodecParseException {
         try {
             for (IrtgParser.Interpretation_declContext c : context.interpretation_decl()) {
                 interpretationDecl(c);
@@ -113,15 +113,15 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             ret.addAllInterpretations(interpretations);
 
             return ret;
-        } catch (ParseException e) {
+        } catch (CodecParseException e) {
             throw e;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new ParseException("Unexpected parsing error: " + e.toString());
+            throw new CodecParseException("Unexpected parsing error: " + e.toString());
         }
     }
 
-    private void interpretationDecl(IrtgParser.Interpretation_declContext ic) throws ParseException {
+    private void interpretationDecl(IrtgParser.Interpretation_declContext ic) throws CodecParseException {
         String id = name(ic.name(0));
         String classname = name(ic.name(1));
 
@@ -133,11 +133,11 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             interpretations.put(id, new Interpretation(algebra, hom));
             homomorphisms.put(id, hom);
         } catch (Exception e) {
-            throw new ParseException("Could not instantiate algebra class " + classname + " for interpretation " + id + ": " + e.toString());
+            throw new CodecParseException("Could not instantiate algebra class " + classname + " for interpretation " + id + ": " + e.toString());
         }
     }
 
-    private void featureDecl(IrtgParser.Feature_declContext co) throws ParseException {
+    private void featureDecl(IrtgParser.Feature_declContext co) throws CodecParseException {
         if (co instanceof IrtgParser.CONSTRUCTOR_FEATUREContext) {
             IrtgParser.CONSTRUCTOR_FEATUREContext c = (IrtgParser.CONSTRUCTOR_FEATUREContext) co;
             String id = c.name(0).getText();
@@ -156,7 +156,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
-    public static void addConstructorFeature(String id, String classname, List<String> arguments, Map<String, FeatureFunction> features) throws ParseException {
+    public static void addConstructorFeature(String id, String classname, List<String> arguments, Map<String, FeatureFunction> features) throws CodecParseException {
         try {
             Constructor<FeatureFunction> con = findFeatureConstructor(classname, arguments.size());
 
@@ -166,11 +166,11 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             FeatureFunction feature = con.newInstance(args);
             features.put(id, feature);
         } catch (Exception e) {
-            throw new ParseException("Could not instantiate FeatureFunction class " + classname + " for feature " + id + ": " + e.toString());
+            throw new CodecParseException("Could not instantiate FeatureFunction class " + classname + " for feature " + id + ": " + e.toString());
         }
     }
 
-    public static void addStaticFeature(String id, String classname, String methodname, List<String> arguments, Map<String, FeatureFunction> features) throws ParseException {
+    public static void addStaticFeature(String id, String classname, String methodname, List<String> arguments, Map<String, FeatureFunction> features) throws CodecParseException {
         try {
             Method meth = CodecUtilities.findStaticFeatureFactory(classname, methodname, arguments.size());
 
@@ -180,15 +180,15 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             FeatureFunction feature = (FeatureFunction) meth.invoke(null, args);
             features.put(id, feature);
         } catch (ClassNotFoundException e) {
-            throw new ParseException("Could not find feature factory class " + classname + " for feature " + id + ": " + e.toString());
+            throw new CodecParseException("Could not find feature factory class " + classname + " for feature " + id + ": " + e.toString());
         } catch (NoSuchMethodException e) {
-            throw new ParseException("Could not find feature factory method " + methodname + " in class " + classname + " for feature " + id + ": " + e.toString());
+            throw new CodecParseException("Could not find feature factory method " + methodname + " in class " + classname + " for feature " + id + ": " + e.toString());
         } catch (IllegalAccessException e) {
-            throw new ParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
+            throw new CodecParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
         } catch (IllegalArgumentException e) {
-            throw new ParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
+            throw new CodecParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
         } catch (InvocationTargetException e) {
-            throw new ParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
+            throw new CodecParseException("Not allowed to invoke factory method " + classname + "::" + methodname + "for feature " + id + ": " + e.toString());
         }
     }
 
@@ -204,18 +204,18 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return rule;
     }
 
-    private void homRule(String label, IrtgParser.Hom_ruleContext hc, int ruleArity) throws ParseException {
+    private void homRule(String label, IrtgParser.Hom_ruleContext hc, int ruleArity) throws CodecParseException {
         String interp = name(hc.name());
         Homomorphism hom = homomorphisms.get(interp);
         Tree<String> rhs = term(hc.term());
 
         if (!interpretations.containsKey(interp)) {
-            throw new ParseException("Undeclared interpretation '" + interp + "'");
+            throw new CodecParseException("Undeclared interpretation '" + interp + "'");
         } else if (hom == null) {
-            throw new ParseException("Homomorphism declaration for unknown interpretation '" + interp + "'");
+            throw new CodecParseException("Homomorphism declaration for unknown interpretation '" + interp + "'");
         } else if (hom.get(hom.getSourceSignature().getIdForSymbol(label)) != null) {
             if (!hom.get(label).equals(rhs)) {
-                throw new ParseException("Redefined value of interpretation '" + interp + "' for " + label + " as " + rhs + " (was: " + hom.get(label) + ")");
+                throw new CodecParseException("Redefined value of interpretation '" + interp + "' for " + label + " as " + rhs + " (was: " + hom.get(label) + ")");
             }
         }
 
@@ -228,7 +228,7 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         });
 
         if (maxVariableIndex.getValue() >= ruleArity) {
-            throw new ParseException("Homomorphism value " + rhs + " contains " + (maxVariableIndex.getValue() + 1) + " variables, but should have at most " + ruleArity);
+            throw new CodecParseException("Homomorphism value " + rhs + " contains " + (maxVariableIndex.getValue() + 1) + " variables, but should have at most " + ruleArity);
         } 
 
         hom.add(label, rhs);

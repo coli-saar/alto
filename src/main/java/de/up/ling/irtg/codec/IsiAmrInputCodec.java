@@ -6,7 +6,6 @@
 
 package de.up.ling.irtg.codec;
 
-import de.up.ling.irtg.algebra.graph.IsiAmrParser;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,11 +27,11 @@ import java.io.InputStreamReader;
 @CodecMetadata(name = "isi-amr", description = "ISI-style AMRs", type = SGraph.class)
 public class IsiAmrInputCodec extends InputCodec<SGraph> {
     @Override
-    public SGraph read(InputStream is) throws ParseException, IOException {
+    public SGraph read(InputStream is) throws CodecParseException, IOException {
         try {
             return IsiAmrParser.parse(new InputStreamReader(is));
-        } catch (de.up.ling.irtg.algebra.graph.ParseException ex) {
-            throw new ParseException(ex);
+        } catch (ParseException ex) {
+            throw new CodecParseException(ex);
         }
     }
 }
