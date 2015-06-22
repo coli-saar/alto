@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.algebra;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterators;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -23,7 +22,6 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
-import jdk.nashorn.internal.objects.NativeDebug;
 
 /**
  * An algebra over some domain E of values. An algebra can
