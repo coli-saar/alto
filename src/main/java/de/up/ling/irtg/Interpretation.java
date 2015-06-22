@@ -5,28 +5,26 @@
 package de.up.ling.irtg;
 
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.InverseHomAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.PMFactoryRestrictive;
 import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.Logging;
-import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import java.io.Serializable;
-import java.util.Map;
 
 /**
  *
  * @author koller
  */
 public class Interpretation<E> implements Serializable {
+
     private Algebra<E> algebra;
     private Homomorphism hom;
     private PatternMatchingInvhomAutomatonFactory pmFactory;
-    
 
     public Interpretation(Algebra<E> algebra, Homomorphism hom) {
         this.algebra = algebra;
@@ -53,19 +51,26 @@ public class Interpretation<E> implements Serializable {
         // inverse homomorphism, if that is possible. Pattern matching works for both top down
         // and bottom up queries.
         if (hom.isNonDeleting()) {
-            if (pmFactory == null) {
-                pmFactory = new PMFactoryRestrictive(hom);
+            if (hom.getSourceSignature().getMaxArity() <= 2 || !decompositionAutomaton.supportsTopDownQueries()) {
+                //if source signature is binarized, use pattern matcher. Also
+                //use pattern matcher if only bottom up queries can be answered,
+                //since this is not supported by CondensedNondeletingInverseHomAutomaton
+                if (pmFactory == null) {
+                    pmFactory = new PMFactoryRestrictive(hom);
+                }
+                Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching.");
+                return pmFactory.invhom(decompositionAutomaton);
+            } else {
+                Logging.get().info(() -> "Using condensed inverse hom automaton.");
+                return new CondensedNondeletingInverseHomAutomaton(decompositionAutomaton, hom);
             }
-            Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching.");
-            return pmFactory.invhom(decompositionAutomaton);
-
 
             //return new CondensedNondeletingInverseHomAutomaton(decompositionAutomaton, hom);//this works only using top down queries.
         } else {
             if (decompositionAutomaton.supportsTopDownQueries()) {
 
-                    Logging.get().info(() -> "Using inverse hom automaton for deleting homomorphisms.");
-                    return new InverseHomAutomaton(decompositionAutomaton, hom);
+                Logging.get().info(() -> "Using inverse hom automaton for deleting homomorphisms.");
+                return new InverseHomAutomaton(decompositionAutomaton, hom);
             } else {
                 Logging.get().info(() -> "Using non-condensed inverse hom automaton.");
                 return decompositionAutomaton.inverseHomomorphism(hom);
@@ -100,7 +105,6 @@ public class Interpretation<E> implements Serializable {
         return true;
     }
 
-    
     public void setPmLogName(String name) {
         pmFactory.logTitle = name;
     }

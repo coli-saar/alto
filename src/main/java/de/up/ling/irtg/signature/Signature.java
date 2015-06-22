@@ -182,4 +182,17 @@ public class Signature implements Serializable {
     public int[] remap(Signature other) {
         return interner.remap(other.interner);
     }    
+    
+    /**
+     * Returns the maximum arity of any symbol in this signature.
+     * @return 
+     */
+    public int getMaxArity() {
+        int ret = 0;
+        for (int arity : arities.values()) {
+            ret = Math.max(ret, arity);
+        }
+        return ret;
+    }
+    
 }
