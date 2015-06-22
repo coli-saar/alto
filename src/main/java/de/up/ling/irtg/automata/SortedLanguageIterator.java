@@ -511,41 +511,41 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }        
     }
     
-    public static void main(String[] args) throws ParseException, FileNotFoundException, IOException {
-        Reader reader = null;
-        
-        if( args[0].endsWith(".gz")) {
-            reader = new InputStreamReader(new GZIPInputStream(new FileInputStream(new File(args[0]))));
-        } else {
-            reader = new FileReader(new File(args[0]));
-        }        
-        
-        TreeAutomaton auto = TreeAutomatonParser.parse(reader);
-        int k = Integer.parseInt(args[1]);
-        
-        long s = System.currentTimeMillis();
-        SortedLanguageIterator it = new SortedLanguageIterator(auto);
-        long e = System.currentTimeMillis();
-        
-        System.out.println("Init time: " + (e-s) + " millisec\n");
-        
-//        System.out.println(auto);
-        
-        long totalStart = System.currentTimeMillis();
-        long numReadings = 0;
-        for( int i = 0; i < k && it.hasNext(); i++ ) {
-            long start = System.nanoTime();
-            WeightedTree w = it.next();
-            long end = System.nanoTime();
-            
-            System.out.println("" + (i+1) + ": " + w.getTree());
-            System.out.println("  [" + w.getWeight() + ", " + (end-start)/1000 + " microsec]\n");
-            numReadings++;
-        }
-        long totalEnd = System.currentTimeMillis();
-        
-        System.err.println("Enumerated " + numReadings + " trees in " + (totalEnd-totalStart) + " ms (" + (totalEnd-totalStart+0.0)/numReadings + " ms/tree)");
-    }
+//    public static void main(String[] args) throws ParseException, FileNotFoundException, IOException {
+//        Reader reader = null;
+//        
+//        if( args[0].endsWith(".gz")) {
+//            reader = new InputStreamReader(new GZIPInputStream(new FileInputStream(new File(args[0]))));
+//        } else {
+//            reader = new FileReader(new File(args[0]));
+//        }        
+//        
+//        TreeAutomaton auto = TreeAutomatonParser.parse(reader);
+//        int k = Integer.parseInt(args[1]);
+//        
+//        long s = System.currentTimeMillis();
+//        SortedLanguageIterator it = new SortedLanguageIterator(auto);
+//        long e = System.currentTimeMillis();
+//        
+//        System.out.println("Init time: " + (e-s) + " millisec\n");
+//        
+////        System.out.println(auto);
+//        
+//        long totalStart = System.currentTimeMillis();
+//        long numReadings = 0;
+//        for( int i = 0; i < k && it.hasNext(); i++ ) {
+//            long start = System.nanoTime();
+//            WeightedTree w = it.next();
+//            long end = System.nanoTime();
+//            
+//            System.out.println("" + (i+1) + ": " + w.getTree());
+//            System.out.println("  [" + w.getWeight() + ", " + (end-start)/1000 + " microsec]\n");
+//            numReadings++;
+//        }
+//        long totalEnd = System.currentTimeMillis();
+//        
+//        System.err.println("Enumerated " + numReadings + " trees in " + (totalEnd-totalStart) + " ms (" + (totalEnd-totalStart+0.0)/numReadings + " ms/tree)");
+//    }
     
     private String formatWeightedTree(WeightedTree wt) {
         if( wt == null ) {

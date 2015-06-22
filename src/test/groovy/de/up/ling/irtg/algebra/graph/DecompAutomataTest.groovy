@@ -53,8 +53,8 @@ class DecompAutomataTest {
         Writer writer = new StringWriter()
         SGraph input = new IsiAmrInputCodec().read("(c / chapter :mod 2)")
         GraphAlgebra.writeRestrictedDecompositionAutomaton(input, 2, writer)
-        System.err.println(writer.toString())
-        System.err.println(decompAutoGold)
+//        System.err.println(writer.toString())
+//        System.err.println(decompAutoGold)
         assertEquals(writer.toString(), decompAutoGold)
     }
     

@@ -1,13 +1,41 @@
-# README #
+# The Alto parser
 
-This is a tool for working with Interpreted Regular Tree Grammars (IRTGs). This tool supports natural-language parsing, translation, and training with a wide variety of grammar formalisms, based on an efficient implementation of tree automata.
+Welcome to Alto, the Algebraic Language Toolkit.
 
-Please see the [Wiki](https://bitbucket.org/tclup/irtg/wiki/Home) for more details and consult the [Downloads](https://bitbucket.org/tclup/irtg/downloads) for a current release.
+Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It is being developed at the [University of Potsdam](http://www.ling.uni-potsdam.de/en/) in the Theoretical Computational Linguistics group, led by [Alexander Koller](http://www.ling.uni-potsdam.de/~koller/). Its main features are:
 
-If you wish to use the IRTG tool seriously, it may be worth reading up on the theoretical background: [Koller & Kuhlmann, IWPT 2011](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-11); [Koller & Kuhlmann, TAG+ 2012](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=tag-irtg).
+- Represents grammars from a wide variety of popular grammar formalisms as IRTGs, including:
+	- Context-free grammars
+	- Tree-adjoining grammars (TAG)
+	- Tree automata and bottom-up tree transducers
+	- Synchronous context-free grammars, TAG, etc.
+	- Tree-to-string and string-to-tree transducers
+	- Synchronous Hyperedge Replacement Grammars (HRG): Alto is the [fastest published HRG parser in the world](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=sgraph-parsing-15)
+	- and many more
+- Implements chart-based algorithms for
+	- parsing
+	- synchronous parsing (with inputs from multiple sides of a synchronous grammar)
+	- decoding (to another side of a synchronous grammar)
+	- computing 1-best (Viterbi) and k-best derivations
+	- maximum likelihood and expectation maximization (EM) training
+	- binarization
+- Supports PCFG-style and log-linear probability models for all of these grammar formalisms.
+- Built for easy extensibility: implement your own grammar formalism by adding an [Algebra](https://bitbucket.org/tclup/alto/wiki/Algebras) class, and use any of the Alto algorithms directly.
+- Comes with a GUI that provides access to most of these algorithms and visualizes parsing results.
 
-Notice that the IRTG tool is currently a research prototype. It is limited in two essential ways:
+The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-11). You can find more details on the [Literature](https://bitbucket.org/tclup/alto/wiki/Literature) page.
 
-* Many algorithms in the tool are not implemented as efficiently as they could be. We are actively working on improving the performance of these algorithms, and are hoping to release a new version of the tool soon.
+Alto is implemented in Java and can be downloaded [here](https://bitbucket.org/tclup/alto/downloads).
 
-* Although we have done extensive testing, we expect that there are still bugs in the IRTG tool. If you find bugs, we would appreciate hearing about them in the [IRTG tool discussion forum](https://groups.google.com/forum/#!forum/irtg-discussion)
+See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on how to use Alto.
+
+## Screenshots ##
+
+Here are some screenshots of the Alto GUI. Here's an IRTG with one string and one graph interpretation (equivalent to a synchronous HRG):
+
+![Screen Shot 2015-05-27 at 16.18.42.png](https://bitbucket.org/repo/ny94Mo/images/1617309522-Screen%20Shot%202015-05-27%20at%2016.18.42.png)
+
+Here's the result of parsing "the boy wants to go" with this grammar:
+
+![Screen Shot 2015-05-27 at 16.23.49.png](https://bitbucket.org/repo/ny94Mo/images/1198790576-Screen%20Shot%202015-05-27%20at%2016.23.49.png)
+

@@ -6,4 +6,4 @@ de.up.ling.irtg.codec.TiburonTreeAutomatonInputCodec
 de.up.ling.irtg.codec.TemplateIrtgInputCodec
 de.up.ling.irtg.codec.bolinas_hrg.BolinasHrgInputCodec
 de.up.ling.irtg.codec.IsiAmrInputCodec
-
+de.up.ling.irtg.codec.PtbTreeInputCodec

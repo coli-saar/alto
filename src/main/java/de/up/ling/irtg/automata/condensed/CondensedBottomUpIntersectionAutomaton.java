@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
+import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
@@ -51,7 +52,7 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
             isExplicit = true;
 
             getStateInterner().setTrustingMode(true);
-            
+
             right.makeAllRulesCondensedExplicit();
 
             IntPriorityQueue agenda = new IntArrayFIFOQueue();
@@ -62,7 +63,7 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
 
             for (CondensedRule rightRule : right.getCondensedRulesBottomUpFromExplicit(emptyChildren)) {
 //                System.err.println("right: " + rightRule.toString(right));
-                
+
                 IntSet rightLabels = rightRule.getLabels(right);
                 for (int rightLabel : rightLabels) {
                     int leftLabel = leftToRightSignatureMapper.remapBackward(rightLabel);
@@ -78,15 +79,18 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
 
             // iterate until agenda is empty
             List<IntSet> remappedChildren = new ArrayList<IntSet>();
+            int listenerCount = 0;
 
             while (!agenda.isEmpty()) {
-//                System.err.println("ag: " + agenda);
+                if (GuiUtils.getGlobalListener() != null) {
+                    GuiUtils.getGlobalListener().accept((listenerCount++) % 500, 500, "");
+                }
 
+//                System.err.println("ag: " + agenda);
                 int statePairID = agenda.dequeueInt();
                 int rightState = stateToRightState.get(statePairID);
 
 //                System.err.println("pop: " + statePairID + " = " + left.getStateForId(stateToLeftState.get(statePairID)) + ", " + right.getStateForId(stateToRightState.get(statePairID)));
-
                 rightRuleLoop:
                 for (CondensedRule rightRule : right.getCondensedRulesForRhsState(rightState)) {
                     remappedChildren.clear();
@@ -126,12 +130,12 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
 
         return finalStates;
     }
-    
+
     private void collectStatePairs(IntSet leftStates, IntSet rightStates, IntSet outStates) {
-        for( int l : leftStates ) {
-            for( int r : rightStates ) {
+        for (int l : leftStates) {
+            for (int r : rightStates) {
                 int pair = stateMapping.get(r, l);
-                if( pair != 0 ) {
+                if (pair != 0) {
                     outStates.add(pair);
                 }
             }
@@ -167,7 +171,6 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
             ret = addState(new Pair(left.getStateForId(leftState), right.getStateForId(rightState)));
 
 //            System.err.println("new state " + ret + ": " + getStateForId(ret));
-
             stateMapping.put(rightState, leftState, ret);
             stateToLeftState.put(ret, leftState);
             stateToRightState.put(ret, rightState);
@@ -192,7 +195,7 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
     public boolean isBottomUpDeterministic() {
         return left.isBottomUpDeterministic() && right.isBottomUpDeterministic();
     }
-    
+
     public static void main(String[] args) throws Exception {
         GenericCondensedIntersectionAutomaton.main(args, true, (left, right) -> left.intersectCondensedBottomUp(right));
     }

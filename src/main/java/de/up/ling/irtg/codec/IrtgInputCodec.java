@@ -54,7 +54,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
  * 
  * @author koller
  */
-@CodecMetadata(name = "irtg", description = "IRTG grammars", extension = "irtg", type = InterpretedTreeAutomaton.class)
+@CodecMetadata(name = "irtg", description = "IRTG grammar", extension = "irtg", type = InterpretedTreeAutomaton.class)
 public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     private ConcreteTreeAutomaton<String> automaton = new ConcreteTreeAutomaton<String>();
@@ -116,8 +116,11 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         } catch (CodecParseException e) {
             throw e;
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new CodecParseException("Unexpected parsing error: " + e.toString());
+            if( e.getMessage() != null ) {
+                throw new CodecParseException(e.getMessage(), e);
+            } else {
+                throw new CodecParseException("Parsing error: " + e.toString(), e);
+            }
         }
     }
 

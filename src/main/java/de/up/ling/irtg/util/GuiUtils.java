@@ -17,6 +17,7 @@ import javax.swing.SwingUtilities;
  * @author koller
  */
 public class GuiUtils {
+    private static ProgressListener globalListener = null;
 
     /**
      * Execute this on the EDT.
@@ -29,7 +30,7 @@ public class GuiUtils {
      * @param andThen
      */
     public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, ValueAndTimeConsumer<E> andThen) {
-        final ProgressBarDialog progressBar = new ProgressBarDialog(description, parent, false);
+        final ProgressBarDialog progressBar = new ProgressBarDialog(title, description, parent, false);
         final JProgressBar bar = progressBar.getProgressBar();
         progressBar.getProgressBar().setStringPainted(true);
         progressBar.setVisible(true);
@@ -51,7 +52,7 @@ public class GuiUtils {
             });
         };
 
-        new Thread(() -> {
+        Thread workerThread = new Thread(() -> {
             long start = System.nanoTime();
 
             try {
@@ -61,12 +62,15 @@ public class GuiUtils {
                 SwingUtilities.invokeLater(() -> {
                     andThen.accept(result, time);
                 });
-            } catch (Throwable e) {
-                showError(new Exception(description + " error", e));
+            } catch (Exception e) {
+                showError(e);
             } finally {
                 progressBar.setVisible(false);
             }
-        }).start();
+        });
+        
+        workerThread.setName("Alto worker thread: " + description);
+        workerThread.start();
     }
 
     static public void showError(Component parent, String error) {
@@ -74,8 +78,29 @@ public class GuiUtils {
             JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
         });
     }
-    
+
     static public void showError(Throwable error) {
-        TaskDialogs.showException(error);
+        SwingUtilities.invokeLater(() -> {
+            TaskDialogs.showException(error);
+        });
     }
+
+    public static ProgressListener getGlobalListener() {
+        return globalListener;
+    }
+
+    /**
+     * Sets the global ProgressListener. The preferred method of
+     * giving a progress listener to a worker is to pass it as
+     * a method argument. This method is only here for cases when
+     * this would mess up the code to a terrible extent. You should
+     * avoid it whenever possible.
+     * 
+     * @return 
+     */
+    public static void setGlobalListener(ProgressListener globalListener) {
+        GuiUtils.globalListener = globalListener;
+    }
+    
+    
 }

@@ -10,6 +10,7 @@ import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.InputCodec;
@@ -80,7 +81,7 @@ public class InterpretedTreeAutomaton implements Serializable {
     public void addInterpretation(String name, Interpretation interp) {
         interpretations.put(name, interp);
     }
-
+    
     /**
      * Adds all interpretations in the map, with their respective names.
      *
@@ -214,27 +215,7 @@ public class InterpretedTreeAutomaton implements Serializable {
 //            Logging.get().finest(() -> ("Intersect: " + ret));
         }
 
-//        Map<Integer, Double> inside = ret.inside();
-//        double sum = 0;
-//        for (int q : ret.getFinalStates()) {
-//            double w = inside.get(q);
-//            System.err.println("inside for final state " + ret.getStateForId(q) + ": " + w);
-//            sum += w;
-//        }
-//        System.err.println("--- total = " + sum);
-
         ret = ret.reduceTopDown();
-        
-        /*  // for debugging: print weighted language
-        Iterator<WeightedTree> it = ret.sortedLanguageIterator();
-        int i = 1;
-        while(it.hasNext()) {
-            WeightedTree wt = it.next();
-            System.err.println(i + ". " + ret.getSignature().resolve(wt.getTree()));
-            System.err.println("P = " + wt.getWeight() + "\n");
-            i++;
-        }
-*/
         
         return ret;
     }
@@ -828,5 +809,26 @@ public class InterpretedTreeAutomaton implements Serializable {
 
     public static InterpretedTreeAutomaton read(InputStream r) throws IOException, CodecParseException {
         return new IrtgInputCodec().read(r);
+    }
+    
+    
+    
+    /**
+     * Creates an empty IRTG for the given algebras.
+     * The IRTG contains a tree automaton with no rules,
+     * and one interpretation for each entry of the
+     * given map, with the given name and the given algebra.
+     * 
+     * @param algebras
+     * @return 
+     */
+    public static InterpretedTreeAutomaton forAlgebras(Map<String, Algebra> algebras) {
+        InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());
+
+        for (String i : algebras.keySet()) {
+            irtg.addInterpretation(i, new Interpretation(algebras.get(i), new Homomorphism(irtg.getAutomaton().getSignature(), algebras.get(i).getSignature())));
+        }
+
+        return irtg;
     }
 }

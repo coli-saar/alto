@@ -14,12 +14,5 @@ That way multiple projects can share the same settings (useful for formatting ru
 Any value defined here will override the pom.xml file value but is only applicable to the current project.
 -->
         <netbeans.compile.on.save>none</netbeans.compile.on.save>
-        <org-netbeans-modules-javascript2-requirejs.enabled>true</org-netbeans-modules-javascript2-requirejs.enabled>
     </properties>
-    <config-data xmlns="http://www.netbeans.org/ns/maven-config-data/1">
-        <configurations>
-            <configuration id="testCorpusParsing" profiles=""/>
-            <configuration id="parseTester" profiles=""/>
-        </configurations>
-    </config-data>
 </project-shared-configuration>

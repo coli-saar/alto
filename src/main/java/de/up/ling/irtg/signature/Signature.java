@@ -20,16 +20,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * A ranked signature of symbols. This class maps between the symbols
+ * and their numeric symbol IDs, as an {@link Interner} would. In addition,
+ * it stores, for each symbol f, its arity, i.e. the number of children
+ * that a node with label f must have in a well-formed tree. Every symbol
+ * must have a unique arity.
+ * 
  * @author koller
  */
 public class Signature implements Serializable {
-    private Interner<String> interner;
-    private Int2IntMap arities;
+    private final Interner<String> interner;
+    private final Int2IntMap arities;
 
     public Signature() {
-        interner = new Interner<String>();
+        interner = new Interner<>();
         arities = new Int2IntOpenHashMap();
+        arities.defaultReturnValue(-1);      // arity for unknown symbols
     }
     
     public SignatureMapper getMapperTo(Signature other) {
@@ -81,6 +87,12 @@ public class Signature implements Serializable {
     
     public int addSymbol(String symbol, int arity) {
         int ret = interner.addObject(symbol);
+        
+        int previousArity = arities.get(ret);        
+        if( previousArity >= 0 && previousArity != arity ) {
+            throw new UnsupportedOperationException("Cannot add symbol " + symbol + " with arity " + arity + ", because it was already defined with arity " + previousArity + ".");
+        }
+        
         arities.put(ret, arity);
         return ret;
     }

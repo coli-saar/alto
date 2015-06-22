@@ -15,6 +15,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
@@ -122,6 +123,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         }
     }
 
+    private int progressListenerCount = 0;
+
     /**
      * Iterate over all states in the right (condensed) automaton to find
      * partner states in the left one.
@@ -135,7 +138,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             if (DEBUG) {
                 System.err.println("StateRight: " + q);
             }
+
             visited.add(q);
+
+            final IntList foundPartners = new IntArrayList();
+
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
                 if (DEBUG) {
                     System.err.println("Right rule: " + rightRule.toString(right));
@@ -155,6 +162,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                     }
                 }
 
+                foundPartners.clear();
+
                 // find all rules bottom-up in the left automaton that have the same (remapped) children as the right rule.
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                     // create a new rule
@@ -163,19 +172,36 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                         System.err.println("Left rule: " + leftRule.toString(left));
                         System.err.println("Combined rule: " + rule.toString(this));
                     }
+
                     // transfer rule to staging area for output rules
                     collectOutputRule(rule);
 
+                    // schedule the two parent states for addition
+                    // -- they cannot be added to the partners sets here
+                    // because we are inside an iteration over these sets
+                    foundPartners.add(rightRule.getParent());
+                    foundPartners.add(leftRule.getParent());
+                });
+
+                // now go through to-do list and add all state pairs to partner sets
+                for (int i = 0; i < foundPartners.size(); i += 2) {
+                    int rightState = foundPartners.get(i);
+                    int leftState = foundPartners.get(i + 1);
+
                     // remember the newly found partneres if needed
-                    IntSet knownPartners = partners.get(rightRule.getParent());
+                    IntSet knownPartners = partners.get(rightState);
 
                     if (knownPartners == null) {
                         knownPartners = new IntOpenHashSet();
-                        partners.put(rightRule.getParent(), knownPartners);
+                        partners.put(rightState, knownPartners);
                     }
 
-                    knownPartners.add(leftRule.getParent());
-                });
+                    knownPartners.add(leftState);
+                }
+
+                if (GuiUtils.getGlobalListener() != null) {
+                    GuiUtils.getGlobalListener().accept((progressListenerCount++) % 2000, 2000, "");
+                }
 
             }
         }

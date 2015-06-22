@@ -24,6 +24,7 @@ public class WideStringAlgebra extends StringAlgebra {
     private static final String WIDE_BINARY_CONCATENATION = "conc2";
     
     public WideStringAlgebra() {
+        getSignature().clear(); // remove * from StringAlgebra
         getSignature().addSymbol(WIDE_BINARY_CONCATENATION, 2);
     }
 
@@ -49,7 +50,7 @@ public class WideStringAlgebra extends StringAlgebra {
 
             concatArities = new Int2IntOpenHashMap();
             for (int symId = 0; symId < signature.getMaxSymbolId(); symId++) {
-                if (symId != concatSymbolId && signature.getArity(symId) > 0) {
+                if (signature.getArity(symId) > 0) {
                     concatArities.put(symId, signature.getArity(symId));
                 }
             }

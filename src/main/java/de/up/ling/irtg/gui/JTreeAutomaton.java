@@ -13,12 +13,9 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusWriter;
-import static de.up.ling.irtg.gui.Alto.log;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
-import static de.up.ling.irtg.util.GuiUtils.showError;
 import de.up.ling.irtg.util.Util;
-import static de.up.ling.irtg.util.Util.formatTimeSince;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.awt.Color;
@@ -505,34 +502,58 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             final Map<String, String> options = jif.getOptions();
 
             if (inputs != null) {
-                new Thread() {
-                    @Override
-                    public void run() {
-                        TreeAutomaton chart = null;
-
-                        try {
+                GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
+                        listener -> {
+                            GuiUtils.setGlobalListener(listener);
+                            
                             for (String intp : options.keySet()) {
                                 irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
                             }
 
-                            long start = System.nanoTime();
-                            chart = irtg.parse(inputs);
-                            log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
-//                        } catch (ParserException ex) {
-//                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
-                        } catch (Exception ex) {
-                            showError(new Exception("An error occurred while parsing the input objects " + inputs, ex));
-                        }
+                            TreeAutomaton chart = irtg.parse(inputs);
+                            
+                            GuiUtils.setGlobalListener(null);
+                            return chart;
+                        },
+                        (chart, time) -> {
+                            Alto.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
+                            if (chart != null) {
+                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+                                jta.setIrtg(irtg);
+                                jta.setTitle("Parse chart: " + inputs);
+                                jta.pack();
+                                jta.setVisible(true);
+                            }
+                        });
 
-                        if (chart != null) {
-                            JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                            jta.setIrtg(irtg);
-                            jta.setTitle("Parse chart: " + inputs);
-                            jta.pack();
-                            jta.setVisible(true);
-                        }
-                    }
-                }.start();
+//                new Thread() {
+//                    @Override
+//                    public void run() {
+//                        TreeAutomaton chart = null;
+//
+//                        try {
+//                            for (String intp : options.keySet()) {
+//                                irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
+//                            }
+//
+//                            long start = System.nanoTime();
+//                            chart = irtg.parse(inputs);
+//                            log("Computed parse chart for " + inputs + ", " + formatTimeSince(start));
+////                        } catch (ParserException ex) {
+////                            showError(JTreeAutomaton.this, "An error occurred while parsing the input objects " + inputs + ": " + ex.getMessage());
+//                        } catch (Exception ex) {
+//                            showError(new Exception("An error occurred while parsing the input objects " + inputs, ex));
+//                        }
+//
+//                        if (chart != null) {
+//                            JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+//                            jta.setIrtg(irtg);
+//                            jta.setTitle("Parse chart: " + inputs);
+//                            jta.pack();
+//                            jta.setVisible(true);
+//                        }
+//                    }
+//                }.start();
             }
         }
     }//GEN-LAST:event_miParseActionPerformed
@@ -641,7 +662,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             rsc.setVisible(true);
 
             if (rsc.getSelectedAlgebras() != null) {
-                GuiUtils.withProgressBar(JTreeAutomaton.this, "Binarizing IRTG", "Binarizing IRTG",
+                GuiUtils.withProgressBar(JTreeAutomaton.this, "Binarization", "Binarizing IRTG ...",
                         listener -> {
                             BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
                             InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
@@ -681,25 +702,25 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miBulkParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miBulkParseActionPerformed
         Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
             try {
-            File outputCorpusFile = Alto.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
-            
-            if (outputCorpusFile != null) {
-                final FileWriter w = new FileWriter(outputCorpusFile);
-                String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
-                final CorpusWriter cw = new CorpusWriter(irtg, true, s, w);
+                File outputCorpusFile = Alto.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
 
-                GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Bulk parsing of input corpus ...",
-                        listener -> {
-                            irtg.bulkParse(inputCorpus, cw, listener);
-                            w.flush();
-                            w.close();
-                            return null;
-                        },
-                        (result, time) -> {
-                            Alto.log("Finished bulk parsing, " + Util.formatTime(time));
-                        });
-            }
-            } catch(IOException e) {
+                if (outputCorpusFile != null) {
+                    final FileWriter w = new FileWriter(outputCorpusFile);
+                    String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
+                    final CorpusWriter cw = new CorpusWriter(irtg, true, s, w);
+
+                    GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Bulk parsing of input corpus ...",
+                            listener -> {
+                                irtg.bulkParse(inputCorpus, cw, listener);
+                                w.flush();
+                                w.close();
+                                return null;
+                            },
+                            (result, time) -> {
+                                Alto.log("Finished bulk parsing, " + Util.formatTime(time));
+                            });
+                }
+            } catch (IOException e) {
                 GuiUtils.showError(e);
             }
         });

@@ -13,6 +13,7 @@ import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.up.ling.tree.*
 import de.up.ling.irtg.*
+import de.up.ling.irtg.InterpretedTreeAutomaton
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.codec.bolinas_hrg.BolinasHrgInputCodec
@@ -280,32 +281,52 @@ Y -> (.want :arg0 .*2 :arg1 .*1);
         assertEquals(p,7);
     }
     
-    @Test
-    public void testBinarizeTree() {
-//        Logging.get().setLevel(Level.ALL);
-//        Logging.setConsoleHandler();
-
-        InterpretedTreeAutomaton irtg = pi(SYNC_IRTG);
-        
-        Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
-        Algebra rightAlgebra = irtg.getInterpretation("right").getAlgebra()
+    private InterpretedTreeAutomaton binarizeStringTree(InterpretedTreeAutomaton irtg, String stringIntp, String treeIntp) {
+        Algebra leftAlgebra = irtg.getInterpretation(stringIntp).getAlgebra()
+        Algebra rightAlgebra = irtg.getInterpretation(treeIntp).getAlgebra()
         
         Algebra leftOutAlgebra = new StringAlgebra()
         Algebra rightOutAlgebra = new BinarizingTreeAlgebra()
         
-        Map newAlgebras = ["left": leftOutAlgebra, "right": rightOutAlgebra]
-        Map seeds = ["left": new StringAlgebraSeed(leftAlgebra, leftOutAlgebra), "right": new BinarizingAlgebraSeed(rightAlgebra,rightOutAlgebra)];
+        Map newAlgebras = [(stringIntp): leftOutAlgebra, (treeIntp): rightOutAlgebra]
+        Map seeds = [(stringIntp): new StringAlgebraSeed(leftAlgebra, leftOutAlgebra), (treeIntp): new BinarizingAlgebraSeed(rightAlgebra,rightOutAlgebra)];
         
         BkvBinarizer bin = new BkvBinarizer(seeds)
-        
+
         InterpretedTreeAutomaton binarized = bin.binarize(irtg, newAlgebras);
         assertBinaryGrammar(binarized)
         
+        return binarized
+    }
+    
+    @Test
+    public void testBinarizeTree() {
+        InterpretedTreeAutomaton irtg = pi(SYNC_IRTG);
+        InterpretedTreeAutomaton binarized = binarizeStringTree(irtg, "left", "right")
+
         List leftObj = ["a", "b", "c"] 
         Object rightObj = pt("f(d, a, g(c), b)")
         
         assertDecoding(binarized, ["left": leftObj, "right": rightObj], "left", 2.0)        
         assertDecoding(binarized, ["left": leftObj, "right": rightObj], "right", 2.0)
+    }
+    
+    @Test
+    public void testWeirdBug() {
+        InterpretedTreeAutomaton irtg = pi("""\n\
+interpretation string: de.up.ling.irtg.algebra.WideStringAlgebra
+interpretation tree: de.up.ling.irtg.algebra.TreeWithAritiesAlgebra\n\
+
+'.'! -> r3944 [0.009389671361502348]
+  [string] conc1('?')
+  [tree] '._1'('?')""");
+        InterpretedTreeAutomaton binarized = binarizeStringTree(irtg, "string", "tree")
+        
+        Tree st = binarized.getInterpretation("string").getHomomorphism().get("r3944_br0")
+        assertEquals(Tree.create("?"), st)
+        
+        Tree tt = binarized.getInterpretation("tree").getHomomorphism().get("r3944_br0")
+        assertEquals(pt("'._1'('?')"), tt)
     }
     
     // test grammar from ACL-13 paper

@@ -16,14 +16,14 @@ class ProgressBarDialog extends javax.swing.JDialog {
     /**
      * Creates new form ProgressBarDialog
      */
-    public ProgressBarDialog(String title, java.awt.Frame parent, boolean modal) {
+    public ProgressBarDialog(String title, String labelText, java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
         
         this.maximumValue = maximumValue;
         
         setTitle(title);
-        label.setText(title + " ...");
+        label.setText(labelText);
         
         progressBar.setMaximum(1);
         progressBar.setValue(0);

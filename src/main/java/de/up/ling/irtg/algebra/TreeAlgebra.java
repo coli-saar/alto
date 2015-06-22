@@ -6,13 +6,10 @@ package de.up.ling.irtg.algebra;
 
 import de.up.ling.irtg.automata.SingletonAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import de.up.ling.tree.TreeParser;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.JComponent;
 
 /**
@@ -43,10 +40,6 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         return new SingletonAutomaton(value);
     }
 
-//    @Override
-//    public Signature getSignature() {
-//        return signature;
-//    }
     @Override
     public JComponent visualize(Tree<String> object) {
         return new TreePanel(object);

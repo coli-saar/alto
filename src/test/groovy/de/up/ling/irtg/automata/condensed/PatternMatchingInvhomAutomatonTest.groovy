@@ -64,7 +64,7 @@ class PatternMatchingInvhomAutomatonTest {
         
         assert invhom.accepts(pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))"));
         assert invhom.accepts(pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
-        assert ! invhom.accepts(pt("r1(r2,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
+        assert ! invhom.accepts(pt("r1(r9,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"));
         
 //        System.err.println(invhom.toString())
     }

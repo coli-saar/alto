@@ -7,18 +7,17 @@
 package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.Lists;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.Util;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.swing.JComponent;
 
 /**
- *
+ * An experimental algebra for tuples of objects. Expect bugs when using this.
+ * 
  * @author koller
  */
-public class TupleAlgebra<E> extends Algebra<List<E>>{
+class TupleAlgebra<E> extends Algebra<List<E>>{
     private final Algebra<E> underlyingAlgebra;
     public static final String PROJ = "proj_";
     public static final String TUP = "**";

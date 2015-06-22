@@ -9,10 +9,11 @@ package de.up.ling.irtg.algebra;
 import de.up.ling.tree.Tree;
 
 /**
- *
+ * An experimental algebra for MBOTs. Expect bugs when using this.
+ * 
  * @author koller
  */
-public class RightMbotAlgebra extends TupleAlgebra<Tree<String>> {
+class RightMbotAlgebra extends TupleAlgebra<Tree<String>> {
     public RightMbotAlgebra() {
         super(new TreeAlgebra());
     }
