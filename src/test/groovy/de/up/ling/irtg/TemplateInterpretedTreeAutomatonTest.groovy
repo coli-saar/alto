@@ -12,6 +12,7 @@ import java.util.*
 import java.io.*
 import com.google.common.collect.Iterators
 import de.up.ling.irtg.automata.*
+import de.up.ling.irtg.codec.InputCodec
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
@@ -21,7 +22,7 @@ import de.up.ling.irtg.maxent.MaximumEntropyIrtg
 import de.up.ling.irtg.util.FirstOrderModel
 import de.up.ling.irtg.corpus.*
 import static de.up.ling.irtg.util.TestingTools.*;
-import de.up.ling.irtg.codec.*
+import de.up.ling.irtg.codec.template_irtg.*
 
 /**
  *

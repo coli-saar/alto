@@ -4,8 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec
-
+package de.up.ling.irtg.codec.treeautomaton
 
 import org.junit.*
 import java.util.*
@@ -19,31 +18,25 @@ import de.up.ling.irtg.algebra.*;
 import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
 
-
 /**
  *
  * @author koller
  */
-class TiburonTreeAutomatonInputCodecTest {
-    InputCodec codec = new TiburonTreeAutomatonInputCodec();
+class TreeAutomatonInputCodecTest {
+    TreeAutomatonInputCodec codec = new TreeAutomatonInputCodec();
     
     @Test
-    public void testWrtg2() {
-        TreeAutomaton auto = codec.read(wrtg2);
-        assert auto.accepts(pt("S(John, likes, candy)"))
-        assert auto.accepts(pt("S(Stacy, hates, candy)"))
+    public void testFta() {
+        String str = '''S! -> f(A,B)\n\
+        B -> b\n\
+        A -> c\n\
+        A -> g(D)\n\
+        D -> d
+\n\
+        ''';
+        
+        TreeAutomaton fta = codec.read(str);
+        assertEquals(new HashSet([pt("f(c,b)"), pt("f(g(d),b)")]), fta.language())
     }
-    
-    private final static String wrtg2 = '''\n\
-%% Filename wrtg2 %%\n\
-q\n\
-q -> S(subj vb obj) # 0.8\n\
-q -> S(subj hates obj) # 0.2\n\
-subj -> John # 0.7\n\
-subj -> Stacy # 0.4\n\
-obj -> candy\n\
-vb -> likes # 0.4\n\
-vb -> hates # 0.6
-    ''';
 }
 

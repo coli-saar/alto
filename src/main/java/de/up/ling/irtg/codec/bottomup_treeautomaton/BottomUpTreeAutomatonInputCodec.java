@@ -4,9 +4,10 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec;
+package de.up.ling.irtg.codec.bottomup_treeautomaton;
 
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.codec.*;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import java.io.IOException;

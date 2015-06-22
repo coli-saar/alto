@@ -3,8 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.codec;
+package de.up.ling.irtg.codec.ptb_tree;
 
+import de.up.ling.irtg.codec.CodecMetadata;
+import de.up.ling.irtg.codec.CodecParseException;
+import de.up.ling.irtg.codec.ExceptionErrorStrategy;
+import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import java.io.IOException;

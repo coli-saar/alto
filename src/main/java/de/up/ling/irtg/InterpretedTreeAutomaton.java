@@ -14,7 +14,7 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.InputCodec;
-import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.codec.irtg.IrtgInputCodec;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;

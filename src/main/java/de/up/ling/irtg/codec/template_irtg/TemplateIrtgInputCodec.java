@@ -3,10 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.codec;
+package de.up.ling.irtg.codec.template_irtg;
 
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton.Guard;
+import de.up.ling.irtg.codec.CodecMetadata;
+import de.up.ling.irtg.codec.CodecParseException;
+import de.up.ling.irtg.codec.CodecUtilities;
+import de.up.ling.irtg.codec.ExceptionErrorStrategy;
+import de.up.ling.irtg.codec.InputCodec;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -15,7 +20,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.atn.PredictionMode;
 
-import static de.up.ling.irtg.codec.TemplateIrtgParser.*;
+import static de.up.ling.irtg.codec.template_irtg.TemplateIrtgParser.*;
 import de.up.ling.irtg.util.FirstOrderModel;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;

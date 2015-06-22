@@ -8,7 +8,7 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.PtbTreeInputCodec;
+import de.up.ling.irtg.codec.ptb_tree.PtbTreeInputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;

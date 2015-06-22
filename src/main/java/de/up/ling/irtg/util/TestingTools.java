@@ -16,7 +16,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomatonParser;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser;
-import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.codec.irtg.IrtgInputCodec;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;

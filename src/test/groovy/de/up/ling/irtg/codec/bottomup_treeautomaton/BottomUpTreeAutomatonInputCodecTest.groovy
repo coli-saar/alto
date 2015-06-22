@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec
+package de.up.ling.irtg.codec.bottomup_treeautomaton
 
 
 import org.junit.*
@@ -24,7 +24,7 @@ import static de.up.ling.irtg.util.TestingTools.*;
  * @author koller
  */
 class BottomUpTreeAutomatonInputCodecTest {
-    InputCodec codec = new BottomUpTreeAutomatonInputCodec();
+    BottomUpTreeAutomatonInputCodec codec = new BottomUpTreeAutomatonInputCodec();
     
     @Test
     public void testNoWeights() {

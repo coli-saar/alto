@@ -3,13 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.codec;
+package de.up.ling.irtg.codec.irtg;
 
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.codec.CodecMetadata;
+import de.up.ling.irtg.codec.CodecParseException;
+import de.up.ling.irtg.codec.CodecUtilities;
+import de.up.ling.irtg.codec.ExceptionErrorStrategy;
+import de.up.ling.irtg.codec.InputCodec;
 import static de.up.ling.irtg.codec.CodecUtilities.findFeatureConstructor;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
