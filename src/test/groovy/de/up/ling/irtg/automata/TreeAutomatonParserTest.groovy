@@ -9,6 +9,7 @@ import org.junit.*
 import java.util.*
 import java.io.*
 import static org.junit.Assert.*
+import static de.up.ling.irtg.util.TestingTools.*
 
 /**
  *
@@ -90,7 +91,7 @@ class TreeAutomatonParserTest {
     }
 
     private static TreeAutomaton parse(String s) {
-        return TreeAutomatonParser.parse(new StringReader(s));
+        return pa(s);
     }
 
     private static Rule r(parent, label, children) {

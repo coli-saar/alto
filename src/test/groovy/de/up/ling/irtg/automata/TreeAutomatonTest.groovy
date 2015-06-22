@@ -759,7 +759,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     }
 
     private static TreeAutomaton parse(String s) {
-        return TreeAutomatonParser.parse(new StringReader(s));
+        return pa(s);
     }
 
 //    private static Rule r(parent, label, children) {

@@ -1,6 +1,7 @@
 import java.io._
 import de.up.ling.irtg.automata._
 import de.up.ling.irtg._
+import de.up.ling.irtg.codec.treeautomaton._
 import de.up.ling.irtg.signature._
 import collection.JavaConverters._
 
@@ -9,7 +10,7 @@ object ScalaShell {
   def fistream(filename: String) = new FileInputStream(new File(filename))
   def fostream(filename: String) = new FileOutputStream(new File(filename))
 
-  def loadAutomaton(filename: String) = TreeAutomatonParser.parse(file(filename))
+  def loadAutomaton(filename: String) = (new TreeAutomatonInputCodec()).read(new FileInputStream(filename))
 
   def loadIrtg(filename: String) = InterpretedTreeAutomaton.read(fistream(filename))
   def saveIrtg(irtg: InterpretedTreeAutomaton, filename:String) = {

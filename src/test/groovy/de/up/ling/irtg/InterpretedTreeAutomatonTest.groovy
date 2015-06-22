@@ -257,7 +257,7 @@ S -> r2
     }
 
     private static TreeAutomaton parse(String s) {
-        return TreeAutomatonParser.parse(new StringReader(s));
+        return pa(s);
     }
 
     private static InterpretedTreeAutomaton iparse(String s) {

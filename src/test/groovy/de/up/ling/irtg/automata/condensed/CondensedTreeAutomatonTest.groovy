@@ -12,10 +12,10 @@ import static org.junit.Assert.*
 import de.saar.basic.Pair
 import de.up.ling.irtg.automata.Rule
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser
-import de.up.ling.irtg.automata.TreeAutomatonParser
 import de.up.ling.irtg.automata.TreeAutomaton
 import de.up.ling.irtg.signature.Signature
 import de.up.ling.irtg.util.Logging
+import static de.up.ling.irtg.util.TestingTools.*
 
 /**
  *
@@ -39,7 +39,7 @@ class CondensedTreeAutomatonTest {
     @Test
     public void testTAtoCTA() {
 //        System.out.println("\nCTA from TA:")
-        TreeAutomaton automaton = TreeAutomatonParser.parse(new StringReader("q! -> f(q2) q! -> g(q2) q2! -> a"));
+        TreeAutomaton automaton = pa("q! -> f(q2) q! -> g(q2) q2! -> a");
         CondensedTreeAutomaton condensed = ConcreteCondensedTreeAutomaton.fromTreeAutomaton(automaton)
         assertEquals(automaton, condensed)
 //        System.out.println("toString BottomUp:\n" + automaton.toStringBottomUp());
@@ -74,7 +74,7 @@ class CondensedTreeAutomatonTest {
     }
     
     private CondensedTreeAutomaton parseTA(String s) {
-        return ConcreteCondensedTreeAutomaton.fromTreeAutomaton(TreeAutomatonParser.parse(new StringReader(s)));
+        return ConcreteCondensedTreeAutomaton.fromTreeAutomaton(pa(s));
     }
     
     static Pair p(Object a, Object b) {

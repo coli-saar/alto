@@ -905,7 +905,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      *
      * @param args
      */
-    public static void main(String[] args) throws FileNotFoundException, ParseException, IOException, de.up.ling.irtg.codec.CodecParseException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, de.up.ling.irtg.codec.CodecParseException {
         if (args.length != 5) {
             System.err.println("1. IRTG\n"
                     + "2. Sentences\n"

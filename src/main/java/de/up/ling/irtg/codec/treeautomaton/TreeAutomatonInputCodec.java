@@ -12,8 +12,6 @@ import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.CodecUtilities;
 import de.up.ling.irtg.codec.ExceptionErrorStrategy;
 import de.up.ling.irtg.codec.InputCodec;
-import de.up.ling.irtg.codec.treeautomaton.TreeAutomatonLexer;
-import de.up.ling.irtg.codec.treeautomaton.TreeAutomatonParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;

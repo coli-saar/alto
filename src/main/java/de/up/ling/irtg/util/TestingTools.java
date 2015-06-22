@@ -10,14 +10,14 @@ import de.saar.chorus.term.Term;
 import de.saar.chorus.term.parser.TermParser;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.automata.ParseException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomatonParser;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomatonParser;
+import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.irtg.IrtgInputCodec;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;
+import de.up.ling.irtg.codec.treeautomaton.TreeAutomatonInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.maxent.FeatureFunction;
@@ -58,8 +58,8 @@ public class TestingTools {
         return HomomorphismSymbol.treeFromNames(pt(s), sig);
     }
 
-    public static TreeAutomaton pa(String s) throws ParseException {
-        return TreeAutomatonParser.parse(new StringReader(s));
+    public static TreeAutomaton pa(String s) throws CodecParseException, IOException {
+        return (new TreeAutomatonInputCodec()).read(new ByteArrayInputStream(s.getBytes()));
     }
     
     public static InterpretedTreeAutomaton pi(String s) throws IOException, de.up.ling.irtg.codec.CodecParseException {
@@ -125,7 +125,7 @@ public class TestingTools {
     
     // *** Methodes for Condensed Tree Automatons
     
-    public static CondensedTreeAutomaton pac(String s) throws ParseException, de.up.ling.irtg.automata.condensed.ParseException {
+    public static CondensedTreeAutomaton pac(String s) throws de.up.ling.irtg.automata.condensed.ParseException {
         return CondensedTreeAutomatonParser.parse(new StringReader(s));
     }
     
