@@ -1,7 +1,7 @@
 import java.io._
 import de.up.ling.irtg.automata._
 import de.up.ling.irtg._
-import de.up.ling.irtg.codec.treeautomaton._
+import de.up.ling.irtg.codec._
 import de.up.ling.irtg.signature._
 import collection.JavaConverters._
 

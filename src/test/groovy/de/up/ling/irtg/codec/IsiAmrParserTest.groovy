@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec.isiamr
+package de.up.ling.irtg.codec
 
 
 import org.junit.*
@@ -17,6 +17,7 @@ import de.up.ling.irtg.algebra.*;
 import de.up.ling.irtg.hom.*;
 import static de.up.ling.irtg.util.TestingTools.*;
 import de.up.ling.irtg.*
+import de.up.ling.irtg.codec.isiamr.IsiAmrParser;
 
 import org.junit.*
 import java.util.*

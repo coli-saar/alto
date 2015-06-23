@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.codec.template_irtg;
+package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton.Guard;
@@ -12,6 +12,8 @@ import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.CodecUtilities;
 import de.up.ling.irtg.codec.ExceptionErrorStrategy;
 import de.up.ling.irtg.codec.InputCodec;
+import de.up.ling.irtg.codec.template_irtg.TemplateIrtgLexer;
+import de.up.ling.irtg.codec.template_irtg.TemplateIrtgParser;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;

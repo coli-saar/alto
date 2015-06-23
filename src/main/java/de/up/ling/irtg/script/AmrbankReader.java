@@ -5,7 +5,7 @@
 package de.up.ling.irtg.script;
 
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.codec.isiamr.IsiAmrInputCodec;
+import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;

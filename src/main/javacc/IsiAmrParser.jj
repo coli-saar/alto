@@ -21,7 +21,7 @@ import de.up.ling.irtg.algebra.graph.*;
 /**
  * Utility class to parse AMR style graphs.
  */
-class IsiAmrParser {
+public class IsiAmrParser {
     private SGraph graph = null;
 
 	

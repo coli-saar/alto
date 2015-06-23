@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec.ptb_tree
+package de.up.ling.irtg.codec
 
 
 import org.junit.*
@@ -58,7 +58,7 @@ S(NP-SBJ(NP(NNP(Pierre), NNP(Vinken)), ','(','), ADJP(NP(CD('61'), NNS(years)), 
     
     @Test
     public void testReadTwoTrees() {
-        PtbTreeInputCodec c = new PtbTreeInputCodec();
+        InputCodec c = new PtbTreeInputCodec();
         InputStream is = new ByteArrayInputStream(TWO_TREES.getBytes());
         List trees = c.readCorpus(is);
         

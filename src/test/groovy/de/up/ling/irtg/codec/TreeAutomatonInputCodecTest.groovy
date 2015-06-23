@@ -4,36 +4,39 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec.isiamr
-
+package de.up.ling.irtg.codec
 
 import org.junit.*
 import java.util.*
 import java.io.*
 import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.automata.TreeAutomaton
-import de.up.ling.irtg.codec.SgraphAmrOutputCodec
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
 import de.up.ling.irtg.algebra.*;
 import de.up.ling.irtg.hom.*;
-import de.up.ling.irtg.algebra.graph.*;
 import static de.up.ling.irtg.util.TestingTools.*;
-
 
 /**
  *
  * @author koller
  */
-class AmrCodecsTest {
+class TreeAutomatonInputCodecTest {
+    InputCodec codec = new TreeAutomatonInputCodec();
+    
     @Test
-    public void encodeThenParse() {
-        SGraph x = new IsiAmrInputCodec().read("   (w_5 / want  :ARG0 (subj_6 / boy)  :ARG1 (vcomp_7 / believe  :ARG0 (obj_8 / girl)  :ARG1 (xcomp_6_3 / like  :ARG0 (subj_5_2_4 / boy)  :ARG1 (obj_6_3_5 / girl))))");
-        String s = new SgraphAmrOutputCodec().asString(x);
-        SGraph y = new IsiAmrInputCodec().read(s);
+    public void testFta() {
+        String str = '''S! -> f(A,B)\n\
+        B -> b\n\
+        A -> c\n\
+        A -> g(D)\n\
+        D -> d
+\n\
+        ''';
         
-        assertEquals(y, x)
+        TreeAutomaton fta = codec.read(str);
+        assertEquals(new HashSet([pt("f(c,b)"), pt("f(g(d),b)")]), fta.language())
     }
 }
 
