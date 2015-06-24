@@ -51,14 +51,14 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
     protected ConcreteTreeAutomaton<String> matcher;
     private Set<Rule> matcherConstantRules;
     private IntSet matcherConstants;
-    private List<Pair<IntSet, Integer>> constants2LabelSetID; //the constant is stored by its ID in the signature of restrictiveMatcher
     private Int2ObjectMap<IntList> constants2LabelSetIDSimplified;
     private Int2ObjectMap<List<Pair<Rule, Integer>>> labelSetID2StartStateRules;
     private Int2ObjectMap<Pair<Rule, Integer>> matcherChild2Rule;//use arraymap because we only add to this, and it is dense. The Integer stores the position of the child in the rule
     private List<Pair<Rule, Integer>> posOfStartStateRepInRules;
     private List<Pair<Rule, Integer>> posOfStartStateRepInRulesFromConstantFreeTerms;
     //private Int2ObjectMap<IntSet> matcherState2RhsState;
-    private Int2ObjectMap<BinaryPartnerFinder> matcherState2RhsState;
+    private Int2ObjectMap<BinaryPartnerFinder> matcherState2RhsPartnerFinder;
+    private Int2ObjectMap<IntSet> matcherState2RhsStates;
     private Int2ObjectMap<Rule> labelSetID2TopDownStartRules;
     private Int2ObjectMap<Rule> matcherParent2Rule;
     //private List<String> startStates;
@@ -87,7 +87,6 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         genericStartStateIDs = new IntArrayList();
         isStartState = new BitSet();
         labelSetID2StartStateRules = new Int2ObjectOpenHashMap<>();
-        constants2LabelSetID = new ArrayList<>();
         constants2LabelSetIDSimplified = new ArrayMap<>();
         matcher = new ConcreteTreeAutomaton<>(hom.getTargetSignature());
         matcherParent2Rule = new ArrayMap<>();
@@ -188,35 +187,40 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
          }*/
     }
 
-    private Pair<String, State> makeDuoStateAndPutOnAgenda(int matcherStateID, int rhsStateID, TreeAutomaton<State> rhs, Int2ObjectMap<BinaryPartnerFinder> matcherStateToRhsState, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen) {
-        /*if (isStartState.get(matcherStateID)) {
-         IntSet matchingStateIDs = rhsState2MatchingStartStates.get(rhsStateID);
-         if (matchingStateIDs == null) {
-         matchingStateIDs = new IntOpenHashSet();
-         rhsState2MatchingStartStates.put(rhsStateID, matchingStateIDs);
-         }
-         matchingStateIDs.add(matcherStateID);
-         }*/
-
-        if (matcherStateToRhsState != null) {
-            int matcherStoreID;
-            if (isStartState.get(matcherStateID)) {
-                matcherStoreID = startStateRepresentativeID;
-
-                //rhs.addStateForPatternMatching(rhsStateID);
-            } else {
-                matcherStoreID = matcherStateID;
-            }
-
-            BinaryPartnerFinder rhsStateIDs = matcherStateToRhsState.get(matcherStoreID);
+    private Pair<String, State> makeDuoStateAndPutOnAgenda(int matcherStateID, int rhsStateID, TreeAutomaton<State> rhs, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen) {
+        boolean isStartStateHere = false;
+        int matcherStoreID;
+        
+        //store the rhs state to have it available as partner for rules with arity > 1 later.
+        if (isStartState.get(matcherStateID)) {
+            matcherStoreID = startStateRepresentativeID;
+            isStartStateHere = true;
+            //rhs.addStateForPatternMatching(rhsStateID);
+        } else {
+            matcherStoreID = matcherStateID;
+        }
+        int arity = -1;
+        if (!isStartStateHere) {
+            arity = matcherChild2Rule.get(matcherStoreID).left.getArity();
+        }
+        if (arity == 2 || isStartStateHere) {
+            BinaryPartnerFinder rhsStateIDs = matcherState2RhsPartnerFinder.get(matcherStoreID);
             if (rhsStateIDs == null) {
                 rhsStateIDs = rhs.makeNewBinaryPartnerFinder();
-                matcherStateToRhsState.put(matcherStoreID, rhsStateIDs);
+                matcherState2RhsPartnerFinder.put(matcherStoreID, rhsStateIDs);
             }
             rhsStateIDs.addState(rhsStateID);
-
+        }
+        if (arity >2 || isStartStateHere) {
+            IntSet rhsStateIDs = matcherState2RhsStates.get(matcherStoreID);
+            if (rhsStateIDs == null) {
+                rhsStateIDs = new IntOpenHashSet();
+                matcherState2RhsStates.put(matcherStoreID, rhsStateIDs);
+            }
+            rhsStateIDs.add(rhsStateID);
         }
 
+        // put the rhs state on agenda
         if (agenda != null) {
             Pair intPair;
             if (isStartState.get(matcherStateID)) {
@@ -229,6 +233,8 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 seen.add(intPair);
             }
         }
+        
+        //return the new intersection state
         return new Pair(matcher.getStateForId(matcherStateID), rhs.getStateForId(rhsStateID));
     }
 
@@ -417,121 +423,13 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         }
     }
 
-    private ConcreteTreeAutomaton<Pair<String, State>> intersectWithMatcherTopDown_OLD(TreeAutomaton<State> rhs) {//old version, for runtime comparison
-        ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton = new ConcreteTreeAutomaton<>(rhs.getSignature());
-        SignatureMapper mapper = rhs.getSignature().getMapperTo(matcher.getSignature());
-        IntInt2IntMap rToLToIntersectID = new IntInt2IntMap();//we expect rhs states to be relatively dense here.
-        rToLToIntersectID.setDefaultReturnValue(-1);
-        IntList results = new IntArrayList();
-        //System.err.println(hom.getTargetSignature().resolveSymbolId(6));
-        //System.err.println(hom.getTargetSignature().resolveSymbolId(11));
-        for (int f1 : startStateIDs) {
-            for (int f2 : rhs.getFinalStates()) {
-                results.add(intersect(f1, f2, rhs, intersectionAutomaton, rToLToIntersectID, mapper));//give correct automaton here
-            }
-        }
-        /*for (int id : rhs.getStateInterner().getKnownIds()) {
-         System.err.println("id " + id + " for state " + rhs.getStateForId(id));
-         }
-         for (int source = 0; source < ((SGraphBRDecompositionAutomatonTopDownAysmptotic)rhs).completeGraphInfo.getNrSources(); source++) {
-         System.err.println(source + " is source " + ((SGraphBRDecompositionAutomatonTopDownAysmptotic)rhs).completeGraphInfo.getSourceForInt(source));
-         }
-         for (int labelID = 0; labelID<rhs.getSignature().getMaxSymbolId(); labelID++) {
-         System.err.println(labelID + " is label " + rhs.getSignature().resolveSymbolId(labelID));
-         }*/
-        //System.err.println(results);
-        return intersectionAutomaton;
-    }
-
-    //returns 0 if the input state is definitely inaccessible, 1 if pending (i.e. still depending on other states) and 2 if accessible.
-    //could turn "seen" into a IntInt2BooleanMap or sth like that.
-    private int intersect(int matcherParentID, int rhsParentID, TreeAutomaton<State> rhs, ConcreteTreeAutomaton<Pair<String, State>> intersectionAuto, IntInt2IntMap seen, SignatureMapper mapper) {
-        int prevState = seen.get(rhsParentID, matcherParentID);
-        if (prevState != -1) {
-            return prevState;
-        } else {
-            Pair<String, State> intersState = makeDuoStateAndPutOnAgenda(matcherParentID, rhsParentID, rhs, null, null, null);//just returns a new Pair in this case.
-            if (startStateIdToLabelSetID.containsKey(matcherParentID)) {
-                seen.put(rhsParentID, matcherParentID, intersectionAuto.addState(intersState));//if we arrive at a start state of a rule later, we want to always answer "yes".
-                //if however we meet an internal state of a rule twice, we want to pursue further (note that the algorithm still terminates).
-            }
-
-            IntList outerResults = new IntArrayList();
-            Iterable<Rule> matcherRules = matcher.getRulesTopDown(matcherParentID);
-            //List<Rule> rhsRules = new ArrayList<>();//different labels give different rules, so no need to use set here
-
-            //iterate over all pairs of rules
-            for (Rule matcherRule : matcherRules) {
-                int arity = matcherRule.getArity();
-                int[] matcherChildren = matcherRule.getChildren();
-                int matcherLabel = matcherRule.getLabel();
-                for (Rule rhsRule : rhs.getRulesTopDown(mapper.remapBackward(matcherLabel), rhsParentID)) {
-                    int[] rhsChildren = rhsRule.getChildren();
-                    //System.err.println(rhsRule);
-                    /*DuoState[] duoChildren = new DuoState[arity];
-                     for (int i = 0; i<arity; i++) {
-                     duoChildren[i] = new DuoState(matcherChildren[i], rhsChildren[i]);
-                     }*/
-
-                    IntList innerResults = new IntArrayList();
-                    //Set<DuoState> pendingStates = new HashSet<>();
-
-                    //iterate over all children (pairwise)
-                    for (int i = 0; i < arity; i++) {
-                        if (matcherChildren[i] == startStateRepresentativeID) {
-                            IntList innerInnerResults = new IntArrayList();
-                            for (int matcherStartStateID : startStateIDs) {
-                                int res = intersect(matcherStartStateID, rhsChildren[i], rhs, intersectionAuto, seen, mapper);
-                                innerInnerResults.add(res);
-                            }
-                            innerResults.add(Ints.max(innerInnerResults.toIntArray()));
-                        } else {
-                            int res = intersect(matcherChildren[i], rhsChildren[i], rhs, intersectionAuto, seen, mapper);
-                            innerResults.add(res);
-                        }
-                        /*if (res == 1) {
-                         pendingStates.add(new DuoState(matcherChildren[i], rhsChildren[i]));
-                         }*/
-                    }
-
-                    int minRes;
-                    if (arity > 0) {
-                        minRes = Ints.min(innerResults.toIntArray());
-                    } else {
-                        minRes = 2;//if no children needed, then the rule always works.
-                    }
-                    outerResults.add(minRes);
-                    if (minRes > 0) {
-                        List<Pair<String, State>> children = new ArrayList<>();
-                        for (int i = 0; i < arity; i++) {
-                            children.add(new Pair(matcher.getStateForId(matcherChildren[i]), rhs.getStateForId(rhsChildren[i])));
-                        }
-                        intersectionAuto.addRule(intersectionAuto.createRule(intersState, matcher.getSignature().resolveSymbolId(matcherLabel), children));
-                    }
-                }
-            }
-            if (outerResults.isEmpty()) {
-                return 0;//then we found no common rules
-            } else {
-                int maxRes = Ints.max(outerResults.toIntArray());
-                int ret;
-                if (maxRes == 0) {
-                    ret = 0;//this will now possibly overwriting the temporary state.
-                } else {
-                    ret = intersectionAuto.getIdForState(intersState);
-                }
-                seen.put(rhsParentID, matcherParentID, ret);
-                return ret;
-            }
-        }
-    }
-
     @Override
     protected ConcreteTreeAutomaton<Pair<String, State>> intersectWithMatcherBottomUp(TreeAutomaton<State> rhs) {
         ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton = new ConcreteTreeAutomaton<>(rhs.getSignature());
         SignatureMapper mapper = rhs.getSignature().getMapperTo(matcher.getSignature());
 
-        matcherState2RhsState = new ArrayMap<>();
+        matcherState2RhsPartnerFinder = new ArrayMap<>();
+        matcherState2RhsStates = new ArrayMap<>();
         // set up agenda with constant pairs, and add correspinding rules to intersection automaton.
         List<Pair<Integer, Integer>> agenda = new ArrayList<>();
         Set<Pair<Integer, Integer>> seen = new HashSet<>();
@@ -635,7 +533,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 //System.err.println(constRuleMatcher.getLabel(restrictiveMatcher));
                 int matcherParent = constRuleMatcher.getParent();
                 int rhsParent = constRuleRhs.getParent();
-                Pair<String, State> parent = makeDuoStateAndPutOnAgenda(matcherParent, rhsParent, rhs, matcherState2RhsState, agenda, seen);
+                Pair<String, State> parent = makeDuoStateAndPutOnAgenda(matcherParent, rhsParent, rhs, agenda, seen);
                 Rule intersRule = intersectionAutomaton.createRule(parent, constRuleMatcher.getLabel(matcher), new Pair[0]);
                 intersectionAutomaton.addRule(intersRule);
             }
@@ -672,7 +570,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
              }
              }*/
             for (Rule rhsRule : rhs.getRulesBottomUp(rhsLabelID, rhsProcessedChildIDs)) {
-                Pair<String, State> intersParent = makeDuoStateAndPutOnAgenda(matcherRule.getParent(), rhsRule.getParent(), rhs, matcherState2RhsState, agenda, seen);
+                Pair<String, State> intersParent = makeDuoStateAndPutOnAgenda(matcherRule.getParent(), rhsRule.getParent(), rhs, agenda, seen);
                 Pair<String, State>[] intersChildren = new Pair[arity];
                 for (int j = 0; j < arity; j++) {
                     intersChildren[j] = new Pair(matcher.getStateForId(matcherRule.getChildren()[j]), rhs.getStateForId(rhsProcessedChildIDs[j]));
@@ -751,12 +649,24 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                  * and thus works for all arities (it does exactly what it should,
                  * just has an inappropriate name).
                  */
-                BinaryPartnerFinder rhsPartnerFinder = matcherState2RhsState.get(matcherRule.getChildren()[j]);
-                if (rhsPartnerFinder != null) {
-                    IntCollection knownRhsChildIDs = rhsPartnerFinder.getPartners(rhsLabelID, rhsChildID);
-                    jSet = knownRhsChildIDs;//can take original since this is put into an ArrayTupleIterator, which makes a copy.
+                
+                if (arity == 2) {
+                    BinaryPartnerFinder rhsPartnerFinder = matcherState2RhsPartnerFinder.get(matcherRule.getChildren()[j]);
+                    if (rhsPartnerFinder != null) {
+                        IntCollection knownRhsChildIDs = rhsPartnerFinder.getPartners(rhsLabelID, rhsChildID);
+                        jSet = knownRhsChildIDs;//can take original since this is put into an ArrayTupleIterator, which makes a copy.
+                    } else {
+                        isEmpty = true;
+                    }
                 } else {
-                    isEmpty = true;
+                    //then arity > 2, due to j != pos
+                    IntSet rhsPartners = matcherState2RhsStates.get(matcherRule.getChildren()[j]);
+                    if (rhsPartners != null) {
+                        IntCollection knownRhsChildIDs = rhsPartners;
+                        jSet = knownRhsChildIDs;//can take original since this is put into an ArrayTupleIterator, which makes a copy.
+                    } else {
+                        isEmpty = true;
+                    }
                 }
             }
 
