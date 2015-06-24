@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.codec.bolinas_hrg
+package de.up.ling.irtg.codec
 
 import org.junit.*
 import java.util.*

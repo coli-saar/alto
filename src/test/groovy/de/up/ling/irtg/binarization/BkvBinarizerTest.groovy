@@ -16,7 +16,7 @@ import de.up.ling.irtg.*
 import de.up.ling.irtg.InterpretedTreeAutomaton
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.automata.*
-import de.up.ling.irtg.codec.bolinas_hrg.BolinasHrgInputCodec
+import de.up.ling.irtg.codec.BolinasHrgInputCodec
 import de.up.ling.irtg.algebra.*
 import de.up.ling.irtg.signature.*
 import de.up.ling.irtg.util.*
