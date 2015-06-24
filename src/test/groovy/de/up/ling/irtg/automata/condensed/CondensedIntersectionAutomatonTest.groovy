@@ -225,6 +225,19 @@ Y -> r8(X,X)
         assertEquals(["s01", "s12", "s23", "s02", "s13", "s03"], states)
     }
     
+//    @Test
+    public void testUnaryStartRule() {
+        CondensedTreeAutomaton cta = pac("q -> {a}\n q! -> {f}(q)")
+        TreeAutomaton ta = pa("p1! -> f(p2)\n p2 -> a")
+        SignatureMapper smap = ta.getSignature().getMapperTo(cta.getSignature())
+        CondensedIntersectionAutomaton inter = new CondensedIntersectionAutomaton(ta, cta, smap)
+        
+        System.err.println("*****")
+        inter.DEBUG = true;
+        inter.makeAllRulesExplicit()
+        
+        assertEquals(new HashSet([pt("f(a)")]), inter.language())
+    }
     
     // Helping functions
     private static Pair p(Object a, Object b) {
