@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import com.google.common.primitives.Ints;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
@@ -19,7 +18,6 @@ import de.up.ling.irtg.util.ArrayInt2IntMap;
 import de.up.ling.irtg.util.ArrayInt2ObjectMap;
 import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.IntArrayTupleIterator;
-import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.AbstractIntList;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
