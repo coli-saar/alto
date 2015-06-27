@@ -39,3 +39,10 @@ Here's the result of parsing "the boy wants to go" with this grammar:
 
 ![Screen Shot 2015-05-27 at 16.23.49.png](https://bitbucket.org/repo/ny94Mo/images/1198790576-Screen%20Shot%202015-05-27%20at%2016.23.49.png)
 
+## Contributors ##
+
+* Danilo Baumgarten (BSc University of Potsdam, 2013)
+* Johannes Gontrum (BSc University of Potsdam, 2015)
+* Jonas Groschwitz
+* [Alexander Koller](http://www.ling.uni-potsdam.de/~koller/)
+* [Christoph Teichmann](https://sites.google.com/site/christophteichmanncl/)
