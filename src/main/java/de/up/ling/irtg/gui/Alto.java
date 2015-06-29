@@ -13,6 +13,7 @@ import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.FileInputStreamSupplier;
+import de.up.ling.irtg.corpus.OnTheFlyCharts;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.FirstOrderModel;
@@ -371,26 +372,16 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                 corpus.setSource(file.getAbsolutePath());
                 log("Read unannotated corpus from " + file.getName() + ", " + Util.formatTimeSince(start));
 
-                File chartsFile = chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);
+                // here we removed the option of loading a chart
+                File chartsFile = null;  //chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);
 
                 if (chartsFile != null) {
-                    Charts charts = new Charts(new FileInputStreamSupplier(chartsFile));
+                    Iterable<TreeAutomaton> charts = new OnTheFlyCharts(chartsFile);
                     corpus.attachCharts(charts);
                     andThen.accept(corpus);
                 } else {
-                    GuiUtils.withProgressBar(parent, "Chart computation", "Computing charts ...",
-                            listener -> {
-                                File f = new File(file.getParent(), stripExtension(file.getName()) + "-charts.zip");
-                                OutputStream fos = new FileOutputStream(f);
-                                Charts.computeCharts(corpus, irtg, fos, listener);
-                                return f;
-                            },
-                            (f, time) -> {
-                                log("Wrote parse charts to " + f + ", " + Util.formatTime(time));
-                                Charts charts = new Charts(new FileInputStreamSupplier(f));
-                                corpus.attachCharts(charts);
-                                andThen.accept(corpus);
-                            });
+                    corpus.attachCharts(new OnTheFlyCharts(irtg,corpus));
+                    andThen.accept(corpus);
                 }
             } catch (Exception e) {
                 showError(new Exception("An error occurred while reading the corpus " + file.getName(), e));

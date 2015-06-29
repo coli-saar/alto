@@ -41,7 +41,7 @@ public class Corpus implements Iterable<Instance> {
     private static final Pattern COMMENT_PATTERN = Pattern.compile("\\s*#.*");
     private static final Pattern INTERPRETATION_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*interpretation\\s+([^: ]+)\\s*:\\s*(\\S+).*", Pattern.CASE_INSENSITIVE);
     private final List<Instance> instances;
-    private Charts charts;
+    private Iterable<TreeAutomaton> charts;
     private boolean isAnnotated;
     private static final boolean DEBUG = false;
     private String source; // explains where this corpus came from
@@ -60,7 +60,7 @@ public class Corpus implements Iterable<Instance> {
         return charts != null;
     }
 
-    public void attachCharts(Charts charts) {
+    public void attachCharts(Iterable<TreeAutomaton> charts) {
         this.charts = charts;
     }
 
