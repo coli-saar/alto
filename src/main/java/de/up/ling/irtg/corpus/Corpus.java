@@ -81,15 +81,24 @@ public class Corpus implements Iterable<Instance> {
     @Override
     public Iterator<Instance> iterator() {
         if (hasCharts()) {
-            return new ZipIterator<Instance, TreeAutomaton, Instance>(instances.iterator(), charts.iterator()) {
+            return new ZipIterator<Instance, TreeAutomaton, Instance>(this.blandIterator(), charts.iterator()) {
                 @Override
                 public Instance zip(Instance left, TreeAutomaton right) {
                     return left.withChart(right);
                 }
             };
         } else {
-            return instances.iterator();
+            return this.blandIterator();
         }
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    Iterator<Instance> blandIterator()
+    {
+       return instances.iterator();
     }
 
     public void addInstance(Instance instance) {

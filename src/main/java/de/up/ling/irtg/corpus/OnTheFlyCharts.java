@@ -58,7 +58,13 @@ public class OnTheFlyCharts implements Iterable<TreeAutomaton> {
     @Override
     public Iterator<TreeAutomaton> iterator() {
         if(this.supp == null){
-            return Iterators.transform(instances.iterator(), inst -> irtg.parseInputObjects(inst.getInputObjects()));
+            if(this.instances instanceof Corpus){
+                return Iterators.transform(((Corpus) instances).blandIterator(),
+                        inst -> irtg.parseInputObjects(inst.getInputObjects()));
+            }
+            else{
+                return Iterators.transform(instances.iterator(), inst -> irtg.parseInputObjects(inst.getInputObjects()));
+            }
         }
         else
         {
@@ -69,5 +75,5 @@ public class OnTheFlyCharts implements Iterable<TreeAutomaton> {
                 return null;
             }
         }
-    }   
+    }
 }
