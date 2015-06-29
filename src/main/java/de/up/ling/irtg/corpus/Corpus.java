@@ -71,7 +71,7 @@ public class Corpus implements Iterable<Instance> {
      * @throws IOException
      */
     public void attachCharts(String filename) throws IOException {
-        attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
+        attachCharts(new OnTheFlyCharts(new File(filename)));
     }
 
     public int getNumberOfInstances() {
