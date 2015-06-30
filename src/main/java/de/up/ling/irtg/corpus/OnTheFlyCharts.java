@@ -9,13 +9,11 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import java.util.Iterator;
 
 /**
- * A drop in replacement for the class method capabilities of the Charts class.
+ * This attaches charts to the instances from an iterator on the fly.
  * 
- * Use an instance of this class to compute charts for an iterator, when they
- * are needed, instead of computing them all beforehand. Note that this class
- * implements no caching policy, so charts are re-computed every time they are
- * reached by an iterator. It is possible to either read the charts from a zip
- * file, or compute them using and IRTG and an Iterator over instances.
+ * Adds charts to instances by computing them, whenever an instance with a chart
+ * is requested. Note that we copy the original instances and that we re-compute
+ * the charts each time we apply attach() to an iterator.
  * 
  * @author koller
  * @author christoph teichmann
@@ -23,8 +21,7 @@ import java.util.Iterator;
 public class OnTheFlyCharts implements ChartAttacher {
 
     /**
-     * The IRTG that will compute the necessary charts if we do not read them
-     * from a file.
+     * The IRTG that will compute the necessary charts.
      */
     private final InterpretedTreeAutomaton irtg;
     
@@ -44,7 +41,9 @@ public class OnTheFlyCharts implements ChartAttacher {
         return new It(source);
     }
     
-    
+    /**
+     * A simple wrapper, that creates a new instance with the chart attached.
+     */
     private class It implements Iterator<Instance>
     {
         /**
