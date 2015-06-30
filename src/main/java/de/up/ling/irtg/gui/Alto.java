@@ -373,6 +373,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                 // here we removed the option of loading a chart
                 File chartsFile = null;  //chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);
 
+                //currently the if clause will always fail.
                 if (chartsFile != null) {
                     Iterable<TreeAutomaton> charts = new OnTheFlyCharts(chartsFile);
                     corpus.attachCharts(charts);

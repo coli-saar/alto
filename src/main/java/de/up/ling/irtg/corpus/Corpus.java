@@ -93,8 +93,12 @@ public class Corpus implements Iterable<Instance> {
     }
     
     /**
+     * An iterator that does not attempt to attach chart entries, this is
+     * necessary because the class that generates the chart entries may need
+     * to look at the instances first.
      * 
-     * @return 
+     * @return an iterator over the instances in this corpus, possibly without
+     * charts, even if there are charts attached to this corpus.
      */
     Iterator<Instance> blandIterator()
     {
