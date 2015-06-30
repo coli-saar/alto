@@ -5,6 +5,7 @@
 package de.up.ling.irtg.corpus;
 
 import com.google.common.base.Supplier;
+import de.saar.basic.ZipIterator;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -28,17 +29,17 @@ import de.up.ling.zip.ZipEntryIterator;
  *
  * @author koller
  */
-public class Charts implements Iterable<TreeAutomaton> {
+public class Charts implements ChartAttacher {
 
-    private Supplier<InputStream> supplier;
+    private final Supplier<InputStream> supplier;
 
     public Charts(Supplier<InputStream> supplier) {
         this.supplier = supplier;
     }
 
-    public Iterator<TreeAutomaton> iterator() {
+    private Iterator<TreeAutomaton> iterator() {
         try {
-            return new ZipEntryIterator<TreeAutomaton>(supplier.get());
+            return new ZipEntryIterator<>(supplier.get());
         } catch (IOException ex) {
             Logger.getLogger(Charts.class.getName()).log(Level.SEVERE, null, ex);
             return null;
@@ -67,5 +68,15 @@ public class Charts implements Iterable<TreeAutomaton> {
         }
 
         zec.close();
+    }
+
+    @Override
+    public Iterator<Instance> attach(Iterator<Instance> source) {
+        return new ZipIterator<Instance, TreeAutomaton, Instance>(source, this.iterator()) {
+                @Override
+                public Instance zip(Instance left, TreeAutomaton right) {
+                    return left.withChart(right);
+                }
+            };
     }
 }

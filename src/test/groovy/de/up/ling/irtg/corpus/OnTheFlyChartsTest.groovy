@@ -29,31 +29,7 @@ class OnTheFlyChartsTest {
         InterpretedTreeAutomaton irtg = pi(CorpusTest.CFG_STR);
         Corpus corpus = Corpus.readCorpus(new StringReader(CorpusTest.UNANNOTATED_CORPUS), irtg);
         
-        Iterable<TreeAutomaton> it = new OnTheFlyCharts(irtg,corpus);
-        
-        corpus.attachCharts(it);
-        
-        int count = 0;
-        for( Instance inst : corpus ) {
-            assert irtg.parseInputObjects(inst.getInputObjects()).equals(inst.getChart()) : "chart test failed for " + count;
-            count++;
-        }
-        
-        assert count == 3;
-    }
-    
-    
-    @Test
-    public void readOnTheFlyTest()
-    {
-        // this is basically the same test as CorpusTest.testComputeCharts(), but reading on the fly instead of doing the
-        // same with Charts
-        ByteArrayOutputStream ostream = new ByteArrayOutputStream();        
-        InterpretedTreeAutomaton irtg = pi(CorpusTest.CFG_STR);
-        Corpus corpus = Corpus.readCorpus(new StringReader(CorpusTest.UNANNOTATED_CORPUS), irtg);        
-        Charts.computeCharts(corpus, irtg, ostream);
-        
-        Iterable<TreeAutomaton> it = new OnTheFlyCharts(new ByteArrayInputStreamSupplier(ostream.toByteArray()));
+        ChartAttacher it = new OnTheFlyCharts(irtg);
         
         corpus.attachCharts(it);
         

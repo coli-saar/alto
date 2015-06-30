@@ -6,10 +6,8 @@ package de.up.ling.irtg.corpus;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
-import de.saar.basic.ZipIterator;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -41,7 +39,7 @@ public class Corpus implements Iterable<Instance> {
     private static final Pattern COMMENT_PATTERN = Pattern.compile("\\s*#.*");
     private static final Pattern INTERPRETATION_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*interpretation\\s+([^: ]+)\\s*:\\s*(\\S+).*", Pattern.CASE_INSENSITIVE);
     private final List<Instance> instances;
-    private Iterable<TreeAutomaton> charts;
+    private ChartAttacher charts;
     private boolean isAnnotated;
     private static final boolean DEBUG = false;
     private String source; // explains where this corpus came from
@@ -60,7 +58,7 @@ public class Corpus implements Iterable<Instance> {
         return charts != null;
     }
 
-    public void attachCharts(Iterable<TreeAutomaton> charts) {
+    public void attachCharts(ChartAttacher charts) {
         this.charts = charts;
     }
 
@@ -71,7 +69,7 @@ public class Corpus implements Iterable<Instance> {
      * @throws IOException
      */
     public void attachCharts(String filename) throws IOException {
-        attachCharts(new OnTheFlyCharts(new FileInputStreamSupplier(new File(filename))));
+        attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
     }
 
     public int getNumberOfInstances() {
@@ -81,28 +79,10 @@ public class Corpus implements Iterable<Instance> {
     @Override
     public Iterator<Instance> iterator() {
         if (hasCharts()) {
-            return new ZipIterator<Instance, TreeAutomaton, Instance>(this.blandIterator(), charts.iterator()) {
-                @Override
-                public Instance zip(Instance left, TreeAutomaton right) {
-                    return left.withChart(right);
-                }
-            };
+            return this.charts.attach(this.instances.iterator());
         } else {
-            return this.blandIterator();
+            return this.instances.iterator();
         }
-    }
-    
-    /**
-     * An iterator that does not attempt to attach chart entries, this is
-     * necessary because the class that generates the chart entries may need
-     * to look at the instances first.
-     * 
-     * @return an iterator over the instances in this corpus, possibly without
-     * charts, even if there are charts attached to this corpus.
-     */
-    Iterator<Instance> blandIterator()
-    {
-       return instances.iterator();
     }
 
     public void addInstance(Instance instance) {

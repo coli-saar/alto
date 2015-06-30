@@ -5,16 +5,8 @@
  */
 package de.up.ling.irtg.corpus;
 
-import com.google.common.collect.Iterators;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.zip.ZipEntryIterator;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
-import com.google.common.base.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * A drop in replacement for the class method capabilities of the Charts class.
@@ -28,7 +20,7 @@ import java.util.logging.Logger;
  * @author koller
  * @author christoph teichmann
  */
-public class OnTheFlyCharts implements Iterable<TreeAutomaton> {
+public class OnTheFlyCharts implements ChartAttacher {
 
     /**
      * The IRTG that will compute the necessary charts if we do not read them
@@ -37,64 +29,50 @@ public class OnTheFlyCharts implements Iterable<TreeAutomaton> {
     private final InterpretedTreeAutomaton irtg;
     
     /**
-     * An iterable used to obtain inputs for which charts will be computed.
-     */
-    private final Iterable<Instance> instances;
-
-    /**
-     * A source of input streams from which the charts can be read.
-     */
-    private final Supplier<InputStream> supp;
-    
-    /**
      * Creates an instance that will provide an iterator over charts by iterating
      * over the instances and computing charts as they are needed.
      * 
      * @param irtg
      * @param instances 
      */
-    public OnTheFlyCharts(InterpretedTreeAutomaton irtg, Iterable<Instance> instances) {
+    public OnTheFlyCharts(InterpretedTreeAutomaton irtg) {
         this.irtg = irtg;
-        this.instances = instances;
-        this.supp = null;
     }
-    
-    /**
-     * Creates an instance that iterates over charts by reading them from the file
-     * one by one.
-     * 
-     * @param chartsSource 
-     */
-    public OnTheFlyCharts(Supplier<InputStream> chartsSource)
-    {
-        this.instances = null;
-        this.irtg = null;
-        this.supp = chartsSource;
-    }
-    
+
     @Override
-    public Iterator<TreeAutomaton> iterator() {
-        // if there is no file from which we can read results, we compute them.
-        if(this.supp == null){
-            // for corpora we have to avoid an infinite loop.
-            if(this.instances instanceof Corpus){
-                return Iterators.transform(((Corpus) instances).blandIterator(),
-                        inst -> irtg.parseInputObjects(inst.getInputObjects()));
-            }
-            else{
-                return Iterators.transform(instances.iterator(), inst -> irtg.parseInputObjects(inst.getInputObjects()));
-            }
+    public Iterator<Instance> attach(Iterator<Instance> source) {
+        return new It(source);
+    }
+    
+    
+    private class It implements Iterator<Instance>
+    {
+        /**
+         * 
+         */
+        private final Iterator<Instance> main;
+
+        /**
+         * 
+         * @param main 
+         */
+        public It(Iterator<Instance> main) {
+            this.main = main;
         }
-        else
-        {
-            try {
-                //This is problematic, does the stream ever get closed?
-                return new ZipEntryIterator<>(this.supp.get());
-            } catch (IOException ex) {
-                // If we have a file, then we do not have an IRTG so we can only return null.
-                Logger.getLogger(OnTheFlyCharts.class.getName()).log(Level.SEVERE, null, ex);
-                return null;
-            }
+        
+        
+        
+        @Override
+        public boolean hasNext() {
+            return main.hasNext();
         }
+
+        @Override
+        public Instance next() {
+            Instance inst = main.next();
+            
+            return inst.withChart(irtg.parseInputObjects(inst.getInputObjects()));
+        }
+        
     }
 }
