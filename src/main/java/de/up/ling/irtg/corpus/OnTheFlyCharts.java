@@ -9,9 +9,10 @@ import com.google.common.collect.Iterators;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.zip.ZipEntryIterator;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Iterator;
+import com.google.common.base.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -43,7 +44,7 @@ public class OnTheFlyCharts implements Iterable<TreeAutomaton> {
     /**
      * A source of input streams from which the charts can be read.
      */
-    private final FileInputStreamSupplier supp;
+    private final Supplier<InputStream> supp;
     
     /**
      * Creates an instance that will provide an iterator over charts by iterating
@@ -62,13 +63,13 @@ public class OnTheFlyCharts implements Iterable<TreeAutomaton> {
      * Creates an instance that iterates over charts by reading them from the file
      * one by one.
      * 
-     * @param chartsFile 
+     * @param chartsSource 
      */
-    public OnTheFlyCharts(File chartsFile)
+    public OnTheFlyCharts(Supplier<InputStream> chartsSource)
     {
         this.instances = null;
         this.irtg = null;
-        this.supp = new FileInputStreamSupplier(chartsFile);
+        this.supp = chartsSource;
     }
     
     @Override

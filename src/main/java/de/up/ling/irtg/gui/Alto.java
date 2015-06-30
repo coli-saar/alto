@@ -11,6 +11,7 @@ import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.corpus.OnTheFlyCharts;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
@@ -375,7 +376,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 
                 //currently the if clause will always fail.
                 if (chartsFile != null) {
-                    Iterable<TreeAutomaton> charts = new OnTheFlyCharts(chartsFile);
+                    Iterable<TreeAutomaton> charts = new OnTheFlyCharts(new FileInputStreamSupplier(chartsFile));
                     corpus.attachCharts(charts);
                     andThen.accept(corpus);
                 } else {
