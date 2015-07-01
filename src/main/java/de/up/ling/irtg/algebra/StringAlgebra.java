@@ -39,8 +39,15 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     
     public static final String CONCAT = "*";
     
+    /**
+     * A special symbol in the algebra that represents a terminal "*" which we cannot
+     * represent directly, it is interpreted as [*].
+     */
     public static final String SPECIAL_STAR = "__*__";
     
+    /**
+     * The number that is used to represent the special star symbol.
+     */
     protected int specialStarId;
     
     protected final int concatSymbolId;
@@ -59,14 +66,14 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     @Override
     protected List<String> evaluate(String label, List<List<String>> childrenValues) {
        switch(label){
-            case CONCAT:
+            case CONCAT: // combine children
                 List<String> ret = new ArrayList<>();
                 ret.addAll(childrenValues.get(0));
                 ret.addAll(childrenValues.get(1));
                 return ret;
-            case SPECIAL_STAR:
+            case SPECIAL_STAR: // turn this into a "*"
                 return Lists.newArrayList("*");
-            default:
+            default: //interpret as itself
                 return Lists.newArrayList(label);
        }
     }
@@ -83,7 +90,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                     String label = node.getLabel();
                     
                     switch(label){
-                        case SPECIAL_STAR:
+                        case SPECIAL_STAR: // we need to turn this into a "*"
                             ret.add("*");
                             return null;
                         default:
@@ -111,6 +118,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
 
         for (String word : symbols) {
+            // here we check whether we need to tranform the word because it is "*"
             if(!CONCAT.equals(word)){
                 signature.addSymbol(word, 0);
             }
@@ -149,7 +157,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                 int code;
                 
                 
-                switch(word){
+                switch(word){// we write the words into the array, if there is a "*" we turn it into specialStarId
                     case "*":
                         code = specialStarId;
                         break;
