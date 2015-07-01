@@ -26,6 +26,7 @@ public class WideStringAlgebra extends StringAlgebra {
     public WideStringAlgebra() {
         getSignature().clear(); // remove * from StringAlgebra
         getSignature().addSymbol(WIDE_BINARY_CONCATENATION, 2);
+        this.specialStarId = getSignature().addSymbol(StringAlgebra.SPECIAL_STAR, 0);
     }
 
     @Override

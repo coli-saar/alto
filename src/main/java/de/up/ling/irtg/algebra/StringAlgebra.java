@@ -36,27 +36,39 @@ import java.util.Set;
  * @author koller
  */
 public class StringAlgebra extends Algebra<List<String>> implements Serializable {
+    
     public static final String CONCAT = "*";
-    protected int concatSymbolId;
+    
+    public static final String SPECIAL_STAR = "__*__";
+    
+    protected int specialStarId;
+    
+    protected final int concatSymbolId;
+    
     private IntSet concatSet;
 
     public StringAlgebra() {
         concatSymbolId = signature.addSymbol(CONCAT, 2);
 
+        specialStarId = signature.addSymbol(SPECIAL_STAR, 0);
+        
         concatSet = new IntOpenHashSet();
         concatSet.add(concatSymbolId);
     }
 
     @Override
     protected List<String> evaluate(String label, List<List<String>> childrenValues) {
-        if (CONCAT.equals(label)) {
-            List<String> ret = new ArrayList<>();
-            ret.addAll(childrenValues.get(0));
-            ret.addAll(childrenValues.get(1));
-            return ret;
-        } else {
-            return Lists.newArrayList(label);
-        }
+       switch(label){
+            case CONCAT:
+                List<String> ret = new ArrayList<>();
+                ret.addAll(childrenValues.get(0));
+                ret.addAll(childrenValues.get(1));
+                return ret;
+            case SPECIAL_STAR:
+                return Lists.newArrayList("*");
+            default:
+                return Lists.newArrayList(label);
+       }
     }
 
     @Override
@@ -66,11 +78,23 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         t.dfs(new TreeVisitor<String, Void, Void>() {
             @Override
             public Void combine(Tree<String> node, List<Void> childrenValues) {
-                if (childrenValues.isEmpty()) {
-                    ret.add(node.getLabel());
+                
+                if(node.getChildren().isEmpty()){ 
+                    String label = node.getLabel();
+                    
+                    switch(label){
+                        case SPECIAL_STAR:
+                            ret.add("*");
+                            return null;
+                        default:
+                            ret.add(node.getLabel());
+                            return null;
+                    }
+                    
                 }
-
-                return null;
+                else{
+                    return null;
+                }
             }
         });
 
@@ -119,9 +143,21 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
             this.words = new int[words.size()];
             for (int i = 0; i < words.size(); i++) {
-                int symbolID = StringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
-                this.words[i] = symbolID;
-                allLabels.add(symbolID);
+                String word = words.get(i);
+                int code;
+                
+                
+                switch(word){
+                    case "*":
+                        code = specialStarId;
+                        break;
+                    default:
+                        code = StringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
+                        break;
+                }
+                
+                this.words[i] = code;
+                allLabels.add(code);
             }
 
             finalStates.add(addState(new Span(0, words.size())));
