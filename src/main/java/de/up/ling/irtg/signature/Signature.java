@@ -48,6 +48,7 @@ public class Signature implements Serializable {
     
     public void clear() {
         interner.clear();
+        this.arities.clear();
     }
     
     // deliberately only package-visible
