@@ -111,7 +111,9 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
 
         for (String word : symbols) {
-            signature.addSymbol(word, 0);
+            if(!CONCAT.equals(word)){
+                signature.addSymbol(word, 0);
+            }
         }
 
         return symbols;

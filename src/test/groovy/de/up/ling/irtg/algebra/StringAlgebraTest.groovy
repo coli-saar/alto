@@ -94,6 +94,26 @@ class StringAlgebraTest {
         assert( auto.accepts(pt("conc2(conc2(a,b),c)")));
         assert( auto.accepts(pt("conc2(a,conc2(b,c))")));
     }
-	
+    
+    
+    @Test
+    public void testDecomposeWithStar(){
+        String s = "* b * a";
+        Algebra a = new StringAlgebra();
+        
+        List words = a.parseString(s);
+        
+        TreeAutomaton ta = a.decompose(words);
+        
+        assertEquals(ta.language().size(),5);
+        
+        assertTrue(ta.accepts(pt("*(*(__*__,*(b,__*__)),a)")));
+        assertTrue(ta.accepts(pt("*(__*__,*(b,*(__*__,a)))")));
+        assertTrue(ta.accepts(pt("*(__*__,*(*(b,__*__),a))")));
+        assertTrue(ta.accepts(pt("*(*(__*__,b),*(__*__,a))")));
+        assertTrue(ta.accepts(pt("*(*(*(__*__,b),__*__),a)")));
+        
+        assertEquals(a.evaluate(pt("*(*(*(__*__,b),__*__),a)")),a.parseString("* b * a"));
+    }
 }
 
