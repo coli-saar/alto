@@ -45,7 +45,12 @@ import java.util.List;
  * algorithm, which queries the right automaton top-down and the left
  * automaton bottom-up. A typical use-case is that the left automaton
  * is the derivation-tree RTG of an IRTG and the right automaton
- * is the inverse-homomorphism image of a decomposition automaton.
+ * is the inverse-homomorphism image of a decomposition automaton.<p>
+ * 
+ * Note that this automaton will not work correctly if right is
+ * recursive. Recursive right automata come up, for instance, when
+ * parsing with an IRTG that has ?1 on the input interpretation.
+ * (See issue #2 on Bitbucket.)
  *
  * @author koller
  * @param <LeftState>

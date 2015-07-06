@@ -23,6 +23,7 @@ import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -81,7 +82,7 @@ public class InterpretedTreeAutomaton implements Serializable {
     public void addInterpretation(String name, Interpretation interp) {
         interpretations.put(name, interp);
     }
-    
+
     /**
      * Adds all interpretations in the map, with their respective names.
      *
@@ -216,7 +217,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         }
 
         ret = ret.reduceTopDown();
-        
+
         return ret;
     }
 
@@ -671,12 +672,14 @@ public class InterpretedTreeAutomaton implements Serializable {
     }
 
     /**
-     * Reads all inputs for this IRTG from a corpus and parses them. 
-     * This behaves like {@link #bulkParse(de.up.ling.irtg.corpus.Corpus, java.util.function.Predicate, java.util.function.Consumer, de.up.ling.irtg.util.ProgressListener) }
+     * Reads all inputs for this IRTG from a corpus and parses them. This
+     * behaves like {@link #bulkParse(de.up.ling.irtg.corpus.Corpus, java.util.function.Predicate, java.util.function.Consumer, de.up.ling.irtg.util.ProgressListener)
+     * }
      * with an instance filter that always returns true.
+     *
      * @param input
      * @param corpusConsumer
-     * @param listener 
+     * @param listener
      */
     public void bulkParse(Corpus input, Consumer<Instance> corpusConsumer, ProgressListener listener) {
         bulkParse(input, null, corpusConsumer, listener);
@@ -686,17 +689,17 @@ public class InterpretedTreeAutomaton implements Serializable {
      * Reads inputs for this IRTG from a corpus and parses them. The input
      * corpus must be suitable for this IRTG (i.e., use a subset of the
      * interpretations it defines). If the corpus has charts attached, these
-     * will be used; otherwise, each instance for which the "filter" is true is parsed. We then compute the
-     * best derivation tree from each chart using Viterbi, and map it to all
-     * interpretations of the IRTG. This yields a "completed" {@link Instance}
-     * (consisting of the derivation tree and values on all interpretations),
-     * which we write to the given corpusConsumer (e.g., a
-     * {@link CorpusWriter}). If a non-null value is passed as the "listener",
-     * it is notified after each instance has been written.<p>
-     * 
-     * Note that the output corpus may contain fewer instances than the
-     * input corpus, if the "filter" returned false on some of the
-     * input instances.
+     * will be used; otherwise, each instance for which the "filter" is true is
+     * parsed. We then compute the best derivation tree from each chart using
+     * Viterbi, and map it to all interpretations of the IRTG. This yields a
+     * "completed" {@link Instance} (consisting of the derivation tree and
+     * values on all interpretations), which we write to the given
+     * corpusConsumer (e.g., a {@link CorpusWriter}). If a non-null value is
+     * passed as the "listener", it is notified after each instance has been
+     * written.<p>
+     *
+     * Note that the output corpus may contain fewer instances than the input
+     * corpus, if the "filter" returned false on some of the input instances.
      *
      * @param input
      * @param filter
@@ -718,20 +721,31 @@ public class InterpretedTreeAutomaton implements Serializable {
 
                 TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
                 Tree<Integer> t = chart.viterbiRaw();
-                Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t);
 
-                Map<String, Object> values = new HashMap<>();
-                for (String intp : getInterpretations().keySet()) {
-                    values.put(intp, getInterpretation(intp).interpret(tWithStrings));
+                if (t == null) {
+                    Instance parsedInst = new Instance();
+                    parsedInst.setAsNull();
+                    parsedInst.setDerivationTree(t);
+                    parsedInst.setComment("could not parse: " + inst);
+                    corpusConsumer.accept(parsedInst);
+                    
+                    Logging.get().warning("Could not parse: " + inst);
+                } else {
+                    Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t);
+
+                    Map<String, Object> values = new HashMap<>();
+                    for (String intp : getInterpretations().keySet()) {
+                        values.put(intp, getInterpretation(intp).interpret(tWithStrings));
+                    }
+
+                    sw.record(1);
+
+                    Instance parsedInst = new Instance();
+                    parsedInst.setInputObjects(values);
+                    parsedInst.setDerivationTree(t);
+                    parsedInst.setComment("parse_time=" + sw.getTimeBefore(1) / 1000000 + "ms");
+                    corpusConsumer.accept(parsedInst);
                 }
-
-                sw.record(1);
-
-                Instance parsedInst = new Instance();
-                parsedInst.setInputObjects(values);
-                parsedInst.setDerivationTree(t);
-                parsedInst.setComment("parse_time=" + sw.getTimeBefore(1) / 1000000 + "ms");
-                corpusConsumer.accept(parsedInst);
 
                 if (listener != null) {
                     listener.accept(i++, N, null);
@@ -810,17 +824,14 @@ public class InterpretedTreeAutomaton implements Serializable {
     public static InterpretedTreeAutomaton read(InputStream r) throws IOException, CodecParseException {
         return new IrtgInputCodec().read(r);
     }
-    
-    
-    
+
     /**
-     * Creates an empty IRTG for the given algebras.
-     * The IRTG contains a tree automaton with no rules,
-     * and one interpretation for each entry of the
+     * Creates an empty IRTG for the given algebras. The IRTG contains a tree
+     * automaton with no rules, and one interpretation for each entry of the
      * given map, with the given name and the given algebra.
-     * 
+     *
      * @param algebras
-     * @return 
+     * @return
      */
     public static InterpretedTreeAutomaton forAlgebras(Map<String, Algebra> algebras) {
         InterpretedTreeAutomaton irtg = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>());

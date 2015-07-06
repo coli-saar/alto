@@ -28,6 +28,14 @@ public class Instance {
     public void setInputObjects(Map<String, Object> inputObjects) {
         this.inputObjects = inputObjects;
     }
+    
+    public void setAsNull() {
+        this.inputObjects = null;
+    }
+    
+    public boolean isNull() {
+        return this.inputObjects == null;
+    }
 
     public Tree<Integer> getDerivationTree() {
         return derivationTree;

@@ -125,6 +125,10 @@ public class Signature implements Serializable {
     }
     
     public Tree<String> resolve(Tree<Integer> tree) {
+        if( tree == null ) {
+            throw new RuntimeException("Cannot resolve null tree.");
+        }
+        
         return tree.dfs(new TreeVisitor<Integer, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<Integer> node, List<Tree<String>> childrenValues) {

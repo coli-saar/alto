@@ -24,6 +24,7 @@ public class CorpusWriter implements Consumer<Instance> {
     private final List<String> interpretationsInOrder;
     private boolean isHeaderWritten;
     private String comment;
+    public static final String NULL = "_null_";
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, boolean isAnnotated, String comment, Writer writer) throws IOException {
         this.writer = writer;
@@ -36,6 +37,8 @@ public class CorpusWriter implements Consumer<Instance> {
     }
 
     public void writeInstance(Instance inst) throws IOException {
+        boolean isn = inst.isNull();
+        
         if (!isHeaderWritten) {
             writer.write(makeHeader(comment) + "\n");
             isHeaderWritten = true;
@@ -46,12 +49,12 @@ public class CorpusWriter implements Consumer<Instance> {
         }
 
         for (String interp : interpretationsInOrder) {
-            String repr = irtg.getInterpretation(interp).getAlgebra().representAsString(inst.getInputObjects().get(interp));
+            String repr = isn ? NULL : irtg.getInterpretation(interp).getAlgebra().representAsString(inst.getInputObjects().get(interp));
             writer.write(repr + "\n");
         }
 
         if (isAnnotated) {
-            writer.write(irtg.getAutomaton().getSignature().resolve(inst.getDerivationTree()) + "\n");
+            writer.write((isn ? NULL : irtg.getAutomaton().getSignature().resolve(inst.getDerivationTree())) + "\n");
         }
 
         writer.write("\n");
