@@ -50,8 +50,8 @@ public class WideStringAlgebra extends StringAlgebra {
                 String s = words.get(i);
                 
                 // if we encounter a star, then we need to convert it into the special symbol
-                if(StringAlgebra.SPECIAL_STAR.equals(s)){
-                    this.words[i]= specialStarId;
+                if(StringAlgebra.CONCAT.equals(s)){
+                    this.words[i]= WideStringAlgebra.this.specialStarId;
                 }
                 else{
                     this.words[i] = WideStringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
@@ -61,7 +61,7 @@ public class WideStringAlgebra extends StringAlgebra {
             finalStates.add(addState(new Span(0, words.size())));
 
             concatArities = new Int2IntOpenHashMap();
-            for (int symId = 0; symId < signature.getMaxSymbolId(); symId++) {
+            for (int symId = 0; symId <= signature.getMaxSymbolId(); symId++) {
                 if (signature.getArity(symId) > 0) {
                     concatArities.put(symId, signature.getArity(symId));
                 }
