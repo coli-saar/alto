@@ -131,6 +131,8 @@ class StringAlgebraTest {
         assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
         assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
         assertTrue(ta.accepts(pt("conc4(__*__,b,__*__,a)")));
+        
+        assertEquals(ta.language().size(),11);
     }
 }
 
