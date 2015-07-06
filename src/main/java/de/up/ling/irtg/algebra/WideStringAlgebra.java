@@ -25,7 +25,11 @@ public class WideStringAlgebra extends StringAlgebra {
     
     public WideStringAlgebra() {
         getSignature().clear(); // remove * from StringAlgebra
+        
         getSignature().addSymbol(WIDE_BINARY_CONCATENATION, 2);
+
+        // but we still keep the special star symbol
+        this.specialStarId = getSignature().addSymbol(StringAlgebra.SPECIAL_STAR, 0);
     }
 
     @Override
@@ -43,13 +47,21 @@ public class WideStringAlgebra extends StringAlgebra {
 
             this.words = new int[words.size()];
             for (int i = 0; i < words.size(); i++) {
-                this.words[i] = WideStringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
+                String s = words.get(i);
+                
+                // if we encounter a star, then we need to convert it into the special symbol
+                if(StringAlgebra.CONCAT.equals(s)){
+                    this.words[i]= WideStringAlgebra.this.specialStarId;
+                }
+                else{
+                    this.words[i] = WideStringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
+                }
             }
 
             finalStates.add(addState(new Span(0, words.size())));
 
             concatArities = new Int2IntOpenHashMap();
-            for (int symId = 0; symId < signature.getMaxSymbolId(); symId++) {
+            for (int symId = 0; symId <= signature.getMaxSymbolId(); symId++) {
                 if (signature.getArity(symId) > 0) {
                     concatArities.put(symId, signature.getArity(symId));
                 }

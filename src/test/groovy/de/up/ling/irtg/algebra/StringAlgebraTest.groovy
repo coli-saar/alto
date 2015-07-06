@@ -28,7 +28,7 @@ class StringAlgebraTest {
 
         List words = algebra.parseString(string);
         TreeAutomaton auto = algebra.decompose(words);
-
+        
         assertEquals(new HashSet([auto.getIdForState(s(0,7))]), auto.getFinalStates());
         assertEquals(new HashSet([r(auto, s(2,4), StringAlgebra.CONCAT, [s(2,3), s(3,4)])]), auto.getRulesBottomUp(concat, [s(2,3), s(3,4)].collect { auto.addState(it)}));
         assertEquals(new HashSet(), auto.getRulesBottomUp(concat, [s(2,3), s(4,5)].collect { auto.addState(it)}));
@@ -94,6 +94,45 @@ class StringAlgebraTest {
         assert( auto.accepts(pt("conc2(conc2(a,b),c)")));
         assert( auto.accepts(pt("conc2(a,conc2(b,c))")));
     }
-	
+    
+    
+    @Test
+    public void testDecomposeWithStar(){
+        String s = "* b * a";
+        Algebra a = new StringAlgebra();
+        
+        List words = a.parseString(s);
+        
+        TreeAutomaton ta = a.decompose(words);
+        
+        assertEquals(ta.language().size(),5);
+        
+        assertTrue(ta.accepts(pt("*(*(__*__,*(b,__*__)),a)")));
+        assertTrue(ta.accepts(pt("*(__*__,*(b,*(__*__,a)))")));
+        assertTrue(ta.accepts(pt("*(__*__,*(*(b,__*__),a))")));
+        assertTrue(ta.accepts(pt("*(*(__*__,b),*(__*__,a))")));
+        assertTrue(ta.accepts(pt("*(*(*(__*__,b),__*__),a)")));
+        
+        assertEquals(a.evaluate(pt("*(*(*(__*__,b),__*__),a)")),a.parseString("* b * a"));
+        
+        a = new WideStringAlgebra();
+        words = a.parseString(s);
+        
+        a.getSignature().addSymbol("conc2",2);
+        a.getSignature().addSymbol("conc3",3);
+        a.getSignature().addSymbol("conc4",4);
+        
+        ta = a.decompose(words);
+        
+        
+        assertEquals(ta.language().size(),11);
+        
+        assertTrue(ta.accepts(pt("conc2(conc2(conc2(__*__,b),__*__),a)")));
+        assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
+        assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
+        assertTrue(ta.accepts(pt("conc4(__*__,b,__*__,a)")));
+        
+        assertEquals(ta.language().size(),11);
+    }
 }
 

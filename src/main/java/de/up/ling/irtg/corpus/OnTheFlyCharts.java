@@ -5,75 +5,73 @@
  */
 package de.up.ling.irtg.corpus;
 
-import com.google.common.collect.Iterators;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.zip.ZipEntryIterator;
-import java.io.File;
-import java.io.IOException;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- *
+ * This attaches charts to the instances from an iterator on the fly.
+ * 
+ * Adds charts to instances by computing them, whenever an instance with a chart
+ * is requested. Note that we copy the original instances and that we re-compute
+ * the charts each time we apply attach() to an iterator.
+ * 
  * @author koller
+ * @author christoph teichmann
  */
-public class OnTheFlyCharts implements Iterable<TreeAutomaton> {
+public class OnTheFlyCharts implements ChartAttacher {
 
     /**
-     * 
+     * The IRTG that will compute the necessary charts.
      */
     private final InterpretedTreeAutomaton irtg;
     
     /**
-     * 
-     */
-    private final Iterable<Instance> instances;
-
-    /**
-     * 
-     */
-    private final FileInputStreamSupplier supp;
-    
-    /**
+     * Creates an instance that will provide an iterator over charts by iterating
+     * over the instances and computing charts as they are needed.
      * 
      * @param irtg
      * @param instances 
      */
-    public OnTheFlyCharts(InterpretedTreeAutomaton irtg, Iterable<Instance> instances) {
+    public OnTheFlyCharts(InterpretedTreeAutomaton irtg) {
         this.irtg = irtg;
-        this.instances = instances;
-        this.supp = null;
     }
-    
-    
-    public OnTheFlyCharts(File chartsFile)
-    {
-        this.instances = null;
-        this.irtg = null;
-        this.supp = new FileInputStreamSupplier(chartsFile);
-    }
-    
+
     @Override
-    public Iterator<TreeAutomaton> iterator() {
-        if(this.supp == null){
-            if(this.instances instanceof Corpus){
-                return Iterators.transform(((Corpus) instances).blandIterator(),
-                        inst -> irtg.parseInputObjects(inst.getInputObjects()));
-            }
-            else{
-                return Iterators.transform(instances.iterator(), inst -> irtg.parseInputObjects(inst.getInputObjects()));
-            }
+    public Iterator<Instance> attach(Iterator<Instance> source) {
+        return new It(source);
+    }
+    
+    /**
+     * A simple wrapper, that creates a new instance with the chart attached.
+     */
+    private class It implements Iterator<Instance>
+    {
+        /**
+         * 
+         */
+        private final Iterator<Instance> main;
+
+        /**
+         * 
+         * @param main 
+         */
+        public It(Iterator<Instance> main) {
+            this.main = main;
         }
-        else
-        {
-            try {
-                return new ZipEntryIterator<>(this.supp.get());
-            } catch (IOException ex) {
-                Logger.getLogger(OnTheFlyCharts.class.getName()).log(Level.SEVERE, null, ex);
-                return null;
-            }
+        
+        
+        
+        @Override
+        public boolean hasNext() {
+            return main.hasNext();
         }
+
+        @Override
+        public Instance next() {
+            Instance inst = main.next();
+            
+            return inst.withChart(irtg.parseInputObjects(inst.getInputObjects()));
+        }
+        
     }
 }

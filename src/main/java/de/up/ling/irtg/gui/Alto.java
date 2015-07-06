@@ -10,7 +10,10 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.TemplateInterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.InputCodec;
+import de.up.ling.irtg.corpus.ChartAttacher;
+import de.up.ling.irtg.corpus.Charts;
 import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.FileInputStreamSupplier;
 import de.up.ling.irtg.corpus.OnTheFlyCharts;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
@@ -373,12 +376,13 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                 // here we removed the option of loading a chart
                 File chartsFile = null;  //chooseFile("Open precomputed parse charts (or cancel)", new FileNameExtensionFilter("Parse charts (*.zip)", "zip"), parent);
 
+                //currently the we will always use the else clause
                 if (chartsFile != null) {
-                    Iterable<TreeAutomaton> charts = new OnTheFlyCharts(chartsFile);
+                    ChartAttacher charts = new Charts(new FileInputStreamSupplier(chartsFile));
                     corpus.attachCharts(charts);
                     andThen.accept(corpus);
                 } else {
-                    corpus.attachCharts(new OnTheFlyCharts(irtg,corpus));
+                    corpus.attachCharts(new OnTheFlyCharts(irtg));
                     andThen.accept(corpus);
                 }
             } catch (Exception e) {
