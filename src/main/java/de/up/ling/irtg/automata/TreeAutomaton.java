@@ -840,7 +840,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Tree<String> viterbi() {
-        return getSignature().resolve(viterbiRaw());
+        return getSignature().resolve(viterbiRaw().getTree());
 //        // run Viterbi algorithm bottom-up, saving rules as backpointers
 //
 //        Int2ObjectMap<Pair<Double, Rule>> map
@@ -869,16 +869,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        // extract best tree from backpointers
 //        return extractTreeFromViterbi(bestFinalState, map);
     }
-    
+
     /**
      * Computes the highest-weighted tree in the language of this (weighted)
      * automaton, using the Viterbi algorithm. If the language is empty, return
      * null. Unlike {@link #viterbi() }, this method returns a tree whose nodes
-     * are labeled with label IDs, as opposed to the labels (Strings) themselves.
+     * are labeled with label IDs, as opposed to the labels (Strings)
+     * themselves. It also returns the weight of the top-ranked tree.
      *
      * @return
      */
-    public Tree<Integer> viterbiRaw() {
+    public WeightedTree viterbiRaw() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
 
         Int2ObjectMap<Pair<Double, Rule>> map
@@ -901,13 +902,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 }
             }
         }
-        
-        //getSignature().resolveSymbolId(
 
+        //getSignature().resolveSymbolId(
         // extract best tree from backpointers
-        return extractTreeFromViterbi(bestFinalState, map);
+        Tree<Integer> t = extractTreeFromViterbi(bestFinalState, map);
+
+        if (t == null) {
+            return null;
+        } else {
+            return new WeightedTree(t, weightBestFinalState);
+        }
     }
-    
 
     private Tree<Integer> extractTreeFromViterbi(int state, Int2ObjectMap<Pair<Double, Rule>> map) {
         if (map.containsKey(state)) {
@@ -1672,7 +1677,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 };
             }
         };
-        
 
 //        List<State> ret = new ArrayList<State>();
 //
@@ -1683,15 +1687,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        return ret;
     }
 
-    
     protected State[] getStatesFromIds(int[] states) {
         Object[] ret = new Object[states.length];
-        for (int i = 0; i<states.length; i++) {
+        for (int i = 0; i < states.length; i++) {
             ret[i] = getStateForId(states[i]);
         }
         return (State[]) ret;
     }
-    
+
     /**
      * Runs the automaton bottom-up on the given tree, using symbol IDs, and
      * returns the set of possible states for the root. The nodes of the tree
@@ -2993,12 +2996,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
                                 Integer[] partnerTuple = partnerIterator.next();
                                 for (int pos = 0; pos < arity; pos++) {
                                     int[] children = new int[arity];
-                                    for (int k = 0; k<pos; k++) {
+                                    for (int k = 0; k < pos; k++) {
                                         children[k] = partnerTuple[k];
                                     }
                                     children[pos] = a;
-                                    for (int k = pos; k<partnerTuple.length; k++) {
-                                        children[k+1] = partnerTuple[k];
+                                    for (int k = pos; k < partnerTuple.length; k++) {
+                                        children[k + 1] = partnerTuple[k];
                                     }
                                     foundRules.add(getRulesBottomUp(label, children));
                                 }

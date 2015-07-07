@@ -13,6 +13,7 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.WeightedTree;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.CodecParseException;
@@ -726,18 +727,21 @@ public class InterpretedTreeAutomaton implements Serializable {
                     sw.record(0);
 
                     TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
-                    Tree<Integer> t = chart.viterbiRaw();
+                    WeightedTree t = chart.viterbiRaw();
 
                     if (t == null) {
                         Instance parsedInst = new Instance();
                         parsedInst.setAsNull();
-                        parsedInst.setDerivationTree(t);
+                        parsedInst.setDerivationTree(null);
                         parsedInst.setComment("could not parse: " + inst);
                         corpusConsumer.accept(parsedInst);
 
                         Logging.get().warning("Could not parse: " + inst);
                     } else {
-                        Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t);
+//                        Iterator<WeightedTree> it = chart.sortedLanguageIterator();
+//                        System.err.println("w: " + it.next().getWeight());
+
+                        Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t.getTree());
 
                         Map<String, Object> values = new HashMap<>();
                         for (String intp : getInterpretations().keySet()) {
@@ -748,8 +752,8 @@ public class InterpretedTreeAutomaton implements Serializable {
 
                         Instance parsedInst = new Instance();
                         parsedInst.setInputObjects(values);
-                        parsedInst.setDerivationTree(t);
-                        parsedInst.setComment("parse_time=" + sw.getTimeBefore(1) / 1000000 + "ms");
+                        parsedInst.setDerivationTree(t.getTree());
+                        parsedInst.setComment("parse_time=" + sw.getTimeBefore(1) / 1000000 + "ms\nweight=" + t.getWeight());
                         corpusConsumer.accept(parsedInst);
                     }
 

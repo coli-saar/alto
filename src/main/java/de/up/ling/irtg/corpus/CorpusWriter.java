@@ -45,7 +45,10 @@ public class CorpusWriter implements Consumer<Instance> {
         }
 
         if (inst.getComment() != null) {
-            writer.write("# " + inst.getComment() + "\n");
+            String[] lines = inst.getComment().split("\n");
+            for( String line : lines ) {
+                writer.write("# " + line + "\n");
+            }
         }
 
         for (String interp : interpretationsInOrder) {
