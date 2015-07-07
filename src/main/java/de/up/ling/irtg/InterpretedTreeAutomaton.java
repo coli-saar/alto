@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import org.apache.commons.math3.special.Gamma;
 
 /**
@@ -714,43 +715,52 @@ public class InterpretedTreeAutomaton implements Serializable {
             listener.accept(i++, N, null);
         }
 
-        for (Instance inst : input) {
-            if ((filter == null) || filter.test(inst)) {
-                CpuTimeStopwatch sw = new CpuTimeStopwatch();
-                sw.record(0);
+        // suppress INFOs from intersection algorithms
+        Level oldLevel = Logging.get().getLevel();
+        Logging.get().setLevel(Level.WARNING);
 
-                TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
-                Tree<Integer> t = chart.viterbiRaw();
+        try {
+            for (Instance inst : input) {
+                if ((filter == null) || filter.test(inst)) {
+                    CpuTimeStopwatch sw = new CpuTimeStopwatch();
+                    sw.record(0);
 
-                if (t == null) {
-                    Instance parsedInst = new Instance();
-                    parsedInst.setAsNull();
-                    parsedInst.setDerivationTree(t);
-                    parsedInst.setComment("could not parse: " + inst);
-                    corpusConsumer.accept(parsedInst);
-                    
-                    Logging.get().warning("Could not parse: " + inst);
-                } else {
-                    Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t);
+                    TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
+                    Tree<Integer> t = chart.viterbiRaw();
 
-                    Map<String, Object> values = new HashMap<>();
-                    for (String intp : getInterpretations().keySet()) {
-                        values.put(intp, getInterpretation(intp).interpret(tWithStrings));
+                    if (t == null) {
+                        Instance parsedInst = new Instance();
+                        parsedInst.setAsNull();
+                        parsedInst.setDerivationTree(t);
+                        parsedInst.setComment("could not parse: " + inst);
+                        corpusConsumer.accept(parsedInst);
+
+                        Logging.get().warning("Could not parse: " + inst);
+                    } else {
+                        Tree<String> tWithStrings = getAutomaton().getSignature().resolve(t);
+
+                        Map<String, Object> values = new HashMap<>();
+                        for (String intp : getInterpretations().keySet()) {
+                            values.put(intp, getInterpretation(intp).interpret(tWithStrings));
+                        }
+
+                        sw.record(1);
+
+                        Instance parsedInst = new Instance();
+                        parsedInst.setInputObjects(values);
+                        parsedInst.setDerivationTree(t);
+                        parsedInst.setComment("parse_time=" + sw.getTimeBefore(1) / 1000000 + "ms");
+                        corpusConsumer.accept(parsedInst);
                     }
 
-                    sw.record(1);
-
-                    Instance parsedInst = new Instance();
-                    parsedInst.setInputObjects(values);
-                    parsedInst.setDerivationTree(t);
-                    parsedInst.setComment("parse_time=" + sw.getTimeBefore(1) / 1000000 + "ms");
-                    corpusConsumer.accept(parsedInst);
-                }
-
-                if (listener != null) {
-                    listener.accept(i++, N, null);
+                    if (listener != null) {
+                        listener.accept(i++, N, null);
+                    }
                 }
             }
+        } finally {
+            // turn logging back on
+            Logging.get().setLevel(oldLevel);
         }
     }
 

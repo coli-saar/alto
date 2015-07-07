@@ -25,15 +25,12 @@ import de.up.ling.irtg.util.ValueAndTimeConsumer;
 import de.up.ling.irtg.util.ProgressBarWorker;
 import de.up.ling.irtg.util.TextInputDialog;
 import de.up.ling.irtg.util.Util;
-import static de.up.ling.irtg.util.Util.stripExtension;
 import java.awt.Component;
 import java.awt.Window;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.util.ArrayList;
@@ -594,6 +591,13 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
             @Override
             public void publish(LogRecord record) {
                 String str = getFormatter().format(record);
+                
+                if( record.getLevel() == Level.WARNING ) {
+                    str = "WARNING: " + str;
+                } else if( record.getLevel() == Level.SEVERE ) {
+                    str = "SEVERE: " + str;
+                }
+                
                 guiMain.log(str);
             }
 

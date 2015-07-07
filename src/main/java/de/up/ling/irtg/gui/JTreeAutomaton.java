@@ -709,7 +709,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                     String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
                     final CorpusWriter cw = new CorpusWriter(irtg, true, s, w);
 
-                    GuiUtils.withProgressBar(Alto.getApplication(), "Parsing progress", "Bulk parsing of input corpus ...",
+                    GuiUtils.withProgressBar(JTreeAutomaton.this, "Parsing progress", "Bulk parsing of input corpus ...",
                             listener -> {
                                 irtg.bulkParse(inputCorpus, cw, listener);
                                 w.flush();
