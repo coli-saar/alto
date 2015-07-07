@@ -67,8 +67,8 @@ public class BestFirstIntersectionAutomaton<LeftState, RightState> extends Inter
      */
     @Override
     public void makeAllRulesExplicit() {
-        if (!isExplicit) {
-            isExplicit = true;
+        if (!ruleStore.isExplicit()) {
+            ruleStore.setExplicit(true);
 
             getStateInterner().setTrustingMode(true);
 

@@ -48,8 +48,8 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
 
     @Override
     public void makeAllRulesExplicit() {
-        if (!isExplicit) {
-            isExplicit = true;
+        if (!ruleStore.isExplicit()) {
+            ruleStore.setExplicit(true);
 
             getStateInterner().setTrustingMode(true);
 

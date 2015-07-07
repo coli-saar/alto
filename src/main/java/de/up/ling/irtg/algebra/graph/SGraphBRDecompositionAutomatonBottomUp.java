@@ -8,11 +8,12 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.automata.RuleCache;
-import de.up.ling.irtg.automata.BinaryRuleCache;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.index.BinaryBottomUpRuleIndex;
+import de.up.ling.irtg.automata.index.MapTopDownIndex;
+import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
@@ -42,6 +43,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -58,7 +60,7 @@ import java.util.Set;
  * @author groschwitz
  */
 public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<BoundaryRepresentation> {
-    private final RuleCache storedRules;    
+//    private final BottomUpRuleIndex storedRules;    
     private final GraphInfo completeGraphInfo;    
     private final GraphAlgebra algebra;
     
@@ -75,7 +77,10 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         this.algebra = algebra;
 
         completeGraphInfo = new GraphInfo(completeGraph, algebra);
-        storedRules = new BinaryRuleCache();
+        
+        ruleStore = new RuleStore(new MapTopDownIndex(), new BinaryBottomUpRuleIndex());
+        
+//        storedRules = new BinaryBottomUpRuleIndex();
         
         
         
@@ -128,11 +133,11 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
     
 
-    static <E> Iterable<E> sing(E object) {
+    private static <E> Collection<E> sing(E object) {
         return Collections.singletonList(object);
     }
 
-    Iterable<Rule> sing(BoundaryRepresentation parent, int labelId, int[] childStates) {
+    private Collection<Rule> sing(BoundaryRepresentation parent, int labelId, int[] childStates) {
 //        System.err.println("-> make rule, parent= " + parent);
         return sing(makeRule(parent, labelId, childStates));
     }
@@ -142,7 +147,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-        Iterable<Rule> cachedResult = storedRules.get(labelId, childStates);
+        Iterable<Rule> cachedResult = ruleStore.getRulesBottomUp(labelId, childStates);
         
         if( cachedResult != null ) {
             switch (signature.getArity(labelId)) {
@@ -288,12 +293,8 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * @param children
      * @return 
      */
-    protected Iterable<Rule> cacheRules(Iterable<Rule> rules, int labelID, int[] children) {
-        Iterable<Rule> ret = rules;
-        if (doStore) {
-            ret = storedRules.put(rules, labelID, children);
-        }
-        return ret;
+    protected Collection<Rule> cacheRules(Collection<Rule> rules, int labelID, int[] children) {
+        return ruleStore.storeRules(rules, labelID, children);
     }
     
 
@@ -630,8 +631,8 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         stateInterner.setTrustingMode(true);
         count = 0;
 
-        boolean tempDoStore = isDoStore();
-        setDoStore(false);
+        boolean tempDoStore = isStoring();
+        setStoring(false);
         
         boolean ret = processAllRulesBottomUp(rule -> {
             if (actuallyWrite) {
@@ -643,7 +644,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             }
         });
         
-        setDoStore(tempDoStore);
+        setStoring(tempDoStore);
         
         return ret;
     }

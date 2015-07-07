@@ -3,32 +3,35 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.automata;
 
+package de.up.ling.irtg.automata.index;
+
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import java.util.Collection;
 
 /**
  *
  * @author koller
  */
-public class BinaryRuleCache implements RuleCache {
-    private final Int2ObjectMap<Iterable<Rule>> storedRulesNullary;   // label -> rules
-    private final Long2ObjectMap<Iterable<Rule>> storedRulesUnary;    // child|label -> rules
-    private final Int2ObjectMap<Long2ObjectMap<Iterable<Rule>>> storedRulesBinary; // label -> child1|child2 -> rules
+public class BinaryBottomUpRuleIndex extends BottomUpRuleIndex {
+    private final Int2ObjectMap<Collection<Rule>> storedRulesNullary;   // label -> rules
+    private final Long2ObjectMap<Collection<Rule>> storedRulesUnary;    // child|label -> rules
+    private final Int2ObjectMap<Long2ObjectMap<Collection<Rule>>> storedRulesBinary; // label -> child1|child2 -> rules
 
-    public BinaryRuleCache() {
+    public BinaryBottomUpRuleIndex() {
         storedRulesNullary = new ArrayMap<>();
         storedRulesUnary = new Long2ObjectOpenHashMap<>();
         storedRulesBinary = new Int2ObjectOpenHashMap<>();
     }
 
     @Override
-    public Iterable<Rule> put(Iterable<Rule> rules, int labelId, int[] childStates) {
+    public void put(Collection<Rule> rules, int labelId, int[] childStates) {
         long key;
 
         switch (childStates.length) {
@@ -42,7 +45,7 @@ public class BinaryRuleCache implements RuleCache {
                 break;
 
             case 2:
-                Long2ObjectMap<Iterable<Rule>> rulesHere = storedRulesBinary.get(labelId);
+                Long2ObjectMap<Collection<Rule>> rulesHere = storedRulesBinary.get(labelId);
                 if (rulesHere == null) {
                     rulesHere = new Long2ObjectOpenHashMap<>();
                     storedRulesBinary.put(labelId, rulesHere);
@@ -55,12 +58,10 @@ public class BinaryRuleCache implements RuleCache {
             default:
                 throw new RuntimeException("using label with arity > 2");
         }
-
-        return rules;
     }
 
     @Override
-    public Iterable<Rule> get(int labelId, int[] childStates) {
+    public Collection<Rule> get(int labelId, int[] childStates) {
         long key;
         
         switch(childStates.length) {
@@ -72,7 +73,7 @@ public class BinaryRuleCache implements RuleCache {
                 return storedRulesUnary.get(key);
                 
             case 2:
-                Long2ObjectMap<Iterable<Rule>> rulesHere = storedRulesBinary.get(labelId);
+                Long2ObjectMap<Collection<Rule>> rulesHere = storedRulesBinary.get(labelId);
                 
                 if( rulesHere == null ) {
                     return null;
@@ -85,5 +86,6 @@ public class BinaryRuleCache implements RuleCache {
                 throw new RuntimeException("using label with arity > 2");
         }
     }
+
 
 }

@@ -97,8 +97,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     // Intersecting the two automatons using a CKY algorithm
     @Override
     public void makeAllRulesExplicit() {
-        if (!isExplicit) {
-            isExplicit = true;
+        if (!ruleStore.isExplicit()) {
+            ruleStore.setExplicit(true);
             getStateInterner().setTrustingMode(true);
 
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<IntSet>();

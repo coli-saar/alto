@@ -27,7 +27,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 
     public ConcreteTreeAutomaton(Signature signature) {
         super(signature);
-        isExplicit = true;
+        ruleStore.setExplicit(true);
     }
 
     @Override
@@ -45,14 +45,14 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
         storeRule(rule);
     }
     
-    public void removeAllRules() {
-        explicitRulesBottomUp = new IntTrie<Int2ObjectMap<Set<Rule>>>();
-
-        explicitRulesTopDown = new MapTopDownIndex();
-
-        unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
-        unprocessedUpdatesForBottomUp = new ArrayList<>();
-    }
+//    public void removeAllRules() {
+//        explicitRulesBottomUp = new IntTrie<Int2ObjectMap<Set<Rule>>>();
+//
+//        explicitRulesTopDown = new MapTopDownIndex();
+//
+//        unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
+//        unprocessedUpdatesForBottomUp = new ArrayList<>();
+//    }
 
     @Override
     public Iterable<Rule> getRulesBottomUp(int label, int[] childStates) {
@@ -66,8 +66,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 
     @Override
     public boolean isBottomUpDeterministic() {
-        getExplicitRulesBottomUp();
-        return explicitIsBottomUpDeterministic;
+        return ruleStore.isBottomUpDeterministic();
     }
 
     @Override

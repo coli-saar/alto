@@ -171,7 +171,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
     */
 
     @Override
-    public Collection<Rule> getRulesBottomUp(int label, final int[] childStates) {
+    public Iterable<Rule> getRulesBottomUp(int label, final int[] childStates) {
         if (debug) {
             System.err.println("Handling label " + label + " and CS : " + childStatesToString(childStates));
         }

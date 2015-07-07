@@ -316,9 +316,9 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     }
 
     public void makeAllRulesExplicitCKY() {
-        if (!isExplicit) {
+        if (!ruleStore.isExplicit()) {
             ckyTimestamp[0] = System.nanoTime();
-            isExplicit = true;
+            ruleStore.setExplicit(true);
 
             int[] oldLabelRemap = labelRemap;
             labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
@@ -354,11 +354,11 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     }
 
     public void makeAllRulesExplicitCKYOld() {
-        if (!isExplicit) {
+        if (!ruleStore.isExplicit()) {
 
             double t1 = System.nanoTime();
 
-            isExplicit = true;
+            ruleStore.setExplicit(true);
             int[] oldLabelRemap = labelRemap;
             labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
             SetMultimap<Integer, Integer> partners = HashMultimap.create();
@@ -429,8 +429,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     @Override
     public void makeAllRulesExplicit() {
 //        makeAllRulesExplicitCKY();
-        if (!isExplicit) {
-            isExplicit = true;
+        if (!ruleStore.isExplicit()) {
+            ruleStore.setExplicit(true);
 
             getStateInterner().setTrustingMode(true);
 
@@ -698,7 +698,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * ************* Early-style intersection *************
      */
     public void makeAllRulesExplicitEarley() {
-        if (!isExplicit) {
+        if (!ruleStore.isExplicit()) {
             Queue<IncompleteEarleyItem> agenda = new Agenda<IncompleteEarleyItem>();
             ListMultimap<Integer, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create(); // left state ID -> ...
             ListMultimap<Integer, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();   // left state ID -> ...
@@ -751,7 +751,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                 }
             }
 
-            isExplicit = true;
+            ruleStore.setExplicit(true);
 //            System.err.println("earley intersect: " + countAgendaItems + " incomplete items");
         }
     }
