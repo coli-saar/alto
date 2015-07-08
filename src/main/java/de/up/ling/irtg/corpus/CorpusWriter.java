@@ -10,32 +10,36 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
 /**
  *
  * @author koller
  */
-public class CorpusWriter implements Consumer<Instance> {
+public class CorpusWriter extends AbstractCorpusWriter {
 
     private final Writer writer;
-    private boolean isAnnotated;
     private final InterpretedTreeAutomaton irtg;
     private final List<String> interpretationsInOrder;
     private boolean isHeaderWritten;
     private String comment;
     public static final String NULL = "_null_";
 
-    public CorpusWriter(InterpretedTreeAutomaton irtg, boolean isAnnotated, String comment, Writer writer) throws IOException {
+    public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, Writer writer) throws IOException {
         this.writer = writer;
-        this.isAnnotated = isAnnotated;
         this.irtg = irtg;
         this.interpretationsInOrder = new ArrayList<>(irtg.getInterpretations().keySet()); // fix some order of interpretations
         this.comment = comment;
 
         isHeaderWritten = false;
     }
+    
+    @Override
+    public void close() throws IOException {
+        writer.flush();
+        writer.close();
+    }
 
+    @Override
     public void writeInstance(Instance inst) throws IOException {
         boolean isn = inst.isNull();
         
@@ -44,10 +48,9 @@ public class CorpusWriter implements Consumer<Instance> {
             isHeaderWritten = true;
         }
 
-        if (inst.getComment() != null) {
-            String[] lines = inst.getComment().split("\n");
-            for( String line : lines ) {
-                writer.write("# " + line + "\n");
+        if (inst.getComments() != null) {
+            for( String key : inst.getComments().keySet() ) {
+                writer.write("# " + key + ": " + inst.getComments().get(key) + "\n");
             }
         }
 
@@ -56,17 +59,18 @@ public class CorpusWriter implements Consumer<Instance> {
             writer.write(repr + "\n");
         }
 
-        if (isAnnotated) {
+        if (annotated) {
             writer.write((isn ? NULL : irtg.getAutomaton().getSignature().resolve(inst.getDerivationTree())) + "\n");
         }
 
         writer.write("\n");
+        writer.flush();
     }
 
     private String makeHeader(String comment) {
         StringBuilder buf = new StringBuilder();
 
-        buf.append("# IRTG " + (isAnnotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
+        buf.append("# IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
         buf.append("# \n");
 
         if (comment != null) {
@@ -82,19 +86,4 @@ public class CorpusWriter implements Consumer<Instance> {
 
         return buf.toString();
     }
-
-    @Override
-    public void accept(Instance t) {
-        try {
-            writeInstance(t);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-    }
-
-    public void setIsAnnotated(boolean isAnnotated) {
-        this.isAnnotated = isAnnotated;
-    }
-    
-    
 }

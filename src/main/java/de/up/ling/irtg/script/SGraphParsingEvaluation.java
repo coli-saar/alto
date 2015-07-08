@@ -153,7 +153,7 @@ public class SGraphParsingEvaluation {
         Iterator<Instance> it = ret.iterator();
         int id = 1;
         while (it.hasNext()) {
-            it.next().setComment(String.valueOf(id));
+            it.next().setComments("id", String.valueOf(id));
             id++;
         }
         return ret;
@@ -351,7 +351,7 @@ public class SGraphParsingEvaluation {
         invhomRules = 0;
         intersectionRules = 0;
         SGraph graph = (SGraph)instance.getInputObjects().get("graph");
-        int id = Integer.valueOf(instance.getComment());
+        int id = Integer.valueOf(instance.getComments().get("id"));
         System.out.println(graph.toIsiAmrString());
         internalSw.record(0);
         TreeAutomaton chart = null;
@@ -507,7 +507,7 @@ public class SGraphParsingEvaluation {
         while (it.hasNext()) {
             Instance instance = it.next();
             SGraph graph = (SGraph)instance.getInputObjects().get("graph");
-            int id = Integer.valueOf(instance.getComment());
+            int id = Integer.valueOf(instance.getComments().get("id"));
             System.err.println("i = " + i);
             GraphInfo graphInfo = new GraphInfo(graph, alg);
             int maxDeg = graphInfo.getMaxDegree();

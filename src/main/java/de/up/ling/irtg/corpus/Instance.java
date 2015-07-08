@@ -4,8 +4,10 @@
  */
 package de.up.ling.irtg.corpus;
 
+import com.google.common.collect.ImmutableMap;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -16,7 +18,7 @@ public class Instance {
     private Map<String, Object> inputObjects;
     private Tree<Integer> derivationTree;        // may be null if corpus was unannotated
     private TreeAutomaton chart;                 // may be null if corpus was unparsed
-    private String comment;                      // may be null if instance had no comment
+    private Map<String,String> comments;          // may be null if instance had no comment
 
     public Instance() {
     }
@@ -64,13 +66,22 @@ public class Instance {
         return copy;
     }
 
-    public String getComment() {
-        return comment;
+    public Map<String, String> getComments() {
+        return comments;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setComments(Map<String, String> comments) {
+        this.comments = comments;
     }
+    
+    public void setComments(String... comments) {
+        this.comments = new HashMap<>();
+        for( int i = 0; i < comments.length; i++ ) {
+            this.comments.put(comments[i], comments[i+1]);
+        }
+    }
+
+    
     
     
     

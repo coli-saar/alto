@@ -707,7 +707,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 if (outputCorpusFile != null) {
                     final FileWriter w = new FileWriter(outputCorpusFile);
                     String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
-                    final CorpusWriter cw = new CorpusWriter(irtg, true, s, w);
+                    final CorpusWriter cw = new CorpusWriter(irtg, s, w);
+                    cw.setAnnotated(true);
 
                     GuiUtils.withProgressBar(JTreeAutomaton.this, "Parsing progress", "Bulk parsing of input corpus ...",
                             listener -> {

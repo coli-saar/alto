@@ -102,7 +102,8 @@ public class Corpus implements Iterable<Instance> {
     }
 
     public void writeCorpus(Writer writer, InterpretedTreeAutomaton irtg) throws IOException {
-        CorpusWriter cw = new CorpusWriter(irtg, isAnnotated, null, writer);
+        CorpusWriter cw = new CorpusWriter(irtg, null, writer);
+        cw.setAnnotated(isAnnotated);
 
         for (Instance inst : instances) {
             cw.writeInstance(inst);

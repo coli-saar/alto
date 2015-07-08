@@ -28,31 +28,37 @@ import java.util.function.Function;
  *
  * The {@link #convert(java.util.Iterator) } method will then traverse the
  * iterator and write the converted outputs to the writer.<p>
- * 
- * Alternatively, you can use the CorpusConverter as a {@link Consumer} in
- * the context of internal iteration.
- * 
+ *
+ * Alternatively, you can use the CorpusConverter as a {@link Consumer} in the
+ * context of internal iteration.
+ *
  *
  * @author koller
  */
 public class CorpusConverter<E> implements Consumer<E> {
+
     private final Map<String, Function<E, ? extends Object>> conv;
-    private final InterpretedTreeAutomaton irtg;
-    private final CorpusWriter cw;
-    private Function<E,Tree<String>> derivationTreeMaker;
+//    private final InterpretedTreeAutomaton irtg;
+    private final AbstractCorpusWriter cw;
+    private Function<E, Tree<Integer>> derivationTreeMaker;
 
-    public CorpusConverter(String inputCorpusName, Map<String, Algebra> algebras, Map<String, Function<E, ? extends Object>> conv, Writer writer) throws IOException {
+    public CorpusConverter(AbstractCorpusWriter cw, Map<String, Function<E, ? extends Object>> conv) throws IOException {
         this.conv = conv;
-
-        irtg = InterpretedTreeAutomaton.forAlgebras(algebras);
-        cw = new CorpusWriter(irtg, false, "Converted from " + inputCorpusName + "\non " + new Date().toString(), writer);
+//        this.irtg = irtg;
+        this.cw = cw;
     }
 
-    public void setDerivationTreeMaker(Function<E, Tree<String>> derivationTreeMaker) {
+//    @Deprecated
+//    public CorpusConverter(String inputCorpusName, Map<String, Algebra> algebras, Map<String, Function<E, ? extends Object>> conv, Writer writer) throws IOException {
+//        this.conv = conv;
+//        irtg = InterpretedTreeAutomaton.forAlgebras(algebras);
+//        cw = new CorpusWriter(irtg, false, "Converted from " + inputCorpusName + "\non " + new Date().toString(), writer);
+//    }
+    public void setDerivationTreeMaker(Function<E, Tree<Integer>> derivationTreeMaker) {
         this.derivationTreeMaker = derivationTreeMaker;
-        cw.setIsAnnotated(true);
+        cw.setAnnotated(true);
     }
-    
+
     public void convert(Iterator<E> inputCorpus) throws IOException {
         while (inputCorpus.hasNext()) {
             E element = inputCorpus.next();
@@ -70,13 +76,15 @@ public class CorpusConverter<E> implements Consumer<E> {
     @Override
     public void accept(E element) {
         Instance instance = toInstance(element);
-        
-        if( derivationTreeMaker != null ) {
-            Tree<String> dt = derivationTreeMaker.apply(element);
-            instance.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(dt));
+
+        if (derivationTreeMaker != null) {
+            Tree<Integer> dt = derivationTreeMaker.apply(element);
+            instance.setDerivationTree(dt);
+//            Tree<String> dt = derivationTreeMaker.apply(element);
+//            instance.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(dt));
 //            System.exit(0);
         }
-        
+
         cw.accept(instance);
     }
 }

@@ -5,6 +5,7 @@
 package de.up.ling.irtg;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import de.saar.basic.Pair;
@@ -733,7 +734,7 @@ public class InterpretedTreeAutomaton implements Serializable {
                         Instance parsedInst = new Instance();
                         parsedInst.setAsNull();
                         parsedInst.setDerivationTree(null);
-                        parsedInst.setComment("could not parse: " + inst);
+                        parsedInst.setComments("could not parse", inst.toString());
                         corpusConsumer.accept(parsedInst);
 
                         Logging.get().warning("Could not parse: " + inst);
@@ -753,7 +754,8 @@ public class InterpretedTreeAutomaton implements Serializable {
                         Instance parsedInst = new Instance();
                         parsedInst.setInputObjects(values);
                         parsedInst.setDerivationTree(t.getTree());
-                        parsedInst.setComment("parse_time=" + sw.getTimeBefore(1) / 1000000 + "ms\nweight=" + t.getWeight());
+                        parsedInst.setComments("parse_time_ms", Double.toString(sw.getTimeBefore(1) / 1000000),
+                                "weight=", Double.toString(t.getWeight()));
                         corpusConsumer.accept(parsedInst);
                     }
 
