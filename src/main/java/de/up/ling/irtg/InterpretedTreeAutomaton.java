@@ -713,7 +713,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         int i = 0;
 
         if (listener != null) {
-            listener.accept(i++, N, null);
+            listener.accept(i, N, "Parsing 1/" + N);
         }
 
         // suppress INFOs from intersection algorithms
@@ -726,9 +726,12 @@ public class InterpretedTreeAutomaton implements Serializable {
                     CpuTimeStopwatch sw = new CpuTimeStopwatch();
                     sw.record(0);
 
+//                    System.err.println("parse: " + inst.getInputObjects());
+//                    System.err.println("   - " + input.hasCharts());
                     TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
+//                    System.err.println("ok");
                     WeightedTree t = chart.viterbiRaw();
-
+                    
                     if (t == null) {
                         Instance parsedInst = new Instance();
                         parsedInst.setAsNull();
@@ -758,7 +761,8 @@ public class InterpretedTreeAutomaton implements Serializable {
                     }
 
                     if (listener != null) {
-                        listener.accept(i++, N, null);
+                        i++;
+                        listener.accept(i, N, "Parsing " + (i+1) + "/" + N);
                     }
                 }
             }
