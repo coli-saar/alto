@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.align;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -13,6 +14,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -66,15 +69,16 @@ public class IntroduceX {
      * @param setPrefix
      * @return 
      */
-    public static ConcreteTreeAutomaton introduce(TreeAutomaton input, RuleMarker marks,
+    public static Pair<TreeAutomaton,Set<String>> introduce(TreeAutomaton input, RuleMarker marks,
                                                              String setPrefix){
         ConcreteTreeAutomaton cta = new ConcreteTreeAutomaton(input.getSignature());
         Int2ObjectMap<IntSet> mapping = input.evaluateInSemiring2(VAR_PROPAGATOR, marks);
+        Set<String> specialSymbols = new TreeSet<>();
         
-        Visitor vis = new Visitor(setPrefix, mapping, cta, input);
+        Visitor vis = new Visitor(setPrefix, mapping, specialSymbols, cta, input);
         input.foreachStateInBottomUpOrder(vis);
         
-        return cta;
+        return new Pair<>(cta,specialSymbols);
     }
     
     /**
@@ -82,6 +86,11 @@ public class IntroduceX {
      */
     private static class Visitor implements TreeAutomaton.BottomUpStateVisitor
     {
+        /**
+         * 
+         */
+        private final Set<String> specialSymbols;
+        
         /**
          * 
          */
@@ -108,12 +117,13 @@ public class IntroduceX {
          * @param vars
          * @param goal 
          */
-        public Visitor(String prefix, Int2ObjectMap<IntSet> vars, 
+        public Visitor(String prefix, Int2ObjectMap<IntSet> vars, Set<String> special,
                                         ConcreteTreeAutomaton goal, TreeAutomaton original) {
             this.prefix = prefix;
             this.vars = vars;
             this.goal = goal;
             this.original = original;
+            this.specialSymbols = special;
         }
         
         
@@ -124,6 +134,7 @@ public class IntroduceX {
             
             Object st = this.original.getStateForId(state);
             String loopLabel = this.prefix+this.vars.get(state);
+            this.specialSymbols.add(loopLabel);
             
             this.goal.addRule(this.goal.createRule(st, loopLabel, new Object[] {st}));
             
