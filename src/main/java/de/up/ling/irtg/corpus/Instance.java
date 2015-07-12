@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.corpus;
 
-import com.google.common.collect.ImmutableMap;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import java.util.HashMap;
