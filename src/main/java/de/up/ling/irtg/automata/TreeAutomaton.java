@@ -840,7 +840,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Tree<String> viterbi() {
-        return getSignature().resolve(viterbiRaw().getTree());
+	WeightedTree raw = viterbiRaw();
+
+	if( raw == null ) {
+	    return null;
+	} else {
+	    return getSignature().resolve(raw.getTree());
+	}
+
 //        // run Viterbi algorithm bottom-up, saving rules as backpointers
 //
 //        Int2ObjectMap<Pair<Double, Rule>> map
