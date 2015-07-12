@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import com.google.common.collect.ImmutableMap;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
@@ -800,7 +801,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
         int id = 1;
         for (Instance instance : corpus) {
-            instance.setComment(String.valueOf(id));
+            instance.setComments("id", String.valueOf(id));
             SGraph graph = (SGraph)instance.getInputObjects().get("graph");
             ByteArrayOutputStream stream = new ByteArrayOutputStream();
             bolCodec.write(graph, stream);
@@ -844,7 +845,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             }
         }
         System.out.println("Chosen IDs:");
-        corpusToParse.forEach(instance-> System.out.println(instance.getComment()));
+        corpusToParse.forEach(instance-> System.out.println(instance.getComments().get("id")));
         System.out.println("---------------------");
         
         corpusToParse.sort(Comparator.comparingInt(instance -> ((SGraph)instance.getInputObjects().get("graph")).getAllNodeNames().size()
@@ -862,7 +863,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
                 instancesTried++;
                 System.out.println(i);
                 SGraph graph = (SGraph)instance.getInputObjects().get("graph");
-                int instanceID = Integer.valueOf(instance.getComment());
+                int instanceID = Integer.valueOf(instance.getComments().get("id"));
                 GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(graph, sourceCount);
                 Writer rtgWriter = new FileWriter(targetFolderPath+String.valueOf(instanceID)+"_"+graph.getAllNodeNames().size()+"nodes"+".rtg");
                 SGraphBRDecompositionAutomatonBottomUp botupAuto = new SGraphBRDecompositionAutomatonBottomUp(graph, alg);

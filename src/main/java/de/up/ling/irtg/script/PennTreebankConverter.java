@@ -16,6 +16,8 @@ import de.up.ling.irtg.algebra.WideStringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.PtbTreeInputCodec;
+import de.up.ling.irtg.corpus.AbstractCorpusWriter;
+import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Interner;
@@ -27,6 +29,7 @@ import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -48,18 +51,24 @@ import java.util.function.Function;
  * @author koller
  */
 public class PennTreebankConverter {
-
+    private static final Map<String, Algebra> algebras = ImmutableMap.of("string", new WideStringAlgebra(), "tree", new TreeWithAritiesAlgebra());
+    private static final InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.forAlgebras(algebras);
+        
     public static void main(String[] args) throws Exception {
-        PtbTreeInputCodec codec = new PtbTreeInputCodec();
         Writer w = new FileWriter("out.txt");
-        Map<String, Algebra> algebras = ImmutableMap.of("string", new WideStringAlgebra(), "tree", new TreeWithAritiesAlgebra());
+        
+        String corpusName = Joiner.on(" ").join(args);
+        AbstractCorpusWriter cw = new CorpusWriter(irtg, "Converted from " + corpusName + "\non " + new Date().toString(), w);
+        
+        convert(args, cw);
+    }
+    
+    public static void convert(String[] args, AbstractCorpusWriter cw) throws Exception {
+        PtbTreeInputCodec codec = new PtbTreeInputCodec();
+        CorpusConverter<Tree<String>> converter = new CorpusConverter<Tree<String>>(cw, 
+                ImmutableMap.of("string", (Tree<String> tree) -> tree.getLeafLabels(), "tree", x -> x));
 
-        CorpusConverter<Tree<String>> converter = new CorpusConverter<Tree<String>>(Joiner.on(" ").join(args),
-                algebras,
-                ImmutableMap.of("string", (Tree<String> tree) -> tree.getLeafLabels(), "tree", x -> x),
-                w);
-
-        DerivationTreeMaker dtm = new DerivationTreeMaker(algebras);
+        DerivationTreeMaker dtm = new DerivationTreeMaker();
         converter.setDerivationTreeMaker(dtm);
 
         for (String filename : args) {
@@ -67,19 +76,17 @@ public class PennTreebankConverter {
             InputStream corpus = new FileInputStream(filename);
             codec.readCorpus(corpus).forEach(converter);
         }
-
-        w.flush();
-        w.close();
+        
+        cw.close();
 
         System.err.println("Done.");
 
         // write IRTG
         System.err.println("\nEstimate IRTG weights with Maximum Likelihood on new corpus ...");
         
-        InterpretedTreeAutomaton irtg = dtm.irtg;
         irtg.trainML(irtg.readCorpus(new FileReader("out.txt")));
         
-        w = new FileWriter("out.irtg");
+        Writer w = new FileWriter("out.irtg");
         w.write(irtg.toString());
         w.flush();
         w.close();
@@ -87,20 +94,25 @@ public class PennTreebankConverter {
         System.err.println("Done.");
     }
 
-    private static class DerivationTreeMaker implements Function<Tree<String>, Tree<String>> {
+    public static InterpretedTreeAutomaton getIrtg() {
+        return irtg;
+    }
 
+    
+    
+    
+    private static class DerivationTreeMaker implements Function<Tree<String>, Tree<Integer>> {
         Interner<PtbRule> seenRules = new Interner<>();
-        InterpretedTreeAutomaton irtg;
         private ConcreteTreeAutomaton<String> auto;
 
-        public DerivationTreeMaker(Map<String, Algebra> algebras) {
-            irtg = InterpretedTreeAutomaton.forAlgebras(algebras);
+        public DerivationTreeMaker() {
+//            irtg = InterpretedTreeAutomaton.forAlgebras(algebras);
             auto = (ConcreteTreeAutomaton) irtg.getAutomaton();
         }
 
         @Override
-        public Tree<String> apply(Tree<String> derivedTree) {
-            return derivedTree.dfs((node, children) -> {
+        public Tree<Integer> apply(Tree<String> derivedTree) {
+            Tree<String> dt = derivedTree.dfs((node, children) -> {
 //                System.err.println("call: " + node);
 //                System.err.println("    " + children);
 
@@ -151,6 +163,8 @@ public class PennTreebankConverter {
                     return Tree.create(label, derivTreeChildren);
                 }
             });
+            
+            return irtg.getAutomaton().getSignature().addAllSymbols(dt);
         }
     }
     
