@@ -9,13 +9,12 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.RuleEvaluator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.List;
 
 /**
  *
  * @author christoph
  */
-public interface RuleMarker extends RuleEvaluator<IntSet[]> {
+public interface RuleMarker extends RuleEvaluator<IntSet> {
     
     /**
      * 
@@ -23,13 +22,7 @@ public interface RuleMarker extends RuleEvaluator<IntSet[]> {
      * @return 
      */
     @Override
-    public IntSet[] evaluateRule(Rule r);
-
-    /**
-     * 
-     * @return 
-     */
-    public int width();
+    public IntSet evaluateRule(Rule r);
 
     /**
      * 
@@ -38,12 +31,13 @@ public interface RuleMarker extends RuleEvaluator<IntSet[]> {
      * @param state
      * @return 
      */
-    public String makeCode(IntSet[] alignments, TreeAutomaton original, int state);
+    public String makeCode(IntSet alignments, TreeAutomaton original, int state);
     
     /**
-     * 
-     * @param labels
+     *
+     * @param label1
+     * @param label2
      * @return 
      */
-    public boolean checkCompatible(List<String> labels);
+    public boolean checkCompatible(String label1, String label2);
 }

@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.align;
 
-import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -14,14 +13,12 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  *
  * @author christoph
  */
-public class IntroduceX {  
+public class MarkingPropagator {  
     
     /**
      * 
@@ -32,7 +29,7 @@ public class IntroduceX {
      * 
      * @param setPrefixMarker 
      */
-    public IntroduceX(String setPrefixMarker)
+    public MarkingPropagator(String setPrefixMarker)
     {
         this.setPrefix = setPrefixMarker;
     }
@@ -46,9 +43,9 @@ public class IntroduceX {
     public TreeAutomaton introduce(TreeAutomaton input, RuleMarker rlm){
         ConcreteTreeAutomaton cta = new ConcreteTreeAutomaton(input.getSignature());
         
-        Semiring<IntSet[]> sr = new VariablePropagator(rlm.width());
+        Semiring<IntSet> sr = new VariablePropagator();
         
-        Int2ObjectMap<IntSet[]> mapping = input.evaluateInSemiring2(sr, rlm);
+        Int2ObjectMap<IntSet> mapping = input.evaluateInSemiring2(sr, rlm);
         
         Visitor vis = new Visitor(setPrefix, mapping, rlm, cta, input);
         input.foreachStateInBottomUpOrder(vis);
@@ -70,7 +67,7 @@ public class IntroduceX {
         /**
          * 
          */
-        private final Int2ObjectMap<IntSet[]> vars;
+        private final Int2ObjectMap<IntSet> vars;
         
         /**
          * 
@@ -94,7 +91,7 @@ public class IntroduceX {
          * @param vars
          * @param goal 
          */
-        public Visitor(String prefix, Int2ObjectMap<IntSet[]> vars, RuleMarker rlm,
+        public Visitor(String prefix, Int2ObjectMap<IntSet> vars, RuleMarker rlm,
                                         ConcreteTreeAutomaton goal, TreeAutomaton original) {
             this.prefix = prefix;
             this.vars = vars;
@@ -147,84 +144,41 @@ public class IntroduceX {
     /**
      * 
      */
-    private class VariablePropagator implements Semiring<IntSet[]> {
-        
+    private static class VariablePropagator implements Semiring<IntSet> {
+
         /**
          * 
          */
-        private final int width;
+        private final static IntSet ZERO = new IntAVLTreeSet();
         
-        VariablePropagator(int width)
-        {
-            this.width = width;
-        }
-
         @Override
-        public IntSet[] add(IntSet[] x, IntSet[] y) {
-            
-            if(x.length != y.length)
-            {
-                throw new IllegalStateException("non-equal alignment groups");
-            }
-            
-            for(int i = 0;i<x.length;++i)
-            {
-                IntSet a = x[i];
-                IntSet b = x[i];
-                
-                if(!a.equals(b))
-                {
-                    throw new IllegalStateException("Variables dominated by states are not unique");
-                }
+        public IntSet add(IntSet x, IntSet y) {
+            if(!x.equals(y)){
+                throw new IllegalStateException("Variables dominated by states are not unique");
             }
             
             return x;
         }
 
         @Override
-        public IntSet[] multiply(IntSet[] x, IntSet[] y) {
-            
-           if(x.length != y.length)
-           {
-               throw new IllegalStateException("non-equal alignment groups");
-           }
-            
-           IntSet[] ret = new IntSet[x.length];
-            
-            for(int i=0;i<x.length;++i)
-            {
-                IntSet a = x[i];
-                IntSet b = x[i];
-                
-                IntIterator ii = a.iterator();
-                while(ii.hasNext())
-                {
-                    if(b.contains(ii.nextInt()))
-                    {
-                        throw new IllegalStateException("Adding a variable twice is against the rules for alignment"
-                           + "markers; attempted for: "+a+" "+b);
-                    }
+        public IntSet multiply(IntSet x, IntSet y) {
+           IntIterator ii = x.iterator();
+           while(ii.hasNext()){
+                if(y.contains(ii.nextInt())){
+                    throw new IllegalStateException("Adding a variable twice is against the rules for alignment"
+                        + "markers; attempted for: "+x+" "+y);
                 }
-           
-                IntSet set = new IntAVLTreeSet(a);
-                set.addAll(b);
-                
-                ret[i] = set;
             }
            
-           return ret;
+            IntSet set = new IntAVLTreeSet(x);
+            set.addAll(y);
+           
+           return set;
         }
 
         @Override
-        public IntSet[] zero() {
-            IntSet[] ret = new IntSet[width];
-            
-            for(int i=0;i<ret.length;++i)
-            {
-                ret[i] = new IntAVLTreeSet();
-            }
-            
-            return ret;
+        public IntSet zero() {
+            return ZERO;
         }
     };
 }
