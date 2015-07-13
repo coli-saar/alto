@@ -85,9 +85,10 @@ class TreeAutomatonTest{
     }
     
     @Test
-    public void testIntersection() {
+    public void testIntersection() {        
         TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
+        
         TreeAutomaton intersect = auto1.intersect(auto2);
         
         assert intersect.getSignature() == auto1.getSignature();

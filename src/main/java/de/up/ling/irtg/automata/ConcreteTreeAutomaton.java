@@ -71,7 +71,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 
     @Override
     public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Consumer<Rule> fn) {
-        getExplicitRulesBottomUp().foreachValueForKeySets(childStateSets, ruleMap -> {
+        ruleStore.getTrie().foreachValueForKeySets(childStateSets, ruleMap -> {
             // TODO: This is optimized for the PCFG case, where the label sets are typically much
             // larger than the sets of rules with the same child states. Adapt IntTrie iteration/contains
             // trick here to iterate over smaller set. Take special care to remap in the right direction.

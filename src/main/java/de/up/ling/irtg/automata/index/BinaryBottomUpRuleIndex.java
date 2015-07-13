@@ -87,5 +87,11 @@ public class BinaryBottomUpRuleIndex extends BottomUpRuleIndex {
         }
     }
 
+    // TODO - implement this!
+    @Override
+    public Iterable<Rule> getAllRules() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 
 }

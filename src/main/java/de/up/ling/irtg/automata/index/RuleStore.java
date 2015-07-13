@@ -8,6 +8,7 @@ package de.up.ling.irtg.automata.index;
 import com.google.common.collect.Iterables;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
@@ -15,18 +16,18 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  *
  * @author koller
  */
 public class RuleStore {
+    private TreeAutomaton auto;
+    
     private TopDownRuleIndex topDown;
 
     private BottomUpRuleIndex bottomUp;
@@ -38,11 +39,12 @@ public class RuleStore {
     private boolean explicit;
     protected boolean storing = true;
 
-    public RuleStore() {
-        this(new MapTopDownIndex(), new TrieBottomUpRuleIndex());
+    public RuleStore(TreeAutomaton auto) {
+        this(auto, new MapTopDownIndex(auto), new TrieBottomUpRuleIndex());
     }
 
-    public RuleStore(TopDownRuleIndex topDown, BottomUpRuleIndex bottomUp) {
+    public RuleStore(TreeAutomaton auto, TopDownRuleIndex topDown, BottomUpRuleIndex bottomUp) {
+        this.auto = auto;
         this.topDown = topDown;
         this.bottomUp = bottomUp;
 
@@ -73,6 +75,12 @@ public class RuleStore {
     public Iterable<Rule> getRulesTopDown(int parentState) {
         return topDown.getRules(parentState);
     }
+    
+    private static void DEBUG(Supplier<String> s) {
+        if( TreeAutomaton.DEBUG_STORE ) {
+            System.err.println(s.get());
+        }
+    }
 
     /**
      * Caches a rule for future use. Once a rule has been cached, it will be
@@ -86,6 +94,8 @@ public class RuleStore {
      * @param rule
      */
     public void storeRule(Rule rule) {
+        DEBUG(() -> "store: " + rule.toString(auto));
+        
         // adding states unnecessary, was done in creating Rule object
 
         // Both for bottom-up and for top-down indexing, we only store rules
@@ -98,6 +108,8 @@ public class RuleStore {
             unprocessedUpdatesForBottomUp.add(rule);
             topDown.add(rule);
             rulesForRhsState = null;
+            DEBUG(() -> " - added");
+            DEBUG(() -> topDown.toString());
         }
     }
     
@@ -193,7 +205,7 @@ public class RuleStore {
             rulesForRhsState = new Int2ObjectOpenHashMap<List<Iterable<Rule>>>();
             final IntSet visitedInEntry = new IntOpenHashSet(); //new BitSet(getStateInterner().getNextIndex());
 
-            getAllRulesBottomUp().foreachWithKeys(new IntTrie.EntryVisitor<Int2ObjectMap<Collection<Rule>>>() {
+            getTrie().foreachWithKeys(new IntTrie.EntryVisitor<Int2ObjectMap<Collection<Rule>>>() {
 
                 public void visit(IntList keys, Int2ObjectMap<Collection<Rule>> value) {
                     visitedInEntry.clear();
@@ -292,8 +304,14 @@ public class RuleStore {
         }
     }
 
-    public IntTrie<Int2ObjectMap<Collection<Rule>>> getAllRulesBottomUp() {
+    @Deprecated
+    public IntTrie<Int2ObjectMap<Collection<Rule>>> getTrie() {
         return ((TrieBottomUpRuleIndex) bottomUp).getTrie();
+    }
+    
+    public Iterable<Rule> getAllRulesBottomUp() {
+        processNewBottomUpRules();
+        return bottomUp.getAllRules();
     }
 
     public IntIterable getLabelsTopDown(int parentState) {
@@ -331,21 +349,13 @@ public class RuleStore {
             return true;
         }
 
-        Int2ObjectMap<Collection<Rule>> entry = getAllRulesBottomUp().get(childStates);
+        Int2ObjectMap<Collection<Rule>> entry = getTrie().get(childStates);
 
         if (entry == null) {
             return false;
         } else {
             return entry.containsKey(label);
         }
-
-//        StateListToStateMap smap = explicitRulesBottomUp.get(label);
-//
-//        if (smap == null) {
-//            return false;
-//        } else {
-//            return smap.contains(childStates);
-//        }
     }
 
     /**

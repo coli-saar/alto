@@ -56,7 +56,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -104,6 +103,8 @@ import java.util.stream.Collectors;
  * @author koller
  */
 public abstract class TreeAutomaton<State> implements Serializable {
+    public static boolean DEBUG_STORE = false;
+    
     protected RuleStore ruleStore;
 
 //    IntTrie<Int2ObjectMap<Set<Rule>>> explicitRulesBottomUp;        // children -> label -> set(rules)
@@ -125,7 +126,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected boolean hasStoredConstants = false;
 
     public TreeAutomaton(Signature signature) {
-        ruleStore = new RuleStore();
+        ruleStore = new RuleStore(this);
         
         
 //        MapFactory factory = depth -> {
@@ -461,12 +462,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ruleStore.storeRule(rule);
     }
 
-    // TODO - this is bottom-up rule store implementation-specific,
-    // so should generalize this!!
-    @Deprecated
-    protected IntTrie<Int2ObjectMap<Collection<Rule>>> getExplicitRulesBottomUp() {
-        return ruleStore.getAllRulesBottomUp();
-    }
+//    // TODO - this is bottom-up rule store implementation-specific,
+//    // so should generalize this!!
+//    @Deprecated
+//    protected IntTrie<Int2ObjectMap<Collection<Rule>>> getExplicitRulesBottomUp() {
+//        return ruleStore.getTrie();
+//    }
 
 //    /**
 //     * Returns false if adding this rule makes the automaton bottom-up
@@ -593,15 +594,16 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Iterable<Rule> getRuleSet() {
-        List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
-
-        makeAllRulesExplicit();
-
-        getExplicitRulesBottomUp().foreach(entry -> {
-            ruleSets.addAll(entry.values());
-        });
-
-        return Iterables.concat(ruleSets);
+        return ruleStore.getAllRulesBottomUp();
+//        List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
+//
+//        makeAllRulesExplicit();
+//
+//        getExplicitRulesBottomUp().foreach(entry -> {
+//            ruleSets.addAll(entry.values());
+//        });
+//
+//        return Iterables.concat(ruleSets);
     }
 
     /**
@@ -1160,6 +1162,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * Computes a string representation of this automaton. This method
      * elaborates the rules of the automaton in a top-down fashion, starting
      * with the final states and working from parents to children.
+     * TODO *** this is no longer true!
      *
      * @return
      */
@@ -2656,7 +2659,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
 
         System.err.println("\nTrie statistics:");
-        getExplicitRulesBottomUp().printStatistics();
+        ruleStore.getTrie().printStatistics();
     }
 
     /**

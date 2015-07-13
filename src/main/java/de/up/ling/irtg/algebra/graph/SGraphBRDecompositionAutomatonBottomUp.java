@@ -78,7 +78,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
         completeGraphInfo = new GraphInfo(completeGraph, algebra);
         
-        ruleStore = new RuleStore(new MapTopDownIndex(), new BinaryBottomUpRuleIndex());
+        ruleStore = new RuleStore(this, new MapTopDownIndex(this), new BinaryBottomUpRuleIndex());
         
 //        storedRules = new BinaryBottomUpRuleIndex();
         

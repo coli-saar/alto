@@ -18,6 +18,8 @@ public abstract class BottomUpRuleIndex {
     public abstract void put(Collection<Rule> rules, int labelId, int[] childStates);
     public abstract Collection<Rule> get(int labelId, int[] childStates);
     
+    public abstract Iterable<Rule> getAllRules();
+    
     /**
      * Returns false if adding this rule makes the automaton bottom-up
      * nondeterministic. That is: when q -> f(q1,...,qn) is added, the method

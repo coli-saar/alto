@@ -5,11 +5,14 @@
  */
 package de.up.ling.irtg.automata.index;
 
+import com.google.common.collect.Iterables;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.util.ArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  *
@@ -51,5 +54,16 @@ public class TrieBottomUpRuleIndex extends BottomUpRuleIndex {
     @Deprecated
     IntTrie<Int2ObjectMap<Collection<Rule>>> getTrie() {
         return storedRules;
+    }
+
+    @Override
+    public Iterable<Rule> getAllRules() {
+        List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
+
+        storedRules.foreach(entry -> {
+            ruleSets.addAll(entry.values());
+        });
+
+        return Iterables.concat(ruleSets);
     }
 }
