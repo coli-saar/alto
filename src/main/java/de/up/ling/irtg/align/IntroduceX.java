@@ -26,70 +26,41 @@ public class IntroduceX {
     /**
      * 
      */
-    private final static Semiring<IntSet> VAR_PROPAGATOR = 
-                                                new Semiring<IntSet>() {
-
-        @Override
-        public IntSet add(IntSet x, IntSet y) {
-            if(x.equals(y))
-            {
-                return x;
-            }
-            
-            throw new IllegalStateException("Variables dominated by states are not unique");
-        }
-
-        @Override
-        public IntSet multiply(IntSet x, IntSet y) { 
-           IntIterator ii = x.iterator();
-           while(ii.hasNext())
-           {
-               if(y.contains(ii.nextInt()))
-               {
-                   throw new IllegalStateException("Adding a variable twice is against the rules for alignment"
-                           + "markers");
-               }
-           }
-           
-           IntSet set = new IntAVLTreeSet(x);
-           set.addAll(y);
-           return set;
-        }
-
-        @Override
-        public IntSet zero() {
-            return new IntAVLTreeSet();
-        }
-    };
+    private final String setPrefix;
+    
+    /**
+     * 
+     * @param setPrefixMarker 
+     */
+    public IntroduceX(String setPrefixMarker)
+    {
+        this.setPrefix = setPrefixMarker;
+    }
     
     /**
      * 
      * @param input
-     * @param marks
-     * @param setPrefix
+     * @param rlm
      * @return 
      */
-    public static Pair<TreeAutomaton,Set<String>> introduce(TreeAutomaton input, RuleMarker marks,
-                                                             String setPrefix){
+    public TreeAutomaton introduce(TreeAutomaton input, RuleMarker rlm){
         ConcreteTreeAutomaton cta = new ConcreteTreeAutomaton(input.getSignature());
-        Int2ObjectMap<IntSet> mapping = input.evaluateInSemiring2(VAR_PROPAGATOR, marks);
-        Set<String> specialSymbols = new TreeSet<>();
         
-        Visitor vis = new Visitor(setPrefix, mapping, specialSymbols, cta, input);
+        Semiring<IntSet[]> sr = new VariablePropagator(rlm.width());
+        
+        Int2ObjectMap<IntSet[]> mapping = input.evaluateInSemiring2(sr, rlm);
+        
+        Visitor vis = new Visitor(setPrefix, mapping, rlm, cta, input);
         input.foreachStateInBottomUpOrder(vis);
         
-        return new Pair<>(cta,specialSymbols);
+        return cta;
     }
     
     /**
      * 
      */
-    private static class Visitor implements TreeAutomaton.BottomUpStateVisitor
+    private class Visitor implements TreeAutomaton.BottomUpStateVisitor
     {
-        /**
-         * 
-         */
-        private final Set<String> specialSymbols;
         
         /**
          * 
@@ -99,7 +70,7 @@ public class IntroduceX {
         /**
          * 
          */
-        private final Int2ObjectMap<IntSet> vars;
+        private final Int2ObjectMap<IntSet[]> vars;
         
         /**
          * 
@@ -110,6 +81,12 @@ public class IntroduceX {
          * 
          */
         private final TreeAutomaton original;
+        
+        /**
+         * 
+         */
+        private final RuleMarker rlm;
+        
 
         /**
          * 
@@ -117,24 +94,21 @@ public class IntroduceX {
          * @param vars
          * @param goal 
          */
-        public Visitor(String prefix, Int2ObjectMap<IntSet> vars, Set<String> special,
+        public Visitor(String prefix, Int2ObjectMap<IntSet[]> vars, RuleMarker rlm,
                                         ConcreteTreeAutomaton goal, TreeAutomaton original) {
             this.prefix = prefix;
             this.vars = vars;
             this.goal = goal;
             this.original = original;
-            this.specialSymbols = special;
+            this.rlm = rlm;
         }
         
         
-        
-
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
             
             Object st = this.original.getStateForId(state);
-            String loopLabel = this.prefix+this.vars.get(state);
-            this.specialSymbols.add(loopLabel);
+            String loopLabel = rlm.makeCode(this.vars.get(state),this.original,state);
             
             this.goal.addRule(this.goal.createRule(st, loopLabel, new Object[] {st}));
             
@@ -169,4 +143,88 @@ public class IntroduceX {
         }
         
     }
+    
+    /**
+     * 
+     */
+    private class VariablePropagator implements Semiring<IntSet[]> {
+        
+        /**
+         * 
+         */
+        private final int width;
+        
+        VariablePropagator(int width)
+        {
+            this.width = width;
+        }
+
+        @Override
+        public IntSet[] add(IntSet[] x, IntSet[] y) {
+            
+            if(x.length != y.length)
+            {
+                throw new IllegalStateException("non-equal alignment groups");
+            }
+            
+            for(int i = 0;i<x.length;++i)
+            {
+                IntSet a = x[i];
+                IntSet b = x[i];
+                
+                if(!a.equals(b))
+                {
+                    throw new IllegalStateException("Variables dominated by states are not unique");
+                }
+            }
+            
+            return x;
+        }
+
+        @Override
+        public IntSet[] multiply(IntSet[] x, IntSet[] y) {
+            
+           if(x.length != y.length)
+           {
+               throw new IllegalStateException("non-equal alignment groups");
+           }
+            
+           IntSet[] ret = new IntSet[x.length];
+            
+            for(int i=0;i<x.length;++i)
+            {
+                IntSet a = x[i];
+                IntSet b = x[i];
+                
+                IntIterator ii = a.iterator();
+                while(ii.hasNext())
+                {
+                    if(b.contains(ii.nextInt()))
+                    {
+                        throw new IllegalStateException("Adding a variable twice is against the rules for alignment"
+                           + "markers; attempted for: "+a+" "+b);
+                    }
+                }
+           
+                IntSet set = new IntAVLTreeSet(a);
+                set.addAll(b);
+                
+                ret[i] = set;
+            }
+           
+           return ret;
+        }
+
+        @Override
+        public IntSet[] zero() {
+            IntSet[] ret = new IntSet[width];
+            
+            for(int i=0;i<ret.length;++i)
+            {
+                ret[i] = new IntAVLTreeSet();
+            }
+            
+            return ret;
+        }
+    };
 }

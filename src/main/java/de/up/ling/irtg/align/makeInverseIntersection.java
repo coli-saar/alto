@@ -10,6 +10,8 @@ import de.up.ling.irtg.automata.InverseHomAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.Util;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -18,7 +20,7 @@ import it.unimi.dsi.fastutil.objects.ObjectList;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
+import java.util.NoSuchElementException;
 
 /**
  *
@@ -29,18 +31,18 @@ public class makeInverseIntersection {
     /**
      * 
      * @param input
+     * @param rlm
      * @return 
      */
     public static Pair<TreeAutomaton,List<Homomorphism>> makeInverseIntersection(
-                                            List<Pair<TreeAutomaton,Set<String>>> input,
-                                            boolean match){
+                                            List<TreeAutomaton> input, RuleMarker rlm){
         Signature sig = new Signature();
-        List<Homomorphism> mappings = makeMappings(input, match, sig);
+        List<Homomorphism> mappings = makeMappings(input, sig, rlm);
         
-        TreeAutomaton ta = new InverseHomAutomaton(input.get(0).getLeft(), mappings.get(0));
+        TreeAutomaton ta = new InverseHomAutomaton(input.get(0), mappings.get(0));
         for(int i=1;i<mappings.size();++i)
         {
-            TreeAutomaton inv = new InverseHomAutomaton(input.get(i).getLeft(), mappings.get(i));
+            TreeAutomaton inv = new InverseHomAutomaton(input.get(i), mappings.get(i));
             ta = ta.intersect(inv);
         }
         
@@ -52,26 +54,79 @@ public class makeInverseIntersection {
      * @param input
      * @return 
      */
-    private static List<Homomorphism> makeMappings(List<Pair<TreeAutomaton, Set<String>>> input,
-                                                    boolean match, Signature sig) {
-        List<Homomorphism> l = new ArrayList<>();
+    private static List<Homomorphism> makeMappings(List<TreeAutomaton> input, Signature sig,
+                                                RuleMarker rlm) {
+        List<Homomorphism> ret = new ArrayList<>();
         for(int i=0;i<input.size();++i){
-            l.add(new Homomorphism(sig, input.get(i).getLeft().getSignature()));
+            ret.add(new Homomorphism(sig, input.get(i).getSignature()));
         }
         
+        IterationHelper ih = new IterationHelper(input);
+        IntList arities = new IntArrayList();
+        List<Tree<String>> imageList = new ArrayList<>();
         
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        while(ih.hasNext()){
+            List<String> tuple = ih.next();
+            
+            if(rlm.checkCompatible(tuple)){
+                arities.clear();
+                
+                for(int i=0;i<tuple.size();++i){
+                    arities.add(input.get(i).getSignature().getArityForLabel(tuple.get(i)));
+                    PermutationIterator pi = new PermutationIterator(arities);
+                    
+                    while(pi.hasNext()){
+                        List<String[]> permutation = pi.next();
+                        String label = Util.gensym("l_");
+                        
+                        for(int k=0;k<ret.size();++k){
+                            imageList.clear();
+                            
+                            for(String s : permutation.get(k)){
+                                imageList.add(Tree.create(s));
+                            }
+                            
+                            ret.get(k).add(label, Tree.create(tuple.get(k), imageList));
+                        }
+                    }
+                }
+            }
+        }
+        
+        return ret;
     }
     
     /**
      * 
      */
-    private class IterationHelper implements Iterator<IntList>{
+    private static class PermutationIterator implements Iterator<List<String[]>>{
+
+        private PermutationIterator(IntList arities) {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public boolean hasNext() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public List<String[]> next() {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+        
+    }
+    
+    
+    /**
+     * 
+     */
+    private static class IterationHelper implements Iterator<List<String>>{
 
         /**
          * 
          */
-        private final IntList output = new IntArrayList();
+        private final ObjectList<String> output = new ObjectArrayList<>();
         
         /**
          * 
@@ -81,32 +136,86 @@ public class makeInverseIntersection {
         /**
          * 
          */
-        private final ObjectList<IntIterator> mainSource = new ObjectArrayList<>();
+        private final ObjectList<Iterator<String>> mainSource = new ObjectArrayList<>();
+        
+        /**
+         * 
+         */
+        private boolean first = true;
         
         /**
          * 
          * @param input 
          */
-        public IterationHelper(List<Pair<TreeAutomaton, Set<String>>> input,
-                                    boolean mixInSpecials) {
+        public IterationHelper(List<TreeAutomaton> input) {
             for(int i=0;i<input.size();++i)
             {
-                Signature s = input.get(i).getLeft().getSignature();
-                //TODO
-                
+                Signature s = input.get(i).getSignature();
+                this.input.add(s);
             }
             
+            for(int i=0;i<this.input.size();++i)
+            {
+                if(this.input.get(i).getSymbols().isEmpty())
+                {
+                    throw new IllegalArgumentException("Empty signature for automaton: "+input.get(i));
+                }
+                
+                Iterator<String> s = this.input.get(i).getSymbols().iterator();
+                this.output.add(s.next());
+                
+                this.mainSource.add(s);
+            }
         }
         
         @Override
         public boolean hasNext() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            if(first)
+            {
+                return true;
+            }
+            
+            for(int i=0;i<this.mainSource.size();++i)
+            {
+               if(this.mainSource.get(i).hasNext())
+               {
+                   return true;
+               }
+            }
+            
+            return false;
         }
 
         @Override
-        public IntList next() {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        public List<String> next() {
+            if(first)
+            {
+                first = false;
+                return this.output;
+            }
+            
+            int cutOff = this.mainSource.size()-1;
+            
+            while(!this.mainSource.get(cutOff).hasNext())
+            {
+                --cutOff;
+                if(cutOff < 0)
+                {
+                    throw new NoSuchElementException();
+                }
+            }
+            
+            for(int i=cutOff+1;i<this.input.size();++i)
+            {
+                this.mainSource.set(i, this.input.get(i).getSymbols().iterator());
+            }
+            
+            for(int i=cutOff;i<this.mainSource.size();++i)
+            {
+                this.output.set(i, this.mainSource.get(i).next());
+            }
+            
+            return this.output;
         }
-        
     }
 }
