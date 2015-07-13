@@ -13,13 +13,14 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
  *
  * @author koller
  */
-public class BinaryBottomUpRuleIndex extends BottomUpRuleIndex {
+public class BinaryBottomUpRuleIndex extends BottomUpRuleIndex implements Serializable {
     private final Int2ObjectMap<Collection<Rule>> storedRulesNullary;   // label -> rules
     private final Long2ObjectMap<Collection<Rule>> storedRulesUnary;    // child|label -> rules
     private final Int2ObjectMap<Long2ObjectMap<Collection<Rule>>> storedRulesBinary; // label -> child1|child2 -> rules

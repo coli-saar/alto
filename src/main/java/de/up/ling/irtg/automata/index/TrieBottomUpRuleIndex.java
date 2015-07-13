@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.util.ArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.List;
  *
  * @author koller
  */
-public class TrieBottomUpRuleIndex extends BottomUpRuleIndex {
+public class TrieBottomUpRuleIndex extends BottomUpRuleIndex implements Serializable {
 
     private final IntTrie<Int2ObjectMap<Collection<Rule>>> storedRules;
 

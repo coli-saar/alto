@@ -15,6 +15,7 @@ import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -25,7 +26,7 @@ import java.util.function.Supplier;
  *
  * @author koller
  */
-public class RuleStore {
+public class RuleStore implements Serializable {
     private TreeAutomaton auto;
     
     private TopDownRuleIndex topDown;
