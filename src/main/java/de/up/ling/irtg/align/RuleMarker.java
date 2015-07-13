@@ -14,8 +14,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
  *
  * @author christoph
  */
-public interface RuleMarker extends RuleEvaluator<IntSet> {
-    
+public interface RuleMarker extends RuleEvaluator<IntSet> {    
     /**
      * 
      * @param r
@@ -43,15 +42,15 @@ public interface RuleMarker extends RuleEvaluator<IntSet> {
 
     /**
      * 
-     * @param sym1
+     * @param label
      * @return 
      */
-    public boolean isFrontier(String sym1);
+    public boolean isFrontier(String label);
 
     /**
      * 
-     * @param sym1
+     * @param variable
      * @return 
      */
-    public String getCorresponding(String sym1);
+    public String getCorresponding(String variable);
 }

@@ -10,5 +10,16 @@ package de.up.ling.irtg.align;
  * @author christoph_teichmann
  */
 public class RuleTreeFinder {
-    
+    /**
+     * 
+     */
+    private final AlignmentAlgebra[] algebras;
+
+    /**
+     * 
+     * @param algebras 
+     */
+    public RuleTreeFinder(AlignmentAlgebra[] algebras) {
+        this.algebras = algebras;
+    }
 }

@@ -24,7 +24,6 @@ import java.util.Set;
  * @author christoph
  */
 public class RuleTreeGenerator {
-    
     /**
      * 
      * @param input1
@@ -129,6 +128,10 @@ public class RuleTreeGenerator {
      */
     private void handleFrontier(RuleMarker rlm, String sym1, Signature sig, List<Homomorphism> homs) {
         String sym2 = rlm.getCorresponding(sym1);
+        if(!homs.get(1).getTargetSignature().contains(sym2))
+        {
+            return;
+        }
         
         Tree<String> t = Tree.create("x_1");
         
