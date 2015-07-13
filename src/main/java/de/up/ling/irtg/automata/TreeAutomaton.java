@@ -2250,8 +2250,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
-    public <E> Map<Integer, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator, List<Integer> statesInOrder) {
-        Map<Integer, E> ret = new HashMap<Integer, E>();
+    public <E> Int2ObjectMap<E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator, List<Integer> statesInOrder) {
+        Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<>();
 
         for (int s : statesInOrder) {
             E accu = semiring.zero();
