@@ -104,9 +104,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<IntSet>();
 
             long t1 = System.nanoTime();
-            
-            System.err.println("xxx");
-            System.err.println("right final: " + Util.mapToList(right.getFinalStates(), x -> right.getStateForId(x)));
 
             // Perform a DFS in the right automaton to find all partner states
             IntSet visited = new IntOpenHashSet();

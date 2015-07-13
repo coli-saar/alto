@@ -30,7 +30,10 @@ class DecompAutomataTest {
 
         SGraph sgraph = alg.parseString(input)
 
+//        System.err.println("==============")
         SGraphBRDecompositionAutomatonBottomUp auto = (SGraphBRDecompositionAutomatonBottomUp)alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class)
+//        System.err.println(auto)
+//        System.err.println("==============")
         assert(auto.accepts(pt("f_subj(f_vcomp(merge(merge('(u<root> / want-01  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))', r_subj('(x<root> / boy)')), r_vcomp(r_subj_subj('(g<root> / go-01  :ARG0 (s<subj>))')))))")))
     }
 
@@ -54,7 +57,7 @@ class DecompAutomataTest {
         GraphAlgebra.writeRestrictedDecompositionAutomaton(input, 2, writer)
 //        System.err.println(writer.toString())
 //        System.err.println(decompAutoGold)
-        assertEquals(writer.toString(), decompAutoGold)
+        assertEquals(decompAutoGold, writer.toString())
     }
     
     public static final String HRGCleanS = """\n\

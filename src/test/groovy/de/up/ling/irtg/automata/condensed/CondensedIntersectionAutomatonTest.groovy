@@ -89,19 +89,8 @@ Y -> r8(X,X)
     
     @Test
     public void testIntersection() {
-        TreeAutomaton.DEBUG_STORE = true;
-        GenericCondensedIntersectionAutomaton.DEBUG = true;
-        
         TreeAutomaton auto1 = pa("q1 -> a\n q2 ! -> f(q1,q1) ");       
         CondensedTreeAutomaton auto2 = pac("p1! -> {f}(p2,p3) \n p2 -> {a}  \n p3 -> {a}");
-        
-        System.err.println("==================")
-//        System.err.println(auto1)
-        
-        System.err.println("==================")
-        System.err.println(auto2)
-        
-        System.err.println("==================")
         
         TreeAutomaton intersect = auto1.intersectCondensed(auto2, auto1.getSignature().getMapperTo(auto2.getSignature()));
         intersect.getStateInterner().setTrustingMode(false); // important!
@@ -120,8 +109,6 @@ Y -> r8(X,X)
             rbu("f", [p("q1","p2"), p("q1","p3")], intersect));
         
         assertEquals(new HashSet([p("q2","p1")]), new HashSet(intersect.getFinalStates().collect { intersect.getStateForId(it)}));
-        
-//        TreeAutomaton.DEBUG_STORE = false;
     }
     
     @Test

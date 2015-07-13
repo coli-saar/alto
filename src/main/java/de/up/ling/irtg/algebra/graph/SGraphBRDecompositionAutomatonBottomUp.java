@@ -18,6 +18,7 @@ import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.AverageLogger;
+import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -78,7 +79,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
         completeGraphInfo = new GraphInfo(completeGraph, algebra);
         
-        ruleStore = new RuleStore(this, new MapTopDownIndex(this), new BinaryBottomUpRuleIndex());
+        ruleStore = new RuleStore(this, new MapTopDownIndex(this), new BinaryBottomUpRuleIndex(this));
         
 //        storedRules = new BinaryBottomUpRuleIndex();
         
@@ -147,7 +148,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-        Iterable<Rule> cachedResult = ruleStore.getRulesBottomUp(labelId, childStates);
+        Iterable<Rule> cachedResult = ruleStore.getRulesBottomUpRaw(labelId, childStates);
         
         if( cachedResult != null ) {
             switch (signature.getArity(labelId)) {
@@ -294,6 +295,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * @return 
      */
     protected Collection<Rule> cacheRules(Collection<Rule> rules, int labelID, int[] children) {
+//        System.err.println("cache: " + Util.mapToList(rules, rule -> rule.toString(this)));
         return ruleStore.storeRules(rules, labelID, children);
     }
     

@@ -9,6 +9,7 @@ import com.google.common.collect.Iterables;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
@@ -115,9 +116,11 @@ public class RuleStore implements Serializable {
     }
     
     public Collection<Rule> storeRules(Collection<Rule> rules, int labelID, int[] children) {
-        // TODO ** add to top-down too
         if(storing) {
             bottomUp.put(rules, labelID, children);
+            rules.forEach(topDown::add);
+        } else {
+//            System.err.println("ignore: " + Util.mapToList(rules, rule -> rule.toString(auto)));
         }
         
         return rules;
@@ -242,6 +245,19 @@ public class RuleStore implements Serializable {
 //            unprocessedUpdatesForRulesForRhsState.clear();
 //        }
     }
+    
+    /**
+     * Returns null if such rules were never cached.
+     * 
+     * @param labelId
+     * @param childStates
+     * @return 
+     */
+    public Iterable<Rule> getRulesBottomUpRaw(int labelId, int[] childStates) {
+        processNewBottomUpRules();
+        return bottomUp.get(labelId, childStates);
+    }
+    
 
     /**
      * Like getRulesBottomUp, but only looks for rules in the cache of
