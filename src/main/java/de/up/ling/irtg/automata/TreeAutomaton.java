@@ -276,7 +276,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         labelIds.forEach(labelId -> {
             if (signature.getArity(labelId) == childStateSets.size()) {
                 FastutilUtils.forEachIntCartesian(childStateSets, childStates -> {
-                    getRulesBottomUp(signatureMapper.remapForward(labelId), childStates).forEach(fn);
+                    Iterable<Rule> rules = getRulesBottomUp(signatureMapper.remapForward(labelId), childStates);
+                    rules.forEach(fn);
                 });
             }
         });

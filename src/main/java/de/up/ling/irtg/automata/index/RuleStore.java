@@ -308,6 +308,7 @@ public class RuleStore implements Serializable {
     @Deprecated
     public IntTrie<Int2ObjectMap<Collection<Rule>>> getTrie() {
         assert bottomUp instanceof TrieBottomUpRuleIndex;
+        processNewBottomUpRules();
         return ((TrieBottomUpRuleIndex) bottomUp).getTrie();
     }
     
@@ -351,6 +352,7 @@ public class RuleStore implements Serializable {
             return true;
         }
 
+        processNewBottomUpRules();
         Int2ObjectMap<Collection<Rule>> entry = getTrie().get(childStates);
 
         if (entry == null) {

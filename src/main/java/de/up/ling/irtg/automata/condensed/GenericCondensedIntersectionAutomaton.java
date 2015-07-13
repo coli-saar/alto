@@ -60,7 +60,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
     private final TreeAutomaton<LeftState> left;
     private final CondensedTreeAutomaton<RightState> right;
-    protected boolean DEBUG = false;
+    public static boolean DEBUG = false;
     private final SignatureMapper leftToRightSignatureMapper;
 
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
@@ -104,6 +104,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<IntSet>();
 
             long t1 = System.nanoTime();
+            
+            System.err.println("xxx");
+            System.err.println("right final: " + Util.mapToList(right.getFinalStates(), x -> right.getStateForId(x)));
 
             // Perform a DFS in the right automaton to find all partner states
             IntSet visited = new IntOpenHashSet();
