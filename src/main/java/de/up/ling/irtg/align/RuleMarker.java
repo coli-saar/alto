@@ -40,4 +40,18 @@ public interface RuleMarker extends RuleEvaluator<IntSet> {
      * @return 
      */
     public boolean checkCompatible(String label1, String label2);
+
+    /**
+     * 
+     * @param sym1
+     * @return 
+     */
+    public boolean isFrontier(String sym1);
+
+    /**
+     * 
+     * @param sym1
+     * @return 
+     */
+    public String getCorresponding(String sym1);
 }
