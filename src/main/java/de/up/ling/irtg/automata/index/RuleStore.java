@@ -306,6 +306,7 @@ public class RuleStore {
 
     @Deprecated
     public IntTrie<Int2ObjectMap<Collection<Rule>>> getTrie() {
+        assert bottomUp instanceof TrieBottomUpRuleIndex;
         return ((TrieBottomUpRuleIndex) bottomUp).getTrie();
     }
     

@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.MapFactory;
@@ -159,17 +158,26 @@ public class IntTrie<E> implements Serializable {
         foreach(keys, visitor);
     }
 
-    private void foreach(IntList keys, EntryVisitor<E> visitor) {
+    private void foreach(final IntList keys, EntryVisitor<E> visitor) {
         if (value != null) {
             visitor.visit(keys, value);
         }
-
-        FastutilUtils.foreachFastEntry(nextStep, (key, value) -> {
+        
+        IntSet keysHere = nextStep.keySet();
+        FastutilUtils.forEach(keysHere, key -> {
             int size = keys.size();
             keys.add(key);
-            value.foreach(keys, visitor);
+            nextStep.get(key).foreach(keys, visitor);
             keys.remove(size);
         });
+        
+//  // this might be faster, but fails if nextStep is an ArrayMap (because that doesn't have a fast iterator):
+//        FastutilUtils.foreachFastEntry(nextStep, (key, value) -> {
+//            int size = keys.size();
+//            keys.add(key);
+//            value.foreach(keys, visitor);
+//            keys.remove(size);
+//        });
 
 //        for (int next : nextStep.keySet()) {
 //            int size = keys.size();
