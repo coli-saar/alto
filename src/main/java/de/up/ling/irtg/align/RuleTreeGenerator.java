@@ -31,25 +31,24 @@ public class RuleTreeGenerator {
      * @param rlm
      * @return 
      */
-    public Pair<TreeAutomaton,List<Homomorphism>> makeInverseIntersection(TreeAutomaton input1,
+    public Pair<TreeAutomaton,Pair<Homomorphism,Homomorphism>> makeInverseIntersection(TreeAutomaton input1,
                                                             TreeAutomaton input2, RuleMarker rlm){
         Signature sig1 = input1.getSignature();
         Signature sig2 = input2.getSignature();
-        
-        List<Homomorphism> homs = new ArrayList<>();
         Signature sig = new Signature();
-        homs.add(new Homomorphism(sig, input1.getSignature()));
-        homs.add(new Homomorphism(sig,input2.getSignature()));
+        
+        Pair<Homomorphism,Homomorphism> homs = new Pair<>(new Homomorphism(sig, input1.getSignature()),
+                new Homomorphism(sig,input2.getSignature()));
         
         List<Tree<String>> xs = new ArrayList<>();
         
-        this.makeSymbolToSkip(sig1, xs, homs.get(0), homs.get(1), sig);
-        this.makeSymbolToSkip(sig2, xs, homs.get(1), homs.get(0), sig);
+        this.makeSymbolToSkip(sig1, xs, homs.getLeft(), homs.getRight(), sig);
+        this.makeSymbolToSkip(sig2, xs, homs.getRight(), homs.getLeft(), sig);
         
         for(String sym1 : sig1.getSymbols()){
             
             if(rlm.isFrontier(sym1)){
-                handleFrontier(rlm, sym1, sig, homs);
+                handleFrontier(rlm, sym1, sig, homs.getLeft(),homs.getRight());
             }
             
             int arity1 = sig1.getArityForLabel(sym1);
@@ -58,15 +57,15 @@ public class RuleTreeGenerator {
                 int arity2 = sig2.getArityForLabel(sym2);
                 
                 if(arity1 < arity2){
-                    makePairings(xs, arity2, sym2, arity1, sym1, sig, homs.get(1), homs.get(2));   
+                    makePairings(xs, arity2, sym2, arity1, sym1, sig, homs.getRight(), homs.getLeft());   
                 }else{
-                    makePairings(xs, arity1, sym1, arity2, sym2, sig, homs.get(0), homs.get(1));
+                    makePairings(xs, arity1, sym1, arity2, sym2, sig, homs.getLeft(), homs.getRight());
                 }
             }
         }
         
-        TreeAutomaton inv1 = new InverseHomAutomaton(input1, homs.get(0));
-        TreeAutomaton inv2 = new InverseHomAutomaton(input2, homs.get(1));
+        TreeAutomaton inv1 = new InverseHomAutomaton(input1, homs.getLeft());
+        TreeAutomaton inv2 = new InverseHomAutomaton(input2, homs.getRight());
         
         return new Pair<>(inv1.intersect(inv2),homs);
     }
@@ -126,9 +125,10 @@ public class RuleTreeGenerator {
      * @param sig
      * @param homs 
      */
-    private void handleFrontier(RuleMarker rlm, String sym1, Signature sig, List<Homomorphism> homs) {
+    private void handleFrontier(RuleMarker rlm, String sym1, Signature sig, Homomorphism hom1,
+            Homomorphism hom2) {
         String sym2 = rlm.getCorresponding(sym1);
-        if(!homs.get(1).getTargetSignature().contains(sym2))
+        if(!hom1.getTargetSignature().contains(sym2))
         {
             return;
         }
@@ -138,8 +138,8 @@ public class RuleTreeGenerator {
         String label = Util.gensym("X");
         sig.addSymbol(label, 1);
         
-        homs.get(0).add(label, Tree.create(sym1, t));
-        homs.get(1).add(label, Tree.create(sym2, t));
+        hom1.add(label, Tree.create(sym1, t));
+        hom2.add(label, Tree.create(sym2, t));
     }
 
     /**
