@@ -14,15 +14,22 @@ import it.unimi.dsi.fastutil.ints.IntSet;
  *
  * @author christoph
  */
-public interface RuleMarker extends RuleEvaluator<IntSet> {    
+public interface RuleMarker {    
     /**
      * 
      * @param r
      * @return 
      */
-    @Override
-    public IntSet evaluateRule(Rule r);
+    public RuleEvaluator<IntSet> ruleMarkings(int num);
 
+    /**
+     * 
+     * @param ta
+     * @param r
+     * @return 
+     */
+    public IntSet getMarkings(int num, Rule r);
+    
     /**
      * 
      * @param alignments

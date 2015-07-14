@@ -38,14 +38,15 @@ public class MarkingPropagator {
      * 
      * @param input
      * @param rlm
+     * @param num
      * @return 
      */
-    public TreeAutomaton introduce(TreeAutomaton input, RuleMarker rlm){
+    public TreeAutomaton introduce(TreeAutomaton input, RuleMarker rlm, int num){
         ConcreteTreeAutomaton cta = new ConcreteTreeAutomaton(input.getSignature());
         
         Semiring<IntSet> sr = new VariablePropagator();
         
-        Int2ObjectMap<IntSet> mapping = input.evaluateInSemiring2(sr, rlm);
+        Int2ObjectMap<IntSet> mapping = input.evaluateInSemiring2(sr, rlm.ruleMarkings(num));
         
         Visitor vis = new Visitor(setPrefix, mapping, rlm, cta, input);
         input.foreachStateInBottomUpOrder(vis);

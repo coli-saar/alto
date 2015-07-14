@@ -7,6 +7,7 @@ package de.up.ling.irtg.align.rule_markers;
 
 import de.up.ling.irtg.align.RuleMarker;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.RuleEvaluator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -44,7 +45,7 @@ public class SimpleRuleMarker implements RuleMarker {
      * 
      */
     private final Object2ObjectMap<Rule,IntSet> secondRules = new Object2ObjectOpenHashMap<>();
-
+    
     /**
      * 
      * @param prefix 
@@ -78,17 +79,6 @@ public class SimpleRuleMarker implements RuleMarker {
     }
 
     @Override
-    public IntSet evaluateRule(Rule r) {
-        if(this.firstRules.containsKey(r)){
-            return this.firstRules.get(r);
-        }else if(this.secondRules.containsKey(r)){
-            return this.secondRules.get(r);
-        }
-        
-        throw new IllegalArgumentException("Unknown rule: "+r);
-    }
-
-    @Override
     public String makeCode(IntSet alignments, TreeAutomaton original, int state) {
         String code = this.prefix+alignments.toString();
         return code;
@@ -107,5 +97,46 @@ public class SimpleRuleMarker implements RuleMarker {
     @Override
     public String getCorresponding(String variable) {
         return variable;
+    }
+
+    @Override
+    public RuleEvaluator<IntSet> ruleMarkings(int num) {
+        return new SimpleEvaluator(num);
+    }
+
+    @Override
+    public IntSet getMarkings(int num, Rule r) {
+        switch(num){
+            case 0:
+                return this.firstRules.get(r);
+            case 1:
+                return this.secondRules.get(r);
+            default:
+                throw new IllegalArgumentException("Only carries rules for automaton 0 or 1");
+        }
+    }
+    
+    /**
+     * 
+     */
+    public class SimpleEvaluator implements RuleEvaluator<IntSet>{
+
+        /**
+         * 
+         */
+        private final int num;
+
+        /**
+         * 
+         * @param ta 
+         */
+        public SimpleEvaluator(int num) {
+            this.num = num;
+        }
+        
+        @Override
+        public IntSet evaluateRule(Rule rule) {
+            return getMarkings(num,rule);
+        }   
     }
 }
