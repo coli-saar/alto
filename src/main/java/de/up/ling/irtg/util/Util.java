@@ -71,12 +71,12 @@ public class Util {
         }
     }
 
-    public static <I, O> List<O> mapToList(Collection<I> values, Function<I, O> fn) {
-        return values.stream().map(fn).collect(Collectors.toList());
+    public static <I, O> List<O> mapToList(Iterable<I> values, Function<I, O> fn) {
+        return StreamSupport.stream(values.spliterator(), false).map(fn).collect(Collectors.toList());
     }
     
-    public static <I, O> Set<O> mapToSet(Collection<I> values, Function<I, O> fn) {
-        return values.stream().map(fn).collect(Collectors.toSet());
+    public static <I, O> Set<O> mapToSet(Iterable<I> values, Function<I, O> fn) {
+        return StreamSupport.stream(values.spliterator(), false).map(fn).collect(Collectors.toSet());
     }
     
     public static <E, Up> Tree<Up> mapTree(Tree<E> tree, com.google.common.base.Function<E,Up> fn) {

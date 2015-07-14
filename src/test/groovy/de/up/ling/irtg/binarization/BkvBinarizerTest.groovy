@@ -156,7 +156,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     // Thus in case of bugs in the addRuleToHomomorphism, the test case might
     // sometimes pass, sometimes fail. :)
     @Test
-    public void testBinarize() {        
+    public void testBinarize() {
         InterpretedTreeAutomaton irtg = pi(BIN_IRTG);
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()

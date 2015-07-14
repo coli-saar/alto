@@ -590,21 +590,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * Returns the set of all rules of this automaton. This is done by
      * concatenating iterators over the explicit bottom-up rules. Note that this
      * necessarily _computes_ the set of all rules, which may be expensive for
-     * lazy automata.
+     * lazy automata.<p>
+     * 
+     * Note that this method calls {@link #makeAllRulesExplicit() } to enumerate
+     * all rules, and then returns the set of all rules in the rule store.
+     * You can therefore break its functionality if you override makeAllRulesExplicit
+     * carelessly.
      *
      * @return
      */
     public Iterable<Rule> getRuleSet() {
+        makeAllRulesExplicit();
         return ruleStore.getAllRulesBottomUp();
-//        List<Iterable<Rule>> ruleSets = new ArrayList<Iterable<Rule>>();
-//
-//        makeAllRulesExplicit();
-//
-//        getExplicitRulesBottomUp().foreach(entry -> {
-//            ruleSets.addAll(entry.values());
-//        });
-//
-//        return Iterables.concat(ruleSets);
     }
 
     /**
