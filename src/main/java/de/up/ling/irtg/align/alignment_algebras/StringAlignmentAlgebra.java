@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.AlignmentAlgebras;
+package de.up.ling.irtg.align.alignment_algebras;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;

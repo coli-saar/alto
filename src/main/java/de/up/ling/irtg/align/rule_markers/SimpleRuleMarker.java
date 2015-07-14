@@ -11,8 +11,8 @@ import de.up.ling.irtg.automata.RuleEvaluator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -39,12 +39,12 @@ public class SimpleRuleMarker implements RuleMarker {
     /**
      * 
      */
-    private final Object2ObjectMap<Rule,IntSet> firstRules = new Object2ObjectOpenHashMap<>();
+    private final Map<Rule,IntSet> firstRules = new HashMap<>();
     
     /**
      * 
      */
-    private final Object2ObjectMap<Rule,IntSet> secondRules = new Object2ObjectOpenHashMap<>();
+    private final Map<Rule,IntSet> secondRules = new HashMap<>();
     
     /**
      * 
@@ -52,7 +52,7 @@ public class SimpleRuleMarker implements RuleMarker {
      */
     public SimpleRuleMarker(String prefix) {
         this.prefix = prefix+"_";
-        this.patt = Pattern.compile(prefix+"_.*");
+        this.patt = Pattern.compile(prefix+"_.+");
     }
 
     /**
@@ -106,14 +106,29 @@ public class SimpleRuleMarker implements RuleMarker {
 
     @Override
     public IntSet getMarkings(int num, Rule r) {
+        IntSet i = null;
         switch(num){
             case 0:
-                return this.firstRules.get(r);
+                i =  this.firstRules.get(r);
+                if(i == null){
+                    i = new IntOpenHashSet();
+                    this.firstRules.put(r, i);
+                }
+                
+                break;
             case 1:
-                return this.secondRules.get(r);
+                i = this.secondRules.get(r);
+                if(i == null){
+                    i = new IntOpenHashSet();
+                    this.secondRules.put(r, i);
+                }
+                
+                break;
             default:
                 throw new IllegalArgumentException("Only carries rules for automaton 0 or 1");
         }
+        
+        return i;
     }
     
     /**
