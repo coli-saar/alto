@@ -13,7 +13,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
  * @author christoph_teichmann
  * @param <Type>
  */
-public abstract class AlignmentAlgebra<Type> {
+public abstract interface AlignmentAlgebra<Type> {
     /**
      * 
      * @param one
