@@ -64,11 +64,6 @@ public class MarkingPropagatorTest {
         TreeAutomaton mta1 = this.mp.introduce(ta1,rm,0);
         TreeAutomaton mta2 = this.mp.introduce(ta2,rm,1);
         
-        Iterator<String> it1 = mta2.languageIterator();
-        for(int i=0;i<10;++i){
-            System.out.println(it1.next());
-        }
-        
         assertTrue(mta1.accepts(pt("'X_{0, 1, 2, 3}'(*(a,*(*(b,c),d)))")));
         assertTrue(mta1.accepts(pt("'X_{0, 1, 2, 3}'(*(a,'X_{0, 1, 2}'(*(*(b,c),d))))")));
         assertTrue(mta1.accepts(pt("'X_{0, 1, 2, 3}'(*('X_{3}'(a),'X_{0, 1, 2}'(*(*(b,c),d))))")));
