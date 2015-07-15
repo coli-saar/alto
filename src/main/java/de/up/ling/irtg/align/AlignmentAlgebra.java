@@ -20,5 +20,5 @@ public abstract interface AlignmentAlgebra<Type> {
      * @param two
      * @return 
      */
-    public abstract Pair<RuleMarker,Pair<TreeAutomaton,TreeAutomaton>> decompose(String one, String two);
+    public abstract Pair<RuleMarker,Pair<TreeAutomaton,TreeAutomaton>> decomposePair(String one, String two);
 }

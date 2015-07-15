@@ -28,40 +28,47 @@ import java.util.List;
 public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAlgebra {
 
     @Override
-    public Pair<RuleMarker,Pair<TreeAutomaton,TreeAutomaton>> decompose(String one, String two) {
+    public Pair<RuleMarker,Pair<TreeAutomaton,TreeAutomaton>> decomposePair(String one, String two) {
         String[] pOne = one.split("\\s+");
         String[] pTwo = two.split("\\s+");
         
         List<String> input = new ArrayList<>();
         Int2IntMap oneMarkerToPosition = new Int2IntOpenHashMap();
+        int pos = 0;
         for(String s : pOne)
         {
             String[] k = s.split(":");
             input.add(k[0]);
+            getSignature().addSymbol(k[0], 0);
             
-            for(int i=0;i<k.length;++i){
-                oneMarkerToPosition.put(Integer.parseInt(k[i].trim()), i);
+            for(int i=1;i<k.length;++i){
+                oneMarkerToPosition.put(Integer.parseInt(k[i].trim()), pos);
             }
+            ++pos;
         }
         
-        TreeAutomaton<Span> ta1 = super.decompose(input);
+        TreeAutomaton<Span> ta1 = decompose(input);
         
         input.clear();
         Int2IntMap twoMarkerToPosition = new Int2IntOpenHashMap();
+        pos = 0;
         for(String s : pTwo)
         {
             String[] k = s.split(":");
             input.add(k[0]);
+            getSignature().addSymbol(k[0], 0);
             
-            for(int i=0;i<k.length;++i){
-                twoMarkerToPosition.put(Integer.parseInt(k[i].trim()), i);
+            for(int i=1;i<k.length;++i){
+                twoMarkerToPosition.put(Integer.parseInt(k[i].trim()), pos);
             }
+            ++pos;
         }
         
-        TreeAutomaton<Span> ta2 = super.decompose(input);
+        TreeAutomaton<Span> ta2 = decompose(input);
         
         Int2ObjectMap<Rule> rulesOne = new Int2ObjectOpenHashMap<>();
         Int2ObjectMap<Rule> rulesTwo = new Int2ObjectOpenHashMap<>();
+        
         
         for(Rule r : ta1.getRuleIterable()){
             Span s = ta1.getStateForId(r.getParent());
@@ -78,6 +85,7 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
         
         SimpleRuleMarker srm = new SimpleRuleMarker("X");
         Iterator<Entry> it = oneMarkerToPosition.int2IntEntrySet().iterator();
+        
         while(it.hasNext()){
             Entry e = it.next();
             int marker = e.getIntKey();

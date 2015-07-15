@@ -43,7 +43,7 @@ public class RuleTreeFinder {
                                                                                 String algebraUsed){
         AlignmentAlgebra alal = algebras.get(algebraUsed);
         
-        Pair<RuleMarker, Pair<TreeAutomaton,TreeAutomaton>> alignments = alal.decompose(inputPair.getLeft(),
+        Pair<RuleMarker, Pair<TreeAutomaton,TreeAutomaton>> alignments = alal.decomposePair(inputPair.getLeft(),
                 inputPair.getRight());
         RuleMarker rlm = alignments.getLeft();
         TreeAutomaton ta1 = alignments.getRight().getLeft();
