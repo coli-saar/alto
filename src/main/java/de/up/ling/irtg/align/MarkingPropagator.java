@@ -13,6 +13,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.Arrays;
 
 /**
  *
@@ -112,7 +113,7 @@ public class MarkingPropagator {
             
             if(original.getFinalStates().contains(state))
             {
-                this.goal.addFinalState(state);
+                this.goal.addFinalState(this.goal.getIdForState(st));
             }
             
             for(Rule r : rulesTopDown)
@@ -131,7 +132,7 @@ public class MarkingPropagator {
          * @return 
          */
         private Object[] makeCopy(int[] children) {
-            Object[] obs = new Object[] {children.length};
+            Object[] obs = new Object[children.length];
             
             for (int i = 0; i < children.length; i++) {
                 obs[i] = this.original.getStateForId(children[i]);
@@ -154,7 +155,13 @@ public class MarkingPropagator {
         
         @Override
         public IntSet add(IntSet x, IntSet y) {
-            if(!x.equals(y)){
+            if(ZERO == x){
+                return y;
+            }
+            if(ZERO == y){
+                return x;
+            }
+            if(!x.equals(y)){    
                 throw new IllegalStateException("Variables dominated by states are not unique");
             }
             

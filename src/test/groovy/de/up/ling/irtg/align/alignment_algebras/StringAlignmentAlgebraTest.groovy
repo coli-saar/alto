@@ -70,5 +70,5 @@ public class StringAlignmentAlgebraTest {
                 assertTrue(is1.contains(is2.iterator().nextInt()));
             }
         }
-    }   
+    }
 }
