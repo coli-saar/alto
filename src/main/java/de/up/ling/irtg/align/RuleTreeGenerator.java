@@ -42,8 +42,8 @@ public class RuleTreeGenerator {
         
         List<Tree<String>> xs = new ArrayList<>();
         
-        this.makeSymbolToSkip(sig1, xs, homs.getLeft(), homs.getRight(), sig);
-        this.makeSymbolToSkip(sig2, xs, homs.getRight(), homs.getLeft(), sig);
+        this.makeSymbolToSkip(sig1, xs, homs.getLeft(), homs.getRight(), sig, true);
+        this.makeSymbolToSkip(sig2, xs, homs.getRight(), homs.getLeft(), sig, false);
         
         for(String sym1 : sig1.getSymbols()){
             
@@ -57,9 +57,9 @@ public class RuleTreeGenerator {
                 int arity2 = sig2.getArityForLabel(sym2);
                 
                 if(arity1 < arity2){
-                    makePairings(xs, arity2, sym2, arity1, sym1, sig, homs.getRight(), homs.getLeft());   
+                    makePairings(xs, arity2, sym2, arity1, sym1, sig, homs.getRight(), homs.getLeft(), false);   
                 }else{
-                    makePairings(xs, arity1, sym1, arity2, sym2, sig, homs.getLeft(), homs.getRight());
+                    makePairings(xs, arity1, sym1, arity2, sym2, sig, homs.getLeft(), homs.getRight(), true);
                 }
             }
         }
@@ -83,7 +83,7 @@ public class RuleTreeGenerator {
      */
     private void makePairings(List<Tree<String>> xs, int arityLarger, String symLarger,
             int aritySmaller, String symSmaller, Signature sig,
-            Homomorphism homLarger, Homomorphism homSmaller) {
+            Homomorphism homLarger, Homomorphism homSmaller, boolean leftToRight) {
         xs.clear();
         for(int i=1;i<=arityLarger;++i){
             xs.add(Tree.create("x_"+i));
@@ -93,7 +93,12 @@ public class RuleTreeGenerator {
         if(aritySmaller == 0)
         {
             Tree<String> expression2 = Tree.create(symSmaller);
-            String label = makeLabel(sig,arityLarger);
+            String label;
+            if(leftToRight){
+                label = this.makeLabel(sig, arityLarger, symLarger, arityLarger, symSmaller, aritySmaller);
+            }else{
+                label = this.makeLabel(sig, arityLarger, symSmaller, aritySmaller, symLarger, arityLarger);
+            }
             
             homLarger.add(label, expression1);
             homSmaller.add(label, expression2);
@@ -111,7 +116,12 @@ public class RuleTreeGenerator {
             }
             Tree<String> expression2 = Tree.create(symSmaller, xs);
             
-            String label = makeLabel(sig,arityLarger);
+            String label;
+            if(leftToRight){
+                label = this.makeLabel(sig, arityLarger, symLarger, arityLarger, symSmaller, aritySmaller);
+            }else{
+                label = this.makeLabel(sig, arityLarger, symSmaller, aritySmaller, symLarger, arityLarger);
+            }
             
             homLarger.add(label, expression1);
             homSmaller.add(label, expression2);
@@ -150,7 +160,7 @@ public class RuleTreeGenerator {
      * @param hom2 
      */
     private void makeSymbolToSkip(Signature sig, List<Tree<String>> xs, Homomorphism hom1,
-                                                 Homomorphism hom2, Signature add) {
+                                                 Homomorphism hom2, Signature add, boolean leftToRight) {
         for(String sym : sig.getSymbols()){
             int arity1 = sig.getArityForLabel(sym);
             xs.clear();
@@ -159,7 +169,13 @@ public class RuleTreeGenerator {
             }
             Tree<String> expression = Tree.create(sym, xs);
             for(int i=0;i<xs.size();++i){
-                String label = makeLabel(add,arity1);
+                String label;
+                if(leftToRight){
+                    label = makeLabel(sig, arity1, sym, arity1, "", 1);
+                }
+                else{
+                    label = makeLabel(sig, arity1, "", 1, sym, arity1);
+                }
                 
                 hom2.add(label, xs.get(i));
                 hom1.add(label, expression);
@@ -171,8 +187,8 @@ public class RuleTreeGenerator {
      * 
      * @return 
      */
-    private String makeLabel(Signature sig, int arity) {
-        String s = Util.gensym("l_");
+    private String makeLabel(Signature sig, int arity, String sym1, int arity1, String sym2, int arity2) {
+        String s = sym1+"_"+arity1+"/"+sym2+"_"+arity2;
         
         sig.addSymbol(s, arity);
         
