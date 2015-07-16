@@ -53,7 +53,7 @@ public class MarkingPropagatorTest {
         ta1 = result.getRight().getLeft();
         ta2 = result.getRight().getRight();
         
-        this.mp = new MarkingPropagator("X");
+        this.mp = new MarkingPropagator();
     }
 
     /**

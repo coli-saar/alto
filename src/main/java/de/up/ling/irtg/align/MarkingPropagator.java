@@ -13,28 +13,13 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.Arrays;
 
 /**
  *
  * @author christoph
  */
-public class MarkingPropagator {  
-    
-    /**
-     * 
-     */
-    private final String setPrefix;
-    
-    /**
-     * 
-     * @param setPrefixMarker 
-     */
-    public MarkingPropagator(String setPrefixMarker)
-    {
-        this.setPrefix = setPrefixMarker;
-    }
-    
+public class MarkingPropagator {
+        
     /**
      * 
      * @param input
@@ -49,7 +34,7 @@ public class MarkingPropagator {
         
         Int2ObjectMap<IntSet> mapping = input.evaluateInSemiring2(sr, rlm.ruleMarkings(num));
         
-        Visitor vis = new Visitor(setPrefix, mapping, rlm, cta, input);
+        Visitor vis = new Visitor(mapping, rlm, cta, input);
         input.foreachStateInBottomUpOrder(vis);
         
         return cta;
@@ -60,11 +45,6 @@ public class MarkingPropagator {
      */
     private class Visitor implements TreeAutomaton.BottomUpStateVisitor
     {
-        
-        /**
-         * 
-         */
-        private final String prefix;
         
         /**
          * 
@@ -93,9 +73,8 @@ public class MarkingPropagator {
          * @param vars
          * @param goal 
          */
-        public Visitor(String prefix, Int2ObjectMap<IntSet> vars, RuleMarker rlm,
+        public Visitor(Int2ObjectMap<IntSet> vars, RuleMarker rlm,
                                         ConcreteTreeAutomaton goal, TreeAutomaton original) {
-            this.prefix = prefix;
             this.vars = vars;
             this.goal = goal;
             this.original = original;
