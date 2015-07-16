@@ -6,14 +6,18 @@
 package de.up.ling.irtg.align;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.InverseHomAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -35,24 +39,34 @@ public class RuleTreeGenerator {
      */
     public Pair<TreeAutomaton,Pair<Homomorphism,Homomorphism>> makeInverseIntersection(TreeAutomaton input1,
                                                             TreeAutomaton input2, RuleMarker rlm){
+        Signature sig = new Signature();
+        
+        Pair<Homomorphism,Homomorphism> homs = this.getHomomorphisms(sig, input1, input2, rlm);
+        
+        TreeAutomaton inv1 = new InverseHomAutomaton(input1, homs.getLeft()).asConcreteTreeAutomaton();
+        TreeAutomaton inv2 = new InverseHomAutomaton(input2, homs.getRight()).asConcreteTreeAutomaton();
+        
+        TreeAutomaton restriction = makeRestriction(sig,rlm, homs.getLeft(), homs.getRight());
+        
+        return new Pair<>(inv1.intersect(inv2).intersect(restriction),homs);
+    }
+
+    
+    public Pair<Homomorphism,Homomorphism> getHomomorphisms(Signature sig, TreeAutomaton input1,
+                                                            TreeAutomaton input2, RuleMarker rlm){
         Signature sig1 = input1.getSignature();
         Signature sig2 = input2.getSignature();
-        
-        Signature sig = new Signature();
         
         Pair<Homomorphism,Homomorphism> homs = new Pair<>(new Homomorphism(sig, input1.getSignature()),
                 new Homomorphism(sig,input2.getSignature()));
         
         List<Tree<String>> xs = new ArrayList<>();
         
-        String dummy1 = findDummy(sig1);
-        String dummy2 = findDummy(sig2);
-        
         Set<String> relevant1 = makeRelevant(input1);
         Set<String> relevant2 = makeRelevant(input2);
         
-        this.makeSymbolToSkip(relevant1, sig, sig1, xs, homs.getLeft(), homs.getRight(), dummy1, rlm);
-        this.makeSymbolToSkip(relevant2, sig, sig2, xs, homs.getRight(), homs.getLeft(), dummy2, rlm);
+        this.makeSymbolToSkip(relevant1, sig, sig1, xs, homs.getLeft(), homs.getRight(), rlm);
+        this.makeSymbolToSkip(relevant2, sig, sig2, xs, homs.getRight(), homs.getLeft(), rlm);
         
         for(String sym1 : relevant1){           
             if(rlm.isFrontier(sym1)){
@@ -77,12 +91,9 @@ public class RuleTreeGenerator {
             }
         }
         
-        TreeAutomaton inv1 = new InverseHomAutomaton(input1, homs.getLeft()).asConcreteTreeAutomaton();
-        TreeAutomaton inv2 = new InverseHomAutomaton(input2, homs.getRight()).asConcreteTreeAutomaton();
-        
-        return new Pair<>(inv1.intersect(inv2).asConcreteTreeAutomaton(),homs);
+        return homs;
     }
-
+    
     /**
      * 
      * @param xs
@@ -164,9 +175,7 @@ public class RuleTreeGenerator {
      * @param hom2 
      */
     private void makeSymbolToSkip(Set<String> relevant, Signature sigToAdd, Signature from, List<Tree<String>> xs, Homomorphism hom1,
-                                                 Homomorphism hom2, String dummy, RuleMarker rlm) {
-        Tree<String> dum = Tree.create(dummy);
-        
+                                                 Homomorphism hom2, RuleMarker rlm) {
         for(String sym : relevant){
             if(rlm.isFrontier(sym)){
                 continue;
@@ -179,17 +188,12 @@ public class RuleTreeGenerator {
             }
             
             Tree<String> expression = Tree.create(sym, xs);
-            String label = makeLabel(sigToAdd,arity1);
-            
-            hom1.add(label, expression);
-            hom2.add(label, dum);
-            
             if(arity1 < 1){
                 continue;
             }
             
             for(int i=0;i<xs.size();++i){
-                label = makeLabel(sigToAdd, arity1);
+                String label = makeLabel(sigToAdd, arity1);
                 
                 hom2.add(label, xs.get(i));
                 hom1.add(label, expression);
@@ -210,20 +214,6 @@ public class RuleTreeGenerator {
 
     /**
      * 
-     * @param sig
-     * @return 
-     */
-    private String findDummy(Signature sig) {
-        String dum = "D";
-        while(sig.contains("D")){
-            sig.addSymbol(dum, 0);
-        }
-        
-        return dum;
-    }
-
-    /**
-     * 
      * @param input1
      * @return 
      */
@@ -238,6 +228,75 @@ public class RuleTreeGenerator {
         }
         
         return ret;
+    }
+
+    /**
+     * 
+     * @param sig
+     * @param rlm
+     * @param h1
+     * @param h2
+     * @return 
+     */
+    private TreeAutomaton makeRestriction(Signature sig, RuleMarker rlm,
+            Homomorphism h1, Homomorphism h2) {
+        ConcreteTreeAutomaton<String> cta = new ConcreteTreeAutomaton<>();
+        
+        int general = cta.addState("a");
+        int addmissible = cta.addState("b");
+        
+        cta.addFinalState(general);
+        
+        IntSet s1 = new IntOpenHashSet();
+        IntSet s2 = new IntOpenHashSet();
+        
+        IntArrayList il = new IntArrayList();
+        
+        for(String sym : sig.getSymbols()){
+            int label = cta.getSignature().addSymbol(sym, 1);
+            Tree<String> t1 = h1.get(sym);
+            Tree<String> t2 = h2.get(sym);
+            
+            String l1 = t1.getLabel();
+            String l2 = h2.get(sym).getLabel();
+            
+            if(rlm.isFrontier(l1) || rlm.isFrontier(l2)){
+                il.clear();
+                il.add(general);
+                cta.addRule(cta.createRule(general, label, il, 1));
+                continue;
+            }
+            
+            il.clear();
+            for(int i=0;i<sig.getArityForLabel(sym);++i){
+                il.add(addmissible);
+            }
+            cta.addRule(cta.createRule(addmissible, label, il, 1));
+            
+            s1.clear();
+            s2.clear();
+            fillWithConversion(s1,t1.getChildren());
+            fillWithConversion(s2,t2.getChildren());
+            
+            il.clear();
+            for(int i=0;i<sig.getArityForLabel(sym);++i){
+                il.add((s1.contains(i) || s2.contains(i)) ? general : addmissible);
+            }
+            
+        }
+        
+        return cta;
+    }
+
+    /**
+     * 
+     * @param is
+     * @param children 
+     */
+    private void fillWithConversion(IntSet is, List<Tree<String>> children) {
+        for(Tree<String> ts : children){
+            is.add(Integer.parseInt(ts.getLabel().substring(1)));
+        }
     }
     
     /**
