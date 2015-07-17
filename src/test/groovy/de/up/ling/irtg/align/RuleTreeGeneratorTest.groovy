@@ -62,9 +62,6 @@ public class RuleTreeGeneratorTest {
         TreeAutomaton ta = result.getLeft();
         ta.determinize();
         
-        Set<String> s = new TreeSet<>(hom1.getSourceSignature().getSymbols());
-        s.addAll(hom1.getSourceSignature().getSymbols());
-        
         for(Rule r : ta.getRuleIterable()){
             String label = r.getLabel(ta);
             
@@ -135,7 +132,6 @@ public class RuleTreeGeneratorTest {
         
         
         TreeAutomaton ta = result.getLeft();
-        Iterator<Tree<String>> it = ta.languageIterator();
         Homomorphism hm1 = result.getRight().getLeft();
         Homomorphism hm2 = result.getRight().getRight();
         
@@ -150,11 +146,12 @@ public class RuleTreeGeneratorTest {
             h.setWeight(0.5);
         }
         
+        Iterator<Tree<String>> it = ta.languageIterator();
+        
         Set<Pair<String,String>> seen = new HashSet<>();
         for(int i=0;i<100;++i){
             Tree<String> ts = it.next();
-            System.out.println(ts);
-           
+            
             seen.add(new Pair<>(hm1.apply(ts).toString(),hm2.apply(ts).toString()));
         }
         

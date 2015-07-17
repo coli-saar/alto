@@ -31,7 +31,7 @@ public class SubtreePairer implements  Function<String,Pair<Tree<String>,Tree<St
      * @param h1
      * @param h2 
      */
-    private SubtreePairer(Homomorphism h1, Homomorphism h2) {
+    public SubtreePairer(Homomorphism h1, Homomorphism h2) {
         this.h1 = h1;
         this.h2 = h2;
     }
@@ -46,6 +46,15 @@ public class SubtreePairer implements  Function<String,Pair<Tree<String>,Tree<St
     public static Tree<Pair<Tree<String>,Tree<String>>> convert(Tree<String> t, Homomorphism h1, Homomorphism h2){
         SubtreePairer sp = new SubtreePairer(h1,h2);
         return t.map(sp);
+    }
+    
+    /**
+     * 
+     * @param t
+     * @return 
+     */
+    public Tree<Pair<Tree<String>,Tree<String>>> convert(Tree<String> t){
+        return t.map(this);
     }
 
     @Override
