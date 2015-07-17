@@ -12,6 +12,7 @@ import de.up.ling.irtg.align.RuleMarker;
 import de.up.ling.irtg.align.rule_markers.SimpleRuleMarker;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -83,7 +84,7 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
             }
         }
         
-        SimpleRuleMarker srm = new SimpleRuleMarker("X");
+        SimpleRuleMarker srm = new SimpleRuleMarker(ensure("X",ta1.getSignature(),ta2.getSignature()));
         Iterator<Entry> it = oneMarkerToPosition.int2IntEntrySet().iterator();
         
         while(it.hasNext()){
@@ -98,5 +99,21 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
         }
         
         return new Pair<>(srm,new Pair<>(ta1,ta2));
+    }
+
+    /**
+     * 
+     * @param x
+     * @param signature
+     * @param signature0
+     * @return 
+     */
+    private String ensure(String x, Signature signature, Signature signature0) {
+        String code = x;
+        while(signature.contains(code) || signature0.contains(code)){
+            code += x;
+        }
+        
+        return code;
     }
 }
