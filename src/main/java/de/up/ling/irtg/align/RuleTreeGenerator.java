@@ -8,6 +8,7 @@ package de.up.ling.irtg.align;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.InverseHomAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
@@ -51,7 +52,14 @@ public class RuleTreeGenerator {
         return new Pair<>(inv1.intersect(inv2).intersect(restriction),homs);
     }
 
-    
+    /**
+     * 
+     * @param sig
+     * @param input1
+     * @param input2
+     * @param rlm
+     * @return 
+     */
     public Pair<Homomorphism,Homomorphism> getHomomorphisms(Signature sig, TreeAutomaton input1,
                                                             TreeAutomaton input2, RuleMarker rlm){
         Signature sig1 = input1.getSignature();
@@ -61,6 +69,7 @@ public class RuleTreeGenerator {
                 new Homomorphism(sig,input2.getSignature()));
         
         List<Tree<String>> xs = new ArrayList<>();
+        List<Tree<String>> otherXs = new ArrayList<>();
         
         Set<String> relevant1 = makeRelevant(input1);
         Set<String> relevant2 = makeRelevant(input2);
@@ -84,9 +93,9 @@ public class RuleTreeGenerator {
                 int arity2 = sig2.getArityForLabel(sym2);
                 
                 if(arity1 < arity2){
-                    makePairings(xs, arity2, sym2, arity1, sym1, sig, homs.getRight(), homs.getLeft());   
+                    makePairings(xs, otherXs, arity2, sym2, arity1, sym1, sig, homs.getRight(), homs.getLeft());   
                 }else{
-                    makePairings(xs, arity1, sym1, arity2, sym2, sig, homs.getLeft(), homs.getRight());
+                    makePairings(xs, otherXs, arity1, sym1, arity2, sym2, sig, homs.getLeft(), homs.getRight());
                 }
             }
         }
@@ -105,14 +114,16 @@ public class RuleTreeGenerator {
      * @param homLarger
      * @param homSmaller 
      */
-    private void makePairings(List<Tree<String>> xs, int arityLarger, String symLarger,
+    private void makePairings(List<Tree<String>> xs, List<Tree<String>> other, int arityLarger, String symLarger,
             int aritySmaller, String symSmaller, Signature sig,
             Homomorphism homLarger, Homomorphism homSmaller) {
-        xs.clear();
+        other.clear();
+        
         for(int i=1;i<=arityLarger;++i){
-            xs.add(Tree.create("?"+i));
+            other.add(Tree.create("?"+i));
         }
-        Tree<String> expression1 = Tree.create(symLarger, xs);
+        
+        Tree<String> expression1 = Tree.create(symLarger, other);
         
         if(aritySmaller == 0)
         {
@@ -240,32 +251,46 @@ public class RuleTreeGenerator {
      */
     private TreeAutomaton makeRestriction(Signature sig, RuleMarker rlm,
             Homomorphism h1, Homomorphism h2) {
-        ConcreteTreeAutomaton<String> cta = new ConcreteTreeAutomaton<>();
+        ConcreteTreeAutomaton<String> cta = new ConcreteTreeAutomaton<>(sig);
         
-        int general = cta.addState("a");
-        int addmissible = cta.addState("b");
+        int start = cta.addState(findFree("s", sig));
+        int general = cta.addState(findFree("a",sig));
+        int addmissible = cta.addState(findFree("b",sig));
         
-        cta.addFinalState(general);
+        cta.addFinalState(start);
         
         IntSet s1 = new IntOpenHashSet();
         IntSet s2 = new IntOpenHashSet();
         
         IntArrayList il = new IntArrayList();
         
+        Set<String> fronts = new ObjectOpenHashSet<>();
+        Set<String> others = new ObjectOpenHashSet<>();
         for(String sym : sig.getSymbols()){
-            int label = cta.getSignature().addSymbol(sym, 1);
+            String l1 = h1.get(sym).getLabel();
+            String l2 = h2.get(sym).getLabel();
+            
+            if(rlm.isFrontier(l1) || rlm.isFrontier(l2)){
+                int label = sig.getIdForSymbol(sym);
+                int goal = cta.addState(sym);
+                
+                il.clear();
+                fronts.add(sym);
+                il.add(goal);
+                cta.addRule(cta.createRule(general, label, il, 1));
+            }else{
+                others.add(sym);
+            }
+        }
+        
+        for(String sym : others){
+            int label = sig.getIdForSymbol(sym);
+            
             Tree<String> t1 = h1.get(sym);
             Tree<String> t2 = h2.get(sym);
             
             String l1 = t1.getLabel();
-            String l2 = h2.get(sym).getLabel();
-            
-            if(rlm.isFrontier(l1) || rlm.isFrontier(l2)){
-                il.clear();
-                il.add(general);
-                cta.addRule(cta.createRule(general, label, il, 1));
-                continue;
-            }
+            String l2 = t2.getLabel();    
             
             il.clear();
             for(int i=0;i<sig.getArityForLabel(sym);++i){
@@ -275,14 +300,21 @@ public class RuleTreeGenerator {
             
             s1.clear();
             s2.clear();
-            fillWithConversion(s1,t1.getChildren());
-            fillWithConversion(s2,t2.getChildren());
+            fillWithConversion(s1,t1);
+            fillWithConversion(s2,t2);
             
             il.clear();
-            for(int i=0;i<sig.getArityForLabel(sym);++i){
-                il.add((s1.contains(i) || s2.contains(i)) ? general : addmissible);
+            for(int i=1;i<=sig.getArityForLabel(sym);++i){
+                il.add((s1.contains(i) && s2.contains(i)) ? general : addmissible);
             }
             
+            cta.addRule(cta.createRule(general, label, il, 1));
+            cta.addRule(cta.createRule(start, label, il, 1));
+            
+            for(String s : fronts){
+                int state = cta.getIdForState(s);
+                cta.addRule(cta.createRule(state, label, il, 1));
+            }
         }
         
         return cta;
@@ -293,10 +325,31 @@ public class RuleTreeGenerator {
      * @param is
      * @param children 
      */
-    private void fillWithConversion(IntSet is, List<Tree<String>> children) {
-        for(Tree<String> ts : children){
+    private void fillWithConversion(IntSet is, Tree<String> t) {
+        String label = t.getLabel();
+        if(label.matches("\\?.*")){
+            is.add(Integer.parseInt(label.substring(1)));
+            return;
+        }
+        
+        for(Tree<String> ts : t.getChildren()){
             is.add(Integer.parseInt(ts.getLabel().substring(1)));
         }
+    }
+
+    /**
+     * 
+     * @param code
+     * @param sig
+     * @return 
+     */
+    private String findFree(String code, Signature sig) {
+        String ret = code;
+        while(sig.contains(ret)){
+            ret += code;
+        }
+        
+        return ret;
     }
     
     /**

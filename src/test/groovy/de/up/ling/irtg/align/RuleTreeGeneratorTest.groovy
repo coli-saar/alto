@@ -14,6 +14,7 @@ import de.up.ling.irtg.automata.Rule
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree
+import java.util.HashSet
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -44,8 +45,8 @@ public class RuleTreeGeneratorTest {
         
         StringAlignmentAlgebra saa = new StringAlignmentAlgebra();
         
-        String one = "a:1 a:2";
-        String two = "a a:1 b:2";
+        String one = "a:1:4 b";
+        String two = "c d:1 e:4";
         
         Pair<RuleMarker,Pair<TreeAutomaton,TreeAutomaton>> parts = saa.decomposePair(one, two);
         
@@ -55,30 +56,40 @@ public class RuleTreeGeneratorTest {
         Pair<TreeAutomaton,Pair<Homomorphism,Homomorphism>> result = rgen.makeInverseIntersection(ta1,ta2,parts.getLeft());
         Homomorphism hom1 = result.getRight().getLeft();
         Homomorphism hom2 = result.getRight().getRight();
-        
-        System.out.println("obtained result");
            
         TreeAutomaton ta = result.getLeft();
+        ta.determinize();
         
         Set<String> s = new TreeSet<>(hom1.getSourceSignature().getSymbols());
         s.addAll(hom1.getSourceSignature().getSymbols());
         
         for(Rule r : ta.getRuleIterable()){
+            String label = r.getLabel(ta);
+            
+            if(label.matches("X.+")){
+               r.setWeight(1.0);
+               continue;
+            }
+            
             r.setWeight(0.5);
-        }        
+        }
         
         SubtreePairer sp = new SubtreePairer(hom1,hom2);
         
+        Set<Pair<String,String>> seen = new HashSet<>();
+        
         Iterator<Tree<String>> it = ta.languageIterator();
-        for(int i=0;i<50;++i){
+        for(int i=0;i<150;++i){
             Tree<String> t = it.next();
-            System.out.println(t);
-            System.out.println(hom1.apply(t));
-            System.out.println(hom2.apply(t));
             
-            System.out.println(t.map(sp));
+            seen.add(new Pair<>(hom1.apply(t).toString(),hom2.apply(t).toString()));
         }
-        // TODO review the generated test code and remove the default call to fail.
+        
+        assertTrue(seen.contains(new Pair<>("*('X_{0, 1}'(a),'X_{}'(b))","*('X_{}'(c),'X_{0, 1}'(*(d,e)))")));
+        assertFalse(seen.contains(new Pair<>("'X_{0, 1}'(*('X_{0, 1}'(a),'X_{}'(b)))","'X_{0, 1}'(*('X_{}'(c),'X_{0, 1}'(*(d,e))))")));
+        assertTrue(seen.contains(new Pair<>("*('X_{0, 1}'(a),b)","*(c,'X_{0, 1}'(*(d,e)))")));
+        assertTrue(seen.contains(new Pair<>("*(a,b)","*(c,*(d,e))")));
+        assertTrue(seen.contains(new Pair<>("*(a,b)","*(*(c,d),e)")));
+        assertFalse(seen.contains(new Pair<>("*(a,'X_{0, 1}'(b))","*(*(c,d),'X_{0, 1}'(e))")));
     }
-    
 }
