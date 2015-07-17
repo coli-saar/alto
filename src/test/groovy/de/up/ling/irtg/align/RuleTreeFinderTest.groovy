@@ -57,8 +57,6 @@ public class RuleTreeFinderTest {
         assertTrue(list.contains(new Pair<Tree<String>>(pt("a"),pt("*(d,e)"))));
         assertTrue(list.contains(new Pair<Tree<String>>(pt("b"),pt("c"))));
         assertTrue(list.contains(new Pair<Tree<String>>(pt("*(x_1,x_2)"),pt("*(x_2,x_1)"))));
-        
-        // TODO review the generated test code and remove the default call to fail.
     }
     
 }
