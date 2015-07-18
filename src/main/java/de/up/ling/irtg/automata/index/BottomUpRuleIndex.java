@@ -19,7 +19,7 @@ import java.util.function.Consumer;
  * @author koller
  */
 public abstract class BottomUpRuleIndex {
-    public abstract void put(Collection<Rule> rules, int labelId, int[] childStates);
+    public abstract void setRules(Collection<Rule> rules, int labelId, int[] childStates);
     public abstract Collection<Rule> get(int labelId, int[] childStates);
     
     public abstract Iterable<Rule> getAllRules();
@@ -48,7 +48,7 @@ public abstract class BottomUpRuleIndex {
         
         if( rulesHere == null ) {
             rulesHere = new HashSet<>();
-            put(rulesHere, rule.getLabel(), rule.getChildren());
+            setRules(rulesHere, rule.getLabel(), rule.getChildren());
         }        
         
         rulesHere.add(rule);

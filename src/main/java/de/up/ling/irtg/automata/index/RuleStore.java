@@ -116,9 +116,9 @@ public class RuleStore implements Serializable {
         }
     }
     
-    public Collection<Rule> storeRules(Collection<Rule> rules, int labelID, int[] children) {
+    public Collection<Rule> setRules(Collection<Rule> rules, int labelID, int[] children) {
         if(storing) {
-            bottomUp.put(rules, labelID, children);
+            bottomUp.setRules(rules, labelID, children);
             rules.forEach(topDown::add);
         } else {
 //            System.err.println("ignore: " + Util.mapToList(rules, rule -> rule.toString(auto)));

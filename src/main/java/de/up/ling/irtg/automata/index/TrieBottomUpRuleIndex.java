@@ -79,7 +79,7 @@ public class TrieBottomUpRuleIndex extends BottomUpRuleIndex implements Serializ
     }
 
     @Override
-    public void put(Collection<Rule> rules, int labelId, int[] childStates) {
+    public void setRules(Collection<Rule> rules, int labelId, int[] childStates) {
         Int2ObjectMap<Collection<Rule>> rulesHere = storedRules.get(childStates);
 
         if (rulesHere == null) {
