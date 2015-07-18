@@ -24,6 +24,8 @@ import de.up.ling.irtg.InterpretedTreeAutomaton
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomatonTest
 
+import de.up.ling.irtg.automata.index.*
+
 /**
  *
  * @author gontrum

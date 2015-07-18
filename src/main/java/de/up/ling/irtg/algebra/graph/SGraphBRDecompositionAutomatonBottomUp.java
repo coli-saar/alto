@@ -300,9 +300,9 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
 //        }
         
         // Jonas' original implementation -- replaced by AK
-        System.err.println("cache: " + Util.mapToList(rules, rule -> rule.toString(this)));
-//        return ruleStore.storeRules(rules, labelID, children);
-        return rules;
+//        System.err.println("cache: " + Util.mapToList(rules, rule -> rule.toString(this)));
+        return ruleStore.storeRules(rules, labelID, children);
+//        return rules;
     }
     
 

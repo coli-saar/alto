@@ -130,7 +130,7 @@ public class RuleStore implements Serializable {
     private void processNewBottomUpRules() {
         if (!unprocessedUpdatesForBottomUp.isEmpty()) {
             unprocessedUpdatesForBottomUp.forEach(rule -> {
-                boolean rhsIsNew = storeRuleInTrie(rule);
+                boolean rhsIsNew = bottomUp.add(rule);
 
                 if (!rhsIsNew) {
                     explicitIsBottomUpDeterministic = false;
@@ -147,63 +147,6 @@ public class RuleStore implements Serializable {
     }
     
     
-
-//    // XXX
-//    private IntTrie<Int2ObjectMap<Collection<Rule>>> getExplicitRulesBottomUp() {
-//        processNewBottomUpRules();
-//        return (IntTrie) explicitRulesBottomUp;
-//    }
-
-    /**
-     * Returns false if adding this rule makes the automaton bottom-up
-     * nondeterministic. That is: when q -> f(q1,...,qn) is added, the method
-     * returns true; when subsequently q' -> f(q1,...,qn) is added, with q !=
-     * q', the method returns false. (However, adding q -> f(q1,...,qn) for a
-     * second time does not actually change the set of rules; in this case, the
-     * method returns true.)
-     *
-     * @param rule
-     * @return
-     */
-    private boolean storeRuleInTrie(Rule rule) {
-        return bottomUp.add(rule);        
-        
-//        Collection<Rule> knownRuleMap = bottomUp.getRulesLike(rule);
-//        boolean ret = true;
-//        
-//        if( knownRuleMap == null ) {
-//            
-//        }
-//        
-//        
-//        
-//        
-//        
-////        bottomUp.add(rule);
-//        
-//        
-//        Int2ObjectMap<Collection<Rule>> knownRuleMap = getAllRulesBottomUp().get(rule.getChildren());
-//        boolean ret = true;
-//
-//        if (knownRuleMap == null) {
-//            knownRuleMap = new Int2ObjectOpenHashMap<Set<Rule>>();
-//            explicitRulesBottomUp.put(rule.getChildren(), knownRuleMap);
-//        }
-//
-//        Set<Rule> knownRules = knownRuleMap.get(rule.getLabel());
-//
-//        if (knownRules == null) {
-//            // no rules known at all for this RHS => always return true
-//            knownRules = new HashSet<Rule>();
-//            knownRuleMap.put(rule.getLabel(), knownRules);
-//            knownRules.add(rule);
-//        } else {
-//            // some rules were known for this RHS => return false if the new rule is new
-//            ret = !knownRules.add(rule);  // add returns true iff rule is new
-//        }
-//
-//        return ret;
-    }
 
     public void processNewRulesForRhs() {
         if (rulesForRhsState == null) {
@@ -248,6 +191,17 @@ public class RuleStore implements Serializable {
     }
     
     /**
+     * Use this method to access the bottom-up index,
+     * in a way that guarantees that all rules have been indexed in it.
+     * 
+     * @return 
+     */
+    private BottomUpRuleIndex bu() {
+        processNewBottomUpRules();
+        return bottomUp;
+    }
+    
+    /**
      * Returns null if such rules were never cached.
      * 
      * @param labelId
@@ -255,8 +209,10 @@ public class RuleStore implements Serializable {
      * @return 
      */
     public Iterable<Rule> getRulesBottomUpRaw(int labelId, int[] childStates) {
-        processNewBottomUpRules();
-        return bottomUp.get(labelId, childStates);
+        return bu().get(labelId, childStates);
+        
+//        processNewBottomUpRules();
+//        return bottomUp.get(labelId, childStates);
     }
     
 
@@ -269,9 +225,10 @@ public class RuleStore implements Serializable {
      * @return
      */
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-        processNewBottomUpRules();
+//        processNewBottomUpRules();        
+//        Iterable<Rule> ret = bottomUp.get(labelId, childStates);
         
-        Iterable<Rule> ret = bottomUp.get(labelId, childStates);
+        Iterable<Rule> ret = bu().get(labelId, childStates);
         
         if( ret == null ) {
             return Collections.emptySet();
@@ -325,13 +282,17 @@ public class RuleStore implements Serializable {
     @Deprecated
     private IntTrie<Int2ObjectMap<Collection<Rule>>> getTrie() {
         assert bottomUp instanceof TrieBottomUpRuleIndex;
-        processNewBottomUpRules();
-        return ((TrieBottomUpRuleIndex) bottomUp).getTrie();
+        
+        return ((TrieBottomUpRuleIndex) bu()).getTrie();
+        
+//        processNewBottomUpRules();
+//        return ((TrieBottomUpRuleIndex) bottomUp).getTrie();
     }
     
     public Iterable<Rule> getAllRulesBottomUp() {
-        processNewBottomUpRules();
-        return bottomUp.getAllRules();
+        return bu().getAllRules();
+//        processNewBottomUpRules();
+//        return bottomUp.getAllRules();
     }
 
     public IntIterable getLabelsTopDown(int parentState) {
@@ -369,7 +330,7 @@ public class RuleStore implements Serializable {
             return true;
         }
 
-        processNewBottomUpRules();
+//        processNewBottomUpRules();
         Int2ObjectMap<Collection<Rule>> entry = getTrie().get(childStates);
 
         if (entry == null) {
@@ -401,14 +362,74 @@ public class RuleStore implements Serializable {
     }
     
     public void printStatistics() {
-        bottomUp.printStatistics();
+        bu().printStatistics();
     }
     
     public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Consumer<Rule> fn) {
-        bottomUp.foreachRuleForSets(labelIds, childStateSets, signatureMapper, fn);
+        bu().foreachRuleForSets(labelIds, childStateSets, signatureMapper, fn);
     }
     
 //    public void foreachValueForKeySets(List<IntSet> keySets, Consumer<Rule> fn) {
 //        bottomUp.foreachValueForKeySets(keySets, fn);
 //    }
 }
+
+
+
+
+//    // XXX
+//    private IntTrie<Int2ObjectMap<Collection<Rule>>> getExplicitRulesBottomUp() {
+//        processNewBottomUpRules();
+//        return (IntTrie) explicitRulesBottomUp;
+//    }
+
+    /**
+     * Returns false if adding this rule makes the automaton bottom-up
+     * nondeterministic. That is: when q -> f(q1,...,qn) is added, the method
+     * returns true; when subsequently q' -> f(q1,...,qn) is added, with q !=
+     * q', the method returns false. (However, adding q -> f(q1,...,qn) for a
+     * second time does not actually change the set of rules; in this case, the
+     * method returns true.)
+     *
+     * @param rule
+     * @return
+     */
+//    private boolean storeRuleInTrie(Rule rule) {
+//        return bottomUp.add(rule);        
+        
+//        Collection<Rule> knownRuleMap = bottomUp.getRulesLike(rule);
+//        boolean ret = true;
+//        
+//        if( knownRuleMap == null ) {
+//            
+//        }
+//        
+//        
+//        
+//        
+//        
+////        bottomUp.add(rule);
+//        
+//        
+//        Int2ObjectMap<Collection<Rule>> knownRuleMap = getAllRulesBottomUp().get(rule.getChildren());
+//        boolean ret = true;
+//
+//        if (knownRuleMap == null) {
+//            knownRuleMap = new Int2ObjectOpenHashMap<Set<Rule>>();
+//            explicitRulesBottomUp.put(rule.getChildren(), knownRuleMap);
+//        }
+//
+//        Set<Rule> knownRules = knownRuleMap.get(rule.getLabel());
+//
+//        if (knownRules == null) {
+//            // no rules known at all for this RHS => always return true
+//            knownRules = new HashSet<Rule>();
+//            knownRuleMap.put(rule.getLabel(), knownRules);
+//            knownRules.add(rule);
+//        } else {
+//            // some rules were known for this RHS => return false if the new rule is new
+//            ret = !knownRules.add(rule);  // add returns true iff rule is new
+//        }
+//
+//        return ret;
+//    }

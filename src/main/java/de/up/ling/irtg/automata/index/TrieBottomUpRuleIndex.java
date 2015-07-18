@@ -122,16 +122,28 @@ public class TrieBottomUpRuleIndex extends BottomUpRuleIndex implements Serializ
         storedRules.printStatistics();
     }
     
+    public static boolean DEBUG_ITERATION = false;
+    
     @Override
-    public void foreachRuleForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {        
+    public void foreachRuleForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {
+        if(DEBUG_ITERATION) System.err.println("\nforeachRuleForSets: labels = " + labelIds);
+        
         storedRules.foreachValueForKeySets(childStateSets, ruleMap -> {
             // TODO: This is optimized for the PCFG case, where the label sets are typically much
             // larger than the sets of rules with the same child states. Adapt IntTrie iteration/contains
             // trick here to iterate over smaller set. Take special care to remap in the right direction.
+            
+            if( DEBUG_ITERATION ) {
+                System.err.println("rule map labels: " + ruleMap.keySet());
+            }
 
             FastutilUtils.forEach(ruleMap.keySet(), label -> {
                 if (labelIds.contains(signatureMapper.remapForward(label))) {
                     ruleMap.get(label).forEach(fn);
+//                    rule -> {
+//                        if(DEBUG_ITERATION) System.err.println("-> rule: " + rule);
+//                        fn.accept(rule);
+//                    });
                 }
             });
         });
