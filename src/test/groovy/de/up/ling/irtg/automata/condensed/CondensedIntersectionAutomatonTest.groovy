@@ -24,6 +24,8 @@ import de.up.ling.irtg.InterpretedTreeAutomaton
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomatonTest
 
+import de.up.ling.irtg.automata.index.*
+
 /**
  *
  * @author gontrum
@@ -94,6 +96,9 @@ Y -> r8(X,X)
         
         TreeAutomaton intersect = auto1.intersectCondensed(auto2, auto1.getSignature().getMapperTo(auto2.getSignature()));
         intersect.getStateInterner().setTrustingMode(false); // important!
+        
+        TreeAutomaton.DEBUG_STORE = false;
+        GenericCondensedIntersectionAutomaton.DEBUG = false;
 
         assert intersect.getSignature() == auto1.getSignature();
         

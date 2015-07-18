@@ -265,7 +265,7 @@ public abstract class Algebra<E> implements Serializable {
 
                         Rule rule = createRule(parentStateId, labelId, childStates, 1);
                         ret.add(rule);
-                        storeRule(rule);
+                        storeRuleBottomUp(rule);
                     }
                 }
 

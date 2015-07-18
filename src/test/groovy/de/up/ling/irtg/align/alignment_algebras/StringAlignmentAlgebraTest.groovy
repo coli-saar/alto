@@ -53,7 +53,7 @@ public class StringAlignmentAlgebraTest {
         TreeAutomaton t1 = result.getRight().getLeft();
         TreeAutomaton t2 = result.getRight().getRight();
         
-        for(Rule r : t1.getRuleIterable()){
+        for(Rule r : t1.getRuleSet()){
                        
             if(r.getLabel(t1).equals("*") || r.getLabel(t1).equals("h")){
                 assertTrue(rlm.getMarkings(0,r).isEmpty());

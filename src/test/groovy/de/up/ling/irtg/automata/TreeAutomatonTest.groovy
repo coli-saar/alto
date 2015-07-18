@@ -85,9 +85,10 @@ class TreeAutomatonTest{
     }
     
     @Test
-    public void testIntersection() {
+    public void testIntersection() {        
         TreeAutomaton auto1 = parse("q1 -> a\n q2 ! -> f(q1,q1) ");
         TreeAutomaton auto2 = parse("p1! -> f(p2,p3) \n p2 -> a  \n p3 -> a");
+        
         TreeAutomaton intersect = auto1.intersect(auto2);
         
         assert intersect.getSignature() == auto1.getSignature();
@@ -631,6 +632,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assertEquals(gold, result)
     }
     
+    /*
     @Test
     public void testRuleIterable() {
         TreeAutomaton a = parse("s03! -> f(s01,s13)\n s03 -> f(s02,s23)\n s13 -> f(s12, s23)\n s02 -> f(s01, s12)\n s01 -> a\n s12 -> a\n s23 -> a");
@@ -648,6 +650,7 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         
         assertEquals(h(a.getRuleSet()), fromIterator);
     }
+    */
     
     //    @Test
     public void testBottomUpOrder() {
@@ -720,6 +723,34 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assert(rulesFound.contains(gold3))
         assert(rulesFound.contains(gold4))
     
+    }
+    
+    
+    /* This looks like a test of the WideStringAlgebra (and it does
+     * mirror some functionality of StringAlgebraTest#testDecomposeWideWithStar),
+     * but its main purpose here is to check that the bottom-up and top-down
+     * index structures do not pollute each other.
+     */
+    @Test
+    public void testDecomposeTopDownBottomUp() {
+        String s = "* b * a";
+        Algebra a = new WideStringAlgebra();
+        List words = a.parseString(s);
+        a.getSignature().addSymbol("conc2",2);
+        a.getSignature().addSymbol("conc3",3);
+        a.getSignature().addSymbol("conc4",4);
+
+        TreeAutomaton ta = a.decompose(words);
+        
+        // ask a bunch of bottom-up queries to populate bottom-up index
+        assertTrue(ta.accepts(pt("conc2(conc2(conc2(__*__,b),__*__),a)")));
+        assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
+        assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
+        assertTrue(ta.accepts(pt("conc4(__*__,b,__*__,a)")));
+        
+        // not all rules were discovered top-down; this test fails
+        // if bottom-up rules polluted top-down index
+        assertEquals(11, ta.language().size());
     }
     
     

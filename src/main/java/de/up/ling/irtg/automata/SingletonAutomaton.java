@@ -44,7 +44,7 @@ public class SingletonAutomaton extends TreeAutomaton<String> {
         if (childStates.length == 0) {
             for (int state : leafLabelsToStateIds.get(label)) {
                 Rule rule = createRule(state, label, childStates, 1);
-                storeRule(rule);
+                storeRuleBottomUp(rule);
                 ret.add(rule);
             }
         } else {
@@ -60,7 +60,7 @@ public class SingletonAutomaton extends TreeAutomaton<String> {
 
             if (correctChildren && treeWithIntLabels.selectWithSeparators(potentialParent, 1, SEPARATOR).getLabel().equals(label)) {
                 Rule rule = createRule(addState(potentialParent), label, childStates, 1);
-                storeRule(rule);
+                storeRuleBottomUp(rule);
                 ret.add(rule);
             }
         }
@@ -94,7 +94,7 @@ public class SingletonAutomaton extends TreeAutomaton<String> {
 
             Rule rule = createRule(parentState, label, children, 1);
             ret.add(rule);
-            storeRule(rule);
+            storeRuleTopDown(rule);
         }
 
 

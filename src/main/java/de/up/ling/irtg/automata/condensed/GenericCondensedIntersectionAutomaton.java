@@ -60,7 +60,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
     private final TreeAutomaton<LeftState> left;
     private final CondensedTreeAutomaton<RightState> right;
-    protected boolean DEBUG = false;
+    public static boolean DEBUG = false;
     private final SignatureMapper leftToRightSignatureMapper;
 
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
@@ -97,8 +97,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     // Intersecting the two automatons using a CKY algorithm
     @Override
     public void makeAllRulesExplicit() {
-        if (!isExplicit) {
-            isExplicit = true;
+        if (!ruleStore.isExplicit()) {
+            ruleStore.setExplicit(true);
             getStateInterner().setTrustingMode(true);
 
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<IntSet>();

@@ -160,7 +160,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                            System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                             Rule rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
+                            storeRuleBoth(rule);
                             partners.put(rightRule.getParent(), leftRule.getParent());
                             //  System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                         }
@@ -183,7 +183,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                                System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                                 Rule rule = combineRules(leftRule, rightRule);
-                                storeRule(rule);
+                                storeRuleBoth(rule);
                                 partners.put(rightRule.getParent(), leftRule.getParent());
                                 // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                             }
@@ -212,7 +212,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                            System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                             Rule rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
+                            storeRuleBoth(rule);
                             partners.put(rightRule.getParent(), leftRule.getParent());
                             //  System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                         }
@@ -233,7 +233,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                                System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                                 Rule rule = combineRules(leftRule, rightRule);
-                                storeRule(rule);
+                                storeRuleBoth(rule);
                                 partners.put(rightRule.getParent(), leftRule.getParent());
                                 // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                             }
@@ -262,7 +262,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                            System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                             Rule rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
+                            storeRuleBoth(rule);
                             if (!partners.containsKey(rightRule.getParent())) {
                                 IntSet partnerSet = new IntArraySet();
                                 partnerSet.add(leftRule.getParent());
@@ -295,7 +295,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                                     for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), childStates)) {
 //                                            System.err.println("consider leftrule:  " + leftRule.toString(left));
                                         Rule rule = combineRules(leftRule, rightRule);
-                                        storeRule(rule);
+                                        storeRuleBoth(rule);
                                         if (!partners.containsKey(rightRule.getParent())) {
                                             IntSet partnerSet = new IntArraySet();
                                             partnerSet.add(leftRule.getParent());
@@ -316,9 +316,9 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     }
 
     public void makeAllRulesExplicitCKY() {
-        if (!isExplicit) {
+        if (!ruleStore.isExplicit()) {
             ckyTimestamp[0] = System.nanoTime();
-            isExplicit = true;
+            ruleStore.setExplicit(true);
 
             int[] oldLabelRemap = labelRemap;
             labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
@@ -354,11 +354,11 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     }
 
     public void makeAllRulesExplicitCKYOld() {
-        if (!isExplicit) {
+        if (!ruleStore.isExplicit()) {
 
             double t1 = System.nanoTime();
 
-            isExplicit = true;
+            ruleStore.setExplicit(true);
             int[] oldLabelRemap = labelRemap;
             labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
             SetMultimap<Integer, Integer> partners = HashMultimap.create();
@@ -379,7 +379,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                             // make rule pairs and store them.
                             for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0])) {
                                 Rule rule = combineRules(leftRule, rightRule);
-                                storeRule(rule);
+                                storeRuleBoth(rule);
                                 partners.put(rightRule.getParent(), leftRule.getParent());
                                 //                            System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                             }
@@ -397,7 +397,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                                 // get all rules from the left automaton, where the rhs is the rhs of the current rule.
                                 for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), it.next())) {
                                     Rule rule = combineRules(leftRule, rightRule);
-                                    storeRule(rule);
+                                    storeRuleBoth(rule);
                                     partners.put(rightRule.getParent(), leftRule.getParent());
                                     //                                System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                                 }
@@ -429,8 +429,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     @Override
     public void makeAllRulesExplicit() {
 //        makeAllRulesExplicitCKY();
-        if (!isExplicit) {
-            isExplicit = true;
+        if (!ruleStore.isExplicit()) {
+            ruleStore.setExplicit(true);
 
             getStateInterner().setTrustingMode(true);
 
@@ -453,7 +453,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                    }
                     for (Rule rightRule : preterminalRulesForLabel) {
                         Rule rule = combineRules(leftRule, rightRule);
-                        storeRule(rule);
+                        storeRuleBoth(rule);
                         agenda.offer(rule.getParent());
                         seenStates.add(rule.getParent());
                         partners.put(leftRule.getParent(), rightRule.getParent());
@@ -515,7 +515,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
                                 for (Rule rightRule : rightRules) {
                                     Rule rule = combineRules(leftRule, rightRule);
-                                    storeRule(rule);
+                                    storeRuleBoth(rule);
 
                                     if (seenStates.add(rule.getParent())) {
                                         newStates.add(rule.getParent());
@@ -698,7 +698,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
      * ************* Early-style intersection *************
      */
     public void makeAllRulesExplicitEarley() {
-        if (!isExplicit) {
+        if (!ruleStore.isExplicit()) {
             Queue<IncompleteEarleyItem> agenda = new Agenda<IncompleteEarleyItem>();
             ListMultimap<Integer, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create(); // left state ID -> ...
             ListMultimap<Integer, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();   // left state ID -> ...
@@ -726,7 +726,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                         CompleteEarleyItem completedItem = new CompleteEarleyItem(item.leftRule, rightRule);
                         completedItemsForLeftState.put(item.leftRule.getParent(), completedItem);
                         Rule combinedRule = combineRules(item.leftRule, rightRule);
-                        storeRule(combinedRule);
+                        storeRuleBoth(combinedRule);
 
                         if (DEBUG) {
                             System.err.println(" -> finish!");
@@ -751,7 +751,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                 }
             }
 
-            isExplicit = true;
+            ruleStore.setExplicit(true);
 //            System.err.println("earley intersect: " + countAgendaItems + " incomplete items");
         }
     }

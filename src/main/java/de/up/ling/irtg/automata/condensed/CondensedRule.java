@@ -5,8 +5,6 @@
  */
 
 package de.up.ling.irtg.automata.condensed;
-import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Arrays;

@@ -70,13 +70,13 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
         Int2ObjectMap<Rule> rulesTwo = new Int2ObjectOpenHashMap<>();
         
         
-        for(Rule r : ta1.getRuleIterable()){
+        for(Rule r : ta1.getRuleSet()){
             Span s = ta1.getStateForId(r.getParent());
             if(s.end - s.start == 1){
                 rulesOne.put(s.start, r);
             }
         }
-        for(Rule r : ta2.getRuleIterable()){
+        for(Rule r : ta2.getRuleSet()){
             Span s = ta2.getStateForId(r.getParent());
             if(s.end - s.start == 1){
                 rulesTwo.put(s.start, r);
