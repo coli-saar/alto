@@ -385,6 +385,10 @@ public class RuleStore implements Serializable {
 //    public void foreachValueForKeySets(List<IntSet> keySets, Consumer<Rule> fn) {
 //        bottomUp.foreachValueForKeySets(keySets, fn);
 //    }
+
+    public Iterable<Rule> getAllRulesTopDown() {
+        return topDown.getAllRules();
+    }
 }
 
 

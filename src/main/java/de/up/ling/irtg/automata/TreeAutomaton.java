@@ -616,37 +616,42 @@ public abstract class TreeAutomaton<State> implements Serializable {
         makeAllRulesExplicit();
         return ruleStore.getAllRulesBottomUp();
     }
-
-    /**
-     * Returns an iterable over the rules of this automaton. Each request to
-     * provide an iterator returns a fresh instance of {@link #getRuleIterator()
-     * }.
-     *
-     * @return
-     */
-    public Iterable<Rule> getRuleIterable() {
-        return new Iterable<Rule>() {
-            public Iterator<Rule> iterator() {
-                return getRuleIterator();
-            }
-        };
+    
+    public Iterable<Rule> getAllRulesTopDown() {
+        makeAllRulesExplicit();
+        return ruleStore.getAllRulesTopDown();
     }
 
-    /**
-     * Returns an iterator over the rules of this automaton. Rules are computed
-     * by need, so this rule requires a lower initial computational overhead
-     * than {@link #getRuleSet() }. Of course, after the iteration has finished,
-     * all rules of the automaton that can be reached top-down from the final
-     * states have been computed explicitly anyway.<p>
-     *
-     * The implementation of this method accesses rules via
-     * {@link #getRulesTopDown(int) }.
-     *
-     * @return
-     */
-    public Iterator<Rule> getRuleIterator() {
-        return Iterators.concat(new RuleIterator(this));
-    }
+//    /**
+//     * Returns an iterable over the rules of this automaton. Each request to
+//     * provide an iterator returns a fresh instance of {@link #getRuleIterator()
+//     * }.
+//     *
+//     * @return
+//     */
+//    public Iterable<Rule> getRuleIterable() {
+//        return new Iterable<Rule>() {
+//            public Iterator<Rule> iterator() {
+//                return getRuleIterator();
+//            }
+//        };
+//    }
+
+//    /**
+//     * Returns an iterator over the rules of this automaton. Rules are computed
+//     * by need, so this rule requires a lower initial computational overhead
+//     * than {@link #getRuleSet() }. Of course, after the iteration has finished,
+//     * all rules of the automaton that can be reached top-down from the final
+//     * states have been computed explicitly anyway.<p>
+//     *
+//     * The implementation of this method accesses rules via
+//     * {@link #getRulesTopDown(int) }.
+//     *
+//     * @return
+//     */
+//    public Iterator<Rule> getRuleIterator() {
+//        return Iterators.concat(new RuleIterator(this));
+//    }
 
     /**
      * Returns true if the

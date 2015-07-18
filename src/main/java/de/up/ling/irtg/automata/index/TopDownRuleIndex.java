@@ -75,4 +75,6 @@ public interface TopDownRuleIndex {
      * @return 
      */
     public boolean useCachedRule(int label, int parent);
+
+    public abstract Iterable<Rule> getAllRules();
 }

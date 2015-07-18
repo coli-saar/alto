@@ -67,8 +67,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         }
 
         jMenuBar2.add(new WindowMenu(this));
-        
-        if( ! SHOW_DEBUG_MENU ) {
+
+        if (!SHOW_DEBUG_MENU) {
             jMenuBar2.remove(debugMenu);
         }
 
@@ -524,13 +524,13 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                 GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
                         listener -> {
                             GuiUtils.setGlobalListener(listener);
-                            
+
                             for (String intp : options.keySet()) {
                                 irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
                             }
 
                             TreeAutomaton chart = irtg.parse(inputs);
-                            
+
                             GuiUtils.setGlobalListener(null);
                             return chart;
                         },

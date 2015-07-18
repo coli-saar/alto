@@ -129,6 +129,11 @@ class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
         }
     }
 
+    @Override
+    public Iterable<Rule> getAllRules() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
     private class RuleUntilIterable implements Iterable<Rule> {
 
         private final int start;

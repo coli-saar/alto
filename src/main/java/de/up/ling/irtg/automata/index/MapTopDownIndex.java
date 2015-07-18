@@ -17,10 +17,12 @@ import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntLists;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A top-down rule index that organizes the rules in a two-level hashmap.
@@ -168,6 +170,17 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
         }
 
         return buf.toString();
+    }
+    
+    private Iterable<Rule> concatInnerIterables(Int2ObjectMap<Set<Rule>> map) {
+        return Iterables.concat(map.values());
+    }
+
+    @Override
+    public Iterable<Rule> getAllRules() {
+        processNewTopDownRules();
+        Collection<Iterable<Rule>> iterables = explicitRulesTopDown.values().stream().map(this::concatInnerIterables).collect(Collectors.toList());
+        return Iterables.concat(iterables);
     }
 
 }
