@@ -2656,8 +2656,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
             System.err.println(String.format("%3d %d", arity, counts.count(arity)));
         }
 
-        System.err.println("\nTrie statistics:");
-        ruleStore.getTrie().printStatistics();
+        System.err.println("\nRule store statistics:");
+        ruleStore.printStatistics();
     }
 
     /**

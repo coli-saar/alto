@@ -9,7 +9,6 @@ import com.google.common.collect.Iterables;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
@@ -397,5 +396,9 @@ public class RuleStore implements Serializable {
         } else {
             return topDown.useCachedRule(label, parent);
         }
+    }
+    
+    public void printStatistics() {
+        bottomUp.printStatistics();
     }
 }

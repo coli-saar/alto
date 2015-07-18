@@ -257,4 +257,12 @@ public class Util {
         
         return -1;
     }
+    
+    public static String repeat(String s, int repetitions) {
+        StringBuilder buf = new StringBuilder();
+        for( int i = 0; i < repetitions; i++ ) {
+            buf.append(s);
+        }
+        return buf.toString();
+    }
 }

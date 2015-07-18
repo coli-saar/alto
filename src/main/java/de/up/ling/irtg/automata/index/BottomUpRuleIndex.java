@@ -52,6 +52,10 @@ public abstract class BottomUpRuleIndex {
         return ret;
     }
     
+    public void printStatistics() {
+        
+    }
+    
 //    public Collection<Rule> getRulesLike(Rule likeRule) {
 //        return get(likeRule.getLabel(), likeRule.getChildren());
 //    }

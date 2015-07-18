@@ -46,6 +46,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private long numRules;
     private long numStates;
     private int maxRuleRank;
+    private static final boolean SHOW_DEBUG_MENU = true;
 
     /**
      * Creates new form JInterpretedTreeAutomaton
@@ -66,6 +67,10 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         }
 
         jMenuBar2.add(new WindowMenu(this));
+        
+        if( ! SHOW_DEBUG_MENU ) {
+            jMenuBar2.remove(debugMenu);
+        }
 
 //        new WindowMenu(this).get
         this.automaton = automaton;
@@ -228,6 +233,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miTrainMaxent = new javax.swing.JMenuItem();
         jSeparator5 = new javax.swing.JPopupMenu.Separator();
         jMenuItem1 = new javax.swing.JMenuItem();
+        debugMenu = new javax.swing.JMenu();
+        jMenuItem3 = new javax.swing.JMenuItem();
 
         org.jdesktop.layout.GroupLayout jPanel1Layout = new org.jdesktop.layout.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -439,6 +446,18 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu4.add(jMenuItem1);
 
         jMenuBar2.add(jMenu4);
+
+        debugMenu.setText("Debug");
+
+        jMenuItem3.setText("Analyze Tree Automaton");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem3ActionPerformed(evt);
+            }
+        });
+        debugMenu.add(jMenuItem3);
+
+        jMenuBar2.add(debugMenu);
 
         setJMenuBar(jMenuBar2);
 
@@ -726,12 +745,18 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         });
     }//GEN-LAST:event_miBulkParseActionPerformed
 
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+        automaton.analyze();
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenu debugMenu;
     private javax.swing.table.DefaultTableModel entries;
     private javax.swing.JMenu jMenu3;
     private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar2;
     private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane1;
