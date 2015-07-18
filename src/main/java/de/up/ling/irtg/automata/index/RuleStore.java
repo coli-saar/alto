@@ -9,6 +9,7 @@ import com.google.common.collect.Iterables;
 import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.signature.SignatureMapper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
@@ -321,7 +323,7 @@ public class RuleStore implements Serializable {
     }
 
     @Deprecated
-    public IntTrie<Int2ObjectMap<Collection<Rule>>> getTrie() {
+    private IntTrie<Int2ObjectMap<Collection<Rule>>> getTrie() {
         assert bottomUp instanceof TrieBottomUpRuleIndex;
         processNewBottomUpRules();
         return ((TrieBottomUpRuleIndex) bottomUp).getTrie();
@@ -401,4 +403,12 @@ public class RuleStore implements Serializable {
     public void printStatistics() {
         bottomUp.printStatistics();
     }
+    
+    public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Consumer<Rule> fn) {
+        bottomUp.foreachRuleForSets(labelIds, childStateSets, signatureMapper, fn);
+    }
+    
+//    public void foreachValueForKeySets(List<IntSet> keySets, Consumer<Rule> fn) {
+//        bottomUp.foreachValueForKeySets(keySets, fn);
+//    }
 }

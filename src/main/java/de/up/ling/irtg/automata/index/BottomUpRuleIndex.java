@@ -7,8 +7,12 @@
 package de.up.ling.irtg.automata.index;
 
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.signature.SignatureMapper;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  *
@@ -59,4 +63,8 @@ public abstract class BottomUpRuleIndex {
 //    public Collection<Rule> getRulesLike(Rule likeRule) {
 //        return get(likeRule.getLabel(), likeRule.getChildren());
 //    }
+
+//    public abstract void foreachValueForKeySets(List<IntSet> keySets, Consumer<Rule> fn);
+
+    public abstract void foreachRuleForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn);
 }

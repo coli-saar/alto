@@ -9,17 +9,20 @@ package de.up.ling.irtg.automata.index;
 import com.google.common.collect.Iterables;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.NumbersCombine;
 import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  *
@@ -151,6 +154,11 @@ public class BinaryBottomUpRuleIndex extends BottomUpRuleIndex implements Serial
         });
         
         return buf.toString();
+    }
+
+    @Override
+    public void foreachRuleForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     

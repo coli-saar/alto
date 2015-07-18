@@ -41,13 +41,7 @@ public class IntTrie<E> implements Serializable {
         nextStep = (Int2ObjectMap) factory.createMap(depth);
         value = null;
 
-        valueCounter = (e -> {
-            if (e instanceof Collection) {
-                return ((Collection) e).size();
-            } else {
-                return 0;
-            }
-        });
+        valueCounter = new CollectionValueCounter();
     }
 
     public IntTrie(MapFactory factory) {
@@ -63,6 +57,17 @@ public class IntTrie<E> implements Serializable {
     }
 
     private static final MapFactory alwaysHashMapFactory = depth -> new Int2ObjectOpenHashMap<>();
+    
+    private class CollectionValueCounter implements ToLongFunction<E>, Serializable {
+        @Override
+        public long applyAsLong(E e) {
+            if (e instanceof Collection) {
+                return ((Collection) e).size();
+            } else {
+                return 0;
+            }
+        }        
+    }
 
     /**
      * Returns the previously known entry, or null if an entry for this key was

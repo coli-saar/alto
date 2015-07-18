@@ -7,14 +7,18 @@ package de.up.ling.irtg.automata.index;
 
 import com.google.common.collect.Iterables;
 import de.up.ling.irtg.automata.*;
-import de.up.ling.irtg.util.ArrayMap;
+import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.FastutilUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.ToLongFunction;
 
 /**
  *
@@ -29,7 +33,13 @@ public class TrieBottomUpRuleIndex extends BottomUpRuleIndex implements Serializ
         
         storedRules = new IntTrie<>();
         
-        storedRules.setValueCounter(e -> {
+        storedRules.setValueCounter(new MapValueCounter());
+    }
+    
+    private static class MapValueCounter implements ToLongFunction<Int2ObjectMap<Collection<Rule>>>, Serializable { 
+
+        @Override
+        public long applyAsLong(Int2ObjectMap<Collection<Rule>> e) {
             long ret = 0;
 
             for (Collection<Rule> rules : e.values()) {
@@ -37,7 +47,7 @@ public class TrieBottomUpRuleIndex extends BottomUpRuleIndex implements Serializ
             }
 
             return ret;
-        });
+        }        
     }
 
     @Override
@@ -110,6 +120,21 @@ public class TrieBottomUpRuleIndex extends BottomUpRuleIndex implements Serializ
     @Override
     public void printStatistics() {
         storedRules.printStatistics();
+    }
+    
+    @Override
+    public void foreachRuleForSets(IntSet labelIds, List<IntSet> childStateSets, SignatureMapper signatureMapper, Consumer<Rule> fn) {        
+        storedRules.foreachValueForKeySets(childStateSets, ruleMap -> {
+            // TODO: This is optimized for the PCFG case, where the label sets are typically much
+            // larger than the sets of rules with the same child states. Adapt IntTrie iteration/contains
+            // trick here to iterate over smaller set. Take special care to remap in the right direction.
+
+            FastutilUtils.forEach(ruleMap.keySet(), label -> {
+                if (labelIds.contains(signatureMapper.remapForward(label))) {
+                    ruleMap.get(label).forEach(fn);
+                }
+            });
+        });
     }
 
 }
