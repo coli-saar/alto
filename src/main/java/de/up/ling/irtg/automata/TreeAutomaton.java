@@ -459,8 +459,21 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @param rule
      */
-    protected void storeRule(Rule rule) {
-        ruleStore.storeRule(rule);
+//    protected void storeRule(Rule rule) {
+//        ruleStore.storeRule(rule);
+//    }
+    
+    protected void storeRuleBottomUp(Rule rule) {
+        ruleStore.storeRuleBottomUp(rule);
+    }
+    
+    protected void storeRuleTopDown(Rule rule) {
+        ruleStore.storeRuleTopDown(rule);
+    }
+    
+    protected void storeRuleBoth(Rule rule) {
+        storeRuleBottomUp(rule);
+        storeRuleTopDown(rule);
     }
 
 //    // TODO - this is bottom-up rule store implementation-specific,
@@ -1237,7 +1250,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     Iterable<Rule> rules = getRulesTopDown(label, state);
 
                     for (Rule rule : rules) {
-                        storeRule(rule);
+                        storeRuleBottomUp(rule);
+                        storeRuleTopDown(rule);
 
                         for (int child : rule.getChildren()) {
                             if (!everAddedStates.contains(child)) {

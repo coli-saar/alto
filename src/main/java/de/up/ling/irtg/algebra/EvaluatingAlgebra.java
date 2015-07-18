@@ -142,7 +142,7 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
                         
                         Rule rule = createRule(parentStateId, labelId, childStates, 1);
                         ret.add(rule);
-                        storeRule(rule);
+                        storeRuleBottomUp(rule);
                     }
                 }
 

@@ -70,7 +70,7 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
                     for (Rule leftRule : left.getRulesBottomUp(leftLabel, emptyChildren)) {
 //                        System.err.println("left: " + leftRule.toString(left));
                         Rule rule = combineRules(leftRule, rightRule);
-                        storeRule(rule);
+                        storeRuleBoth(rule);
                         agenda.enqueue(rule.getParent());
                         seenStates.add(rule.getParent());
                     }
@@ -108,7 +108,7 @@ public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> exten
 
                     left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                         Rule rule = combineRules(leftRule, rightRule);
-                        storeRule(rule);
+                        storeRuleBoth(rule);
                         if (seenStates.add(rule.getParent())) {
                             agenda.enqueue(rule.getParent());
                         }

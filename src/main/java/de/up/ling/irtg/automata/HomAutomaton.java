@@ -84,7 +84,9 @@ class HomAutomaton extends TreeAutomaton<Object> {
                                 }
 
                                 Rule newRule = createRule(parentState, label.getValue(), childrenValues, weight);
-                                storeRule(newRule);
+                                storeRuleBottomUp(newRule);
+                                storeRuleTopDown(newRule);
+                                
                                 labels.add(label.getValue());
                                 return parentState;
                             }
@@ -100,7 +102,9 @@ class HomAutomaton extends TreeAutomaton<Object> {
                     for( int label : labels ) {
                         for( Rule ruleForEntry : getRulesTopDownFromExplicit(label, lowerParent) ) {
                             // TODO: correct weight
-                            storeRule(createRule(upperParent, label, ruleForEntry.getChildren(), 1)); 
+                            Rule newRule = createRule(upperParent, label, ruleForEntry.getChildren(), 1);
+                            storeRuleBottomUp(newRule);
+                            storeRuleTopDown(newRule);
                         }
                     }
                 }

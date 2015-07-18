@@ -37,7 +37,8 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     
 
     public void addRule(Rule rule) {
-        storeRule(rule);
+        storeRuleBottomUp(rule);
+        storeRuleTopDown(rule);
     }
 
     @Override

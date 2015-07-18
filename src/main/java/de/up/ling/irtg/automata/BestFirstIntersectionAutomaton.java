@@ -87,7 +87,9 @@ public class BestFirstIntersectionAutomaton<LeftState, RightState> extends Inter
 
                     for (Rule rightRule : preterminalRulesForLabel) {
                         Rule rule = combineRules(leftRule, rightRule);
-                        storeRule(rule);
+                        storeRuleBottomUp(rule);
+                        storeRuleTopDown(rule);
+                        
                         evaluator.ruleAdded(rule);
                         if (DEBUG) {
                             System.err.println("added rule: " + pprule(rule));
@@ -157,7 +159,9 @@ public class BestFirstIntersectionAutomaton<LeftState, RightState> extends Inter
 
                                 for (Rule rightRule : rightRules) {
                                     Rule rule = combineRules(leftRule, rightRule);
-                                    storeRule(rule);
+                                    storeRuleBottomUp(rule);
+                                    storeRuleTopDown(rule);
+                                    
                                     evaluator.ruleAdded(rule);
                                     if (DEBUG) {
                                         System.err.println("added rule: " + pprule(rule));

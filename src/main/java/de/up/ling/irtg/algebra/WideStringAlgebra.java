@@ -109,7 +109,7 @@ public class WideStringAlgebra extends StringAlgebra {
                     int spanState = addState(span);
                     Rule rule = createRule(spanState, label, childStates, 1);
                     ret.add(rule);
-                    storeRule(rule);
+                    storeRuleBottomUp(rule);
 
                     return ret;
                 } else {
@@ -157,14 +157,14 @@ public class WideStringAlgebra extends StringAlgebra {
 
                             childStates[arity-1] = addState(new Span(tuple[arity-2], parentSpan.end));
                             Rule rule = createRule(parentState, label, childStates, 1);
-                            storeRule(rule);
+                            storeRuleTopDown(rule);
                             
                             return null;
                         }
                     });
                 } else if ((parentSpan.length() == 1) && label == words[parentSpan.start]) {
                     Rule rule = createRule(parentState, label, new int[0], 1);
-                    storeRule(rule);
+                    storeRuleTopDown(rule);
                 }
             }
 

@@ -160,7 +160,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                            System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                             Rule rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
+                            storeRuleBoth(rule);
                             partners.put(rightRule.getParent(), leftRule.getParent());
                             //  System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                         }
@@ -183,7 +183,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                                System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                                 Rule rule = combineRules(leftRule, rightRule);
-                                storeRule(rule);
+                                storeRuleBoth(rule);
                                 partners.put(rightRule.getParent(), leftRule.getParent());
                                 // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                             }
@@ -212,7 +212,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                            System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                             Rule rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
+                            storeRuleBoth(rule);
                             partners.put(rightRule.getParent(), leftRule.getParent());
                             //  System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                         }
@@ -233,7 +233,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                                System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                                 Rule rule = combineRules(leftRule, rightRule);
-                                storeRule(rule);
+                                storeRuleBoth(rule);
                                 partners.put(rightRule.getParent(), leftRule.getParent());
                                 // System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                             }
@@ -262,7 +262,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                            System.err.println("consider leftrule:  " + leftRule.toString(left));
 
                             Rule rule = combineRules(leftRule, rightRule);
-                            storeRule(rule);
+                            storeRuleBoth(rule);
                             if (!partners.containsKey(rightRule.getParent())) {
                                 IntSet partnerSet = new IntArraySet();
                                 partnerSet.add(leftRule.getParent());
@@ -295,7 +295,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                                     for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), childStates)) {
 //                                            System.err.println("consider leftrule:  " + leftRule.toString(left));
                                         Rule rule = combineRules(leftRule, rightRule);
-                                        storeRule(rule);
+                                        storeRuleBoth(rule);
                                         if (!partners.containsKey(rightRule.getParent())) {
                                             IntSet partnerSet = new IntArraySet();
                                             partnerSet.add(leftRule.getParent());
@@ -379,7 +379,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                             // make rule pairs and store them.
                             for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), new int[0])) {
                                 Rule rule = combineRules(leftRule, rightRule);
-                                storeRule(rule);
+                                storeRuleBoth(rule);
                                 partners.put(rightRule.getParent(), leftRule.getParent());
                                 //                            System.err.println("Matching rules(0): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                             }
@@ -397,7 +397,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                                 // get all rules from the left automaton, where the rhs is the rhs of the current rule.
                                 for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), it.next())) {
                                     Rule rule = combineRules(leftRule, rightRule);
-                                    storeRule(rule);
+                                    storeRuleBoth(rule);
                                     partners.put(rightRule.getParent(), leftRule.getParent());
                                     //                                System.err.println("Matching rules(1): \n" + leftRule.toString(left) + "\n" + rightRule.toString(right) + "\n");
                                 }
@@ -453,7 +453,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //                    }
                     for (Rule rightRule : preterminalRulesForLabel) {
                         Rule rule = combineRules(leftRule, rightRule);
-                        storeRule(rule);
+                        storeRuleBoth(rule);
                         agenda.offer(rule.getParent());
                         seenStates.add(rule.getParent());
                         partners.put(leftRule.getParent(), rightRule.getParent());
@@ -515,7 +515,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
                                 for (Rule rightRule : rightRules) {
                                     Rule rule = combineRules(leftRule, rightRule);
-                                    storeRule(rule);
+                                    storeRuleBoth(rule);
 
                                     if (seenStates.add(rule.getParent())) {
                                         newStates.add(rule.getParent());
@@ -726,7 +726,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                         CompleteEarleyItem completedItem = new CompleteEarleyItem(item.leftRule, rightRule);
                         completedItemsForLeftState.put(item.leftRule.getParent(), completedItem);
                         Rule combinedRule = combineRules(item.leftRule, rightRule);
-                        storeRule(combinedRule);
+                        storeRuleBoth(combinedRule);
 
                         if (DEBUG) {
                             System.err.println(" -> finish!");

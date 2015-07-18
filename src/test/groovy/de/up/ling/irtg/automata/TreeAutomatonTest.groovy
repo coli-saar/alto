@@ -724,6 +724,34 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     }
     
     
+    /* This looks like a test of the WideStringAlgebra (and it does
+     * mirror some functionality of StringAlgebraTest#testDecomposeWideWithStar),
+     * but its main purpose here is to check that the bottom-up and top-down
+     * index structures do not pollute each other.
+     */
+    @Test
+    public void testDecomposeTopDownBottomUp() {
+        String s = "* b * a";
+        Algebra a = new WideStringAlgebra();
+        List words = a.parseString(s);
+        a.getSignature().addSymbol("conc2",2);
+        a.getSignature().addSymbol("conc3",3);
+        a.getSignature().addSymbol("conc4",4);
+
+        TreeAutomaton ta = a.decompose(words);
+        
+        // ask a bunch of bottom-up queries to populate bottom-up index
+        assertTrue(ta.accepts(pt("conc2(conc2(conc2(__*__,b),__*__),a)")));
+        assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
+        assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
+        assertTrue(ta.accepts(pt("conc4(__*__,b,__*__,a)")));
+        
+        // not all rules were discovered top-down; this test fails
+        // if bottom-up rules polluted top-down index
+        assertEquals(11, ta.language().size());
+    }
+    
+    
     /*
     def "testing whether automaton is bottom-up deterministic"() {
     expect:

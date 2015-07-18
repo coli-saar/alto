@@ -114,25 +114,31 @@ class StringAlgebraTest {
         assertTrue(ta.accepts(pt("*(*(*(__*__,b),__*__),a)")));
         
         assertEquals(a.evaluate(pt("*(*(*(__*__,b),__*__),a)")),a.parseString("* b * a"));
-        
-        a = new WideStringAlgebra();
-        words = a.parseString(s);
-        
+//        
+//        a = new WideStringAlgebra();
+//        words = a.parseString(s);
+//        
+//        a.getSignature().addSymbol("conc2",2);
+//        a.getSignature().addSymbol("conc3",3);
+//        a.getSignature().addSymbol("conc4",4);
+    }
+    
+    @Test
+    public void testDecomposeWideWithStar() {     
+        String s = "* b * a";
+        Algebra a = new WideStringAlgebra();
+        List words = a.parseString(s);
         a.getSignature().addSymbol("conc2",2);
         a.getSignature().addSymbol("conc3",3);
         a.getSignature().addSymbol("conc4",4);
-        
-        ta = a.decompose(words);
-        
-        
-        assertEquals(ta.language().size(),11);
-        
+
+        TreeAutomaton ta = a.decompose(words);
+
         assertTrue(ta.accepts(pt("conc2(conc2(conc2(__*__,b),__*__),a)")));
         assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
         assertTrue(ta.accepts(pt("conc3(__*__,conc2(b,__*__),a)")));
         assertTrue(ta.accepts(pt("conc4(__*__,b,__*__,a)")));
-        
-        assertEquals(ta.language().size(),11);
     }
+    
 }
 

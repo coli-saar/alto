@@ -84,6 +84,19 @@ public class RuleStore implements Serializable {
             System.err.println(s.get());
         }
     }
+    
+    public void storeRuleBottomUp(Rule rule) {
+        if( storing ) {
+            unprocessedUpdatesForBottomUp.add(rule);
+            rulesForRhsState = null;
+        }
+    }
+    
+    public void storeRuleTopDown(Rule rule) {
+        if( storing ) {
+            topDown.add(rule);
+        }
+    }
 
     /**
      * Caches a rule for future use. Once a rule has been cached, it will be
@@ -96,7 +109,7 @@ public class RuleStore implements Serializable {
      *
      * @param rule
      */
-    public void storeRule(Rule rule) {
+    private void storeRule(Rule rule) {
         DEBUG(() -> "store: " + rule.toString(auto));
         
         // adding states unnecessary, was done in creating Rule object

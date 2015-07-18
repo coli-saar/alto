@@ -215,7 +215,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                     int spanState = addState(span);
                     Rule rule = createRule(spanState, label, Arrays.copyOf(childStates, childStates.length), 1);  // contents of childStates may change in the future, clone it to be on the safe side
                     ret.add(rule);
-                    storeRule(rule);
+                    storeRuleBottomUp(rule);
 
                     return ret;
                 } else {
@@ -241,11 +241,11 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                         childStates[0] = addState(new Span(parentSpan.start, i));
                         childStates[1] = addState(new Span(i, parentSpan.end));
                         Rule rule = createRule(parentState, label, childStates, 1);
-                        storeRule(rule);
+                        storeRuleTopDown(rule);
                     }
                 } else if ((parentSpan.length() == 1) && label == words[parentSpan.start]) {
                     Rule rule = createRule(parentState, label, new int[0], 1);
-                    storeRule(rule);
+                    storeRuleTopDown(rule);
                 }
             }
 
