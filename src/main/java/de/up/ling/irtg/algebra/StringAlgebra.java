@@ -80,7 +80,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
     @Override
     public List<String> evaluate(Tree<String> t) {
-        List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<>();
 
         t.dfs(new TreeVisitor<String, Void, Void>() {
             @Override
@@ -117,7 +117,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     public List<String> parseString(String representation) {
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
 
-        for (String word : symbols) {
+        for(String word : symbols) {
             // here we check whether we need to tranform the word because it is "*"
             if(!CONCAT.equals(word)){
                 signature.addSymbol(word, 0);

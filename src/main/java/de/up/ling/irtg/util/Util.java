@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.IntFunction;
@@ -29,17 +29,21 @@ import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well19937c;
 
 /**
  *
  * @author koller
  */
 public class Util {
-    private static Random rnd = new Random();
-    private static long nextGensym = 1;
+    
+    private static final RandomGenerator rnd = new Well19937c();
+    
+    private static AtomicLong nextGensym = new AtomicLong(0L);
     
     public static String gensym(String prefix) {
-        return prefix + (nextGensym++);
+        return prefix + (nextGensym.getAndIncrement());
     }
     
     public static Tree<String> makeBinaryTree(String symbol, List<String> leaves) {
