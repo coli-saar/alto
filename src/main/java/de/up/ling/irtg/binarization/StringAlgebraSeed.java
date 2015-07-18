@@ -55,8 +55,17 @@ public class StringAlgebraSeed extends RegularSeed {
         }
         
         switch(sourceSignature.getArityForLabel(symbol)) {
-            case 0: return new OneSymbolAutomaton(symbol, targetSignature);
+            // return all symbols of arity 0 unchanged
+            // -- except the word "*", which needs to be mapped to "__*__" 
+            // (a constant that the string algebra evaluates to "*")
+            case 0: if( StringAlgebra.CONCAT.equals(symbol) ) {
+                return new OneSymbolAutomaton(StringAlgebra.SPECIAL_STAR, sourceSignature);
+            } else {
+                return new OneSymbolAutomaton(symbol, targetSignature);
+            }
+            
             case 1: return new OneSymbolAutomaton("?1", targetSignature);
+                
             default: return new BinarizationAutomaton(sourceSignature.getArityForLabel(symbol), targetSignature, binaryConcatenationId);
         }
     }

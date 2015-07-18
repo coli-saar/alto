@@ -75,7 +75,7 @@ public class Instance {
     
     public void setComments(String... comments) {
         this.comments = new HashMap<>();
-        for( int i = 0; i < comments.length; i++ ) {
+        for( int i = 0; i < comments.length; i += 2 ) {
             this.comments.put(comments[i], comments[i+1]);
         }
     }
