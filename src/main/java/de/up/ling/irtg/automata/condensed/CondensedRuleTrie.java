@@ -5,8 +5,6 @@
 package de.up.ling.irtg.automata.condensed;
 
 import com.google.common.collect.Iterables;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import java.util.HashSet;
 import java.util.Set;

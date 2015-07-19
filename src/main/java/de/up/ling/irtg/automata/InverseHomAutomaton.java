@@ -105,14 +105,14 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
                 // no successful runs found, add rule with FAIL parent
                 // TODO weight??
                 Rule rule = createRule(failStateId, label, childStates, 1);
-                storeRule(rule);
+                storeRuleBottomUp(rule);
                 ret.add(rule);
             } else {
                 // found successful runs, add rules with ordinary parents
                 for (int r : resultStates) {
                     // TODO: weight
                     Rule rule = createRule(r, label, childStates, 1);
-                    storeRule(rule);
+                    storeRuleBottomUp(rule);
                     ret.add(rule);
                 }
             }
@@ -155,7 +155,7 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         while (it.hasNext()) {
             List<Integer> children = it.next();
             // TODO: weight??
-            storeRule(createRule(failStateId, label, children, 1));
+            storeRuleBoth(createRule(failStateId, label, children, 1));
         }
     }
 
@@ -223,7 +223,7 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
                 CartesianIterator<Integer> optionsIterator = new CartesianIterator<Integer>(optionsForEachChild);
                 while (optionsIterator.hasNext()) {
                     // TODO weights
-                    storeRule(createRule(rootItem.state, label, optionsIterator.next(), 1));
+                    storeRuleTopDown(createRule(rootItem.state, label, optionsIterator.next(), 1));
                 }
             }
 

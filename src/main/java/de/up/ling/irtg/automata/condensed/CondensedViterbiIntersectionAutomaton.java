@@ -58,7 +58,7 @@ public class CondensedViterbiIntersectionAutomaton<LeftState, RightState> extend
 
     @Override
     protected void addAllOutputRules() {
-        viterbiRuleMap.values().forEach(this::storeRule);
+        viterbiRuleMap.values().forEach(this::storeRuleBoth);
     }
     
     public static void main(String[] args) throws Exception {

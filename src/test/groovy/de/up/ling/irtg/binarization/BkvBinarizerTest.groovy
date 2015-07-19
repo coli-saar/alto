@@ -156,7 +156,7 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
     // Thus in case of bugs in the addRuleToHomomorphism, the test case might
     // sometimes pass, sometimes fail. :)
     @Test
-    public void testBinarize() {        
+    public void testBinarize() {
         InterpretedTreeAutomaton irtg = pi(BIN_IRTG);
         
         Algebra leftAlgebra = irtg.getInterpretation("left").getAlgebra()
@@ -252,7 +252,7 @@ Y -> (.want :arg0 .*2 :arg1 .*1);
         InterpretedTreeAutomaton irta = ic.read(hrg);
         
         int p = 0;
-        Iterator<Rule> it = irta.getAutomaton().getRuleIterator();
+        Iterator<Rule> it = irta.getAutomaton().getRuleSet().iterator();
         while(it.hasNext())
         {
             it.next();
@@ -272,7 +272,7 @@ Y -> (.want :arg0 .*2 :arg1 .*1);
         InterpretedTreeAutomaton result = bin.binarize(irta, ["Graph": al])
         
         p = 0;
-        it = result.getAutomaton().getRuleIterator();
+        it = result.getAutomaton().getRuleSet().iterator();
         while(it.hasNext())
         {
             it.next();

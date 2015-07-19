@@ -12,6 +12,7 @@ import de.up.ling.irtg.automata.SingletonAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -95,18 +96,14 @@ public abstract class RegularSeed {
         // compute binarization automaton for the current node and compute map
         // that maps q to i iff q -> ?i is a rule
         
-        TreeAutomaton<?> autoHere = null;
-                
-        if( term.getLabel().startsWith("?")) {
-            autoHere = new SingletonAutomaton(term);
-        } else {
-            autoHere = binarizeCached(term.getLabel());
-        }
+        final TreeAutomaton<?> autoHere = HomomorphismSymbol.isVariableSymbol(term.getLabel()) ?
+                new SingletonAutomaton(term) :
+                binarizeCached(term.getLabel());
 
         Int2IntMap variableStates = findVariableStates(autoHere, term.getLabel(), arity);
 
         // copy rules of this automaton into ret, renaming states
-        for (Rule rule : autoHere.getRuleSet()) {
+        for (Rule rule : autoHere.getRuleSet()) {            
             // skip rules of the form q -> ?i
             if (!variableStates.containsKey(rule.getParent())) {
                 String newParent = nodeName + "_" + autoHere.getStateForId(rule.getParent()).toString();

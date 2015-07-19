@@ -5,12 +5,14 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.script.SGraphParsingEvaluation;
 import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.MapFactory;
+import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2LongMap;
+import it.unimi.dsi.fastutil.ints.Int2LongOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -21,20 +23,25 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.ToLongFunction;
 
 /**
  *
  * @author koller
  */
 public class IntTrie<E> implements Serializable {
+
     private Int2ObjectMap<IntTrie<E>> nextStep;
     private E value;
     private final MapFactory factory;
+    private ToLongFunction<E> valueCounter;
 
     private IntTrie(int depth, MapFactory factory) {
         this.factory = factory;
         nextStep = (Int2ObjectMap) factory.createMap(depth);
         value = null;
+
+        valueCounter = new CollectionValueCounter();
     }
 
     public IntTrie(MapFactory factory) {
@@ -45,9 +52,22 @@ public class IntTrie<E> implements Serializable {
         this(alwaysHashMapFactory);
     }
 
-    
+    public void setValueCounter(ToLongFunction<E> valueCounter) {
+        this.valueCounter = valueCounter;
+    }
 
     private static final MapFactory alwaysHashMapFactory = depth -> new Int2ObjectOpenHashMap<>();
+    
+    private class CollectionValueCounter implements ToLongFunction<E>, Serializable {
+        @Override
+        public long applyAsLong(E e) {
+            if (e instanceof Collection) {
+                return ((Collection) e).size();
+            } else {
+                return 0;
+            }
+        }        
+    }
 
     /**
      * Returns the previously known entry, or null if an entry for this key was
@@ -77,6 +97,7 @@ public class IntTrie<E> implements Serializable {
             IntTrie<E> next = nextStep.get(key[depth]);
             if (next == null) {
                 next = new IntTrie<E>(depth + 1, factory);
+                next.setValueCounter(valueCounter);
                 nextStep.put(key[depth], next);
             }
 
@@ -159,18 +180,26 @@ public class IntTrie<E> implements Serializable {
         foreach(keys, visitor);
     }
 
-    private void foreach(IntList keys, EntryVisitor<E> visitor) {
+    private void foreach(final IntList keys, EntryVisitor<E> visitor) {
         if (value != null) {
             visitor.visit(keys, value);
         }
 
-        FastutilUtils.foreachFastEntry(nextStep, (key, value) -> {
+        IntSet keysHere = nextStep.keySet();
+        FastutilUtils.forEach(keysHere, key -> {
             int size = keys.size();
             keys.add(key);
-            value.foreach(keys, visitor);
+            nextStep.get(key).foreach(keys, visitor);
             keys.remove(size);
         });
 
+//  // this might be faster, but fails if nextStep is an ArrayMap (because that doesn't have a fast iterator):
+//        FastutilUtils.foreachFastEntry(nextStep, (key, value) -> {
+//            int size = keys.size();
+//            keys.add(key);
+//            value.foreach(keys, visitor);
+//            keys.remove(size);
+//        });
 //        for (int next : nextStep.keySet()) {
 //            int size = keys.size();
 //            keys.add(next);
@@ -204,20 +233,35 @@ public class IntTrie<E> implements Serializable {
         Int2IntMap totalKeysPerDepth = new Int2IntOpenHashMap();
         Int2IntMap totalNodesPerDepth = new Int2IntOpenHashMap();
         Int2IntMap maxKeysPerDepth = new Int2IntOpenHashMap();
-        collectStatistics(0, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth);
+        Int2LongMap totalValuesPerDepth = new Int2LongOpenHashMap();
+        collectStatistics(0, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth, totalValuesPerDepth);
 
-        for (int depth : totalKeysPerDepth.keySet()) {
-            System.err.println("depth " + depth + ": " + totalNodesPerDepth.get(depth) + " nodes");
-            System.err.println("max keys: " + maxKeysPerDepth.get(depth));
-            System.err.println("avg keys: " + ((double) totalKeysPerDepth.get(depth)) / totalNodesPerDepth.get(depth) + "\n");
+        int maxDepth = totalKeysPerDepth.keySet().stream().max(Integer::compare).get();
+
+        for (int depth = 0; depth <= maxDepth; depth++) {
+            String prefix = Util.repeat(" ", depth);
+            double avgKeys = ((double) totalKeysPerDepth.get(depth)) / totalNodesPerDepth.get(depth);
+
+            System.err.print(prefix);
+            System.err.print(depth + ": " + nextStep.getClass().getSimpleName() + ": total " + totalNodesPerDepth.get(depth) + " nodes");
+            System.err.print(" // keys: max " + maxKeysPerDepth.get(depth) + ", avg " + avgKeys);
+            System.err.print(" // values: " + totalValuesPerDepth.get(depth));
+            System.err.println();
         }
-        
-        if( nextStep instanceof ArrayMap ) {
-            System.err.println("uses ArrayMap with density " + ((ArrayMap) nextStep).getStatistics());
-        }
+
+//
+//        for (int depth : totalKeysPerDepth.keySet()) {
+//            System.err.println("depth " + depth + ": " + totalNodesPerDepth.get(depth) + " nodes");
+//            System.err.println("max keys: " + maxKeysPerDepth.get(depth));
+//            System.err.println("avg keys: " + ((double) totalKeysPerDepth.get(depth)) / totalNodesPerDepth.get(depth) + "\n");
+//        }
+//        
+//        if( nextStep instanceof ArrayMap ) {
+//            System.err.println("uses ArrayMap with density " + ((ArrayMap) nextStep).getStatistics());
+//        }
     }
 
-    private void collectStatistics(int depth, Int2IntMap totalKeysPerDepth, Int2IntMap totalNodesPerDepth, Int2IntMap maxKeysPerDepth) {
+    private void collectStatistics(int depth, Int2IntMap totalKeysPerDepth, Int2IntMap totalNodesPerDepth, Int2IntMap maxKeysPerDepth, Int2LongMap totalValuesPerDepth) {
         int x = totalKeysPerDepth.get(depth);
         x += nextStep.keySet().size();
         totalKeysPerDepth.put(depth, x);
@@ -231,8 +275,14 @@ public class IntTrie<E> implements Serializable {
             maxKeysPerDepth.put(depth, nextStep.keySet().size());
         }
 
+        if (value != null) {
+            long y = totalValuesPerDepth.get(depth);
+            y += valueCounter.applyAsLong(value);
+            totalValuesPerDepth.put(depth, y);
+        }
+
         for (int key : nextStep.keySet()) {
-            nextStep.get(key).collectStatistics(depth + 1, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth);
+            nextStep.get(key).collectStatistics(depth + 1, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth, totalValuesPerDepth);
         }
     }
 }

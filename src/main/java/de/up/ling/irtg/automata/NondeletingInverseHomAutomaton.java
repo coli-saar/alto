@@ -15,7 +15,6 @@ import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -171,7 +170,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
     */
 
     @Override
-    public Collection<Rule> getRulesBottomUp(int label, final int[] childStates) {
+    public Iterable<Rule> getRulesBottomUp(int label, final int[] childStates) {
         if (debug) {
             System.err.println("Handling label " + label + " and CS : " + childStatesToString(childStates));
         }
@@ -213,7 +212,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
                 // TODO: weight
                 for (int newLabel : hom.getLabelSetForLabel(label)) {
                     Rule rule = createRule(r, newLabel, childStates, 1);
-                    storeRule(rule);
+                    storeRuleBottomUp(rule);
 
                     if (newLabel == label) {
                         ret.add(rule);
@@ -263,7 +262,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<Object>
                     // TODO: weights
                     for (int newLabel : hom.getLabelSetForLabel(label)) {
                         Rule rule = createRule(parentState, newLabel, substitutionTuple, 1);
-                        storeRule(rule);
+                        storeRuleTopDown(rule);
                         ret.add(rule);
                     }
                 }

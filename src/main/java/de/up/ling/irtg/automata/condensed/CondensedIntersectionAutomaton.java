@@ -31,7 +31,7 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends Gener
 
     @Override
     protected void collectOutputRule(Rule outputRule) {
-        storeRule(outputRule);
+        storeRuleBoth(outputRule);
     }
 
     @Override
