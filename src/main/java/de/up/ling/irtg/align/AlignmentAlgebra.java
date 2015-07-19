@@ -9,12 +9,14 @@ import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.TreeAutomaton;
 
 /**
- *
+ * This interface implements an algebra that is able to take two inputs and turn them into
+ * two automata with alignments.
  * @author christoph_teichmann
- * @param <Type>
  */
-public abstract interface AlignmentAlgebra<Type> {
+public abstract interface AlignmentAlgebra {
     /**
+     * Returns a pair of decomposition automata for the input encoding + an Rule marker for any alignments
+     * that may have been discovered.
      * 
      * @param one
      * @param two
