@@ -14,32 +14,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * This class provides utilities for interpreting the results of the rule extraction process and
+ * making it useful.
+ * 
+ * An instance is based on two homomorphisms that are used to interpret rule trees.
+ * 
  * @author christoph_teichmann
  */
 public class AlignmentMapper {
  
     /**
-     * 
+     * The first homomorphism used.
      */
     private final Homomorphism hom1;
     
     /**
-     * 
+     * The second homomorphism used.
      */
     private final Homomorphism hom2;
     
     /**
-     * 
+     * The rule marker which was used.
      */
     private final RuleMarker rlm;
     
     /**
-     * 
+     * Used to make rule tree labels more readable.
      */
     private final SubtreePairer sp;
 
     /**
+     * Create a new instance with the given mapping and with rlm as an interpretation
+     * for variables.
      * 
      * @param hom1
      * @param hom2
@@ -54,6 +60,7 @@ public class AlignmentMapper {
     }
     
     /**
+     * Returns the original first tree for the given rule tree.
      * 
      * @param t
      * @return 
@@ -65,6 +72,7 @@ public class AlignmentMapper {
     }
     
     /**
+     * Returns the first homomorphic image for the given rule tree.
      * 
      * @param t
      * @return 
@@ -74,6 +82,7 @@ public class AlignmentMapper {
     }
     
     /**
+     * Returns the first homomorphic image for the given rule tree.
      * 
      * @param t
      * @return 
@@ -84,6 +93,7 @@ public class AlignmentMapper {
     
     
     /**
+     * Returns the original second tree for the given rule tree.
      * 
      * @param t
      * @return 
@@ -94,11 +104,22 @@ public class AlignmentMapper {
         return removeVar(q);
     }
     
+    /**
+     * Replaces the labels in the tree with the pairs of operations that they are mapped to.
+     * 
+     * @param t
+     * @return 
+     */
     public Tree<Pair<Tree<String>, Tree<String>>> getOperationPairs(Tree<String> t){
         return this.sp.convert(t);
     }
     
     /**
+     * Returns the first homomorphic image with the variables marked with simple numbers
+     * as x_1, x_2 so that they are in the order they would have been in the underlying rule
+     * tree. 
+     * 
+     * Makes it easy to read of direct information for building an IRTG.
      * 
      * @param t
      * @return 
@@ -108,6 +129,8 @@ public class AlignmentMapper {
     }
 
     /**
+     * Iterates through the tree to find the variable numbers, then replaces
+     * the alignment nodes with variable numbers.
      * 
      * @param t
      * @param hm
@@ -131,6 +154,11 @@ public class AlignmentMapper {
     
     
     /**
+     * Returns the second homomorphic image with the variables marked with simple numbers
+     * as x_1, x_2 so that they are in the order they would have been in the underlying rule
+     * tree. 
+     * 
+     * Makes it easy to read of direct information for building an IRTG.
      * 
      * @param t
      * @return 
@@ -140,6 +168,11 @@ public class AlignmentMapper {
     }
     
     /**
+     * Returns the pairs of images that are implied by the rule tree and the
+     * homomorphism. 
+     * 
+     * Note that this algorithm assumes that there are no labels of the form
+     * x_.+ in the original trees.
      * 
      * @param t
      * @return 
@@ -165,6 +198,7 @@ public class AlignmentMapper {
     }
 
     /**
+     * Deletes variable nodes.
      * 
      * @param t
      * @return 
@@ -185,6 +219,7 @@ public class AlignmentMapper {
     }
 
     /**
+     * Enumerates the variable nodes by simple recursion.
      * 
      * @param t
      * @return 
@@ -198,6 +233,7 @@ public class AlignmentMapper {
     }
 
     /**
+     * Main recursion method for enumeration of variables.
      * 
      * @param t
      * @param i 
@@ -205,7 +241,8 @@ public class AlignmentMapper {
     private int enumerate(Tree<String> t, int i, Object2IntMap map) {
         String label = t.getLabel();
         label = hom1.get(label).getLabel();
-                
+        
+        // if we are at a frontier we need to restart our count
         if(rlm.isFrontier(label)){
             map.put(label, i);
             
@@ -225,6 +262,8 @@ public class AlignmentMapper {
     }
 
     /**
+     * Cuts the tree at every variable but keep the whole tree below that,
+     * because we cannot have symbols with two arities in the homomorphisms.
      * 
      * @param t
      * @param trees 
@@ -248,6 +287,7 @@ public class AlignmentMapper {
     }
 
     /**
+     * Cuts off everything below an x_.+ because we assume those are variables.
      * 
      * @param q
      * @return 
