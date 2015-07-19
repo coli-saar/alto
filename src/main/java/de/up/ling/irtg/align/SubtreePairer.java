@@ -11,25 +11,29 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.tree.Tree;
 
 /**
- *
+ * This class takes the labels of a rule tree and puts them in a "paired" form by replacing each 
+ * label with the subtrees it is interpreted into by two given homomorphisms.
+ * 
  * @author teichmann
  */
 public class SubtreePairer implements  Function<String,Pair<Tree<String>,Tree<String>>>{
     
     /**
-     * 
+     * First homomorphism used.
      */
     private final Homomorphism h1;
     
     /**
-     * 
+     * Second homomorphism used.
      */
     private final Homomorphism h2;
     
     /**
+     * Construct a new instance that will use the given homomorphisms to replace labels.
      * 
-     * @param h1
-     * @param h2 
+     * 
+     * @param h1 first homomorphism
+     * @param h2 second homomorphism
      */
     public SubtreePairer(Homomorphism h1, Homomorphism h2) {
         this.h1 = h1;
@@ -37,6 +41,9 @@ public class SubtreePairer implements  Function<String,Pair<Tree<String>,Tree<St
     }
     
     /**
+     * Takes a tree and two homomorphisms and then executes convert on an instance that uses the
+     * two homomorphisms.
+     * 
      * 
      * @param t
      * @param h1
@@ -49,8 +56,13 @@ public class SubtreePairer implements  Function<String,Pair<Tree<String>,Tree<St
     }
     
     /**
+     * Turns the given tree into a tree that has the interpretations of labels
+     * as labels instead.
      * 
-     * @param t
+     * Interpretations are given by the two homomorphisms with which this instance
+     * was constructed.
+     * 
+     * @param t the tree to transform.
      * @return 
      */
     public Tree<Pair<Tree<String>,Tree<String>>> convert(Tree<String> t){
