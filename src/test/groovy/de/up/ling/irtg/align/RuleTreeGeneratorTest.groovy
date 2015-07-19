@@ -62,7 +62,7 @@ public class RuleTreeGeneratorTest {
         TreeAutomaton ta = result.getLeft();
         ta.determinize();
         
-        for(Rule r : ta.getRuleIterable()){
+        for(Rule r : ta.getRuleSet()){
             String label = r.getLabel(ta);
             
             if(label.matches("X.+")){
@@ -135,7 +135,7 @@ public class RuleTreeGeneratorTest {
         Homomorphism hm1 = result.getRight().getLeft();
         Homomorphism hm2 = result.getRight().getRight();
         
-        for(Rule h : ta.getRuleIterable()){
+        for(Rule h : ta.getRuleSet()){
             String label = h.getLabel(ta);
             
             if(label.matches("X.+")){

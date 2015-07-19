@@ -70,7 +70,7 @@ public class AlignmentMapperTest {
         
         TreeAutomaton ta = result.getLeft();
         
-        for(Rule h : ta.getRuleIterable()){
+        for(Rule h : ta.getRuleSet()){
             String label = h.getLabel(ta);
             
             if(label.matches("X.+")){

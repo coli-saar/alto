@@ -84,7 +84,7 @@ public class RuleTreeFinder {
         AlignmentMapper am = new AlignmentMapper(h1, h2, rlm);
         
         if(reweigh){
-            Iterable<Rule> it = ta.getRuleIterable();
+            Iterable<Rule> it = ta.getRuleSet();
             for(Rule r : it){
                 String label = r.getLabel(ta);
                 if(rlm.isFrontier(h1.get(label).getLabel()) || rlm.isFrontier(h2.get(label).getLabel())){
