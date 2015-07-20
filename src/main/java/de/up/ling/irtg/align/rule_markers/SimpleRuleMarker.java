@@ -17,36 +17,39 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
 /**
- *
+ * A basic implementation of the rule marker interface where each pair of aligned rules has to be
+ * specified independently.
+ * 
  * @author christoph_teichmann
  */
 public class SimpleRuleMarker implements RuleMarker {
     /**
-     * 
+     * The prefix used to encode label sets
      */
     private final String prefix;
     
     /**
-     * 
+     * The pattern used to identify encoded label sets.
      */
     private final Pattern patt;
     
     /**
-     * 
+     * Counter for giving numbers to alignment pairs. 
      */
     private final AtomicInteger num = new AtomicInteger(0);
     
     /**
-     * 
+     * Rules from the first automaton mapped to numbers.
      */
     private final Map<Rule,IntSet> firstRules = new HashMap<>();
     
     /**
-     * 
+     * Rules from the second automaton mapped to numbers.
      */
     private final Map<Rule,IntSet> secondRules = new HashMap<>();
     
     /**
+     * Create a new instance that will use prefix+"_"+Intset.tostring() to encode alignment sets.
      * 
      * @param prefix 
      */
@@ -56,6 +59,7 @@ public class SimpleRuleMarker implements RuleMarker {
     }
 
     /**
+     * Add a pair of r1 for the first automaton and r2 for the second.
      * 
      * @param r1
      * @param r2 
@@ -132,18 +136,20 @@ public class SimpleRuleMarker implements RuleMarker {
     }
     
     /**
-     * 
+     * An evaluator that maps rules to IntSets, needs to be aware of the automaton it is
+     * working on.
      */
     public class SimpleEvaluator implements RuleEvaluator<IntSet>{
 
         /**
-         * 
+         * The number of the relevant automaton.
          */
         private final int num;
 
         /**
+         * Create a new instance.
          * 
-         * @param ta 
+         * @param num
          */
         public SimpleEvaluator(int num) {
             this.num = num;

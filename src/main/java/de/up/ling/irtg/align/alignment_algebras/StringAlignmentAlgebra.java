@@ -12,6 +12,7 @@ import de.up.ling.irtg.align.RuleMarker;
 import de.up.ling.irtg.align.rule_markers.SimpleRuleMarker;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap.Entry;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -22,7 +23,14 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- *
+ * An implementation of the AlignmentAlgebra interface for pairs of strings.
+ * 
+ * Strings should be of the form "aaa:1 bbb:3:2 ...." where "aaa" is an input token,
+ * and each ":" is follow by one integer marking alignment with a token in the other string.
+ * 
+ * Note that the resulting rule marker will use some some sequence of "X" plus "_" to encode alignment
+ * labels.
+ * 
  * @author christoph_teichmann
  */
 public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAlgebra {
@@ -33,6 +41,7 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
         String[] pTwo = two.split("\\s+");
         
         List<String> input = new ArrayList<>();
+        // we remember the alignment position for each token.
         Int2IntMap oneMarkerToPosition = new Int2IntOpenHashMap();
         int pos = 0;
         for(String s : pOne)
@@ -46,7 +55,7 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
             }
             ++pos;
         }
-        
+        // then we get an automaton with spans
         TreeAutomaton<Span> ta1 = decompose(input);
         
         input.clear();
@@ -70,6 +79,7 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
         Int2ObjectMap<Rule> rulesTwo = new Int2ObjectOpenHashMap<>();
         
         
+        // we extract which terminal rule corresponds to which starting point
         for(Rule r : ta1.getRuleSet()){
             Span s = ta1.getStateForId(r.getParent());
             if(s.end - s.start == 1){
@@ -83,9 +93,10 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
             }
         }
         
-        SimpleRuleMarker srm = new SimpleRuleMarker("X");
+        SimpleRuleMarker srm = new SimpleRuleMarker(ensure("X",ta1.getSignature(),ta2.getSignature()));
         Iterator<Entry> it = oneMarkerToPosition.int2IntEntrySet().iterator();
         
+        // then we use this information to pair up rules.
         while(it.hasNext()){
             Entry e = it.next();
             int marker = e.getIntKey();
@@ -98,5 +109,21 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
         }
         
         return new Pair<>(srm,new Pair<>(ta1,ta2));
+    }
+
+    /**
+     * Finds label prefix that is currently not itself in the signature (but it may be with a suffix).
+     * @param x
+     * @param signature
+     * @param signature0
+     * @return 
+     */
+    private String ensure(String x, Signature signature, Signature signature0) {
+        String code = x+"_";
+        while(signature.contains(code) || signature0.contains(code)){
+            code = x + code;
+        }
+        
+        return code;
     }
 }
