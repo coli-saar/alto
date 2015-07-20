@@ -177,8 +177,8 @@ Y -> r8(X,X)
     }
     
     
-    // not implemented yet
-//    @Test
+        // not implemented yet
+    //    @Test
 //    public void testInvHomNonlinearByIntersection() {
 //        TreeAutomaton rhs = pa("q2! -> f(q1) \n q1 -> a "); // accepts { f(a) }
 //        Homomorphism h = hom(["G":"f(?1)", "A":"a"], sig(["G":2, "A":0]), rhs.getSignature());
@@ -230,18 +230,35 @@ Y -> r8(X,X)
         assertEquals(["s01", "s12", "s23", "s02", "s13", "s03"], states)
     }
     
-//    @Test
+    @Test
     public void testUnaryStartRule() {
         CondensedTreeAutomaton cta = pac("q -> {a}\n q! -> {f}(q)")
         TreeAutomaton ta = pa("p1! -> f(p2)\n p2 -> a")
         SignatureMapper smap = ta.getSignature().getMapperTo(cta.getSignature())
         CondensedIntersectionAutomaton inter = new CondensedIntersectionAutomaton(ta, cta, smap)
         
-        System.err.println("*****")
-        inter.DEBUG = true;
+        //System.err.println("*****")
+        //inter.DEBUG = true;
         inter.makeAllRulesExplicit()
         
         assertEquals(new HashSet([pt("f(a)")]), inter.language())
+        
+        CondensedTreeAutomaton con = pac("q -> {t,i}(q1,q2) \n q! -> {a,b}(q)\n q1! -> {g}(q1) \n q1 -> {c}(q2) \n q2 -> {u,h}");
+        TreeAutomaton taut = pa("q0! -> a(q0) \n q0! -> b(q0) \n q0! -> t(q1,q2) \n q0! -> i(q1,q2) \n q1 -> c(q2) \n q2 -> u");
+        
+        smap = taut.getSignature().getMapperTo(con.getSignature());
+        CondensedIntersectionAutomaton sect = new CondensedIntersectionAutomaton(taut, con, smap);
+        
+        sect.makeAllRulesExplicit();
+        
+        Iterator<Tree<String>> lit = taut.languageIterator();
+        
+        for(int i=0;i<30 && lit.hasNext();++i){
+            Tree<String> t = lit.next();
+            System.out.println(t);
+            System.out.println(con.accepts(t));
+            System.out.println(sect.accepts(t));
+        }
     }
     
     // Helping functions

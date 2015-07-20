@@ -41,14 +41,16 @@ import java.util.List;
 
 /**
  * Computes an automaton for the intersection of an ordinary {@link TreeAutomaton} (left) and a
- * {@link CondensedTreeAutomaton} (right). This class uses a CKY-style
- * algorithm, which queries the right automaton top-down and the left
- * automaton bottom-up. A typical use-case is that the left automaton
- * is the derivation-tree RTG of an IRTG and the right automaton
+ * {@link CondensedTreeAutomaton} (right). 
+ * 
+ * This class uses a CKY-style algorithm, which queries the right automaton
+ * top-down and the left automaton bottom-up. A typical use-case is that the
+ * left automaton is the derivation-tree RTG of an IRTG and the right automaton
  * is the inverse-homomorphism image of a decomposition automaton.<p>
  * 
  * Note that this automaton will not work correctly if right is
- * recursive. Recursive right automata come up, for instance, when
+ * recursive except if all recursive rules are of the form 'q -> {...}(q)' which
+ * is explicitly handled. Recursive right automata come up, for instance, when
  * parsing with an IRTG that has ?1 on the input interpretation.
  * (See issue #2 on Bitbucket.)
  *
@@ -101,7 +103,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             ruleStore.setExplicit(true);
             getStateInterner().setTrustingMode(true);
 
-            Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<IntSet>();
+            Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<>();
 
             long t1 = System.nanoTime();
 
@@ -144,13 +146,22 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             visited.add(q);
 
             final IntList foundPartners = new IntArrayList();
-
+            final ArrayList<CondensedRule> selfLoops = new ArrayList<>();
+            final IntList selfToDo = new IntArrayList();
+            final IntSet  selfSeen = new IntOpenHashSet();
+            
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
                 if (DEBUG) {
                     System.err.println("Right rule: " + rightRule.toString(right));
                 }
+                
+                if(rightRule.getArity() == 1 && rightRule.getChildren()[0] == q){
+                    selfLoops.add(rightRule);
+                    continue;
+                }
+                
                 int[] rightChildren = rightRule.getChildren();
-                List<IntSet> remappedChildren = new ArrayList<IntSet>();
+                List<IntSet> remappedChildren = new ArrayList<>();
 
                 // iterate over all children in the right rule
                 for (int i = 0; i < rightRule.getArity(); ++i) {
@@ -170,6 +181,13 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                     // create a new rule
                     Rule rule = combineRules(leftRule, rightRule);
+                    
+                    if(!selfSeen.contains(rule.getParent())){
+                        selfToDo.add(leftRule.getParent());
+                        
+                        selfSeen.add(rule.getParent());
+                    }
+                                        
                     if (DEBUG) {
                         System.err.println("Left rule: " + leftRule.toString(left));
                         System.err.println("Combined rule: " + rule.toString(this));
@@ -206,6 +224,49 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 }
 
             }
+            
+            int[] children = new int[1];
+            for(int i=0;i<selfToDo.size();++i){
+                int leftState = selfToDo.get(i);
+                
+                children[0] = leftState;
+                
+                for(int k=0;k<selfLoops.size();++k){
+                    CondensedRule rightRule = selfLoops.get(k);
+                    
+                    rightRule.getLabels(right).forEach(labelId ->{
+                        Iterable<Rule> rules = left.getRulesBottomUp(leftToRightSignatureMapper.remapForward(labelId), children);
+                        
+                        rules.forEach(leftRule -> {
+                            // create a new rule
+                            Rule rule = combineRules(leftRule, rightRule);
+                    
+                        if(!selfSeen.contains(rule.getParent())){
+                            selfToDo.add(rule.getParent());
+                            selfToDo.add(leftRule.getParent());
+                        
+                            selfSeen.add(rule.getParent());
+                        }
+                                        
+                        if (DEBUG) {
+                            System.err.println("Left rule: " + leftRule.toString(left));
+                            System.err.println("Combined rule: " + rule.toString(this));
+                        }
+
+                        // transfer rule to staging area for output rules
+                        collectOutputRule(rule);
+
+                        // schedule the two parent states for addition
+                        // -- they cannot be added to the partners sets here
+                        // because we are inside an iteration over these sets
+                        foundPartners.add(rightRule.getParent());
+                        foundPartners.add(leftRule.getParent());
+                            
+                        });
+                    });
+                }
+            }
+            
         }
     }
 
