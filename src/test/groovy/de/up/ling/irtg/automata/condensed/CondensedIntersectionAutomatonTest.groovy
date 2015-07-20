@@ -255,9 +255,9 @@ Y -> r8(X,X)
         
         for(int i=0;i<30 && lit.hasNext();++i){
             Tree<String> t = lit.next();
-            System.out.println(t);
-            System.out.println(con.accepts(t));
-            System.out.println(sect.accepts(t));
+            if(con.accepts(t)){
+               assertTrue(sect.accepts(t));
+            }
         }
     }
     

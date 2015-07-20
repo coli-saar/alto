@@ -200,15 +200,15 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
             if (useCachedRuleBottomUp(label, childStates)) {
                 return getRulesBottomUpFromExplicit(label, childStates);
             } else {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
 
                 if (label == concatSymbolId) {
                     if (childStates.length != 2) {
-                        return new HashSet<Rule>();
+                        return new HashSet<>();
                     }
 
                     if (getStateForId(childStates[0]).end != getStateForId(childStates[1]).start) {
-                        return new HashSet<Rule>();
+                        return new HashSet<>();
                     }
 
                     Span span = new Span(getStateForId(childStates[0]).start, getStateForId(childStates[1]).end);
@@ -219,6 +219,10 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
                     return ret;
                 } else {
+                    if(childStates.length > 0){
+                        return new HashSet<>();
+                    }
+                    
                     for (int i = 0; i < words.length; i++) {
                         if (words[i] == label) {
                             ret.add(createRule(addState(new Span(i, i + 1)), label, new int[0], 1));
