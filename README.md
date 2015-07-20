@@ -27,7 +27,7 @@ The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://
 
 Alto is implemented in Java and can be downloaded [here](https://bitbucket.org/tclup/alto/downloads).
 
-See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on how to use Alto.
+See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on how to use Alto. The [tutorials](https://bitbucket.org/tclup/alto/wiki/Tutorials) are a good way to get started with Alto.
 
 ## Screenshots ##
 
