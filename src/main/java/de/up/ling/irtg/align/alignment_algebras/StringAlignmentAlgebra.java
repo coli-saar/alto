@@ -119,7 +119,7 @@ public class StringAlignmentAlgebra extends StringAlgebra implements AlignmentAl
      * @return 
      */
     private String ensure(String x, Signature signature, Signature signature0) {
-        String code = x+"_";
+        String code = x;
         while(signature.contains(code) || signature0.contains(code)){
             code = x + code;
         }
