@@ -21,6 +21,27 @@ import java.util.logging.Level;
  */
 public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomaton<State> {
     
+    /**
+     * Constructs a new instance which is backed by the given signature.
+     * 
+     * The automaton might add to the signature when it creates new rules.
+     * 
+     * This constructor was added for testing purposes.
+     * 
+     * @author christoph teichmann
+     * @param sig 
+     */
+    public ConcreteCondensedTreeAutomaton(Signature sig) {
+        super(sig);
+        
+        // Do NOT set isExplicit to true here! This means that all the condensed
+        // rules have been spelled out explicitly as uncondensed rules, which is
+        // something we want to avoid.
+        
+        isCondensedExplicit = true;
+    }
+    
+    
     public ConcreteCondensedTreeAutomaton() {
         super(new Signature());
         
