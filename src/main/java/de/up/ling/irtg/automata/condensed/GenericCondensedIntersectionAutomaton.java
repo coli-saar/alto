@@ -167,6 +167,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
                 D(depth, () -> "Right rule: " + rightRule.toString(right));
 
+                // If the right rule is a "self-loop", i.e. of the form q -> f(q),
+                // the normal DFS doesn't work. We give it special treatment by
+                // postponing its combination with the right rules until below.
                 if (rightRule.getArity() == 1 && rightRule.getChildren()[0] == q) {
                     selfLoops.add(rightRule);
                     continue;
@@ -230,6 +233,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
             }
 
+            // Now that we have seen all children of q through rules that
+            // are not self-loops, go through the self-loops and process them.
             int[] children = new int[1];
             for (int i = 0; i < selfToDo.size(); ++i) {
                 int leftState = selfToDo.get(i);

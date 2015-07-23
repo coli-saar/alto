@@ -26,8 +26,11 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +42,18 @@ import java.util.Set;
  * @author koller
  */
 public class TestingTools {
+    /**
+     * Returns an InputStream for the resource with the given name.
+     * Resources are resolved relative to the root of the given classpath;
+     * thus files in src/test/resources can be addressed as "foo.txt" etc.
+     * 
+     * @param filename
+     * @return
+     * @throws IOException 
+     */
+    public static InputStream rs(String filename) throws IOException {
+        return TestingTools.class.getClassLoader().getResourceAsStream(filename);
+    }
 
     public static Tree<String> pt(String s) throws Exception {
         return TreeParser.parse(s);
