@@ -21,11 +21,12 @@ import java.util.Set;
  * @author koller
  */
 public class WideStringAlgebra extends StringAlgebra {
+
     private static final String WIDE_BINARY_CONCATENATION = "conc2";
-    
+
     public WideStringAlgebra() {
         getSignature().clear(); // remove * from StringAlgebra
-        
+
         getSignature().addSymbol(WIDE_BINARY_CONCATENATION, 2);
 
         // but we still keep the special star symbol
@@ -38,14 +39,15 @@ public class WideStringAlgebra extends StringAlgebra {
     }
 
     private class WideCkyAutomaton extends TreeAutomaton<Span> {
+
         private final int[] words;
         private final boolean isBottomUpDeterministic;
         private final Int2IntMap concatArities;
-        
+
         /**
-         * We have to allow unary productions to represent for example the grammars we get
-         * from the WSJ corpus, but this means we also need to be able to handle them
-         * correctly when we are asked for all labels.
+         * We have to allow unary productions to represent for example the
+         * grammars we get from the WSJ corpus, but this means we also need to
+         * be able to handle them correctly when we are asked for all labels.
          */
         private final IntSet unaryLabels;
 
@@ -55,12 +57,11 @@ public class WideStringAlgebra extends StringAlgebra {
             this.words = new int[words.size()];
             for (int i = 0; i < words.size(); i++) {
                 String s = words.get(i);
-                
+
                 // if we encounter a star, then we need to convert it into the special symbol
-                if(StringAlgebra.CONCAT.equals(s)){
-                    this.words[i]= WideStringAlgebra.this.specialStarId;
-                }
-                else{
+                if (StringAlgebra.CONCAT.equals(s)) {
+                    this.words[i] = WideStringAlgebra.this.specialStarId;
+                } else {
                     this.words[i] = WideStringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
                 }
             }
@@ -69,13 +70,13 @@ public class WideStringAlgebra extends StringAlgebra {
 
             concatArities = new Int2IntOpenHashMap();
             this.unaryLabels = new IntOpenHashSet();
-            
+
             for (int symId = 0; symId <= signature.getMaxSymbolId(); symId++) {
                 if (signature.getArity(symId) > 0) {
-                    if(signature.getArity(symId) == 1){
+                    if (signature.getArity(symId) == 1) {
                         unaryLabels.add(symId);
                     }
-                    
+
                     concatArities.put(symId, signature.getArity(symId));
                 }
             }
@@ -154,31 +155,30 @@ public class WideStringAlgebra extends StringAlgebra {
                 final Span parentSpan = getStateForId(parentState);
 
                 if (concatArities.containsKey(label)) {
-                                       
-                        final int arity = concatArities.get(label);
-                    
-                        // handle unary steps if there are such labels
-                        if(arity == 1){
-                            Rule rule = createRule(parentState, label, new int[] {parentState}, 1);
-                            storeRuleTopDown(rule);
-                        }else{
-                    
+
+                    final int arity = concatArities.get(label);
+
+                    // handle unary steps if there are such labels
+                    if (arity == 1) {
+                        Rule rule = createRule(parentState, label, new int[]{parentState}, 1);
+                        storeRuleTopDown(rule);
+                    } else {
                         assert arity >= 2;
 
-                        forAscendingTuple(parentSpan.start+1, parentSpan.end, 0, new int[arity-1], new Function<int[], Void>() {
+                        forAscendingTuple(parentSpan.start + 1, parentSpan.end, 0, new int[arity - 1], new Function<int[], Void>() {
                             public Void apply(int[] tuple) {
                                 int[] childStates = new int[arity];
-                            
+
                                 childStates[0] = addState(new Span(parentSpan.start, tuple[0]));
 
                                 for (int i = 0; i < arity - 2; i++) {
-                                    childStates[i+1] = addState(new Span(tuple[i], tuple[i + 1]));
+                                    childStates[i + 1] = addState(new Span(tuple[i], tuple[i + 1]));
                                 }
 
-                                childStates[arity-1] = addState(new Span(tuple[arity-2], parentSpan.end));
+                                childStates[arity - 1] = addState(new Span(tuple[arity - 2], parentSpan.end));
                                 Rule rule = createRule(parentState, label, childStates, 1);
                                 storeRuleTopDown(rule);
-                                
+
                                 return null;
                             }
                         });
@@ -199,7 +199,7 @@ public class WideStringAlgebra extends StringAlgebra {
             if (parentSpan.end == parentSpan.start + 1) {
                 // if there are any unary labels, then we always have to add them
                 IntSet ret = this.unaryLabels.isEmpty() ? new IntOpenHashSet() : new IntOpenHashSet(this.unaryLabels);
-                
+
                 ret.add(words[parentSpan.start]);
                 return ret;
             } else {

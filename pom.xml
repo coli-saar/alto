@@ -10,7 +10,7 @@
   <url>http://maven.apache.org</url>
 
   <properties>
-    <antlr.version>4.3</antlr.version>
+    <antlr.version>4.5.1</antlr.version>
     <assembly.version>2.4</assembly.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>

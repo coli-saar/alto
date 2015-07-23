@@ -58,6 +58,58 @@ class InterpretedTreeAutomatonTest {
     }
     
     @Test
+    public void testParseUnaryRule() {
+        String istr = """\n\
+interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+interpretation tree: de.up.ling.irtg.algebra.BinarizingTreeWithAritiesAlgebra
+
+S! -> r28_br18139(NP-SBJ, q18140) [0.1562209842154132]
+  [string] *(?1,?2)
+  [tree] S_3('_@_'(?1,?2))
+
+q18140 -> r28_br18138(VP, '.') [1.0]
+  [string] *(?1,?2)
+  [tree] '_@_'(?1,?2)
+
+NP-SBJ -> r1280_br9876(NN, q9877) [2.6232948583420777E-4]
+  [string] *(?1,?2)
+  [tree] NP-SBJ_3('_@_'(?1,?2))
+
+q9877 -> r1280_br9875(CC, NN) [1.0]
+  [string] *(?1,?2)
+  [tree] '_@_'(?1,?2)
+
+NN -> r1278_br288 [1.6310552927744252E-4]
+  [string] Champagne
+  [tree] NN_1(Champagne_0)
+
+CC -> r48_br252 [0.6886120996441281]
+  [string] and
+  [tree] CC_1(and_0)
+
+NN -> r1279_br6324 [1.6310552927744252E-4]
+  [string] dessert
+  [tree] NN_1(dessert_0)
+
+VP -> r969_br14525(VBD) [0.0015326738191444892]
+  [string] ?1
+  [tree] VP_1(?1)
+
+VBD -> r1281_br8789 [0.002635046113306983]
+  [string] followed
+  [tree] VBD_1(followed_0)
+
+'.' -> r27_br2559 [0.9890453834115805]
+  [string] '.'
+  [tree] '._1'('._0')
+""";
+        InterpretedTreeAutomaton irtg = pi(istr)
+        TreeAutomaton chart = irtg.parse(["string":"Champagne and dessert followed ."])
+        
+        assert chart.viterbi() != null
+    }
+    
+    @Test
     public void testNonbinaryRhs() {
         InterpretedTreeAutomaton irtg = pi(wideString_IRTG)
         Map<String, String> map = new HashMap<>()
