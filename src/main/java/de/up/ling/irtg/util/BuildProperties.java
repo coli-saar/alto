@@ -6,7 +6,6 @@
 
 package de.up.ling.irtg.util;
 
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -17,8 +16,8 @@ import java.util.Properties;
 public class BuildProperties {
     private static final Properties props = new Properties();
     
-    private static final String IMPL_VERSION = "implementation-version";
-    private static final String IMPL_BUILD = "implementation-build";
+    private static final String IMPL_VERSION = "version";
+    private static final String IMPL_BUILD = "scm-revision";
     
 //    private static BuildProperties sing = new BuildProperties();
     
