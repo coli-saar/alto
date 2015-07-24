@@ -19,8 +19,6 @@ public class BuildProperties {
     private static final String IMPL_VERSION = "version";
     private static final String IMPL_BUILD = "scm-revision";
     
-//    private static BuildProperties sing = new BuildProperties();
-    
     static {
         try {
             props.load(BuildProperties.class.getClassLoader().getResourceAsStream("build.properties"));
