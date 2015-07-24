@@ -24,7 +24,7 @@ public class BuildProperties {
     
     static {
         try {
-            props.load(new FileReader("build.properties"));
+            props.load(BuildProperties.class.getClassLoader().getResourceAsStream("build.properties"));
         } catch (IOException ex) {
             props.put(IMPL_VERSION, "(undefined)");
             props.put(IMPL_BUILD, "(undefined)");

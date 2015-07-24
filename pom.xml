@@ -170,10 +170,23 @@
 	</configuration>
       </plugin>
 
+      <!-- buildnumber plugin: add hg revision to a properties file -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>buildnumber-maven-plugin</artifactId>
         <version>1.3</version>
+	<!-- -->
+	<configuration>
+	  <doCheck>false</doCheck>
+          <doUpdate>false</doUpdate>
+	  <revisiononscmfailure>UNKNOWN_REVISION</revisiononscmfailure>
+	  <format>{0} {1,date,yyyy-MM-dd HH:mm}</format>
+	  <items>
+	    <item>scmVersion</item>
+            <item>timestamp</item>
+	  </items>
+        </configuration>
+	<!-- -->
         <executions>
           <execution>
             <phase>validate</phase>
@@ -182,37 +195,8 @@
             </goals>
           </execution>
         </executions>
-        <configuration>
-          <doCheck>false</doCheck>
-          <doUpdate>false</doUpdate>
-	  <format>{0} {1,date,yyyy-MM-dd HH:mm}</format>
-        <items>
-	    <item>scmVersion</item>
-            <item>timestamp</item>
-        </items>
-        </configuration>
+        
       </plugin>
-
-<!--
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>2.4.1</version>
-        <configuration>
-
-        </configuration>
-        <executions>
-          <execution>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
--->
-
-
 
       <!-- Groovy plugin for unit tests -->
       <plugin>
@@ -377,21 +361,6 @@
         </configuration>
       </plugin>
 
-      <!-- Jar plugin: add implementation version etc -->
-      <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-jar-plugin</artifactId>
-	<version>2.1</version>
-	<configuration>
-	  <archive>
-	    <manifestEntries>
-	      <implementation-version>${project.version}</implementation-version>
-	      <implementation-build>${buildNumber}</implementation-build>
-	    </manifestEntries>
-	  </archive>
-	</configuration>
-      </plugin>
-
       <!-- Assembly plugin -->
       <plugin>
 	<artifactId>maven-assembly-plugin</artifactId>
@@ -415,6 +384,26 @@
 	  </execution>
 	</executions>
       </plugin>
+
+<!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.1</version>
+        <configuration>
+
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+-->
+
     </plugins>
 
     <!-- some more config -->

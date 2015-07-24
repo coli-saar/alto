@@ -15,14 +15,13 @@ import static org.hamcrest.CoreMatchers.*;
  * @author koller
  */
 class BuildPropertiesTest {
-//    @Test
+    @Test
     public void testVersion() {
         assertThat(BuildProperties.getVersion(), is(not(null)))
         assertThat(BuildProperties.getVersion(), is(not("(undefined)")))
-        System.err.println("vvvv " + BuildProperties.getVersion())
     }
     
-//    @Test
+    @Test
     public void testBuild() {
         assertThat(BuildProperties.getBuild(), is(not(null)))
         assertThat(BuildProperties.getBuild(), is(not("(undefined)")))
