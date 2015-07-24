@@ -563,7 +563,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
     public static void main(String args[]) throws Exception {
         // enable Mac integration
         System.setProperty("apple.laf.useScreenMenuBar", "true");
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "IRTG GUI");
+        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Alto");
 
         UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 
@@ -581,7 +581,10 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         Application application = new DefaultApplication();
         application.addApplicationListener(guiMain);
         application.addPreferencesMenuItem();
+//        application.removeAboutMenuItem();
+        application.setEnabledAboutMenu(true);
         application.setEnabledPreferencesMenu(false);
+        
 
         // set up logging
         Logging.setUp();
@@ -636,6 +639,8 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
      * ** callback methods for macify ***
      */
     public void handleAbout(ApplicationEvent ae) {
+        new AboutWindow(this, true).setVisible(true);
+        ae.setHandled(true);
     }
 
     public void handleOpenApplication(ApplicationEvent ae) {
