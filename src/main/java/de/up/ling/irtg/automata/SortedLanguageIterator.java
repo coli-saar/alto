@@ -8,13 +8,6 @@ import de.saar.basic.StringTools;
 import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;
 import de.up.ling.tree.Tree;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -24,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
-import java.util.zip.GZIPInputStream;
 
 /**
  * An iterator for the tree language of an automaton, sorted by descending

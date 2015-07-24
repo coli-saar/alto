@@ -77,6 +77,10 @@ public class TestingTools {
         return (new TreeAutomatonInputCodec()).read(new ByteArrayInputStream(s.getBytes()));
     }
     
+    public static TreeAutomaton pa(InputStream s) throws CodecParseException, IOException {
+        return (new TreeAutomatonInputCodec()).read(s);
+    }
+    
     public static InterpretedTreeAutomaton pi(String s) throws IOException, de.up.ling.irtg.codec.CodecParseException {
         return new IrtgInputCodec().read(s);
     }

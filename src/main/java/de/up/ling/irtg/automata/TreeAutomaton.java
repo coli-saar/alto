@@ -31,6 +31,7 @@ import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
+import de.up.ling.irtg.util.DebuggingWriter;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.TupleIterator;
@@ -103,15 +104,15 @@ import java.util.stream.Collectors;
  * @author koller
  */
 public abstract class TreeAutomaton<State> implements Serializable {
+
     public static boolean DEBUG_STORE = false;
-    
+    public static DebuggingWriter D = new DebuggingWriter();
+
     protected RuleStore ruleStore;
 
 //    IntTrie<Int2ObjectMap<Set<Rule>>> explicitRulesBottomUp;        // children -> label -> set(rules)
 //    List<Rule> unprocessedUpdatesForBottomUp;
-
 //    TopDownRuleIndex explicitRulesTopDown;
-
     protected IntSet finalStates;                                             // final states, subset of allStates
     protected IntSet allStates;        // TODO - remove these!                                        // subset of stateInterner.keySet() that actually occurs in this automaton; allows for sharing interners across automata to preserve state IDs
 //    protected boolean isExplicit;
@@ -127,8 +128,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
     public TreeAutomaton(Signature signature) {
         ruleStore = new RuleStore(this);
-        
-        
+
 //        MapFactory factory = depth -> {
 //           if( depth == 0 ) {
 //               return new ArrayMap<IntTrie>();
@@ -136,14 +136,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //               return new Int2ObjectOpenHashMap<IntTrie>();
 //           }
 //        };
-
 //        explicitRulesBottomUp = new IntTrie<Int2ObjectMap<Set<Rule>>>();
-
 //        explicitRulesTopDown = new MapTopDownIndex();
-
 //        unprocessedUpdatesForRulesForRhsState = new ArrayList<Rule>();
 //        unprocessedUpdatesForBottomUp = new ArrayList<>();
-
         finalStates = new IntOpenHashSet();
         allStates = new IntOpenHashSet();
 
@@ -462,15 +458,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //    protected void storeRule(Rule rule) {
 //        ruleStore.storeRule(rule);
 //    }
-    
     protected void storeRuleBottomUp(Rule rule) {
         ruleStore.storeRuleBottomUp(rule);
     }
-    
+
     protected void storeRuleTopDown(Rule rule) {
         ruleStore.storeRuleTopDown(rule);
     }
-    
+
     protected void storeRuleBoth(Rule rule) {
         storeRuleBottomUp(rule);
         storeRuleTopDown(rule);
@@ -482,7 +477,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //    protected IntTrie<Int2ObjectMap<Collection<Rule>>> getExplicitRulesBottomUp() {
 //        return ruleStore.getTrie();
 //    }
-
 //    /**
 //     * Returns false if adding this rule makes the automaton bottom-up
 //     * nondeterministic. That is: when q -> f(q1,...,qn) is added, the method
@@ -517,7 +511,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //
 //        return ret;
 //    }
-
 //    protected void processNewRulesForRhs() {
 //        if (rulesForRhsState == null) {
 //            rulesForRhsState = new Int2ObjectOpenHashMap<List<Iterable<Rule>>>();
@@ -547,7 +540,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //                }
 //            });
 //        }
-
 //        
 //        if (!unprocessedUpdatesForRulesForRhsState.isEmpty()) {
 //            for (Rule rule : unprocessedUpdatesForRulesForRhsState) {
@@ -559,7 +551,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //            unprocessedUpdatesForRulesForRhsState.clear();
 //        }
 //    }
-
     /**
      * Like getRulesBottomUp, but only looks for rules in the cache of
      * previously discovered rules.
@@ -584,11 +575,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ruleStore.getRulesTopDown(labelId, parentState);
 //        return explicitRulesTopDown.getRules(labelId, parentState);
     }
-    
-    
-    
-    
-    
 
     public Iterable<Rule> getRulesForRhsState(int rhsState) {
         List<Iterable<Rule>> val = ruleStore.getRulesForRhsState(rhsState);
@@ -604,11 +590,11 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * concatenating iterators over the explicit bottom-up rules. Note that this
      * necessarily _computes_ the set of all rules, which may be expensive for
      * lazy automata.<p>
-     * 
+     *
      * Note that this method calls {@link #makeAllRulesExplicit() } to enumerate
-     * all rules, and then returns the set of all rules in the rule store.
-     * You can therefore break its functionality if you override makeAllRulesExplicit
-     * carelessly.
+     * all rules, and then returns the set of all rules in the rule store. You
+     * can therefore break its functionality if you override
+     * makeAllRulesExplicit carelessly.
      *
      * @return
      */
@@ -616,7 +602,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         makeAllRulesExplicit();
         return ruleStore.getAllRulesBottomUp();
     }
-    
+
     public Iterable<Rule> getAllRulesTopDown() {
         makeAllRulesExplicit();
         return ruleStore.getAllRulesTopDown();
@@ -636,7 +622,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //            }
 //        };
 //    }
-
 //    /**
 //     * Returns an iterator over the rules of this automaton. Rules are computed
 //     * by need, so this rule requires a lower initial computational overhead
@@ -652,7 +637,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //    public Iterator<Rule> getRuleIterator() {
 //        return Iterators.concat(new RuleIterator(this));
 //    }
-
     /**
      * Returns true if the
      *
@@ -815,13 +799,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public Tree<String> viterbi() {
-	WeightedTree raw = viterbiRaw();
+        WeightedTree raw = viterbiRaw();
 
-	if( raw == null ) {
-	    return null;
-	} else {
-	    return getSignature().resolve(raw.getTree());
-	}
+        if (raw == null) {
+            return null;
+        } else {
+            return getSignature().resolve(raw.getTree());
+        }
 
 //        // run Viterbi algorithm bottom-up, saving rules as backpointers
 //
@@ -869,8 +853,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         rule -> new Pair(rule.getWeight(), rule));
 
         // find final state with highest weight
-        int bestFinalState = 0;
-        double weightBestFinalState = Double.POSITIVE_INFINITY;
+        int bestFinalState = -1;
+        double weightBestFinalState = Double.NEGATIVE_INFINITY;
 
         for (int s : getFinalStates()) {
             Pair<Double, Rule> result = map.get(s);
@@ -878,16 +862,21 @@ public abstract class TreeAutomaton<State> implements Serializable {
             // ignore final states that (for some crazy reason) can't
             // be expanded
             if (result.right != null) {
-                if (map.get(s).left < weightBestFinalState) {
+                if (map.get(s).left > weightBestFinalState) {
                     bestFinalState = s;
                     weightBestFinalState = map.get(s).left;
+
+                    if (D.isEnabled()) {
+                        System.err.println("update best final state to " + getStateForId(s) + ": " + weightBestFinalState);
+                    }
                 }
             }
         }
 
-        //getSignature().resolveSymbolId(
+        assert bestFinalState > -1 : "Viterbi failed: no useful final state found";
+
         // extract best tree from backpointers
-        Tree<Integer> t = extractTreeFromViterbi(bestFinalState, map);
+        Tree<Integer> t = extractTreeFromViterbi(bestFinalState, map, 0);
 
         if (t == null) {
             return null;
@@ -896,19 +885,28 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    private Tree<Integer> extractTreeFromViterbi(int state, Int2ObjectMap<Pair<Double, Rule>> map) {
+    private Tree<Integer> extractTreeFromViterbi(int state, Int2ObjectMap<Pair<Double, Rule>> map, int depth) {
+        D.D(depth, () -> "etfv " + getStateForId(state));
+
         if (map.containsKey(state)) {
-//            System.err.println("bp: " + map.get(state));
-//            System.err.println(" = " + map.get(state).right.toString(this));
+            D.D(depth, () -> "bp: " + map.get(state));
+            D.D(depth, () -> " = " + map.get(state).right.toString(this));
 
             Rule backpointer = map.get(state).right;
             List<Tree<Integer>> childTrees = new ArrayList<>();
 
             for (int child : backpointer.getChildren()) {
-                childTrees.add(extractTreeFromViterbi(child, map));
+                Tree<Integer> childTree = extractTreeFromViterbi(child, map, depth + 1);
+                D.D(depth, () -> "child " + child + " -> " + getSignature().resolve(childTree));
+
+                childTrees.add(childTree);
             }
 
-            return Tree.create(backpointer.getLabel(), childTrees);
+            Tree<Integer> ret = Tree.create(backpointer.getLabel(), childTrees);
+            D.D(depth, () -> "-> " + getSignature().resolve(ret));
+            return ret;
+        } else {
+            D.D(depth, () -> "(no entries for " + getStateForId(state) + ")");
         }
 
 //        System.err.println(getStateForId(state) + " -> null");
@@ -1184,8 +1182,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     /**
      * Computes a string representation of this automaton. This method
      * elaborates the rules of the automaton in a top-down fashion, starting
-     * with the final states and working from parents to children.
-     * TODO *** this is no longer true!
+     * with the final states and working from parents to children. TODO *** this
+     * is no longer true!
      *
      * @return
      */
@@ -1246,7 +1244,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * rules are in the cache.
      */
     public void makeAllRulesExplicit() {
-        if (! ruleStore.isExplicit()) {
+        if (!ruleStore.isExplicit()) {
             IntSet everAddedStates = new IntOpenHashSet();
             IntPriorityQueue agenda = new IntArrayFIFOQueue();
 
@@ -1274,7 +1272,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     }
                 }
             }
-            
+
             ruleStore.setExplicit(true);
         }
     }
@@ -2138,65 +2136,47 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    public <E> Int2ObjectMap<E> evaluateInSemiring2(final Semiring<E> semiring, final RuleEvaluator<E> evaluator) {
+    /**
+     * The method is only guaranteed to work on non-recursive automata. As a
+     * special case, loop rules of the form q -> f(q) are allowed, but they are
+     * simply skipped. This is correct in automata in which traversals of the
+     * loop only lead to worse results, e.g. in Viterbi for PCFGs.
+     *
+     * @param <E>
+     * @param semiring
+     * @param evaluator
+     * @return
+     */
+    private <E> Int2ObjectMap<E> evaluateInSemiring2(final Semiring<E> semiring, final RuleEvaluator<E> evaluator) {
         final Int2ObjectMap<E> ret = new Int2ObjectOpenHashMap<E>();
 
         foreachStateInBottomUpOrder((state, rulesTopDown) -> {
             E accu = semiring.zero();
 
             for (Rule rule : rulesTopDown) {
-                E valueThisRule = evaluator.evaluateRule(rule);
-                for (int child : rule.getChildren()) {
-                    if (valueThisRule != null) {
-                        if (ret.containsKey(child)) {
-                            valueThisRule = semiring.multiply(valueThisRule, ret.get(child));
-                        } else {
-                            // if a child state hasn't been evaluated yet, this means that it
-                            // is not reachable bottom-up, and therefore shouldn't be counted here
-                            valueThisRule = null;
+                if (!rule.isLoop()) { // skip loops
+                    E valueThisRule = evaluator.evaluateRule(rule);
+                    for (int child : rule.getChildren()) {
+                        if (valueThisRule != null) {
+                            if (ret.containsKey(child)) {
+                                valueThisRule = semiring.multiply(valueThisRule, ret.get(child));
+                            } else {
+                                // if a child state hasn't been evaluated yet, this means that it
+                                // is not reachable bottom-up, and therefore shouldn't be counted here
+                                valueThisRule = null;
+                            }
                         }
                     }
-                }
 
-                if (valueThisRule != null) {
-                    accu = semiring.add(accu, valueThisRule);
+                    if (valueThisRule != null) {
+                        accu = semiring.add(accu, valueThisRule);
+                    }
                 }
             }
 
             ret.put(state, accu);
         });
 
-//                new BottomUpStateVisitor() {
-//            public void visit(int state, Iterable<Rule> rulesTopDown) {
-////                System.err.println("visit: " + getStateForId(state));
-////                List<Rule> rules = new ArrayList<Rule>();
-////                Iterators.addAll(rules, rulesTopDown.iterator());
-////                System.err.println("rules: " + Rule.rulesToStrings(rules, TreeAutomaton.this));
-//
-//                E accu = semiring.zero();
-//
-//                for (Rule rule : rulesTopDown) {
-//                    E valueThisRule = evaluator.evaluateRule(rule);
-//                    for (int child : rule.getChildren()) {
-//                        if (valueThisRule != null) {
-//                            if (ret.containsKey(child)) {
-//                                valueThisRule = semiring.multiply(valueThisRule, ret.get(child));
-//                            } else {
-//                                // if a child state hasn't been evaluated yet, this means that it
-//                                // is not reachable bottom-up, and therefore shouldn't be counted here
-//                                valueThisRule = null;
-//                            }
-//                        }
-//                    }
-//
-//                    if (valueThisRule != null) {
-//                        accu = semiring.add(accu, valueThisRule);
-//                    }
-//                }
-//
-//                ret.put(state, accu);
-//            }
-//        });
         return ret;
     }
 
@@ -2276,7 +2256,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         Collections.reverse(statesInOrder);
 
 //        processNewRulesForRhs();
-
         for (int s : statesInOrder) {
             E accu = semiring.zero();
 

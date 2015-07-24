@@ -190,4 +190,8 @@ public class Rule implements Serializable {
         
         return ret;
     }
+    
+    public boolean isLoop() {
+        return getArity() == 1 && children[0] == parent;
+    }
 }

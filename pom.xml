@@ -108,10 +108,14 @@
 	<version>3.7.4</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.swinglabs</groupId>
+      <artifactId>swing-layout</artifactId>
+      <version>1.0.3</version>
+    </dependency>
+    
   
-  
-
-
+    <!-- testing dependencies -->
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -133,65 +137,38 @@
       <version>2.0.5</version>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.swinglabs</groupId>
-      <artifactId>swing-layout</artifactId>
-      <version>1.0.3</version>
-    </dependency>
-    
-    
-<!--
-    <dependency>
-	<groupId>org.apache.spark</groupId>
-	<artifactId>spark-core_2.10</artifactId>
-	<version>1.1.0</version>
-</dependency>
-
--->
-
-
   </dependencies>
 
   <build>
-
-      <resources>
-<resource>
-    <directory>src/main/resources</directory>
-    <filtering>true</filtering>
-    <includes>
-      <include>**/build.properties</include>
-    </includes>
-  </resource>
-  <resource>
-    <directory>src/main/resources</directory>
-    <filtering>false</filtering>
-    <excludes>
-      <exclude>**/build.properties</exclude>
-    </excludes>
-  </resource>
-<!--
-	<resource>
-	  <directory>src/main/resources</directory>
-	</resource>
-	<resource>
-	  <directory>src/main/filtered-resources</directory>
-	  <filtering>true</filtering>
-	</resource>
--->
-      </resources>
-
+    <!-- filter build.properties to add buildnumber -->
+    <resources>
+      <resource>
+	<directory>src/main/resources</directory>
+	<filtering>true</filtering>
+	<includes>
+	  <include>**/build.properties</include>
+	</includes>
+      </resource>
+      <resource>
+	<directory>src/main/resources</directory>
+	<filtering>false</filtering>
+	<excludes>
+	  <exclude>**/build.properties</exclude>
+	</excludes>
+      </resource>
+    </resources>
 
     <plugins>
-<plugin>
-    <artifactId>maven-compiler-plugin</artifactId>
-    <version>3.1</version>
-    <configuration>
-        <source>1.8</source>
-        <target>1.8</target>
-        <useIncrementalCompilation>yes</useIncrementalCompilation>
-    </configuration>
-</plugin>
+      <!-- use more recent version of compiler plugin so we can do incremental compilation despite filtering -->
+      <plugin>
+	<artifactId>maven-compiler-plugin</artifactId>
+	<version>3.1</version>
+	<configuration>
+	  <source>1.8</source>
+	  <target>1.8</target>
+	  <useIncrementalCompilation>yes</useIncrementalCompilation>
+	</configuration>
+      </plugin>
 
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
@@ -237,7 +214,7 @@
 
 
 
-
+      <!-- Groovy plugin for unit tests -->
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
         <artifactId>gmaven-plugin</artifactId>
@@ -252,7 +229,6 @@
             </goals>
           </execution>
         </executions>
-
         <dependencies>
           <dependency>
             <groupId>org.codehaus.gmaven.runtime</groupId>
@@ -273,6 +249,7 @@
         </dependencies>
       </plugin>
 
+      <!-- ANTLR4 plugin -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -305,6 +282,7 @@
         </executions>
       </plugin>
 
+      <!-- JavaCC plugin -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
@@ -319,7 +297,7 @@
         </executions>
       </plugin>
 
-
+      <!-- Javadoc plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -329,13 +307,10 @@
 	  <sourceFileExcludes>
 	    <sourceFileExclude>**/de/up/ling/irtg/codec/*Listener*</sourceFileExclude>
 	  </sourceFileExcludes>
-
           <show>public</show>
-
           <!-- Ideally, one would like to use detectLinks and link
           elements; but for some reason that doesn't seem to work with
           Java 8. Replacing with offline links temporarily. -->
-
           <offlineLinks>
             <offlineLink>
               <url>http://fastutil.di.unimi.it/docs/</url>
@@ -354,12 +329,11 @@
               <location>http://docs.oracle.com/javase/8/docs/api/</location>
             </offlineLink>
           </offlineLinks>
-
           <detectLinks>false</detectLinks>
         </configuration>
       </plugin>
 
-
+      <!-- Scala plugin -->
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
@@ -391,7 +365,7 @@
         </configuration>
       </plugin>
 
-      <!-- plugin configuration for Jenkins -->
+      <!-- Findbugs plugin configuration for Jenkins -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
@@ -403,6 +377,7 @@
         </configuration>
       </plugin>
 
+      <!-- Jar plugin: add implementation version etc -->
       <plugin>
 	<groupId>org.apache.maven.plugins</groupId>
 	<artifactId>maven-jar-plugin</artifactId>
@@ -417,34 +392,32 @@
 	</configuration>
       </plugin>
 
-
-
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>${assembly.version}</version>
-            <configuration>
-              <archive>
-                <manifest>
-                  <mainClass>de.up.ling.irtg.gui.Alto</mainClass>
-                </manifest>
-              </archive>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-
-
+      <!-- Assembly plugin -->
+      <plugin>
+	<artifactId>maven-assembly-plugin</artifactId>
+	<version>${assembly.version}</version>
+	<configuration>
+	  <archive>
+	    <manifest>
+	      <mainClass>de.up.ling.irtg.gui.Alto</mainClass>
+	    </manifest>
+	  </archive>
+	  <descriptorRefs>
+	    <descriptorRef>jar-with-dependencies</descriptorRef>
+	  </descriptorRefs>
+	</configuration>
+	<executions>
+	  <execution>
+	    <phase>package</phase>
+	    <goals>
+	      <goal>single</goal>
+	    </goals>
+	  </execution>
+	</executions>
+      </plugin>
     </plugins>
 
+    <!-- some more config -->
     <pluginManagement>
       <plugins>
         <plugin>
@@ -465,51 +438,6 @@
   </build>
 
 
-<!--
-
-
-  <profiles>
-    <profile>
-      <id>fatjar</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>zip</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>${assembly.version}</version>
-            <configuration>
-              <descriptors>
-                <descriptor>zip.xml</descriptor>
-              </descriptors>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
-
--->
   <repositories>
     <repository>
       <snapshots>
@@ -589,3 +517,49 @@
   </scm>
 </project>
 
+
+<!--
+
+
+  <profiles>
+    <profile>
+      <id>fatjar</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>zip</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>${assembly.version}</version>
+            <configuration>
+              <descriptors>
+                <descriptor>zip.xml</descriptor>
+              </descriptors>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+-->

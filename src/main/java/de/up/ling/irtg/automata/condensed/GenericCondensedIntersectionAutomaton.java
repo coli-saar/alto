@@ -137,13 +137,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         }
     }
 
-    private void DD(int depth, Supplier<String> s) {
-        if (DEBUG) {
-            System.err.println();
-            System.err.println(Util.repeat("  ", depth) + s.get());
-        }
-    }
-
     /**
      * Iterate over all states in the right (condensed) automaton to find
      * partner states in the left one.
@@ -170,7 +163,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 // If the right rule is a "self-loop", i.e. of the form q -> f(q),
                 // the normal DFS doesn't work. We give it special treatment by
                 // postponing its combination with the right rules until below.
-                if (rightRule.getArity() == 1 && rightRule.getChildren()[0] == q) {
+                if (rightRule.isLoop()) {
                     selfLoops.add(rightRule);
                     continue;
                 }
