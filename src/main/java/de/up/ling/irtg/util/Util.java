@@ -6,12 +6,10 @@
 package de.up.ling.irtg.util;
 
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.Int2IntFunction;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;

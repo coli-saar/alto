@@ -26,12 +26,10 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.ByteArrayInputStream;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Reader;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -154,5 +152,9 @@ public class TestingTools {
                 return Double.parseDouble(x);
             }
         };
+    }
+    
+    public static List<String> ss(String s) {
+        return Arrays.asList(s.split("\\s+"));
     }
 }

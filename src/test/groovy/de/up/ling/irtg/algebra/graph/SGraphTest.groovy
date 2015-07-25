@@ -52,6 +52,20 @@ class SGraphTest {
     }
     
     @Test
+    public void testIso4() {
+        SGraph g1 = pg("(u_273 / want :ARG1 (u_274 / sleep :ARG0 (u_272 / boy)) :ARG0 u_272)")
+        SGraph g2 = pg("(u_27<root> / want :ARG0 (u_26 / boy) :ARG1 (u_28 / sleep :ARG0 u_26))")
+        assertThat(g1, is(not(g2))) // because of sources, see also Iso5
+    }
+    
+    @Test
+    public void testIso5() {
+        SGraph g1 = pg("(u_273 / want :ARG1 (u_274 / sleep :ARG0 (u_272 / boy)) :ARG0 u_272)")
+        SGraph g2 = pg("(u_27 / want :ARG0 (u_26 / boy) :ARG1 (u_28 / sleep :ARG0 u_26))")
+        assertEquals(g1, g2);
+    }
+    
+    @Test
     public void testDisjointMerge() {
         SGraph g1 = pg("(w<root> / want-01  :ARG0 (b<left>)  :ARG1 (g<right>))")
         SGraph g2 = pg("(bb<left> :ARG0 (gg<right>))")

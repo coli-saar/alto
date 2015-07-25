@@ -32,6 +32,13 @@ public class Interpretation<E> implements Serializable {
         pmFactory = null;
     }
 
+    /**
+     * Applies the homomorphism to the derivation tree "t"
+     * and evaluates it in the algebra.
+     * 
+     * @param t
+     * @return 
+     */
     public E interpret(Tree<String> t) {
         return algebra.evaluate(hom.apply(t));
     }

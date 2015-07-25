@@ -8,6 +8,9 @@ package de.up.ling.irtg.util;
 import com.ezware.dialog.task.TaskDialogs;
 import java.awt.Component;
 import java.awt.Frame;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
@@ -18,6 +21,12 @@ import javax.swing.SwingUtilities;
  */
 public class GuiUtils {
     private static ProgressListener globalListener = null;
+    
+    public static void copyToClipboard(String s) {
+        StringSelection selection = new StringSelection(s);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, selection);
+    }
 
     /**
      * Execute this on the EDT.

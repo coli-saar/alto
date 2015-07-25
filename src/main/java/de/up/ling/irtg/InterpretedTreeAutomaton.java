@@ -123,6 +123,19 @@ public class InterpretedTreeAutomaton implements Serializable {
     public Interpretation getInterpretation(String interp) {
         return interpretations.get(interp);
     }
+    
+    
+    /**
+     * Interprets the given derivation tree in the interpretation with
+     * the given name, and returns an object of the algebra.
+     * 
+     * @param derivationTree
+     * @param interpretationName
+     * @return 
+     */
+    public Object interpret(Tree<String> derivationTree, String interpretationName) {
+        return getInterpretation(interpretationName).interpret(derivationTree);
+    }
 
     /**
      * Maps a given derivation tree to terms over all interpretations and
@@ -136,8 +149,9 @@ public class InterpretedTreeAutomaton implements Serializable {
         Map<String, Object> ret = new HashMap<String, Object>();
 
         for (String interpretationName : interpretations.keySet()) {
-            Interpretation interp = interpretations.get(interpretationName);
-            ret.put(interpretationName, interp.getAlgebra().evaluate(interp.getHomomorphism().apply(derivationTree)));
+            ret.put(interpretationName, interpret(derivationTree, interpretationName));
+//            Interpretation interp = interpretations.get(interpretationName);
+//            ret.put(interpretationName, interp.getAlgebra().evaluate(interp.getHomomorphism().apply(derivationTree)));
         }
 
         return ret;
@@ -266,6 +280,7 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return ret;
     }
+
 
     /**
      * ***********************************************************************

@@ -109,7 +109,7 @@ P -> r12
         assertEquals( gfrtd("r1", "S", irtg).getWeight(), 1.0, 0.001);
     }
     
-    private Rule gfrtd(String label, String parentState, InterpretedTreeAutomaton irtg) {
+    private de.up.ling.irtg.automata.Rule gfrtd(String label, String parentState, InterpretedTreeAutomaton irtg) {
         TreeAutomaton auto = irtg.getAutomaton();
         return auto.getRulesTopDown(auto.getSignature().getIdForSymbol(label), auto.addState(parentState)).iterator().next();
     }

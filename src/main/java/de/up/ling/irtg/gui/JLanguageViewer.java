@@ -5,10 +5,13 @@
 package de.up.ling.irtg.gui;
 
 import com.bric.window.WindowMenu;
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
 import static de.up.ling.irtg.gui.Alto.log;
+import de.up.ling.irtg.util.GuiUtils;
 import static de.up.ling.irtg.util.Util.formatTimeSince;
 import de.up.ling.tree.Tree;
 import java.awt.Component;
@@ -167,6 +170,8 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         miAddView = new javax.swing.JMenuItem();
         miRemoveView = new javax.swing.JMenuItem();
+        jMenu4 = new javax.swing.JMenu();
+        miCopyTestCase = new javax.swing.JMenuItem();
 
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -354,6 +359,18 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu2);
 
+        jMenu4.setText("Advanced");
+
+        miCopyTestCase.setText("Copy test case");
+        miCopyTestCase.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCopyTestCaseActionPerformed(evt);
+            }
+        });
+        jMenu4.add(miCopyTestCase);
+
+        jMenuBar1.add(jMenu4);
+
         setJMenuBar(jMenuBar1);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
@@ -474,6 +491,34 @@ public class JLanguageViewer extends javax.swing.JFrame {
         Alto.showDecompositionDialog(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
+    private void miCopyTestCaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCopyTestCaseActionPerformed
+        StringBuilder buf = new StringBuilder();
+        int numInterpretations = currentIrtg.getInterpretations().keySet().size();
+        int i = 1;
+        
+        buf.append("        runTest(\"XXXXX.irtg\", \"" + currentTree.toString() + "\", [\n");
+        
+        for( String interp : currentIrtg.getInterpretations().keySet() ) {
+            String val = interpretToString(currentTree, interp, currentIrtg);
+            buf.append("             \"" + interp + "\":\"" + val + "\"");
+            if( i < numInterpretations ) {
+                buf.append(",");
+            }
+            buf.append("\n");
+            i++;
+        }
+        
+        buf.append("        ])");
+        
+        GuiUtils.copyToClipboard(buf.toString());
+    }//GEN-LAST:event_miCopyTestCaseActionPerformed
+
+    private String interpretToString(Tree<String> dt, String interpName, InterpretedTreeAutomaton irtg) {
+        Interpretation intrp = irtg.getInterpretation(interpName);
+        Algebra alg = intrp.getAlgebra();        
+        return alg.representAsString(intrp.interpret(dt));
+    }
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private javax.swing.JPanel derivationViewers;
@@ -481,6 +526,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
+    private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel2;
@@ -493,6 +539,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JMenuItem miAddView;
     private javax.swing.JMenuItem miCloseAllWindows;
     private javax.swing.JMenuItem miCloseWindow;
+    private javax.swing.JMenuItem miCopyTestCase;
     private javax.swing.JMenuItem miNextTree;
     private javax.swing.JMenuItem miOpenAutomaton;
     private javax.swing.JMenuItem miOpenIrtg;

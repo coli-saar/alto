@@ -1,0 +1,42 @@
+/* Sentence compression grammar for example from Cohn & Lapata 09 */
+
+/* example tree from Cohn & Lapata is:
+
+   s3(sbar(whnp2(rb(exactly),wp(what)),s2(np(nns(records)),vp2(vbd(made),np(prp(it))))),
+   cc(and), sbar(whnp1(wp(which)), s2(np(nns(ones)), vp2(vbp(are),vp1(vbn(involved))))))
+*/
+
+interpretation long: de.up.ling.irtg.algebra.TreeAlgebra
+interpretation compressed: de.up.ling.irtg.algebra.TreeAlgebra
+
+S! -> r1(WHNP, S, Sbar)
+[long]       s3(sbar(?1, ?2), cc(and), ?3)
+[compressed] s2(?1, s2(?2, ?3))
+
+WHNP -> r2(WP)
+[long]       whnp2(rb(exactly), ?1)
+[compressed] whnp1(?1)
+
+S -> r3
+[long]       s2(np(nns(records)), vp2(vbd(made),np(prp(it))))
+[compressed] np(nns(records))
+
+Sbar -> r4(VP)
+[long]       sbar(whnp1(wp(which)), s2(np(nns(ones)),?1))
+[compressed] ?1
+
+WP -> r5
+[long]       wp(what)
+[compressed] wp(what)
+
+VP -> r6
+[long]       vp2(vbp(are), vp1(vbn(involved)))
+[compressed] vp2(vbp(are), vp1(vbn(involved)))
+
+
+
+
+
+
+
+
