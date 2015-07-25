@@ -15,7 +15,9 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
+import de.up.ling.irtg.util.LambdaStopwatch;
 import de.up.ling.irtg.util.Util;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.awt.Color;
@@ -47,6 +49,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private long numStates;
     private int maxRuleRank;
     private static final boolean SHOW_DEBUG_MENU = true;
+    private LambdaStopwatch T = new LambdaStopwatch(null);
 
     /**
      * Creates new form JInterpretedTreeAutomaton
@@ -74,8 +77,13 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
 //        new WindowMenu(this).get
         this.automaton = automaton;
-
-        if (automaton.isEmpty()) {
+        
+        // We used to check the automaton for emptiness here and 
+        
+//        Tree vit = T.t("emptiness", () -> automaton.viterbi());
+        
+        boolean isEmpty = T.t("emptiness", () -> automaton.isEmpty());
+        if (isEmpty) {
             miShowLanguage.setEnabled(false);
         }
 
@@ -127,7 +135,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         IntSet allStates = new IntOpenHashSet();
 
         rulesInOrder = new ArrayList<Rule>();
-        Iterables.addAll(rulesInOrder, automaton.getRuleSet());
+        Iterables.addAll(rulesInOrder, T.t("ruleSet", () -> automaton.getRuleSet()));
 
         maxRuleRank = 0;
 

@@ -2561,7 +2561,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public boolean isEmpty() {
-        return !sortedLanguageIterator().hasNext();
+        // replacing test via sortLanguageIterator by much faster null-test for Viterbi
+        return viterbiRaw() == null;
+//        return !sortedLanguageIterator().hasNext();
     }
 
     /**
