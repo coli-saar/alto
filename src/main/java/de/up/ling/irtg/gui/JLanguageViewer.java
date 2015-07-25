@@ -36,6 +36,9 @@ public class JLanguageViewer extends javax.swing.JFrame {
      */
     public JLanguageViewer() {
         initComponents();
+
+        // by default, hide the Advanced menu
+        jMenuBar1.remove(mAdvanced);
         
         jMenuBar1.add(new WindowMenu(this));
         
@@ -170,7 +173,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         miAddView = new javax.swing.JMenuItem();
         miRemoveView = new javax.swing.JMenuItem();
-        jMenu4 = new javax.swing.JMenu();
+        mAdvanced = new javax.swing.JMenu();
         miCopyTestCase = new javax.swing.JMenuItem();
 
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
@@ -359,7 +362,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu2);
 
-        jMenu4.setText("Advanced");
+        mAdvanced.setText("Advanced");
 
         miCopyTestCase.setText("Copy test case");
         miCopyTestCase.addActionListener(new java.awt.event.ActionListener() {
@@ -367,9 +370,9 @@ public class JLanguageViewer extends javax.swing.JFrame {
                 miCopyTestCaseActionPerformed(evt);
             }
         });
-        jMenu4.add(miCopyTestCase);
+        mAdvanced.add(miCopyTestCase);
 
-        jMenuBar1.add(jMenu4);
+        jMenuBar1.add(mAdvanced);
 
         setJMenuBar(jMenuBar1);
 
@@ -526,7 +529,6 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
-    private javax.swing.JMenu jMenu4;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel2;
@@ -536,6 +538,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JLabel languageSizeLabel;
     private javax.swing.JButton leftButton;
+    private javax.swing.JMenu mAdvanced;
     private javax.swing.JMenuItem miAddView;
     private javax.swing.JMenuItem miCloseAllWindows;
     private javax.swing.JMenuItem miCloseWindow;
