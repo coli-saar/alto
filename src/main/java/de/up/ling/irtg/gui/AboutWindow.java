@@ -3,10 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.util.BuildProperties;
+import de.up.ling.irtg.util.Logging;
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
 
 /**
  *
@@ -20,9 +23,11 @@ public class AboutWindow extends javax.swing.JDialog {
     public AboutWindow(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        
+
         lVersion.setText("Version " + BuildProperties.getVersion());
         lBuild.setText("Build: " + BuildProperties.getBuild());
+
+        getRootPane().setDefaultButton(bOk);
     }
 
     /**
@@ -37,10 +42,10 @@ public class AboutWindow extends javax.swing.JDialog {
         jLabel3 = new javax.swing.JLabel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        bOk = new javax.swing.JButton();
         lVersion = new javax.swing.JLabel();
         lBuild = new javax.swing.JLabel();
-        jLabel6 = new javax.swing.JLabel();
+        bWebsite = new javax.swing.JButton();
 
         jLabel3.setText("jLabel3");
 
@@ -50,12 +55,12 @@ public class AboutWindow extends javax.swing.JDialog {
 
         jLabel1.setText("Alto, the Algebraic Language Toolkit");
 
-        jLabel2.setText("University of Potsdam");
+        jLabel2.setText("<html>Alto is being developed at the<br/>University of Potsdam</html>");
 
-        jButton1.setText("Ok");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        bOk.setText("Ok");
+        bOk.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                bOkActionPerformed(evt);
             }
         });
 
@@ -63,7 +68,12 @@ public class AboutWindow extends javax.swing.JDialog {
 
         lBuild.setText("Build");
 
-        jLabel6.setText("<html><a href=\"https://bitbucket.org/tclup/alto\">Alto website</a></html>");
+        bWebsite.setText("Visit Alto Website");
+        bWebsite.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bWebsiteActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -73,46 +83,57 @@ public class AboutWindow extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel1)
-                    .addComponent(jLabel2)
                     .addComponent(lVersion)
-                    .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(lBuild)
-                    .addComponent(jButton1))
-                .addContainerGap(111, Short.MAX_VALUE))
+                    .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(lBuild))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(bOk)
+                .addGap(18, 18, 18)
+                .addComponent(bWebsite)
+                .addGap(0, 185, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addContainerGap()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(lVersion)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(18, 18, 18)
                 .addComponent(lBuild)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton1)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(bOk)
+                    .addComponent(bWebsite)))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void bOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bOkActionPerformed
         setVisible(false);
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_bOkActionPerformed
 
+    private void bWebsiteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bWebsiteActionPerformed
+        if (Desktop.isDesktopSupported()) {
+            try {
+                Desktop.getDesktop().browse(new URI("https://bitbucket.org/tclup/alto"));
+            } catch (Exception e) {
+                Logging.get().warning("Opening links is not supported on this platform.");
+            }
+        }
+    }//GEN-LAST:event_bWebsiteActionPerformed
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton bOk;
+    private javax.swing.JButton bWebsite;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel lBuild;
     private javax.swing.JLabel lVersion;
     // End of variables declaration//GEN-END:variables

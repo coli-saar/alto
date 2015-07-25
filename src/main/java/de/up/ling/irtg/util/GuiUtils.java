@@ -22,6 +22,11 @@ import javax.swing.SwingUtilities;
 public class GuiUtils {
     private static ProgressListener globalListener = null;
     
+    /**
+     * Copies the given string to the system clipboard.
+     * 
+     * @param s 
+     */
     public static void copyToClipboard(String s) {
         StringSelection selection = new StringSelection(s);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -110,6 +115,4 @@ public class GuiUtils {
     public static void setGlobalListener(ProgressListener globalListener) {
         GuiUtils.globalListener = globalListener;
     }
-    
-    
 }
