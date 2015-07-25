@@ -20,12 +20,13 @@ import javax.swing.SwingUtilities;
  * @author koller
  */
 public class GuiUtils {
+
     private static ProgressListener globalListener = null;
-    
+
     /**
      * Copies the given string to the system clipboard.
-     * 
-     * @param s 
+     *
+     * @param s
      */
     public static void copyToClipboard(String s) {
         StringSelection selection = new StringSelection(s);
@@ -44,10 +45,20 @@ public class GuiUtils {
      * @param andThen
      */
     public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, ValueAndTimeConsumer<E> andThen) {
-        final ProgressBarDialog progressBar = new ProgressBarDialog(title, description, parent, false);
+        if( parent != null && ! parent.isVisible() ) {
+            parent = null;
+        }
+        
+        final ProgressBarDialog progressBar = new ProgressBarDialog(title, description, parent, false); // wouldn't update if it were modal
         final JProgressBar bar = progressBar.getProgressBar();
         progressBar.getProgressBar().setStringPainted(true);
         progressBar.setVisible(true);
+
+//        // bring progress dialog to front
+//        SwingUtilities.invokeLater(() -> {
+//            progressBar.toFront();
+//            progressBar.repaint();
+//        });
 
         ProgressListener listener = (currentValue, maxValue, string) -> {
             SwingUtilities.invokeLater(() -> {
@@ -82,7 +93,7 @@ public class GuiUtils {
                 progressBar.setVisible(false);
             }
         });
-        
+
         workerThread.setName("Alto worker thread: " + description);
         workerThread.start();
     }
@@ -104,13 +115,12 @@ public class GuiUtils {
     }
 
     /**
-     * Sets the global ProgressListener. The preferred method of
-     * giving a progress listener to a worker is to pass it as
-     * a method argument. This method is only here for cases when
-     * this would mess up the code to a terrible extent. You should
-     * avoid it whenever possible.
-     * 
-     * @return 
+     * Sets the global ProgressListener. The preferred method of giving a
+     * progress listener to a worker is to pass it as a method argument. This
+     * method is only here for cases when this would mess up the code to a
+     * terrible extent. You should avoid it whenever possible.
+     *
+     * @return
      */
     public static void setGlobalListener(ProgressListener globalListener) {
         GuiUtils.globalListener = globalListener;

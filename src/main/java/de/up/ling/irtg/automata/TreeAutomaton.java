@@ -34,6 +34,7 @@ import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.DebuggingWriter;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
+import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;

@@ -5,6 +5,7 @@
 package de.up.ling.irtg.automata;
 
 import de.saar.basic.StringTools;
+import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;
 import de.up.ling.tree.Tree;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import javafx.scene.control.ProgressBar;
 
 /**
  * An iterator for the tree language of an automaton, sorted by descending
@@ -33,14 +35,14 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     private static final boolean DEBUG = false;
     private TreeAutomaton<State> auto;
     private Stream<WeightedTree> globalStream;
-
+    private int progress;
+    private ProgressListener progressListener;
+    
     public SortedLanguageIterator(TreeAutomaton<State> auto) {
         this.auto = auto;
         streamForState = new HashMap<Integer, StreamForState>();
         
-        // if necessary, this call to getAllStates could be replaced
-        // by slightly more careful coding in this constructor and in
-        // evaluatedUnevaluatedItems
+        this.progress = 0;
         
         // combine streams for the different start symbols
         visitedStates = new HashSet<Integer>();
@@ -84,6 +86,24 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }
         
         return globalStream.peek() != null;
+    }
+    
+    /**
+     * Returns the next tree from the iterator.
+     * Because the first tree may take a while to compute
+     * (this operation initializes internal data structures),
+     * you can pass a {@link ProgressListener} to track
+     * the progress.
+     * 
+     * @param listener
+     * @return 
+     */
+    public WeightedTree next(ProgressListener listener) {
+        progressListener = listener;
+        progress = 0;
+        WeightedTree ret = next();
+        progressListener = null;
+        return ret;
     }
 
     @Override
@@ -303,6 +323,14 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
          * needs to be done each time we want to access the best remaining tree.
          */
         private void evaluateUnevaluatedItems() {
+            if( progressListener != null ) {
+                if( progress % 100 == 0 ) {
+                    progressListener.accept((progress+1) % 100000, 100000, "Initialized language iterator for " + progress + " items");
+                }
+
+                progress++;
+            }
+            
             List<UnevaluatedItem> itemsToRemove = new ArrayList<UnevaluatedItem>();
             
             if( DEBUG ) {

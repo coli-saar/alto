@@ -17,7 +17,6 @@ import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.LambdaStopwatch;
 import de.up.ling.irtg.util.Util;
-import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.awt.Color;

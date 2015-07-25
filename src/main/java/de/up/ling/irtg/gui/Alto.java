@@ -26,6 +26,7 @@ import de.up.ling.irtg.util.ProgressBarWorker;
 import de.up.ling.irtg.util.TextInputDialog;
 import de.up.ling.irtg.util.Util;
 import java.awt.Component;
+import java.awt.Frame;
 import java.awt.Window;
 import java.io.File;
 import java.io.FileInputStream;
@@ -444,7 +445,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    private static <T> void withLoadedObject(Class<T> objectClass, String objectDescription, Component parent, ValueAndTimeConsumer<LoadingResult<T>> andThen) {
+    private static <T> void withLoadedObject(Class<T> objectClass, String objectDescription, Frame parent, ValueAndTimeConsumer<LoadingResult<T>> andThen) {
         List<FileFilter> filters = new ArrayList<>();
 
         for (InputCodec ic : InputCodec.getInputCodecs(objectClass)) {
@@ -475,7 +476,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
                         return new LoadingResult<>(result, file);
                     };
 
-                    GuiUtils.withProgressBar(app, "Grammar reading progress", description, worker, andThen);
+                    GuiUtils.withProgressBar(parent, "Grammar reading progress", description, worker, andThen);
                 }
             }
         } catch (Exception e) {
@@ -483,7 +484,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    public static void loadTemplateIrtg(Component parent) {
+    public static void loadTemplateIrtg(Frame parent) {
         withLoadedObject(TemplateInterpretedTreeAutomaton.class, "Template IRTG", parent, (result, time) -> {
             log("Loaded Template IRTG from " + result.filename.getName() + ", " + Util.formatTime(time));
 
@@ -511,7 +512,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         });
     }
 
-    public static void loadIrtg(Component parent) {
+    public static void loadIrtg(Frame parent) {
         withLoadedObject(InterpretedTreeAutomaton.class, "IRTG", parent, (result, time) -> {
             log("Loaded IRTG from " + result.filename.getName() + ", " + Util.formatTime(time));
 
@@ -526,7 +527,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         });
     }
 
-    public static void loadAutomaton(Component parent) {
+    public static void loadAutomaton(Frame parent) {
         withLoadedObject(TreeAutomaton.class, "tree automaton", parent, (result, time) -> {
             log("Loaded tree automaton from " + result.filename.getName() + ", " + Util.formatTime(time));
             TreeAutomaton auto = result.object;
