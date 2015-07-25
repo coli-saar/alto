@@ -182,7 +182,7 @@ public class Corpus implements Iterable<Instance> {
             throw new CorpusReadingException("First non-blank line of corpus must be corpus declaration, but was " + line);
         }
         
-        System.err.println("comment pattern: |" + commentPrefix + "|");
+//        System.err.println("comment pattern: |" + commentPrefix + "|");
 
         // read and check header
         while (true) {
