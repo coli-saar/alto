@@ -35,4 +35,11 @@ public class MutableInteger {
     public void max(int value) {
         this.value = Math.max(value, this.value);
     }
+
+    @Override
+    public String toString() {
+        return Integer.toString(value);
+    }
+    
+    
 }

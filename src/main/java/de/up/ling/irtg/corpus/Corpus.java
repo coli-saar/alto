@@ -5,7 +5,7 @@
 package de.up.ling.irtg.corpus;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.BufferedReader;
@@ -118,13 +118,12 @@ public class Corpus implements Iterable<Instance> {
         List<String> interpretationOrder = new ArrayList<String>();
         Map<String, Object> currentInputs = new HashMap<String, Object>();
         int currentInterpretationIndex = 0;
-        int lineNumber = 0;
+        MutableInteger lineNumber = new MutableInteger(0);
         String line = null;
 
         // read and check header
         while (true) {
-            line = readNextLine(br);
-            lineNumber++;
+            line = readNextLine(br, lineNumber);
 
             if (line == null) {
                 return ret;
@@ -169,11 +168,6 @@ public class Corpus implements Iterable<Instance> {
             break;
         }
 
-        // remove this check -- it can be okay that corpus does not specify all interpretations
-//        // check metadata
-//        if (interpretationOrder.size() != irtg.getInterpretations().size()) {
-//            throw new CorpusReadingException("Corpus file specified interpretation order incompletely: " + interpretationOrder);
-//        }
         ret.isAnnotated = annotated;
 
         // read actual corpus
@@ -184,8 +178,7 @@ public class Corpus implements Iterable<Instance> {
 
             Matcher commentMatcher = COMMENT_PATTERN.matcher(line);
             if (commentMatcher.matches()) {
-                line = readNextLine(br);
-                lineNumber++;
+                line = readNextLine(br, lineNumber);
                 continue;
             }
 
@@ -194,8 +187,8 @@ public class Corpus implements Iterable<Instance> {
             try {
                 Object inputObject = irtg.parseString(current, line);
                 currentInputs.put(current, inputObject);
-            } catch (ParserException ex) {
-                throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + lineNumber + ": " + ex.getMessage());
+            } catch (Throwable ex) {
+                throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + lineNumber + ", expected interpretation " + current + ": " + ex.getMessage(), ex);
             }
 
             if (currentInterpretationIndex == interpretationOrder.size()) {
@@ -203,18 +196,17 @@ public class Corpus implements Iterable<Instance> {
                 inst.setInputObjects(currentInputs);
 
                 if (annotated) {
-                    String annoLine = readNextLine(br);
-                    lineNumber++;
+                    String annoLine = readNextLine(br, lineNumber);
 
                     if (annoLine == null) {
-                        throw new CorpusReadingException("Expected an annotation in line " + lineNumber);
+                        throw new CorpusReadingException("Expected a derivation tree in line " + lineNumber);
                     }
 
                     Tree<String> derivationTree = null;
                     try {
                         derivationTree = TreeParser.parse(annoLine);
-                    } catch (Exception ex) {
-                        throw new CorpusReadingException("An error occurred while reading the derivation tree in line " + lineNumber + ": " + ex.getMessage());
+                    } catch (Throwable ex) {  // TreeParser#parse can throw weird Errors
+                        throw new CorpusReadingException("An error occurred while reading the derivation tree in line " + lineNumber + ": " + ex.getMessage(), ex);
                     }
 
                     inst.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(derivationTree));
@@ -225,86 +217,16 @@ public class Corpus implements Iterable<Instance> {
                 currentInterpretationIndex = 0;
             }
 
-            line = readNextLine(br);
-            lineNumber++;
+            line = readNextLine(br, lineNumber);
         }
     }
 
-    /*
-     private static Corpus readCorpus(Reader reader, InterpretedTreeAutomaton irtg, boolean annotated) throws IOException, CorpusReadingException {
-     Corpus ret = new Corpus();
-     ret.isAnnotated = annotated;
-
-     BufferedReader br = new BufferedReader(reader);
-     List<String> interpretationOrder = new ArrayList<String>();
-     Map<String, Object> currentInputs = new HashMap<String, Object>();
-     int currentInterpretationIndex = 0;
-     int lineNumber = 0;
-
-     while (true) {
-     String line = readNextLine(br);
-     lineNumber++;
-
-     if (line == null) {
-     return ret;
-     }
-
-     if (lineNumber - 1 < irtg.getInterpretations().size()) {
-     if (DEBUG) {
-     System.err.println("-> interp " + line);
-     }
-     interpretationOrder.add(line);
-     } else {
-     String current = interpretationOrder.get(currentInterpretationIndex);
-
-     try {
-     if (DEBUG) {
-     System.err.println("-> input " + line);
-     }
-     Object inputObject = irtg.parseString(current, line);
-     currentInputs.put(current, inputObject);
-     } catch (ParserException ex) {
-     throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + lineNumber + ": " + ex.getMessage());
-     }
-
-     currentInterpretationIndex++;
-
-     if (currentInterpretationIndex == interpretationOrder.size()) {
-     Instance inst = new Instance();
-     inst.setInputObjects(currentInputs);
-
-     if (annotated) {
-     String annoLine = readNextLine(br);
-     lineNumber++;
-
-     if (annoLine == null) {
-     throw new CorpusReadingException("Expected an annotation in line " + lineNumber);
-     }
-
-
-     Tree<String> derivationTree = TreeParser.parse(annoLine);
-     inst.setDerivationTree(derivationTree);
-     }
-
-     ret.instances.add(inst);
-
-     if (DEBUG) {
-     System.err.println("-> read instance: " + currentInputs);
-     }
-
-     currentInputs = new HashMap<String, Object>();
-     currentInterpretationIndex = 0;
-     }
-     }
-     }
-     }
-
-     */
-    private static String readNextLine(BufferedReader br) throws IOException {
+    private static String readNextLine(BufferedReader br, MutableInteger lineNumber) throws IOException {
         String ret = null;
 
         do {
             ret = br.readLine();
+            lineNumber.incValue();
         } while (ret != null && WHITESPACE_PATTERN.matcher(ret).matches());
 
         if (DEBUG) {
