@@ -20,7 +20,10 @@ import java.util.Set;
 
 /**
  * An iterator for the tree language of an automaton, sorted by descending
- * weight. This works even if the language is infinite.
+ * weight. This works even if the language is infinite. By using the
+ * iterator to enumerate the first k elements of the language, for some
+ * fixed k, you can efficiently enumerate the k-best algorithms
+ * in time comparable to the Huang &amp; Chiang k-best algorithm.
  * 
  * @author koller
  */

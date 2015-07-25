@@ -7,6 +7,8 @@ package de.up.ling.irtg.algebra;
 import com.google.common.base.Function;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.binarization.BkvBinarizer;
+import de.up.ling.irtg.binarization.StringAlgebraSeed;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
@@ -17,7 +19,22 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * A string algebra with concatenation of arbitrary width.
+ * This algebra behaves like the ordinary {@link StringAlgebra}
+ * in most ways. However, instead of a single binary concatenation
+ * operation "*", the WideStringAlgebra defines a whole collection
+ * of concatenation operations conc1, conc2, conc3, ... with arity
+ * 1, 2, 3, ...<p>
+ * 
+ * The most direct way of writing a context-free grammar as an
+ * IRTG is by using a WideStringAlgebra. For instance, the context-free rule
+ * <code>A -&gt; B C D</code> corresponds to an RTG rule <code>A -&gt; r(B,C,D)</code>
+ * with h(r) = conc3(?1, ?2, ?3). However, parsing with a WideStringAlgebra
+ * takes time O(n^(r+1)), where r is the maximum arity of a concatenation
+ * operation. It is therefore a good idea to {@link BkvBinarizer binarize}
+ * the IRTG into an IRTG over a {@link StringAlgebra} (using a
+ * {@link StringAlgebraSeed}) for O(n^3) parsing.
+ * 
  * @author koller
  */
 public class WideStringAlgebra extends StringAlgebra {

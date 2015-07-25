@@ -7,6 +7,7 @@ package de.up.ling.irtg.binarization;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
+import de.up.ling.irtg.algebra.WideStringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -18,7 +19,14 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * A regular seed for binarizing the {@link WideStringAlgebra}
+ * into the {@link StringAlgebra}. Each operation conck (for
+ * some number k) of the wide algebra is binarized as a tree
+ * automaton that describes all binary bracketings of the
+ * longer concatenation. For instance, the automaton for conc3
+ * accepts the terms *(*(?1, ?2), ?3) and *(?1, *(?2, ?3))
+ * over the ordinary string algebra.
+ * 
  * @author koller
  */
 public class StringAlgebraSeed extends RegularSeed {

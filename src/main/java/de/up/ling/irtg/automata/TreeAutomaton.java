@@ -69,12 +69,6 @@ import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
 import java.util.stream.Collectors;
 
-/*
- TODO:
- - remove Integers in favor of ints
- - optimize Viterbi
- - replace gRBU(List<Integer>) by gRBU(IntLIst) if possible
- */
 /**
  * A finite tree automaton. Objects of this class can be simultaneously seen as
  * a bottom-up or a top-down tree automaton, by querying them for rules using

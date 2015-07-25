@@ -303,8 +303,8 @@
               <location>http://fastutil.di.unimi.it/docs/</location>
             </offlineLink>
             <offlineLink>
-              <url>http://tcl.ling.uni-potsdam.de/jenkins/job/basics/javadoc</url>
-              <location>http://tcl.ling.uni-potsdam.de/jenkins/job/basics/javadoc</location>
+              <url>http://www.ling.uni-potsdam.de/tcl/basics/apidocs/</url>
+              <location>http://www.ling.uni-potsdam.de/tcl/basics/apidocs/</location>
             </offlineLink>
             <offlineLink>
               <url>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</url>

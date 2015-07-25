@@ -5,13 +5,12 @@
 package de.up.ling.irtg.automata;
 
 import de.up.ling.irtg.signature.Signature;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * A tree automaton that accepts all terms over the given signature.
+ * 
  * @author koller
  */
 public class UniversalAutomaton extends TreeAutomaton<String> {

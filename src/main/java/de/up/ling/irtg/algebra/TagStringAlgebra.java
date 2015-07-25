@@ -12,8 +12,6 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.*;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
 
 /**
  * A string algebra for TAG. The elements of this algebra are strings and string
@@ -24,8 +22,8 @@ import javax.swing.JLabel;
  * <p>
  *
  * This algebra defines the string-combining operations described in Koller and
- * Kuhlmann 2012, "Decomposing TAG Algorithms Using Simple Algebraizations",
- * TAG+ Workshop. In particular:
+ * Kuhlmann 2012, <a href="http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=tag-irtg">"Decomposing TAG Algorithms Using Simple Algebraizations"</a>,
+ * In particular:
  * <ul>
  * <li>*CONC11*(v,w) concatenates two strings into the string vw.</li>
  * <li>*CONC12*(v,(w1,w2)) concatenates a string and a string pair into the

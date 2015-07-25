@@ -9,7 +9,9 @@ import de.up.ling.tree.TreePanel;
 import javax.swing.JComponent;
 
 /**
- *
+ * A {@link BinarizingAlgebra} that interprets values
+ * over a {@link TreeAlgebra}.
+ * 
  * @author koller
  */
 public class BinarizingTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
