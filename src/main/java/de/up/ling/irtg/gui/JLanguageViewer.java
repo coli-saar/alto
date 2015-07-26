@@ -17,6 +17,7 @@ import de.up.ling.irtg.util.Util;
 import static de.up.ling.irtg.util.Util.formatTimeSince;
 import de.up.ling.tree.Tree;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -34,6 +35,8 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private List<WeightedTree> cachedTrees;
     private InterpretedTreeAutomaton currentIrtg;
     private Tree<String> currentTree;
+    private boolean hasBeenPacked = false; // window has been packed once -- after this, only allow manual size changes
+
 
     /**
      * Creates new form JLanguageViewer
@@ -55,14 +58,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
         if (!Alto.isMac()) {
             GuiUtils.replaceMetaByCtrl(jMenuBar1);
-//            miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-//            miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-//            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-//            miNextTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.CTRL_MASK));
-//            miPreviousTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.CTRL_MASK));
         }
-
-//        GuiUtils.addDebuggingFocusListener(this);
     }
 
     @Override
@@ -152,6 +148,23 @@ public class JLanguageViewer extends javax.swing.JFrame {
         });
     }
 
+    @Override
+    public void pack() {
+        super.pack(); //To change body of generated methods, choose Tools | Templates.
+        hasBeenPacked = true;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        // pin window size to current size => layout of contents does not change window size
+        // -- an exception is the very first time the window is packed, then allow it to get correct size
+        if (hasBeenPacked) {
+            return getSize();
+        } else {
+            return super.getPreferredSize();
+        }
+    }
+
     private void ensureFirstTreeComputed(Consumer<Void> fn) {
         if (!cachedTrees.isEmpty()) {
             fn.accept(null);
@@ -160,17 +173,17 @@ public class JLanguageViewer extends javax.swing.JFrame {
             // internal data structures of the SortedLanguageIterator.
             // We track this with a progress bar.
             GuiUtils.withProgressBar(this, "Language viewer", "Initializing language iterator ...",
-                    listener -> {
-                        return languageIterator.next(listener);
-                    },
-                    (tree, time) -> {
-                        if (time > 500000000) {
-                            Alto.log("Initialized language viewer, " + Util.formatTime(time));
-                        }
+                                     listener -> {
+                                         return languageIterator.next(listener);
+                                     },
+                                     (tree, time) -> {
+                                         if (time > 500000000) {
+                                             Alto.log("Initialized language viewer, " + Util.formatTime(time));
+                                         }
 
-                        cachedTrees.add(tree);
-                        fn.accept(null);
-                    });
+                                         cachedTrees.add(tree);
+                                         fn.accept(null);
+                                     });
         }
     }
 
@@ -486,7 +499,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         if (currentIrtg != null) {
             dv.setInterpretedTreeAutomaton(currentIrtg);
 
-                // set view to the first view that is not already being displayed;
+            // set view to the first view that is not already being displayed;
             // if none are available, stick with derivation tree view
             for (String view : dv.getPossibleViews()) {
                 boolean taken = false;
@@ -512,7 +525,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         }
 
         derivationViewers.add(dv);
-        setPreferredSize(getSize());
+//        setPreferredSize(getSize());
         derivationViewers.revalidate();
 
         miRemoveView.setEnabled(true);

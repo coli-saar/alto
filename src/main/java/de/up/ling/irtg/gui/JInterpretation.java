@@ -146,8 +146,7 @@ public class JInterpretation extends JDerivationDisplayable {
     }// </editor-fold>//GEN-END:initComponents
 
     private void handleValuePanelResized(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_handleValuePanelResized
-        valuePanel.setPreferredSize(valuePanel.getSize());
-//        valuePanel.setm
+//        valuePanel.setPreferredSize(valuePanel.getSize());
     }//GEN-LAST:event_handleValuePanelResized
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JSplitPane jSplitPane1;
