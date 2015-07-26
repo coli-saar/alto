@@ -80,10 +80,11 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         jMenuBar1.add(new WindowMenu(this));
 
         if (!Alto.isMac()) {
-            miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-            miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+            GuiUtils.replaceMetaByCtrl(jMenuBar1);
+//            miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+//            miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+//            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+//            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
         }
     }
 
@@ -114,6 +115,8 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
         miCloseAllWindows = new javax.swing.JMenuItem();
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
+        miAbout = new javax.swing.JMenuItem();
+        jSeparator3 = new javax.swing.JPopupMenu.Separator();
         miQuit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         miComputeDecompositionAutomaton = new javax.swing.JMenuItem();
@@ -164,6 +167,15 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         });
         jMenu1.add(miCloseAllWindows);
         jMenu1.add(jSeparator2);
+
+        miAbout.setText("About Alto ...");
+        miAbout.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miAboutActionPerformed(evt);
+            }
+        });
+        jMenu1.add(miAbout);
+        jMenu1.add(jSeparator3);
 
         miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.META_MASK));
         miQuit.setText("Quit");
@@ -234,6 +246,10 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         loadTemplateIrtg(this);
     }//GEN-LAST:event_miLoadTemplateIrtgActionPerformed
 
+    private void miAboutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAboutActionPerformed
+        handleAbout(null);
+    }//GEN-LAST:event_miAboutActionPerformed
+
     public static void showDecompositionDialog(java.awt.Frame parent) {
         new DecompositionDialog(parent, true).setVisible(true);
     }
@@ -272,7 +288,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 
             if (selected.exists()) {
                 int response = JOptionPane.showConfirmDialog(parent, "The file " + selected.getName() + " already exists. Do you want to replace the existing file?",
-                        "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                                                             "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
                 if (response != JOptionPane.YES_OPTION) {
                     log("Canceled writing to file " + selected.getName());
@@ -311,16 +327,16 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 
     public static boolean saveAutomaton(TreeAutomaton auto, Component parent) {
         return saveSomething(auto, "automaton",
-                new FileNameExtensionFilter("Tree automata (*.auto)", "auto"),
-                (file, exc) -> "An error occurred while attempting to save automaton as" + file.getName(),
-                parent);
+                             new FileNameExtensionFilter("Tree automata (*.auto)", "auto"),
+                             (file, exc) -> "An error occurred while attempting to save automaton as" + file.getName(),
+                             parent);
     }
 
     public static boolean saveIrtg(InterpretedTreeAutomaton irtg, Component parent) {
         return saveSomething(irtg, "IRTG",
-                new FileNameExtensionFilter("Interpreted regular tree grammars (*.irtg)", "irtg"),
-                (file, exc) -> "An error occurred while attempting to save IRTG as" + file.getName(),
-                parent);
+                             new FileNameExtensionFilter("Interpreted regular tree grammars (*.irtg)", "irtg"),
+                             (file, exc) -> "An error occurred while attempting to save IRTG as" + file.getName(),
+                             parent);
     }
 
     public static Corpus loadAnnotatedCorpus(InterpretedTreeAutomaton irtg, Component parent) {
@@ -585,7 +601,6 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 //        application.removeAboutMenuItem();
         application.setEnabledAboutMenu(true);
         application.setEnabledPreferencesMenu(false);
-        
 
         // set up logging
         Logging.setUp();
@@ -595,13 +610,13 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
             @Override
             public void publish(LogRecord record) {
                 String str = getFormatter().format(record);
-                
-                if( record.getLevel() == Level.WARNING ) {
+
+                if (record.getLevel() == Level.WARNING) {
                     str = "WARNING: " + str;
-                } else if( record.getLevel() == Level.SEVERE ) {
+                } else if (record.getLevel() == Level.SEVERE) {
                     str = "SEVERE: " + str;
                 }
-                
+
                 guiMain.log(str);
             }
 
@@ -626,7 +641,9 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPopupMenu.Separator jSeparator1;
     private javax.swing.JPopupMenu.Separator jSeparator2;
+    private javax.swing.JPopupMenu.Separator jSeparator3;
     private javax.swing.JTextArea log;
+    private javax.swing.JMenuItem miAbout;
     private javax.swing.JMenuItem miCloseAllWindows;
     private javax.swing.JMenuItem miComputeDecompositionAutomaton;
     private javax.swing.JMenuItem miLoadAutomaton;
@@ -641,7 +658,10 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
      */
     public void handleAbout(ApplicationEvent ae) {
         new AboutWindow(this, true).setVisible(true);
-        ae.setHandled(true);
+
+        if (ae != null) {
+            ae.setHandled(true);
+        }
     }
 
     public void handleOpenApplication(ApplicationEvent ae) {

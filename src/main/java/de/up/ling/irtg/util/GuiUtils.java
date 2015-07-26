@@ -7,15 +7,19 @@ package de.up.ling.irtg.util;
 
 import com.ezware.dialog.task.TaskDialogs;
 import java.awt.Component;
-import java.awt.Container;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.InputEvent;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
 /**
@@ -135,7 +139,7 @@ public class GuiUtils {
     public static void setGlobalListener(ProgressListener globalListener) {
         GuiUtils.globalListener = globalListener;
     }
-    
+
     public static void addDebuggingFocusListener(Component comp) {
         comp.addFocusListener(new FocusListener() {
             @Override
@@ -148,5 +152,43 @@ public class GuiUtils {
                 System.err.println("lost focus: " + comp);
             }
         });
+    }
+
+    /**
+     * Replaces the Meta keymask in all menus of this menu bar
+     * by Ctrl. Useful if the menu accelerators were defined for
+     * Mac, but should be mapped to Ctrl-based accelerators for
+     * Windows or Linux.
+     * 
+     * @param mb 
+     */
+    public static void replaceMetaByCtrl(JMenuBar mb) {
+        for (int i = 0; i < mb.getMenuCount(); i++) {
+            JMenu menu = mb.getMenu(i);
+
+            for (int j = 0; j < menu.getItemCount(); j++) {
+                replaceMetaByCtrl(menu.getItem(j));
+            }
+        }
+    }
+
+    private static void replaceMetaByCtrl(JMenuItem item) {
+        if (item != null) {
+            KeyStroke ks = item.getAccelerator();
+
+            if (ks != null) {
+                int mods = ks.getModifiers();
+                int code = ks.getKeyCode();
+
+                if ((mods & InputEvent.META_MASK) > 0) {
+                    mods &= ~ InputEvent.META_MASK;
+                    mods &= ~ InputEvent.META_DOWN_MASK;
+                    mods |= InputEvent.CTRL_MASK;
+
+                    KeyStroke newKs = KeyStroke.getKeyStroke(code, mods);
+                    item.setAccelerator(newKs);
+                }
+            }
+        }
     }
 }
