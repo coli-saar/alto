@@ -7,10 +7,13 @@ package de.up.ling.irtg.util;
 
 import com.ezware.dialog.task.TaskDialogs;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Frame;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
 import javax.swing.SwingUtilities;
@@ -45,10 +48,10 @@ public class GuiUtils {
      * @param andThen
      */
     public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, ValueAndTimeConsumer<E> andThen) {
-        if( parent != null && ! parent.isVisible() ) {
+        if (parent != null && !parent.isVisible()) {
             parent = null;
         }
-        
+
         final ProgressBarDialog progressBar = new ProgressBarDialog(title, description, parent, false); // wouldn't update if it were modal
         final JProgressBar bar = progressBar.getProgressBar();
         progressBar.getProgressBar().setStringPainted(true);
@@ -59,7 +62,6 @@ public class GuiUtils {
 //            progressBar.toFront();
 //            progressBar.repaint();
 //        });
-
         ProgressListener listener = (currentValue, maxValue, string) -> {
             SwingUtilities.invokeLater(() -> {
                 bar.setMaximum(maxValue);
@@ -98,6 +100,14 @@ public class GuiUtils {
         workerThread.start();
     }
 
+    public static void bringToFront(Frame comp) {
+        SwingUtilities.invokeLater(() -> {
+            comp.toFront();
+            comp.repaint();
+        });
+
+    }
+
     static public void showError(Component parent, String error) {
         SwingUtilities.invokeLater(() -> {
             JOptionPane.showMessageDialog(parent, error, "Error", JOptionPane.ERROR_MESSAGE);
@@ -124,5 +134,19 @@ public class GuiUtils {
      */
     public static void setGlobalListener(ProgressListener globalListener) {
         GuiUtils.globalListener = globalListener;
+    }
+    
+    public static void addDebuggingFocusListener(Component comp) {
+        comp.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                System.err.println("gained focus: " + comp);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                System.err.println("lost focus: " + comp);
+            }
+        });
     }
 }

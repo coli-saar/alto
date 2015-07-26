@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -195,6 +196,17 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miTrainEM.setEnabled(enabled);
         miTrainML.setEnabled(enabled);
         miTrainVB.setEnabled(enabled);
+    }
+    
+    @Override
+    public void setVisible(boolean b) {
+        super.setVisible(b);
+
+        // For some reason, new window doesn't always get the focus as it should
+        // (at least on Mac). Request it explicitly to make sure hotkeys work.
+        SwingUtilities.invokeLater(() -> {
+            requestFocus();
+        });
     }
 
     /**

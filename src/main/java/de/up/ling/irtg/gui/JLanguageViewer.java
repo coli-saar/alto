@@ -20,12 +20,13 @@ import java.awt.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.swing.SwingUtilities;
 
 /**
  *
  * @author koller
  */
-public class JLanguageViewer extends javax.swing.JFrame {
+public class JLanguageViewer extends javax.swing.JFrame  {
 
     private TreeAutomaton automaton;
     private SortedLanguageIterator languageIterator;
@@ -46,8 +47,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         rightButton.setEnabled(false);
 
         // by default, hide the Advanced menu
-//        jMenuBar1.remove(mAdvanced);
-
+        jMenuBar1.remove(mAdvanced);
         jMenuBar1.add(new WindowMenu(this));
 
         derivationViewers.add(new JDerivationViewer());
@@ -60,6 +60,19 @@ public class JLanguageViewer extends javax.swing.JFrame {
             miNextTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.CTRL_MASK));
             miPreviousTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.CTRL_MASK));
         }
+        
+//        GuiUtils.addDebuggingFocusListener(this);
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+        super.setVisible(b);
+
+        // For some reason, new window doesn't always get the focus as it should
+        // (at least on Mac). Request it explicitly to make sure hotkeys work.
+        SwingUtilities.invokeLater(() -> {
+            requestFocus();
+        });
     }
 
     public void setAutomaton(TreeAutomaton automaton, InterpretedTreeAutomaton irtg) {
@@ -468,6 +481,9 @@ public class JLanguageViewer extends javax.swing.JFrame {
     }//GEN-LAST:event_miQuitActionPerformed
 
     private void miAddViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAddViewActionPerformed
+//        jMenuBar1.requestFocus();
+        requestFocus();
+
         JDerivationViewer dv = new JDerivationViewer();
 
         if (currentIrtg != null) {
