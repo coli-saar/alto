@@ -17,6 +17,9 @@ import de.up.ling.irtg.util.Util;
 import static de.up.ling.irtg.util.Util.formatTimeSince;
 import de.up.ling.tree.Tree;
 import java.awt.Component;
+import java.awt.Frame;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -26,7 +29,7 @@ import javax.swing.SwingUtilities;
  *
  * @author koller
  */
-public class JLanguageViewer extends javax.swing.JFrame  {
+public class JLanguageViewer extends javax.swing.JFrame {
 
     private TreeAutomaton automaton;
     private SortedLanguageIterator languageIterator;
@@ -60,7 +63,7 @@ public class JLanguageViewer extends javax.swing.JFrame  {
             miNextTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.CTRL_MASK));
             miPreviousTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.CTRL_MASK));
         }
-        
+
 //        GuiUtils.addDebuggingFocusListener(this);
     }
 
@@ -464,8 +467,7 @@ public class JLanguageViewer extends javax.swing.JFrame  {
     }//GEN-LAST:event_treeIndexActionPerformed
 
     private void handleResize(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_handleResize
-        setPreferredSize(getSize());
-        setMaximumSize(getSize());
+
     }//GEN-LAST:event_handleResize
 
     private void miOpenIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenIrtgActionPerformed
@@ -481,15 +483,12 @@ public class JLanguageViewer extends javax.swing.JFrame  {
     }//GEN-LAST:event_miQuitActionPerformed
 
     private void miAddViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAddViewActionPerformed
-//        jMenuBar1.requestFocus();
-        requestFocus();
-
         JDerivationViewer dv = new JDerivationViewer();
 
         if (currentIrtg != null) {
             dv.setInterpretedTreeAutomaton(currentIrtg);
 
-            // set view to the first view that is not already being displayed;
+                // set view to the first view that is not already being displayed;
             // if none are available, stick with derivation tree view
             for (String view : dv.getPossibleViews()) {
                 boolean taken = false;
@@ -515,7 +514,8 @@ public class JLanguageViewer extends javax.swing.JFrame  {
         }
 
         derivationViewers.add(dv);
-        validate();
+        setPreferredSize(getSize());
+        derivationViewers.revalidate();
 
         miRemoveView.setEnabled(true);
     }//GEN-LAST:event_miAddViewActionPerformed
