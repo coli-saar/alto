@@ -62,10 +62,11 @@ public class GuiUtils {
         progressBar.setVisible(true);
 
 //        // bring progress dialog to front
-//        SwingUtilities.invokeLater(() -> {
-//            progressBar.toFront();
-//            progressBar.repaint();
-//        });
+        SwingUtilities.invokeLater(() -> {
+            progressBar.toFront();
+            progressBar.repaint();
+        });
+        
         ProgressListener listener = (currentValue, maxValue, string) -> {
             SwingUtilities.invokeLater(() -> {
                 bar.setMaximum(maxValue);
