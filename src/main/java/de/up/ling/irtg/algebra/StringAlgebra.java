@@ -6,13 +6,26 @@ package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.Lists;
 import de.saar.basic.StringTools;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedRule;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.LambdaStopwatch;
+import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,36 +49,36 @@ import java.util.Set;
  * @author koller
  */
 public class StringAlgebra extends Algebra<List<String>> implements Serializable {
-    
+
     public static final String CONCAT = "*";
-    
+
     /**
-     * A special symbol in the algebra that represents a terminal "*" which we cannot
-     * represent directly, it is interpreted as [*].
+     * A special symbol in the algebra that represents a terminal "*" which we
+     * cannot represent directly, it is interpreted as [*].
      */
     public static final String SPECIAL_STAR = "__*__";
-    
+
     /**
      * The number that is used to represent the special star symbol.
      */
     protected int specialStarId;
-    
+
     protected final int concatSymbolId;
-    
+
     private IntSet concatSet;
 
     public StringAlgebra() {
         concatSymbolId = signature.addSymbol(CONCAT, 2);
 
         specialStarId = signature.addSymbol(SPECIAL_STAR, 0);
-        
+
         concatSet = new IntOpenHashSet();
         concatSet.add(concatSymbolId);
     }
 
     @Override
     protected List<String> evaluate(String label, List<List<String>> childrenValues) {
-       switch(label){
+        switch (label) {
             case CONCAT: // combine children
                 List<String> ret = new ArrayList<>();
                 ret.addAll(childrenValues.get(0));
@@ -75,7 +88,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                 return Lists.newArrayList("*");
             default: //interpret as itself
                 return Lists.newArrayList(label);
-       }
+        }
     }
 
     @Override
@@ -85,11 +98,11 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         t.dfs(new TreeVisitor<String, Void, Void>() {
             @Override
             public Void combine(Tree<String> node, List<Void> childrenValues) {
-                
-                if(node.getChildren().isEmpty()){ 
+
+                if (node.getChildren().isEmpty()) {
                     String label = node.getLabel();
-                    
-                    switch(label){
+
+                    switch (label) {
                         case SPECIAL_STAR: // we need to turn this into a "*"
                             ret.add("*");
                             return null;
@@ -97,9 +110,8 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                             ret.add(node.getLabel());
                             return null;
                     }
-                    
-                }
-                else{
+
+                } else {
                     return null;
                 }
             }
@@ -117,9 +129,9 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     public List<String> parseString(String representation) {
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
 
-        for(String word : symbols) {
+        for (String word : symbols) {
             // here we check whether we need to tranform the word because it is "*"
-            if(!CONCAT.equals(word)){
+            if (!CONCAT.equals(word)) {
                 signature.addSymbol(word, 0);
             }
         }
@@ -131,13 +143,10 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 //    public JComponent visualize(List<String> object) {
 //        return new JLabel(StringTools.join(object, " "));
 //    }
-
     @Override
     public String representAsString(List<String> object) {
         return StringTools.join(object, " ");
     }
-    
-    
 
     private class CkyAutomaton extends TreeAutomaton<Span> {
 
@@ -155,9 +164,8 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
             for (int i = 0; i < words.size(); i++) {
                 String word = words.get(i);
                 int code;
-                
-                
-                switch(word){// we write the words into the array, if there is a "*" we turn it into specialStarId
+
+                switch (word) {// we write the words into the array, if there is a "*" we turn it into specialStarId
                     case "*":
                         code = specialStarId;
                         break;
@@ -165,7 +173,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                         code = StringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
                         break;
                 }
-                
+
                 this.words[i] = code;
                 allLabels.add(code);
             }
@@ -219,10 +227,10 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
                     return ret;
                 } else {
-                    if(childStates.length > 0){
+                    if (childStates.length > 0) {
                         return new HashSet<>();
                     }
-                    
+
                     for (int i = 0; i < words.length; i++) {
                         if (words[i] == label) {
                             ret.add(createRule(addState(new Span(i, i + 1)), label, new int[0], 1));
@@ -351,5 +359,144 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
     public String getBinaryConcatenation() {
         return CONCAT;
+    }
+
+    private static class InvhomDecompFactory {
+
+        private static final int UNDEF = -1;
+        private int binaryLabelSetId = UNDEF;
+        private int unaryLabelSetId = UNDEF;
+        private Int2IntMap wordIdToLabelSetId;
+        private Homomorphism hom;
+        
+        private String[] unaryLabels;
+        private String[] binaryLabels;
+
+        public InvhomDecompFactory(Homomorphism hom) {
+            this.hom = hom;
+            
+            Signature srcSignature = hom.getSourceSignature();
+            wordIdToLabelSetId = new Int2IntOpenHashMap();
+            wordIdToLabelSetId.defaultReturnValue(UNDEF);
+
+            for (int i = 1; i <= hom.getMaxLabelSetID(); i++) {
+                IntSet labelSet = hom.getLabelSetByLabelSetID(i);
+                int someLabel = labelSet.intIterator().nextInt();
+                int arity = srcSignature.getArity(someLabel);
+
+                switch (arity) {
+                    case 2:
+                        if (binaryLabelSetId != UNDEF) {
+                            System.err.println("duplicate binary entry: " + binaryLabelSetId + " and " + i);
+                            System.err.println("  " + Util.mapToList(labelSet, label -> srcSignature.resolveSymbolId(label)));
+                        }
+
+                        binaryLabelSetId = i;
+                        binaryLabels = getLabels(labelSet, srcSignature);
+                        break;
+
+                    case 1:
+                        if (unaryLabelSetId != UNDEF) {
+                            System.err.println("duplicate unary entry: " + unaryLabelSetId + " and " + i);
+                            System.err.println("  " + Util.mapToList(labelSet, label -> srcSignature.resolveSymbolId(label)));
+                        }
+
+                        unaryLabelSetId = i;
+                        unaryLabels = getLabels(labelSet, srcSignature);
+                        break;
+
+                    default:
+                        Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(i);
+                        assert rhs != null;
+                        assert rhs.getChildren().isEmpty();
+
+                        wordIdToLabelSetId.put(rhs.getLabel().getValue(), i);
+                }
+            }
+
+            System.err.println("binary: " + binaryLabelSetId);
+            System.err.println("unary: " + unaryLabelSetId);
+            System.err.println("constants: " + wordIdToLabelSetId);
+        }
+
+        public CondensedTreeAutomaton<Span> getInvDecomp(List<String> sentence) {
+            ConcreteCondensedTreeAutomaton<Span> ret = new ConcreteCondensedTreeAutomaton<>(hom.getSourceSignature());
+            int n = sentence.size();
+
+            // constants
+            for (int i = 0; i < n; i++) {
+                int word = hom.getTargetSignature().getIdForSymbol(sentence.get(i));
+                int labelSetIdForWord = wordIdToLabelSetId.get(word);
+
+                if (labelSetIdForWord == UNDEF) {
+                    System.err.println("unknown word: " + sentence.get(i));
+                    return ret;
+                } else {
+                    String[] labels = getLabels(hom.getLabelSetByLabelSetID(labelSetIdForWord), hom.getSourceSignature());
+                    CondensedRule rule = ret.createRule(new Span(i, i + 1), labels, new Span[0]);
+                    ret.addRule(rule);
+                }
+            }
+
+            // unary
+            if (unaryLabelSetId != UNDEF) {
+                for (int i = 0; i < n; i++) {
+                    for (int j = i + 1; j <= n; j++) {
+                        Span x = new Span(i,j);
+                        CondensedRule rule = ret.createRule(x, unaryLabels, new Span[] { x });
+                        ret.addRule(rule);
+                    }
+                }
+            }
+            
+            // binary
+            if( binaryLabelSetId != UNDEF ) {
+                for( int i = 0; i < n; i++ ) {
+                    for( int j = i+1; j <= n; j++ ) {
+                        for( int k = j+1; k <= n; k++ ) {
+                            Span left = new Span(i,j);
+                            Span right = new Span(j,k);
+                            Span total = new Span(i,k);
+                            CondensedRule rule = ret.createRule(total, binaryLabels, new Span[] { left, right });
+                            ret.addRule(rule);
+                        }
+                    }
+                }
+            }
+            
+            ret.addFinalState(ret.addState(new Span(0,n)));
+
+            return ret;
+        }
+
+        private static String[] getLabels(IntSet labelSet, Signature signature) {
+            String[] ret = new String[labelSet.size()];
+            int i = 0;
+
+            for (int label : labelSet) {
+                ret[i] = signature.resolveSymbolId(label);
+                i++;
+            }
+
+            return ret;
+        }
+    }
+
+    public static void main(String[] args) throws Exception {
+        LambdaStopwatch w = new LambdaStopwatch(System.err);
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("gont/wsj0221_bin.irtg"));
+        Homomorphism hom = irtg.getInterpretation("string").getHomomorphism();
+        StringAlgebra alg = (StringAlgebra) irtg.getInterpretation("string").getAlgebra();
+        InvhomDecompFactory fact = w.t("init", () -> new InvhomDecompFactory(hom));
+        
+        List<String> words = alg.parseString("IN DT NNP CD NN IN `` DT NN '' IN NNP POS NNP NNP -LRB- `` VBN NNS VBP DT NN IN NNP NNP , '' NN CC NNS -RRB- , DT NN IN NNP , VBN -NONE- IN NNP NNP , VBD RB VBN -NONE- TO NNP NNP .");
+        CondensedTreeAutomaton<Span> auto = w.t("getinv", () -> fact.getInvDecomp(words));
+        
+//        System.err.println(auto);wsj0221_bin.irtg
+        
+        TreeAutomaton chart = w.t("intersect", () -> irtg.getAutomaton().intersectCondensed(auto));
+        System.err.println("***\n" + chart);
+        
+        System.err.println(chart.viterbi());
     }
 }

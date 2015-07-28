@@ -87,7 +87,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
 
     // Adds a given labelSet to the interner and returns the int value representing it. 
     // This should be called while creating a rule for this automaton.
-    protected int addLabelSetID(IntSet labels) {
+    public int addLabelSetID(IntSet labels) {
         return labelSetInterner.addObject(labels);
     }
 
