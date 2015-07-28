@@ -496,13 +496,16 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     }
 
     public static void main(String[] args) throws Exception {
+        String grammar = "a.irtg";
+        String sentence = "Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 .";
+
         LambdaStopwatch w = new LambdaStopwatch(System.err);
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("a.irtg"));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammar));
         Homomorphism hom = irtg.getInterpretation("string").getHomomorphism();
         StringAlgebra alg = (StringAlgebra) irtg.getInterpretation("string").getAlgebra();
         InvhomDecompFactory fact = w.t("init", () -> new InvhomDecompFactory(hom));
 
-        List<String> words = alg.parseString("Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 .");
+        List<String> words = alg.parseString(sentence);
         CondensedTreeAutomaton<Span> auto = w.t("getinv", () -> fact.getInvDecomp(words));
         TreeAutomaton chart = w.t("intersect", () -> irtg.getAutomaton().intersectCondensed(auto));
 
