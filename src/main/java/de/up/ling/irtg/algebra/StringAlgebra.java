@@ -364,17 +364,17 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     private static class InvhomDecompFactory {
 
         private static final int UNDEF = -1;
-        private int binaryLabelSetId = UNDEF;
-        private int unaryLabelSetId = UNDEF;
+        private IntSet binaryLabelSetIds = new IntOpenHashSet();
+        private IntSet unaryLabelSetIds = new IntOpenHashSet();
         private Int2IntMap wordIdToLabelSetId;
         private Homomorphism hom;
-        
+
         private String[] unaryLabels;
         private String[] binaryLabels;
 
         public InvhomDecompFactory(Homomorphism hom) {
             this.hom = hom;
-            
+
             Signature srcSignature = hom.getSourceSignature();
             wordIdToLabelSetId = new Int2IntOpenHashMap();
             wordIdToLabelSetId.defaultReturnValue(UNDEF);
@@ -386,23 +386,24 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
                 switch (arity) {
                     case 2:
-                        if (binaryLabelSetId != UNDEF) {
-                            System.err.println("duplicate binary entry: " + binaryLabelSetId + " and " + i);
-                            System.err.println("  " + Util.mapToList(labelSet, label -> srcSignature.resolveSymbolId(label)));
-                        }
+//                        if (binaryLabelSetId != UNDEF) {
+//                            System.err.println("duplicate binary entry: " + binaryLabelSetId + " and " + i);
+//                            System.err.println("  " + Util.mapToList(labelSet, label -> srcSignature.resolveSymbolId(label)));
+//                        }
 
-                        binaryLabelSetId = i;
-                        binaryLabels = getLabels(labelSet, srcSignature);
+                        binaryLabelSetIds.add(i);
+//                        binaryLabelSetId = i;
+//                        binaryLabels = getLabels(labelSet, srcSignature);
                         break;
 
                     case 1:
-                        if (unaryLabelSetId != UNDEF) {
-                            System.err.println("duplicate unary entry: " + unaryLabelSetId + " and " + i);
-                            System.err.println("  " + Util.mapToList(labelSet, label -> srcSignature.resolveSymbolId(label)));
-                        }
+//                        if (unaryLabelSetId != UNDEF) {
+//                            System.err.println("duplicate unary entry: " + unaryLabelSetId + " and " + i);
+//                            System.err.println("  " + Util.mapToList(labelSet, label -> srcSignature.resolveSymbolId(label)));
+//                        }
 
-                        unaryLabelSetId = i;
-                        unaryLabels = getLabels(labelSet, srcSignature);
+                        unaryLabelSetIds.add(i);
+//                        unaryLabels = getLabels(labelSet, srcSignature);
                         break;
 
                     default:
@@ -414,9 +415,9 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                 }
             }
 
-            System.err.println("binary: " + binaryLabelSetId);
-            System.err.println("unary: " + unaryLabelSetId);
-            System.err.println("constants: " + wordIdToLabelSetId);
+            System.err.println("binary: " + binaryLabelSetIds.size());
+            System.err.println("unary: " + unaryLabelSetIds.size());
+            System.err.println("constants: " + wordIdToLabelSetId.size());
         }
 
         public CondensedTreeAutomaton<Span> getInvDecomp(List<String> sentence) {
@@ -439,34 +440,46 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
             }
 
             // unary
-            if (unaryLabelSetId != UNDEF) {
+            for (int unary : unaryLabelSetIds) {
+                String[] unaryLabels = getLabels(unary);
+                int labelSetId = ret.addLabelSetID(unaryLabels, 1);
+
                 for (int i = 0; i < n; i++) {
                     for (int j = i + 1; j <= n; j++) {
-                        Span x = new Span(i,j);
-                        CondensedRule rule = ret.createRule(x, unaryLabels, new Span[] { x });
+                        Span x = new Span(i, j);
+                        int q = ret.addState(x);
+                        CondensedRule rule = ret.createRuleRaw(q, labelSetId, new int[]{q}, 1.0);
                         ret.addRule(rule);
                     }
                 }
             }
-            
+
             // binary
-            if( binaryLabelSetId != UNDEF ) {
-                for( int i = 0; i < n; i++ ) {
-                    for( int j = i+1; j <= n; j++ ) {
-                        for( int k = j+1; k <= n; k++ ) {
-                            Span left = new Span(i,j);
-                            Span right = new Span(j,k);
-                            Span total = new Span(i,k);
-                            CondensedRule rule = ret.createRule(total, binaryLabels, new Span[] { left, right });
+            for (int binary : binaryLabelSetIds) {
+                String[] binaryLabels = getLabels(binary);
+                int labelSetId = ret.addLabelSetID(binaryLabels, 2);
+
+                for (int i = 0; i < n; i++) {
+                    for (int j = i + 1; j <= n; j++) {
+                        int left = ret.addState(new Span(i, j));
+                        for (int k = j + 1; k <= n; k++) {
+                            int right = ret.addState(new Span(j, k));
+                            int total = ret.addState(new Span(i, k));
+
+                            CondensedRule rule = ret.createRuleRaw(total, labelSetId, new int[]{left, right}, 1.0);
                             ret.addRule(rule);
                         }
                     }
                 }
             }
-            
-            ret.addFinalState(ret.addState(new Span(0,n)));
+
+            ret.addFinalState(ret.addState(new Span(0, n)));
 
             return ret;
+        }
+
+        private String[] getLabels(int labelSetId) {
+            return getLabels(hom.getLabelSetByLabelSetID(labelSetId), hom.getSourceSignature());
         }
 
         private static String[] getLabels(IntSet labelSet, Signature signature) {
@@ -484,19 +497,17 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
     public static void main(String[] args) throws Exception {
         LambdaStopwatch w = new LambdaStopwatch(System.err);
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("gont/wsj0221_bin.irtg"));
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("a.irtg"));
         Homomorphism hom = irtg.getInterpretation("string").getHomomorphism();
         StringAlgebra alg = (StringAlgebra) irtg.getInterpretation("string").getAlgebra();
         InvhomDecompFactory fact = w.t("init", () -> new InvhomDecompFactory(hom));
-        
-        List<String> words = alg.parseString("IN DT NNP CD NN IN `` DT NN '' IN NNP POS NNP NNP -LRB- `` VBN NNS VBP DT NN IN NNP NNP , '' NN CC NNS -RRB- , DT NN IN NNP , VBN -NONE- IN NNP NNP , VBD RB VBN -NONE- TO NNP NNP .");
+
+        List<String> words = alg.parseString("Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 .");
         CondensedTreeAutomaton<Span> auto = w.t("getinv", () -> fact.getInvDecomp(words));
-        
-//        System.err.println(auto);wsj0221_bin.irtg
-        
         TreeAutomaton chart = w.t("intersect", () -> irtg.getAutomaton().intersectCondensed(auto));
-        System.err.println("***\n" + chart);
-        
-        System.err.println(chart.viterbi());
+
+        Tree t = chart.viterbi();
+        System.err.println(t);
+        System.err.println(irtg.interpret(t));
     }
 }
