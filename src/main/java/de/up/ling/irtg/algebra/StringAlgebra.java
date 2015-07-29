@@ -19,13 +19,15 @@ import de.up.ling.irtg.util.LambdaStopwatch;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -366,18 +368,16 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         private static final int UNDEF = -1;
         private IntSet binaryLabelSetIds = new IntOpenHashSet();
         private IntSet unaryLabelSetIds = new IntOpenHashSet();
-        private Int2IntMap wordIdToLabelSetId;
+        private Object2IntMap<IntList> wordIdsToLabelSetIds;
+//        private Int2IntMap wordIdToLabelSetId;
         private Homomorphism hom;
-
-        private String[] unaryLabels;
-        private String[] binaryLabels;
 
         public InvhomDecompFactory(Homomorphism hom) {
             this.hom = hom;
 
             Signature srcSignature = hom.getSourceSignature();
-            wordIdToLabelSetId = new Int2IntOpenHashMap();
-            wordIdToLabelSetId.defaultReturnValue(UNDEF);
+            wordIdsToLabelSetIds = new Object2IntOpenHashMap<>();
+            wordIdsToLabelSetIds.defaultReturnValue(UNDEF);
 
             for (int i = 1; i <= hom.getMaxLabelSetID(); i++) {
                 IntSet labelSet = hom.getLabelSetByLabelSetID(i);
@@ -386,38 +386,29 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
                 switch (arity) {
                     case 2:
-//                        if (binaryLabelSetId != UNDEF) {
-//                            System.err.println("duplicate binary entry: " + binaryLabelSetId + " and " + i);
-//                            System.err.println("  " + Util.mapToList(labelSet, label -> srcSignature.resolveSymbolId(label)));
-//                        }
-
                         binaryLabelSetIds.add(i);
-//                        binaryLabelSetId = i;
-//                        binaryLabels = getLabels(labelSet, srcSignature);
                         break;
 
                     case 1:
-//                        if (unaryLabelSetId != UNDEF) {
-//                            System.err.println("duplicate unary entry: " + unaryLabelSetId + " and " + i);
-//                            System.err.println("  " + Util.mapToList(labelSet, label -> srcSignature.resolveSymbolId(label)));
-//                        }
-
                         unaryLabelSetIds.add(i);
-//                        unaryLabels = getLabels(labelSet, srcSignature);
                         break;
 
                     default:
                         Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(i);
-                        assert rhs != null;
-                        assert rhs.getChildren().isEmpty();
+                        List<HomomorphismSymbol> leafLabels = rhs.getLeafLabels();
+                        IntList words = Util.mapToIntList(leafLabels, ll -> ll.getValue());
 
-                        wordIdToLabelSetId.put(rhs.getLabel().getValue(), i);
+                        wordIdsToLabelSetIds.put(words, i);
+
+//                        assert rhs != null;
+//                        assert rhs.getChildren().isEmpty();
+//                        wordIdToLabelSetId.put(rhs.getLabel().getValue(), i);
                 }
             }
 
             System.err.println("binary: " + binaryLabelSetIds.size());
             System.err.println("unary: " + unaryLabelSetIds.size());
-            System.err.println("constants: " + wordIdToLabelSetId.size());
+            System.err.println("constants: " + wordIdsToLabelSetIds.size());
         }
 
         public CondensedTreeAutomaton<Span> getInvDecomp(List<String> sentence) {
@@ -426,17 +417,19 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
             // constants
             for (int i = 0; i < n; i++) {
-                int word = hom.getTargetSignature().getIdForSymbol(sentence.get(i));
-                int labelSetIdForWord = wordIdToLabelSetId.get(word);
+                IntList stringFromHere = new IntArrayList();
 
-                if (labelSetIdForWord == UNDEF) {
-                    System.err.println("unknown word: " + sentence.get(i));
-                    return ret;
-                } else {
-                    String[] labels = getLabels(hom.getLabelSetByLabelSetID(labelSetIdForWord), hom.getSourceSignature());
-                    CondensedRule rule = ret.createRule(new Span(i, i + 1), labels, new Span[0]);
-                    ret.addRule(rule);
+                for (int j = i; j < n; j++) {
+                    stringFromHere.add(hom.getTargetSignature().getIdForSymbol(sentence.get(j)));
+                    int labelSetId = wordIdsToLabelSetIds.getInt(stringFromHere);
+
+                    if (labelSetId != UNDEF) {
+                        String[] labels = getLabels(hom.getLabelSetByLabelSetID(labelSetId), hom.getSourceSignature());
+                        CondensedRule rule = ret.createRule(new Span(i, j + 1), labels, new Span[0]);
+                        ret.addRule(rule);
+                    }
                 }
+
             }
 
             // unary
@@ -496,8 +489,10 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     }
 
     public static void main(String[] args) throws Exception {
-        String grammar = "a.irtg";
-        String sentence = "Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 .";
+//        String grammar = "a.irtg";
+//        String sentence = "Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 .";
+        String grammar = "gont/wsj0221_bin.irtg";
+        String sentence = "DT NN NN NN JJ NN VBD CD NNS IN DT NNP";
 
         LambdaStopwatch w = new LambdaStopwatch(System.err);
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(grammar));

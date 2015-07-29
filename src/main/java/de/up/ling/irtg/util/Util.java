@@ -6,6 +6,9 @@
 package de.up.ling.irtg.util;
 
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -21,6 +24,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntToDoubleFunction;
 import java.util.function.IntUnaryOperator;
 import java.util.function.Supplier;
+import java.util.function.ToIntFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -77,6 +81,14 @@ public class Util {
 
     public static <I, O> List<O> mapToList(Iterable<I> values, Function<I, O> fn) {
         return StreamSupport.stream(values.spliterator(), false).map(fn).collect(Collectors.toList());
+    }
+    
+    public static <I> IntList mapToIntList(Iterable<I> values, ToIntFunction<I> fn) {
+        IntList ret = new IntArrayList();
+        for( I x : values ) {
+            ret.add(fn.applyAsInt(x));
+        }
+        return ret;
     }
 
     public static <I, O> Set<O> mapToSet(Iterable<I> values, Function<I, O> fn) {
