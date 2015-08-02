@@ -16,7 +16,7 @@ import java.util.Set;
  *
  * @author koller
  */
-public class BinarizationAutomaton extends TreeAutomaton<StringAlgebra.Span> {
+class BinarizationAutomaton extends TreeAutomaton<StringAlgebra.Span> {
     private int concatId;
     
     public BinarizationAutomaton(int len, Signature signature, int concatId) {

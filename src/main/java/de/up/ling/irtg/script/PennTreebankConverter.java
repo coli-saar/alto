@@ -58,7 +58,7 @@ public class PennTreebankConverter {
         Writer w = new FileWriter("out.txt");
         
         String corpusName = Joiner.on(" ").join(args);
-        AbstractCorpusWriter cw = new CorpusWriter(irtg, "Converted from " + corpusName + "\non " + new Date().toString(), w);
+        AbstractCorpusWriter cw = new CorpusWriter(irtg, "Converted from " + corpusName + "\non " + new Date().toString(), "/// ", w);
         
         convert(args, cw);
     }

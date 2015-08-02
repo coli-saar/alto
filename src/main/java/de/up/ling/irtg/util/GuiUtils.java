@@ -8,8 +8,18 @@ package de.up.ling.irtg.util;
 import com.ezware.dialog.task.TaskDialogs;
 import java.awt.Component;
 import java.awt.Frame;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.InputEvent;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
+import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 
 /**
@@ -17,7 +27,19 @@ import javax.swing.SwingUtilities;
  * @author koller
  */
 public class GuiUtils {
+
     private static ProgressListener globalListener = null;
+
+    /**
+     * Copies the given string to the system clipboard.
+     *
+     * @param s
+     */
+    public static void copyToClipboard(String s) {
+        StringSelection selection = new StringSelection(s);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(selection, selection);
+    }
 
     /**
      * Execute this on the EDT.
@@ -30,11 +52,21 @@ public class GuiUtils {
      * @param andThen
      */
     public static <E> void withProgressBar(Frame parent, String title, String description, ProgressBarWorker<E> worker, ValueAndTimeConsumer<E> andThen) {
-        final ProgressBarDialog progressBar = new ProgressBarDialog(title, description, parent, false);
+        if (parent != null && !parent.isVisible()) {
+            parent = null;
+        }
+
+        final ProgressBarDialog progressBar = new ProgressBarDialog(title, description, parent, false); // wouldn't update if it were modal
         final JProgressBar bar = progressBar.getProgressBar();
         progressBar.getProgressBar().setStringPainted(true);
         progressBar.setVisible(true);
 
+//        // bring progress dialog to front
+        SwingUtilities.invokeLater(() -> {
+            progressBar.toFront();
+            progressBar.repaint();
+        });
+        
         ProgressListener listener = (currentValue, maxValue, string) -> {
             SwingUtilities.invokeLater(() -> {
                 bar.setMaximum(maxValue);
@@ -68,9 +100,17 @@ public class GuiUtils {
                 progressBar.setVisible(false);
             }
         });
-        
+
         workerThread.setName("Alto worker thread: " + description);
         workerThread.start();
+    }
+
+    public static void bringToFront(Frame comp) {
+        SwingUtilities.invokeLater(() -> {
+            comp.toFront();
+            comp.repaint();
+        });
+
     }
 
     static public void showError(Component parent, String error) {
@@ -90,17 +130,66 @@ public class GuiUtils {
     }
 
     /**
-     * Sets the global ProgressListener. The preferred method of
-     * giving a progress listener to a worker is to pass it as
-     * a method argument. This method is only here for cases when
-     * this would mess up the code to a terrible extent. You should
-     * avoid it whenever possible.
-     * 
-     * @return 
+     * Sets the global ProgressListener. The preferred method of giving a
+     * progress listener to a worker is to pass it as a method argument. This
+     * method is only here for cases when this would mess up the code to a
+     * terrible extent. You should avoid it whenever possible.
+     *
+     * @return
      */
     public static void setGlobalListener(ProgressListener globalListener) {
         GuiUtils.globalListener = globalListener;
     }
-    
-    
+
+    public static void addDebuggingFocusListener(Component comp) {
+        comp.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                System.err.println("gained focus: " + comp);
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                System.err.println("lost focus: " + comp);
+            }
+        });
+    }
+
+    /**
+     * Replaces the Meta keymask in all menus of this menu bar
+     * by Ctrl. Useful if the menu accelerators were defined for
+     * Mac, but should be mapped to Ctrl-based accelerators for
+     * Windows or Linux.
+     * 
+     * @param mb 
+     */
+    public static void replaceMetaByCtrl(JMenuBar mb) {
+        for (int i = 0; i < mb.getMenuCount(); i++) {
+            JMenu menu = mb.getMenu(i);
+
+            for (int j = 0; j < menu.getItemCount(); j++) {
+                replaceMetaByCtrl(menu.getItem(j));
+            }
+        }
+    }
+
+    private static void replaceMetaByCtrl(JMenuItem item) {
+        if (item != null) {
+            KeyStroke ks = item.getAccelerator();
+
+            if (ks != null) {
+                int mods = ks.getModifiers();
+                int code = ks.getKeyCode();
+
+                if ((mods & InputEvent.META_MASK) > 0) {
+                    mods &= ~ InputEvent.META_MASK;
+                    mods &= ~ InputEvent.META_DOWN_MASK;
+                    mods |= InputEvent.CTRL_MASK;
+
+                    KeyStroke newKs = KeyStroke.getKeyStroke(code, mods);
+                    item.setAccelerator(newKs);
+                }
+            }
+        }
+    }
 }

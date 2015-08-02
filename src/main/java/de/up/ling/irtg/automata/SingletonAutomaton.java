@@ -12,7 +12,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- *
+ * A tree automaton that accepts a single, given tree.
+ * 
  * @author koller
  */
 public class SingletonAutomaton extends TreeAutomaton<String> {

@@ -180,7 +180,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     // Adds a given labelSet to the interner and returns the int value representing it. 
     // This should be called while creating a rule for this automaton.
     @Override
-    protected int addLabelSetID(IntSet labels) {
+    public int addLabelSetID(IntSet labels) {
         throw new UnsupportedOperationException("cannot add label set IDs to invhom automaton");
     }
 

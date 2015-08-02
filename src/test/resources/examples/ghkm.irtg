@@ -1,0 +1,17 @@
+/* Example tree-to-string transducer from Galley et al. 04 */
+
+interpretation french: de.up.ling.irtg.algebra.StringAlgebra
+interpretation english: de.up.ling.irtg.algebra.TreeAlgebra
+
+S! -> r1(NP,VB)
+[french]  *(*(*(?1, ne), ?2), pas)
+[english] s(?1, vp(aux(does), rb(not), ?2))
+
+NP -> r2
+[french]  il
+[english] np(prp(he))
+
+VB -> r3
+[french]  va
+[english] vb(go)
+

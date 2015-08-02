@@ -5,8 +5,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.saar.basic.CartesianIterator;
-import de.up.ling.irtg.signature.IdentitySignatureMapper;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Util;

@@ -5,58 +5,83 @@
 package de.up.ling.irtg.gui;
 
 import com.bric.window.WindowMenu;
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.automata.SortedLanguageIterator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
 import static de.up.ling.irtg.gui.Alto.log;
+import de.up.ling.irtg.util.GuiUtils;
+import de.up.ling.irtg.util.Util;
 import static de.up.ling.irtg.util.Util.formatTimeSince;
 import de.up.ling.tree.Tree;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
+import javax.swing.SwingUtilities;
 
 /**
  *
  * @author koller
  */
 public class JLanguageViewer extends javax.swing.JFrame {
+
     private TreeAutomaton automaton;
-    private Iterator<WeightedTree> languageIterator;
+    private SortedLanguageIterator languageIterator;
     private long numTrees;
     private List<WeightedTree> cachedTrees;
     private InterpretedTreeAutomaton currentIrtg;
     private Tree<String> currentTree;
+    private boolean hasBeenPacked = false; // window has been packed once -- after this, only allow manual size changes
+
 
     /**
      * Creates new form JLanguageViewer
      */
     public JLanguageViewer() {
         initComponents();
-        
+
+        // until we display the first tree, disable everything
+        treeIndex.setText("N/A");
+        leftButton.setEnabled(false);
+        rightButton.setEnabled(false);
+
+        // by default, hide the Advanced menu
+        jMenuBar1.remove(mAdvanced);
         jMenuBar1.add(new WindowMenu(this));
-        
+
         derivationViewers.add(new JDerivationViewer());
         miRemoveView.setEnabled(false);
-        
-        if( ! Alto.isMac() ) {
-            miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-            miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-            miNextTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_RIGHT, java.awt.event.InputEvent.CTRL_MASK));
-            miPreviousTree.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_LEFT, java.awt.event.InputEvent.CTRL_MASK));
+
+        if (!Alto.isMac()) {
+            GuiUtils.replaceMetaByCtrl(jMenuBar1);
         }
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+        super.setVisible(b);
+
+        // For some reason, new window doesn't always get the focus as it should
+        // (at least on Mac). Request it explicitly to make sure hotkeys work.
+        SwingUtilities.invokeLater(() -> {
+            requestFocus();
+        });
     }
 
     public void setAutomaton(TreeAutomaton automaton, InterpretedTreeAutomaton irtg) {
         this.automaton = automaton;
 
         currentIrtg = irtg;
-        for( Component dv : derivationViewers.getComponents() ) {
+        for (Component dv : derivationViewers.getComponents()) {
             ((JDerivationViewer) dv).setInterpretedTreeAutomaton(irtg);
         }
-        
-        languageIterator = automaton.sortedLanguageIterator();
+
+        this.languageIterator = (SortedLanguageIterator) automaton.sortedLanguageIterator();
+
         cachedTrees = new ArrayList<WeightedTree>();
 
         if (automaton.isCyclic()) {
@@ -84,39 +109,86 @@ public class JLanguageViewer extends javax.swing.JFrame {
         if (treeNumber < 0) {
             treeNumber = 0;
         }
-        
-        leftButton.setEnabled(treeNumber > 0);
-        miPreviousTree.setEnabled(treeNumber > 0);
-        
-        if( numTrees < 0 || treeNumber < numTrees-1 ) {
-            rightButton.setEnabled(true);
-            miNextTree.setEnabled(true);
-        } else {
-            rightButton.setEnabled(false);
-            miNextTree.setEnabled(false);
-        }
 
-        long treesToCompute = treeNumber - cachedTrees.size() + 1;
-        if (treesToCompute > 0) {
-            long start = System.nanoTime();
-            while (cachedTrees.size() <= treeNumber) {
-                cachedTrees.add(languageIterator.next());
+        final int tn = treeNumber;
+
+        ensureFirstTreeComputed((dummy) -> {
+            long treesToCompute = tn - cachedTrees.size() + 1;
+            if (treesToCompute > 0) {
+                long start = System.nanoTime();
+                while (cachedTrees.size() <= tn) {
+                    cachedTrees.add(nextTree());
+                }
+                log("Enumerated " + treesToCompute + " trees, " + formatTimeSince(start));
             }
-            log("Enumerated " + treesToCompute + " trees, " + formatTimeSince(start));
-        }
 
-        WeightedTree wt = cachedTrees.get(treeNumber);
-        Tree<String> tree = automaton.getSignature().resolve(wt.getTree());
-        
-        currentTree = tree;
-        for( Component dv : derivationViewers.getComponents() ) {
-            ((JDerivationViewer) dv).displayDerivation(tree);
+            WeightedTree wt = cachedTrees.get(tn);
+            Tree<String> tree = automaton.getSignature().resolve(wt.getTree());
+
+            currentTree = tree;
+            for (Component dv : derivationViewers.getComponents()) {
+                ((JDerivationViewer) dv).displayDerivation(tree);
+            }
+
+            weightLabel.setText("w = " + formatWeight(wt.getWeight()));
+            weightLabel.setToolTipText("w = " + wt.getWeight());
+            treeIndex.setText(Integer.toString(tn + 1));
+
+            leftButton.setEnabled(tn > 0);
+            miPreviousTree.setEnabled(tn > 0);
+
+            if (numTrees < 0 || tn < numTrees - 1) {
+                rightButton.setEnabled(true);
+                miNextTree.setEnabled(true);
+            } else {
+                rightButton.setEnabled(false);
+                miNextTree.setEnabled(false);
+            }
+
+        });
+    }
+
+    @Override
+    public void pack() {
+        super.pack(); //To change body of generated methods, choose Tools | Templates.
+        hasBeenPacked = true;
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        // pin window size to current size => layout of contents does not change window size
+        // -- an exception is the very first time the window is packed, then allow it to get correct size
+        if (hasBeenPacked) {
+            return getSize();
+        } else {
+            return super.getPreferredSize();
         }
-        
-        
-        weightLabel.setText("w = " + formatWeight(wt.getWeight()));
-        weightLabel.setToolTipText("w = " + wt.getWeight());
-        treeIndex.setText(Integer.toString(treeNumber + 1));
+    }
+
+    private void ensureFirstTreeComputed(Consumer<Void> fn) {
+        if (!cachedTrees.isEmpty()) {
+            fn.accept(null);
+        } else {
+            // Computing the first tree in the language initializes all the
+            // internal data structures of the SortedLanguageIterator.
+            // We track this with a progress bar.
+            GuiUtils.withProgressBar(this, "Language viewer", "Initializing language iterator ...",
+                                     listener -> {
+                                         return languageIterator.next(listener);
+                                     },
+                                     (tree, time) -> {
+                                         if (time > 500000000) {
+                                             Alto.log("Initialized language viewer, " + Util.formatTime(time));
+                                         }
+
+                                         cachedTrees.add(tree);
+                                         fn.accept(null);
+                                     });
+        }
+    }
+
+    private WeightedTree nextTree() {
+        return languageIterator.next();
     }
 
     private int getTreeIndex() {
@@ -167,6 +239,8 @@ public class JLanguageViewer extends javax.swing.JFrame {
         jSeparator2 = new javax.swing.JPopupMenu.Separator();
         miAddView = new javax.swing.JMenuItem();
         miRemoveView = new javax.swing.JMenuItem();
+        mAdvanced = new javax.swing.JMenu();
+        miCopyTestCase = new javax.swing.JMenuItem();
 
         org.jdesktop.layout.GroupLayout jPanel2Layout = new org.jdesktop.layout.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -354,6 +428,18 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu2);
 
+        mAdvanced.setText("Advanced");
+
+        miCopyTestCase.setText("Copy test case");
+        miCopyTestCase.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miCopyTestCaseActionPerformed(evt);
+            }
+        });
+        mAdvanced.add(miCopyTestCase);
+
+        jMenuBar1.add(mAdvanced);
+
         setJMenuBar(jMenuBar1);
 
         org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());
@@ -392,8 +478,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
     }//GEN-LAST:event_treeIndexActionPerformed
 
     private void handleResize(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_handleResize
-        setPreferredSize(getSize());
-        setMaximumSize(getSize());
+
     }//GEN-LAST:event_handleResize
 
     private void miOpenIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenIrtgActionPerformed
@@ -410,46 +495,47 @@ public class JLanguageViewer extends javax.swing.JFrame {
 
     private void miAddViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAddViewActionPerformed
         JDerivationViewer dv = new JDerivationViewer();
-        
-        if( currentIrtg != null ) {
+
+        if (currentIrtg != null) {
             dv.setInterpretedTreeAutomaton(currentIrtg);
-            
+
             // set view to the first view that is not already being displayed;
             // if none are available, stick with derivation tree view
-            for( String view : dv.getPossibleViews() ) {
+            for (String view : dv.getPossibleViews()) {
                 boolean taken = false;
-                
-                for( Component other : derivationViewers.getComponents() ) {
-                  if( other instanceof JDerivationViewer ) {
-                      String otherView = ((JDerivationViewer) other).getCurrentView();
-                      if( view.equals(otherView) ) {
-                          taken = true;
-                      }
-                  }
+
+                for (Component other : derivationViewers.getComponents()) {
+                    if (other instanceof JDerivationViewer) {
+                        String otherView = ((JDerivationViewer) other).getCurrentView();
+                        if (view.equals(otherView)) {
+                            taken = true;
+                        }
+                    }
                 }
-                
-                if( ! taken ) {
+
+                if (!taken) {
                     dv.setView(view);
                     break;
                 }
             }
         }
-        
-        if( currentTree != null ) {
+
+        if (currentTree != null) {
             dv.displayDerivation(currentTree);
         }
-        
+
         derivationViewers.add(dv);
-        validate();
-        
+//        setPreferredSize(getSize());
+        derivationViewers.revalidate();
+
         miRemoveView.setEnabled(true);
     }//GEN-LAST:event_miAddViewActionPerformed
 
     private void miRemoveViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miRemoveViewActionPerformed
-        derivationViewers.remove(derivationViewers.getComponents().length-1);
+        derivationViewers.remove(derivationViewers.getComponents().length - 1);
         validate();
-        
-        if( derivationViewers.getComponents().length == 1 ) {
+
+        if (derivationViewers.getComponents().length == 1) {
             miRemoveView.setEnabled(false);
         }
     }//GEN-LAST:event_miRemoveViewActionPerformed
@@ -474,6 +560,34 @@ public class JLanguageViewer extends javax.swing.JFrame {
         Alto.showDecompositionDialog(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
+    private void miCopyTestCaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCopyTestCaseActionPerformed
+        StringBuilder buf = new StringBuilder();
+        int numInterpretations = currentIrtg.getInterpretations().keySet().size();
+        int i = 1;
+
+        buf.append("        runTest(\"XXXXX.irtg\", \"" + currentTree.toString() + "\", [\n");
+
+        for (String interp : currentIrtg.getInterpretations().keySet()) {
+            String val = interpretToString(currentTree, interp, currentIrtg);
+            buf.append("             \"" + interp + "\":\"" + val + "\"");
+            if (i < numInterpretations) {
+                buf.append(",");
+            }
+            buf.append("\n");
+            i++;
+        }
+
+        buf.append("        ])");
+
+        GuiUtils.copyToClipboard(buf.toString());
+    }//GEN-LAST:event_miCopyTestCaseActionPerformed
+
+    private String interpretToString(Tree<String> dt, String interpName, InterpretedTreeAutomaton irtg) {
+        Interpretation intrp = irtg.getInterpretation(interpName);
+        Algebra alg = intrp.getAlgebra();
+        return alg.representAsString(intrp.interpret(dt));
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel controls;
     private javax.swing.JPanel derivationViewers;
@@ -490,9 +604,11 @@ public class JLanguageViewer extends javax.swing.JFrame {
     private javax.swing.JPopupMenu.Separator jSeparator4;
     private javax.swing.JLabel languageSizeLabel;
     private javax.swing.JButton leftButton;
+    private javax.swing.JMenu mAdvanced;
     private javax.swing.JMenuItem miAddView;
     private javax.swing.JMenuItem miCloseAllWindows;
     private javax.swing.JMenuItem miCloseWindow;
+    private javax.swing.JMenuItem miCopyTestCase;
     private javax.swing.JMenuItem miNextTree;
     private javax.swing.JMenuItem miOpenAutomaton;
     private javax.swing.JMenuItem miOpenIrtg;

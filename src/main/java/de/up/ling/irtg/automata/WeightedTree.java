@@ -7,7 +7,8 @@ package de.up.ling.irtg.automata;
 import de.up.ling.tree.Tree;
 
 /**
- *
+ * A tree with a weight. 
+ * 
  * @author koller
  */
 public class WeightedTree implements Comparable<WeightedTree> {

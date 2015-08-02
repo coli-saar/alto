@@ -261,6 +261,16 @@ Y -> r8(X,X)
         }
     }
     
+    /*
+     * Test fails if rules of the form "[algebra] ?1" are not processed correctly.
+     */
+    @Test
+    public void testParseUnaryRule() {
+        InterpretedTreeAutomaton irtg = pi(rs("unary.irtg"))        
+        TreeAutomaton chart = irtg.parse(["string":"Champagne and dessert followed ."])
+        assertEquals(pt("r28_br18139(r1280_br9876(r1278_br288,r1280_br9875(r48_br252,r1279_br6324)),r28_br18138(r969_br14525(r1281_br8789),r27_br2559))"), chart.viterbi())
+    }
+    
     // Helping functions
     private static Pair p(Object a, Object b) {
         return new Pair(a,b);

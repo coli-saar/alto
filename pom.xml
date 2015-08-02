@@ -5,12 +5,12 @@
   <groupId>de.up.ling</groupId>
   <artifactId>alto</artifactId>
   <packaging>jar</packaging>
-  <version>1.1-SNAPSHOT</version>
+  <version>2.1-SNAPSHOT</version>
   <name>alto</name>
   <url>http://maven.apache.org</url>
 
   <properties>
-    <antlr.version>4.3</antlr.version>
+    <antlr.version>4.5.1</antlr.version>
     <assembly.version>2.4</assembly.version>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
@@ -108,16 +108,30 @@
 	<version>3.7.4</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.swinglabs</groupId>
+      <artifactId>swing-layout</artifactId>
+      <version>1.0.3</version>
+    </dependency>
+    
   
-  
-
+    <!-- testing dependencies -->
+    <dependency> <!-- hamcrest before junit to get dependencies right -->
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-all</artifactId>
+      <version>1.3</version>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>4.6</version>
+      <version>4.11</version>
       <scope>test</scope>
     </dependency>
+
+<!--
+-->
     
     <dependency>
       <artifactId>groovy-all</artifactId>
@@ -125,29 +139,68 @@
       <version>2.0.5</version>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.swinglabs</groupId>
-      <artifactId>swing-layout</artifactId>
-      <version>1.0.3</version>
-    </dependency>
-    
-    
-<!--
-    <dependency>
-	<groupId>org.apache.spark</groupId>
-	<artifactId>spark-core_2.10</artifactId>
-	<version>1.1.0</version>
-</dependency>
-
--->
-
-
   </dependencies>
 
   <build>
+    <!-- filter build.properties to add buildnumber -->
+    <resources>
+      <resource>
+	<directory>src/main/resources</directory>
+	<filtering>true</filtering>
+	<includes>
+	  <include>**/build.properties</include>
+	</includes>
+      </resource>
+      <resource>
+	<directory>src/main/resources</directory>
+	<filtering>false</filtering>
+	<excludes>
+	  <exclude>**/build.properties</exclude>
+	</excludes>
+      </resource>
+    </resources>
 
     <plugins>
+      <!-- use more recent version of compiler plugin so we can do incremental compilation despite filtering -->
+      <plugin>
+	<artifactId>maven-compiler-plugin</artifactId>
+	<version>3.1</version>
+	<configuration>
+	  <source>1.8</source>
+	  <target>1.8</target>
+	  <useIncrementalCompilation>yes</useIncrementalCompilation>
+	</configuration>
+      </plugin>
+
+      <!-- buildnumber plugin: add hg revision to a properties file -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.3</version>
+	<!-- -->
+	<configuration>
+	  <doCheck>false</doCheck>
+          <doUpdate>false</doUpdate>
+	  <revisionOnScmFailure>unknownRevision</revisionOnScmFailure>
+	  <format>{1,date,yyyy-MM-dd HH:mm} {0}</format>
+	  <items>
+	    <item>scmVersion</item>
+            <item>timestamp</item>
+	  </items>
+        </configuration>
+	<!-- -->
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+          </execution>
+        </executions>
+        
+      </plugin>
+
+      <!-- Groovy plugin for unit tests -->
       <plugin>
         <groupId>org.codehaus.gmaven</groupId>
         <artifactId>gmaven-plugin</artifactId>
@@ -162,7 +215,6 @@
             </goals>
           </execution>
         </executions>
-
         <dependencies>
           <dependency>
             <groupId>org.codehaus.gmaven.runtime</groupId>
@@ -183,6 +235,7 @@
         </dependencies>
       </plugin>
 
+      <!-- ANTLR4 plugin -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
@@ -215,6 +268,7 @@
         </executions>
       </plugin>
 
+      <!-- JavaCC plugin -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>javacc-maven-plugin</artifactId>
@@ -229,7 +283,7 @@
         </executions>
       </plugin>
 
-
+      <!-- Javadoc plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -239,21 +293,18 @@
 	  <sourceFileExcludes>
 	    <sourceFileExclude>**/de/up/ling/irtg/codec/*Listener*</sourceFileExclude>
 	  </sourceFileExcludes>
-
           <show>public</show>
-
           <!-- Ideally, one would like to use detectLinks and link
           elements; but for some reason that doesn't seem to work with
           Java 8. Replacing with offline links temporarily. -->
-
           <offlineLinks>
             <offlineLink>
               <url>http://fastutil.di.unimi.it/docs/</url>
               <location>http://fastutil.di.unimi.it/docs/</location>
             </offlineLink>
             <offlineLink>
-              <url>http://tcl.ling.uni-potsdam.de/jenkins/job/basics/javadoc</url>
-              <location>http://tcl.ling.uni-potsdam.de/jenkins/job/basics/javadoc</location>
+              <url>http://www.ling.uni-potsdam.de/tcl/basics/apidocs/</url>
+              <location>http://www.ling.uni-potsdam.de/tcl/basics/apidocs/</location>
             </offlineLink>
             <offlineLink>
               <url>http://docs.guava-libraries.googlecode.com/git-history/v15.0/javadoc/</url>
@@ -264,12 +315,11 @@
               <location>http://docs.oracle.com/javase/8/docs/api/</location>
             </offlineLink>
           </offlineLinks>
-
           <detectLinks>false</detectLinks>
         </configuration>
       </plugin>
 
-
+      <!-- Scala plugin -->
       <plugin>
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
@@ -301,7 +351,7 @@
         </configuration>
       </plugin>
 
-      <!-- plugin configuration for Jenkins -->
+      <!-- Findbugs plugin configuration for Jenkins -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>findbugs-maven-plugin</artifactId>
@@ -313,8 +363,52 @@
         </configuration>
       </plugin>
 
+      <!-- Assembly plugin -->
+      <plugin>
+	<artifactId>maven-assembly-plugin</artifactId>
+	<version>${assembly.version}</version>
+	<configuration>
+	  <archive>
+	    <manifest>
+	      <mainClass>de.up.ling.irtg.gui.Alto</mainClass>
+	    </manifest>
+	  </archive>
+	  <descriptorRefs>
+	    <descriptorRef>jar-with-dependencies</descriptorRef>
+	  </descriptorRefs>
+	</configuration>
+	<executions>
+	  <execution>
+	    <phase>package</phase>
+	    <goals>
+	      <goal>single</goal>
+	    </goals>
+	  </execution>
+	</executions>
+      </plugin>
+
+<!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.4.1</version>
+        <configuration>
+
+        </configuration>
+        <executions>
+          <execution>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+-->
+
     </plugins>
 
+    <!-- some more config -->
     <pluginManagement>
       <plugins>
         <plugin>
@@ -333,73 +427,6 @@
       </extension>
     </extensions>
   </build>
-
-
-
-
-
-  <profiles>
-    <profile>
-      <id>fatjar</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>${assembly.version}</version>
-            <configuration>
-              <archive>
-                <manifest>
-                  <mainClass>de.up.ling.irtg.gui.Alto</mainClass>
-                </manifest>
-              </archive>
-              <descriptorRefs>
-                <descriptorRef>jar-with-dependencies</descriptorRef>
-              </descriptorRefs>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-
-    <profile>
-      <id>zip</id>
-      <activation>
-        <activeByDefault>false</activeByDefault>
-      </activation>
-      <build>
-        <plugins>
-          <plugin>
-            <artifactId>maven-assembly-plugin</artifactId>
-            <version>${assembly.version}</version>
-            <configuration>
-              <descriptors>
-                <descriptor>zip.xml</descriptor>
-              </descriptors>
-            </configuration>
-            <executions>
-              <execution>
-                <phase>package</phase>
-                <goals>
-                  <goal>single</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 
 
   <repositories>
@@ -473,5 +500,57 @@
     
     <downloadUrl>http://www.ling.uni-potsdam.de/tcl/maven2/releases</downloadUrl>
   </distributionManagement>
+
+
+      <scm>
+      <developerConnection>scm:hg:https://bitbucket.org/tclup/alto</developerConnection>
+        <tag>HEAD</tag>
+  </scm>
 </project>
 
+
+<!--
+
+
+  <profiles>
+    <profile>
+      <id>fatjar</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <id>zip</id>
+      <activation>
+        <activeByDefault>false</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>${assembly.version}</version>
+            <configuration>
+              <descriptors>
+                <descriptor>zip.xml</descriptor>
+              </descriptors>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+-->

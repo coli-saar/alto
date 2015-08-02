@@ -4,7 +4,7 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.util.Lazy;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -15,9 +15,26 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Caution: When comparing rules with equals and hashCode, the rule weight is
- * NOT taken into account. This is so rules can be destructively reweighted in
- * training.
+ * A rule in a tree automaton.<p>
+ * 
+ * A rule consists of a parent state, a label (or terminal symbol),
+ * an array of child states, and a weight. The states and labels are
+ * represented as int values for efficiency reasons; they can be
+ * resolved to human-readable values by looking them up using
+ * {@link TreeAutomaton#getStateForId(int) } (for states) or
+ * {@link Signature#resolveSymbolId(int) } using the tree
+ * automaton's signature (for labels).<p>
+ * 
+ * In order to create new rule objects, do not instantiate
+ * Rules directly. Instead, call {@link TreeAutomaton#createRule(java.lang.Object, java.lang.String, java.util.List) }
+ * or one of its variants. This gives the containing {@link TreeAutomaton}
+ * a chance to update its internal data structures if necessary.<p>
+ * 
+ * If it is not specified, the weight is set to 1.0. You can
+ * destructively modify a rule's weight; this is useful, for instance,
+ * in implementing the EM algorithm. As a consequence, {@link #equals(java.lang.Object) }
+ * and {@link #hashCode() } ignore the weight, i.e. a rule remains equals
+ * to itself after you change the weight.
  *
  * @author koller
  */
@@ -189,5 +206,9 @@ public class Rule implements Serializable {
         }
         
         return ret;
+    }
+    
+    public boolean isLoop() {
+        return getArity() == 1 && children[0] == parent;
     }
 }

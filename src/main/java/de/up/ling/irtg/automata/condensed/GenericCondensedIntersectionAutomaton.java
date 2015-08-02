@@ -38,21 +38,21 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
- * Computes an automaton for the intersection of an ordinary {@link TreeAutomaton} (left) and a
- * {@link CondensedTreeAutomaton} (right). 
- * 
+ * Computes an automaton for the intersection of an ordinary
+ * {@link TreeAutomaton} (left) and a {@link CondensedTreeAutomaton} (right).
+ *
  * This class uses a CKY-style algorithm, which queries the right automaton
  * top-down and the left automaton bottom-up. A typical use-case is that the
  * left automaton is the derivation-tree RTG of an IRTG and the right automaton
  * is the inverse-homomorphism image of a decomposition automaton.<p>
- * 
- * Note that this automaton will not work correctly if right is
- * recursive except if all recursive rules are of the form 'q -> {...}(q)' which
- * is explicitly handled. Recursive right automata come up, for instance, when
- * parsing with an IRTG that has ?1 on the input interpretation.
- * (See issue #2 on Bitbucket.)
+ *
+ * Note that this automaton will not work correctly if right is recursive except
+ * if all recursive rules are of the form 'q -> {...}(q)' which is explicitly
+ * handled. Recursive right automata come up, for instance, when parsing with an
+ * IRTG that has ?1 on the input interpretation. (See issue #2 on Bitbucket.)
  *
  * @author koller
  * @param <LeftState>
@@ -73,6 +73,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     abstract protected void collectOutputRule(Rule outputRule);
 
     abstract protected void addAllOutputRules();
+
+    
 
     @FunctionalInterface
     public static interface IntersectionCall {
@@ -111,7 +113,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             IntSet visited = new IntOpenHashSet();
             right.getFinalStates().forEach((q) -> {
                 // starting the dfs by the final states ensures a topological order
-                ckyDfsForStatesInBottomUpOrder(q, visited, partners);
+                ckyDfsForStatesInBottomUpOrder(q, visited, partners, 0);
             });
 
             // transfer all collected rules into the output automaton
@@ -129,6 +131,12 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
     private int progressListenerCount = 0;
 
+    private void D(int depth, Supplier<String> s) {
+        if (DEBUG) {
+            System.err.println(Util.repeat("  ", depth) + s.get());
+        }
+    }
+
     /**
      * Iterate over all states in the right (condensed) automaton to find
      * partner states in the left one.
@@ -137,36 +145,36 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
      * @param visited already visited states
      * @param partners already found partner states
      */
-    private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, final Int2ObjectMap<IntSet> partners) {
-        if (!visited.contains(q)) {
-            if (DEBUG) {
-                System.err.println("StateRight: " + q);
-            }
+    private void ckyDfsForStatesInBottomUpOrder(int q, IntSet visited, final Int2ObjectMap<IntSet> partners, int depth) {
+        D(depth, () -> "cky called: " + right.getStateForId(q));
 
+        if (!visited.contains(q)) {
             visited.add(q);
+            D(depth, () -> "-> processing " + right.getStateForId(q));
 
             final IntList foundPartners = new IntArrayList();
             final ArrayList<CondensedRule> selfLoops = new ArrayList<>();
             final IntList selfToDo = new IntArrayList();
-            final IntSet  selfSeen = new IntOpenHashSet();
-            
+            final IntSet selfSeen = new IntOpenHashSet();
+
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
-                if (DEBUG) {
-                    System.err.println("Right rule: " + rightRule.toString(right));
-                }
-                
-                if(rightRule.getArity() == 1 && rightRule.getChildren()[0] == q){
+                D(depth, () -> "Right rule: " + rightRule.toString(right));
+
+                // If the right rule is a "self-loop", i.e. of the form q -> f(q),
+                // the normal DFS doesn't work. We give it special treatment by
+                // postponing its combination with the right rules until below.
+                if (rightRule.isLoop()) {
                     selfLoops.add(rightRule);
                     continue;
                 }
-                
+
                 int[] rightChildren = rightRule.getChildren();
                 List<IntSet> remappedChildren = new ArrayList<>();
 
                 // iterate over all children in the right rule
                 for (int i = 0; i < rightRule.getArity(); ++i) {
                     // go into the recursion first to obtain the topological order that is needed for the CKY algorithm
-                    ckyDfsForStatesInBottomUpOrder(rightChildren[i], visited, partners);
+                    ckyDfsForStatesInBottomUpOrder(rightChildren[i], visited, partners, depth + 1);
 
                     // only add, if a partner state has been found.
                     if (partners.containsKey(rightChildren[i])) {
@@ -177,21 +185,25 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
                 foundPartners.clear();
 
+                if (DEBUG) {
+                    List childStates = Util.mapToList(remappedChildren, qs -> Util.mapToList(qs, qq -> left.getStateForId(qq)));
+                    D(depth, () -> "found child states: " + childStates);
+                }
+
                 // find all rules bottom-up in the left automaton that have the same (remapped) children as the right rule.
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                     // create a new rule
                     Rule rule = combineRules(leftRule, rightRule);
-                    
-                    if(!selfSeen.contains(rule.getParent())){
+
+                    if (!selfSeen.contains(rule.getParent())) {
                         selfToDo.add(leftRule.getParent());
-                        
+
                         selfSeen.add(rule.getParent());
                     }
-                                        
-                    if (DEBUG) {
-                        System.err.println("Left rule: " + leftRule.toString(left));
-                        System.err.println("Combined rule: " + rule.toString(this));
-                    }
+
+                    D(depth, () -> "Left rule: " + leftRule.toString(left));
+                    D(depth, () -> "Combined rule: " + rule.toString(this));
+                    D(depth, () -> "");
 
                     // transfer rule to staging area for output rules
                     collectOutputRule(rule);
@@ -205,18 +217,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
                 // now go through to-do list and add all state pairs to partner sets
                 for (int i = 0; i < foundPartners.size(); i += 2) {
-                    int rightState = foundPartners.get(i);
-                    int leftState = foundPartners.get(i + 1);
-
-                    // remember the newly found partneres if needed
-                    IntSet knownPartners = partners.get(rightState);
-
-                    if (knownPartners == null) {
-                        knownPartners = new IntOpenHashSet();
-                        partners.put(rightState, knownPartners);
-                    }
-
-                    knownPartners.add(leftState);
+                    addPartner(foundPartners.get(i), foundPartners.get(i + 1), partners);
                 }
 
                 if (GuiUtils.getGlobalListener() != null) {
@@ -224,50 +225,59 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 }
 
             }
-            
+
+            // Now that we have seen all children of q through rules that
+            // are not self-loops, go through the self-loops and process them.
             int[] children = new int[1];
-            for(int i=0;i<selfToDo.size();++i){
+            for (int i = 0; i < selfToDo.size(); ++i) {
                 int leftState = selfToDo.get(i);
-                
+
                 children[0] = leftState;
-                
-                for(int k=0;k<selfLoops.size();++k){
+
+                for (int k = 0; k < selfLoops.size(); ++k) {
                     CondensedRule rightRule = selfLoops.get(k);
-                    
-                    rightRule.getLabels(right).forEach(labelId ->{
+
+                    rightRule.getLabels(right).forEach(labelId -> {
                         Iterable<Rule> rules = left.getRulesBottomUp(leftToRightSignatureMapper.remapForward(labelId), children);
-                        
+
                         rules.forEach(leftRule -> {
                             // create a new rule
                             Rule rule = combineRules(leftRule, rightRule);
-                    
-                        if(!selfSeen.contains(rule.getParent())){
-                            selfToDo.add(rule.getParent());
-                            selfToDo.add(leftRule.getParent());
-                        
-                            selfSeen.add(rule.getParent());
-                        }
-                                        
-                        if (DEBUG) {
-                            System.err.println("Left rule: " + leftRule.toString(left));
-                            System.err.println("Combined rule: " + rule.toString(this));
-                        }
 
-                        // transfer rule to staging area for output rules
-                        collectOutputRule(rule);
+                            if (!selfSeen.contains(rule.getParent())) {
+                                selfToDo.add(rule.getParent());
+                                selfToDo.add(leftRule.getParent());
 
-                        // schedule the two parent states for addition
-                        // -- they cannot be added to the partners sets here
-                        // because we are inside an iteration over these sets
-                        foundPartners.add(rightRule.getParent());
-                        foundPartners.add(leftRule.getParent());
-                            
+                                selfSeen.add(rule.getParent());
+                            }
+
+                            D(depth, () -> "Left rule: " + leftRule.toString(left));
+                            D(depth, () -> "Combined rule (post-hoc): " + rule.toString(this));
+                            D(depth, () -> "");
+
+                            // transfer rule to staging area for output rules
+                            collectOutputRule(rule);
+
+                            addPartner(rightRule.getParent(), leftRule.getParent(), partners);
+
                         });
                     });
                 }
             }
-            
         }
+    }
+    
+    private void addPartner(int rightState, int leftState, Int2ObjectMap<IntSet> partners) {
+
+        // remember the newly found partneres if needed
+        IntSet knownPartners = partners.get(rightState);
+
+        if (knownPartners == null) {
+            knownPartners = new IntOpenHashSet();
+            partners.put(rightState, knownPartners);
+        }
+
+        knownPartners.add(leftState);
     }
 
     private int addStatePair(int leftState, int rightState) {

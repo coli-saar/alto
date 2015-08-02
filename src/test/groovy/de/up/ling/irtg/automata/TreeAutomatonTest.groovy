@@ -753,6 +753,25 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assertEquals(11, ta.language().size());
     }
     
+    // In older versions, this test failed because of bugs in
+    // Viterbi.
+    @Test
+    public void testNullViterbiInChart() {
+        TreeAutomaton auto = pa(rs("binarized-chart.auto"))
+        assert auto.viterbi() != null
+    }
+    
+    // Make sure that Viterbi and the language iterator
+    // agree on what the best tree is.
+    @Test
+    public void testViterbiEqualsIterator() {
+        TreeAutomaton auto = pa(rs("binarized-chart.auto"))
+        WeightedTree tv = auto.viterbiRaw()
+        WeightedTree ti = auto.sortedLanguageIterator().next()
+        
+        assertEquals(ti.getTree(), tv.getTree())
+        assertAlmostEquals(ti.getWeight(), tv.getWeight())
+    }
     
     /*
     def "testing whether automaton is bottom-up deterministic"() {

@@ -1,0 +1,105 @@
+/*
+
+The example grammar from this paper:
+Koller (2015), Semantic construction with graph grammars. Proc. of IWCS 2015.
+http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-sgraph-15
+
+This is an IRTG with a string and a graph interpretation. It can map
+from English sentences (= strings) to simple semantic representations
+(= graphs), and back. Because the graph interpretation uses the
+s-graph algebra (aka HR algebra), you can call this IRTG more
+specifically an s-graph grammar.
+
+Main example sentences from the paper; parse these by choosing Tools
+-> Parse and entering them in the "string" box:
+
+- the boy wants to sleep
+- the boy wants the girl to sleep
+- the boy who snores sleeps
+- the boy sleeps and sometimes snores
+
+Alto also supports parsing graphs to strings; try this by choosing
+Tools -> Parse and entering these in the "graph" box:
+
+- (u_40 / boy  :ARG0-of (u_41 / want  :ARG1 (u_42 / sleep  :ARG0 u_40)))
+- (u_35 / sleep  :ARG0 (u_36 / girl)  :ARG1-of (u_34 / want  :ARG0 (u_33 / boy)))
+
+*/
+
+
+interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+/*** Section 4.1 / Figure 5: Complements ***/
+
+S! -> comb_subj(NP, VP)
+[string] *(?1, ?2)
+[graph]  f_subj(merge(?2, r_subj(?1)))
+
+// for simplicity, use just VP for both "sleep" and "sleeps",
+// and for "go" and "goes"
+// => grammar will overgenerate when mapping graph to string
+VP -> sleep
+[string] sleep
+[graph]  "(g<root> / sleep  :ARG0 (s<subj>))"
+
+VP -> sleeps
+[string] sleeps
+[graph]  "(g<root> / sleep  :ARG0 (s<subj>))"
+
+VP -> go
+[string] go
+[graph]  "(g<root> / go  :ARG0 (s<subj>))"
+
+VP -> goes
+[string] goes
+[graph]  "(g<root> / go  :ARG0 (s<subj>))"
+
+NP -> boy
+[string] *(the, boy)
+[graph]  "(x<root> / boy)"
+
+NP -> girl
+[string] *(the, girl)
+[graph]  "(x<root> / girl)"
+
+// subject-control "want"
+VP -> want1(VP)
+[string] *(*(wants, to), ?1)
+[graph]  f_vcomp(merge("(u<root> / want  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))", r_vcomp(?1)))
+
+// object-control "want"
+VP -> want2(NP, VP)
+[string] *(*(wants, ?1), *(to, ?2))
+[graph]  f_vcomp(merge("(u<root> / want  :ARG0 (b<subj>)  :ARG1 (g<vcomp>))",
+                       f_obj(merge(r_obj(?1),
+                                   r_subj_obj(r_vcomp(?2))))))
+
+
+/*** Section 4.2 / Figure 8: Modifiers ***/
+
+NP -> mod_rc(NP, RC)
+[string] *(?1, ?2)
+[graph]  merge(?1, ?2)
+
+RC -> rc(RP, VP)
+[string] *(?1, ?2)
+[graph]  r_subj_root(f_root(merge(?2, r_subj(?1))))
+
+RP -> who
+[string] who
+[graph]  "(u<root>)"
+
+VP -> coord(VP, VP)
+[string] *(?1, *(and, ?2))
+[graph]  f_1(f_2(merge(merge("(u<root> / and :op1 (v<1>) :op2 (w<2>))",
+                             r_1(?1)),
+                       r_2(?2))))
+
+VP -> sometimes(VP)
+[string] *(sometimes, ?1)
+[graph]  merge("(u<root> :time (v / sometimes))", ?1)
+
+VP -> snore
+[string] snores
+[graph]  "(u<root> / snore :ARG0 (v<subj>))"

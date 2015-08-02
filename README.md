@@ -25,9 +25,11 @@ Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It i
 
 The basic theory of IRTGs is explained in [Koller & Kuhlmann, IWPT 2011](http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=irtg-11). You can find more details on the [Literature](https://bitbucket.org/tclup/alto/wiki/Literature) page.
 
-Alto is implemented in Java and can be downloaded [here](https://bitbucket.org/tclup/alto/downloads).
+Alto requires [Java 8](http://www.oracle.com/technetwork/java/javase/downloads/jre8-downloads-2133155.html) and can be downloaded [here](https://bitbucket.org/tclup/alto/downloads).
 
-See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on how to use Alto. The [tutorials](https://bitbucket.org/tclup/alto/wiki/Tutorials) are a good way to get started with Alto.
+See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on how to use Alto. The [tutorials](https://bitbucket.org/tclup/alto/wiki/Tutorials) are a good way to get started. For advanced usage, you can check out the [Apidocs](http://www.ling.uni-potsdam.de/tcl/alto/apidocs/).
+
+If you run into trouble, please feel free to ask for help on [our Google group](https://groups.google.com/forum/#!forum/alto-users), or you can [submit an issue](https://bitbucket.org/tclup/alto/issues?status=new&status=open).
 
 ## Screenshots ##
 
@@ -43,6 +45,6 @@ Here's the result of parsing "the boy wants to go" with this grammar:
 
 * Danilo Baumgarten (BSc University of Potsdam, 2013)
 * Johannes Gontrum (BSc University of Potsdam, 2015)
-* Jonas Groschwitz
+* [Jonas Groschwitz](http://www.ling.uni-potsdam.de/~groschwitz)
 * [Alexander Koller](http://www.ling.uni-potsdam.de/~koller/)
 * [Christoph Teichmann](https://sites.google.com/site/christophteichmanncl/)

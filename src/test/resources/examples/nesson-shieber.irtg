@@ -1,0 +1,35 @@
+/* STAG grammar for semantic construction. The example is
+   taken from Nesson & Shieber 06.
+
+   You can parse the string "john apparently likes mary"
+   or the derived syntax tree "s(np(john), vp(adv(apparently),
+   vp(v(likes), np(mary))))" and decode them into a derived
+   semantic tree. You can also generate a syntax tree or a string from
+   the semantic tree
+   "t(t_t(apparently),t(e_t(likes,e(mary)),e(john)))".
+*/
+ 
+
+interpretation string: de.up.ling.irtg.algebra.TagStringAlgebra
+interpretation syntax: de.up.ling.irtg.algebra.TagTreeAlgebra
+interpretation semantics: de.up.ling.irtg.algebra.TagTreeAlgebra
+
+S! -> a1(NP, NP, VPa)
+[string]    *CONC11*(?1, *WRAP21*(?3, *CONC11*(likes, ?2)))
+[syntax]    s(?1, @(?3, vp(v(likes), ?2)))
+[semantics] @(?3, t(e_t(likes, ?2), ?1))
+
+NP -> a2
+[string]    john
+[syntax]    np(john)
+[semantics] e(john)
+
+NP -> a3
+[string]    mary
+[syntax]    np(mary)
+[semantics] e(mary)
+
+VPa -> b4
+[string]    *CONC12*(apparently, *EE*)
+[syntax]    vp(adv(apparently), *)
+[semantics] t(t_t(apparently), *)

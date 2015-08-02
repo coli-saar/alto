@@ -51,6 +51,15 @@ class CorpusTest {
         assert ! corpus.isAnnotated();
     }
     
+    // test for comment prefixes other than "#"
+    @Test
+    public void testNewCorpusUnannoWithPrefix() {
+        InterpretedTreeAutomaton irtg = pi(CFG_STR)
+        Corpus corpus = Corpus.readCorpus(new StringReader(UNANNOTATED_CORPUS_WITH_PREFIX), irtg);
+        assert corpus.getNumberOfInstances() == 3;
+        assert ! corpus.isAnnotated();
+    }
+    
      @Test
     public void testNewCorpusAnno() {
         InterpretedTreeAutomaton irtg = pi(CFG_STR)
@@ -127,6 +136,18 @@ john watches the telescope with the woman
 # interpretation i: de.up.ling.irtg.algebra.StringAlgebra
 
 john watches the woman with the telescope
+john watches the telescope with the telescope
+john watches the telescope with the woman
+""";
+    
+    private static final String UNANNOTATED_CORPUS_WITH_PREFIX = """
+!@ IRTG unannotated corpus file, v1.0
+!@
+!@ interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+john watches the woman with the telescope\n\
+!@ comment\n\
+
 john watches the telescope with the telescope
 john watches the telescope with the woman
 """;

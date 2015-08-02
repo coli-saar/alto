@@ -12,7 +12,6 @@ import de.up.ling.irtg.automata.SingletonAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -22,7 +21,15 @@ import java.util.Map;
 import java.util.ServiceLoader;
 
 /**
- *
+ * A mapping from the operations of one algebra into terms consisting
+ * of operations of another algebra. A regular seed R maps each
+ * symbol f over the input algebra to a tree automaton R(f), defined
+ * by the (abstract) {@link #binarize(java.lang.String) } method. 
+ * The expected behavior of R(f) is that L(R(f)) consists of a set
+ * of terms over the output algebra such that the interpretation of these
+ * terms in the output algebra is the same as the interpretation 
+ * of f in the input algebra.
+ * 
  * @author koller
  */
 public abstract class RegularSeed {

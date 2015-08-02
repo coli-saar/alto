@@ -15,7 +15,9 @@ import java.io.PrintWriter;
 import java.util.List;
 
 /**
- *
+ * An output codec that takes a list of objects, transforms them into
+ * strings, and concatenates them with spaces.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "list", description = "space-separated (e.g. words)", type = List.class)

@@ -40,9 +40,8 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 
 /**
- * Implements the binarization algorithm of Buechse/Koller/Vogler 2013. See the
- * following paper for details:
- * http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=binarization-13<p>
+ * Implements the binarization algorithm of <a href="http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=binarization-13">Buechse/Koller/Vogler, ACL 2013</a>. 
+ * <p>
  * 
  * The input IRTG is binarized rule by rule. If a rule cannot be binarized,
  * it is copied verbatim to the binarized IRTG. If the algebra does not

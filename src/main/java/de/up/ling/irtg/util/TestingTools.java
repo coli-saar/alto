@@ -29,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,18 @@ import java.util.Set;
  * @author koller
  */
 public class TestingTools {
+    /**
+     * Returns an InputStream for the resource with the given name.
+     * Resources are resolved relative to the root of the given classpath;
+     * thus files in src/test/resources can be addressed as "foo.txt" etc.
+     * 
+     * @param filename
+     * @return
+     * @throws IOException 
+     */
+    public static InputStream rs(String filename) throws IOException {
+        return TestingTools.class.getClassLoader().getResourceAsStream(filename);
+    }
 
     public static Tree<String> pt(String s) throws Exception {
         return TreeParser.parse(s);
@@ -60,6 +73,10 @@ public class TestingTools {
 
     public static TreeAutomaton pa(String s) throws CodecParseException, IOException {
         return (new TreeAutomatonInputCodec()).read(new ByteArrayInputStream(s.getBytes()));
+    }
+    
+    public static TreeAutomaton pa(InputStream s) throws CodecParseException, IOException {
+        return (new TreeAutomatonInputCodec()).read(s);
     }
     
     public static InterpretedTreeAutomaton pi(String s) throws IOException, de.up.ling.irtg.codec.CodecParseException {
@@ -135,5 +152,9 @@ public class TestingTools {
                 return Double.parseDouble(x);
             }
         };
+    }
+    
+    public static List<String> ss(String s) {
+        return Arrays.asList(s.split("\\s+"));
     }
 }

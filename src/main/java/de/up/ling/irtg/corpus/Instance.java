@@ -87,10 +87,18 @@ public class Instance {
 
     @Override
     public String toString() {
+        return toString(null);
+    }
+    
+    public String toString(TreeAutomaton auto) {
         StringBuffer ret = new StringBuffer("Instance{" + "inputObjects=" + inputObjects);
         
         if( derivationTree != null ) {
-            ret.append(", derivationTree=" + derivationTree);
+            if( auto == null ) {
+                ret.append(", derivationTree=" + derivationTree);
+            } else {
+                ret.append(", derivationTree(rsvd)=" + auto.getSignature().resolve(derivationTree));
+            }
         }
         
         if( chart != null ) {

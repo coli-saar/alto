@@ -7,8 +7,11 @@ package de.up.ling.irtg.algebra
 
 import org.junit.Test
 import java.util.*
+import java.util.HashSet
 import java.io.*
 import de.up.ling.irtg.automata.*
+import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton
+import de.up.ling.irtg.signature.SignatureMapper
 import static org.junit.Assert.*
 import de.saar.chorus.term.parser.*;
 import de.up.ling.tree.*;
@@ -140,5 +143,27 @@ class StringAlgebraTest {
         assertTrue(ta.accepts(pt("conc4(__*__,b,__*__,a)")));
     }
     
-}
+    
+    @Test
+    public void testTopDownConc1() {
+        String s = "a";
+        Algebra a = new WideStringAlgebra();
+        List words = a.parseString(s);
+        a.getSignature().addSymbol("conc1",1);
+        a.getSignature().addSymbol("conc2",2);
 
+        TreeAutomaton ta = a.decompose(words);
+        
+        ConcreteCondensedTreeAutomaton<String> tb = new ConcreteCondensedTreeAutomaton<>(ta.getSignature());
+        tb.addFinalState(tb.addState("0"));        
+        tb.addRule(tb.createRule("0",["conc1"],["1"]));
+        tb.addRule(tb.createRule("1",["conc1"],["2"]));
+        tb.addRule(tb.createRule("2",["a"],[]));
+        
+        TreeAutomaton t = ta.intersect(tb);
+        Set<Tree<String>> lang = t.language();
+        
+        assertEquals(lang.size(),1);
+        assertTrue(lang.contains(pt("conc1(conc1(a))")));
+    }
+}

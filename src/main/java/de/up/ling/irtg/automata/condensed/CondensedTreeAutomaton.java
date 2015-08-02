@@ -57,11 +57,12 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
     }
 
     public CondensedRule createRule(State parent, String[] labels, State[] children, double weight) {
-        IntSet labelSet = new IntArraySet(labels.length);
-        for (int i = 0; i < labels.length; i++) {
-            labelSet.add(signature.addSymbol(labels[i], children.length));
-        }
-        return new CondensedRule(addState(parent), addLabelSetID(labelSet), addStates(children), weight);
+//        IntSet labelSet = new IntArraySet(labels.length);
+//        for (int i = 0; i < labels.length; i++) {
+//            labelSet.add(signature.addSymbol(labels[i], children.length));
+//        }
+        
+        return new CondensedRule(addState(parent), addLabelSetID(labels, children.length), addStates(children), weight);
 
     }
 
@@ -79,6 +80,14 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
         return new CondensedRule(parent, labelSetID, children, weight);
     }
 
+    public int addLabelSetID(String[] labels, int arity) {
+        IntSet labelSet = new IntArraySet(labels.length);
+        for (int i = 0; i < labels.length; i++) {
+            labelSet.add(signature.addSymbol(labels[i], arity));
+        }
+        return addLabelSetID(labelSet);
+    }
+    
     // Returns the ID for a labelset, but does not add it! Returns 0 if it is not 
     // represented in the interner
     protected int getLabelSetID(IntSet labels) {
@@ -87,7 +96,7 @@ public abstract class CondensedTreeAutomaton<State> extends TreeAutomaton<State>
 
     // Adds a given labelSet to the interner and returns the int value representing it. 
     // This should be called while creating a rule for this automaton.
-    protected int addLabelSetID(IntSet labels) {
+    public int addLabelSetID(IntSet labels) {
         return labelSetInterner.addObject(labels);
     }
 

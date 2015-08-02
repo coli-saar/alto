@@ -15,6 +15,7 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
+import de.up.ling.irtg.util.LambdaStopwatch;
 import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -29,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
@@ -47,35 +49,40 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private long numStates;
     private int maxRuleRank;
     private static final boolean SHOW_DEBUG_MENU = true;
+    private LambdaStopwatch T = new LambdaStopwatch(null);
 
     /**
      * Creates new form JInterpretedTreeAutomaton
      */
     public JTreeAutomaton(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
         initComponents();
-
-        if (!Alto.isMac()) {
-            miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
-            miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-            miSaveAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
-            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
-            miShowLanguage.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
-            miParse.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_MASK));
-            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-            miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.CTRL_MASK));
-
-        }
-
+        
         jMenuBar2.add(new WindowMenu(this));
 
         if (!SHOW_DEBUG_MENU) {
             jMenuBar2.remove(debugMenu);
         }
 
+
+        if (!Alto.isMac()) {
+            GuiUtils.replaceMetaByCtrl(jMenuBar2);
+//            miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
+//            miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+//            miSaveAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, java.awt.event.InputEvent.CTRL_MASK));
+//            miQuit.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_Q, java.awt.event.InputEvent.CTRL_MASK));
+//            miShowLanguage.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_L, java.awt.event.InputEvent.CTRL_MASK));
+//            miParse.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_MASK));
+//            miCloseAllWindows.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+//            miCloseWindow.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_W, java.awt.event.InputEvent.CTRL_MASK));
+        }
+
 //        new WindowMenu(this).get
         this.automaton = automaton;
 
-        if (automaton.isEmpty()) {
+        // We used to check the automaton for emptiness here and 
+//        Tree vit = T.t("emptiness", () -> automaton.viterbi());
+        boolean isEmpty = T.t("emptiness", () -> automaton.isEmpty());
+        if (isEmpty) {
             miShowLanguage.setEnabled(false);
         }
 
@@ -127,7 +134,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         IntSet allStates = new IntOpenHashSet();
 
         rulesInOrder = new ArrayList<Rule>();
-        Iterables.addAll(rulesInOrder, automaton.getRuleSet());
+        Iterables.addAll(rulesInOrder, T.t("ruleSet", () -> automaton.getRuleSet()));
 
         maxRuleRank = 0;
 
@@ -188,6 +195,17 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         miTrainEM.setEnabled(enabled);
         miTrainML.setEnabled(enabled);
         miTrainVB.setEnabled(enabled);
+    }
+
+    @Override
+    public void setVisible(boolean b) {
+        super.setVisible(b);
+
+        // For some reason, new window doesn't always get the focus as it should
+        // (at least on Mac). Request it explicitly to make sure hotkeys work.
+        SwingUtilities.invokeLater(() -> {
+            requestFocus();
+        });
     }
 
     /**
@@ -522,28 +540,28 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
             if (inputs != null) {
                 GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
-                        listener -> {
-                            GuiUtils.setGlobalListener(listener);
+                                         listener -> {
+                                             GuiUtils.setGlobalListener(listener);
 
-                            for (String intp : options.keySet()) {
-                                irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
-                            }
+                                             for (String intp : options.keySet()) {
+                                                 irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
+                                             }
 
-                            TreeAutomaton chart = irtg.parse(inputs);
+                                             TreeAutomaton chart = irtg.parse(inputs);
 
-                            GuiUtils.setGlobalListener(null);
-                            return chart;
-                        },
-                        (chart, time) -> {
-                            Alto.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
-                            if (chart != null) {
-                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                                jta.setIrtg(irtg);
-                                jta.setTitle("Parse chart: " + inputs);
-                                jta.pack();
-                                jta.setVisible(true);
-                            }
-                        });
+                                             GuiUtils.setGlobalListener(null);
+                                             return chart;
+                                         },
+                                         (chart, time) -> {
+                                             Alto.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
+                                             if (chart != null) {
+                                                 JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+                                                 jta.setIrtg(irtg);
+                                                 jta.setTitle("Parse chart: " + inputs);
+                                                 jta.pack();
+                                                 jta.setVisible(true);
+                                             }
+                                         });
 
 //                new Thread() {
 //                    @Override
@@ -597,28 +615,28 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miTrainEMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainEMActionPerformed
         Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
             GuiUtils.withProgressBar(Alto.getApplication(), "Training progress", "Performing EM training ...",
-                    listener -> {
-                        irtg.trainEM(corpus, listener);
-                        return null;
-                    },
-                    (result, time) -> {
-                        Alto.log("Performed EM training, " + Util.formatTime(time));
-                        updateWeights();
-                    });
+                                     listener -> {
+                                         irtg.trainEM(corpus, listener);
+                                         return null;
+                                     },
+                                     (result, time) -> {
+                                         Alto.log("Performed EM training, " + Util.formatTime(time));
+                                         updateWeights();
+                                     });
         });
     }//GEN-LAST:event_miTrainEMActionPerformed
 
     private void miTrainVBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainVBActionPerformed
         Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
             GuiUtils.withProgressBar(Alto.getApplication(), "Training progress", "Performing VB training ...",
-                    listener -> {
-                        irtg.trainVB(corpus, listener);
-                        return null;
-                    },
-                    (result, time) -> {
-                        Alto.log("Performed VB training, " + Util.formatTime(time));
-                        updateWeights();
-                    });
+                                     listener -> {
+                                         irtg.trainVB(corpus, listener);
+                                         return null;
+                                     },
+                                     (result, time) -> {
+                                         Alto.log("Performed VB training, " + Util.formatTime(time));
+                                         updateWeights();
+                                     });
         });
     }//GEN-LAST:event_miTrainVBActionPerformed
 
@@ -639,15 +657,15 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             final Corpus corpus = Alto.loadAnnotatedCorpus(irtg, miMaxent);
 
             GuiUtils.withProgressBar(Alto.getApplication(), "Training progress", "Performing Maximum Entropy training ...",
-                    listener -> {
-                        ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, listener);
-                        return null;
-                    },
-                    (result, time) -> {
-                        Alto.log("Trained maxent model, " + Util.formatTime(time));
-                        miShowMaxentWeights.setEnabled(true);
-                        miShowMaxentWeightsActionPerformed(null);
-                    });
+                                     listener -> {
+                                         ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, listener);
+                                         return null;
+                                     },
+                                     (result, time) -> {
+                                         Alto.log("Trained maxent model, " + Util.formatTime(time));
+                                         miShowMaxentWeights.setEnabled(true);
+                                         miShowMaxentWeightsActionPerformed(null);
+                                     });
         }
     }//GEN-LAST:event_miTrainMaxentActionPerformed
 
@@ -682,21 +700,21 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
             if (rsc.getSelectedAlgebras() != null) {
                 GuiUtils.withProgressBar(JTreeAutomaton.this, "Binarization", "Binarizing IRTG ...",
-                        listener -> {
-                            BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
-                            InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
-                            return binarized;
-                        },
-                        (binarized, time) -> {
-                            Alto.log("Binarized IRTG, " + Util.formatTime(time));
+                                         listener -> {
+                                             BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
+                                             InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
+                                             return binarized;
+                                         },
+                                         (binarized, time) -> {
+                                             Alto.log("Binarized IRTG, " + Util.formatTime(time));
 
-                            JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
-                            jta.setTitle("Binarization of " + getTitle());
-                            jta.setIrtg(binarized);
-                            jta.setParsingEnabled(true);
-                            jta.pack();
-                            jta.setVisible(true);
-                        });
+                                             JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
+                                             jta.setTitle("Binarization of " + getTitle());
+                                             jta.setIrtg(binarized);
+                                             jta.setParsingEnabled(true);
+                                             jta.pack();
+                                             jta.setVisible(true);
+                                         });
             }
         }
 
@@ -730,15 +748,15 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                     cw.setAnnotated(true);
 
                     GuiUtils.withProgressBar(JTreeAutomaton.this, "Parsing progress", "Bulk parsing of input corpus ...",
-                            listener -> {
-                                irtg.bulkParse(inputCorpus, cw, listener);
-                                w.flush();
-                                w.close();
-                                return null;
-                            },
-                            (result, time) -> {
-                                Alto.log("Finished bulk parsing, " + Util.formatTime(time));
-                            });
+                                             listener -> {
+                                                 irtg.bulkParse(inputCorpus, cw, listener);
+                                                 w.flush();
+                                                 w.close();
+                                                 return null;
+                                             },
+                                             (result, time) -> {
+                                                 Alto.log("Finished bulk parsing, " + Util.formatTime(time));
+                                             });
                 }
             } catch (IOException e) {
                 GuiUtils.showError(e);

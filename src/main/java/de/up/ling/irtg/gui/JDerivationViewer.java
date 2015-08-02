@@ -7,6 +7,7 @@ package de.up.ling.irtg.gui;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.tree.Tree;
+import java.awt.Dimension;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,20 +31,19 @@ public class JDerivationViewer extends javax.swing.JPanel {
      */
     public JDerivationViewer() {
         initComponents();
-        
-        viewsInOrder = new ArrayList<String>();        
+
+        viewsInOrder = new ArrayList<String>();
         viewsInOrder.add("** derivation tree **");
-        
+
         displayables = new HashMap<String, JDerivationDisplayable>();
         displayables.put("** derivation tree **", new JDerivationTree());
-        
+
         String[] possibleViews = new String[1];
         possibleViews[0] = DERIVATION_TREE;
         componentSelector.setModel(new DefaultComboBoxModel(possibleViews));
-        
+
         componentSelector.setSelectedIndex(0);
-        
-        
+
     }
 
     public void setInterpretedTreeAutomaton(InterpretedTreeAutomaton irtg) {
@@ -84,7 +84,7 @@ public class JDerivationViewer extends javax.swing.JPanel {
     public String getCurrentView() {
         return viewsInOrder.get(componentSelector.getSelectedIndex());
     }
-    
+
     public List<String> getPossibleViews() {
         return viewsInOrder;
     }
@@ -93,15 +93,21 @@ public class JDerivationViewer extends javax.swing.JPanel {
         componentSelector.setSelectedIndex(viewsInOrder.indexOf(viewName));
         changeView(viewName);
     }
-    
+
     private void changeView(String viewName) {
         if (derivationTree != null) {
+            Dimension oldSize = (content.getComponentCount() > 0) ? content.getComponent(0).getSize() : null;
             content.removeAll();
 
             JDerivationDisplayable dis = displayables.get(viewName);
             dis.setDerivationTree(derivationTree);
             content.add(dis);
 
+            if (oldSize != null) {
+                dis.setPreferredSize(oldSize);
+            }
+
+//            setPreferredSize(getSize());
             revalidate();
             repaint();
         }

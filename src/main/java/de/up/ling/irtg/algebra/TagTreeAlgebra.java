@@ -24,8 +24,8 @@ import javax.swing.JComponent;
  * must have the same number of children.<p>
  *
  * This algebra defines the tree-combining operations described in Koller and
- * Kuhlmann 2012, "Decomposing TAG Algorithms Using Simple Algebraizations",
- * TAG+ Workshop, which implement the Engelfriet YIELD operation for
+ * Kuhlmann 2012, <a href="http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=tag-irtg">"Decomposing TAG Algorithms Using Simple Algebraizations"</a>,
+ * which implement the Engelfriet YIELD operation for
  * higher-order tree substitution. The symbols "@" and "*" from the paper are
  * represented by the binary operation "@" and the nullary operation "*" here.
  * All other strings represent the ordinary tree-combining operations, as in

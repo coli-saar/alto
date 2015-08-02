@@ -13,5 +13,11 @@ package de.up.ling.irtg.corpus;
 public class CorpusReadingException extends Exception {
     public CorpusReadingException(String message) {
         super(message);
-    }    
+    }
+
+    public CorpusReadingException(String message, Throwable cause) {
+        super(message, cause);
+    }
+    
+    
 }

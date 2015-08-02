@@ -57,6 +57,8 @@ class InterpretedTreeAutomatonTest {
             chart.language());
     }
     
+    
+    
     @Test
     public void testNonbinaryRhs() {
         InterpretedTreeAutomaton irtg = pi(wideString_IRTG)
@@ -99,6 +101,8 @@ S -> r2
         assertEquals(new HashSet([pt("r1(r2,r1(r2,r2))"), pt("r1(r1(r2,r2),r2)")]),
             chart.language());
     }
+    
+    
 
     private InterpretedTreeAutomaton trainEM(String grammar, String data ) {
         InterpretedTreeAutomaton irtg = pi(grammar)
@@ -130,6 +134,25 @@ S -> r2
         return irtg;
     }
 
+    @Test
+    public void testParseAt() {
+        InterpretedTreeAutomaton irtg = pi("""\n\
+interpretation string: de.up.ling.irtg.algebra.StringAlgebra
+interpretation tree: de.up.ling.irtg.algebra.BinarizingTreeWithAritiesAlgebra
+\n\
+ADVP-TMP! -> r3165_br13055(IN) [0.008174386920980926]
+  [string] ?1
+  [tree] ADVP-TMP_1(?1)\n\
+
+IN -> r9284_br3356 [2.0610057708161583E-4]
+  [string] '@'
+  [tree] IN_1('@_0')
+""")
+        TreeAutomaton chart = irtg.parse(["string":"@"])
+        Tree t = chart.viterbi()
+        
+        assertEquals(pt("r3165_br13055(r9284_br3356)"), t)
+    }
 
     @Test
     public void testEM() {

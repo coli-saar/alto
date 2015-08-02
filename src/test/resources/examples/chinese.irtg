@@ -1,0 +1,40 @@
+/* Grammar for Chinese-English SCFG example from Chiang 2007 */
+
+/* example sentences are:
+
+   30 duonianlai de youhao hezuo
+   friendly cooperation over the past 30 years
+
+*/
+
+interpretation english: de.up.ling.irtg.algebra.StringAlgebra
+interpretation chinese: de.up.ling.irtg.algebra.StringAlgebra
+
+S! -> r1(X)
+[chinese] ?1
+[english] ?1
+
+X -> r2(X,X)
+[chinese] *(*(?1, de), ?2)
+[english] *(?2, ?1)
+
+X -> r3(X,X)
+[chinese] *(?1, ?2)
+[english] *(?1, ?2)
+
+X -> r4(X)
+[chinese] *(?1, duonianlai)
+[english] *(*(*(*(over,the),past), ?1), years)
+
+X -> r5
+[chinese] '30'
+[english] '30'
+
+X -> r6
+[chinese] youhao
+[english] friendly
+
+X -> r7
+[chinese] hezuo
+[english] cooperation
+

@@ -14,7 +14,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * A regular seed that binarizes into a {@link BinarizingAlgebra}.
+ * It maps, for instance, terms f(t1,t2,t3) into terms
+ * f(@(@(t1,t2),t3)) and f(@(t1,@(t2,t3))). These are binary
+ * terms (f is unary, @ is a binary symbol), and the
+ * binarizing algebra will evaluate them to the same value
+ * to which the original algebra would have evaluated f(t1,t2,t3).
+ * 
  * @author koller
  */
 public class BinarizingAlgebraSeed extends RegularSeed {

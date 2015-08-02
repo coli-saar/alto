@@ -7,6 +7,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import java.io.*;
@@ -490,7 +491,7 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                         // compute f_i(x,y)
                        getFiFor(chart.getRuleTree(instance.getDerivationTree()), chart, fiY);
                     } catch (Exception ex) {
-                        Logger.getLogger(MaximumEntropyIrtg.class.getName()).log(Level.SEVERE, null, "Could not reconstruct rule tree: " + ex);
+                        throw new RuntimeException("Could not reconstruct rule tree from derivation tree for instance " + instance.toString(getAutomaton()), ex);
                     }
 
                     if( listener != null ) {

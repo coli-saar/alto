@@ -12,7 +12,9 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 /**
- *
+ * An output codec that encodes arbitrary objects by simply
+ * calling their {@link Object#toString() } method.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "toString", description = "toString", type = Object.class, displayInPopup = false)

@@ -23,14 +23,20 @@ public class CorpusWriter extends AbstractCorpusWriter {
     private boolean isHeaderWritten;
     private String comment;
     public static final String NULL = "_null_";
+    private String commentPrefix;
 
-    public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, Writer writer) throws IOException {
+    public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, Writer writer) throws IOException {
         this.writer = writer;
         this.irtg = irtg;
         this.interpretationsInOrder = new ArrayList<>(irtg.getInterpretations().keySet()); // fix some order of interpretations
         this.comment = comment;
+        this.commentPrefix = commentPrefix;
 
         isHeaderWritten = false;
+    }
+    
+    public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, Writer writer) throws IOException {
+        this(irtg, comment, "# ", writer);
     }
     
     @Override
@@ -50,7 +56,7 @@ public class CorpusWriter extends AbstractCorpusWriter {
 
         if (inst.getComments() != null) {
             for( String key : inst.getComments().keySet() ) {
-                writer.write("# " + key + ": " + inst.getComments().get(key) + "\n");
+                writer.write(commentPrefix + key + ": " + inst.getComments().get(key) + "\n");
             }
         }
 
@@ -70,18 +76,18 @@ public class CorpusWriter extends AbstractCorpusWriter {
     private String makeHeader(String comment) {
         StringBuilder buf = new StringBuilder();
 
-        buf.append("# IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
-        buf.append("# \n");
+        buf.append(commentPrefix + "IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
+        buf.append(commentPrefix + "\n");
 
         if (comment != null) {
             for (String line : comment.split("\n")) {
-                buf.append("# " + line + "\n");
+                buf.append(commentPrefix + line + "\n");
             }
-            buf.append("# \n");
+            buf.append(commentPrefix + "\n");
         }
 
         for (String interp : interpretationsInOrder) {
-            buf.append("# interpretation " + interp + ": " + irtg.getInterpretations().get(interp).getAlgebra().getClass() + "\n");
+            buf.append(commentPrefix + "interpretation " + interp + ": " + irtg.getInterpretations().get(interp).getAlgebra().getClass() + "\n");
         }
 
         return buf.toString();
