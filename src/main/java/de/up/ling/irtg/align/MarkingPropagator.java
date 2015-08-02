@@ -42,7 +42,8 @@ public class MarkingPropagator {
         // basically everything is done by the semiring framework
         Semiring<IntSet> sr = new VariablePropagator();
         
-        Int2ObjectMap<IntSet> mapping = input.evaluateInSemiring2(sr, rlm.ruleMarkings(num));
+        
+        Int2ObjectMap<IntSet> mapping = input.evaluateInSemiring(sr, rlm.ruleMarkings(num));
         
         // we only need to compute the new automaton
         Visitor vis = new Visitor(mapping, rlm, cta, input);

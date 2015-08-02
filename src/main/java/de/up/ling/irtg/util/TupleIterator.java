@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.util;
 
-import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -15,15 +15,35 @@ import java.util.Iterator;
  */
 public class TupleIterator<T> implements Iterator<T[]>{
     
+    /**
+     * 
+     */
     private final Iterable<T>[] tuple;
+    
+    /**
+     * 
+     */
     private boolean isEmpty;
+    
+    /**
+     * 
+     */
     private final T[] current;
+    
+    /**
+     * 
+     */
     private final Iterator[] iterators;
     
-    public TupleIterator(Class<T> c, Iterable[] tuple) {
+    /**
+     * 
+     * @param container
+     * @param tuple 
+     */
+    public TupleIterator(T[] container, Iterable... tuple) {
         this.tuple = tuple;
         @SuppressWarnings("unchecked")
-        final T[] a = (T[]) Array.newInstance(c, tuple.length);
+        final T[] a = container.length == tuple.length ? container : Arrays.copyOf(container, tuple.length);
         this.current = a;
         iterators = new Iterator[tuple.length];
         isEmpty = false;
@@ -52,7 +72,6 @@ public class TupleIterator<T> implements Iterator<T[]>{
             return increaseIndex>-1;
         }
     }
-
     
     /**
      * Returns the next tuple in the iterator. Be careful, since this does not return a copy, calling it again will modify previous results.
@@ -60,6 +79,7 @@ public class TupleIterator<T> implements Iterator<T[]>{
      */
     @Override
     public T[] next() {
+        //this ignores the first element in the iteration
         int increaseIndex = tuple.length-1;
         while (!iterators[increaseIndex].hasNext()) {
             iterators[increaseIndex] = tuple[increaseIndex].iterator();
@@ -68,8 +88,5 @@ public class TupleIterator<T> implements Iterator<T[]>{
         }
         current[increaseIndex] = (T)iterators[increaseIndex].next();
         return current;
-    }
-    
-    
-    
+    }    
 }
