@@ -231,7 +231,26 @@ public class HomomorphismManager {
      * @param symName 
      */
     private void handle0Ary(int sigNum, int symName) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.isJustInsert.clear();
+        this.symbols.clear();
+        this.variables.clear();
+        
+        for(int i=0;i<this.sigs.length;++i){
+            if(i == sigNum){
+                this.isJustInsert.add(false);
+                this.symbols.add(symName);
+            }else{
+                this.isJustInsert.add(true);
+                this.symbols.add(-1);
+                this.variables.add(1);
+            }
+        }
+        
+        String label = this.addMapping(symbols, variables, isJustInsert);
+        String[] tLabel = new String[] {label};
+        
+        
+        //TODO
     }
 
     /**
@@ -251,6 +270,8 @@ public class HomomorphismManager {
      * @return the newly created symbol
      */
     private String addMapping(IntList symbols, IntList variables, BooleanList justVariable) {
+        
+        
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
@@ -289,6 +310,12 @@ public class HomomorphismManager {
         return VARIABLE_PATTERN.matcher(s).matches();
     }
 
+    
+    /**
+     * 
+     * @param sigNum
+     * @param symName 
+     */
     private void handleVariable(int sigNum, int symName) {
         this.isJustInsert.clear();
         this.symbols.clear();
@@ -296,9 +323,18 @@ public class HomomorphismManager {
         
         String sym = this.sigs[sigNum].resolveSymbolId(symName);
         
+        for(Signature sign : this.sigs){
+            if(!sign.contains(sym)){
+                return;
+            }
+            
+            this.isJustInsert.add(false);
+            this.variables.add(1);
+            this.symbols.add(sig.getIdForSymbol(sym));
+        }
         
-        
-        
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String label = this.addMapping(symbols, variables, isJustInsert);
+        this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, new String[] {label},
+                                                                        new String[] {VARIABLE_STATE}));
     }
 }
