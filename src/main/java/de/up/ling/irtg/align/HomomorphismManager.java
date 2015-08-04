@@ -17,6 +17,8 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Arrays;
 import java.util.regex.Pattern;
 
@@ -29,12 +31,12 @@ public class HomomorphismManager {
     /**
      * 
      */
-    public final static Pattern VARIABLE_PATTERN = Pattern.compile("XX_");
+    public final static Pattern VARIABLE_PATTERN = Pattern.compile("XX.*");
     
     /**
      * 
      */
-    public final static String VARIABLE_PREFIX = "XX_";
+    public final static String VARIABLE_PREFIX = "XX.*";
     
     /**
      * 
@@ -74,7 +76,7 @@ public class HomomorphismManager {
     /**
      * 
      */
-    private final BooleanList isJustVariable = new BooleanArrayList();
+    private final BooleanList isJustInsert = new BooleanArrayList();
     
     /**
      * 
@@ -91,6 +93,15 @@ public class HomomorphismManager {
      */
     public static final String GENERAL_STATE_PREFIX = "I";
     
+    /**
+     * 
+     */
+    public static final String VARIABLE_STATE = "X";
+    
+    /**
+     * 
+     */
+    private final ObjectSet<String> seenVariables = new ObjectOpenHashSet<>();
     
     /**
      * 
@@ -139,7 +150,6 @@ public class HomomorphismManager {
            }
        }
         
-       //TODO
        for(int sigNum=0;sigNum<this.sigs.length;++sigNum){
            toDo[sigNum].removeAll(this.seen[sigNum]);
            
@@ -150,8 +160,11 @@ public class HomomorphismManager {
                
                if(arity == 0){
                    handle0Ary(sigNum,symName);
-               }else{
-                   handleSym(sigNum,symName);
+               }else if(isVariable(sigNum,symName)){
+                   handleVariable(sigNum,symName);
+               }
+               else{
+                   handleSym(sigNum,symName);                  
                    this.seen[sigNum].add(symName);
                }
            }
@@ -188,19 +201,20 @@ public class HomomorphismManager {
     private void ensureTermination() {
         this.symbols.clear();
         this.variables.clear();
-        this.isJustVariable.clear();
+        this.isJustInsert.clear();
         
         for(int sym : this.terminate){
             symbols.add(sym);
-            isJustVariable.add(false);
+            isJustInsert.add(false);
         }
         
-        String symbol = addMapping(symbols,variables,isJustVariable);
+        String symbol = addMapping(symbols,variables,isJustInsert);
         String[] syms = new String[] {symbol};
         String[] empty = new String[] {};
         
         this.restriction.addRule(this.restriction.createRule(START, syms, empty));
         this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, syms, empty));
+        this.restriction.addRule(this.restriction.createRule(VARIABLE_STATE, syms, empty));
         
         IncreasingSequencesIterator isi = new IncreasingSequencesIterator(this.sigs.length);
         while(isi.hasNext()){
@@ -248,7 +262,43 @@ public class HomomorphismManager {
         return this.restriction;
     }
 
+    /**
+     * 
+     * @param il
+     * @return 
+     */
     private String makeState(IntList il) {
+        StringBuilder sb = new StringBuilder(GENERAL_STATE_PREFIX);
+        
+        for(int i=0;i<il.size();++i){
+            sb.append("_").append(il.get(i));
+        }
+        
+        return sb.toString();
+    }
+
+    /**
+     * 
+     * @param sigNum
+     * @param symName
+     * @return 
+     */
+    private boolean isVariable(int sigNum, int symName) {
+        String s = this.sigs[sigNum].resolveSymbolId(symName);
+        
+        return VARIABLE_PATTERN.matcher(s).matches();
+    }
+
+    private void handleVariable(int sigNum, int symName) {
+        this.isJustInsert.clear();
+        this.symbols.clear();
+        this.variables.clear();
+        
+        String sym = this.sigs[sigNum].resolveSymbolId(symName);
+        
+        
+        
+        
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
