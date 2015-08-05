@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.IncreasingSequencesIterator;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
@@ -18,6 +19,7 @@ import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Arrays;
@@ -284,9 +286,60 @@ public class HomomorphismManager {
      * @return the newly created symbol
      */
     private String addMapping(IntList symbols, IntList variables, BooleanList justVariable) {
+        StringBuilder symbol = new StringBuilder();
         
+        int varPos = 0;
+        int max = 0;
+        for(int i=0;i<symbols.size();++i){
+            if(i != 0){
+                    symbol.append(" / ");
+            }
+            
+            if(justVariable.getBoolean(i)){
+                symbol.append('?').append(variables.getInt(varPos++)+1);
+                max = Math.max(max, 1);
+            }else{
+                int varNum = this.sigs[i].getArity(symbols.getInt(i));
+                max = Math.max(varNum, max);
+                String sym  = this.sigs[i].resolveSymbolId(variables.getInt(i));
+                
+                symbol.append(sym).append('(');
+                for(int k=0;k < varNum; ++k){
+                    if(k != 0){
+                        symbol.append(", ");
+                    }
+                    
+                    symbol.append(variables.getInt(varPos++)+1);
+                }
+                symbol.append(sym).append(')');
+            }
+        }
         
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        String sym = symbol.toString();
+        int code = this.sig.addSymbol(sym, max);
+        varPos = 0;
+        ObjectArrayList<Tree<String>> storage = new ObjectArrayList<>();
+        for(int i=0;i<symbols.size();++i){
+            Tree<String> t;
+            
+            if(justVariable.getBoolean(i)){
+                t = Tree.create("?"+(variables.getInt(varPos++)+1));
+            }
+            else{
+                int varNum = this.sigs[i].getArity(this.variables.getInt(i));
+                String label = this.sigs[i].resolveSymbolId(this.variables.getInt(i));
+                
+                for(int k=0;k < varNum; ++k){                    
+                    storage.add(Tree.create("?"+(variables.getInt(varPos++)+1)));
+                }
+                
+                t = Tree.create(label, storage);
+            }
+            
+            this.homs[i].add(sym, t);
+        }
+        
+        return sym;
     }
     
     /**
