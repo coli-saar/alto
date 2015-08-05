@@ -260,6 +260,12 @@ public class HomomorphismManager {
         Iterator<IntArrayList> it = new IncreasingSequencesIterator(this.sigs.length);
         while(it.hasNext()){
             IntArrayList il = it.next();
+            // no step like this for the completely terminated state, since we do not want infinite
+            // languages if we can avoid them
+            if(il.size() == this.sigs.length){
+                continue;
+            }
+            
             String state = makeState(il);
             
             extend(il,sigNum);
