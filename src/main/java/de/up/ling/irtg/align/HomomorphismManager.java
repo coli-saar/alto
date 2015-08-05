@@ -268,10 +268,12 @@ public class HomomorphismManager {
             
             String state = makeState(il);
             
-            extend(il,sigNum);
-            String goal = makeState(il);
-            this.restriction.addRule(this.restriction.createRule(state, tLabel,
-                    new String[] {goal}));
+            if(extend(il,sigNum)){
+                String goal = makeState(il);
+                this.restriction.addRule(this.restriction.createRule(state, tLabel,
+                        new String[] {goal}));
+            
+            }
         }
     }
 
@@ -322,7 +324,6 @@ public class HomomorphismManager {
         }
         
         String sym = symbol.toString();
-        int code = this.sig.addSymbol(sym, max);
         varPos = 0;
         ObjectArrayList<Tree<String>> storage = new ObjectArrayList<>();
         for(int i=0;i<symbols.size();++i){
@@ -416,12 +417,15 @@ public class HomomorphismManager {
      * @param il
      * @param sigNum 
      */
-    private void extend(IntArrayList il, int sigNum) {
+    private boolean extend(IntArrayList il, int sigNum) {
         int pos = IntArrays.binarySearch(il.elements(), 0, il.size(), sigNum);
         
         if(pos < 0){
             pos = -(pos+1);
             il.add(pos, sigNum);
+            return true;
+        }else{
+            return false;
         }
     }
 }
