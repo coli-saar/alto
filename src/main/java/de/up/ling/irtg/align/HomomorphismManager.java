@@ -14,12 +14,14 @@ import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.regex.Pattern;
 
 /**
@@ -249,8 +251,20 @@ public class HomomorphismManager {
         String label = this.addMapping(symbols, variables, isJustInsert);
         String[] tLabel = new String[] {label};
         
-        
-        //TODO
+        this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, tLabel, new String[] {GENERAL_STATE_PREFIX+"_"+sigNum}));
+        this.restriction.addRule(this.restriction.createRule(START, tLabel, new String[] {GENERAL_STATE_PREFIX+"_"+sigNum}));
+        this.restriction.addRule(this.restriction.createRule(VARIABLE_STATE, tLabel, new String[] {GENERAL_STATE_PREFIX+"_"+sigNum}));
+              
+        Iterator<IntArrayList> it = new IncreasingSequencesIterator(this.sigs.length);
+        while(it.hasNext()){
+            IntArrayList il = it.next();
+            String state = makeState(il);
+            
+            extend(il,sigNum);
+            String goal = makeState(il);
+            this.restriction.addRule(this.restriction.createRule(state, tLabel,
+                    new String[] {goal}));
+        }
     }
 
     /**
@@ -336,5 +350,19 @@ public class HomomorphismManager {
         String label = this.addMapping(symbols, variables, isJustInsert);
         this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, new String[] {label},
                                                                         new String[] {VARIABLE_STATE}));
+    }
+
+    /**
+     * 
+     * @param il
+     * @param sigNum 
+     */
+    private void extend(IntArrayList il, int sigNum) {
+        int pos = IntArrays.binarySearch(il.elements(), 0, il.size(), sigNum);
+        
+        if(pos < 0){
+            pos = -(pos+1);
+            il.add(pos, sigNum);
+        }
     }
 }

@@ -6,19 +6,23 @@
 package de.up.ling.irtg.util;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.Iterator;
 
 /**
  *
  * @author christoph_teichmann
  */
-public class IncreasingSequencesIterator implements Iterator<IntList> {
+public class IncreasingSequencesIterator implements Iterator<IntArrayList> {
 
     /**
      * 
      */
-    private final IntList ret = new IntArrayList();
+    private final IntArrayList internal = new IntArrayList();
+    
+    /**
+     * 
+     */
+    private final IntArrayList ret = new IntArrayList();
     
     /**
      * 
@@ -32,39 +36,42 @@ public class IncreasingSequencesIterator implements Iterator<IntList> {
     public IncreasingSequencesIterator(int maxNum){
        this.upperBound = maxNum;
        
-       this.ret.add(-1);
+       this.internal.add(-1);
     }
     
     @Override
     public boolean hasNext() {
-        return ret.size() >= upperBound;
+        return internal.size() >= upperBound;
     }
 
     @Override
-    public IntList next() {
-        int lastPos = this.ret.size()-1;
+    public IntArrayList next() {
+        int lastPos = this.internal.size()-1;
         
-        int value = this.ret.get(lastPos);
+        int value = this.internal.get(lastPos);
         
         while(value >= upperBound){
             lastPos = lastPos-1;
             
             if(lastPos < 0){
                 // any value would do
-                this.ret.add(0);
+                this.internal.add(0);
                 lastPos = 0;
                 value = -1;
                 break;
             }
             
-            value = this.ret.get(lastPos);
+            value = this.internal.get(lastPos);
         }
         
-        for(;lastPos<this.ret.size();++lastPos){
-            this.ret.set(lastPos, value += 1);
+        for(;lastPos<this.internal.size();++lastPos){
+            this.internal.set(lastPos, value += 1);
         }
         
-        return ret;
+        ret.clear();
+        ret.addElements(0, this.internal.elements(), 0, this.internal.size());
+        
+        return internal;
     }
     
 }
