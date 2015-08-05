@@ -9,13 +9,16 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.BoundaryIntSet;
 import de.up.ling.irtg.util.IncreasingSequencesIterator;
+import de.up.ling.irtg.util.IntTupleIterator;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrays;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -24,6 +27,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -282,6 +286,44 @@ public class HomomorphismManager {
      * @param symName 
      */
     private void handleSym(int sigNum, int symName) {
+        IntSet singleTon = new BoundaryIntSet(symName, symName);
+        
+        List<IntIterable> l = new ObjectArrayList<>();
+        for(int i=0;i<this.sigs.length;++i){
+            if(i == sigNum){
+                l.add(singleTon);
+            }else{
+                l.add(seen[i]);
+            }
+        }
+        
+        //TODO make sure that we also pair with just the variables
+        
+        Iterator<int[]> it = new IntTupleIterator(l);
+        while(it.hasNext()){
+            int[] tuple = it.next();
+            int max = 0;
+            this.isJustInsert.clear();
+            this.symbols.clear();
+            
+            int pos = 0;
+            for(int k : tuple){
+                max = Math.max(max, this.sigs[k].getArity(k));
+                this.symbols.add(k);
+            }
+            
+            int[] def = new int[max];
+            for(int i=1;i<=max;++i){
+                def[i-1] = i;
+            }
+            List<int[]> fixed = new ObjectArrayList<>();
+            fixed.add(def);
+            
+            List<Iterable<int[]>> varOptions = new ObjectArrayList<>();
+            
+            
+        }
+        
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
