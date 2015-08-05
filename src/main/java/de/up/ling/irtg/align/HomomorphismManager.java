@@ -260,20 +260,19 @@ public class HomomorphismManager {
         Iterator<IntArrayList> it = new IncreasingSequencesIterator(this.sigs.length);
         while(it.hasNext()){
             IntArrayList il = it.next();
-            // no step like this for the completely terminated state, since we do not want infinite
-            // languages if we can avoid them
-            if(il.size() == this.sigs.length){
+            // no step like this for states that have already terminated, since we do not want infinite
+            // languages if we can avoid them            
+            if(IntArrays.binarySearch(il.elements(), 0, il.size(), sigNum) >= 0) {
                 continue;
             }
             
             String state = makeState(il);
             
-            if(extend(il,sigNum)){
-                String goal = makeState(il);
-                this.restriction.addRule(this.restriction.createRule(state, tLabel,
+            extend(il,sigNum);
+            String goal = makeState(il);
+            this.restriction.addRule(this.restriction.createRule(state, tLabel,
                         new String[] {goal}));
             
-            }
         }
     }
 
