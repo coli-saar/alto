@@ -2924,7 +2924,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         default:
                             Set[] partners = new Set[arity - 1];
                             Arrays.fill(partners, seen);
-                            TupleIterator<Integer> partnerIterator = new TupleIterator<>(Integer.class, partners);
+                            TupleIterator<Integer> partnerIterator = new TupleIterator<>(partners, new Integer[partners.length]);
                             while (partnerIterator.hasNext()) {
                                 Integer[] partnerTuple = partnerIterator.next();
                                 for (int pos = 0; pos < arity; pos++) {
