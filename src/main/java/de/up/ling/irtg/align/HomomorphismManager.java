@@ -46,6 +46,26 @@ public class HomomorphismManager {
     /**
      * 
      */
+    public static final String START = "S";
+    
+    /**
+     * 
+     */
+    public static final String GENERAL_STATE_PREFIX = "I";
+    
+    /**
+     * 
+     */
+    public static final String VARIABLE_STATE = "X";
+
+    /**
+     * 
+     */
+    public static final String NEEDS_VARIABLE_STATE = "N";
+    
+    /**
+     * 
+     */
     public final static String VARIABLE_PREFIX = "XX.*";
     
     /**
@@ -62,62 +82,52 @@ public class HomomorphismManager {
      * 
      */
     private final Homomorphism[] homs;
-    
+
     /**
      * 
      */
-    private final Signature sig = new Signature();
+    private final Signature sig;
     
     /**
      * 
      */
     private final Integer[] terminate;
-    
+
     /**
      * 
      */
-    private final IntList symbols = new IntArrayList();
-    
+    private final IntList symbols;
+
     /**
      * 
      */
-    private final IntList variables = new IntArrayList();
-    
+    private final IntList variables;
+
     /**
      * 
      */
-    private final BooleanList isJustInsert = new BooleanArrayList();
+    private final BooleanList isJustInsert;
     
     /**
      * 
      */
     private final ConcreteCondensedTreeAutomaton<String> restriction;  
-    
+
     /**
      * 
      */
-    public static final String START = "S";
-    
-    /**
-     * 
-     */
-    public static final String GENERAL_STATE_PREFIX = "I";
-    
-    /**
-     * 
-     */
-    public static final String VARIABLE_STATE = "X";
-    
-    /**
-     * 
-     */
-    private final ObjectSet<String> seenVariables = new ObjectOpenHashSet<>();
+    private final ObjectSet<String> seenVariables;
     
     /**
      * 
      * @param sigs 
      */
     public HomomorphismManager(Signature... sigs){
+        this.symbols = new IntArrayList();
+        this.isJustInsert = new BooleanArrayList();
+        this.variables = new IntArrayList();
+        this.sig = new Signature();
+        this.seenVariables = new ObjectOpenHashSet<>();
         this.sigs = Arrays.copyOf(sigs, sigs.length);
         this.seen = new IntSet[sigs.length];
         this.homs = new Homomorphism[sigs.length];
@@ -488,8 +498,10 @@ public class HomomorphismManager {
         }
         
         String label = this.addMapping(symbols, variables, isJustInsert);
-        this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, new String[] {label},
-                                                                        new String[] {VARIABLE_STATE}));
+        String[] lab = new String[] {label};
+        
+        this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, lab, new String[] {VARIABLE_STATE}));
+        this.restriction.addRule(this.restriction.createRule(NEEDS_VARIABLE_STATE, lab, new String[] {VARIABLE_STATE}));
     }
 
     /**
