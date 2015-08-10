@@ -10,16 +10,11 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.BooleanArrayIterator;
-import de.up.ling.irtg.util.BoundaryIntSet;
-import de.up.ling.irtg.util.IntTupleIterator;
-import de.up.ling.irtg.util.NChooseK;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrays;
-import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -27,8 +22,6 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import java.util.Iterator;
-import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -411,11 +404,14 @@ public class HomomorphismManager {
         this.symbols.add(source2.getIdForSymbol(sym));
         
         String label = this.addMapping(symbols, variables, isJustInsert);
-        String[] lab = new String[] {label};
+        RestrictionState[] rhs = new RestrictionState[1];
         
-        //TODO
-        this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, lab, new String[] {VARIABLE_STATE}));
-        this.restriction.addRule(this.restriction.createRule(NEEDS_VARIABLE_STATE, lab, new String[] {VARIABLE_STATE}));
+        RestrictionState lhs = RestrictionState.getByDescription(true, 0);
+        rhs[0] = RestrictionState.START;
+        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
+        
+        lhs = RestrictionState.getByDescription(true, 1);
+        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
     }
 
     /**
