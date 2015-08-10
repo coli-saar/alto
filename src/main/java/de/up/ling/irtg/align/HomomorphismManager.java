@@ -5,29 +5,28 @@
  */
 package de.up.ling.irtg.align;
 
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BooleanArrayIterator;
 import de.up.ling.irtg.util.BoundaryIntSet;
-import de.up.ling.irtg.util.IncreasingSequencesIterator;
 import de.up.ling.irtg.util.IntTupleIterator;
 import de.up.ling.irtg.util.NChooseK;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
-import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -37,31 +36,10 @@ import java.util.regex.Pattern;
  * @author christoph_teichmann
  */
 public class HomomorphismManager {
-    
     /**
      * 
      */
-    public final static Pattern VARIABLE_PATTERN = Pattern.compile("XX.*");
-    
-    /**
-     * 
-     */
-    public static final String START = "S";
-    
-    /**
-     * 
-     */
-    public static final String GENERAL_STATE_PREFIX = "I";
-    
-    /**
-     * 
-     */
-    public static final String VARIABLE_STATE = "X";
-
-    /**
-     * 
-     */
-    public static final String NEEDS_VARIABLE_STATE = "N";
+    public final static Pattern VARIABLE_PATTERN = Pattern.compile("XX.*");  
     
     /**
      * 
@@ -71,27 +49,42 @@ public class HomomorphismManager {
     /**
      * 
      */
-    private final Signature[] sigs;
+    private final Signature source1;
     
     /**
      * 
      */
-    private final IntSet[] seen;
+    private final Signature source2;
     
     /**
      * 
      */
-    private final Homomorphism[] homs;
+    private final IntSet seen1;
+    
+    /**
+     * 
+     */
+    private final IntSet seen2;
+    
+    /**
+     * 
+     */
+    private final Homomorphism hom1;
+    
+    /**
+     * 
+     */
+    private final Homomorphism hom2;
 
     /**
      * 
      */
-    private final Signature sig;
+    private final Signature sharedSig;
     
     /**
      * 
      */
-    private final Integer[] terminate;
+    private int[] terminationSequence;
 
     /**
      * 
@@ -111,7 +104,7 @@ public class HomomorphismManager {
     /**
      * 
      */
-    private final ConcreteCondensedTreeAutomaton<String> restriction;  
+    private final ConcreteTreeAutomaton<RestrictionState> restriction;  
 
     /**
      * 
@@ -120,74 +113,97 @@ public class HomomorphismManager {
     
     /**
      * 
-     * @param sigs 
+     * @param source1
+     * @param source2 
      */
-    public HomomorphismManager(Signature... sigs){
+    public HomomorphismManager(Signature source1, Signature source2){
         this.symbols = new IntArrayList();
         this.isJustInsert = new BooleanArrayList();
         this.variables = new IntArrayList();
-        this.sig = new Signature();
+        this.sharedSig = new Signature();
         this.seenVariables = new ObjectOpenHashSet<>();
-        this.sigs = Arrays.copyOf(sigs, sigs.length);
-        this.seen = new IntSet[sigs.length];
-        this.homs = new Homomorphism[sigs.length];
-        this.terminate = new Integer[sigs.length];
-        this.restriction = new ConcreteCondensedTreeAutomaton<>(this.sig);
+        this.source1 = source1;
+        this.source2 = source2;
+        this.seen1 = new IntOpenHashSet();
+        this.seen2 = new IntOpenHashSet();
+        this.hom1 = new Homomorphism(sharedSig, source1);
+        this.hom2 = new Homomorphism(sharedSig, source2);
+        this.terminationSequence = null;
+        this.restriction = new ConcreteTreeAutomaton<>(this.sharedSig);
         
-        Arrays.fill(this.terminate, null);
-        
-        for(int i=0;i<sigs.length;++i){
-            this.seen[i] = new IntAVLTreeSet();
-            this.homs[i] = new Homomorphism(sig, this.sigs[i]);
-        }
-        
-        this.restriction.addFinalState(this.restriction.addState(START));
+        this.restriction.addFinalState(this.restriction.addState(RestrictionState.START));
     }
     
     /**
      * 
-     * @param number
      * @return 
      */
-    public Homomorphism getHomomorphism(int number){
-        return this.homs[number];
+    public Homomorphism getHomomorphism1(){
+        return this.hom1;
     }
     
     /**
      * 
-     * @param toDo
+     * @return 
      */
-    public void update(IntSet... toDo){
-       for(int i=0;i<this.terminate.length;++i){
-           Integer k = this.terminate[i];
-           if(k == null){
-               Integer def = findDefault(this.sigs[i],toDo[i]);
-               if(def == null){
-                   throw new IllegalStateException("We have no 0-ary symbol for signature "+i);
-               }
-               
-               this.terminate[i] = def;
-           }
-       }
-        
-       for(int sigNum=0;sigNum<this.sigs.length;++sigNum){
-           toDo[sigNum].removeAll(this.seen[sigNum]);
+    public Homomorphism getHomomorphism2(){
+        return this.hom2;
+    }
+    
+    /**
+     * 
+     * @param toDo1
+     * @param toDo2 
+     */
+    public void update(IntSet toDo1, IntSet toDo2){
+       if(this.terminationSequence == null){
+           this.terminationSequence = new int[2];
            
-           IntIterator iit = toDo[sigNum].iterator();
-           while(iit.hasNext()){
-               int symName = iit.nextInt();
-               int arity = this.sigs[sigNum].getArity(symName);
-               
-               if(arity == 0){
-                   handle0Ary(sigNum,symName);
-               }else if(isVariable(sigNum,symName)){
-                   handleVariable(sigNum,symName);
-               }
-               else{
-                   handleSym(sigNum,symName);                  
-                   this.seen[sigNum].add(symName);
-               }
+           Integer def = findDefault(this.source1,toDo1);
+           if(def == null){
+                throw new IllegalStateException("We have no 0-ary symbol for signature "+1);
            }
+           this.terminationSequence[0] = def;
+           
+           def = findDefault(this.source2,toDo2);
+           if(def == null){
+                throw new IllegalStateException("We have no 0-ary symbol for signature "+2);
+           }
+           this.terminationSequence[1] = def;
+       }
+         
+       toDo1.removeAll(this.seen1);
+       IntIterator iit = toDo1.iterator();
+       while(iit.hasNext()){
+           int symName = iit.nextInt();
+           int arity = this.source1.getArity(symName);
+           
+            if(arity == 0){
+                handle0Ary(0,symName);
+            }else if(isVariable(0,symName)){
+                handleVariable(0,symName);
+            }
+            else{
+                handleSym(0,symName);                  
+                this.seen1.add(symName);
+            }
+       }
+       
+       toDo2.removeAll(this.seen2);
+       iit = toDo2.iterator();
+       while(iit.hasNext()){
+           int symName = iit.nextInt();
+           int arity = this.source2.getArity(symName);
+           
+            if(arity == 0){
+                handle0Ary(1,symName);
+            }else if(isVariable(1,symName)){
+                handleVariable(1,symName);
+            }
+            else{
+                handleSym(1,symName);                  
+                this.seen2.add(symName);
+            }
        }
        
        ensureTermination();
@@ -223,26 +239,15 @@ public class HomomorphismManager {
         this.variables.clear();
         this.isJustInsert.clear();
         
-        for(int sym : this.terminate){
+        for(int sym : this.terminationSequence){
             symbols.add(sym);
             isJustInsert.add(false);
         }
         
         String symbol = addMapping(symbols,variables,isJustInsert);
-        String[] syms = new String[] {symbol};
-        String[] empty = new String[] {};
+        RestrictionState[] empty = new RestrictionState[] {};
         
-        this.restriction.addRule(this.restriction.createRule(START, syms, empty));
-        this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, syms, empty));
-        this.restriction.addRule(this.restriction.createRule(VARIABLE_STATE, syms, empty));
-        
-        IncreasingSequencesIterator isi = new IncreasingSequencesIterator(this.sigs.length);
-        while(isi.hasNext()){
-            IntList il = isi.next();
-            
-            String state = makeState(il);
-            this.restriction.addRule(this.restriction.createRule(state, syms, empty));
-        }
+        this.restriction.addRule(this.restriction.createRule(RestrictionState.TERMINATION, symbol, empty));
     }
 
     /**
@@ -255,40 +260,37 @@ public class HomomorphismManager {
         this.symbols.clear();
         this.variables.clear();
         
-        for(int i=0;i<this.sigs.length;++i){
+        for(int i=0;i<2;++i){
             if(i == sigNum){
                 this.isJustInsert.add(false);
                 this.symbols.add(symName);
             }else{
                 this.isJustInsert.add(true);
                 this.symbols.add(-1);
-                this.variables.add(1);
+                this.variables.add(0);
             }
         }
         
         String label = this.addMapping(symbols, variables, isJustInsert);
-        String[] tLabel = new String[] {label};
         
-        this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, tLabel, new String[] {GENERAL_STATE_PREFIX+"_"+sigNum}));
-        this.restriction.addRule(this.restriction.createRule(START, tLabel, new String[] {GENERAL_STATE_PREFIX+"_"+sigNum}));
-        this.restriction.addRule(this.restriction.createRule(VARIABLE_STATE, tLabel, new String[] {GENERAL_STATE_PREFIX+"_"+sigNum}));
-              
-        Iterator<IntArrayList> it = new IncreasingSequencesIterator(this.sigs.length);
-        while(it.hasNext()){
-            IntArrayList il = it.next();
-            // no step like this for states that have already terminated, since we do not want infinite
-            // languages if we can avoid them            
-            if(IntArrays.binarySearch(il.elements(), 0, il.size(), sigNum) >= 0) {
-                continue;
-            }
+        RestrictionState[] rhs = new RestrictionState[1];
+        
+        if(sigNum == 0){
+            rhs[0] = RestrictionState.TERMINATION;
+            RestrictionState lhs = RestrictionState.getByDescription(false, 0);
+            this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
             
-            String state = makeState(il);
+            rhs[0] = RestrictionState.getByDescription(false, 1);
+            lhs = RestrictionState.getByDescription(false, 2);
+            this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
             
-            extend(il,sigNum);
-            String goal = makeState(il);
-            this.restriction.addRule(this.restriction.createRule(state, tLabel,
-                        new String[] {goal}));
-            
+            rhs[0] = RestrictionState.getByDescription(false, 0);
+            lhs = RestrictionState.START;
+            this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
+        }else{
+            rhs[1] = RestrictionState.TERMINATION;
+            RestrictionState lhs = RestrictionState.getByDescription(false, 1);
+            this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
         }
     }
 
@@ -298,81 +300,7 @@ public class HomomorphismManager {
      * @param symName 
      */
     private void handleSym(int sigNum, int symName) {
-        IntSet singleTon = new BoundaryIntSet(symName, symName);
-        
-        BooleanArrayIterator bai = new BooleanArrayIterator(this.sigs.length,sigNum);
-        while(bai.hasNext()){
-            boolean[] iji = bai.next();
-            for(int i=0;i<iji.length;++i){
-                iji[i] ^= true;
-            }
-            this.isJustInsert.clear();
-            this.isJustInsert.addElements(0, iji);
-            
-            List<IntIterable> l = new ObjectArrayList<>();
-            for(int i=0;i<this.sigs.length;++i){
-                if(i == sigNum || iji[i]){
-                    l.add(singleTon);
-                }else{
-                    l.add(seen[i]);
-                }
-            }
-            
-            Iterator<int[]> it = new IntTupleIterator(l);
-            while(it.hasNext()){
-                int[] tuple = it.next();
-                this.symbols.clear();
-           
-                int max = 0;
-                for(int i=0;i<tuple.length;++i){
-                    int k = tuple[i];
-                    this.symbols.add(k);
-                    
-                    if(iji[i] && i != sigNum){
-                        continue;
-                    }
-                    
-                    max = Math.max(max, this.sigs[k].getArity(k));
-                    this.symbols.add(k);
-                }
-            
-                int[] def = new int[max];
-                for(int i=1;i<=max;++i){
-                    def[i-1] = i;
-                }
-                List<int[]> fixed = new ObjectArrayList<>();
-                fixed.add(def);
-            
-                List<Iterable<int[]>> varOptions = new ObjectArrayList<>();
-                for(int i=0;i<tuple.length;++i){
-                    if(iji[i] && i != sigNum){
-                        varOptions.add(new NChooseK(1, max));
-                    }else{
-                        int k = tuple[i];
-                        int arity = this.sigs[i].getArity(k);
-                        
-                        if(arity == max){
-                            //TODO add singleton here
-                        }
-                        else{
-                            varOptions.add(new NChooseK(arity, max));
-                        }
-                        
-                    }
-                    
-                    //TODO
-                }
-            
-            
-        }
-            
-            
-        }
-        
-        //TODO make sure that we also pair with just the variables
-        
-        
-        
+        //TODO
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
@@ -397,9 +325,9 @@ public class HomomorphismManager {
                 symbol.append('?').append(variables.getInt(varPos++)+1);
                 max = Math.max(max, 1);
             }else{
-                int varNum = this.sigs[i].getArity(symbols.getInt(i));
+                int varNum = (i == 0 ? this.source1 : this.source2).getArity(symbols.getInt(i));
                 max = Math.max(varNum, max);
-                String sym  = this.sigs[i].resolveSymbolId(variables.getInt(i));
+                String sym  = (i == 0 ? this.source1 : this.source2).resolveSymbolId(variables.getInt(i));
                 
                 symbol.append(sym).append('(');
                 for(int k=0;k < varNum; ++k){
@@ -423,17 +351,17 @@ public class HomomorphismManager {
                 t = Tree.create("?"+(variables.getInt(varPos++)+1));
             }
             else{
-                int varNum = this.sigs[i].getArity(this.variables.getInt(i));
-                String label = this.sigs[i].resolveSymbolId(this.variables.getInt(i));
+                int varNum = (i == 0 ? this.source1 : this.source2).getArity(this.variables.getInt(i));
+                String label = (i == 0 ? this.source1 : this.source2).resolveSymbolId(this.variables.getInt(i));
                 
-                for(int k=0;k < varNum; ++k){                    
+                for(int k=0;k < varNum; ++k){
                     storage.add(Tree.create("?"+(variables.getInt(varPos++)+1)));
                 }
                 
                 t = Tree.create(label, storage);
             }
             
-            this.homs[i].add(sym, t);
+            (i == 0 ? this.hom1 : this.hom2).add(sym, t);
         }
         
         return sym;
@@ -449,27 +377,12 @@ public class HomomorphismManager {
 
     /**
      * 
-     * @param il
-     * @return 
-     */
-    private String makeState(IntList il) {
-        StringBuilder sb = new StringBuilder(GENERAL_STATE_PREFIX);
-        
-        for(int i=0;i<il.size();++i){
-            sb.append("_").append(il.get(i));
-        }
-        
-        return sb.toString();
-    }
-
-    /**
-     * 
      * @param sigNum
      * @param symName
      * @return 
      */
     private boolean isVariable(int sigNum, int symName) {
-        String s = this.sigs[sigNum].resolveSymbolId(symName);
+        String s = (sigNum == 0 ? this.source1 : this.source2).resolveSymbolId(symName);
         
         return VARIABLE_PATTERN.matcher(s).matches();
     }
@@ -485,21 +398,22 @@ public class HomomorphismManager {
         this.symbols.clear();
         this.variables.clear();
         
-        String sym = this.sigs[sigNum].resolveSymbolId(symName);
+        String sym = (sigNum == 0 ? this.source1 : this.source2).resolveSymbolId(symName);
         
-        for(Signature sign : this.sigs){
-            if(!sign.contains(sym)){
-                return;
-            }
-            
-            this.isJustInsert.add(false);
-            this.variables.add(1);
-            this.symbols.add(sig.getIdForSymbol(sym));
+        if(!source1.contains(sym) || !source2.contains(sym)){
+            return;
         }
+        
+        this.isJustInsert.add(false);
+        this.isJustInsert.add(false);
+        this.variables.add(0);
+        this.symbols.add(source1.getIdForSymbol(sym));
+        this.symbols.add(source2.getIdForSymbol(sym));
         
         String label = this.addMapping(symbols, variables, isJustInsert);
         String[] lab = new String[] {label};
         
+        //TODO
         this.restriction.addRule(this.restriction.createRule(GENERAL_STATE_PREFIX, lab, new String[] {VARIABLE_STATE}));
         this.restriction.addRule(this.restriction.createRule(NEEDS_VARIABLE_STATE, lab, new String[] {VARIABLE_STATE}));
     }
@@ -518,6 +432,43 @@ public class HomomorphismManager {
             return true;
         }else{
             return false;
+        }
+    }
+    
+    public CondensedTreeAutomaton<RestrictionState> getCondensedRestriction(){
+        //TODO
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+    
+    
+    /**
+      * 
+      */
+     public static enum RestrictionState{
+        START,
+        HAS_VARIABLE_BOTH,
+        HAS_VARIABLE_LEFT,
+        HAS_VARIABLE_RIGHT,
+        NO_VARIABLE_BOTH,
+        NO_VARIABLE_LEFT,
+        NO_VARIABLE_RIGHT,
+        TERMINATION;
+        
+        /**
+         * 
+         * @param hasVariable
+         * @param leftRightBoth
+         * @return 
+         */
+        public static RestrictionState getByDescription(boolean hasVariable, int leftRightBoth){
+            switch(leftRightBoth){
+                case 0:
+                    return hasVariable ? HAS_VARIABLE_LEFT : NO_VARIABLE_LEFT;
+                case 1:
+                    return hasVariable ? HAS_VARIABLE_RIGHT : NO_VARIABLE_RIGHT;
+                default:
+                    return hasVariable ? HAS_VARIABLE_BOTH : NO_VARIABLE_BOTH;
+            }
         }
     }
 }
