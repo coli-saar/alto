@@ -22,6 +22,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
+import java.util.Arrays;
 import java.util.regex.Pattern;
 
 /**
@@ -293,8 +294,16 @@ public class HomomorphismManager {
      * @param symName 
      */
     private void handleSym(int sigNum, int symName) {
-        //TODO
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        makeSingular(sigNum,symName);
+        
+        IntIterator iit = (sigNum == 0 ? this.seen2 : this.seen2).iterator();
+        while(iit.hasNext()){
+            int other = iit.nextInt();
+            int lSym = (sigNum == 0 ? symName : other);
+            int rSym = (sigNum == 1 ? symName : other);
+            
+            makePairing(lSym,rSym);
+        }
     }
 
     /**
@@ -431,11 +440,113 @@ public class HomomorphismManager {
         }
     }
     
+    /**
+     * 
+     * @return 
+     */
     public CondensedTreeAutomaton<RestrictionState> getCondensedRestriction(){
         //TODO
         throw new UnsupportedOperationException("Not yet implemented");
     }
-    
+
+    /**
+     * 
+     * @param sigNum
+     * @param symName 
+     */
+    private void makeSingular(int sigNum, int symName) {
+        int numVars = (sigNum == 0 ? this.source1.getArity(symName) : this.source2.getArity(symName));
+        
+        this.isJustInsert.clear();
+        this.symbols.clear();
+        this.variables.clear();
+        int varPos = -1;
+        
+        for(int i=0;i<2;++i){
+            if(i == sigNum){
+                this.isJustInsert.add(false);
+                this.symbols.add(symName);
+                for(int k=0;k<numVars;++k){
+                    this.variables.add(k);
+                }
+            }else{
+                this.isJustInsert.add(true);
+                this.symbols.add(-1);
+                varPos = this.variables.size();
+            }
+        }
+        
+        
+        RestrictionState lhs;
+        RestrictionState[] rhs = new RestrictionState[numVars];
+        RestrictionState filler = (sigNum == 0 ? RestrictionState.getByDescription(false, 0) : RestrictionState.getByDescription(false, 0));
+        Arrays.fill(rhs, filler);
+        
+        for(int i=0;i<numVars;++i){
+            this.variables.add(varPos, i);
+            String symbol = this.addMapping(symbols, variables, isJustInsert);
+            
+            if(sigNum == 0){
+                lhs = RestrictionState.START;
+                rhs[i] = RestrictionState.getByDescription(true, 2);                
+                this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+                
+               rhs[i] = RestrictionState.getByDescription(true, 1);
+               this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+               
+               lhs = RestrictionState.getByDescription(true, 2);
+               rhs[i] = RestrictionState.getByDescription(true, 2);
+               this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+               
+               rhs[i] = RestrictionState.getByDescription(true, 1);
+               this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+               
+               lhs = RestrictionState.getByDescription(true, 0);
+               rhs[i] = RestrictionState.getByDescription(true, 0);
+               this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+               if(i == 0){
+                   lhs = RestrictionState.getByDescription(false, 2);
+                   rhs[0] = RestrictionState.getByDescription(false, 2);
+                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+                   
+                   lhs = RestrictionState.START;
+                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+                   
+                   lhs = RestrictionState.getByDescription(false, 2);
+                   rhs[0] = RestrictionState.getByDescription(false, 1);
+                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+                   
+                   lhs = RestrictionState.START;
+                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+                   
+                   lhs = RestrictionState.getByDescription(false, 0);
+                   rhs[0] = RestrictionState.getByDescription(false, 0);
+                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+               }
+            }else{
+                lhs = RestrictionState.getByDescription(true, 1);
+                rhs[i] = RestrictionState.getByDescription(true, 1);
+                this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+                
+                if(i == 0){
+                    lhs = RestrictionState.getByDescription(false, 1);
+                    rhs[i] = RestrictionState.getByDescription(false, 1);
+                    this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
+                }
+            }
+            
+            rhs[i] = filler;
+        }
+    }
+
+    /**
+     * 
+     * @param lSym
+     * @param rSym 
+     */
+    private void makePairing(int lSym, int rSym) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
     /**
       * 
