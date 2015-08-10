@@ -7,6 +7,7 @@ package de.up.ling.irtg.align;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.semiring.Semiring;
+import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
@@ -29,11 +30,31 @@ public class Propagator {
      * @param alignments
      * @return 
      */
-    public Int2ObjectMap<IntSet> introduce(TreeAutomaton input, StateAlignmentMarking alignments){
+    public Int2ObjectMap<IntSet> propagate(TreeAutomaton input, StateAlignmentMarking alignments){
          Int2ObjectMap<IntSet> map = input.evaluateInSemiring(vp, alignments);
         return map;
     }
     
+    /**
+     * 
+     * @param input
+     * @param alignments
+     * @return 
+     */
+    public TreeAutomaton convert(TreeAutomaton input, StateAlignmentMarking alignments){
+        return this.convert(input, this.propagate(input, alignments));
+    }
+    
+    /**
+     * 
+     * @param input
+     * @param propagatedAlignments
+     * @return 
+     */
+    public TreeAutomaton convert(TreeAutomaton input, Int2ObjectMap<IntSet> propagatedAlignments){
+        //TODO
+        return null;
+    }
     
     /**
      * 

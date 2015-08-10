@@ -5,12 +5,18 @@
  */
 package de.up.ling.irtg.align;
 
+import de.up.ling.irtg.automata.TreeAutomaton;
+
 /**
  *
  * @author christoph_teichmann
+ * @param <State>
  */
-public interface Pruner {
-    
-    
-    
+public interface Pruner<State> {
+    /**
+     * 
+     * @param automaton
+     * @return 
+     */
+    public TreeAutomaton<State> prune(TreeAutomaton<State> automaton);
 }
