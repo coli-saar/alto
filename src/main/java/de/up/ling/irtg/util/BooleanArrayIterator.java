@@ -30,8 +30,8 @@ public class BooleanArrayIterator implements Iterator<boolean[]> {
     
     /**
      * 
-     * @param includeAllFalse
-     * @param length 
+     * @param length
+     * @param alwaysTrue 
      */
     public BooleanArrayIterator(int length, int... alwaysTrue){
         this.arr = new boolean[length];

@@ -7,22 +7,32 @@ package de.up.ling.irtg.align;
 
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.BooleanArrayIterator;
+import de.up.ling.irtg.util.NChooseK;
+import de.up.ling.irtg.util.SingletonIterator;
+import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntArrays;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -30,6 +40,11 @@ import java.util.regex.Pattern;
  * @author christoph_teichmann
  */
 public class HomomorphismManager {
+    /**
+     * 
+     */
+    private static final boolean[] RE_USE_FOR_SHARED = new boolean[] {true,true};
+    
     /**
      * 
      */
@@ -422,31 +437,13 @@ public class HomomorphismManager {
         lhs = RestrictionState.getByDescription(true, 1);
         this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
     }
-
-    /**
-     * 
-     * @param il
-     * @param sigNum 
-     */
-    private boolean extend(IntArrayList il, int sigNum) {
-        int pos = IntArrays.binarySearch(il.elements(), 0, il.size(), sigNum);
-        
-        if(pos < 0){
-            pos = -(pos+1);
-            il.add(pos, sigNum);
-            return true;
-        }else{
-            return false;
-        }
-    }
     
     /**
      * 
      * @return 
      */
     public CondensedTreeAutomaton<RestrictionState> getCondensedRestriction(){
-        //TODO
-        throw new UnsupportedOperationException("Not yet implemented");
+        return ConcreteCondensedTreeAutomaton.fromTreeAutomaton(restriction);
     }
 
     /**
@@ -475,7 +472,6 @@ public class HomomorphismManager {
                 varPos = this.variables.size();
             }
         }
-        
         
         RestrictionState lhs;
         RestrictionState[] rhs = new RestrictionState[numVars];
@@ -545,7 +541,194 @@ public class HomomorphismManager {
      * @param rSym 
      */
     private void makePairing(int lSym, int rSym) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        int lArity = this.source1.getArity(lSym);
+        int rArity = this.source2.getArity(rSym);
+        
+        int less = Math.min(lArity, rArity);
+        if(less == 1){
+            return;
+        }
+        int more = Math.max(lArity, rArity);
+        
+        this.isJustInsert.clear();
+        this.isJustInsert.add(false);
+        this.isJustInsert.add(true);
+        this.symbols.clear();
+        this.symbols.add(lSym);
+        this.symbols.add(rSym);
+        
+        // this set tells us which elements we can pair with elements that do
+        // not share a variable
+        // not that we need to write no more than less elements into this, since
+        // no more will be paired
+        IntSortedSet iss = new IntAVLTreeSet();
+        for(int i=0;i<less;++i){
+            iss.add(i);
+        }
+        
+        Set<RestrictionState>[] settings = new Set[more];
+        RestrictionState[] container = new RestrictionState[more];
+        for(int i=0;i<more;++i){
+            settings[i] =new ObjectAVLTreeSet<>();
+        }
+        
+        Iterator<boolean[]> bai;
+        if(less > 2){
+            bai = new SingletonIterator<>(RE_USE_FOR_SHARED);
+        }else{
+            bai = new BooleanArrayIterator(less);
+        }
+        
+        IntSet used = new IntRBTreeSet();
+        
+        while(bai.hasNext()){
+            boolean[] bs = bai.next();
+            int size = less == 2 ? 2 : findNumberTrue(bs);
+            if(size < 2){
+                continue;
+            }
+            
+            for (int[] share : new NChooseK(size, more)) {
+                removeAll(iss, share);
+                used.clear();
+                
+                IntIterator ibi = iss.iterator();
+                this.variables.clear();
+                int posInShared = 0;
+                
+                if(less == rArity){
+                    for(int i=0;i<lArity;++i){
+                        this.variables.add(i);
+                    }
+                    
+                    for(int i=0;i<rArity;++i){
+                        if(bs[i]){
+                            int var = share[posInShared++];
+                            this.variables.add(var);
+                        }else{
+                            int var = ibi.nextInt();
+                            used.add(var);
+                            this.variables.add(var);
+                        }
+                    }
+                    
+                    String label = this.addMapping(symbols, variables, isJustInsert);
+                    Arrays.sort(share);
+                    
+                    for(int i=0;i<more;++i){
+                        Set<RestrictionState> setting = settings[i];
+                        setting.clear();
+                        if(Arrays.binarySearch(share, i) >= 0){
+                            for(int side=0;side<=2;++side){
+                                setting.add(RestrictionState.getByDescription(true, side));
+                            }
+                        }else{
+                            int side = (used.contains(i) ? 2 : 0);
+                            setting.add(RestrictionState.getByDescription(false, side));
+                        }
+                    }
+                    
+                    TupleIterator<RestrictionState> states = new TupleIterator<>(settings,container);
+                    while(states.hasNext()){
+                        RestrictionState[] rhs = states.next();
+                        RestrictionState lhs = RestrictionState.START;
+                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
+                        
+                        lhs = RestrictionState.getByDescription(true, 0);
+                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
+                        
+                        lhs = RestrictionState.getByDescription(true, 1);
+                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
+                    }
+                }else{
+                    for(int i=0;i<lArity;++i){
+                        if(bs[i]){
+                            int var = share[posInShared++];
+                            this.variables.add(var);
+                        }else{
+                            int var = ibi.nextInt();
+                            used.add(var);
+                            this.variables.add(var);
+                        }
+                    }
+                    
+                    for(int i=0;i<rArity;++i){
+                        this.variables.add(i);
+                    }
+                    
+                    
+                    String label = this.addMapping(symbols, variables, isJustInsert);
+                    Arrays.sort(share);
+                    
+                    for(int i=0;i<more;++i){
+                        Set<RestrictionState> setting = settings[i];
+                        setting.clear();
+                        if(Arrays.binarySearch(share, i) >= 0){
+                            for(int side=0;side<=2;++side){
+                                setting.add(RestrictionState.getByDescription(true, side));
+                            }
+                        }else{
+                            if(used.contains(i)){
+                                setting.add(RestrictionState.getByDescription(false, 2));
+                            }else{
+                                setting.add(RestrictionState.getByDescription(false, 1));
+                            }
+                        }
+                    }
+                    
+                    TupleIterator<RestrictionState> states = new TupleIterator<>(settings,container);
+                    while(states.hasNext()){
+                        RestrictionState[] rhs = states.next();
+                        RestrictionState lhs = RestrictionState.START;
+                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
+                        
+                        lhs = RestrictionState.getByDescription(true, 0);
+                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
+                        
+                        lhs = RestrictionState.getByDescription(true, 1);
+                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
+                    }
+                }
+                    
+                    
+                addAll(iss, share);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param s
+     * @param share 
+     */
+    private void removeAll(IntSortedSet s, int[] share) {
+        for(int i : share){
+            s.rem(i);
+        }
+    }
+
+    /**
+     * 
+     * @param s
+     * @param share 
+     */
+    private void addAll(IntSortedSet s, int[] share) {
+        for(int i : share){
+            s.add(i);
+        }
+    }
+
+    /**
+     * 
+     * @param bs
+     * @return 
+     */
+    private int findNumberTrue(boolean[] bs) {
+        int ret = 0;
+        for(boolean b : bs){
+            ret += b ? 1 : 0;
+        }
+        return ret;
     }
     
     /**
