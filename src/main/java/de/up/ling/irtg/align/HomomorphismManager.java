@@ -33,6 +33,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -48,7 +49,7 @@ public class HomomorphismManager {
     /**
      * 
      */
-    public final static Pattern VARIABLE_PATTERN = Pattern.compile("XX.*");  
+    public final static Predicate<String> VARIABLE_PATTERN = Pattern.compile("XX.*").asPredicate();  
     
     /**
      * 
@@ -135,8 +136,13 @@ public class HomomorphismManager {
         this.source2 = source2;
         this.seen1 = new IntOpenHashSet();
         this.seen2 = new IntOpenHashSet();
+        
         this.hom1 = new Homomorphism(sharedSig, source1);
+        this.hom1.add(VARIABLE_PREFIX, Tree.create(VARIABLE_PREFIX, Tree.create("?1")));
+        
         this.hom2 = new Homomorphism(sharedSig, source2);
+        this.hom2.add(VARIABLE_PREFIX, Tree.create(VARIABLE_PREFIX, Tree.create("?1")));
+        
         this.terminationSequence = null;
         this.restriction = new ConcreteTreeAutomaton<>(this.sharedSig);
         
@@ -401,7 +407,7 @@ public class HomomorphismManager {
     private boolean isVariable(int sigNum, int symName) {
         String s = (sigNum == 0 ? this.source1 : this.source2).resolveSymbolId(symName);
         
-        return VARIABLE_PATTERN.matcher(s).matches();
+        return VARIABLE_PATTERN.test(s);
     }
 
     
