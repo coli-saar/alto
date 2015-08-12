@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.align.pruning;
 
+import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.Pruner;
 import de.up.ling.irtg.align.StateAlignmentMarking;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
@@ -14,9 +15,15 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Comparator;
+import java.util.PriorityQueue;
+import java.util.Set;
 
 /**
  *
@@ -25,29 +32,71 @@ import java.util.Comparator;
  */
 public class TightPruner<State> implements Pruner<State> {
 
+    /**
+     * 
+     */
+    private Set<String> admissible;
+
+    /**
+     * 
+     */
+    private int pruningNumber = 5;
+
+    /**
+     * 
+     * @param pruningNumber 
+     */
+    public void setPruningNumber(int pruningNumber) {
+        this.pruningNumber = Math.max(pruningNumber,2);
+    }
+    
+    /**
+     * 
+     * @param admissible 
+     */
+    public void setAdmissible(Set<String> admissible) {
+        this.admissible = admissible;
+    }
+    
+    
     @Override
-    public TreeAutomaton<State> postPrune(TreeAutomaton<State> automaton, StateAlignmentMarking<State> stateMarkers) {
+    public TreeAutomaton<State> prePrune(TreeAutomaton<State> automaton, StateAlignmentMarking<State> stateMarkers) {
         return automaton;
     }
 
     @Override
-    public TreeAutomaton<State> prePrune(TreeAutomaton<State> automaton, StateAlignmentMarking<State> stateMarkers) {
+    public TreeAutomaton<State> postPrune(TreeAutomaton<State> automaton, StateAlignmentMarking<State> stateMarkers) {
         Int2ObjectMap tight = new Int2ObjectOpenHashMap();
-        Int2IntMap height = new Int2IntOpenHashMap();
+        Int2IntMap numberConsistent = new Int2IntOpenHashMap();
+        Object2IntMap<Rule> ruleConsistent = new Object2IntOpenHashMap<>();
         
-        Visitor<State> vis = new Visitor<>(automaton, stateMarkers, tight, height);
+        Visitor<State> vis = new Visitor<>(automaton, stateMarkers, tight, numberConsistent, ruleConsistent);
         automaton.foreachStateInBottomUpOrder(vis);
-        
-        
-        
         
         ConcreteTreeAutomaton<State> cta = new ConcreteTreeAutomaton<State>();
         
         IntSet done = new IntOpenHashSet();
+        IntArrayList todo = new IntArrayList();
+        IntIterator iit = automaton.getFinalStates().iterator();
+        PriorityQueue<Rule> pq;
+        while(iit.hasNext()){
+            todo.add(iit.nextInt());
+        }
+        
+        for(int i=0;i<todo.size();++i){
+            int state = todo.getInt(i);
+            Iterable<Rule> it = automaton.getRulesTopDown(state);
+            
+            
+        }
         
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
+    /**
+     * 
+     * @param <State> 
+     */
     private class Visitor<State> implements TreeAutomaton.BottomUpStateVisitor{
 
         /**
@@ -68,43 +117,54 @@ public class TightPruner<State> implements Pruner<State> {
         /**
          * 
          */
-        private final Int2IntMap height;
+        private final Int2IntMap numberConsistent;
+        
+        /**
+         * 
+         */
+        private final Object2IntMap ruleConsistent;
 
         /**
          * 
          * @param base
          * @param markers
          * @param tight
-         * @param height 
+         * @param numberConsistent 
          */
-        public Visitor(TreeAutomaton<State> base, StateAlignmentMarking<State> markers, Int2ObjectMap<Tightness> tight, Int2IntMap height) {
+        public Visitor(TreeAutomaton<State> base, StateAlignmentMarking<State> markers,
+                Int2ObjectMap<Tightness> tight, Int2IntMap numberConsistent, Object2IntMap ruleConsistent) {
             this.base = base;
             this.markers = markers;
             this.tight = tight;
-            this.height = height;
-            this.height.defaultReturnValue(Integer.MAX_VALUE-1);
+            this.numberConsistent = numberConsistent;
+            this.numberConsistent.defaultReturnValue(0);
+            this.ruleConsistent = ruleConsistent;
         }
         
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
             Tightness t = Tightness.NONE;
-            int depth = Integer.MAX_VALUE;
+            int variablesDominated = 0;
             
             for(Rule r : rulesTopDown){
-                Tightness o = Tightness.getTightness(r, tight, markers, base);
+                Tightness o = Tightness.getTightness(r, tight, markers, base, admissible);
                 if(o.compareTo(t) < 0){
                     t = o;
                 }
                 
-                if(r.getChildren().length < 1){
-                    depth = 1;
-                }else{
-                    int h = this.height.get(r.getChildren()[0])+1;
-                    depth = Math.max(depth, h);
+                String label = r.getLabel(base);
+                int sum = HomomorphismManager.VARIABLE_PATTERN.test(label) &&
+                        (admissible == null || admissible.contains(label)) ? 1 : 0;
+                for(int child : r.getChildren()){
+                    sum += this.numberConsistent.get(child);
                 }
+                
+                this.ruleConsistent.put(r, sum);
+                
+                variablesDominated = Math.max(sum, variablesDominated);
             }
             
-            this.height.put(state, depth);
+            this.numberConsistent.put(state, variablesDominated);
             this.tight.put(state, t);
         }        
     }
@@ -112,10 +172,11 @@ public class TightPruner<State> implements Pruner<State> {
     /**
      * 
      */
-    public static enum Tightness{
+    public enum Tightness{
         TIGHT,
         RIGHT,
         LEFT,
+        DISTANT,
         NONE;
         
         
@@ -126,17 +187,41 @@ public class TightPruner<State> implements Pruner<State> {
          * @param alreadyProcessed
          * @param alignments
          * @param t
+         * @param admissible
          * @return 
          */
         public static <State> Tightness getTightness(Rule r, Int2ObjectMap<Tightness> alreadyProcessed,
-                StateAlignmentMarking<State> alignments, TreeAutomaton<State> t){
+                StateAlignmentMarking<State> alignments, TreeAutomaton<State> t, Set<String> admissible){
             IntSet align = alignments.getAlignmentMarkers(t.getStateForId(r.getParent()));
             if(!align.isEmpty()){
                 return TIGHT;
             }
             
             if(r.getChildren().length < 2){
-                return NONE;
+                if(r.getChildren().length < 1){
+                    return NONE;
+                }else{
+                    String label = r.getLabel(t);
+                    if(admissible != null && ! admissible.contains(label)){
+                        return NONE;
+                    }
+                    
+                    if(HomomorphismManager.VARIABLE_PATTERN.test(label)){
+                        Tightness q = alreadyProcessed.get(r.getChildren()[0]);
+                        if(q != null){
+                            return q;
+                        }else{
+                            return null;
+                        }
+                    }
+                    
+                    Tightness q = alreadyProcessed.get(r.getChildren()[0]);
+                    if(q != null && q != NONE){
+                        return DISTANT;
+                    }else{
+                        return NONE;
+                    }
+                }
             }
             
             Tightness rt = alreadyProcessed.get(r.getChildren()[0]);
@@ -153,21 +238,82 @@ public class TightPruner<State> implements Pruner<State> {
                 if(lt == TIGHT || lt == LEFT){
                     return LEFT;
                 }
-                else{
-                    return NONE;
+            }
+            
+            for(int state : r.getChildren()){
+                Tightness q = alreadyProcessed.get(state);
+                
+                if(q != NONE && q != null){
+                    return DISTANT;
                 }
             }
+            
+            return NONE;
         }
     }
     
+    /**
+     * 
+     */
     private class Comparison implements Comparator<Rule>{
-
         
+        /**
+         * 
+         */
+        private final Object2IntMap<Rule> ruleVariables;
+        
+        /**
+         * 
+         */
+        private final Int2ObjectMap<Tightness> tight;
+
+        /**
+         * 
+         * @param ruleVariables
+         * @param tight 
+         */
+        public Comparison(Object2IntMap<Rule> ruleVariables, Int2ObjectMap<Tightness> tight) {
+            this.ruleVariables = ruleVariables;
+            this.tight = tight;
+        }
         
         @Override
         public int compare(Rule o1, Rule o2) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            int comp = Integer.compare(this.ruleVariables.get(o1), this.ruleVariables.get(o2));
+            if(comp != 0){
+                return comp;
+            }
+            
+            if(o1.getChildren().length > 0){
+                if(o2.getChildren().length > 0){
+                    return comp(o1.getChildren(),o2.getChildren());
+                }else{
+                    return -1;
+                }
+            }else{
+                if(o2.getChildren().length > 0){
+                    return 1;
+                }else{
+                    return comp(o1.getChildren(),o2.getChildren());
+                }
+            }
         }
-        
+
+        /**
+         * 
+         * @param children
+         * @param children0
+         * @return 
+         */
+        private int comp(int[] children, int[] children0) {
+            for(int i=0;i<children.length && i < children0.length;++i){
+                int comp = this.tight.get(children[i]).compareTo(this.tight.get(children0[i]));
+                if(comp != 0){
+                    return comp;
+                }
+            }
+            
+            return Integer.compare(children.length, children0.length);
+        }
     }
 }
