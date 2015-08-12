@@ -13,10 +13,38 @@ import de.up.ling.irtg.automata.TreeAutomaton;
  * @param <State>
  */
 public interface Pruner<State> {
+    
     /**
      * 
      * @param automaton
+     * @param stateMarkers
      * @return 
      */
-    public TreeAutomaton<State> prune(TreeAutomaton<State> automaton);
+    public TreeAutomaton<State> prePrune(TreeAutomaton<State> automaton, StateAlignmentMarking<State> stateMarkers);
+    
+    
+    /**
+     * 
+     * @param automaton
+     * @param stateMarkers
+     * @return 
+     */
+    public TreeAutomaton<State> postPrune(TreeAutomaton<State> automaton, StateAlignmentMarking<State> stateMarkers);
+    
+    /**
+     * 
+     */
+    public Pruner DEFAULT_PRUNER = new Pruner(){
+
+        @Override
+        public TreeAutomaton postPrune(TreeAutomaton automaton, StateAlignmentMarking stateMarkers) {
+            return automaton;
+        }
+
+        @Override
+        public TreeAutomaton prePrune(TreeAutomaton automaton, StateAlignmentMarking stateMarkers) {
+            return automaton;
+        }
+
+    };
 }

@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.align;
 
+import de.up.ling.irtg.align.alignment_marking.SpecifiedAligner;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -27,6 +28,27 @@ public class Propagator {
  
     /**
      * 
+     */
+    private final Pruner pruner;
+    
+    /**
+     * 
+     */
+    public Propagator(){
+        this(Pruner.DEFAULT_PRUNER);
+    }
+    
+    /**
+     * 
+     * @param pruner 
+     */
+    public Propagator(Pruner pruner){
+        this.pruner = pruner;
+    }
+    
+    
+    /**
+     * 
      * @param input
      * @param alignments
      * @return 
@@ -38,29 +60,22 @@ public class Propagator {
     
     /**
      * 
+     * @param <State>
      * @param input
      * @param alignments
      * @return 
      */
-    public TreeAutomaton convert(TreeAutomaton input, StateAlignmentMarking alignments){
-        return this.convert(input, this.propagate(input, alignments));
-    }
-    
-    /**
-     * 
-     * @param <State>
-     * @param input
-     * @param propagatedAlignments
-     * @return 
-     */
-    public <State> TreeAutomaton<State> convert(TreeAutomaton<State> input, 
-            final Int2ObjectMap<IntSet> propagatedAlignments){
+    public <State> TreeAutomaton convert(TreeAutomaton<State> input, StateAlignmentMarking<State> alignments){
+        Int2ObjectMap markings = this.propagate(input, alignments);
         final ConcreteTreeAutomaton<State> output = new ConcreteTreeAutomaton<>(input.getSignature());
+        final SpecifiedAligner map = new SpecifiedAligner(output);
         
-        Visitor visit = new Visitor(propagatedAlignments, output, input);
+        
+        
+        Visitor visit = new Visitor(markings, output, input, map, alignments);
         input.foreachStateInBottomUpOrder(visit);
         
-        return output;
+        return this.pruner.postPrune(output, map);
     }
     
     /**
@@ -136,16 +151,34 @@ public class Propagator {
          */
         private final TreeAutomaton original;
         
-
         /**
-         * Construct a new instance.
          * 
          */
-        public Visitor(Int2ObjectMap<IntSet> vars, ConcreteTreeAutomaton goal, TreeAutomaton original) {
+        private final SpecifiedAligner local;
+        
+        /**
+         * 
+         */
+        private final StateAlignmentMarking mark;
+
+        /**
+         * 
+         * @param vars
+         * @param goal
+         * @param original
+         * @param local
+         * @param mark 
+         */
+        public Visitor(Int2ObjectMap<IntSet> vars, ConcreteTreeAutomaton goal,
+                TreeAutomaton original, SpecifiedAligner local, StateAlignmentMarking mark) {
             this.vars = vars;
             this.goal = goal;
             this.original = original;
+            this.local = local;
+            this.mark = mark;
         }
+
+        
         
         
         @Override
@@ -154,6 +187,7 @@ public class Propagator {
             String loopLabel = HomomorphismManager.VARIABLE_PREFIX+"_"+this.vars.get(state).toString();
             // here we add a loop for the alignments
             this.goal.addRule(this.goal.createRule(st, loopLabel, new Object[] {st}));
+            this.local.put(this.goal.getIdForState(st), this.mark.getAlignmentMarkers(st));
             
             if(original.getFinalStates().contains(state))
             {
