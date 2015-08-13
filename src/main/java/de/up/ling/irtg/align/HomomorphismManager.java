@@ -49,12 +49,12 @@ public class HomomorphismManager {
     /**
      * 
      */
-    public final static Predicate<String> VARIABLE_PATTERN = Pattern.compile("XX.*").asPredicate();  
+    public final static Predicate<String> VARIABLE_PATTERN = Pattern.compile("^XX.*$").asPredicate();  
     
     /**
      * 
      */
-    public final static String VARIABLE_PREFIX = "XX.*";
+    public final static String VARIABLE_PREFIX = "XX";
     
     /**
      * 
@@ -138,10 +138,13 @@ public class HomomorphismManager {
         this.seen2 = new IntOpenHashSet();
         
         this.hom1 = new Homomorphism(sharedSig, source1);
+        this.sharedSig.addSymbol(VARIABLE_PREFIX, 1);
         this.hom1.add(VARIABLE_PREFIX, Tree.create(VARIABLE_PREFIX, Tree.create("?1")));
         
         this.hom2 = new Homomorphism(sharedSig, source2);
         this.hom2.add(VARIABLE_PREFIX, Tree.create(VARIABLE_PREFIX, Tree.create("?1")));
+        
+        this.seenVariables.add(VARIABLE_PREFIX);
         
         this.terminationSequence = null;
         this.restriction = new ConcreteTreeAutomaton<>(this.sharedSig);
@@ -303,8 +306,9 @@ public class HomomorphismManager {
             lhs = RestrictionState.START;
             this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
         }else{
-            rhs[1] = RestrictionState.TERMINATION;
+            rhs[0] = RestrictionState.TERMINATION;
             RestrictionState lhs = RestrictionState.getByDescription(false, 1);
+            
             this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
         }
     }
@@ -317,7 +321,9 @@ public class HomomorphismManager {
     private void handleSym(int sigNum, int symName) {
         makeSingular(sigNum,symName);
         
-        IntIterator iit = (sigNum == 0 ? this.seen2 : this.seen2).iterator();
+        IntIterator iit = (sigNum == 0 ? this.seen2 : this.seen1).iterator();
+        
+       
         while(iit.hasNext()){
             int other = iit.nextInt();
             int lSym = (sigNum == 0 ? symName : other);
@@ -345,12 +351,16 @@ public class HomomorphismManager {
             }
             
             if(justVariable.getBoolean(i)){
-                symbol.append('?').append(variables.getInt(varPos++)+1);
+                symbol.append('x').append(variables.getInt(varPos++)+1);
                 max = Math.max(max, 1);
             }else{
                 int varNum = (i == 0 ? this.source1 : this.source2).getArity(symbols.getInt(i));
                 max = Math.max(varNum, max);
-                String sym  = (i == 0 ? this.source1 : this.source2).resolveSymbolId(variables.getInt(i));
+                String sym  = (i == 0 ? this.source1 : this.source2).resolveSymbolId(symbols.getInt(i));
+                
+                if(sym == null){
+                    throw new IllegalArgumentException("symbol must be known to given signatures");
+                }
                 
                 symbol.append(sym).append('(');
                 for(int k=0;k < varNum; ++k){
@@ -358,24 +368,26 @@ public class HomomorphismManager {
                         symbol.append(", ");
                     }
                     
-                    symbol.append(variables.getInt(varPos++)+1);
+                    symbol.append("x").append(variables.getInt(varPos++)+1);
                 }
-                symbol.append(sym).append(')');
+                symbol.append(')');
             }
         }
         
         String sym = symbol.toString();
         varPos = 0;
+        this.sharedSig.addSymbol(sym, max);
         ObjectArrayList<Tree<String>> storage = new ObjectArrayList<>();
         for(int i=0;i<symbols.size();++i){
+            storage.clear();
             Tree<String> t;
             
             if(justVariable.getBoolean(i)){
                 t = Tree.create("?"+(variables.getInt(varPos++)+1));
             }
             else{
-                int varNum = (i == 0 ? this.source1 : this.source2).getArity(this.variables.getInt(i));
-                String label = (i == 0 ? this.source1 : this.source2).resolveSymbolId(this.variables.getInt(i));
+                int varNum = (i == 0 ? this.source1 : this.source2).getArity(this.symbols.getInt(i));
+                String label = (i == 0 ? this.source1 : this.source2).resolveSymbolId(this.symbols.getInt(i));
                 
                 for(int k=0;k < varNum; ++k){
                     storage.add(Tree.create("?"+(variables.getInt(varPos++)+1)));
@@ -429,6 +441,7 @@ public class HomomorphismManager {
         
         this.isJustInsert.add(false);
         this.isJustInsert.add(false);
+        this.variables.add(0);
         this.variables.add(0);
         this.symbols.add(source1.getIdForSymbol(sym));
         this.symbols.add(source2.getIdForSymbol(sym));
@@ -565,7 +578,7 @@ public class HomomorphismManager {
         
         // this set tells us which elements we can pair with elements that do
         // not share a variable
-        // not that we need to write no more than less elements into this, since
+        // note that we need to write no more than less elements into this, since
         // no more will be paired
         IntSortedSet iss = new IntAVLTreeSet();
         for(int i=0;i<less;++i){
@@ -579,7 +592,7 @@ public class HomomorphismManager {
         }
         
         Iterator<boolean[]> bai;
-        if(less > 2){
+        if(less == 2){
             bai = new SingletonIterator<>(RE_USE_FOR_SHARED);
         }else{
             bai = new BooleanArrayIterator(less);
@@ -587,8 +600,9 @@ public class HomomorphismManager {
         
         IntSet used = new IntRBTreeSet();
         
-        while(bai.hasNext()){
+        while(bai.hasNext()){            
             boolean[] bs = bai.next();
+            
             int size = less == 2 ? 2 : findNumberTrue(bs);
             if(size < 2){
                 continue;
