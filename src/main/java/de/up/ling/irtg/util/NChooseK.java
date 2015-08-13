@@ -8,6 +8,7 @@ package de.up.ling.irtg.util;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.Arrays;
 import java.util.Iterator;
 
 /**
@@ -85,13 +86,15 @@ public class NChooseK implements Iterable<int[]> {
             }
         
             nums[0] = new IntAVLTreeSet();
-            for(int i=1;i<=n;++i){
+            for (int i = 0; i < n; ++i) {
                 nums[0].add(i);
             }
-        
+
             its[0] = nums[0].iterator();
-            ret[0] = its[0].nextInt();
-        
+            if(k > 1){
+                ret[0] = its[0].nextInt();
+            }
+            
             for(int i=1;i<this.its.length-1;++i){
                 this.nums[i] = new IntAVLTreeSet(this.nums[i-1]);
                 this.nums[i].rem(ret[i-1]);
@@ -99,10 +102,13 @@ public class NChooseK implements Iterable<int[]> {
                 this.ret[i] = this.its[i].nextInt();
             }
         
-            int pos = this.its.length-1;
-            this.nums[pos] = new IntAVLTreeSet(this.nums[pos-1]);
-            this.nums[pos].rem(ret[pos-1]);
-            this.its[pos] = this.nums[pos].iterator();
+            if(k > 1)
+            {
+                int pos = this.its.length-1;
+                this.nums[pos] = new IntAVLTreeSet(this.nums[pos-1]);
+                this.nums[pos].rem(ret[pos-1]);
+                this.its[pos] = this.nums[pos].iterator();
+            }
         }
     
     
