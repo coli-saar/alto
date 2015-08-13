@@ -73,12 +73,12 @@ public class TightPruner<State> implements Pruner<State> {
         Visitor<State> vis = new Visitor<>(automaton, stateMarkers, tight, numberConsistent, ruleConsistent);
         automaton.foreachStateInBottomUpOrder(vis);
         
-        ConcreteTreeAutomaton<State> cta = new ConcreteTreeAutomaton<State>();
+        ConcreteTreeAutomaton<State> cta = new ConcreteTreeAutomaton<>();
         
-        IntSet done = new IntOpenHashSet();
+        IntSet seen = new IntOpenHashSet();
         IntArrayList todo = new IntArrayList();
         IntIterator iit = automaton.getFinalStates().iterator();
-        PriorityQueue<Rule> pq;
+        PriorityQueue<Rule> pq = new PriorityQueue<>(new Comparison(ruleConsistent, tight));
         while(iit.hasNext()){
             todo.add(iit.nextInt());
         }
@@ -87,10 +87,50 @@ public class TightPruner<State> implements Pruner<State> {
             int state = todo.getInt(i);
             Iterable<Rule> it = automaton.getRulesTopDown(state);
             
+            for(Rule r : it){
+                pq.offer(r);
+            }
+            int added = 0;
             
+            while(added < this.pruningNumber && !pq.isEmpty()){
+                Rule r = pq.poll();
+                addRule(cta,r,automaton);
+                for(int child : r.getChildren()){
+                    if(!seen.contains(child)){
+                        seen.add(child);
+                        todo.add(child);
+                    }
+                }
+                
+                ++added;
+            }
         }
         
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return cta;
+    }
+
+    /**
+     * 
+     * @param cta
+     * @param r
+     * @param original 
+     */
+    private void addRule(ConcreteTreeAutomaton<State> cta, Rule r, TreeAutomaton<State> original) {
+        State par = original.getStateForId(r.getParent());
+        int parent = cta.addState(par);
+        
+        if(original.getFinalStates().contains(r.getParent())){
+            cta.addFinalState(parent);
+        }
+        
+        int label = cta.getSignature().addSymbol(r.getLabel(original), r.getChildren().length);
+        
+        int[] children = new int[r.getChildren().length];
+        for(int i=0;i<r.getChildren().length;++i){
+            children[i] = cta.addState(original.getStateForId(r.getChildren()[i]));
+        }
+        
+        cta.addRule(cta.createRule(parent, label, children, r.getWeight()));
     }
     
     /**
