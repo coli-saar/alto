@@ -8,26 +8,31 @@ package de.up.ling.irtg.util;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.Arrays;
 import java.util.Iterator;
 
 /**
- *
+ * Generates all sequences of length k that can be generated with the numbers from 0 to n-1.
+ * 
+ * Always re-uses the same array within one iterator. k = 0 always returns one empty
+ * array. k must always be less or equal to n, otherwise there will be an IllegalArgumentException
+ * when you try to obtain an iterator.
+ * 
  * @author christoph
  */
 public class NChooseK implements Iterable<int[]> {
 
     /**
-     * 
+     * number of elements to pick. 
      */
     private final int k;
     
     /**
-     * 
+     * how many choices we have.
      */
     private final int n;
 
     /**
+     * Creates a new instance.
      * 
      * @param k
      * @param n 
@@ -43,31 +48,42 @@ public class NChooseK implements Iterable<int[]> {
     }
 
     /**
-     * 
+     * Iterator implementation that actually does most of the work.
      */    
     private class ItImplementation implements Iterator<int[]>{
     
         /**
+         * Contains the sets that currently hold the different options for each position.
          * 
+         * These are restricted so that no set contains the values that are in
+         * the earlier positions of ret.
          */
         private final IntSet[] nums;
     
         /**
-         * 
+         * Contains the current iterators.
          */
         private final IntIterator[] its;
     
         /**
-         * 
+         * Contains the current picks for values.
          */
         private final int[] ret;
     
         /**
-        * 
+         * The array we actually give to the outside, just to make sure that
+         * nobody messes with ret.
+         */
+        private final int[] shell;
+        
+        /**
+        * Whether we are at the first (and only element), if we are supposed to
+        * pick 0 elements.
         */
         private boolean k0;
     
         /**
+         * Creates a new instance.
          * 
          * @param n
          * @param k 
@@ -80,6 +96,7 @@ public class NChooseK implements Iterable<int[]> {
             this.nums = new IntSet[k];
             this.its = new IntIterator[k];
             this.ret = new int[k];
+            shell = new int[k];
         
             if(k0 = (k==0)){
                 return; 
@@ -90,6 +107,8 @@ public class NChooseK implements Iterable<int[]> {
                 nums[0].add(i);
             }
 
+            // all of the checks are just to make sure we deal with the
+            // corner case of k == 1.
             its[0] = nums[0].iterator();
             if(k > 1){
                 ret[0] = its[0].nextInt();
@@ -151,7 +170,8 @@ public class NChooseK implements Iterable<int[]> {
                 }
             }
         
-            return ret;
+            System.arraycopy(ret, 0, shell, 0, k);
+            return shell;
         }
     }
 }
