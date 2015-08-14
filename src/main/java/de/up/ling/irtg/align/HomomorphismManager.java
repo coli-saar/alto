@@ -22,14 +22,11 @@ import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSet;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
@@ -114,12 +111,17 @@ public class HomomorphismManager {
     /**
      * 
      */
-    private final ConcreteTreeAutomaton<RestrictionState> restriction;  
-
+    private final ConcreteTreeAutomaton<RestrictionState> restriction;
+    
     /**
      * 
      */
-    private final ObjectSet<String> seenVariables;
+    private final IntSet seenAll1;
+    
+    /**
+     * 
+     */
+    private final IntSet seenAll2;
     
     /**
      * 
@@ -131,25 +133,26 @@ public class HomomorphismManager {
         this.isJustInsert = new BooleanArrayList();
         this.variables = new IntArrayList();
         this.sharedSig = new Signature();
-        this.seenVariables = new ObjectOpenHashSet<>();
         this.source1 = source1;
         this.source2 = source2;
-        this.seen1 = new IntOpenHashSet();
-        this.seen2 = new IntOpenHashSet();
+        this.seen1 = new IntAVLTreeSet();
+        this.seen2 = new IntAVLTreeSet();
+        this.seenAll1 = new IntAVLTreeSet();
+        this.seenAll2 = new IntAVLTreeSet();
         
         this.hom1 = new Homomorphism(sharedSig, source1);
-        this.sharedSig.addSymbol(VARIABLE_PREFIX, 1);
-        this.hom1.add(VARIABLE_PREFIX, Tree.create(VARIABLE_PREFIX, Tree.create("?1")));
-        
         this.hom2 = new Homomorphism(sharedSig, source2);
-        this.hom2.add(VARIABLE_PREFIX, Tree.create(VARIABLE_PREFIX, Tree.create("?1")));
-        
-        this.seenVariables.add(VARIABLE_PREFIX);
         
         this.terminationSequence = null;
         this.restriction = new ConcreteTreeAutomaton<>(this.sharedSig);
         
         this.restriction.addFinalState(this.restriction.addState(RestrictionState.START));
+        
+        int symName = this.source1.addSymbol(VARIABLE_PREFIX, 1);
+        int sumName = this.source2.addSymbol(VARIABLE_PREFIX, 1);
+        this.handleVariable(0, symName);
+        this.seenAll1.add(symName);
+        this.seenAll2.add(sumName);
     }
     
     /**
@@ -190,7 +193,7 @@ public class HomomorphismManager {
            this.terminationSequence[1] = def;
        }
          
-       toDo1.removeAll(this.seen1);
+       toDo1.removeAll(this.seenAll1);
        IntIterator iit = toDo1.iterator();
        while(iit.hasNext()){
            int symName = iit.nextInt();
@@ -207,7 +210,7 @@ public class HomomorphismManager {
             }
        }
        
-       toDo2.removeAll(this.seen2);
+       toDo2.removeAll(this.seenAll2);
        iit = toDo2.iterator();
        while(iit.hasNext()){
            int symName = iit.nextInt();
@@ -219,11 +222,13 @@ public class HomomorphismManager {
                 handleVariable(1,symName);
             }
             else{
-                handleSym(1,symName);                  
+                handleSym(1,symName);  
                 this.seen2.add(symName);
             }
        }
        
+       this.seenAll1.addAll(toDo1);
+       this.seenAll2.addAll(toDo2);
        ensureTermination();
     }
 
@@ -498,7 +503,11 @@ public class HomomorphismManager {
         Arrays.fill(rhs, filler);
         
         for(int i=0;i<numVars;++i){
-            this.variables.add(varPos, i);
+            if(i == 0){
+                this.variables.add(varPos, i);
+            }else{
+                this.variables.set(varPos, i);
+            }
             String symbol = this.addMapping(symbols, variables, isJustInsert);
             
             if(sigNum == 0){
