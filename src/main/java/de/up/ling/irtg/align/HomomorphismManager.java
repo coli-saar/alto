@@ -571,7 +571,7 @@ public class HomomorphismManager {
         
         this.isJustInsert.clear();
         this.isJustInsert.add(false);
-        this.isJustInsert.add(true);
+        this.isJustInsert.add(false);
         this.symbols.clear();
         this.symbols.add(lSym);
         this.symbols.add(rSym);
@@ -633,6 +633,7 @@ public class HomomorphismManager {
                     }
                     
                     String label = this.addMapping(symbols, variables, isJustInsert);
+                    
                     Arrays.sort(share);
                     
                     for(int i=0;i<more;++i){
@@ -709,7 +710,6 @@ public class HomomorphismManager {
                         this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
                     }
                 }
-                    
                     
                 addAll(iss, share);
             }

@@ -40,7 +40,7 @@ public class SingletonIterator<T> implements Iterator<T> {
 
     @Override
     public T next() {
-        this.done = false;
+        this.done = true;
         return this.value;
     }
     
