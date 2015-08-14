@@ -300,20 +300,20 @@ public class HomomorphismManager {
         RestrictionState[] rhs = new RestrictionState[1];
         
         if(sigNum == 0){
-            rhs[0] = RestrictionState.TERMINATION;
             RestrictionState lhs = RestrictionState.getByDescription(false, 0);
+            rhs[0] = RestrictionState.TERMINATION;
             this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
             
-            rhs[0] = RestrictionState.getByDescription(false, 1);
             lhs = RestrictionState.getByDescription(false, 2);
+            rhs[0] = RestrictionState.getByDescription(false, 1);
             this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
             
-            rhs[0] = RestrictionState.getByDescription(false, 0);
             lhs = RestrictionState.START;
+            rhs[0] = RestrictionState.getByDescription(false, 1);
             this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
         }else{
-            rhs[0] = RestrictionState.TERMINATION;
             RestrictionState lhs = RestrictionState.getByDescription(false, 1);
+            rhs[0] = RestrictionState.TERMINATION;
             
             this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
         }
