@@ -197,6 +197,7 @@ public class HomomorphismManager {
        IntIterator iit = toDo1.iterator();
        while(iit.hasNext()){
            int symName = iit.nextInt();
+           
            int arity = this.source1.getArity(symName);
            
             if(arity == 0){
