@@ -64,7 +64,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         }
 
 
-        if (!Alto.isMac()) {
+        if (!GuiMain.isMac()) {
             GuiUtils.replaceMetaByCtrl(jMenuBar2);
 //            miOpenIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
 //            miOpenAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
@@ -502,19 +502,19 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void miOpenIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenIrtgActionPerformed
-        Alto.loadIrtg(this);
+        GuiMain.loadIrtg(this);
     }//GEN-LAST:event_miOpenIrtgActionPerformed
 
     private void miOpenAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenAutomatonActionPerformed
-        Alto.loadAutomaton(this);
+        GuiMain.loadAutomaton(this);
     }//GEN-LAST:event_miOpenAutomatonActionPerformed
 
     private void miSaveAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miSaveAutomatonActionPerformed
-        Alto.saveAutomaton(automaton, this);
+        GuiMain.saveAutomaton(automaton, this);
     }//GEN-LAST:event_miSaveAutomatonActionPerformed
 
     private void miQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miQuitActionPerformed
-        Alto.quit();
+        GuiMain.quit();
     }//GEN-LAST:event_miQuitActionPerformed
 
     private void miShowLanguageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miShowLanguageActionPerformed
@@ -553,7 +553,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                                              return chart;
                                          },
                                          (chart, time) -> {
-                                             Alto.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
+                                             GuiMain.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
                                              if (chart != null) {
                                                  JTreeAutomaton jta = new JTreeAutomaton(chart, null);
                                                  jta.setIrtg(irtg);
@@ -602,39 +602,39 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }
 
     private void miTrainMLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainMLActionPerformed
-        Corpus corpus = Alto.loadAnnotatedCorpus(irtg, this);
+        Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, this);
 
         if (corpus != null) {
             long start = System.nanoTime();
             irtg.trainML(corpus);
-            Alto.log("Performed ML training, " + Util.formatTimeSince(start));
+            GuiMain.log("Performed ML training, " + Util.formatTimeSince(start));
             updateWeights();
         }
     }//GEN-LAST:event_miTrainMLActionPerformed
 
     private void miTrainEMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainEMActionPerformed
-        Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
-            GuiUtils.withProgressBar(Alto.getApplication(), "Training progress", "Performing EM training ...",
+        GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
+            GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing EM training ...",
                                      listener -> {
                                          irtg.trainEM(corpus, listener);
                                          return null;
                                      },
                                      (result, time) -> {
-                                         Alto.log("Performed EM training, " + Util.formatTime(time));
+                                         GuiMain.log("Performed EM training, " + Util.formatTime(time));
                                          updateWeights();
                                      });
         });
     }//GEN-LAST:event_miTrainEMActionPerformed
 
     private void miTrainVBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainVBActionPerformed
-        Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
-            GuiUtils.withProgressBar(Alto.getApplication(), "Training progress", "Performing VB training ...",
+        GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
+            GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing VB training ...",
                                      listener -> {
                                          irtg.trainVB(corpus, listener);
                                          return null;
                                      },
                                      (result, time) -> {
-                                         Alto.log("Performed VB training, " + Util.formatTime(time));
+                                         GuiMain.log("Performed VB training, " + Util.formatTime(time));
                                          updateWeights();
                                      });
         });
@@ -643,8 +643,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miLoadMaxentWeightsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadMaxentWeightsActionPerformed
         if (irtg instanceof MaximumEntropyIrtg) {
             long start = System.nanoTime();
-            Alto.loadMaxentWeights((MaximumEntropyIrtg) irtg, this);
-            Alto.log("Loaded maxent weights, " + Util.formatTimeSince(start));
+            GuiMain.loadMaxentWeights((MaximumEntropyIrtg) irtg, this);
+            GuiMain.log("Loaded maxent weights, " + Util.formatTimeSince(start));
 
             miShowMaxentWeights.setEnabled(true);
 
@@ -654,15 +654,15 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     private void miTrainMaxentActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainMaxentActionPerformed
         if (irtg instanceof MaximumEntropyIrtg) {
-            final Corpus corpus = Alto.loadAnnotatedCorpus(irtg, miMaxent);
+            final Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, miMaxent);
 
-            GuiUtils.withProgressBar(Alto.getApplication(), "Training progress", "Performing Maximum Entropy training ...",
+            GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing Maximum Entropy training ...",
                                      listener -> {
                                          ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, listener);
                                          return null;
                                      },
                                      (result, time) -> {
-                                         Alto.log("Trained maxent model, " + Util.formatTime(time));
+                                         GuiMain.log("Trained maxent model, " + Util.formatTime(time));
                                          miShowMaxentWeights.setEnabled(true);
                                          miShowMaxentWeightsActionPerformed(null);
                                      });
@@ -706,7 +706,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                                              return binarized;
                                          },
                                          (binarized, time) -> {
-                                             Alto.log("Binarized IRTG, " + Util.formatTime(time));
+                                             GuiMain.log("Binarized IRTG, " + Util.formatTime(time));
 
                                              JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
                                              jta.setTitle("Binarization of " + getTitle());
@@ -725,21 +725,21 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     }//GEN-LAST:event_miCloseWindowActionPerformed
 
     private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
-        Alto.closeAllWindows();
+        GuiMain.closeAllWindows();
     }//GEN-LAST:event_miCloseAllWindowsActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        Alto.showDecompositionDialog(this);
+        GuiMain.showDecompositionDialog(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void miSaveIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miSaveIrtgActionPerformed
-        Alto.saveIrtg(irtg, this);
+        GuiMain.saveIrtg(irtg, this);
     }//GEN-LAST:event_miSaveIrtgActionPerformed
 
     private void miBulkParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miBulkParseActionPerformed
-        Alto.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
+        GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
             try {
-                File outputCorpusFile = Alto.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
+                File outputCorpusFile = GuiMain.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
 
                 if (outputCorpusFile != null) {
                     final FileWriter w = new FileWriter(outputCorpusFile);
@@ -755,7 +755,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                                                  return null;
                                              },
                                              (result, time) -> {
-                                                 Alto.log("Finished bulk parsing, " + Util.formatTime(time));
+                                                 GuiMain.log("Finished bulk parsing, " + Util.formatTime(time));
                                              });
                 }
             } catch (IOException e) {

@@ -113,6 +113,14 @@
       <artifactId>swing-layout</artifactId>
       <version>1.0.3</version>
     </dependency>
+
+    <dependency>
+      <groupId>com.beust</groupId>
+      <artifactId>jcommander</artifactId>
+      <version>1.48</version>
+    </dependency>
+    
+
     
   
     <!-- testing dependencies -->
@@ -370,7 +378,7 @@
 	<configuration>
 	  <archive>
 	    <manifest>
-	      <mainClass>de.up.ling.irtg.gui.Alto</mainClass>
+	      <mainClass>de.up.ling.irtg.main.Alto</mainClass>
 	    </manifest>
 	  </archive>
 	  <descriptorRefs>

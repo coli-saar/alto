@@ -27,7 +27,7 @@ public class MaxentWeightsFrame extends JTableDialog<JTreeAutomaton.FtWeight> {
         super(title, data);
         this.irtg = irtg;
 
-        int keymask = Alto.isMac() ? InputEvent.META_MASK : InputEvent.CTRL_MASK;
+        int keymask = GuiMain.isMac() ? InputEvent.META_MASK : InputEvent.CTRL_MASK;
 
         JMenuItem miSaveWeights = new JMenuItem("Save Weights ...");
         miSaveWeights.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, keymask));
@@ -42,14 +42,14 @@ public class MaxentWeightsFrame extends JTableDialog<JTreeAutomaton.FtWeight> {
     }
 
     private void miSaveActionPerformed(ActionEvent evt) {
-        File file = Alto.chooseFileForSaving(new FileNameExtensionFilter("Maxent weights (*.txt)", "txt"), this);
+        File file = GuiMain.chooseFileForSaving(new FileNameExtensionFilter("Maxent weights (*.txt)", "txt"), this);
 
         if (file != null) {
             long start = System.nanoTime();
 
             try {
                 ((MaximumEntropyIrtg) irtg).writeWeights(new FileWriter(file));
-                Alto.log("Saved maxent weights, " + Util.formatTimeSince(start));
+                GuiMain.log("Saved maxent weights, " + Util.formatTimeSince(start));
             } catch (IOException e) {
                 showError(new Exception("An error occurred while saving the maxent weights to " + file.getName(), e));
             }

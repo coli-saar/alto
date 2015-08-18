@@ -27,22 +27,21 @@ import java.util.regex.Pattern;
  * collection of parse charts for these input objects to the chart using the
  * {@link Charts} class. See the examples to see the exact file format for
  * corpora.<p>
- * 
- * Blank lines in a corpus file are ignored. Furthermore, lines that start
- * with the <i>comment prefix</i> are ignored as well. The comment prefix
- * is taken from the non-blank line of the corpus, which needs to be
+ *
+ * Blank lines in a corpus file are ignored. Furthermore, lines that start with
+ * the <i>comment prefix</i> are ignored as well. The comment prefix is taken
+ * from the non-blank line of the corpus, which needs to be
  * <p>
  * <code> [ccc] IRTG unannotated corpus file, v1.0</code>
  * <p>
  * or<p>
- * <code> [ccc] IRTG annotated corpus file, v1.0</code>
- * respectively. Whatever you specify as <code>[ccc]</code>
- * is used as the comment pattern, and all lines that start with
- * the same pattern are ignored as comments. So if you use "# IRTG annotated ...",
- * then all lines starting with "#" are comments, and if you use
- * "// IRTG unannotated ...", then all lines starting with "//"
- * are comments. You can freely choose your own comment prefix to suit
- * the needs of your corpus.
+ * <code> [ccc] IRTG annotated corpus file, v1.0</code> respectively. Whatever
+ * you specify as <code>[ccc]</code> is used as the comment pattern, and all
+ * lines that start with the same pattern are ignored as comments. So if you use
+ * "# IRTG annotated ...", then all lines starting with "#" are comments, and if
+ * you use "// IRTG unannotated ...", then all lines starting with "//" are
+ * comments. You can freely choose your own comment prefix to suit the needs of
+ * your corpus.
  *
  * @author koller
  */
@@ -181,9 +180,8 @@ public class Corpus implements Iterable<Instance> {
         if (commentPrefix == null) {
             throw new CorpusReadingException("First non-blank line of corpus must be corpus declaration, but was " + line);
         }
-        
-//        System.err.println("comment pattern: |" + commentPrefix + "|");
 
+//        System.err.println("comment pattern: |" + commentPrefix + "|");
         // read and check header
         while (true) {
             line = readNextLine(br, lineNumber);
@@ -209,8 +207,8 @@ public class Corpus implements Iterable<Instance> {
                 }
             }
         }
-        
-        if( interpretationOrder.isEmpty() ) {
+
+        if (interpretationOrder.isEmpty()) {
             throw new CorpusReadingException("Corpus defined no interpretations");
         }
 
@@ -221,9 +219,9 @@ public class Corpus implements Iterable<Instance> {
             if (line == null) {
                 return ret;
             }
-            
+
             String stripped = readAsComment(line, commentPrefix);
-            if( stripped != null ) {
+            if (stripped != null) {
                 line = readNextLine(br, lineNumber);
                 continue;
             }
@@ -248,14 +246,12 @@ public class Corpus implements Iterable<Instance> {
                         throw new CorpusReadingException("Expected a derivation tree in line " + lineNumber);
                     }
 
-                    Tree<String> derivationTree = null;
                     try {
-                        derivationTree = TreeParser.parse(annoLine);
-                    } catch (Throwable ex) {  // TreeParser#parse can throw weird Errors
+                        Tree<String> derivationTree = TreeParser.parse(annoLine);
+                        inst.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(derivationTree));
+                    } catch (Throwable ex) {  // TreeParser#parse can throw weird Errors, hence Throwable
                         throw new CorpusReadingException("An error occurred while reading the derivation tree in line " + lineNumber + ": " + ex.getMessage(), ex);
                     }
-
-                    inst.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(derivationTree));
                 }
 
                 ret.instances.add(inst);

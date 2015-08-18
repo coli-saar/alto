@@ -163,7 +163,7 @@ public class RegularSeedChooser extends javax.swing.JDialog {
                 selectedAlgebras.put(interp, a);
                 selectedSeeds.put(interp, rs);
             } catch (Exception e) {
-                Alto.log("Exception in constructing binarizer for interpretation " + interp + ": " + e.toString());
+                GuiMain.log("Exception in constructing binarizer for interpretation " + interp + ": " + e.toString());
             }
         }
         

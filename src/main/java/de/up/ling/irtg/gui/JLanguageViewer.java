@@ -11,7 +11,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.SortedLanguageIterator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
-import static de.up.ling.irtg.gui.Alto.log;
+import static de.up.ling.irtg.gui.GuiMain.log;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.Util;
 import static de.up.ling.irtg.util.Util.formatTimeSince;
@@ -56,7 +56,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
         derivationViewers.add(new JDerivationViewer());
         miRemoveView.setEnabled(false);
 
-        if (!Alto.isMac()) {
+        if (!GuiMain.isMac()) {
             GuiUtils.replaceMetaByCtrl(jMenuBar1);
         }
     }
@@ -178,7 +178,7 @@ public class JLanguageViewer extends javax.swing.JFrame {
                                      },
                                      (tree, time) -> {
                                          if (time > 500000000) {
-                                             Alto.log("Initialized language viewer, " + Util.formatTime(time));
+                                             GuiMain.log("Initialized language viewer, " + Util.formatTime(time));
                                          }
 
                                          cachedTrees.add(tree);
@@ -482,15 +482,15 @@ public class JLanguageViewer extends javax.swing.JFrame {
     }//GEN-LAST:event_handleResize
 
     private void miOpenIrtgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenIrtgActionPerformed
-        Alto.loadIrtg(this);
+        GuiMain.loadIrtg(this);
     }//GEN-LAST:event_miOpenIrtgActionPerformed
 
     private void miOpenAutomatonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miOpenAutomatonActionPerformed
-        Alto.loadAutomaton(this);
+        GuiMain.loadAutomaton(this);
     }//GEN-LAST:event_miOpenAutomatonActionPerformed
 
     private void miQuitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miQuitActionPerformed
-        Alto.quit();
+        GuiMain.quit();
     }//GEN-LAST:event_miQuitActionPerformed
 
     private void miAddViewActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAddViewActionPerformed
@@ -553,11 +553,11 @@ public class JLanguageViewer extends javax.swing.JFrame {
     }//GEN-LAST:event_miCloseWindowActionPerformed
 
     private void miCloseAllWindowsActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCloseAllWindowsActionPerformed
-        Alto.closeAllWindows();
+        GuiMain.closeAllWindows();
     }//GEN-LAST:event_miCloseAllWindowsActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        Alto.showDecompositionDialog(this);
+        GuiMain.showDecompositionDialog(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void miCopyTestCaseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miCopyTestCaseActionPerformed

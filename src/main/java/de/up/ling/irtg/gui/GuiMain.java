@@ -60,12 +60,10 @@ import org.simplericity.macify.eawt.DefaultApplication;
  *
  * @author koller
  */
-public class Alto extends javax.swing.JFrame implements ApplicationListener {
-    // Class is named Alto because as of MacOS Mavericks, that determines
-    // the name in the menu bar.
+public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
     private static File previousDirectory;
-    private static Alto app;
+    private static GuiMain app;
     private static ExecutorService executorService = Executors.newFixedThreadPool(1);
 
     static {
@@ -75,11 +73,11 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
     /**
      * Creates new form GuiMain
      */
-    public Alto() {
+    public GuiMain() {
         initComponents();
         jMenuBar1.add(new WindowMenu(this));
 
-        if (!Alto.isMac()) {
+        if (!GuiMain.isMac()) {
             GuiUtils.replaceMetaByCtrl(jMenuBar1);
 //            miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_MASK));
 //            miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
@@ -88,7 +86,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         }
     }
 
-    public static Alto getApplication() {
+    public static GuiMain getApplication() {
         return app;
     }
 
@@ -260,7 +258,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
 
     public static void closeAllWindows() {
         for (Window window : WindowList.getWindows(false, false)) {
-            if (!(window instanceof Alto)) {
+            if (!(window instanceof GuiMain)) {
                 window.setVisible(false);
             }
         }
@@ -556,7 +554,7 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void log(final String log) {
-        final Alto x = app;
+        final GuiMain x = app;
 
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
@@ -592,8 +590,8 @@ public class Alto extends javax.swing.JFrame implements ApplicationListener {
         // tooltips stay visible forever
         ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
 
-        final Alto guiMain = new Alto();
-        Alto.app = guiMain;
+        final GuiMain guiMain = new GuiMain();
+        GuiMain.app = guiMain;
 
         Application application = new DefaultApplication();
         application.addApplicationListener(guiMain);
