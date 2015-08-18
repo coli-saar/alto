@@ -118,14 +118,14 @@ public class Corpus implements Iterable<Instance> {
         this.source = source;
     }
 
-    public void writeCorpus(Writer writer, InterpretedTreeAutomaton irtg) throws IOException {
-        CorpusWriter cw = new CorpusWriter(irtg, null, writer);
-        cw.setAnnotated(isAnnotated);
-
-        for (Instance inst : instances) {
-            cw.writeInstance(inst);
-        }
-    }
+//    public void writeCorpus(Writer writer, InterpretedTreeAutomaton irtg) throws IOException {
+//        CorpusWriter cw = new CorpusWriter(irtg, null, writer);
+//        cw.setAnnotated(isAnnotated);
+//
+//        for (Instance inst : instances) {
+//            cw.writeInstance(inst);
+//        }
+//    }
 
     // Returns the line with leading whitespace + commentPrefix removed.
     // If the line does not start with whitespace + commentPrefix, returns null.

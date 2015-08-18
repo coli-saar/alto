@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.PtbTreeInputCodec;
 import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
@@ -115,7 +116,8 @@ class PTBConverter {
 
         log.info("Writing corpus...");
         FileWriter fw = new FileWriter(corpusFilename);
-        lc.corpus.writeCorpus(fw, lc.irtg);
+        CorpusWriter cw = new CorpusWriter(lc.irtg, null, fw);
+        lc.corpus.forEach(cw);
         fw.close();
 
         log.info("Done.");

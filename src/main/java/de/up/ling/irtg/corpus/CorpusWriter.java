@@ -5,11 +5,12 @@
  */
 package de.up.ling.irtg.corpus;
 
+import com.diffplug.common.base.Errors;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *
@@ -18,27 +19,41 @@ import java.util.List;
 public class CorpusWriter extends AbstractCorpusWriter {
 
     private final Writer writer;
-    private final InterpretedTreeAutomaton irtg;
-    private final List<String> interpretationsInOrder;
+//    private final InterpretationPrintingPolicy printingPolicy;
     private boolean isHeaderWritten;
     private String comment;
     public static final String NULL = "_null_";
     private String commentPrefix;
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, Writer writer) throws IOException {
+        this(comment, commentPrefix, InterpretationPrintingPolicy.fromIrtg(irtg), writer);
+    }
+
+    /**
+     *
+     *
+     * @param comment
+     * @param commentPrefix - string with which each line of comments is
+     * prefixed; set to null to suppress comments in output
+     * @param printingPolicy
+     * @param writer
+     * @throws IOException
+     */
+    public CorpusWriter(String comment, String commentPrefix, InterpretationPrintingPolicy printingPolicy, Writer writer) throws IOException {
+        super(printingPolicy, false);
+
         this.writer = writer;
-        this.irtg = irtg;
-        this.interpretationsInOrder = new ArrayList<>(irtg.getInterpretations().keySet()); // fix some order of interpretations
         this.comment = comment;
         this.commentPrefix = commentPrefix;
+        this.printingPolicy = printingPolicy;
 
         isHeaderWritten = false;
     }
-    
+
     public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, Writer writer) throws IOException {
         this(irtg, comment, "# ", writer);
     }
-    
+
     @Override
     public void close() throws IOException {
         writer.flush();
@@ -48,27 +63,21 @@ public class CorpusWriter extends AbstractCorpusWriter {
     @Override
     public void writeInstance(Instance inst) throws IOException {
         boolean isn = inst.isNull();
-        
+
         if (!isHeaderWritten) {
             writer.write(makeHeader(comment) + "\n");
             isHeaderWritten = true;
         }
 
-        if (inst.getComments() != null) {
-            for( String key : inst.getComments().keySet() ) {
+        if (inst.getComments() != null && commentPrefix != null) {
+            for (String key : inst.getComments().keySet()) {
                 writer.write(commentPrefix + key + ": " + inst.getComments().get(key) + "\n");
             }
         }
 
-        for (String interp : interpretationsInOrder) {
-            String repr = isn ? NULL : irtg.getInterpretation(interp).getAlgebra().representAsString(inst.getInputObjects().get(interp));
-            writer.write(repr + "\n");
-        }
-
-        if (annotated) {
-            writer.write((isn ? NULL : irtg.getAutomaton().getSignature().resolve(inst.getDerivationTree())) + "\n");
-        }
-
+        withDerivationTree(inst, repr -> writer.write(repr + "\n"));
+        forEachInterpretation(inst, (key, repr) -> writer.write(repr + "\n"));
+        
         writer.write("\n");
         writer.flush();
     }
@@ -86,8 +95,8 @@ public class CorpusWriter extends AbstractCorpusWriter {
             buf.append(commentPrefix + "\n");
         }
 
-        for (String interp : interpretationsInOrder) {
-            buf.append(commentPrefix + "interpretation " + interp + ": " + irtg.getInterpretations().get(interp).getAlgebra().getClass() + "\n");
+        for (Pair<String, Algebra> interp : printingPolicy.get()) {
+            buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + interp.getRight().getClass() + "\n");
         }
 
         return buf.toString();
