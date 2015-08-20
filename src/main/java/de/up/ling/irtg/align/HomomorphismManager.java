@@ -111,7 +111,7 @@ public class HomomorphismManager {
     /**
      * 
      */
-    private final ConcreteTreeAutomaton<RestrictionState> restriction;
+    private final RestrictionManager rm;
     
     /**
      * 
@@ -144,9 +144,8 @@ public class HomomorphismManager {
         this.hom2 = new Homomorphism(sharedSig, source2);
         
         this.terminationSequence = null;
-        this.restriction = new ConcreteTreeAutomaton<>(this.sharedSig);
         
-        this.restriction.addFinalState(this.restriction.addState(RestrictionState.START));
+        this.rm = new RestrictionManager(this.sharedSig);
         
         int symName = this.source1.addSymbol(VARIABLE_PREFIX, 1);
         int sumName = this.source2.addSymbol(VARIABLE_PREFIX, 1);
@@ -268,10 +267,7 @@ public class HomomorphismManager {
             isJustInsert.add(false);
         }
         
-        String symbol = addMapping(symbols,variables,isJustInsert);
-        RestrictionState[] empty = new RestrictionState[] {};
-        
-        this.restriction.addRule(this.restriction.createRule(RestrictionState.TERMINATION, symbol, empty));
+        addMapping(symbols,variables,isJustInsert, 0);
     }
 
     /**
@@ -295,28 +291,7 @@ public class HomomorphismManager {
             }
         }
         
-        String label = this.addMapping(symbols, variables, isJustInsert);
-        
-        RestrictionState[] rhs = new RestrictionState[1];
-        
-        if(sigNum == 0){
-            RestrictionState lhs = RestrictionState.getByDescription(false, 0);
-            rhs[0] = RestrictionState.TERMINATION;
-            this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-            
-            lhs = RestrictionState.getByDescription(false, 2);
-            rhs[0] = RestrictionState.getByDescription(false, 1);
-            this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-            
-            lhs = RestrictionState.START;
-            rhs[0] = RestrictionState.getByDescription(false, 1);
-            this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-        }else{
-            RestrictionState lhs = RestrictionState.getByDescription(false, 1);
-            rhs[0] = RestrictionState.TERMINATION;
-            
-            this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-        }
+        this.addMapping(symbols, variables, isJustInsert, 1);
     }
 
     /**
@@ -346,11 +321,11 @@ public class HomomorphismManager {
      * @param justVariable
      * @return the newly created symbol
      */
-    private String addMapping(IntList symbols, IntList variables, BooleanList justVariable) {
+    private String addMapping(IntList symbols, IntList variables, BooleanList justVariable,
+            int totalVariables) {
         StringBuilder symbol = new StringBuilder();
         
         int varPos = 0;
-        int max = 0;
         for(int i=0;i<symbols.size();++i){
             if(i != 0){
                     symbol.append(" / ");
@@ -358,10 +333,8 @@ public class HomomorphismManager {
             
             if(justVariable.getBoolean(i)){
                 symbol.append('x').append(variables.getInt(varPos++)+1);
-                max = Math.max(max, 1);
             }else{
                 int varNum = (i == 0 ? this.source1 : this.source2).getArity(symbols.getInt(i));
-                max = Math.max(varNum, max);
                 String sym  = (i == 0 ? this.source1 : this.source2).resolveSymbolId(symbols.getInt(i));
                 
                 if(sym == null){
@@ -379,11 +352,15 @@ public class HomomorphismManager {
                 symbol.append(')');
             }
         }
+        symbol.append(" |").append(totalVariables);
         
         String sym = symbol.toString();
         varPos = 0;
-        this.sharedSig.addSymbol(sym, max);
+        this.sharedSig.addSymbol(sym, totalVariables);
+        
         ObjectArrayList<Tree<String>> storage = new ObjectArrayList<>();
+        Tree<String> image1 = null;
+        Tree<String> image2 = null;
         for(int i=0;i<symbols.size();++i){
             storage.clear();
             Tree<String> t;
@@ -402,8 +379,15 @@ public class HomomorphismManager {
                 t = Tree.create(label, storage);
             }
             
+            if(image1 == null){
+                image1 = t;
+            }else{
+                image2 = t;
+            }
             (i == 0 ? this.hom1 : this.hom2).add(sym, t);
         }
+        
+        this.rm.addSymbol(sym, image1, image2);
         
         return sym;
     }
@@ -413,7 +397,7 @@ public class HomomorphismManager {
      * @return 
      */
     public TreeAutomaton getRestriction(){
-        return this.restriction;
+        return this.rm.getRestriction();
     }
 
     /**
@@ -452,23 +436,7 @@ public class HomomorphismManager {
         this.symbols.add(source1.getIdForSymbol(sym));
         this.symbols.add(source2.getIdForSymbol(sym));
         
-        String label = this.addMapping(symbols, variables, isJustInsert);
-        RestrictionState[] rhs = new RestrictionState[1];
-        
-        RestrictionState lhs = RestrictionState.getByDescription(true, 0);
-        rhs[0] = RestrictionState.START;
-        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-        
-        lhs = RestrictionState.getByDescription(true, 1);
-        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-    }
-    
-    /**
-     * 
-     * @return 
-     */
-    public CondensedTreeAutomaton<RestrictionState> getCondensedRestriction(){
-        return ConcreteCondensedTreeAutomaton.fromTreeAutomaton(restriction);
+        this.addMapping(symbols, variables, isJustInsert, 1);
     }
 
     /**
@@ -498,69 +466,13 @@ public class HomomorphismManager {
             }
         }
         
-        RestrictionState lhs;
-        RestrictionState[] rhs = new RestrictionState[numVars];
-        RestrictionState filler = (sigNum == 0 ? RestrictionState.getByDescription(false, 0) : RestrictionState.getByDescription(false, 0));
-        Arrays.fill(rhs, filler);
-        
         for(int i=0;i<numVars;++i){
             if(i == 0){
                 this.variables.add(varPos, i);
             }else{
                 this.variables.set(varPos, i);
             }
-            String symbol = this.addMapping(symbols, variables, isJustInsert);
-            
-            if(sigNum == 0){
-                lhs = RestrictionState.START;
-                rhs[i] = RestrictionState.getByDescription(true, 2);                
-                this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-                
-               rhs[i] = RestrictionState.getByDescription(true, 1);
-               this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-               
-               lhs = RestrictionState.getByDescription(true, 2);
-               rhs[i] = RestrictionState.getByDescription(true, 2);
-               this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-               
-               rhs[i] = RestrictionState.getByDescription(true, 1);
-               this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-               
-               lhs = RestrictionState.getByDescription(true, 0);
-               rhs[i] = RestrictionState.getByDescription(true, 0);
-               this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-               if(i == 0){
-                   lhs = RestrictionState.getByDescription(false, 2);
-                   rhs[0] = RestrictionState.getByDescription(false, 2);
-                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-                   
-                   lhs = RestrictionState.START;
-                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-                   
-                   lhs = RestrictionState.getByDescription(false, 2);
-                   rhs[0] = RestrictionState.getByDescription(false, 1);
-                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-                   
-                   lhs = RestrictionState.START;
-                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-                   
-                   lhs = RestrictionState.getByDescription(false, 0);
-                   rhs[0] = RestrictionState.getByDescription(false, 0);
-                   this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-               }
-            }else{
-                lhs = RestrictionState.getByDescription(true, 1);
-                rhs[i] = RestrictionState.getByDescription(true, 1);
-                this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-                
-                if(i == 0){
-                    lhs = RestrictionState.getByDescription(false, 1);
-                    rhs[i] = RestrictionState.getByDescription(false, 1);
-                    this.restriction.addRule(this.restriction.createRule(lhs, symbol, rhs));
-                }
-            }
-            
-            rhs[i] = filler;
+            String symbol = this.addMapping(symbols, variables, isJustInsert, numVars);
         }
     }
 
@@ -591,15 +503,6 @@ public class HomomorphismManager {
         // note that we need to write no more than less elements into this, since
         // no more will be paired
         IntSortedSet iss = new IntAVLTreeSet();
-        for(int i=0;i<less;++i){
-            iss.add(i);
-        }
-        
-        Set<RestrictionState>[] settings = new Set[more];
-        RestrictionState[] container = new RestrictionState[more];
-        for(int i=0;i<more;++i){
-            settings[i] =new ObjectAVLTreeSet<>();
-        }
         
         Iterator<boolean[]> bai;
         if(less == 2){
@@ -608,9 +511,12 @@ public class HomomorphismManager {
             bai = new BooleanArrayIterator(less);
         }
         
-        IntSet used = new IntRBTreeSet();
+        int all = (more+less);
+        for(int i=more;i<all;++i){
+            iss.add(i);
+        }
         
-        while(bai.hasNext()){            
+        while(bai.hasNext()){
             boolean[] bs = bai.next();
             
             int size = less == 2 ? 2 : findNumberTrue(bs);
@@ -619,8 +525,8 @@ public class HomomorphismManager {
             }
             
             for (int[] share : new NChooseK(size, more)) {
+                int actuallyUsed = more;
                 removeAll(iss, share);
-                used.clear();
                 
                 IntIterator ibi = iss.iterator();
                 this.variables.clear();
@@ -637,40 +543,12 @@ public class HomomorphismManager {
                             this.variables.add(var);
                         }else{
                             int var = ibi.nextInt();
-                            used.add(var);
                             this.variables.add(var);
+                            ++actuallyUsed;
                         }
                     }
                     
-                    String label = this.addMapping(symbols, variables, isJustInsert);
-                    
-                    Arrays.sort(share);
-                    
-                    for(int i=0;i<more;++i){
-                        Set<RestrictionState> setting = settings[i];
-                        setting.clear();
-                        if(Arrays.binarySearch(share, i) >= 0){
-                            for(int side=0;side<=2;++side){
-                                setting.add(RestrictionState.getByDescription(true, side));
-                            }
-                        }else{
-                            int side = (used.contains(i) ? 2 : 0);
-                            setting.add(RestrictionState.getByDescription(false, side));
-                        }
-                    }
-                    
-                    TupleIterator<RestrictionState> states = new TupleIterator<>(settings,container);
-                    while(states.hasNext()){
-                        RestrictionState[] rhs = states.next();
-                        RestrictionState lhs = RestrictionState.START;
-                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-                        
-                        lhs = RestrictionState.getByDescription(true, 0);
-                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-                        
-                        lhs = RestrictionState.getByDescription(true, 1);
-                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-                    }
+                    this.addMapping(symbols, variables, isJustInsert, actuallyUsed);
                 }else{
                     for(int i=0;i<lArity;++i){
                         if(bs[i]){
@@ -678,7 +556,7 @@ public class HomomorphismManager {
                             this.variables.add(var);
                         }else{
                             int var = ibi.nextInt();
-                            used.add(var);
+                            ++actuallyUsed;
                             this.variables.add(var);
                         }
                     }
@@ -688,37 +566,7 @@ public class HomomorphismManager {
                     }
                     
                     
-                    String label = this.addMapping(symbols, variables, isJustInsert);
-                    Arrays.sort(share);
-                    
-                    for(int i=0;i<more;++i){
-                        Set<RestrictionState> setting = settings[i];
-                        setting.clear();
-                        if(Arrays.binarySearch(share, i) >= 0){
-                            for(int side=0;side<=2;++side){
-                                setting.add(RestrictionState.getByDescription(true, side));
-                            }
-                        }else{
-                            if(used.contains(i)){
-                                setting.add(RestrictionState.getByDescription(false, 2));
-                            }else{
-                                setting.add(RestrictionState.getByDescription(false, 1));
-                            }
-                        }
-                    }
-                    
-                    TupleIterator<RestrictionState> states = new TupleIterator<>(settings,container);
-                    while(states.hasNext()){
-                        RestrictionState[] rhs = states.next();
-                        RestrictionState lhs = RestrictionState.START;
-                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-                        
-                        lhs = RestrictionState.getByDescription(true, 0);
-                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-                        
-                        lhs = RestrictionState.getByDescription(true, 1);
-                        this.restriction.addRule(this.restriction.createRule(lhs, label, rhs));
-                    }
+                    this.addMapping(symbols, variables, isJustInsert, actuallyUsed);
                 }
                     
                 addAll(iss, share);
@@ -759,36 +607,5 @@ public class HomomorphismManager {
             ret += b ? 1 : 0;
         }
         return ret;
-    }
-    
-    /**
-      * 
-      */
-     public static enum RestrictionState{
-        START,
-        HAS_VARIABLE_BOTH,
-        HAS_VARIABLE_LEFT,
-        HAS_VARIABLE_RIGHT,
-        NO_VARIABLE_BOTH,
-        NO_VARIABLE_LEFT,
-        NO_VARIABLE_RIGHT,
-        TERMINATION;
-        
-        /**
-         * 
-         * @param hasVariable
-         * @param leftRightBoth
-         * @return 
-         */
-        public static RestrictionState getByDescription(boolean hasVariable, int leftRightBoth){
-            switch(leftRightBoth){
-                case 0:
-                    return hasVariable ? HAS_VARIABLE_LEFT : NO_VARIABLE_LEFT;
-                case 1:
-                    return hasVariable ? HAS_VARIABLE_RIGHT : NO_VARIABLE_RIGHT;
-                default:
-                    return hasVariable ? HAS_VARIABLE_BOTH : NO_VARIABLE_BOTH;
-            }
-        }
     }
 }

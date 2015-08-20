@@ -36,7 +36,7 @@ public class RuleFinder {
      * @return 
      */
     public TreeAutomaton getRules(TreeAutomaton left, TreeAutomaton right, HomomorphismManager hm){
-        TreeAutomaton combined = hm.getCondensedRestriction().intersect(
+        TreeAutomaton combined = hm.getRestriction().intersect(
                 left.inverseHomomorphism(hm.getHomomorphism1())).intersect(right.inverseHomomorphism(hm.getHomomorphism2()));
         
         return combined;
@@ -156,7 +156,7 @@ public class RuleFinder {
      * @return 
      */
     public TreeAutomaton generalize(TreeAutomaton ruleTree, HomomorphismManager hm){
-        return this.generalize(ruleTree, hm.getCondensedRestriction());
+        return this.generalize(ruleTree, hm.getRestriction());
     }
     
     /**
@@ -167,7 +167,7 @@ public class RuleFinder {
      */
     public List<TreeAutomaton> generalizeBulk(Collection<TreeAutomaton> ruleTrees, HomomorphismManager hm){
         List<TreeAutomaton> ret = new ArrayList<>();
-        TreeAutomaton restriction = hm.getCondensedRestriction();
+        TreeAutomaton restriction = hm.getRestriction();
         
         for(TreeAutomaton t : ruleTrees){
             ret.add(this.generalize(t, restriction));
