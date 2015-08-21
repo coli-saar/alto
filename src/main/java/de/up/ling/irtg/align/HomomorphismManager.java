@@ -5,16 +5,12 @@
  */
 package de.up.ling.irtg.align;
 
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
-import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BooleanArrayIterator;
 import de.up.ling.irtg.util.NChooseK;
 import de.up.ling.irtg.util.SingletonIterator;
-import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.booleans.BooleanArrayList;
 import it.unimi.dsi.fastutil.booleans.BooleanList;
@@ -22,14 +18,10 @@ import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
-import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -235,7 +227,6 @@ public class HomomorphismManager {
     /**
      * Finds a 0-ary symbol in the given set according to the given signature.
      * 
-     * 
      * @param sig
      * @param toDo
      * @return 
@@ -303,8 +294,7 @@ public class HomomorphismManager {
         makeSingular(sigNum,symName);
         
         IntIterator iit = (sigNum == 0 ? this.seen2 : this.seen1).iterator();
-        
-       
+               
         while(iit.hasNext()){
             int other = iit.nextInt();
             int lSym = (sigNum == 0 ? symName : other);
@@ -472,8 +462,11 @@ public class HomomorphismManager {
             }else{
                 this.variables.set(varPos, i);
             }
-            String symbol = this.addMapping(symbols, variables, isJustInsert, numVars);
+            this.addMapping(symbols, variables, isJustInsert, numVars);
         }
+        
+        this.variables.set(varPos,numVars);
+        this.addMapping(symbols, variables, isJustInsert, numVars+1);
     }
 
     /**
