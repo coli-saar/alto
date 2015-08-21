@@ -12,14 +12,16 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
-import org.apache.commons.math3.util.Pair;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.List;
 
 /**
  *
  * @author christoph_teichmann
  */
 public class RestrictionManager {
- 
     /**
      * Ensures that there is no sequence of variable nodes and that we never start with a variable.
      */
@@ -38,13 +40,13 @@ public class RestrictionManager {
     private final ConcreteTreeAutomaton<Belnapian> termination;
     
     /**
-     * ensures that whenever we see a multi-way split symbol, then there are at least
+     * Ensures that whenever we see a two sided split symbol, then there are at least
      * two children that have a variable.
      */
     private final ConcreteTreeAutomaton<Boolean> splitAtLeastTwo;
     
     /**
-     * ensures that whenever we have a multi-way split, then all the children that are
+     * Ensures that whenever we have a symbol with children, then all the children that are
      * paired have a variable.
      */
     private final ConcreteTreeAutomaton<Boolean> splitOrderedPairing;
@@ -53,25 +55,47 @@ public class RestrictionManager {
      * 
      */
     private CondensedTreeAutomaton fullRestriction = null;
+
+    /**
+     * 
+     */
+    private final IntSet seenLeft = new IntOpenHashSet();
+
+    /**
+     * 
+     */
+    private final IntSet seenRight = new IntOpenHashSet();
+    
+    /**
+     * 
+     */
+    private final List children = new ObjectArrayList();
+    
+    /**
+     * 
+     */
+    private final Signature sig;
     
     /**
      * 
      * @param sig
      */
     public RestrictionManager(Signature sig){
-        this.ordering = new ConcreteTreeAutomaton<>(sig);
+        this.sig = sig;
+        
+        this.ordering = new ConcreteTreeAutomaton<>(this.sig);
         this.ordering.addFinalState(this.ordering.addState(Boolean.FALSE));
         
-        this.splitAtLeastTwo = new ConcreteTreeAutomaton<>(sig);
+        this.splitAtLeastTwo = new ConcreteTreeAutomaton<>(this.sig);
         this.splitAtLeastTwo.addFinalState(this.splitAtLeastTwo.addState(Boolean.FALSE));
         
-        this.splitOrderedPairing = new ConcreteTreeAutomaton<>(sig);
+        this.splitOrderedPairing = new ConcreteTreeAutomaton<>(this.sig);
         this.splitOrderedPairing.addFinalState(this.splitOrderedPairing.addState(Boolean.FALSE));
         
-        this.termination = new ConcreteTreeAutomaton<>(sig);
+        this.termination = new ConcreteTreeAutomaton<>(this.sig);
         this.termination.addFinalState(this.termination.addState(Belnapian.BOTH_FALSE));
         
-        this.variableSequenceing = new ConcreteTreeAutomaton<>(sig);
+        this.variableSequenceing = new ConcreteTreeAutomaton<>(this.sig);
         this.variableSequenceing.addFinalState(this.variableSequenceing.addState(Boolean.FALSE));
     }
 
@@ -138,14 +162,12 @@ public class RestrictionManager {
      */
     public void addSymbol(String symbol, Tree<String> mapping1, Tree<String> mapping2){
         String label1 = mapping1.getLabel();
+
         if(HomomorphismManager.VARIABLE_PATTERN.test(label1)){
-            
-            this.handleVariable(symbol,mapping1,mapping2);
-            
+            this.handleVariable(symbol);
         }
         
-        if(mapping1.getChildren().isEmpty() || mapping2.getChildren().isEmpty()){
-            
+        if(mapping1.getChildren().isEmpty() || mapping2.getChildren().isEmpty()){            
             if(HomomorphismSymbol.isVariableSymbol(label1) ||
                     HomomorphismSymbol.isVariableSymbol(mapping2.getLabel())){
                 handleSingular(symbol,mapping1,mapping2);
@@ -163,19 +185,25 @@ public class RestrictionManager {
      * @param mapping1
      * @param mapping2 
      */
-    private void handleVariable(String symbol, Tree<String> mapping1, Tree<String> mapping2) {
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, new Boolean[] {Boolean.TRUE}));
+    private void handleVariable(String symbol) {
+        this.children.clear();
+        this.children.add(Boolean.TRUE);
+        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
         
-        this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, new Boolean[] {Boolean.FALSE}));
-        this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, new Boolean[] {Boolean.FALSE}));
+        this.children.clear();
+        this.children.add(Boolean.FALSE);
+        this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
+        this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
         
-        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.TRUE, symbol, new Boolean[] {Boolean.FALSE}));
-        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.FALSE, symbol, new Boolean[] {Boolean.FALSE}));
+        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.TRUE, symbol, children));
+        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.FALSE, symbol, children));
         
-        this.termination.addRule(this.termination.createRule(Belnapian.BOTH_FALSE, symbol, new Belnapian[] {Belnapian.BOTH_FALSE}));
+        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, children));
+        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, children));
         
-        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, new Boolean[] {Boolean.FALSE}));
-        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, new Boolean[] {Boolean.FALSE}));
+        this.children.clear();
+        this.children.add(Belnapian.BOTH_FALSE);
+        this.termination.addRule(this.termination.createRule(Belnapian.BOTH_FALSE, symbol, children));
     }
 
     /**
@@ -185,6 +213,44 @@ public class RestrictionManager {
      * @param mapping2 
      */
     private void handleSingular(String symbol, Tree<String> mapping1, Tree<String> mapping2) {
+        this.seenLeft.clear();
+        this.seenRight.clear();
+        
+        addVariables(mapping1,this.seenLeft);
+        addVariables(mapping2,this.seenRight);
+        
+        int vars = this.sig.getArityForLabel(symbol);
+        
+        this.children.clear();
+        for(int i=0;i<vars;++i)
+        {
+            this.children.add(Boolean.FALSE);
+        }
+        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
+        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, children));
+        
+        this.children.clear();
+        for(int i=0;i<vars;++i){
+            this.children.add(this.seenRight.contains(i));
+        }
+        if(isLeft(mapping1,mapping2)){
+            this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
+        }else{
+            this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
+            this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
+        }
+        
+        //TODO
+        
+        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.TRUE, symbol, children));
+        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.FALSE, symbol, children));
+        
+        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, children));
+        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, children));
+        
+        this.children.clear();
+        this.children.add(Belnapian.BOTH_FALSE);
+        this.termination.addRule(this.termination.createRule(Belnapian.BOTH_FALSE, symbol, children));
         // remember that singlar can also mean one terminal        
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -194,17 +260,19 @@ public class RestrictionManager {
      * @param symbol 
      */
     private void handleTermination(String symbol) {
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, new Boolean[] {}));
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, new Boolean[] {}));
+        this.children.clear();
         
-        this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, new Boolean[] {}));
-        this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, new Boolean[] {}));
+        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
+        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, children));
         
-        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.FALSE, symbol, new Boolean[] {}));
+        this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
+        this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
         
-        this.termination.addRule(this.termination.createRule(Belnapian.BOTH_TRUE, symbol, new Belnapian[] {}));
+        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.FALSE, symbol, children));
         
-        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, new Boolean[] {}));
+        this.termination.addRule(this.termination.createRule(Belnapian.BOTH_TRUE, symbol, children));
+        
+        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, children));
     }
 
     /**
@@ -214,6 +282,14 @@ public class RestrictionManager {
      * @param mapping2 
      */
     private void handlePair(String symbol, Tree<String> mapping1, Tree<String> mapping2) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private void addVariables(Tree<String> mapping1, IntSet seenLeft) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private boolean isLeft(Tree<String> mapping1, Tree<String> mapping2) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
