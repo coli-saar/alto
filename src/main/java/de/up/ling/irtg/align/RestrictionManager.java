@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.align;
 
+import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
@@ -167,13 +168,13 @@ public class RestrictionManager {
             this.handleVariable(symbol);
         }
         
-        if(mapping1.getChildren().isEmpty() || mapping2.getChildren().isEmpty()){            
+        if(mapping1.getChildren().isEmpty() || mapping2.getChildren().isEmpty()){
             if(HomomorphismSymbol.isVariableSymbol(label1) ||
                     HomomorphismSymbol.isVariableSymbol(mapping2.getLabel())){
                 handleSingular(symbol,mapping1,mapping2);
             }else{
                 handleTermination(symbol);
-            }     
+            }
         }
         
         handlePair(symbol,mapping1,mapping2);
@@ -282,15 +283,36 @@ public class RestrictionManager {
      * @param mapping2 
      */
     private void handlePair(String symbol, Tree<String> mapping1, Tree<String> mapping2) {
+        this.children.clear();
+        int arity = this.sig.getArityForLabel(symbol);
+        
+        for(int i=0;i<arity;++i){
+            this.children.add(Boolean.FALSE);
+        }
+        
+        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, children));
+        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
+        
+        
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
-    private void addVariables(Tree<String> mapping1, IntSet seenLeft) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private void addVariables(Tree<String> mapping, IntSet variables) {
+        List<Tree<String>> kids = mapping.getChildren();
+        
+        for(int i=0;i<kids.size();++i){
+            variables.add(HomomorphismSymbol.getVariableIndex(kids.get(i).getLabel()));
+        }
     }
 
+    /**
+     * 
+     * @param mapping1
+     * @param mapping2
+     * @return 
+     */
     private boolean isLeft(Tree<String> mapping1, Tree<String> mapping2) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return !mapping1.getChildren().isEmpty();
     }
     
     /**
