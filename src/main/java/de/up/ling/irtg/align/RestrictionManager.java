@@ -40,12 +40,6 @@ public class RestrictionManager {
     private final ConcreteTreeAutomaton<Boolean> ordering;
     
     /**
-     * Ensures that whenever we see a two sided split symbol, then there are at least
-     * two children that have a variable.
-     */
-    private final ConcreteTreeAutomaton<Boolean> splitAtLeastTwo;
-    
-    /**
      * Ensures that whenever we have a symbol with children, then all the children that are
      * paired have a variable.
      */
@@ -86,9 +80,6 @@ public class RestrictionManager {
         this.ordering = new ConcreteTreeAutomaton<>(this.sig);
         this.ordering.addFinalState(this.ordering.addState(Boolean.FALSE));
         
-        this.splitAtLeastTwo = new ConcreteTreeAutomaton<>(this.sig);
-        this.splitAtLeastTwo.addFinalState(this.splitAtLeastTwo.addState(Boolean.FALSE));
-        
         this.splitOrderedPairing = new ConcreteTreeAutomaton<>(this.sig);
         this.splitOrderedPairing.addFinalState(this.splitOrderedPairing.addState(Boolean.FALSE));
         
@@ -127,14 +118,6 @@ public class RestrictionManager {
      * 
      * @return 
      */
-    public ConcreteTreeAutomaton<Boolean> getSplitAtLeastTwo() {
-        return splitAtLeastTwo;
-    }
-
-    /**
-     * 
-     * @return 
-     */
     public ConcreteTreeAutomaton<Boolean> getSplitOrderedPairing() {
         return splitOrderedPairing;
     }
@@ -148,8 +131,7 @@ public class RestrictionManager {
             return fullRestriction;
         }else{
             TreeAutomaton cta = this.variableSequenceing.intersect(ordering)
-                    .intersect(this.termination).intersect(this.splitAtLeastTwo)
-                    .intersect(this.splitOrderedPairing);
+                    .intersect(this.termination).intersect(this.splitOrderedPairing);
             return this.fullRestriction = ConcreteCondensedTreeAutomaton.fromTreeAutomaton(cta);
         }
     }
@@ -194,9 +176,6 @@ public class RestrictionManager {
         this.children.add(Boolean.FALSE);
         this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
         this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
-        
-        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.TRUE, symbol, children));
-        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.FALSE, symbol, children));
         
         this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, children));
         this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, children));
@@ -285,9 +264,6 @@ public class RestrictionManager {
         
         //TODO
         
-        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.TRUE, symbol, children));
-        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.FALSE, symbol, children));
-        
         this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, children));
         this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, children));
         
@@ -308,8 +284,6 @@ public class RestrictionManager {
         
         this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
         this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
-        
-        this.splitAtLeastTwo.addRule(this.splitAtLeastTwo.createRule(Boolean.FALSE, symbol, children));
         
         this.termination.addRule(this.termination.createRule(Belnapian.BOTH_TRUE, symbol, children));
         
