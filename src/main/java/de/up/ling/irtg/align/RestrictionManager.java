@@ -176,7 +176,7 @@ public class RestrictionManager {
             }
         }
         
-        handlePair(symbol,mapping1,mapping2);
+        handleNonVariablePair(symbol,mapping1,mapping2);
     }
 
     /**
@@ -245,8 +245,8 @@ public class RestrictionManager {
         
         this.termination.addRule(this.termination.createRule(Belnapian.BOTH_FALSE, symbol, children));
         
+        this.children.clear();
         if(isLeft){
-            this.children.clear();
             for(int i=0;i<vars;++i){
                 boolean r = seenRight.contains(i);
             
@@ -259,7 +259,6 @@ public class RestrictionManager {
             
             this.termination.addRule(this.termination.createRule(Belnapian.RIGHT_TRUE, symbol, children));
         }else{
-           this.children.clear();
             for(int i=0;i<vars;++i){
                 boolean l = seenLeft.contains(i);
             
@@ -323,7 +322,7 @@ public class RestrictionManager {
      * @param mapping1
      * @param mapping2 
      */
-    private void handlePair(String symbol, Tree<String> mapping1, Tree<String> mapping2) {
+    private void handleNonVariablePair(String symbol, Tree<String> mapping1, Tree<String> mapping2) {
         this.children.clear();
         int arity = this.sig.getArityForLabel(symbol);
         
@@ -339,6 +338,8 @@ public class RestrictionManager {
         this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, children));
         this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
         
+        this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
+        this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
         
         this.children.clear();
         for(int i=0;i<arity;++i){
