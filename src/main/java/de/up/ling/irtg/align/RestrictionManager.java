@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.align;
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
@@ -29,16 +28,16 @@ public class RestrictionManager {
     private final ConcreteTreeAutomaton<Boolean> variableSequenceing;
     
     /**
-     * Makes sure that sequences of symbols that are only productive on one side are ordered
-     * to have first the left productive and then the right productive ones.
-     */
-    private final ConcreteTreeAutomaton<Boolean> ordering;
-    
-    /**
      * Ensures that once we have produced a constant on one side, the only symbol
      * we accept, that is productive on that side, is the terminator.
      */
     private final ConcreteTreeAutomaton<Belnapian> termination;
+    
+    /**
+     * Makes sure that sequences of symbols that are only productive on one side are ordered
+     * to have first the left productive and then the right productive ones.
+     */
+    private final ConcreteTreeAutomaton<Boolean> ordering;
     
     /**
      * Ensures that whenever we see a two sided split symbol, then there are at least
@@ -222,6 +221,8 @@ public class RestrictionManager {
         
         int vars = this.sig.getArityForLabel(symbol);
         
+        boolean isLeft = this.isLeft(mapping1, mapping2);
+        
         this.children.clear();
         for(int i=0;i<vars;++i)
         {
@@ -232,9 +233,51 @@ public class RestrictionManager {
         
         this.children.clear();
         for(int i=0;i<vars;++i){
+            boolean l = seenLeft.contains(i);
+            boolean r = seenRight.contains(i);
+            
+            if(l && r){
+                this.children.add(Belnapian.BOTH_FALSE);
+            }else {
+                this.children.add(l ? Belnapian.RIGHT_TRUE : Belnapian.LEFT_TRUE);
+            }
+        }
+        
+        this.termination.addRule(this.termination.createRule(Belnapian.BOTH_FALSE, symbol, children));
+        
+        if(isLeft){
+            this.children.clear();
+            for(int i=0;i<vars;++i){
+                boolean r = seenRight.contains(i);
+            
+                if(r){
+                    this.children.add(Belnapian.BOTH_TRUE);
+                }else {
+                    this.children.add(Belnapian.RIGHT_TRUE);
+                }
+            }
+            
+            this.termination.addRule(this.termination.createRule(Belnapian.RIGHT_TRUE, symbol, children));
+        }else{
+           this.children.clear();
+            for(int i=0;i<vars;++i){
+                boolean l = seenLeft.contains(i);
+            
+                if(l){
+                    this.children.add(Belnapian.BOTH_TRUE);
+                }else {
+                    this.children.add(Belnapian.LEFT_TRUE);
+                }
+            }
+            
+            this.termination.addRule(this.termination.createRule(Belnapian.LEFT_TRUE, symbol, children));
+        }
+        
+        this.children.clear();
+        for(int i=0;i<vars;++i){
             this.children.add(this.seenRight.contains(i));
         }
-        if(isLeft(mapping1,mapping2)){
+        if(isLeft){
             this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
         }else{
             this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
@@ -249,9 +292,7 @@ public class RestrictionManager {
         this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, children));
         this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, children));
         
-        this.children.clear();
-        this.children.add(Belnapian.BOTH_FALSE);
-        this.termination.addRule(this.termination.createRule(Belnapian.BOTH_FALSE, symbol, children));
+        
         // remember that singlar can also mean one terminal        
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
@@ -286,6 +327,11 @@ public class RestrictionManager {
         this.children.clear();
         int arity = this.sig.getArityForLabel(symbol);
         
+        this.seenLeft.clear();
+        this.seenRight.clear();
+        this.addVariables(mapping1, seenLeft);
+        this.addVariables(mapping2, seenRight);
+        
         for(int i=0;i<arity;++i){
             this.children.add(Boolean.FALSE);
         }
@@ -294,9 +340,28 @@ public class RestrictionManager {
         this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
         
         
+        this.children.clear();
+        for(int i=0;i<arity;++i){
+            if(seenLeft.contains(i)){
+                if(seenRight.contains(i)){
+                    this.children.add(Belnapian.BOTH_FALSE);
+                }else{
+                    this.children.add(Belnapian.RIGHT_TRUE);
+                }
+            }else{
+                this.children.add(Belnapian.LEFT_TRUE);
+            }
+        }
+        this.termination.addRule(this.termination.createRule(Belnapian.BOTH_FALSE, symbol, children));
+        
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    /**
+     * 
+     * @param mapping
+     * @param variables 
+     */
     private void addVariables(Tree<String> mapping, IntSet variables) {
         List<Tree<String>> kids = mapping.getChildren();
         
@@ -312,7 +377,7 @@ public class RestrictionManager {
      * @return 
      */
     private boolean isLeft(Tree<String> mapping1, Tree<String> mapping2) {
-        return !mapping1.getChildren().isEmpty();
+        return !HomomorphismSymbol.isVariableSymbol(mapping1.getLabel());
     }
     
     /**
