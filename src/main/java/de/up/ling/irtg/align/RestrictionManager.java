@@ -40,8 +40,7 @@ public class RestrictionManager {
     private final ConcreteTreeAutomaton<Boolean> ordering;
     
     /**
-     * Ensures that whenever we have a symbol with children, then all the children that are
-     * paired have a variable.
+     * Ensures that all the children that are paired have a variable.
      */
     private final ConcreteTreeAutomaton<Boolean> splitOrderedPairing;
     
@@ -262,14 +261,21 @@ public class RestrictionManager {
             this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
         }
         
-        //TODO
+        this.children.clear();
+        boolean shared = false;
+        for(int i=0;i<vars;++i){
+            if(this.seenLeft.contains(i) && this.seenRight.contains(i)){
+                this.children.add(Boolean.TRUE);
+                shared = true;
+            }else{
+                this.children.add(Boolean.TRUE);
+            }
+        }
         
-        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, children));
+        if(shared){
+            this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, children));
+        }
         this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, children));
-        
-        
-        // remember that singlar can also mean one terminal        
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     /**
@@ -297,7 +303,6 @@ public class RestrictionManager {
      * @param mapping2 
      */
     private void handleNonVariablePair(String symbol, Tree<String> mapping1, Tree<String> mapping2) {
-        this.children.clear();
         int arity = this.sig.getArityForLabel(symbol);
         
         this.seenLeft.clear();
@@ -305,8 +310,16 @@ public class RestrictionManager {
         this.addVariables(mapping1, seenLeft);
         this.addVariables(mapping2, seenRight);
         
+        int shared = 0;
+        this.children.clear();
         for(int i=0;i<arity;++i){
+            shared += this.seenLeft.contains(i) && this.seenRight.contains(i) ? 1 : 0;
+            
             this.children.add(Boolean.FALSE);
+        }
+        
+        if(shared < 2){
+            return;
         }
         
         this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, children));
@@ -329,7 +342,16 @@ public class RestrictionManager {
         }
         this.termination.addRule(this.termination.createRule(Belnapian.BOTH_FALSE, symbol, children));
         
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.children.clear();
+        for(int i=0;i<arity;++i){
+            if(this.seenLeft.contains(i) && this.seenRight.contains(i)){
+                this.children.add(Boolean.TRUE);
+            }else{
+                this.children.add(Boolean.FALSE);
+            }
+        }
+        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.TRUE, symbol, children));
+        this.splitOrderedPairing.addRule(this.splitOrderedPairing.createRule(Boolean.FALSE, symbol, children));
     }
 
     /**
