@@ -2226,7 +2226,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param evaluator
      * @return a map assigning values in the semiring to all reachable states.
      */
-    public <E> Map<Integer, E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator) {
+    public <E> Int2ObjectMap<E> evaluateInSemiring(Semiring<E> semiring, RuleEvaluator<E> evaluator) {
         return evaluateInSemiring(semiring, evaluator, getStatesInBottomUpOrder());
     }
 
