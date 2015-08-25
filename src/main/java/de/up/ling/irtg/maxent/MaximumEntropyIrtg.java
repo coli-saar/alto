@@ -7,7 +7,6 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
-import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import java.io.*;
@@ -21,7 +20,40 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * An IRTG with a log-linear probability model. In addition to
+ * the ordinary IRTG rules (cf. {@link InterpretedTreeAutomaton}),
+ * a maxent IRTG allows you to specify a set of feature functions,
+ * cf. {@link FeatureFunction}. In the grammar file, these are
+ * declared using the <code>feature</code> keyword, and come after
+ * the <code>interpretation</code> declarations and before the rules
+ * of the grammar.<p>
+ * 
+ * You can use any subclass of {@link FeatureFunction} in your grammar,
+ * as long as it is on the classpath. You can then add concrete instances
+ * of your feature function classes to the grammar using one of the following
+ * two forms:
+ * <ul>
+ *   <li><code>feature f1: de.up.ling.irtg.maxent.ChildOfFeature('VP','PP')</code>:
+ *       Constructs a new object of class {@link ChildOfFeature}, passing the strings
+ *       "VP" and "PP" as the first and second argument to the constructor of the class.</li>
+ *   <li><code>feature f2: YourClass::staticMethod("a", "b")</code>:
+ *       Calls the static method <code>YourClass#staticMethod</code> with the given
+ *       string arguments. The static method is supposed to return an object of
+ *       a subclass of {@link FeatureFunction}, which is then used as the feature
+ *       function instance with name f2.</li>
+ * </ul><p>
+ * 
+ * Note that different feature instances must have different names (in the example:
+ * f1 and f2) so the system can keep their weights apart.<p>
+ * 
+ * Supervised learning of the weights of a maxent IRTG is performed using
+ * {@link MaximumEntropyIrtg#trainMaxent(de.up.ling.irtg.corpus.Corpus) }.
+ * Computation of a weighted chart (in which rule weights corresponds to
+ * log-linear scores of trees) is done with {@link MaximumEntropyIrtg#parseInputObjects(java.util.Map) }.
+ * From this, you can compute the best derivation tree using {@link TreeAutomaton#viterbi() }
+ * and similar methods.
+ *       
+ * 
  * @author koller
  * @author Danilo Baumgarten
  */
