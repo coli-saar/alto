@@ -35,7 +35,8 @@ public class RestrictionManager {
     
     /**
      * Makes sure that sequences of symbols that are only productive on one side are ordered
-     * to have first the left productive and then the right productive ones.
+     * to have first the left productive and then the right productive ones until we see the next
+     * 'double productive' symbol.
      */
     private final ConcreteTreeAutomaton<Boolean> ordering;
     
@@ -250,13 +251,18 @@ public class RestrictionManager {
             this.termination.addRule(this.termination.createRule(Belnapian.LEFT_TRUE, symbol, children));
         }
         
-        this.children.clear();
-        for(int i=0;i<vars;++i){
-            this.children.add(this.seenRight.contains(i));
-        }
+        
         if(isLeft){
+            this.children.clear();
+            for(int i=0;i<vars;++i){
+                this.children.add(Boolean.FALSE);
+            }
             this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
         }else{
+            this.children.clear();
+            for(int i=0;i<vars;++i){
+                this.children.add(Boolean.TRUE);
+            }
             this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
             this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
         }

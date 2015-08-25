@@ -157,4 +157,14 @@ public class TestingTools {
     public static List<String> ss(String s) {
         return Arrays.asList(s.split("\\s+"));
     }
+    
+    /**
+     * 
+     * @param t
+     * @return
+     * @throws IOException 
+     */
+    public static TreeAutomaton<String> automatonFromItsString(TreeAutomaton t) throws IOException{
+        return pa(t.toString());
+    }
 }
