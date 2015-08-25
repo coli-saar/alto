@@ -88,7 +88,7 @@ class MaximumEntropyIrtgTest {
     public void testParseStaticMethod() {
         MaximumEntropyIrtg irtg = (MaximumEntropyIrtg) pi(STATIC_MIRTG_STR);
         FeatureFunction ff = irtg.getFeatureFunction("f1");
-        assertEquals(0.1, ff.evaluate(null, null, null), 0.01);
+        assertEquals(0.1, ff.evaluate(null, null, null, null), 0.01);
     }
     
     

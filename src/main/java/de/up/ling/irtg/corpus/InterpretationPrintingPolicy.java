@@ -23,8 +23,8 @@ import java.util.Map;
  */
 public class InterpretationPrintingPolicy {
     public static final String DERIVATION_TREE_KEY = "derivation tree";
-    private List<Pair<String,Algebra>> interpretationToAlgebra;
-    private Algebra algebraForDerivationTree;
+    private final List<Pair<String,Algebra>> interpretationToAlgebra;
+    private final Algebra algebraForDerivationTree;
 
     public InterpretationPrintingPolicy(List<Pair<String, Algebra>> interpretationToAlgebra, Algebra algebraForDerivationTree) {
         this.interpretationToAlgebra = interpretationToAlgebra;

@@ -7,6 +7,7 @@ package de.up.ling.irtg.maxent;
 import de.up.ling.irtg.automata.Rule;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import java.util.Map;
 
 /**
  *
@@ -14,7 +15,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
  */
 public abstract class FeatureFunction<State, V> {
     // "automaton" is the tree automaton to which the "rule" belongs
-    public abstract V evaluate(Rule rule, TreeAutomaton<State> automaton, MaximumEntropyIrtg irtg);
+    public abstract V evaluate(Rule rule, TreeAutomaton<State> automaton, MaximumEntropyIrtg irtg, Map<String,Object> inputs);
 
     @Override
     public String toString() {

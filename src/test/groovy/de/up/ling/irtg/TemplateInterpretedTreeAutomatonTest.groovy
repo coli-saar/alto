@@ -54,7 +54,7 @@ class TemplateInterpretedTreeAutomatonTest {
         FirstOrderModel model = FirstOrderModel.read(new StringReader(MODEL));
         MaximumEntropyIrtg mirtg = (MaximumEntropyIrtg) tirtg.instantiate(model)
         
-        assertEquals(0.1, mirtg.getFeatureFunction("f1").evaluate(null, null, null), 0.01)
+        assertEquals(0.1, mirtg.getFeatureFunction("f1").evaluate(null, null, null, null), 0.01)
     }
     
     private final static String MODEL = '''{"sleep": [["e", "r1"]], "takefrom": [["e2", "r1", "h"]], "rabbit": [["r1"], ["r2"]], "white": [["r1"], ["b"]], "brown": [["r2"]], "in": [["r1","h"], ["f","h2"]], "hat": [["h"], ["h2"]] }''';

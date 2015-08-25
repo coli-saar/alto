@@ -2,6 +2,7 @@ package de.up.ling.irtg.maxent;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import java.util.Map;
 
 /**
  *
@@ -25,7 +26,7 @@ public class ChildOfFeature extends FeatureFunction<String, Double> {
     }
 
     @Override
-    public Double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg){
+    public Double evaluate(Rule rule, TreeAutomaton<String> automaton, MaximumEntropyIrtg irtg, Map<String,Object> inputs){
         String pLabel = getLabelFor(automaton.getStateForId(rule.getParent()));
         
         if (pLabel.equals(parentLabel)) {
