@@ -6,6 +6,7 @@
 package de.up.ling.irtg.align;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BooleanArrayIterator;
@@ -342,7 +343,7 @@ public class HomomorphismManager {
                 symbol.append(')');
             }
         }
-        symbol.append(" |").append(totalVariables);
+        symbol.append(" | ").append(totalVariables);
         
         String sym = symbol.toString();
         varPos = 0;
@@ -386,7 +387,7 @@ public class HomomorphismManager {
      * 
      * @return 
      */
-    public TreeAutomaton getRestriction(){
+    public CondensedTreeAutomaton getRestriction(){
         return this.rm.getRestriction();
     }
 

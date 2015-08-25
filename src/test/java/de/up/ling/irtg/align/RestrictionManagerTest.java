@@ -7,7 +7,8 @@ package de.up.ling.irtg.align;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.codec.CodecParseException;
+import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import org.junit.Before;
@@ -172,30 +173,85 @@ public class RestrictionManagerTest {
         assertEquals(automatonFromItsString(ta),correct);
     }
 
+    private static final String T_AUTOMATON = "BOTH_TRUE -> 'k / g' [1.0]\n"
+            + "RIGHT_TRUE -> 'z / x1'(BOTH_TRUE) [1.0]\n"
+            + "LEFT_TRUE -> 'x1 / g'(BOTH_TRUE) [1.0]\n"
+            + "BOTH_FALSE! -> 'z / x1'(LEFT_TRUE) [1.0]\n"
+            + "LEFT_TRUE -> 'x1 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE) [1.0]\n"
+            + "LEFT_TRUE -> 'x3 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE, BOTH_TRUE) [1.0]\n"
+            + "BOTH_FALSE! -> 'x3 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE, RIGHT_TRUE) [1.0]\n"
+            + "BOTH_FALSE! -> 'XXX(x1) / XXX(x1)'(BOTH_FALSE) [1.0]\n"
+            + "BOTH_FALSE! -> 'x1 / m(x1,x2)'(BOTH_FALSE, LEFT_TRUE) [1.0]\n"
+            + "BOTH_FALSE! -> 'x1 / g'(RIGHT_TRUE) [1.0]\n"
+            + "BOTH_FALSE! -> 'm(x1,x2) / x2'(RIGHT_TRUE, BOTH_FALSE) [1.0]\n"
+            + "BOTH_FALSE! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(RIGHT_TRUE, BOTH_FALSE, RIGHT_TRUE, BOTH_FALSE, LEFT_TRUE) [1.0]\n"
+            + "RIGHT_TRUE -> 'm(x1,x2) / x2'(RIGHT_TRUE, RIGHT_TRUE) [1.0]\n"
+            + "RIGHT_TRUE -> 'm(x1,x2) / x3'(RIGHT_TRUE, RIGHT_TRUE, BOTH_TRUE) [1.0]\n"
+            + "BOTH_FALSE! -> 'm(x1,x2) / x3'(RIGHT_TRUE, RIGHT_TRUE, LEFT_TRUE) [1.0]";
+    
     /**
      * Test of getTermination method, of class RestrictionManager.
+     * @throws java.io.IOException
      */
     @Test
-    public void testGetTermination() {
+    public void testGetTermination() throws IOException {
         TreeAutomaton ta = rm.getTermination();
         
-        System.out.println(ta);
-        //TODO
+        assertEquals(automatonFromItsString(ta),pa(T_AUTOMATON));
     }
 
+    
+    private final static String S_AUTOMATON = "false! -> 'k / g' [1.0]\n"
+            + "true -> 'x1 / m(x1,x2)'(true, false) [1.0]\n"
+            + "false! -> 'x1 / m(x1,x2)'(true, false) [1.0]\n"
+            + "false! -> 'z / x1'(false) [1.0]\n"
+            + "false! -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n"
+            + "true -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n"
+            + "false! -> 'x1 / g'(false) [1.0]\n"
+            + "false! -> 'm(x1,x2) / x2'(false, true) [1.0]\n"
+            + "true -> 'm(x1,x2) / x2'(false, true) [1.0]\n"
+            + "false! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, true, false, true, false) [1.0]\n"
+            + "true -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, true, false, true, false) [1.0]\n"
+            + "false! -> 'm(x1,x2) / x3'(false, false, false) [1.0]\n"
+            + "false! -> 'x3 / m(x1,x2)'(false, false, false) [1.0]";
+    
     /**
      * Test of getSplitOrderedPairing method, of class RestrictionManager.
      */
     @Test
-    public void testGetSplitOrderedPairing() {
-        //TODO
+    public void testGetSplitOrderedPairing() throws IOException {
+        TreeAutomaton ta = rm.getSplitOrderedPairing();
+        
+        assertEquals(automatonFromItsString(ta),pa(S_AUTOMATON));
     }
 
     /**
      * Test of getRestriction method, of class RestrictionManager.
      */
     @Test
-    public void testGetRestriction() {
-        //TODO
+    public void testGetRestriction() throws Exception {
+        CondensedTreeAutomaton cta = rm.getRestriction();
+        
+        Iterable<Rule> rs = cta.getAllRulesTopDown();
+        for(Rule r : rs){
+            r.setWeight(1);
+        }
+        
+        assertTrue(cta.accepts(pt("'z / x1'('x1 / g'('k / g'))")));
+        
+        String s = "'x1 / m(x1,x2)'('z / x1'('x1 / g'('k / g')),'x1 / g'('k / g'))";
+        assertFalse(cta.accepts(pt(s)));
+        
+        s = "'x1 / m(x1,x2)'('XXX(x1) / XXX(x1)'('z / x1'('x1 / g'('k / g'))),'x1 / g'('k / g'))";
+        assertTrue(cta.accepts(pt(s)));
+        
+        s = "'x1 / m(x1,x2)'('XXX(x1) / XXX(x1)'('z / x1'('x1 / g'('k / g'))),'z / x1'('x1 / g'('k / g')))";
+        assertFalse(cta.accepts(pt(s)));
+        
+        TreeAutomaton t = rm.getVariableSequenceing().intersect(rm.getOrdering())
+                    .intersect(rm.getTermination()).intersect(rm.getSplitOrderedPairing());
+        CondensedTreeAutomaton con = ConcreteCondensedTreeAutomaton.fromTreeAutomaton(t);
+        
+        assertEquals(con,cta);
     }
 }
