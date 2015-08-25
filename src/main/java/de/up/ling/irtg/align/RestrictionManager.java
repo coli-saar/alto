@@ -275,7 +275,7 @@ public class RestrictionManager {
                 this.children.add(Boolean.TRUE);
                 shared = true;
             }else{
-                this.children.add(Boolean.TRUE);
+                this.children.add(Boolean.FALSE);
             }
         }
         
