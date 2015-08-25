@@ -195,8 +195,8 @@ public class RestrictionManager {
         this.seenLeft.clear();
         this.seenRight.clear();
         
-        addVariables(mapping1,this.seenLeft);
-        addVariables(mapping2,this.seenRight);
+        addVariables(symbol, mapping1,this.seenLeft);
+        addVariables(symbol, mapping2,this.seenRight);
         
         int vars = this.sig.getArityForLabel(symbol);
         
@@ -215,6 +215,7 @@ public class RestrictionManager {
             boolean l = seenLeft.contains(i);
             boolean r = seenRight.contains(i);
             
+            
             if(l && r){
                 this.children.add(Belnapian.BOTH_FALSE);
             }else {
@@ -227,24 +228,24 @@ public class RestrictionManager {
         this.children.clear();
         if(isLeft){
             for(int i=0;i<vars;++i){
-                boolean r = seenRight.contains(i);
+                boolean l = seenLeft.contains(i);
             
-                if(r){
-                    this.children.add(Belnapian.BOTH_TRUE);
-                }else {
+                if(l){
                     this.children.add(Belnapian.RIGHT_TRUE);
+                }else {
+                    this.children.add(Belnapian.BOTH_TRUE);
                 }
             }
             
             this.termination.addRule(this.termination.createRule(Belnapian.RIGHT_TRUE, symbol, children));
         }else{
             for(int i=0;i<vars;++i){
-                boolean l = seenLeft.contains(i);
+                boolean r = seenRight.contains(i);
             
-                if(l){
-                    this.children.add(Belnapian.BOTH_TRUE);
-                }else {
+                if(r){
                     this.children.add(Belnapian.LEFT_TRUE);
+                }else {
+                    this.children.add(Belnapian.BOTH_TRUE);
                 }
             }
             
@@ -313,8 +314,8 @@ public class RestrictionManager {
         
         this.seenLeft.clear();
         this.seenRight.clear();
-        this.addVariables(mapping1, seenLeft);
-        this.addVariables(mapping2, seenRight);
+        this.addVariables(symbol, mapping1, seenLeft);
+        this.addVariables(symbol, mapping2, seenRight);
         
         int shared = 0;
         this.children.clear();
@@ -365,8 +366,11 @@ public class RestrictionManager {
      * @param mapping
      * @param variables 
      */
-    private void addVariables(Tree<String> mapping, IntSet variables) {
+    private void addVariables(String symbol, Tree<String> mapping, IntSet variables) {
         List<Tree<String>> kids = mapping.getChildren();
+        if(HomomorphismSymbol.isVariableSymbol(mapping.getLabel())){
+            variables.add(HomomorphismSymbol.getVariableIndex(mapping.getLabel()));
+        }
         
         for(int i=0;i<kids.size();++i){
             variables.add(HomomorphismSymbol.getVariableIndex(kids.get(i).getLabel()));
