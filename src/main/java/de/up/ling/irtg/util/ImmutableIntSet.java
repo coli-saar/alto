@@ -41,6 +41,7 @@ public class ImmutableIntSet implements IntSet {
         throw new UnsupportedOperationException("Immutable Set");
     }
 
+    @Deprecated
     @Override
     public IntIterator intIterator() {
         return basis.iterator();
