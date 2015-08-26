@@ -17,7 +17,7 @@ import java.io.PrintWriter;
  * 
  * @author koller
  */
-@CodecMetadata(name = "toString", description = "toString", type = Object.class, displayInPopup = false)
+@CodecMetadata(name = "toString", description = "encodes an object using its toString method", type = Object.class, displayInPopup = false)
 public class ToStringOutputCodec extends OutputCodec<Object> {
     @Override
     public void write(Object object, OutputStream ostream) throws IOException {

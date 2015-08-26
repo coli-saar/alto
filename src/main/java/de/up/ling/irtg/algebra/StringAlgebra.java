@@ -19,7 +19,6 @@ import de.up.ling.irtg.util.LambdaStopwatch;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -128,6 +127,11 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     }
 
     @Override
+    public Class getClassOfValues() {
+        return List.class;
+    }
+
+    @Override
     public List<String> parseString(String representation) {
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
 
@@ -141,10 +145,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         return symbols;
     }
 
-//    @Override
-//    public JComponent visualize(List<String> object) {
-//        return new JLabel(StringTools.join(object, " "));
-//    }
     @Override
     public String representAsString(List<String> object) {
         return StringTools.join(object, " ");

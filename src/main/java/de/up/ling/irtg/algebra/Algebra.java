@@ -7,6 +7,7 @@ package de.up.ling.irtg.algebra;
 import com.google.common.collect.Iterators;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -217,6 +218,24 @@ public abstract class Algebra<E> implements Serializable {
      */
     public String representAsString(E object) {
         return object.toString();
+    }
+    
+    /**
+     * Returns the class of the elements of this algebra.
+     * The default interpretation simply returns {@link Object};
+     * you may override this with the actual class of the objects
+     * of your algebra.<p>
+     * 
+     * This method is used in some places throughout Alto to
+     * figure out what {@link OutputCodec}s are appropriate
+     * for encoding objects of the algebra. By overriding the
+     * method to return more specific classes than Object, you
+     * make more output codecs available in those places.
+     * 
+     * @return 
+     */
+    public Class getClassOfValues() {
+        return Object.class;
     }
 
     /**

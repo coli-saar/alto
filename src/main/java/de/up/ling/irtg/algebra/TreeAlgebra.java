@@ -55,4 +55,9 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
             throw new ParserException(e);
         }
     }
+
+    @Override
+    public Class getClassOfValues() {
+        return Tree.class;
+    }
 }

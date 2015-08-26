@@ -7,10 +7,11 @@
 package de.up.ling.irtg.corpus;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.codec.OutputCodec;
 import static de.up.ling.irtg.corpus.CorpusWriter.NULL;
+import de.up.ling.irtg.signature.Signature;
+import de.up.ling.tree.Tree;
 import java.io.IOException;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -38,19 +39,20 @@ public abstract class AbstractCorpusWriter implements Consumer<Instance> {
         public void accept(E x, F y) throws IOException;
     }
     
-    protected void withDerivationTree(Instance inst, ExConsumer<String> fn) throws IOException {
+    protected void withDerivationTree(Instance inst, Signature derivationTreeSignature, ExConsumer<String> fn) throws IOException {
         boolean isn = inst.isNull();
         
         if (annotated && printingPolicy.getAlgebraForDerivationTree() != null) {
-            fn.accept(isn ? NULL : printingPolicy.getAlgebraForDerivationTree().representAsString(inst.getDerivationTree()));
+            Tree<String> t = derivationTreeSignature.resolve(inst.getDerivationTree());
+            fn.accept(isn ? NULL : printingPolicy.getAlgebraForDerivationTree().representAsString(t));
         }
     }
     
     protected void forEachInterpretation(Instance inst, ExBiConsumer<String,String> fn) throws IOException {
         boolean isn = inst.isNull();
         
-        for( Pair<String,Algebra> interp : printingPolicy.get() ) {
-            fn.accept(interp.getLeft(), isn ? NULL : interp.getRight().representAsString(inst.getInputObjects().get(interp.getLeft())));
+        for( Pair<String,OutputCodec> interp : printingPolicy.get() ) {
+            fn.accept(interp.getLeft(), isn ? NULL : interp.getRight().asString(inst.getInputObjects().get(interp.getLeft())));
         }
     }
 

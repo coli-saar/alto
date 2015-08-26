@@ -11,6 +11,8 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.TreeAlgebra;
+import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
+import de.up.ling.irtg.codec.OutputCodec;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,16 +25,16 @@ import java.util.Map;
  */
 public class InterpretationPrintingPolicy {
     public static final String DERIVATION_TREE_KEY = "derivation tree";
-    private final List<Pair<String,Algebra>> interpretationToAlgebra;
+    private final List<Pair<String,OutputCodec>> interpretationToCodec;
     private final Algebra algebraForDerivationTree;
 
-    public InterpretationPrintingPolicy(List<Pair<String, Algebra>> interpretationToAlgebra, Algebra algebraForDerivationTree) {
-        this.interpretationToAlgebra = interpretationToAlgebra;
+    public InterpretationPrintingPolicy(List<Pair<String, OutputCodec>> interpretationToCodec, Algebra algebraForDerivationTree) {
+        this.interpretationToCodec = interpretationToCodec;
         this.algebraForDerivationTree = algebraForDerivationTree;
     }
 
-    public List<Pair<String, Algebra>> get() {
-        return interpretationToAlgebra;
+    public List<Pair<String, OutputCodec>> get() {
+        return interpretationToCodec;
     }
 
     public Algebra getAlgebraForDerivationTree() {
@@ -40,14 +42,28 @@ public class InterpretationPrintingPolicy {
     }
     
     public static InterpretationPrintingPolicy fromIrtg(InterpretedTreeAutomaton irtg) {
-        List<Pair<String, Algebra>> interps = new ArrayList<>();
+        List<Pair<String, OutputCodec>> interps = new ArrayList<>();
         Map<String,Interpretation> interpMap = irtg.getInterpretations();
         
         for( String key : interpMap.keySet() ) {
-            interps.add(new Pair(key, interpMap.get(key).getAlgebra()));
+            Algebra alg = interpMap.get(key).getAlgebra();
+            OutputCodec oc = new AlgebraStringRepresentationOutputCodec(alg);
+            
+            interps.add(new Pair(key, oc));
         }
         
         return new InterpretationPrintingPolicy(interps, new TreeAlgebra());
+    }
+    
+    public static InterpretationPrintingPolicy create(Algebra algebraForDerivationTree, Object... args) {
+        List<Pair<String,OutputCodec>> interpretationToAlgebra = new ArrayList<>();
+        
+        for( int i = 0; i < args.length; i += 2 ) {
+            OutputCodec oc = new AlgebraStringRepresentationOutputCodec((Algebra) args[i+1]);
+            interpretationToAlgebra.add(new Pair((String) args[i], oc));
+        }
+        
+        return new InterpretationPrintingPolicy(interpretationToAlgebra, algebraForDerivationTree);
     }
     
     public static boolean isDeriv(Pair<String,Algebra> pair) {

@@ -5,10 +5,9 @@
  */
 package de.up.ling.irtg.corpus;
 
-import com.diffplug.common.base.Errors;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.codec.OutputCodec;
 import java.io.IOException;
 import java.io.Writer;
 
@@ -24,9 +23,10 @@ public class CorpusWriter extends AbstractCorpusWriter {
     private String comment;
     public static final String NULL = "_null_";
     private String commentPrefix;
+    private InterpretedTreeAutomaton irtg;
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, Writer writer) throws IOException {
-        this(comment, commentPrefix, InterpretationPrintingPolicy.fromIrtg(irtg), writer);
+        this(irtg, comment, commentPrefix, InterpretationPrintingPolicy.fromIrtg(irtg), writer);
     }
 
     /**
@@ -39,13 +39,14 @@ public class CorpusWriter extends AbstractCorpusWriter {
      * @param writer
      * @throws IOException
      */
-    public CorpusWriter(String comment, String commentPrefix, InterpretationPrintingPolicy printingPolicy, Writer writer) throws IOException {
+    public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, InterpretationPrintingPolicy printingPolicy, Writer writer) throws IOException {
         super(printingPolicy, false);
 
         this.writer = writer;
         this.comment = comment;
         this.commentPrefix = commentPrefix;
         this.printingPolicy = printingPolicy;
+        this.irtg = irtg;
 
         isHeaderWritten = false;
     }
@@ -75,7 +76,7 @@ public class CorpusWriter extends AbstractCorpusWriter {
             }
         }
 
-        withDerivationTree(inst, repr -> writer.write(repr + "\n"));
+        withDerivationTree(inst, irtg.getAutomaton().getSignature(), repr -> writer.write(repr + "\n"));
         forEachInterpretation(inst, (key, repr) -> writer.write(repr + "\n"));
         
         writer.write("\n");
@@ -95,8 +96,8 @@ public class CorpusWriter extends AbstractCorpusWriter {
             buf.append(commentPrefix + "\n");
         }
 
-        for (Pair<String, Algebra> interp : printingPolicy.get()) {
-            buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + interp.getRight().getClass() + "\n");
+        for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
+            buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + irtg.getInterpretation(interp.getLeft()).getAlgebra().getClass() + "\n");
         }
 
         return buf.toString();
