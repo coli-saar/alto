@@ -154,5 +154,15 @@ public class ImmutableIntSet implements IntSet {
     @Override
     public void clear() {
         throw new UnsupportedOperationException("Immutable Set");
-    }    
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return basis.equals(obj);
+    }
+
+    @Override
+    public String toString() {
+        return basis.toString();
+    }
 }

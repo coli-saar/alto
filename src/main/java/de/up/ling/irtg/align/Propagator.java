@@ -70,7 +70,7 @@ public class Propagator {
         final ConcreteTreeAutomaton<State> output = new ConcreteTreeAutomaton<>(input.getSignature());
         final SpecifiedAligner map = new SpecifiedAligner(output);
         
-        
+        input = this.pruner.prePrune(input, alignments);
         
         Visitor visit = new Visitor(markings, output, input, map, alignments);
         input.foreachStateInBottomUpOrder(visit);
