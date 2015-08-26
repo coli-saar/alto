@@ -350,8 +350,6 @@ public class HomomorphismManager {
         this.sharedSig.addSymbol(sym, totalVariables);
         
         ObjectArrayList<Tree<String>> storage = new ObjectArrayList<>();
-        Tree<String> image1 = null;
-        Tree<String> image2 = null;
         for(int i=0;i<symbols.size();++i){
             storage.clear();
             Tree<String> t;
@@ -370,15 +368,10 @@ public class HomomorphismManager {
                 t = Tree.create(label, storage);
             }
             
-            if(image1 == null){
-                image1 = t;
-            }else{
-                image2 = t;
-            }
             (i == 0 ? this.hom1 : this.hom2).add(sym, t);
         }
         
-        this.rm.addSymbol(sym, image1, image2);
+        this.rm.addSymbol(sym, this.hom1.get(sym), this.hom2.get(sym));
         
         return sym;
     }
@@ -601,5 +594,9 @@ public class HomomorphismManager {
             ret += b ? 1 : 0;
         }
         return ret;
+    }
+
+    public RestrictionManager getRestrictionManager() {
+        return rm;
     }
 }

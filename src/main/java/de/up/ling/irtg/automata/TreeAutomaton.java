@@ -51,8 +51,11 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
+import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import java.io.Serializable;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -68,7 +71,11 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well44497a;
 
 /**
  * A finite tree automaton. Objects of this class can be simultaneously seen as
@@ -978,6 +985,93 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
+    /**
+     * 
+     * @return 
+     */
+    public Tree<String> getRandomDiverseTree(){
+        Set<Rule> seen = new ObjectOpenHashSet<>();
+        IntSet states = new IntRBTreeSet();
+        RandomGenerator rnd = new Well44497a();
+        
+        if (getFinalStates().isEmpty()) {
+            return null;
+        } else {
+            int finalState = getFinalStates().toIntArray()[rnd.nextInt(getFinalStates().size())];
+            return getRandomDiverseTree(seen, states, finalState, rnd, rule -> rule.getLabel(this));
+        }
+    }
+    
+    /**
+     * 
+     * @param <E>
+     * @param seenRules
+     * @param state
+     * @param rnd
+     * @param makeLabel
+     * @return 
+     */
+    private <E> Tree<E> getRandomDiverseTree(Set<Rule> seenRules, IntSet seenStates, int state, RandomGenerator rnd, Function<Rule, E> makeLabel){
+        List<Rule> rulesHere = new ArrayList<>();
+        seenStates.add(state);
+        double totalWeight = 0;
+
+        for (Rule r : getRulesTopDown(state)) {
+            rulesHere.add(r);
+            totalWeight += this.diverseWeight(seenRules, seenStates, r);
+        }
+        
+        boolean def;
+        if(def = (totalWeight <= 0.0)){
+            totalWeight = 0.0;
+            for (int i = 0; i < rulesHere.size(); i++) {
+                Rule rule = rulesHere.get(i);
+                totalWeight += rule.getWeight();
+            }
+        }
+
+        double selectWeight = rnd.nextDouble() * totalWeight;
+        double cumulativeWeight = 0;
+
+        for (int i = 0; i < rulesHere.size(); i++) {
+            Rule rule = rulesHere.get(i);
+            cumulativeWeight += def ? rule.getWeight() : this.diverseWeight(seenRules, seenStates, rule);
+
+            if (cumulativeWeight >= selectWeight) {
+                seenRules.add(rule);
+                
+                List<Tree<E>> subtrees = new ArrayList<>();
+                for (int j = 0; j < rule.getArity(); j++) {
+                    subtrees.add(getRandomDiverseTree(seenRules, seenStates, rule.getChildren()[j], rnd, makeLabel));
+                }
+                return Tree.create(makeLabel.apply(rule), subtrees);
+            }
+        }
+
+        // should be unreachable
+        return null;
+    }
+    
+    /**
+     * 
+     * @param seenRules
+     * @param seenStates
+     * @param r
+     * @return 
+     */
+    private double diverseWeight(Set<Rule> seenRules, IntSet seenStates, Rule r){
+        if(seenRules.contains(r)){
+            return 0.0;
+        }
+        for(int i : r.getChildren()){
+            if(seenStates.contains(i)){
+                return 0.0;
+            }
+        }
+        
+        return r.getWeight();
+    }
+    
     private <E> Tree<E> getRandomTree(int state, Random rnd, Function<Rule, E> makeLabel) {
         List<Rule> rulesHere = new ArrayList<>();
         double totalWeight = 0;

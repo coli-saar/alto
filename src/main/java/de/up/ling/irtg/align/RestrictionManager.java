@@ -23,7 +23,8 @@ import java.util.List;
  */
 public class RestrictionManager {
     /**
-     * Ensures that there is no sequence of variable nodes and that we never start with a variable.
+     * Ensures that there is no sequence of variable nodes and that we never start with a variable or
+     * end without having read anything under a variable.
      */
     private final ConcreteTreeAutomaton<Boolean> variableSequenceing;
     
@@ -87,7 +88,7 @@ public class RestrictionManager {
         this.termination.addFinalState(this.termination.addState(Belnapian.BOTH_FALSE));
         
         this.variableSequenceing = new ConcreteTreeAutomaton<>(this.sig);
-        this.variableSequenceing.addFinalState(this.variableSequenceing.addState(Boolean.FALSE));
+        this.variableSequenceing.addFinalState(this.variableSequenceing.addState(Boolean.TRUE));
     }
 
     /**
@@ -252,7 +253,6 @@ public class RestrictionManager {
             this.termination.addRule(this.termination.createRule(Belnapian.LEFT_TRUE, symbol, children));
         }
         
-        
         if(isLeft){
             this.children.clear();
             for(int i=0;i<vars;++i){
@@ -293,7 +293,6 @@ public class RestrictionManager {
         this.children.clear();
         
         this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, children));
         
         this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
         this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
