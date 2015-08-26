@@ -12,7 +12,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -50,6 +52,8 @@ import java.util.logging.Logger;
  * @author koller
  */
 public abstract class OutputCodec<E> {
+    private Map<String,String> options = new HashMap<>();
+    
     /**
      * Writes a string representation of a given object to an output stream.
      * Implement this method to implement your own concrete encoding.
@@ -127,5 +131,26 @@ public abstract class OutputCodec<E> {
      */
     public CodecMetadata getMetadata() {
         return (CodecMetadata) getClass().getAnnotation(CodecMetadata.class);
+    }
+    
+    public void addOptions(String options) {
+        String[] parts = options.split("\\s*[,=]\\s*");
+        for( int i = 0; i < parts.length; i += 2 ) {
+            this.options.put(parts[i], parts[i+1]);
+        }
+    }
+    
+    public String getOption(String key) {
+        return options.get(key);
+    }
+    
+    public boolean hasTrueOption(String key) {
+        String val = getOption(key);
+        
+        if( val != null && val.toLowerCase().equals("true")) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

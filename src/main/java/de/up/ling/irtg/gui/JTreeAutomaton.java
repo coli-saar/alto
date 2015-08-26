@@ -774,9 +774,16 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         // derivation tree
         List<OutputCodec> outputCodecs = collectOutputCodecs(new TreeAlgebra());
         ConcreteListDataPanelEntry<OutputCodec> dpeList = new ConcreteListDataPanelEntry<OutputCodec>("derivation tree", "Output codec for derivation tree:", outputCodecs, oc -> oc.getMetadata().name() + ": " + oc.getMetadata().description());
-        DataPanelEntry<Boolean> dpeCheck = new ConcreteBooleanDataPanelEntry("derivation tree_use", "Generate output for derivation tree:");
 
-//        ret.addEntry(dpeList);
+        DataPanelEntry<Boolean> dpeCheck = new ConcreteBooleanDataPanelEntry("derivation tree_use", "Generate output for derivation tree:");
+        ret.addEntry(dpeCheck);
+        
+        dpeCheck = new ConcreteBooleanDataPanelEntry("_print_comments_", "Print comments:");
+        dpeCheck.setValue(true);
+        ret.addEntry(dpeCheck);
+        
+        dpeCheck = new ConcreteBooleanDataPanelEntry("_print_separators_", "Print empty lines between instances:");        
+        dpeCheck.setValue(true);
         ret.addEntry(dpeCheck);
 
         for (String interpName : irtg.getInterpretations().keySet()) {
@@ -790,8 +797,8 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             dpeList = new ConcreteListDataPanelEntry<OutputCodec>(interpName, "Output codec for interpretation '" + interpName + "':", outputCodecs, oc -> oc.getMetadata().name() + ": " + oc.getMetadata().description());
             dpeCheck = new ConcreteBooleanDataPanelEntry(interpName + "_use", "Generate output for interpretation '" + interpName + "':");
 
-            ret.addEntry(dpeList);
             ret.addEntry(dpeCheck);
+            ret.addEntry(dpeList);
         }
 
         return ret;
@@ -828,8 +835,11 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                         Corpus inputCorpus = Corpus.readCorpus(new FileReader(corpusNames.inputCorpusName), irtg);
                         FileWriter w = new FileWriter(corpusNames.outputCorpusName);
                         String s = "Parsed from " + corpusNames.inputCorpusName + "\nat " + new Date().toString();
-
-                        final CorpusWriter cw = new CorpusWriter(irtg, s, "# ", createPolicy(codecOptions), w);
+                        
+                        String commentPrefix = ((Boolean) codecOptions.getEntry("_print_comments_").getValue()) ? "# " : null;
+                        
+                        final CorpusWriter cw = new CorpusWriter(irtg, s, commentPrefix, createPolicy(codecOptions), w);
+                        cw.setPrintSeparatorLines(((Boolean) codecOptions.getEntry("_print_separators_").getValue()));
 
                         boolean annotated = (Boolean) (codecOptions.getEntry("derivation tree_use").getValue());
                         cw.setAnnotated(annotated);

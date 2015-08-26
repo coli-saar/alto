@@ -12,11 +12,14 @@ import java.io.IOException;
 import java.io.Writer;
 
 /**
+ * Comment lines are prepended with the <code>commentPrefix</code>. If
+ * commentPrefix is null, then comments are not printed at all.
  *
  * @author koller
  */
 public class CorpusWriter extends AbstractCorpusWriter {
 
+    private boolean printSeparatorLines;
     private final Writer writer;
 //    private final InterpretationPrintingPolicy printingPolicy;
     private boolean isHeaderWritten;
@@ -48,7 +51,10 @@ public class CorpusWriter extends AbstractCorpusWriter {
         this.printingPolicy = printingPolicy;
         this.irtg = irtg;
 
+        printSeparatorLines = true;
+
         isHeaderWritten = false;
+
     }
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, Writer writer) throws IOException {
@@ -70,36 +76,47 @@ public class CorpusWriter extends AbstractCorpusWriter {
             isHeaderWritten = true;
         }
 
-        if (inst.getComments() != null && commentPrefix != null) {
-            for (String key : inst.getComments().keySet()) {
-                writer.write(commentPrefix + key + ": " + inst.getComments().get(key) + "\n");
+        if (commentPrefix != null) {
+            if (inst.getComments() != null && commentPrefix != null) {
+                for (String key : inst.getComments().keySet()) {
+                    writer.write(commentPrefix + key + ": " + inst.getComments().get(key) + "\n");
+                }
             }
         }
 
         withDerivationTree(inst, irtg.getAutomaton().getSignature(), repr -> writer.write(repr + "\n"));
         forEachInterpretation(inst, (key, repr) -> writer.write(repr + "\n"));
-        
-        writer.write("\n");
+
+        if (printSeparatorLines) {
+            writer.write("\n");
+        }
+
         writer.flush();
     }
 
     private String makeHeader(String comment) {
         StringBuilder buf = new StringBuilder();
 
-        buf.append(commentPrefix + "IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
-        buf.append(commentPrefix + "\n");
-
-        if (comment != null) {
-            for (String line : comment.split("\n")) {
-                buf.append(commentPrefix + line + "\n");
-            }
+        if (commentPrefix != null) {
+            buf.append(commentPrefix + "IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
             buf.append(commentPrefix + "\n");
-        }
 
-        for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
-            buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + irtg.getInterpretation(interp.getLeft()).getAlgebra().getClass() + "\n");
+            if (comment != null) {
+                for (String line : comment.split("\n")) {
+                    buf.append(commentPrefix + line + "\n");
+                }
+                buf.append(commentPrefix + "\n");
+            }
+
+            for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
+                buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + irtg.getInterpretation(interp.getLeft()).getAlgebra().getClass() + "\n");
+            }
         }
 
         return buf.toString();
+    }
+
+    public void setPrintSeparatorLines(boolean printSeparatorLines) {
+        this.printSeparatorLines = printSeparatorLines;
     }
 }
