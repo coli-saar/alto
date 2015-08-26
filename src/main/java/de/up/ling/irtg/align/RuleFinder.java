@@ -36,6 +36,8 @@ public class RuleFinder {
      * @return 
      */
     public TreeAutomaton getRules(TreeAutomaton left, TreeAutomaton right, HomomorphismManager hm){
+        hm.update(left.getAllLabels(), right.getAllLabels());
+        
         TreeAutomaton combined = hm.getRestriction().intersect(
                 left.inverseHomomorphism(hm.getHomomorphism1())).intersect(right.inverseHomomorphism(hm.getHomomorphism2()));
         
