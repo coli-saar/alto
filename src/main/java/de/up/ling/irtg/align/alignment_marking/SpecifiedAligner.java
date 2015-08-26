@@ -18,7 +18,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
  * @param <State>
  */
 public class SpecifiedAligner<State> extends StateAlignmentMarking<State> {
-
     /**
      * 
      */
