@@ -21,8 +21,9 @@
     <dependency>
       <groupId>de.saar.coli</groupId>
       <artifactId>basics</artifactId>
-      <version>1.2.37-SNAPSHOT</version>
+      <version>[1.2.37-SNAPSHOT,)</version>
     </dependency>
+<!--  -->
 
     <dependency>
       <groupId>com.google.guava</groupId>

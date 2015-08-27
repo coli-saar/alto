@@ -72,7 +72,12 @@ public class CorpusWriter extends AbstractCorpusWriter {
         boolean isn = inst.isNull();
 
         if (!isHeaderWritten) {
-            writer.write(makeHeader(comment) + "\n");
+            writer.write(makeHeader(comment));
+            
+            if( printSeparatorLines ) {
+                writer.write("\n");
+            }
+            
             isHeaderWritten = true;
         }
 
