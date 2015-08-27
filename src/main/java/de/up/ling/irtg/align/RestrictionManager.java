@@ -145,7 +145,8 @@ public class RestrictionManager {
      */
     public void addSymbol(String symbol, Tree<String> mapping1, Tree<String> mapping2){
         String label1 = mapping1.getLabel();
-
+        this.fullRestriction = null;
+        
         if(HomomorphismManager.VARIABLE_PATTERN.test(label1)){
             this.handleVariable(symbol);
         }
