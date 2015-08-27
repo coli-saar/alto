@@ -1567,9 +1567,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public TreeAutomaton inverseHomomorphism(Homomorphism hom) {
         if (hom.isNonDeleting()) {
-            return new NondeletingInverseHomAutomaton<State>(this, hom);
-        } else {
-            return new InverseHomAutomaton<State>(this, hom);
+            return new NondeletingInverseHomAutomaton<>(this, hom);
+        } else if(hom.isHeight1()){
+            return new Height1InverseHomAutomaton(this,hom);
+        }else
+        {
+            return new InverseHomAutomaton<>(this, hom);
         }
     }
 
