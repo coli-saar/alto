@@ -55,8 +55,10 @@ public class Height1InverseHomAutomaton extends TreeAutomaton {
             return getRulesBottomUpFromExplicit(labelId, childStates);
         }else{
             int arity = this.signature.getArity(labelId);
+            
             if(arity == childStates.length){
                 Tree<HomomorphismSymbol> goal = this.hom.get(labelId);
+                
                 if(goal.getLabel().isVariable()){
                     boolean wellFormed = true;
                     int ignore = goal.getLabel().getValue();
@@ -68,20 +70,34 @@ public class Height1InverseHomAutomaton extends TreeAutomaton {
                     }
                     
                     if(wellFormed){
-                        this.storeRuleBottomUp(createRule(childStates[0], labelId, Arrays.copyOf(childStates, childStates.length), 1.0));                 
+                        this.storeRuleBottomUp(createRule(childStates[ignore], labelId, Arrays.copyOf(childStates, childStates.length), 1.0));
                     }
                 }else{
-                    int[] kids = new int[arity];
-                    Arrays.fill(kids, this.failStateId);
-                    for(int i=0;i<arity;++i){
+                    int[] kids = new int[goal.getChildren().size()];
+                    for(int i=0;i<goal.getChildren().size();++i){
                         kids[i] = childStates[goal.getChildren().get(i).getLabel().getValue()];
                     }
                     
                     Iterable<Rule> it = this.rhs.getRulesBottomUp(goal.getLabel().getValue(), kids);
+                    int[] copy = Arrays.copyOf(childStates, childStates.length);
                     for(Rule r : it){
                         int parent = r.getParent();
                         
-                        this.storeRuleBottomUp(this.createRule(parent, labelId, Arrays.copyOf(childStates, childStates.length), 1.0));
+                        this.storeRuleBottomUp(this.createRule(parent, labelId, copy, 1.0));
+                    }
+                    
+                    boolean allFail = true;
+                    for(int q : childStates){
+                        if(q != this.failStateId){
+                            allFail = false;
+                            break;
+                        }
+                    }
+                    
+                    if(allFail){
+                        int[] failure = Arrays.copyOf(childStates, childStates.length);
+                        
+                        this.storeRuleBottomUp(this.createRule(this.failStateId, labelId, failure, 1.0));
                     }
                 }
             }
@@ -101,7 +117,11 @@ public class Height1InverseHomAutomaton extends TreeAutomaton {
             return this.getRulesTopDownFromExplicit(labelId, parentState);
         }else{
             if(parentState == this.failStateId){
-                this.makeFailStatesExplicit();
+                int arity = this.getSignature().getArity(labelId);
+                int[] children = new int[arity];
+                Arrays.fill(children, this.failStateId);
+                
+                storeRuleTopDown(this.createRule(parentState, labelId, children, 1.0));
             }else{
                 int arity = this.signature.getArity(labelId);
                 Tree<HomomorphismSymbol> goal = this.hom.get(labelId);
@@ -131,21 +151,5 @@ public class Height1InverseHomAutomaton extends TreeAutomaton {
         }
         
         return this.getRulesTopDownFromExplicit(labelId, parentState);
-    }
-
-    /**
-     * 
-     */
-    private void makeFailStatesExplicit() {
-        for(int label=1;label<=this.getSignature().getMaxSymbolId();++label){
-            int arity = this.getSignature().getArity(label);
-            int[] children = new int[arity];
-            
-            for(int i=0;i<arity;++i){
-                children[i] = this.failStateId;
-            }
-            
-            storeRuleBoth(this.createRule(this.failStateId, label, children, 1.0));
-        }
     }
 }

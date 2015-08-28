@@ -12,6 +12,8 @@ import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
@@ -38,10 +40,15 @@ public class RuleFinder {
     public TreeAutomaton getRules(TreeAutomaton left, TreeAutomaton right, HomomorphismManager hm){
         hm.update(left.getAllLabels(), right.getAllLabels());
         
-        TreeAutomaton combined = hm.getRestriction().intersect(
-                left.inverseHomomorphism(hm.getHomomorphism1())).intersect(right.inverseHomomorphism(hm.getHomomorphism2()));
+        left = left.inverseHomomorphism(hm.getHomomorphism1());
         
-        return combined;
+        right = right.inverseHomomorphism(hm.getHomomorphism2());
+        
+        TreeAutomaton combo1 =  hm.getRestriction().intersect(left);
+        
+        TreeAutomaton result = combo1.intersect(right);
+        
+        return result;
     }
     
     /**

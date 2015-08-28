@@ -178,9 +178,6 @@ public class Propagator {
             this.mark = mark;
         }
 
-        
-        
-        
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
             Object st = this.original.getStateForId(state);
