@@ -97,7 +97,9 @@ public class ImmutableIntSetTest {
         Object[] arr = new Object[2];
         this.iis.toArray(arr);
         
-        assertArrayEquals(arr, new Object[] {0,3});
+        Object[] a = [0,3];
+        
+        assertArrayEquals(arr, a);
     }
 
     /**
@@ -115,7 +117,10 @@ public class ImmutableIntSetTest {
     @Test
     public void testToIntArray_0args() {
         int[] arr = this.iis.toIntArray();
-        assertArrayEquals(arr, new int[] {0,3});
+        
+        int[] a = [0,3];
+        
+        assertArrayEquals(arr, a);
     }
 
     /**
@@ -125,7 +130,10 @@ public class ImmutableIntSetTest {
     public void testToIntArray_intArr() {
         int[] a = new int[2];
         this.iis.toIntArray(a);
-        assertArrayEquals(a, new int[] {0,3});
+        
+        int[] q = [0,3];
+        
+        assertArrayEquals(a, q);
     }
 
     /**
@@ -135,7 +143,10 @@ public class ImmutableIntSetTest {
     public void testToArray_intArr() {
         int[] a = new int[2];
         this.iis.toArray(a);
-        assertArrayEquals(a, new int[] {0,3});
+        
+        int[] d = [0,3];
+        
+        assertArrayEquals(a, d);
     }
 
     /**
@@ -268,7 +279,9 @@ public class ImmutableIntSetTest {
     public void testToArray_0args() {
         Object[] arr = this.iis.toArray();
         
-        assertArrayEquals(arr, new Object[] {0,3});
+        Object[] d = [0,3];
+        
+        assertArrayEquals(arr, d);
     }
 
     /**
