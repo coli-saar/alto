@@ -88,6 +88,11 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
     public boolean supportsBottomUpQueries() {
         return false;
     }
+
+    @Override
+    public boolean supportsTopDownQueries() {
+        return true;
+    }
     
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
@@ -108,6 +113,11 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
         
         Tree<HomomorphismSymbol> im1 = hom1.get(labelId);
         Tree<HomomorphismSymbol> im2 = hom2.get(labelId);
+        if(im1.getLabel().isVariable() && im2.getLabel().isVariable()){
+            return EMPTY;
+        }
+        
+        Pair<Object,Object>[] children = new Pair[arity];
         
         if(left == this.failState){
             if(right == this.failState){
@@ -122,7 +132,6 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
                     Iterable<Rule> rules = this.ta2.getRulesTopDown(im2.getLabel().getValue(), parent);
                     
                     for(Rule r : rules){
-                        Pair<Object,Object>[] children = new Pair[arity];
                         Arrays.fill(children, null);
                         
                         for(int i=0;i<im2.getChildren().size();++i){
@@ -148,11 +157,96 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
             }
         }else{
             if(right == failState){
-                
+                if(im2.getLabel().isVariable()){
+                    int parent = ta1.getIdForState(left);
+                    Iterable<Rule> rules = ta1.getRulesTopDown(im1.getLabel().getValue(), parentState);
+                    
+                    for(Rule rule : rules){
+                        Arrays.fill(children, null);
+                        
+                        for(int i=0;i<im1.getChildren().size();++i){
+                            int state = rule.getChildren()[i];
+                            Object o = this.ta1.getStateForId(state);
+                            
+                            children[im1.getChildren().get(i).getLabel().getValue()] = new Pair<>(o,this.failState);
+                        }
+                        
+                        Pair<Object,Object> pa = new Pair<>(this.failState,this.failState);
+                        for(int i=0;i<children.length;++i){
+                            if(children[i] == null){
+                                children[i] = pa;
+                            }
+                        }
+                        
+                        Rule gen = this.createRule(pair, this.signature.resolveSymbolId(labelId), children, 1.0);
+                        this.storeRuleTopDown(gen);
+                    }
+                    
+                }else{
+                    return EMPTY;
+                }
             }else{
+                Object[] leftChildren = new Object[arity];
+                Object[] rightChildren = new Object[arity];
                 
+                Arrays.fill(leftChildren, failState);
+                Arrays.fill(rightChildren, failState);
                 
-                
+                if(im1.getLabel().isVariable()){
+                    leftChildren[im1.getLabel().getValue()] = pair.getKey();
+                    
+                    Iterable<Rule> rules = ta2.getRulesTopDown(im2.getLabel().getValue(), ta2.getIdForState(right));
+                    
+                    for(Rule rule : rules){
+                        Arrays.fill(rightChildren, failState);
+                        
+                        for(int i=0;i<im2.getChildren().size();++i){
+                            Object o = ta2.getStateForId(rule.getChildren()[i]);
+                            rightChildren[im2.getChildren().get(i).getLabel().getValue()] = o;
+                        }
+                        
+                        for(int i=0;i<arity;++i){
+                            children[i] = new Pair<>(leftChildren[i],rightChildren[i]);
+                        }
+                        
+                        Rule r = this.createRule(pair, this.signature.resolveSymbolId(labelId), children, 1.0);
+                        this.storeRuleTopDown(r);
+                    }
+                    
+                    
+                }else{
+                    if(im2.getLabel().isVariable()){
+                        //TODO
+                    }else{
+                        Iterable<Rule> lRules = this.ta1.getRulesTopDown(im1.getLabel().getValue(), ta1.getIdForState(left));
+                        Iterable<Rule> rRules = this.ta2.getRulesTopDown(im2.getLabel().getValue(), ta2.getIdForState(right));
+                        
+                        for(Rule lRule : lRules){
+                            Arrays.fill(leftChildren, failState);
+                            
+                            for(int i=0;i<im1.getChildren().size();++i){
+                                leftChildren[im1.getChildren().get(i).getLabel().getValue()] =
+                                        ta1.getStateForId(lRule.getChildren()[i]);
+                            }
+                            for(Rule rRule : rRules){
+                                Arrays.fill(rightChildren, failState);
+                            
+                                for(int i=0;i<im2.getChildren().size();++i){
+                                    rightChildren[im2.getChildren().get(i).getLabel().getValue()] =
+                                            ta2.getStateForId(rRule.getChildren()[i]);
+                                }
+                                
+                                
+                                for(int i=0;i<arity;++i){
+                                    children[i] = new Pair<>(leftChildren[i],rightChildren[i]);
+                                }
+                        
+                                Rule r = this.createRule(pair, this.signature.resolveSymbolId(labelId), children, 1.0);
+                                this.storeRuleTopDown(r);
+                            }
+                        }
+                    }
+                }
             }
             //TODO
         }
