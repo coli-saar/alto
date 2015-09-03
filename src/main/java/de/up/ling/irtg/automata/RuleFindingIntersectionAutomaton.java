@@ -96,7 +96,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
     
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported.");
     }
     
     @Override
@@ -122,88 +122,155 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
         
         if(left == this.failState){
             if(right == this.failState){
-                if(arity == 0){
-                    this.storeRuleTopDown(this.createRule(arity, labelId, new int[0], 1.0));
-                }else{
+                if(manageDoubleFail(arity, labelId)){
                     return EMPTY;
                 }
             }else{
-                if(im1.getLabel().isVariable()){
-                    int parent = this.ta2.stateInterner.resolveObject(right);
-                    Iterable<Rule> rules = this.ta2.getRulesTopDown(im2.getLabel().getValue(), parent);
-                    
-                    for(Rule r : rules){
-                        handleOnesided(im2, ta2, r, children);
-                        makeRule(pair, labelId, children);
-                    }
-                }else{
+                if(handleSingleFail(im1, ta2, im2, right, children, true, pair, labelId)){
                     return EMPTY;
                 }
             }
         }else{
             if(right == failState){
-                if(im2.getLabel().isVariable()){
-                    int parent = ta1.getIdForState(left);
-                    Iterable<Rule> rules = ta1.getRulesTopDown(im1.getLabel().getValue(), parent);
-                    
-                    for(Rule rule : rules){
-                        this.handleOnesided(im1, ta1, rule, children);
-                        makeRule(pair, labelId, children);
-                    }
-                }else{
+                if(handleSingleFail(im2, ta1, im1, left, children, false, pair, labelId)){
                     return EMPTY;
                 }
             }else{
-                Object[] leftChildren = new Object[arity];
-                Object[] rightChildren = new Object[arity];
-                
-                Arrays.fill(leftChildren, failState);
-                Arrays.fill(rightChildren, failState);
-                
-                if(im1.getLabel().isVariable()){
-                    leftChildren[im1.getLabel().getValue()] = pair.getKey();
-                    
-                    Iterable<Rule> rules = ta2.getRulesTopDown(im2.getLabel().getValue(), ta2.getIdForState(right));
-                    
-                    for(Rule rule : rules){
-                        insertChildren(im2, ta2, rule, rightChildren);
-                        
-                        buildChildren(arity, children, leftChildren, rightChildren);
-                        makeRule(pair, labelId, children);
-                    }
-                }else{
-                    if(im2.getLabel().isVariable()){
-                        rightChildren[im2.getLabel().getValue()] = pair.getKey();
-                        
-                        Iterable<Rule> rules = ta1.getRulesTopDown(im2.getLabel().getValue(), ta1.getIdForState(right));
-                        
-                        for(Rule rule : rules){
-                            this.insertChildren(im1, ta1, rule, leftChildren);
-                        
-                            buildChildren(arity, children, leftChildren, rightChildren);
-                            makeRule(pair, labelId, children);
-                        }
-                        //TODO
-                    }else{
-                        Iterable<Rule> lRules = this.ta1.getRulesTopDown(im1.getLabel().getValue(), ta1.getIdForState(left));
-                        Iterable<Rule> rRules = this.ta2.getRulesTopDown(im2.getLabel().getValue(), ta2.getIdForState(right));
-                        
-                        for(Rule lRule : lRules){
-                            insertChildren(im1, ta1, lRule, leftChildren);
-                            
-                            for(Rule rRule : rRules){
-                                insertChildren(im2, ta2, rRule, rightChildren);
-                                
-                                buildChildren(arity, children, leftChildren, rightChildren);                        
-                                makeRule(pair, labelId, children);
-                            }
-                        }
-                    }
-                }
+                handleNoFail(arity, im1, pair, im2, right, children, labelId, left);
             }
         }
         
         return this.getRulesTopDownFromExplicit(labelId, parentState);
+    }
+
+    /**
+     * 
+     * @param arity
+     * @param im1
+     * @param pair
+     * @param im2
+     * @param right
+     * @param children
+     * @param labelId
+     * @param left 
+     */
+    private void handleNoFail(int arity, Tree<HomomorphismSymbol> im1,
+            Pair<Object, Object> pair, Tree<HomomorphismSymbol> im2,
+            Object right, Pair<Object, Object>[] children, int labelId,
+            Object left) {
+
+        Object[] leftChildren = new Object[arity];
+        Object[] rightChildren = new Object[arity];
+        
+        Arrays.fill(leftChildren, failState);
+        Arrays.fill(rightChildren, failState);
+        
+        if(im1.getLabel().isVariable()){
+            leftChildren[im1.getLabel().getValue()] = pair.getKey();
+            
+            Iterable<Rule> rules = ta2.getRulesTopDown(im2.getLabel().getValue(), ta2.getIdForState(right));
+            
+            for(Rule rule : rules){
+                insertChildren(im2, ta2, rule, rightChildren);
+                
+                buildChildren(arity, children, leftChildren, rightChildren);
+                makeRule(pair, labelId, children);
+            }
+        }else{
+            if(im2.getLabel().isVariable()){
+                rightChildren[im2.getLabel().getValue()] = pair.getKey();
+                
+                Iterable<Rule> rules = ta1.getRulesTopDown(im2.getLabel().getValue(), ta1.getIdForState(right));
+                
+                for(Rule rule : rules){
+                    this.insertChildren(im1, ta1, rule, leftChildren);
+                    
+                    buildChildren(arity, children, leftChildren, rightChildren);
+                    makeRule(pair, labelId, children);
+                }
+            }else{
+                makeTwoRules(im1, left, im2, right, leftChildren,
+                        rightChildren, arity, children, pair, labelId);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param im1
+     * @param left
+     * @param im2
+     * @param right
+     * @param leftChildren
+     * @param rightChildren
+     * @param arity
+     * @param children
+     * @param pair
+     * @param labelId 
+     */
+    private void makeTwoRules(Tree<HomomorphismSymbol> im1, Object left,
+            Tree<HomomorphismSymbol> im2, Object right,
+            Object[] leftChildren, Object[] rightChildren,
+            int arity, Pair<Object, Object>[] children,
+            Pair<Object, Object> pair, int labelId) {
+
+        Iterable<Rule> lRules = this.ta1.getRulesTopDown(im1.getLabel().getValue(), ta1.getIdForState(left));
+        Iterable<Rule> rRules = this.ta2.getRulesTopDown(im2.getLabel().getValue(), ta2.getIdForState(right));
+        
+        for(Rule lRule : lRules){
+            insertChildren(im1, ta1, lRule, leftChildren);
+            
+            for(Rule rRule : rRules){
+                insertChildren(im2, ta2, rRule, rightChildren);
+                
+                buildChildren(arity, children, leftChildren, rightChildren);
+                makeRule(pair, labelId, children);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param image1
+     * @param base
+     * @param image2
+     * @param nonFail
+     * @param children
+     * @param leftFail
+     * @param pair
+     * @param labelId
+     * @return 
+     */
+    private boolean handleSingleFail(Tree<HomomorphismSymbol> image1,
+            TreeAutomaton base, Tree<HomomorphismSymbol> image2, Object nonFail,
+            Pair<Object, Object>[] children, boolean leftFail,
+            Pair<Object, Object> pair, int labelId) {
+        if (image1.getLabel().isVariable()) {
+            Iterable<Rule> rules = base.getRulesTopDown(image2.getLabel().getValue(), base.getIdForState(nonFail));
+            for (Rule r : rules) {
+                handleOnesided(image2, base, r, children, leftFail);
+                makeRule(pair, labelId, children);
+            }
+        } else {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * 
+     * @param arity
+     * @param labelId
+     * @return 
+     */
+    private boolean manageDoubleFail(int arity, int labelId) {
+        if (arity == 0) {
+            this.storeRuleTopDown(this.createRule(arity, labelId, new int[0], 1.0));
+        } else {
+            return true;
+        }
+        
+        return false;
     }
 
     /**
@@ -214,12 +281,15 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
      * @param children 
      */
     private void handleOnesided(Tree<HomomorphismSymbol> image,
-            TreeAutomaton basis, Rule rule, Pair<Object, Object>[] children) {
+            TreeAutomaton basis, Rule rule, Pair<Object, Object>[] children, boolean leftFail) {
+
         Arrays.fill(children, null);
         
         for(int i=0;i<image.getChildren().size();++i){
             Object o = basis.getStateForId(rule.getChildren()[i]);
-            children[image.getChildren().get(i).getLabel().getValue()] = new Pair<>(this.failState,o);
+            
+            children[image.getChildren().get(i).getLabel().getValue()] = leftFail ?
+                    new Pair<>(this.failState,o) : new Pair<>(o, this.failState);
         }
         
         Pair<Object,Object> pa = new Pair<>(this.failState,this.failState);
@@ -239,6 +309,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
      */
     private void insertChildren(Tree<HomomorphismSymbol> image,
             TreeAutomaton automaton, Rule rule, Object[] potentialChildren) {
+
         Arrays.fill(potentialChildren,this.failState);
         
         for(int i=0;i<image.getChildren().size();++i){
