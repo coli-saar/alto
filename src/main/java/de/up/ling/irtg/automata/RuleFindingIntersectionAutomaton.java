@@ -6,13 +6,13 @@
 package de.up.ling.irtg.automata;
 
 import com.google.common.collect.ImmutableSet;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Arrays;
-import org.apache.commons.math3.util.Pair;
 
 /**
  *
@@ -107,8 +107,8 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
         
         Pair<Object,Object> pair = this.getStateForId(parentState);
         
-        Object left = pair.getKey();
-        Object right = pair.getValue();
+        Object left = pair.getLeft();
+        Object right = pair.getRight();
         int arity = this.signature.getArity(labelId);
         
         Tree<HomomorphismSymbol> im1 = hom1.get(labelId);
@@ -122,7 +122,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
         
         if(left == this.failState){
             if(right == this.failState){
-                if(manageDoubleFail(arity, labelId)){
+                if(manageDoubleFail(parentState, arity, labelId)){
                     return EMPTY;
                 }
             }else{
@@ -166,7 +166,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
         Arrays.fill(rightChildren, failState);
         
         if(im1.getLabel().isVariable()){
-            leftChildren[im1.getLabel().getValue()] = pair.getKey();
+            leftChildren[im1.getLabel().getValue()] = pair.getLeft();
             
             Iterable<Rule> rules = ta2.getRulesTopDown(im2.getLabel().getValue(), ta2.getIdForState(right));
             
@@ -178,7 +178,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
             }
         }else{
             if(im2.getLabel().isVariable()){
-                rightChildren[im2.getLabel().getValue()] = pair.getKey();
+                rightChildren[im2.getLabel().getValue()] = pair.getRight();
                 
                 Iterable<Rule> rules = ta1.getRulesTopDown(im2.getLabel().getValue(), ta1.getIdForState(right));
                 
@@ -263,9 +263,9 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
      * @param labelId
      * @return 
      */
-    private boolean manageDoubleFail(int arity, int labelId) {
+    private boolean manageDoubleFail(int parent, int arity, int labelId) {
         if (arity == 0) {
-            this.storeRuleTopDown(this.createRule(arity, labelId, new int[0], 1.0));
+            this.storeRuleTopDown(this.createRule(parent, labelId, new int[0], 1.0));
         } else {
             return true;
         }
