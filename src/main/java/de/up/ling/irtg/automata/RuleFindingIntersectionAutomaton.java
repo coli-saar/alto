@@ -47,7 +47,14 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
     /**
      * 
      */
-    private final Object failState = new Object();
+    private final Object failState = new Object(){
+
+        @Override
+        public String toString() {
+            return "FailureState";
+        }
+        
+    };
     
     /**
      * 
@@ -168,7 +175,8 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
         if(im1.getLabel().isVariable()){
             leftChildren[im1.getLabel().getValue()] = pair.getLeft();
             
-            Iterable<Rule> rules = ta2.getRulesTopDown(im2.getLabel().getValue(), ta2.getIdForState(right));
+            Iterable<Rule> rules = ta2.getRulesTopDown(im2.getLabel().getValue(),
+                    ta2.getIdForState(right));
             
             for(Rule rule : rules){
                 insertChildren(im2, ta2, rule, rightChildren);
@@ -178,9 +186,16 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
             }
         }else{
             if(im2.getLabel().isVariable()){
+                //System.out.println("---------------------");
+                //System.out.println("Here");
+                //System.out.println(this.signature.resolveSymbolId(labelId));
+                //System.out.println(left);
+                //System.out.println(right);
+                //System.out.println("---------------------");
+                
                 rightChildren[im2.getLabel().getValue()] = pair.getRight();
                 
-                Iterable<Rule> rules = ta1.getRulesTopDown(im2.getLabel().getValue(), ta1.getIdForState(right));
+                Iterable<Rule> rules = ta1.getRulesTopDown(im1.getLabel().getValue(), ta1.getIdForState(left));
                 
                 for(Rule rule : rules){
                     this.insertChildren(im1, ta1, rule, leftChildren);
