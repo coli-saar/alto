@@ -73,12 +73,12 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
         this.hom1 = hom1;
         this.hom2 = hom2;
         
-        IntIterator iit1 = t1.finalStates.iterator();
+        IntIterator iit1 = t1.getFinalStates().iterator();
         while(iit1.hasNext()){
             int state1 = iit1.nextInt();
             Object o1 = t1.getStateForId(state1);
             
-            IntIterator iit2 = t2.finalStates.iterator();
+            IntIterator iit2 = t2.getFinalStates().iterator();
             while(iit2.hasNext()){
                 int state2 = iit2.nextInt();
                 Object o2 = t2.getStateForId(state2);
@@ -86,7 +86,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
                 Pair<Object,Object> pair = new Pair<>(o1,o2);
                 
                 int state = this.addState(pair);
-                this.finalStates.add(state);
+                this.addFinalState(state);
             }
         }
     }
@@ -116,7 +116,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
         
         Object left = pair.getLeft();
         Object right = pair.getRight();
-        int arity = this.signature.getArity(labelId);
+        int arity = this.getSignature().getArity(labelId);
         
         Tree<HomomorphismSymbol> im1 = hom1.get(labelId);
         Tree<HomomorphismSymbol> im2 = hom2.get(labelId);
@@ -186,13 +186,6 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Pair<Object,
             }
         }else{
             if(im2.getLabel().isVariable()){
-                //System.out.println("---------------------");
-                //System.out.println("Here");
-                //System.out.println(this.signature.resolveSymbolId(labelId));
-                //System.out.println(left);
-                //System.out.println(right);
-                //System.out.println("---------------------");
-                
                 rightChildren[im2.getLabel().getValue()] = pair.getRight();
                 
                 Iterable<Rule> rules = ta1.getRulesTopDown(im1.getLabel().getValue(), ta1.getIdForState(left));
