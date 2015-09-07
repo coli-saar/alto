@@ -6,8 +6,6 @@
 package de.up.ling.irtg.automata;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.signature.Signature;
-import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 
 /**
@@ -103,6 +101,6 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Pair<Object,Obje
 
     @Override
     public boolean isBottomUpDeterministic() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.left.isBottomUpDeterministic() && this.right.isBottomUpDeterministic();
     }   
 }
