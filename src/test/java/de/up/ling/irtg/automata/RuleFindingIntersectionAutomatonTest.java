@@ -127,23 +127,25 @@ public class RuleFindingIntersectionAutomatonTest {
         hm = new HomomorphismManager(alg1.getSignature(), alg2.getSignature());
         
         TreeAutomaton t1 = alg1.decompose(alg1.parseString("a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"
-                + "a16 a17 a18 a19 a20 a21 a22 a23 a24 a25"));
-        TreeAutomaton t2 = alg2.decompose(alg2.parseString("a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"));
+                + "a16 a17 a18 a19 a20 a21 a22 a23 a24 a25"
+                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"
+                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"));
+        TreeAutomaton t2 = alg2.decompose(alg2.parseString("a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"
+                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"
+                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"));
         
         SpanAligner spa1 = new SpanAligner("", t1);
         SpanAligner spa2 = new SpanAligner("", t2);
         
         Propagator prop = new Propagator();
         
-        FromRuleTreesAutomaton sample = new FromRuleTreesAutomaton(t1);
-        int samps = 1;
+        t1 = makeSample(t1, 10);
         
-        for(int i=0;i<samps;++i){
-            Tree<Rule> samp = t1.getRandomRuleTreeFromInside();
-            sample.addRules(samp);
-        }
+        System.out.println("Sampled first");
         
-        t1 = sample;
+        t2 = makeSample(t2, 10);
+        
+        System.out.println("Sampled second");
         
         t1 = prop.convert(t1, spa1);
         t2 = prop.convert(t2, spa2);
@@ -151,9 +153,30 @@ public class RuleFindingIntersectionAutomatonTest {
         hm.update(t1.getAllLabels(), t2.getAllLabels());
         
         this.rfi = new RuleFindingIntersectionAutomaton(t1, t2, hm.getHomomorphism1(), hm.getHomomorphism2());
-        tdi = new TopDownIntersectionAutomaton(rfi, hm.getRestriction());
+        tdi = new TopDownIntersectionAutomaton(rfi, hm.getRestriction().asConcreteTreeAutomaton());
         
-        Tree<String> t = tdi.viterbi();
+        System.out.println("Before rules");
+        
+        //System.out.println(t1);
+        //System.out.println(t2);
+        
+        
+        System.out.println(tdi.getRandomRuleTreeFromInside());
+    }
+
+    /**
+     * 
+     * @param t
+     * @return 
+     */
+    private TreeAutomaton makeSample(TreeAutomaton t, int samps) {
+        FromRuleTreesAutomaton sample = new FromRuleTreesAutomaton(t);
+        for(int i=0;i<samps;++i){
+            Tree<Rule> samp = t.getRandomRuleTreeFromInside();
+            sample.addRules(samp);
+        }
+        
+        return sample;
     }
 
     /**
