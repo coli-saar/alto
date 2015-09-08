@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.align;
 
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
@@ -389,7 +390,7 @@ public class HomomorphismManager {
      * 
      * @return 
      */
-    public CondensedTreeAutomaton getRestriction(){
+    public TreeAutomaton getRestriction(){
         return this.rm.getRestriction();
     }
 

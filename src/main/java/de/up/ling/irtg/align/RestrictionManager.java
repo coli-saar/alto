@@ -49,7 +49,7 @@ public class RestrictionManager {
     /**
      * 
      */
-    private CondensedTreeAutomaton fullRestriction = null;
+    private TreeAutomaton fullRestriction = null;
 
     /**
      * 
@@ -127,13 +127,13 @@ public class RestrictionManager {
      * 
      * @return 
      */
-    public CondensedTreeAutomaton getRestriction(){
+    public TreeAutomaton getRestriction(){
         if(fullRestriction != null){
             return fullRestriction;
         }else{
             TreeAutomaton cta = this.variableSequenceing.intersect(ordering)
                     .intersect(this.termination).intersect(this.splitOrderedPairing);
-            return this.fullRestriction = ConcreteCondensedTreeAutomaton.fromTreeAutomaton(cta);
+            return this.fullRestriction = cta;
         }
     }
     
