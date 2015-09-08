@@ -120,11 +120,11 @@ public class HomomorphismManager {
      * @param source1
      * @param source2 
      */
-    public HomomorphismManager(Signature source1, Signature source2){
+    public HomomorphismManager(Signature source1, Signature source2, Signature shared){
         this.symbols = new IntArrayList();
         this.isJustInsert = new BooleanArrayList();
         this.variables = new IntArrayList();
-        this.sharedSig = new Signature();
+        this.sharedSig = shared;
         this.source1 = source1;
         this.source2 = source2;
         this.seen1 = new IntAVLTreeSet();
@@ -145,6 +145,16 @@ public class HomomorphismManager {
         this.seenAll1.add(symName);
         this.seenAll2.add(sumName);
     }
+    
+    /**
+     * 
+     * @param source1
+     * @param source2 
+     */
+    public HomomorphismManager(Signature source1, Signature source2){
+        this(source1,source2, new Signature());
+    }
+    
     
     /**
      * 
