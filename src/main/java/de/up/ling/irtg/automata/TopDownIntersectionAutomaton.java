@@ -6,13 +6,15 @@
 package de.up.ling.irtg.automata;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.util.IntInt2IntMap;
+import de.up.ling.irtg.util.NumberWrapping;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 
 /**
  *
  * @author christoph_teichmann
  */
-public class TopDownIntersectionAutomaton extends TreeAutomaton<Pair<Object,Object>> {
+public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
 
     /**
      * 
@@ -37,16 +39,28 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Pair<Object,Obje
         
         IntIterator fitL = left.getFinalStates().iterator();
         while(fitL.hasNext()){
-            Object leftState = left.getStateForId(fitL.nextInt());
+            int l = fitL.nextInt();
             
             IntIterator fitR = right.getFinalStates().iterator();
             while(fitR.hasNext()){
-                Object rightState = right.getStateForId(fitR.nextInt());
+                int r = fitR.nextInt();
                 
-                int fState = this.addState(new Pair(leftState, rightState));
+                int fState = this.addState(getState(l, r));
                 this.addFinalState(fState);
             }
         }
+    }
+
+    
+    
+    /**
+     * 
+     * @param l
+     * @param r
+     * @return 
+     */
+    private static long getState(int left, int right) {
+        return NumberWrapping.combine(left, right);
     }
 
     @Override
@@ -72,22 +86,22 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Pair<Object,Obje
             return this.getRulesTopDownFromExplicit(labelId, parentState);
         }
         
-        Pair<Object,Object> parent = this.getStateForId(parentState);
+        long parent = this.getStateForId(parentState);
         
-        int leftParent = this.left.getIdForState(parent.getLeft());
-        int rightParent = this.right.getIdForState(parent.getRight());
+        int leftParent = NumberWrapping.getFirst(parent);
+        int rightParent = NumberWrapping.getSecond(parent);
         
         Iterable<Rule> itL = this.left.getRulesTopDown(labelId, leftParent);
         Iterable<Rule> itR = this.right.getRulesTopDown(labelId, rightParent);
         
-        Pair<Object,Object>[] children = new Pair[this.getSignature().getArity(labelId)];
+        Long[] children = new Long[this.getSignature().getArity(labelId)];
         for(Rule lr : itL){
             for(Rule rr : itR){
                 for(int i=0;i<rr.getArity();++i){
-                    Object l = this.left.getStateForId(lr.getChildren()[i]);
-                    Object r = this.right.getStateForId(rr.getChildren()[i]);
+                    int l = lr.getChildren()[i];
+                    int r = rr.getChildren()[i];
                     
-                    children[i] = new Pair<>(l,r);
+                    children[i] = getState(l, r);
                 }
                 
                 Rule rule = this.createRule(parent, this.getSignature().resolveSymbolId(labelId), children, 1.0);
