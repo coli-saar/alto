@@ -5,8 +5,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.saar.basic.Pair;
-import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.NumberWrapping;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 
@@ -77,8 +75,6 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
     public boolean supportsTopDownQueries() {
         return true;
     }
-
-    
     
     @Override
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
@@ -104,7 +100,8 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
                     children[i] = getState(l, r);
                 }
                 
-                Rule rule = this.createRule(parent, this.getSignature().resolveSymbolId(labelId), children, 1.0);
+                Rule rule = this.createRule(parent, this.getSignature().resolveSymbolId(labelId),
+                        children, lr.getWeight()*rr.getWeight());
                 this.storeRuleTopDown(rule);
             }
         }

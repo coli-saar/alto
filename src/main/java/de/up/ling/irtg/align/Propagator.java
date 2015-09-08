@@ -45,6 +45,15 @@ public class Propagator {
     public Propagator(Pruner pruner){
         this.pruner = pruner;
     }
+
+    /**
+     * 
+     * @param state
+     * @return 
+     */
+    public static String getVariableLabel(IntSet markers) {
+        return HomomorphismManager.VARIABLE_PREFIX+"_"+markers.toString();
+    }
     
     
     /**
@@ -181,7 +190,7 @@ public class Propagator {
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
             Object st = this.original.getStateForId(state);
-            String loopLabel = HomomorphismManager.VARIABLE_PREFIX+"_"+this.vars.get(state).toString();
+            String loopLabel = getVariableLabel(this.vars.get(state));
             // here we add a loop for the alignments
             this.goal.addRule(this.goal.createRule(st, loopLabel, new Object[] {st}));
             this.local.put(this.goal.getIdForState(st), this.mark.getAlignmentMarkers(st));
