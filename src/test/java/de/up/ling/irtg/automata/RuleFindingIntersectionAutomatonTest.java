@@ -6,9 +6,12 @@
 package de.up.ling.irtg.automata;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.Propagator;
+import de.up.ling.irtg.align.RuleFinder;
 import de.up.ling.irtg.align.alignment_marking.SpanAligner;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
@@ -126,26 +129,24 @@ public class RuleFindingIntersectionAutomatonTest {
         
         hm = new HomomorphismManager(alg1.getSignature(), alg2.getSignature());
         
-        TreeAutomaton t1 = alg1.decompose(alg1.parseString("a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"
-                + "a16 a17 a18 a19 a20 a21 a22 a23 a24 a25"
-                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"
-                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"));
-        TreeAutomaton t2 = alg2.decompose(alg2.parseString("a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"
-                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"
-                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15"));
+        String one = "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 "
+                + "a16 a17 a18 a19 a20 a21 a22 a23 a24 a25 "
+                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15";
+       
+        String two = "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 "
+                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15";
         
-        SpanAligner spa1 = new SpanAligner("", t1);
-        SpanAligner spa2 = new SpanAligner("", t2);
+        TreeAutomaton t1 = alg1.decompose(alg1.parseString(one));
+        TreeAutomaton t2 = alg2.decompose(alg2.parseString(two));
+        
+        SpanAligner spa1 = new SpanAligner("0:1:1 1:2:2 2:3:3 3:4:4 4:5:5 5:6:6", t1);
+        SpanAligner spa2 = new SpanAligner("0:1:1 0:1:2 0:1:3 1:2:4 1:2:5 1:2:6", t2);
         
         Propagator prop = new Propagator();
         
-        t1 = makeSample(t1, 10);
+        t1 = makeSample(t1, 1);
         
-        System.out.println("Sampled first");
-        
-        t2 = makeSample(t2, 10);
-        
-        System.out.println("Sampled second");
+        t2 = makeSample(t2, 1);
         
         t1 = prop.convert(t1, spa1);
         t2 = prop.convert(t2, spa2);
@@ -155,13 +156,17 @@ public class RuleFindingIntersectionAutomatonTest {
         this.rfi = new RuleFindingIntersectionAutomaton(t1, t2, hm.getHomomorphism1(), hm.getHomomorphism2());
         tdi = new TopDownIntersectionAutomaton(rfi, hm.getRestriction().asConcreteTreeAutomaton());
         
-        System.out.println("Before rules");
+        Tree<String> t = tdi.getRandomTreeFromInside();
+        SingletonAutomaton st = new SingletonAutomaton(t);
         
-        //System.out.println(t1);
-        //System.out.println(t2);
+        RuleFinder rf = new RuleFinder();
+        InterpretedTreeAutomaton ita = rf.getInterpretation(st, hm, alg1, alg2);
         
+        Interpretation pret1 = ita.getInterpretation("left");
+        Interpretation pret2 = ita.getInterpretation("right");
         
-        System.out.println(tdi.getRandomRuleTreeFromInside());
+        assertEquals(alg1.parseString(one),pret1.interpret(t));
+        assertEquals(alg2.parseString(two),pret2.interpret(t));
     }
 
     /**
