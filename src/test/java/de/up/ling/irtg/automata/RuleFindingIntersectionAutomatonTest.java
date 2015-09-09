@@ -144,9 +144,9 @@ public class RuleFindingIntersectionAutomatonTest {
         
         Propagator prop = new Propagator();
         
-        t1 = makeSample(t1, 2);
+        t1 = makeSample(t1, 10);
         
-        t2 = makeSample(t2, 2);
+        t2 = makeSample(t2, 10);
         
         t1 = prop.convert(t1, spa1);
         t2 = prop.convert(t2, spa2);
@@ -156,17 +156,25 @@ public class RuleFindingIntersectionAutomatonTest {
         this.rfi = new RuleFindingIntersectionAutomaton(t1, t2, hm.getHomomorphism1(), hm.getHomomorphism2());
         tdi = new TopDownIntersectionAutomaton(rfi, hm.getRestriction().asConcreteTreeAutomaton());
         
-        Tree<String> t = tdi.getRandomTreeFromInside();
-        SingletonAutomaton st = new SingletonAutomaton(t);
-        
-        RuleFinder rf = new RuleFinder();
-        InterpretedTreeAutomaton ita = rf.getInterpretation(st, hm, alg1, alg2);
-        
-        Interpretation pret1 = ita.getInterpretation("left");
-        Interpretation pret2 = ita.getInterpretation("right");
-        
-        assertEquals(alg1.parseString(one),pret1.interpret(t));
-        assertEquals(alg2.parseString(two),pret2.interpret(t));
+        int fs = 0;
+        for(int i=0;i<50;++i){
+            Tree<String> t = tdi.getRandomTree();
+            if(containsNull(t)){
+                continue;
+            }else{
+                ++fs;
+            }
+            SingletonAutomaton st = new SingletonAutomaton(t);
+            
+            RuleFinder rf = new RuleFinder();
+            InterpretedTreeAutomaton ita = rf.getInterpretation(st, hm, alg1, alg2);
+            
+            Interpretation pret1 = ita.getInterpretation("left");
+            Interpretation pret2 = ita.getInterpretation("right");
+            
+            assertEquals(alg1.parseString(one),pret1.interpret(t));
+            assertEquals(alg2.parseString(two),pret2.interpret(t));
+        }
     }
 
     /**
@@ -191,4 +199,18 @@ public class RuleFindingIntersectionAutomatonTest {
     public void testIsBottomUpDeterministic() {        
         assertFalse(this.rfi.isBottomUpDeterministic());
     }   
+
+    private boolean containsNull(Tree<String> t) {
+        if(t== null || t.getLabel() == null){
+            return true;
+        }
+        
+        for(Tree<String> q : t.getChildren()){
+            if(containsNull(q)){
+                return true;
+            }
+        }
+        
+        return false;
+    }
 }
