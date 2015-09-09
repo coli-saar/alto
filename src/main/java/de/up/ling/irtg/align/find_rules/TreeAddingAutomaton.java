@@ -102,13 +102,13 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
     }
     
     
-    public int addVariableTree(Tree<Rule> t){
+    public int addVariableTree(Tree<Integer> t){
         StringBuilder sb = new StringBuilder();
         sb.append(t.getLabel());
         sb.append("(");
         int state;
         
-        int code = t.getLabel().getLabel();
+        int code = t.getLabel();
         
         int[] children = new int[t.getChildren().size()];
         for(int i=0;i<t.getChildren().size();++i){          
