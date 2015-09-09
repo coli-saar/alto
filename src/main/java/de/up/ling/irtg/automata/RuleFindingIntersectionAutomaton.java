@@ -11,6 +11,7 @@ import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.NumberWrapping;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntRBTreeMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Arrays;
@@ -53,7 +54,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
     /**
      * 
      */
-    private final Long2IntRBTreeMap seen;
+    private final Long2IntMap seen;
     
     
     /**
@@ -145,25 +146,23 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
             return EMPTY;
         }
         
-        int[] children = new int[arity];
-        
         if(left == FAIL){
             if(right == FAIL){
                 if(manageDoubleFail(parentState, arity, labelId)){
                     return EMPTY;
                 }
             }else{
-                if(handleSingleFail(im1, ta2, im2, right, children, true, parentState, labelId)){
+                if(handleSingleFail(im1, ta2, im2, right, true, parentState, labelId, arity)){
                     return EMPTY;
                 }
             }
         }else{
             if(right == FAIL){
-                if(handleSingleFail(im2, ta1, im1, left, children, false, parentState, labelId)){
+                if(handleSingleFail(im2, ta1, im1, left, false, parentState, labelId, arity)){
                     return EMPTY;
                 }
             }else{
-                handleNoFail(arity, im1, parentState, im2, right, children, labelId, left);
+                handleNoFail(arity, im1, parentState, im2, right, labelId, left);
             }
         }
         
@@ -183,9 +182,8 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
      */
     private void handleNoFail(int arity, Tree<HomomorphismSymbol> im1,
             int parent, Tree<HomomorphismSymbol> im2,
-            int right, int[] children, int labelId,
+            int right, int labelId,
             int left) {
-
         int[] leftChildren = new int[arity];
         int[] rightChildren = new int[arity];
         
@@ -200,7 +198,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
             for(Rule rule : rules){
                 insertChildren(im2, rule, rightChildren);
                 
-                buildChildren(arity, children, leftChildren, rightChildren);
+                int[] children = buildChildren(arity, leftChildren, rightChildren);
                 makeRule(parent, labelId, children, rule.getWeight());
             }
         }else{
@@ -212,12 +210,12 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
                 for(Rule rule : rules){
                     this.insertChildren(im1, rule, leftChildren);
                     
-                    buildChildren(arity, children, leftChildren, rightChildren);
+                    int[] children = buildChildren(arity, leftChildren, rightChildren);
                     makeRule(parent, labelId, children, rule.getWeight());
                 }
             }else{
                 makeTwoRules(im1, left, im2, right, leftChildren,
-                        rightChildren, arity, children, parent, labelId);
+                        rightChildren, arity, parent, labelId);
             }
         }
     }
@@ -238,8 +236,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
     private void makeTwoRules(Tree<HomomorphismSymbol> im1, int left,
             Tree<HomomorphismSymbol> im2, int right,
             int[] leftChildren, int[] rightChildren,
-            int arity, int[] children,
-            int parent, int labelId) {
+            int arity, int parent, int labelId) {
 
         Iterable<Rule> lRules = this.ta1.getRulesTopDown(im1.getLabel().getValue(), left);
         Iterable<Rule> rRules = this.ta2.getRulesTopDown(im2.getLabel().getValue(), right);
@@ -250,7 +247,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
             for(Rule rRule : rRules){
                 insertChildren(im2, rRule, rightChildren);
                 
-                buildChildren(arity, children, leftChildren, rightChildren);
+                int[] children = buildChildren(arity, leftChildren, rightChildren);
                 makeRule(parent, labelId, children,lRule.getWeight()*rRule.getWeight());
             }
         }
@@ -269,13 +266,13 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
      * @return 
      */
     private boolean handleSingleFail(Tree<HomomorphismSymbol> image1,
-            TreeAutomaton base, Tree<HomomorphismSymbol> image2, int nonFail,
-            int[] children, boolean leftFail,
-            int parent, int labelId) {
+            TreeAutomaton base, Tree<HomomorphismSymbol> image2, int nonFail, boolean leftFail,
+            int parent, int labelId, int arity) {
         if (image1.getLabel().isVariable()) {
             Iterable<Rule> rules = base.getRulesTopDown(image2.getLabel().getValue(), nonFail);
             for (Rule r : rules) {
-                handleOnesided(image2, r, children, leftFail);
+                int[] children = handleOnesided(image2, r, leftFail, arity);
+                
                 makeRule(parent, labelId, children,r.getWeight());
             }
         } else {
@@ -307,9 +304,9 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
      * @param rule
      * @param children 
      */
-    private void handleOnesided(Tree<HomomorphismSymbol> image,
-            Rule rule, int[] children, boolean leftFail) {
-
+    private int[] handleOnesided(Tree<HomomorphismSymbol> image,
+            Rule rule, boolean leftFail, int arity) {
+        int[] children = new int[arity];
         Arrays.fill(children, this.seen.defaultReturnValue());
         
         for(int i=0;i<image.getChildren().size();++i){
@@ -325,6 +322,8 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
                 children[i] = pa;
             }
         }
+        
+        return children;
     }
 
     /**
@@ -352,11 +351,15 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
      * @param leftChildren
      * @param rightChildren 
      */
-    private void buildChildren(int arity, int[] children,
+    private int[] buildChildren(int arity,
             int[] leftChildren, int[] rightChildren) {
+        int[] children = new int[arity];
+        
         for(int i=0;i<arity;++i){
             children[i] = makeState(leftChildren[i],rightChildren[i]);
         }
+        
+        return children;
     }
 
     /**
@@ -367,7 +370,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
      */
     private void makeRule(int parent, int labelId,
             int[] children, double weight) {
-        Rule r = this.createRule(parent, labelId, Arrays.copyOf(children, children.length), weight);
+        Rule r = this.createRule(parent, labelId, children, weight);
         this.storeRuleTopDown(r);
     }
 

@@ -16,7 +16,6 @@ import de.up.ling.irtg.align.alignment_marking.SpanAligner;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -134,7 +133,8 @@ public class RuleFindingIntersectionAutomatonTest {
                 + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15";
        
         String two = "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 "
-                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15";
+                + "a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16"
+                + " a17 a18 a19 a20";
         
         TreeAutomaton t1 = alg1.decompose(alg1.parseString(one));
         TreeAutomaton t2 = alg2.decompose(alg2.parseString(two));
@@ -144,9 +144,9 @@ public class RuleFindingIntersectionAutomatonTest {
         
         Propagator prop = new Propagator();
         
-        t1 = makeSample(t1, 1);
+        t1 = makeSample(t1, 2);
         
-        t2 = makeSample(t2, 1);
+        t2 = makeSample(t2, 2);
         
         t1 = prop.convert(t1, spa1);
         t2 = prop.convert(t2, spa2);
