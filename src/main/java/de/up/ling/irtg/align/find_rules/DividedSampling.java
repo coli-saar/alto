@@ -12,6 +12,7 @@ import de.up.ling.irtg.align.StateAlignmentMarking;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,9 +37,14 @@ public class DividedSampling {
     public InterpretedTreeAutomaton findRules(List<TreeAutomaton> left, List<TreeAutomaton> right,
                                             List<StateAlignmentMarking> leftAlign,
                                             List<StateAlignmentMarking> rightAlign, Signature leftSig,
-                                            Signature rightSig, Propagator prop){
+                                            Signature rightSig, Propagator prop, SampleDriver drive){
         Signature shared = new Signature();
         List<HomomorphismManager> connections = new ArrayList<>();
+        
+        IntSet varsL = new IntOpenHashSet();
+        IntSet varsR = new IntOpenHashSet();
+        
+        
         
         for(int i=0;i<left.size() && i<right.size();++i){
             TreeAutomaton t1 = left.get(i);
@@ -47,7 +53,13 @@ public class DividedSampling {
             Int2ObjectMap<IntSet> setL = prop.propagate(t1, leftAlign.get(i));
             Int2ObjectMap<IntSet> setR = prop.propagate(t2, rightAlign.get(i));
             
+            dumpVars(varsL,setL, prop);
+            dumpVars(varsR,setR, prop);
             
+            HomomorphismManager hom = new HomomorphismManager(leftSig, rightSig, shared);
+            
+            hom.update(t1.getAllLabels(), t2.getAllLabels());
+            hom.update(varsL, varsR);
             
             
         }
@@ -55,5 +67,9 @@ public class DividedSampling {
         
         //TODO
         return null;
+    }
+
+    private void dumpVars(IntSet varsL, Int2ObjectMap<IntSet> setL, Propagator prop) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
