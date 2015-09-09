@@ -156,14 +156,12 @@ public class RuleFindingIntersectionAutomatonTest {
         this.rfi = new RuleFindingIntersectionAutomaton(t1, t2, hm.getHomomorphism1(), hm.getHomomorphism2());
         tdi = new TopDownIntersectionAutomaton(rfi, hm.getRestriction().asConcreteTreeAutomaton());
         
-        int fs = 0;
         for(int i=0;i<50;++i){
             Tree<String> t = tdi.getRandomTree();
             if(containsNull(t)){
                 continue;
-            }else{
-                ++fs;
             }
+            
             SingletonAutomaton st = new SingletonAutomaton(t);
             
             RuleFinder rf = new RuleFinder();
