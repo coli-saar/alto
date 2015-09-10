@@ -250,4 +250,9 @@ public abstract class StateWeighter {
      * @param weight 
      */
     protected abstract void update(Tree<Rule> observation, double weight);
+    
+    /**
+     * 
+     */
+    public abstract void reset();
 }

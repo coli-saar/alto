@@ -9,6 +9,8 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.Propagator;
 import de.up.ling.irtg.align.StateAlignmentMarking;
+import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
+import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -53,6 +55,8 @@ public class DividedSampling {
             Int2ObjectMap<IntSet> setL = prop.propagate(t1, leftAlign.get(i));
             Int2ObjectMap<IntSet> setR = prop.propagate(t2, rightAlign.get(i));
             
+            reduceToShared(setL,setR);
+            
             dumpVars(varsL,setL, prop);
             dumpVars(varsR,setR, prop);
             
@@ -61,7 +65,11 @@ public class DividedSampling {
             hom.update(t1.getAllLabels(), t2.getAllLabels());
             hom.update(varsL, varsR);
             
+            reweight(t1,t2,setL,setR);
             
+            TreeAutomaton ta = new TopDownIntersectionAutomaton(
+                    new RuleFindingIntersectionAutomaton(t1, t2, hom.getHomomorphism1(),
+                            hom.getHomomorphism2()), hom.getRestriction());
         }
         
         
@@ -69,7 +77,16 @@ public class DividedSampling {
         return null;
     }
 
+    
     private void dumpVars(IntSet varsL, Int2ObjectMap<IntSet> setL, Propagator prop) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private void reduceToShared(Int2ObjectMap<IntSet> setL, Int2ObjectMap<IntSet> setR) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
+    private void reweight(TreeAutomaton t1, TreeAutomaton t2, Int2ObjectMap<IntSet> setL, Int2ObjectMap<IntSet> setR) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

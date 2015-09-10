@@ -78,4 +78,9 @@ public class MaxCountWeighter extends StateWeighter {
             this.update(observation.getChildren().get(i), weight);
         }
     }
+
+    @Override
+    public void reset() {
+        counts.clear();
+    }
 }
