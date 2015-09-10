@@ -5,11 +5,14 @@
  */
 package de.up.ling.irtg.align.find_rules;
 
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.List;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497a;
 
@@ -79,7 +82,7 @@ public abstract class StateWeighter {
      * 
      * @return 
      */
-    public Tree<Integer> nextSample(){
+    public Tree<Rule> nextSample(){
         while (true) {
             this.lastSampleWeight = 0.0;
 
@@ -108,7 +111,7 @@ public abstract class StateWeighter {
                     break;
                 }
 
-                Tree<Integer> ti = this.sampleTreeForState(state);
+                Tree<Rule> ti = this.sampleTreeForState(state);
 
                 if (ti != null) {
                     this.lastSampleWeight += Math.log(this.getFullStateWeight(state));
@@ -141,8 +144,59 @@ public abstract class StateWeighter {
      * @param state
      * @return 
      */
-    private Tree<Integer> sampleTreeForState(int state) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private Tree<Rule> sampleTreeForState(int state) {
+        Iterable<Rule> it = this.basis.getRulesTopDown(state);
+        List<Tree<Rule>> children = new ObjectArrayList<>();
+        
+        double oldWeight = this.lastSampleWeight;
+        
+        mainLoop : while(true){
+            this.lastSampleWeight = oldWeight;
+            double sum = 0.0;
+            
+            for(Rule r : it){
+                sum += makeWeight(r);
+            }
+            
+            if(sum <= 0.0){
+                this.setUseles(state);
+                return null;
+            }
+            
+            double border = sum*this.rg.nextDouble();
+            
+            Rule r = null;
+            
+            for(Rule k : it){
+                border -= makeWeight(k);
+                
+                if(border <= 0.0){
+                    r = k;
+                    break;
+                }
+            }
+            
+            if(r == null){
+                this.setUseles(state);
+                return null;
+            }
+            
+            children.clear();
+            
+            for(int i=0;i<r.getArity();++i){
+                Tree<Rule> t = this.sampleTreeForState(r.getChildren()[i]);
+                
+                if(t == null){
+                    continue mainLoop;
+                }else{
+                    children.add(t);
+                }
+            }
+            
+            this.lastSampleWeight += Math.log(this.makeWeight(r)) - Math.log(sum);
+            
+            return Tree.create(r, children);
+        }
     }
 
     /**
@@ -151,4 +205,40 @@ public abstract class StateWeighter {
      * @return 
      */
     public abstract double getStateWeight(int state);
+
+    /**
+     * 
+     * @param r
+     * @return 
+     */
+    private double makeWeight(Rule r) {
+        double score = 0.0;
+        
+        for(int i=0;i<r.getArity();++i){
+            double val = this.getFullStateWeight(r.getChildren()[i]);
+            
+            if(val <= 0.0){
+                return 0.0;
+            }else{
+                score = combine(score,val);
+            }
+        }
+        
+        return score;
+    }
+
+    /**
+     * 
+     * @param score
+     * @param val
+     * @return 
+     */
+    protected abstract double combine(double score, double val);
+    
+    /**
+     * 
+     * @param observation
+     * @param weight 
+     */
+    protected abstract void update(Tree<Rule> observation, double weight);
 }
