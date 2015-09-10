@@ -50,6 +50,15 @@ public abstract class StateWeighter {
     
     /**
      * 
+     * @param basis 
+     */
+    public StateWeighter(TreeAutomaton basis) {
+        this.basis = basis;
+        this.rg = new Well44497a();
+    }
+    
+    /**
+     * 
      * @param state 
      */
     public void setUseles(int state){
