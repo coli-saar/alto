@@ -10,5 +10,11 @@ package de.up.ling.irtg.align.find_rules;
  * @author christoph_teichmann
  */
 public interface SampleDriver {
+
+    public double getSmoothing();
+
+    public int getInitialSampleCount(int i);
+
+    public int rounds();
     
 }

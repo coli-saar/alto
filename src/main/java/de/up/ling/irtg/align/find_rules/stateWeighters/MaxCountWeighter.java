@@ -81,6 +81,7 @@ public class MaxCountWeighter extends StateWeighter {
 
     @Override
     public void reset() {
+        super.reset();
         counts.clear();
     }
 }

@@ -30,7 +30,7 @@ public abstract class StateWeighter {
     /**
      * 
      */
-    private final TreeAutomaton basis;
+    private TreeAutomaton basis;
     
     
     /**
@@ -254,5 +254,24 @@ public abstract class StateWeighter {
     /**
      * 
      */
-    public abstract void reset();
+    public void reset(){
+        this.useless.clear();
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public TreeAutomaton getBasis() {
+        return basis;
+    }
+
+    /**
+     * 
+     * @param basis 
+     */
+    public void setBasis(TreeAutomaton basis) {
+        this.basis = basis;
+        this.reset();
+    }
 }
