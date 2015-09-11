@@ -6,6 +6,8 @@
 package de.up.ling.irtg.automata;
 
 import de.up.ling.irtg.util.NumberWrapping;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntRBTreeMap;
@@ -133,5 +135,43 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
     @Override
     public boolean isBottomUpDeterministic() {
         return this.left.isBottomUpDeterministic() && this.right.isBottomUpDeterministic();
-    }   
+    }
+
+    @Override
+    public IntIterable getLabelsTopDown(int parentState) {
+        long parent = this.getStateForId(parentState);
+        int lState = NumberWrapping.getFirst(parent);
+        int rState = NumberWrapping.getSecond(parent);
+        
+        IntIterable l = this.left.getLabelsTopDown(lState);
+        IntIterable r = this.right.getLabelsTopDown(rState);
+        
+        Int2IntOpenHashMap ret = new Int2IntOpenHashMap();
+        
+        IntIterator i = l.iterator();
+        int lNum = 0;
+        while(i.hasNext()){
+            ret.addTo(i.nextInt(), 1);
+            ++lNum;
+        }
+        i = r.iterator();
+        int rNum = 0;
+        while(i.hasNext()){
+            ret.addTo(i.nextInt(), 1);
+            ++rNum;
+        }
+        if(lNum < rNum){
+            i = l.iterator();
+        }else{
+            i = r.iterator();
+        }
+        while(i.hasNext()){
+            int key = i.nextInt();
+            if(ret.get(key) < 2){
+                ret.remove(key);
+            }
+        }
+        
+        return ret.keySet();
+    }
 }
