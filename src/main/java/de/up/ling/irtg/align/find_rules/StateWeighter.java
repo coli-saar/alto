@@ -249,7 +249,7 @@ public abstract class StateWeighter {
      * @param observation
      * @param weight 
      */
-    protected abstract void update(Tree<Rule> observation, double weight);
+    public abstract void update(Tree<Rule> observation, double weight);
     
     /**
      * 

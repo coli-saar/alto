@@ -69,7 +69,7 @@ public class MaxCountWeighter extends StateWeighter {
     }
 
     @Override
-    protected void update(Tree<Rule> observation, double weight) {
+    public void update(Tree<Rule> observation, double weight) {
         Rule r = observation.getLabel();
         
         this.counts.addTo(r.getParent(), weight);
