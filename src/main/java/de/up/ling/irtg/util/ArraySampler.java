@@ -65,21 +65,21 @@ public class ArraySampler
 		
 		for(double d : logWeights)
 		{
-			max = Math.max(max, d);
+                    max = Math.max(max, d);
 		}
 		
 		double sum = 0.0;
 		
 		for (int i = 0; i < logWeights.length; ++i)
 		{
-			sum += logWeights[i] = Math.exp(logWeights[i]-max);
+                    sum += logWeights[i] = Math.exp(logWeights[i]-max);
 		}
 		
 		double all = 0.0;
 		
 		for(int i=0;i<logWeights.length;++i)
 		{
-			logWeights[i] = all += (logWeights[i]/sum);
+                    logWeights[i] = all += (logWeights[i]/sum);
 		}
 	}
 
