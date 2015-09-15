@@ -10,6 +10,7 @@ import de.up.ling.tree.Tree;
 /**
  *
  * @author christoph_teichmann
+ * @param <State>
  */
 public class FromRuleTreesAutomaton<State> extends TreeAutomaton<State> {
 
@@ -27,6 +28,7 @@ public class FromRuleTreesAutomaton<State> extends TreeAutomaton<State> {
         
         this.parent = parent;
         this.stateInterner = parent.getStateInterner();
+        this.finalStates = parent.finalStates;
     }
 
     /**
@@ -37,9 +39,6 @@ public class FromRuleTreesAutomaton<State> extends TreeAutomaton<State> {
         Rule r = ruleTree.getLabel();
         
         this.storeRuleBoth(r);
-        if(this.parent.finalStates.contains(r.getParent())){
-            this.finalStates.add(r.getParent());
-        }
         
         for(int i=0;i<ruleTree.getChildren().size();++i){
             this.addRules(ruleTree.getChildren().get(i));
