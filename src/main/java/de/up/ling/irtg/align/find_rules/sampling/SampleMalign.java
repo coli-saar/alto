@@ -14,7 +14,6 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -89,7 +88,7 @@ public abstract class SampleMalign {
         this.malign = malign;
         this.worker.clear();
     }
-    
+   
     /**
      * 
      * @param config
@@ -164,7 +163,7 @@ public abstract class SampleMalign {
      * @param state
      * @return 
      */
-    private double getSmoothedStateWeigth(int state) {
+    public double getSmoothedStateWeigth(int state) {
         if(this.useLess.contains(state)){
             return 0.0;
         }else{
@@ -246,7 +245,7 @@ public abstract class SampleMalign {
     /**
      * 
      */
-    public class SamplingConfiguration extends SampleBenign.Configuration{
+    public static class SamplingConfiguration extends SampleBenign.Configuration{
         /**
          * 
          */

@@ -19,6 +19,7 @@ import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -118,6 +119,16 @@ public class HomomorphismManager {
     
     /**
      * 
+     */
+    private final int defaultVariable;
+    
+    /**
+     * 
+     */
+    private final IntSet mapsToVariable = new IntOpenHashSet();
+    
+    /**
+     * 
      * @param source1
      * @param source2 
      */
@@ -142,9 +153,19 @@ public class HomomorphismManager {
         
         int symName = this.source1.addSymbol(VARIABLE_PREFIX, 1);
         int sumName = this.source2.addSymbol(VARIABLE_PREFIX, 1);
-        this.handleVariable(0, symName);
+        this.defaultVariable = this.handleVariable(0, symName);
+        
         this.seenAll1.add(symName);
         this.seenAll2.add(sumName);
+    }
+    
+    /**
+     * 
+     * @param k
+     * @return 
+     */
+    public boolean isVariable(int k){
+        return this.variables.contains(k);
     }
     
     /**
@@ -155,9 +176,17 @@ public class HomomorphismManager {
     public HomomorphismManager(Signature source1, Signature source2){
         this(source1,source2, new Signature());
     }
-    
+
+    /**
+     * 
+     * @return 
+     */
+    public int getDefaultVariable() {
+        return defaultVariable;
+    }
     
     /**
+     * 
      * 
      * @return 
      */
@@ -412,7 +441,7 @@ public class HomomorphismManager {
      * @param sigNum
      * @param symName 
      */
-    private void handleVariable(int sigNum, int symName) {
+    private int handleVariable(int sigNum, int symName) {
         this.isJustInsert.clear();
         this.symbols.clear();
         this.variables.clear();
@@ -420,7 +449,7 @@ public class HomomorphismManager {
         String sym = (sigNum == 0 ? this.source1 : this.source2).resolveSymbolId(symName);
         
         if(!source1.contains(sym) || !source2.contains(sym)){
-            return;
+            return -1;
         }
         
         this.isJustInsert.add(false);
@@ -430,7 +459,9 @@ public class HomomorphismManager {
         this.symbols.add(source1.getIdForSymbol(sym));
         this.symbols.add(source2.getIdForSymbol(sym));
         
-        this.addMapping(symbols, variables, isJustInsert, 1);
+        int k = this.sharedSig.getIdForSymbol(this.addMapping(symbols, variables, isJustInsert, 1));
+        this.variables.add(k);
+        return k;
     }
 
     /**
