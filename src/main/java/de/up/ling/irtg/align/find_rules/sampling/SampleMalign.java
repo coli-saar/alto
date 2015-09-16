@@ -106,10 +106,10 @@ public abstract class SampleMalign {
             
             this.worker.setAutomaton(benign);
             
-            this.worker.getSample(config.getInnerConfiguration(i));
+            this.worker.getSample(config);
         }
         
-        this.worker.getSample(config.getInnerConfiguration(0));
+        this.worker.getSample(config);
         
         return list;
     }
@@ -246,7 +246,7 @@ public abstract class SampleMalign {
     /**
      * 
      */
-    public class SamplingConfiguration{
+    public class SamplingConfiguration extends SampleBenign.Configuration{
         /**
          * 
          */
@@ -256,15 +256,5 @@ public abstract class SampleMalign {
          * 
          */
         public int outerSampleSize;
-        
-        /**
-         * Rounds are numbered 1 to some maximum, the number 0 indicates the round in which
-         * we actually generate the final sample
-         * 
-         * @return 
-         */
-        private SampleBenign.Configuration getInnerConfiguration(int round) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
     }
 }
