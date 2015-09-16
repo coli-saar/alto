@@ -33,35 +33,32 @@ public abstract class SampleBenign {
      * 
      */
     private final TreeAutomaton.BottomUpStateVisitor visit = new TreeAutomaton.BottomUpStateVisitor() {
+        
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
-            double sum = 0.0;
+            double max = Double.NEGATIVE_INFINITY;
             
             for(Rule r : rulesTopDown){
-               double weight = makeRuleWeight(r);
-               r.setWeight(weight);
+               double add = Math.log(makeRuleWeight(r));
+               for(int child : r.getChildren()){
+                   add += insides.get(child);
+               }
                
-               sum += weight;
+               r.setWeight(add);
+               max = Math.max(max, add);
             }
             
-            
-            double w = 0.0;
-            
+            double sum = 0.0;
             for(Rule r : rulesTopDown){
-                double mult = r.getWeight() / sum;
-                
-                double add = mult;
-                for(int child : r.getChildren()){
-                    add *= insides.get(child);
-                }
-                
-                w += add;
-                r.setWeight(mult);
+               double add = Math.exp(r.getWeight()-max);
+               
+               r.setWeight(add);
+               sum += add;
             }
             
-            insides.put(state, w);
+            insides.put(state, Math.log(sum)+max);
             for(Rule r : rulesTopDown){
-                r.setWeight(r.getWeight()/w);
+                r.setWeight(r.getWeight()/sum);
             }
         }
     };
@@ -104,24 +101,20 @@ public abstract class SampleBenign {
     /**
      * 
      * @param smooth
-     * @param benign 
      */
-    public SampleBenign(double smooth, TreeAutomaton benign) {
+    public SampleBenign(double smooth) {
         this.smooth = smooth;
-        this.benign = benign;
         this.arrSamp = new ArraySampler(new Well44497a());
         this.rg = new Well44497a();
     }
     
     /**
      * 
-     * @param smooth
-     * @param benign 
+     * @param smooth 
      * @param seed 
      */
-    public SampleBenign(double smooth, TreeAutomaton benign, long seed) {
+    public SampleBenign(double smooth, long seed) {
         this.smooth = smooth;
-        this.benign = benign;
         Well44497a w = new Well44497a(seed);
         this.arrSamp = new ArraySampler(w);
         this.rg = new Well44497a(w.nextLong());
@@ -151,9 +144,19 @@ public abstract class SampleBenign {
         
         IntIterator iit = this.benign.getFinalStates().iterator();
         
-        insideSum = 0.0;
+        double max = Double.NEGATIVE_INFINITY;
         while(iit.hasNext()){
-            this.insideSum += this.insides.get(iit.nextInt());
+            max = Math.max(max, this.insides.get(iit.nextInt()));
+        }
+        
+        insideSum = 0.0;
+        iit = this.benign.getFinalStates().iterator();
+        while(iit.hasNext()){
+            int i = iit.nextInt();
+            double val = Math.exp(this.insides.get(i)-max);
+            
+            this.insideSum += val;
+            this.insides.put(i, val);
         }
     }
     
@@ -206,11 +209,15 @@ public abstract class SampleBenign {
             addTargetWeight(sample,weights,config);
             
             this.arrSamp.turnIntoCWF(weights);
-            for(int samp=0;samp<numberOfSamples;++samp){
-                resample.add(sample.get(this.arrSamp.produceSample(weights)));
-            }
             
-            this.adapt(resample);
+            for(int i=0;i<weights.size();++i){
+                this.adapt(sample.get(i), weights.get(i) - (i > 0 ? weights.get(i-1) : 0.0));
+            }
+        }
+        
+        int numberOfSamples = config.sampleSize.apply(0);
+        for(int samp=0;samp<numberOfSamples;++samp){
+            resample.add(sample.get(this.arrSamp.produceSample(weights)));
         }
         
         return resample;
@@ -242,7 +249,7 @@ public abstract class SampleBenign {
         Tree<Rule> samp = sample(md,state);
         
         sample.add(samp);
-        weights.add(md.getValue());
+        weights.add(-md.getValue());
     }
 
     /**
@@ -262,23 +269,12 @@ public abstract class SampleBenign {
 
     /**
      * 
-     * @param resample 
-     */
-    private void adapt(List<Tree<Rule>> resample) {
-        for(int i=0;i<resample.size();++i){
-            Tree<Rule> t = resample.get(i);
-            this.adapt(t);
-        }
-    }
-
-    /**
-     * 
      * @param t 
      */
-    private void adapt(Tree<Rule> t) {
-        this.counts.addTo(t.getLabel().getParent(), 1.0);
+    private void adapt(Tree<Rule> t, double amount) {
+        this.counts.addTo(t.getLabel().getParent(), amount);
         for(int i=0;i<t.getChildren().size();++i){
-            adapt(t.getChildren().get(i));
+            adapt(t.getChildren().get(i),amount);
         }
     }
     
@@ -299,10 +295,12 @@ public abstract class SampleBenign {
            if(d <= 0.0){
                choice = j;
                md.add(Math.log(j.getWeight()));
+               break;
            }
         }
         
         List<Tree<Rule>> l = new ArrayList<>();
+        
         for(int child :  choice.getChildren()){
             l.add(this.sample(md, child));
         }
@@ -313,7 +311,7 @@ public abstract class SampleBenign {
     /**
      * 
      */
-    public class Configuration{
+    public static class Configuration{
         /**
          * 
          */
