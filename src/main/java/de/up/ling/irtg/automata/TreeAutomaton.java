@@ -33,6 +33,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.DebuggingWriter;
 import de.up.ling.irtg.util.FastutilUtils;
+import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.irtg.util.TupleIterator;
@@ -54,6 +55,13 @@ import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
+import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
+import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.longs.LongList;
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import java.io.Serializable;
@@ -2070,6 +2078,38 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        }
 //    }
 
+    
+    public double getLogWeightRaw(final Tree<Integer> t){
+        Map<Tree<Integer>,Int2DoubleMap> inside = new Object2ObjectOpenHashMap<>();
+        
+        double sum = Double.NEGATIVE_INFINITY;
+        IntIterator iit = this.getFinalStates().iterator();
+        
+        while(iit.hasNext()){
+            int state = iit.nextInt();
+            
+            double log = getLogWeightRaw(t,state, inside);
+            sum = LogSpaceOperations.addAlmostZero(log, sum);
+        }
+        
+        return sum;
+    }
+    
+    /**
+     * 
+     * @param t
+     * @param state
+     * @param inside
+     * @return 
+     */
+    private double getLogWeightRaw(final Tree<Integer> t,final int state,
+                                    final Map<Tree<Integer>,Int2DoubleMap> inside){
+        
+        
+        //TODO
+        return 0.0;
+    }
+    
     /**
      * Computes the weight of the tree, given the (weighted) tree automaton. The
      * weight is the sum of the weights of all runs with which the automaton can
