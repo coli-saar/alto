@@ -8,8 +8,8 @@ package de.up.ling.irtg.align.find_rules;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.IntDoubleFunction;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.Int2DoubleFunction;
 import java.util.Arrays;
 
 /**
@@ -49,7 +49,7 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
      * @param smooth 
      * @param indicator 
      */
-    public TreeAddingAutomaton(Signature signature, Int2DoubleFunction smooth,
+    public TreeAddingAutomaton(Signature signature, IntDoubleFunction smooth,
                                 VariableIndication indicator) {
         super(signature);
         this.indicator = indicator;
@@ -59,7 +59,11 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
         
         this.getFinalStates().add(startState);
         
-        for(int i=1;i<signature.getMaxSymbolId();++i){           
+        for(int i=1;i<=signature.getMaxSymbolId();++i){
+            if(indicator.isIgnorableVariable(i)){
+                continue;
+            }
+            
             int arity = signature.getArity(i);
             
             int[] children = new int[arity];
@@ -70,21 +74,13 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
                 Arrays.fill(children, this.defaultState);
             }
             
-            makeRule(this.defaultState,i,children, smooth.get(i));
-            makeRule(this.startState,i,children, smooth.get(i));
+            makeRule(this.defaultState,i,children, smooth.apply(i));
+            if(!indicator.isVariable(i)){
+                makeRule(this.startState,i,children, smooth.apply(i));
+            }
         }
         
-        double sum = 0.0;
-        
-        Iterable<Rule> it = this.getRulesTopDown(defaultState);
-        
-        for(Rule r : it){
-            sum += r.getWeight();
-        }
-        
-        for(Rule r : it){
-            r.setWeight(r.getWeight() / sum);
-        }
+        this.normalizeRuleWeights();
     }
 
     /**
@@ -101,26 +97,40 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
         return r;
     }
     
+    /**
+     * 
+     * @param t 
+     */
+    public void addVariableTree(Tree<Integer> t){
+        this.addVariableTree(t, true);
+    }
     
-    public int addVariableTree(Tree<Integer> t){
+    /**
+     * 
+     * @param t
+     * @return 
+     */
+    private int addVariableTree(Tree<Integer> t, boolean toStartState){
         StringBuilder sb = new StringBuilder();
-        sb.append(t.getLabel());
+        sb.append(this.getSignature().resolveSymbolId(t.getLabel()));
         sb.append("(");
         int state;
         
         int code = t.getLabel();
         
         int[] children = new int[t.getChildren().size()];
+        boolean childStart = this.indicator.isVariable(code);
+        
         for(int i=0;i<t.getChildren().size();++i){          
-            children[i] = addVariableTree(t.getChildren().get(i));
+            children[i] = addVariableTree(t.getChildren().get(i),childStart);
             
             if(i != 0){
                 sb.append(", ");
             }
-            sb.append(children[i]);
+            sb.append(this.getStateForId(children[i]));
         }
         
-        if(this.indicator.isVariable(code)){
+        if(toStartState){
             state = this.startState;
         }else{
             sb.append(")");
@@ -137,10 +147,11 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
         }
         
         if(r == null){
-            r = makeRule(state, code, children, 0.0);
+            makeRule(state, code, children, 1.0);
+        }    
+        else if(toStartState){
+            r.setWeight(r.getWeight()+1.0);
         }
-        
-        r.setWeight(r.getWeight()+1.0);
         
         return state;
     }
@@ -148,7 +159,7 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
     /**
      * 
      */
-    public void normalizeStart() {
+    public final void normalizeStart() {
         double sum = 0.0;
         
         Iterable<Rule> it = this.getRulesTopDown(startState);

@@ -6,7 +6,6 @@
 package de.up.ling.irtg.align;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BooleanArrayIterator;
@@ -95,7 +94,7 @@ public class HomomorphismManager {
     /**
      * 
      */
-    private final IntList variables;
+    private final IntList insertionPoints;
 
     /**
      * 
@@ -121,21 +120,23 @@ public class HomomorphismManager {
      * 
      */
     private final int defaultVariable;
-    
+
     /**
      * 
      */
-    private final IntSet mapsToVariable = new IntOpenHashSet();
+    private final IntSet mapsToVariable;
     
     /**
      * 
      * @param source1
      * @param source2 
+     * @param shared 
      */
     public HomomorphismManager(Signature source1, Signature source2, Signature shared){
+        this.mapsToVariable = new IntOpenHashSet();
         this.symbols = new IntArrayList();
         this.isJustInsert = new BooleanArrayList();
-        this.variables = new IntArrayList();
+        this.insertionPoints = new IntArrayList();
         this.sharedSig = shared;
         this.source1 = source1;
         this.source2 = source2;
@@ -161,15 +162,6 @@ public class HomomorphismManager {
     
     /**
      * 
-     * @param k
-     * @return 
-     */
-    public boolean isVariable(int k){
-        return this.variables.contains(k);
-    }
-    
-    /**
-     * 
      * @param source1
      * @param source2 
      */
@@ -177,6 +169,16 @@ public class HomomorphismManager {
         this(source1,source2, new Signature());
     }
 
+
+    /**
+     * 
+     * @param k
+     * @return 
+     */
+    public boolean isVariable(int k){
+        return this.mapsToVariable.contains(k);
+    }
+    
     /**
      * 
      * @return 
@@ -290,7 +292,7 @@ public class HomomorphismManager {
      */
     private void ensureTermination() {
         this.symbols.clear();
-        this.variables.clear();
+        this.insertionPoints.clear();
         this.isJustInsert.clear();
         
         for(int sym : this.terminationSequence){
@@ -298,7 +300,7 @@ public class HomomorphismManager {
             isJustInsert.add(false);
         }
         
-        addMapping(symbols,variables,isJustInsert, 0);
+        addMapping(symbols,insertionPoints,isJustInsert, 0);
     }
 
     /**
@@ -309,7 +311,7 @@ public class HomomorphismManager {
     private void handle0Ary(int sigNum, int symName) {
         this.isJustInsert.clear();
         this.symbols.clear();
-        this.variables.clear();
+        this.insertionPoints.clear();
         
         for(int i=0;i<2;++i){
             if(i == sigNum){
@@ -318,11 +320,11 @@ public class HomomorphismManager {
             }else{
                 this.isJustInsert.add(true);
                 this.symbols.add(-1);
-                this.variables.add(0);
+                this.insertionPoints.add(0);
             }
         }
         
-        this.addMapping(symbols, variables, isJustInsert, 1);
+        this.addMapping(symbols, insertionPoints, isJustInsert, 1);
     }
 
     /**
@@ -444,7 +446,7 @@ public class HomomorphismManager {
     private int handleVariable(int sigNum, int symName) {
         this.isJustInsert.clear();
         this.symbols.clear();
-        this.variables.clear();
+        this.insertionPoints.clear();
         
         String sym = (sigNum == 0 ? this.source1 : this.source2).resolveSymbolId(symName);
         
@@ -454,13 +456,13 @@ public class HomomorphismManager {
         
         this.isJustInsert.add(false);
         this.isJustInsert.add(false);
-        this.variables.add(0);
-        this.variables.add(0);
+        this.insertionPoints.add(0);
+        this.insertionPoints.add(0);
         this.symbols.add(source1.getIdForSymbol(sym));
         this.symbols.add(source2.getIdForSymbol(sym));
         
-        int k = this.sharedSig.getIdForSymbol(this.addMapping(symbols, variables, isJustInsert, 1));
-        this.variables.add(k);
+        int k = this.sharedSig.getIdForSymbol(this.addMapping(symbols, insertionPoints, isJustInsert, 1));
+        this.mapsToVariable.add(k);
         return k;
     }
 
@@ -474,7 +476,7 @@ public class HomomorphismManager {
         
         this.isJustInsert.clear();
         this.symbols.clear();
-        this.variables.clear();
+        this.insertionPoints.clear();
         int varPos = -1;
         
         for(int i=0;i<2;++i){
@@ -482,26 +484,26 @@ public class HomomorphismManager {
                 this.isJustInsert.add(false);
                 this.symbols.add(symName);
                 for(int k=0;k<numVars;++k){
-                    this.variables.add(k);
+                    this.insertionPoints.add(k);
                 }
             }else{
                 this.isJustInsert.add(true);
                 this.symbols.add(-1);
-                varPos = this.variables.size();
+                varPos = this.insertionPoints.size();
             }
         }
         
         for(int i=0;i<numVars;++i){
             if(i == 0){
-                this.variables.add(varPos, i);
+                this.insertionPoints.add(varPos, i);
             }else{
-                this.variables.set(varPos, i);
+                this.insertionPoints.set(varPos, i);
             }
-            this.addMapping(symbols, variables, isJustInsert, numVars);
+            this.addMapping(symbols, insertionPoints, isJustInsert, numVars);
         }
         
-        this.variables.set(varPos,numVars);
-        this.addMapping(symbols, variables, isJustInsert, numVars+1);
+        this.insertionPoints.set(varPos,numVars);
+        this.addMapping(symbols, insertionPoints, isJustInsert, numVars+1);
     }
 
     /**
@@ -557,44 +559,44 @@ public class HomomorphismManager {
                 removeAll(iss, share);
                 
                 IntIterator ibi = iss.iterator();
-                this.variables.clear();
+                this.insertionPoints.clear();
                 int posInShared = 0;
                 
                 if(less == rArity){
                     for(int i=0;i<lArity;++i){
-                        this.variables.add(i);
+                        this.insertionPoints.add(i);
                     }
                     
                     for(int i=0;i<rArity;++i){
                         if(bs[i]){
                             int var = share[posInShared++];
-                            this.variables.add(var);
+                            this.insertionPoints.add(var);
                         }else{
                             int var = ibi.nextInt();
-                            this.variables.add(var);
+                            this.insertionPoints.add(var);
                             ++actuallyUsed;
                         }
                     }
                     
-                    this.addMapping(symbols, variables, isJustInsert, actuallyUsed);
+                    this.addMapping(symbols, insertionPoints, isJustInsert, actuallyUsed);
                 }else{
                     for(int i=0;i<lArity;++i){
                         if(bs[i]){
                             int var = share[posInShared++];
-                            this.variables.add(var);
+                            this.insertionPoints.add(var);
                         }else{
                             int var = ibi.nextInt();
                             ++actuallyUsed;
-                            this.variables.add(var);
+                            this.insertionPoints.add(var);
                         }
                     }
                     
                     for(int i=0;i<rArity;++i){
-                        this.variables.add(i);
+                        this.insertionPoints.add(i);
                     }
                     
                     
-                    this.addMapping(symbols, variables, isJustInsert, actuallyUsed);
+                    this.addMapping(symbols, insertionPoints, isJustInsert, actuallyUsed);
                 }
                     
                 addAll(iss, share);

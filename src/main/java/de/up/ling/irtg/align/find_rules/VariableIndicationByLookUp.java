@@ -6,7 +6,6 @@
 package de.up.ling.irtg.align.find_rules;
 
 import de.up.ling.irtg.align.HomomorphismManager;
-import de.up.ling.irtg.hom.Homomorphism;
 
 /**
  *
@@ -17,19 +16,23 @@ public class VariableIndicationByLookUp implements VariableIndication {
     /**
      * 
      */
-    private final Homomorphism hom;
+    private final HomomorphismManager hom;
 
     /**
      * 
      * @param hom 
      */
-    public VariableIndicationByLookUp(Homomorphism hom) {
+    public VariableIndicationByLookUp(HomomorphismManager hom) {
         this.hom = hom;
     }
     
     @Override
     public boolean isVariable(int label) {
-        return HomomorphismManager.VARIABLE_PATTERN.test(hom.getTargetSignature()
-                .resolveSymbolId(hom.get(label).getLabel().getValue()));
+        return hom.isVariable(label);
     }    
+
+    @Override
+    public boolean isIgnorableVariable(int label) {
+        return this.isVariable(label) && label != hom.getDefaultVariable();
+    }
 }

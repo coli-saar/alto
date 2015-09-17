@@ -3,25 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.find_rules;
+package de.up.ling.irtg.util;
 
 /**
  *
  * @author christoph_teichmann
  */
-public interface VariableIndication {
-
+public interface ObjectIntFunction<Type> {
     /**
      * 
-     * @param label
+     * @param value
      * @return 
      */
-    public boolean isVariable(int label);
-
-    /**
-     * 
-     * @param i
-     * @return 
-     */
-    public boolean isIgnorableVariable(int i);
+    public int apply(Type value);
 }

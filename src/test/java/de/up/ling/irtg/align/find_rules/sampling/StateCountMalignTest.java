@@ -49,17 +49,12 @@ public class StateCountMalignTest {
      */
     private TreeAutomaton sampAut;
     
-    /**
-     * 
-     */
-    private TreeAutomaton first;
-    
     @Before
     public void setUp() {
         alg1 = new StringAlgebra();
         alg2 = new StringAlgebra();
         
-        TreeAutomaton t1 = first = alg1.decompose(alg1.parseString("Example of the first sentence ."));
+        TreeAutomaton t1 = alg1.decompose(alg1.parseString("Example of the first sentence ."));
         TreeAutomaton t2 = alg2.decompose(alg2.parseString("first sentence . of the Example"));
         
         
@@ -73,6 +68,8 @@ public class StateCountMalignTest {
         t2 = prop.convert(t2, spa2);
         
         homa = new HomomorphismManager(alg1.getSignature(), alg2.getSignature());
+        homa.update(t1.getAllLabels(), t2.getAllLabels());
+        
         
         RuleFindingIntersectionAutomaton rfa = new RuleFindingIntersectionAutomaton(t1, t2, homa.getHomomorphism1(), homa.getHomomorphism2());
         sampAut = new TopDownIntersectionAutomaton(rfa, homa.getRestriction());
@@ -96,7 +93,7 @@ public class StateCountMalignTest {
         };
         cof.sampleSize = (int value) -> 1000;
         
-        VariableIndication vai =  (int label) -> homa.isVariable(label);
+        //TODO
         
         
         TreeAutomaton ta;
