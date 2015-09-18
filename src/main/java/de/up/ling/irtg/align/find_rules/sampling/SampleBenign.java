@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.ArraySampler;
 import de.up.ling.irtg.util.IntIntFunction;
+import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.irtg.util.MutableDouble;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497a;
+import org.apache.commons.math3.util.FastMath;
 
 /**
  *
@@ -36,8 +38,7 @@ public abstract class SampleBenign {
         
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
-            double max = Double.NEGATIVE_INFINITY;
-            
+            double sum = Double.NEGATIVE_INFINITY;
             for(Rule r : rulesTopDown){
                double add = Math.log(makeRuleWeight(r));
                for(int child : r.getChildren()){
@@ -45,20 +46,13 @@ public abstract class SampleBenign {
                }
                
                r.setWeight(add);
-               max = Math.max(max, add);
-            }
-            
-            double sum = 0.0;
-            for(Rule r : rulesTopDown){
-               double add = Math.exp(r.getWeight()-max);
                
-               r.setWeight(add);
-               sum += add;
+               sum = LogSpaceOperations.addAlmostZero(sum, add);
             }
             
-            insides.put(state, Math.log(sum)+max);
+            insides.put(state, sum);
             for(Rule r : rulesTopDown){
-                r.setWeight(r.getWeight()/sum);
+                r.setWeight(FastMath.exp(r.getWeight()-sum));
             }
         }
     };
@@ -153,7 +147,7 @@ public abstract class SampleBenign {
         iit = this.benign.getFinalStates().iterator();
         while(iit.hasNext()){
             int i = iit.nextInt();
-            double val = Math.exp(this.insides.get(i)-max);
+            double val = FastMath.exp(this.insides.get(i)-max);
             
             this.insideSum += val;
             this.insides.put(i, val);
@@ -261,10 +255,15 @@ public abstract class SampleBenign {
     private void addTargetWeight(List<Tree<Rule>> sample, DoubleList weights, Configuration config) {
         for(int i=0;i<sample.size();++i){
             Tree<Integer> t = sample.get(i).map(config.label2TargetLabel);
-            double w = Math.log(config.target.getWeightRaw(t));
+            double d = lookUpWeight(config, t);
             
-            weights.set(i, weights.get(i)+w);
+            weights.set(i, weights.get(i)+d);
         }
+    }
+
+    double lookUpWeight(Configuration config, Tree<Integer> t) {
+        return config.target.getLogWeightRaw(t);
+        //return Math.log(config.target.getWeightRaw(t));
     }
 
     /**

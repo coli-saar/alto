@@ -12,7 +12,6 @@ import de.up.ling.irtg.align.find_rules.sampling.SampleBenign.Configuration;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,7 +73,7 @@ public class AddCountBenignTest {
         config.label2TargetLabel = (Function<Rule,Integer>) (Rule input) -> input.getLabel();
         config.rounds = 5;
         config.target = score;
-        config.sampleSize = (int value) -> 20;
+        config.sampleSize = (int value) -> 2000;
         
         this.acb = new StateCountBenign(0.1,928892349279L);
         this.acb.setAutomaton(base);
@@ -90,6 +89,7 @@ public class AddCountBenignTest {
         }
         
         assertTrue(sum / result.size() >= 2.4);
+        System.out.println(sum / result.size());
         
         sum = 0.0;
         this.acb.clear();
@@ -101,6 +101,7 @@ public class AddCountBenignTest {
         }
         
         assertTrue(sum / result.size() >= 2.0);
+        System.out.println(sum / result.size());
     }
 
     /**
@@ -121,6 +122,5 @@ public class AddCountBenignTest {
         }
         
         return result;
-    }
-    
+    }   
 }
