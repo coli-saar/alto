@@ -8,6 +8,7 @@ package de.up.ling.irtg.util;
 /**
  *
  * @author christoph_teichmann
+ * @param <Type>
  */
 public interface ObjectIntFunction<Type> {
     /**

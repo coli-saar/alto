@@ -10,7 +10,6 @@ package de.up.ling.irtg.align.find_rules;
  * @author christoph_teichmann
  */
 public interface VariableIndication {
-
     /**
      * 
      * @param label
