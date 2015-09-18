@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph_teichmann
  */
-public class AddCountBenignTest {
+public class StateCountBenignTest {
     
     /**
      * 
