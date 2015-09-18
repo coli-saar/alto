@@ -5,11 +5,17 @@
  */
 package de.up.ling.irtg.util;
 
+import org.apache.commons.math3.util.FastMath;
+
 /**
  *
  * @author christoph_teichmann
  */
 public class LogSpaceOperations {
+    /**
+     * 
+     */
+    public static double THRESHOLD_1P = 0.00001;
     
     /**
      * 
@@ -19,8 +25,19 @@ public class LogSpaceOperations {
      */
     public static double addAlmostZero(double first, double second){
         double max = Math.max(first, second);
-        double sum = Math.exp(first - max) + Math.exp(second - max);
+        double min = Math.min(first, second);
         
-        return Math.log(sum)+max;
+        if(Double.isInfinite(max)){
+            return max;
+        }
+        
+        min = min-max;
+        min = FastMath.exp(min);
+        
+        if(min <= THRESHOLD_1P){
+            return min+max;
+        }else{
+            return Math.log(1.0+min)+max;
+        }
     }
 }
