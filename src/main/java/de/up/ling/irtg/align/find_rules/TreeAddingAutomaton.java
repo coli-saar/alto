@@ -100,9 +100,10 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
     /**
      * 
      * @param t 
+     * @param amount 
      */
-    public void addVariableTree(Tree<Integer> t){
-        this.addVariableTree(t, true);
+    public void addVariableTree(Tree<Integer> t, double amount){
+        this.addVariableTree(t, true, amount);
     }
     
     /**
@@ -110,7 +111,7 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
      * @param t
      * @return 
      */
-    private int addVariableTree(Tree<Integer> t, boolean toStartState){
+    private int addVariableTree(Tree<Integer> t, boolean toStartState, double amount){
         StringBuilder sb = new StringBuilder();
         sb.append(this.getSignature().resolveSymbolId(t.getLabel()));
         sb.append("(");
@@ -122,7 +123,7 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
         boolean childStart = this.indicator.isVariable(code);
         
         for(int i=0;i<t.getChildren().size();++i){          
-            children[i] = addVariableTree(t.getChildren().get(i),childStart);
+            children[i] = addVariableTree(t.getChildren().get(i),childStart, amount);
             
             if(i != 0){
                 sb.append(", ");
@@ -147,10 +148,10 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
         }
         
         if(r == null){
-            makeRule(state, code, children, 1.0);
+            makeRule(state, code, children, amount);
         }    
         else if(toStartState){
-            r.setWeight(r.getWeight()+1.0);
+            r.setWeight(r.getWeight()+amount);
         }
         
         return state;

@@ -94,10 +94,6 @@ public class TreeAddingAutomatonTest {
      */
     @Test
     public void testAddVariableTree() {
-        //System.out.println("+++++++++++++++++++++++");
-        //System.out.println(test);
-        //System.out.println("+++++++++++++++++++++++");
-        
         Iterable<Rule> it = this.base.getAllRulesTopDown();
         for(Rule r : it){
             if(vib.isVariable(r.getLabel())){
@@ -119,26 +115,40 @@ public class TreeAddingAutomatonTest {
         Tree<Integer> view = choice.map(map);
         
         assertEquals(-40.837867789705705,Math.log(test.getWeightRaw(view)),1.0);
+        assertEquals(Math.log(test.getWeightRaw(view)),test.getLogWeightRaw(view),0.0001);
+        
         int size1 = makeSize(test);
-        test.addVariableTree(view);
+        test.addVariableTree(view,1.0);
         int size2 = makeSize(test);
+        
         assertEquals(1.0008153942871767,test.getWeightRaw(view),0.0000000001);
-        test.addVariableTree(view);
-        test.addVariableTree(view);
-        test.addVariableTree(view);
-        test.addVariableTree(view);
-        test.addVariableTree(view);
-        test.addVariableTree(view);
-        test.addVariableTree(view);
+        assertEquals(Math.log(test.getWeightRaw(view)),test.getLogWeightRaw(view),0.001);
+        
+        test.addVariableTree(view,1.0);
+        test.addVariableTree(view,1.0);
+        test.addVariableTree(view,1.0);
+        test.addVariableTree(view,1.0);
+        test.addVariableTree(view,1.0);
+        test.addVariableTree(view,1.0);
+        test.addVariableTree(view,1.0);
         int size3 = makeSize(test);
+        
         assertEquals(32771.3374752777,test.getWeightRaw(view),0.000000001);
+        assertEquals(Math.log(test.getWeightRaw(view)),test.getLogWeightRaw(view),0.0002);
+        
         test.normalizeStart();
         int size4 = makeSize(test);
+        
         assertEquals(2.8289098319980916E-4,test.getWeightRaw(view),0.000000001);
+        assertEquals(Math.log(test.getWeightRaw(view)),test.getLogWeightRaw(view),0.0001);
+        
         assertTrue(size1 < size2);
         assertEquals(size2,size3);
         assertEquals(size3,size4);
-        //TODO
+        
+        test.addVariableTree(view, 0.9);
+        assertEquals(test.getWeightRaw(view),1.5751441404542283,0.000001);
+        assertEquals(Math.log(test.getWeightRaw(view)),test.getLogWeightRaw(view),0.0001);
     }
 
     /**
