@@ -61,6 +61,8 @@ import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
@@ -2078,9 +2080,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        }
 //    }
 
-    
-    public double getLogWeightRaw(final Tree<Integer> t){
-        Map<Tree<Integer>,Int2DoubleMap> inside = new Object2ObjectOpenHashMap<>();
+    /**
+     * 
+     * @param tree
+     * @return 
+     */
+    public double getLogWeightRaw(final Tree<Integer> tree){
+        Int2ObjectMap<Object2DoubleMap<Tree<Integer>>> inside = new Int2ObjectOpenHashMap<>();
         
         double sum = Double.NEGATIVE_INFINITY;
         IntIterator iit = this.getFinalStates().iterator();
@@ -2088,7 +2094,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         while(iit.hasNext()){
             int state = iit.nextInt();
             
-            double log = getLogWeightRaw(t,state, inside);
+            double log = getLogWeightRaw(tree,state, inside);
+            
             sum = LogSpaceOperations.addAlmostZero(log, sum);
         }
         
@@ -2097,17 +2104,55 @@ public abstract class TreeAutomaton<State> implements Serializable {
     
     /**
      * 
-     * @param t
+     * @param tree
      * @param state
      * @param inside
      * @return 
      */
-    private double getLogWeightRaw(final Tree<Integer> t,final int state,
-                                    final Map<Tree<Integer>,Int2DoubleMap> inside){
+    private double getLogWeightRaw(final Tree<Integer> tree,final int state,
+                   final Int2ObjectMap<Object2DoubleMap<Tree<Integer>>> inside){
+        double sum = Double.NEGATIVE_INFINITY;
+        Iterable<Rule> it = this.getRulesTopDown(tree.getLabel(), state);
         
+        outerLoop : for(Rule rule : it){
+            double weight = Math.log(rule.getWeight());
+            double num = 0.0;
+            
+            for(int i=0;i<rule.getArity();++i){
+                int st              = rule.getChildren()[i];
+                Tree<Integer> child = tree.getChildren().get(i);
+                
+                Object2DoubleMap<Tree<Integer>> inner = inside.get(st);
+                if(inner == null){
+                    inner = new Object2DoubleOpenHashMap<>();
+                    inside.put(state, inner);
+                }
+                
+                double d;
+                if(inner.containsKey(child)){
+                    d = inner.getDouble(child);
+                }else{
+                    d = this.getLogWeightRaw(child, st, inside);
+                }
+                
+                if(Double.isInfinite(d) && d < 0.0){
+                    continue outerLoop;
+                }
+                
+                weight += d;
+            }
+            
+            sum = LogSpaceOperations.addAlmostZero(weight, sum);
+        }
         
-        //TODO
-        return 0.0;
+        Object2DoubleMap<Tree<Integer>> inner = inside.get(state);
+        if(inner == null){
+            inner = new Object2DoubleOpenHashMap<>();
+            inside.put(state, inner);
+        }
+        inner.put(tree, sum);
+        
+        return sum;
     }
     
     /**
