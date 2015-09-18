@@ -12,8 +12,6 @@ import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
-import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
