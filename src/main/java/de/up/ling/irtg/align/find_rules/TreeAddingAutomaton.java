@@ -74,7 +74,7 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
                 Arrays.fill(children, this.defaultState);
             }
             
-            makeRule(this.defaultState,i,children, smooth.apply(i));
+            makeRule(this.defaultState,i, children, smooth.apply(i));
             if(!indicator.isVariable(i)){
                 makeRule(this.startState,i,children, smooth.apply(i));
             }
@@ -123,7 +123,7 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
         boolean childStart = this.indicator.isVariable(code);
         
         for(int i=0;i<t.getChildren().size();++i){          
-            children[i] = addVariableTree(t.getChildren().get(i),childStart, amount);
+            children[i] = addVariableTree(t.getChildren().get(i), childStart, amount);
             
             if(i != 0){
                 sb.append(", ");
