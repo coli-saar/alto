@@ -97,18 +97,18 @@ public abstract class SampleMalign {
     public List<Tree<Rule>> createSample(SamplingConfiguration config){
         List<Tree<Rule>> list = null;
         
+        TreeAutomaton benign = null;
         for(int i=1;i<=config.outerPreSamplingRounds;++i){
-            TreeAutomaton benign = sampleBenign(config);
+            benign = sampleBenign(config);
+            
             if(benign == null){
                 return new ArrayList<>();
             }
             
             this.worker.setAutomaton(benign);
             
-            this.worker.getSample(config);
+            list = this.worker.getSample(config);
         }
-        
-        this.worker.getSample(config);
         
         return list;
     }
@@ -140,13 +140,14 @@ public abstract class SampleMalign {
                 iit = this.malign.getFinalStates().iterator();
                 while (iit.hasNext()) {
                     int state = iit.nextInt();
-                    split -= this.getSmoothedStateWeigth(iit.nextInt());
+                    split -= this.getSmoothedStateWeigth(state);
                     
                     if(split <= 0.0){
                         t = this.sampleFromState(state);
                         if(t == null){
                             this.setUseLess(state);
                         }
+                        
                         break;
                     }
                 }
@@ -181,7 +182,7 @@ public abstract class SampleMalign {
         
         Set<Rule> imp = new ObjectOpenHashSet<>();
         
-        Iterable<Rule> it = this.malign.getAllRulesTopDown();
+        Iterable<Rule> it = this.malign.getRulesTopDown(state);
         double sum = 0.0;
         for(Rule r : it){
             double weight = this.makeRuleWeight(r);
@@ -192,7 +193,8 @@ public abstract class SampleMalign {
             }
         }
         
-        while(true){
+        Tree<Rule> ret = null;
+        while(ret == null){
             double split = sum*this.rg.nextDouble();
             
             if(sum == 0.0 || imp.isEmpty()){
@@ -205,6 +207,7 @@ public abstract class SampleMalign {
                 
                 if(split <= 0.0){
                     children.clear();
+                    
                     for(int child : r.getChildren()){
                         Tree<Rule> chVal = this.sampleFromState(child);
                         if(chVal == null){
@@ -218,13 +221,17 @@ public abstract class SampleMalign {
                             children.add(chVal);
                         }
                     }
+                }
                     
-                    if(r != null){
-                        return Tree.create(r, children);
-                    }
+                if(r != null){
+                    ret = Tree.create(r, children);
+                }else if(split <= 0.0){
+                    break;
                 }
             }
         }
+        
+        return ret;
     }
 
     /**

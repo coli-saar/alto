@@ -10,10 +10,15 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.Propagator;
 import de.up.ling.irtg.align.alignment_marking.SpanAligner;
+import de.up.ling.irtg.align.find_rules.TreeAddingAutomaton;
+import de.up.ling.irtg.align.find_rules.VariableIndication;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
 import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.util.IntDoubleFunction;
+import de.up.ling.tree.Tree;
+import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -72,13 +77,13 @@ public class StateCountMalignTest {
     }
 
     @Test
-    public void testSomeMethod() {
-        StateCountMalign scm = new StateCountMalign(new StateCountBenign(1.0), 0.1);
+    public void testSampling() {
+        StateCountMalign scm = new StateCountMalign(new StateCountBenign(1.0), 0.1,98239128334234L);
         SampleMalign.SamplingConfiguration cof = new SampleMalign.SamplingConfiguration();
         
-        cof.outerPreSamplingRounds = 10;
-        cof.outerSampleSize = 100;
-        cof.rounds = 5;
+        cof.outerPreSamplingRounds = 1;
+        cof.outerSampleSize = 1000;
+        cof.rounds = 1;
         cof.label2TargetLabel = (Function<Rule,Integer>) (Rule input) -> {
             if(homa.isVariable(input.getLabel())){
                 return homa.getDefaultVariable();
@@ -86,12 +91,55 @@ public class StateCountMalignTest {
                 return input.getLabel();
             }
         };
-        cof.sampleSize = (int value) -> 1000;
+        cof.sampleSize = (int value) -> 20;
         
-        //TODO
+        VariableIndication vi = new VariableIndication() {
+
+            @Override
+            public boolean isVariable(int label) {
+                return homa.isVariable(label);
+            }
+
+            @Override
+            public boolean isIgnorableVariable(int i) {
+                return homa.isVariable(i) && i != homa.getDefaultVariable();
+            }
+        };
+        
+        IntDoubleFunction smooth = new IntDoubleFunction() {
+
+            @Override
+            public double apply(int value) {
+                if(homa.isVariable(value)){
+                    return 2.0;
+                }else{
+                    return 1.0;
+                }
+            }
+        };
+        scm.setMalign(sampAut);
+        
+        cof.target = new TreeAddingAutomaton(homa.getSignature(), smooth, vi);
+        List<Tree<Rule>> samp = scm.createSample(cof);
         
         
-        TreeAutomaton ta;
+        
+        /*
+        for(Tree<Rule> t : samp){
+            Tree<String> h = t.map(cof.label2TargetLabel).map(new Function<Integer,String>() {
+
+                @Override
+                public String apply(Integer input) {
+                    return homa.getSignature().resolveSymbolId(input);
+                }
+                
+            });
+            
+            System.out.println("------------");
+            System.out.println(homa.getHomomorphism1().apply(h));
+            System.out.println(homa.getHomomorphism2().apply(h));
+        }*/
+        
         //TODO
     }   
 }

@@ -261,7 +261,13 @@ public abstract class SampleBenign {
         }
     }
 
-    double lookUpWeight(Configuration config, Tree<Integer> t) {
+    /**
+     * 
+     * @param config
+     * @param t
+     * @return 
+     */
+    private double lookUpWeight(Configuration config, Tree<Integer> t) {
         return config.target.getLogWeightRaw(t);
         //return Math.log(config.target.getWeightRaw(t));
     }
