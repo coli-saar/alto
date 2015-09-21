@@ -31,6 +31,10 @@ public class LogSpaceOperations {
             return max;
         }
         
+        if(min == Double.NEGATIVE_INFINITY){
+            return max;
+        }
+        
         min = min-max;
         min = FastMath.exp(min);
         

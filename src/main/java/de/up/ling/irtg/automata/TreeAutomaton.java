@@ -39,7 +39,10 @@ import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeBottomUpVisitor;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2DoubleAVLTreeMap;
+import it.unimi.dsi.fastutil.ints.Int2DoubleArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -64,6 +67,7 @@ import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import java.io.Serializable;
@@ -2088,69 +2092,65 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public double getLogWeightRaw(final Tree<Integer> tree){
         Int2ObjectMap<Object2DoubleMap<Tree<Integer>>> inside = new Int2ObjectOpenHashMap<>();
         
-        double sum = Double.NEGATIVE_INFINITY;
-        IntIterator iit = this.getFinalStates().iterator();
-        
-        while(iit.hasNext()){
-            int state = iit.nextInt();
-            
-            double log = getLogWeightRaw(tree,state, inside);
-            
-            sum = LogSpaceOperations.addAlmostZero(log, sum);
-        }
-        
-        return sum;
-    }
-    
-    /**
-     * 
-     * @param tree
-     * @param state
-     * @param inside
-     * @return 
-     */
-    private double getLogWeightRaw(final Tree<Integer> tree,final int state,
-                   final Int2ObjectMap<Object2DoubleMap<Tree<Integer>>> inside){
-        double sum = Double.NEGATIVE_INFINITY;
-        Iterable<Rule> it = this.getRulesTopDown(tree.getLabel(), state);
-        
-        outerLoop : for(Rule rule : it){
-            double weight = Math.log(rule.getWeight());
-            double num = 0.0;
-            
-            for(int i=0;i<rule.getArity();++i){
-                int st              = rule.getChildren()[i];
-                Tree<Integer> child = tree.getChildren().get(i);
+        TreeBottomUpVisitor<Integer,Iterable<Int2DoubleMap.Entry>> tbv = 
+            (Tree<Integer> tree1, List<Iterable<Int2DoubleMap.Entry>> list) -> {
+                int labelId = tree1.getLabel();
+            if (tree1.getChildren().isEmpty()) {
+                Int2DoubleMap m = new Int2DoubleArrayMap();
                 
-                Object2DoubleMap<Tree<Integer>> inner = inside.get(st);
-                if(inner == null){
-                    inner = new Object2DoubleOpenHashMap<>();
-                    inside.put(state, inner);
+                for(Rule r : getRulesBottomUp(labelId, new int[0])){
+                    // here we assume that every rule (irrespective of weight) exists exactly once
+                    m.put(r.getParent(), Math.log(r.getWeight()));
                 }
                 
-                double d;
-                if(inner.containsKey(child)){
-                    d = inner.getDouble(child);
-                }else{
-                    d = this.getLogWeightRaw(child, st, inside);
-                }
-                
-                if(Double.isInfinite(d) && d < 0.0){
-                    continue outerLoop;
-                }
-                
-                weight += d;
+                return m.int2DoubleEntrySet();
             }
             
-            sum = LogSpaceOperations.addAlmostZero(weight, sum);
-        }
+            int[] children = new int[tree1.getChildren().size()];
+            Int2DoubleMap.Entry[] idp = new Int2DoubleMap.Entry[list.size()];
+            Iterable<Int2DoubleMap.Entry>[] it = list.toArray(new Iterable[list.size()]);
+            
+            Int2DoubleMap results = new Int2DoubleOpenHashMap();
+            results.defaultReturnValue(Double.NEGATIVE_INFINITY);
+            
+            TupleIterator<Int2DoubleMap.Entry> combos = new TupleIterator<>(it,idp);
+            while(combos.hasNext()){
+                Int2DoubleMap.Entry[] combo = combos.next();
+                double weight = 0.0;
+                int pos = 0;
+                
+                for(Int2DoubleMap.Entry pair : combo){
+                    weight += pair.getDoubleValue();
+                    children[pos++] = pair.getIntKey();
+                }
+                
+                for(Rule rule : getRulesBottomUp(labelId, children)){
+                    double all = weight + Math.log(rule.getWeight());
+                    
+                    double old = results.get(rule.getParent());
+                    
+                    if(old == results.defaultReturnValue()){
+                        results.put(rule.getParent(), all);
+                    }
+                    
+                    old = LogSpaceOperations.addAlmostZero(all, old);
+                    
+                    results.put(rule.getParent(), old);
+                }
+            }
+            
+            return results.int2DoubleEntrySet();
+        };
         
-        Object2DoubleMap<Tree<Integer>> inner = inside.get(state);
-        if(inner == null){
-            inner = new Object2DoubleOpenHashMap<>();
-            inside.put(state, inner);
+        double sum = Double.NEGATIVE_INFINITY;
+        
+        Iterable<Int2DoubleMap.Entry> fin = tree.dfs(tbv);
+        
+        for(Int2DoubleMap.Entry ent : fin){
+            if(this.getFinalStates().contains(ent.getIntKey())){
+                sum = LogSpaceOperations.addAlmostZero(sum, ent.getDoubleValue());
+            }
         }
-        inner.put(tree, sum);
         
         return sum;
     }

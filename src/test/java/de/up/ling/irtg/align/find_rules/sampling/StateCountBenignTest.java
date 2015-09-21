@@ -89,7 +89,6 @@ public class StateCountBenignTest {
         }
         
         assertTrue(sum / result.size() >= 2.4);
-        System.out.println(sum / result.size());
         
         sum = 0.0;
         this.acb.clear();
@@ -101,7 +100,6 @@ public class StateCountBenignTest {
         }
         
         assertTrue(sum / result.size() >= 2.0);
-        System.out.println(sum / result.size());
     }
 
     /**

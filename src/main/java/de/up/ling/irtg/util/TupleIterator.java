@@ -51,7 +51,7 @@ public class TupleIterator<T> implements Iterator<T[]>{
      * @param tuple tuple of collections for which we will iterate over the Cartesian product.
      * @param possibleContainer Array to indicate type of return value and possibly store returns.
      */
-    public TupleIterator(Iterable[] tuple,T... possibleContainer) {
+    public TupleIterator(Iterable<T>[] tuple, T... possibleContainer) {
         this.tuple = tuple;
 
         if(possibleContainer.length != tuple.length){
@@ -105,7 +105,6 @@ public class TupleIterator<T> implements Iterator<T[]>{
      */
     @Override
     public T[] next() {
-        //this ignores the first element in the iteration
         int increaseIndex = tuple.length-1;
         while (!iterators[increaseIndex].hasNext()) {
             iterators[increaseIndex] = tuple[increaseIndex].iterator();
