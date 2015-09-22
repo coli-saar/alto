@@ -45,6 +45,14 @@ public class FromRuleTreesAutomaton<State> extends TreeAutomaton<State> {
         }
     }
     
+    /**
+     * 
+     * @param r 
+     */
+    public void addRule(Rule r){
+       this.storeRuleBoth(r);
+    }
+    
     
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
