@@ -98,6 +98,7 @@ public abstract class SampleMalign {
         List<Tree<Rule>> list = null;
         
         TreeAutomaton benign = null;
+        
         for(int i=1;i<=config.outerPreSamplingRounds;++i){
             benign = sampleBenign(config);
             
@@ -109,7 +110,10 @@ public abstract class SampleMalign {
             
             list = this.worker.getSample(config);
         }
-        
+        //DEBUGGING
+        //System.out.println(benign.language().size());
+        //System.out.println(malign.language().size());
+        //DEBUGGING
         return list;
     }
 
@@ -177,7 +181,7 @@ public abstract class SampleMalign {
      * @param state
      * @return 
      */
-    private Tree<Rule> sampleFromState(int state) {
+    private Tree<Rule> sampleFromState(final int state) {
         List<Tree<Rule>> children = new ArrayList<>();
         
         Set<Rule> imp = new ObjectOpenHashSet<>();
@@ -193,8 +197,7 @@ public abstract class SampleMalign {
             }
         }
         
-        Tree<Rule> ret = null;
-        while(ret == null){
+        outerLoop : while(true){
             double split = sum*this.rg.nextDouble();
             
             if(sum == 0.0 || imp.isEmpty()){
@@ -202,11 +205,12 @@ public abstract class SampleMalign {
                 return null;
             }
             
-            for(Rule r : imp){
+            for(final Rule r : imp){               
                 split -= r.getWeight();
                 
                 if(split <= 0.0){
                     children.clear();
+                    
                     
                     for(int child : r.getChildren()){
                         Tree<Rule> chVal = this.sampleFromState(child);
@@ -214,24 +218,18 @@ public abstract class SampleMalign {
                             sum -= r.getWeight();
                             r.setWeight(0.0);
                             imp.remove(r);
-                            r = null;
-                            break;
+                            continue outerLoop;
                         }
                         else{
                             children.add(chVal);
                         }
                     }
-                }
-                    
-                if(r != null){
-                    ret = Tree.create(r, children);
-                }else if(split <= 0.0){
-                    break;
+                        
+                    Tree<Rule> t = Tree.create(r, children);
+                    return t;
                 }
             }
         }
-        
-        return ret;
     }
 
     /**
@@ -247,6 +245,26 @@ public abstract class SampleMalign {
      */
     private void setUseLess(int state) {
         this.useLess.add(state);
+    }
+
+    /**
+     * 
+     * @param ret 
+     */
+    private void checkChildConsistent(Tree<Rule> ret) {
+        if(ret.getChildren().size() != ret.getLabel().getArity()){
+            System.out.println(ret);
+            throw new IllegalStateException("non-matching sizes");
+        }
+        
+        for(int i=0;i<ret.getChildren().size();++i){
+            if(ret.getLabel().getChildren()[i] != ret.getChildren().get(i).getLabel().getParent()){
+                System.out.println(ret);
+                throw new IllegalStateException("non-matching children");
+            }
+            
+            this.checkChildConsistent(ret.getChildren().get(i));
+        }
     }
     
     /**
