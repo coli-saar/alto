@@ -11,12 +11,12 @@ import de.up.ling.irtg.automata.Rule;
  *
  * @author christoph_teichmann
  */
-public class StateCountBenign extends SampleBenign {
+public class RuleCountBenign extends SampleBenign {
     /**
      * 
      * @param smooth 
      */
-    public StateCountBenign(double smooth) {
+    public RuleCountBenign(double smooth) {
         super(smooth);
     }
 
@@ -25,12 +25,12 @@ public class StateCountBenign extends SampleBenign {
      * @param smooth
      * @param seed 
      */
-    public StateCountBenign(double smooth, long seed) {
+    public RuleCountBenign(double smooth, long seed) {
         super(smooth, seed);
     }
 
     @Override
-    protected double makeRuleWeight(Rule r) {     
-        return this.getSmoothedStateCount(r.getParent());
+    protected double makeRuleWeight(Rule r) {    
+        return this.getSmoothedRuleCount(r);
     }   
 }

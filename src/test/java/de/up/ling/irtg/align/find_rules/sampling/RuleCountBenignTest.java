@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph_teichmann
  */
-public class StateCountBenignTest {
+public class RuleCountBenignTest {
     
     /**
      * 
@@ -41,7 +41,7 @@ public class StateCountBenignTest {
     /**
      * 
      */
-    private StateCountBenign acb;
+    private RuleCountBenign acb;
     
     @Before
     public void setUp() {
@@ -61,8 +61,8 @@ public class StateCountBenignTest {
             
             Span left = this.score.getStateForId(r.getChildren()[0]);
             
-            if((left.end-left.start) == 3){
-                r.setWeight(5.0);
+            if((left.end-left.start) == 4){
+                r.setWeight(10.0);
                 continue;
             }
             
@@ -73,9 +73,9 @@ public class StateCountBenignTest {
         config.label2TargetLabel = (Function<Rule,Integer>) (Rule input) -> input.getLabel();
         config.rounds = 5;
         config.target = score;
-        config.sampleSize = (int value) -> 2000;
+        config.sampleSize = (int value) -> 10;
         
-        this.acb = new StateCountBenign(0.1,928892349279L);
+        this.acb = new RuleCountBenign(0.01,928892349279L);
         this.acb.setAutomaton(base);
     }
 
@@ -88,7 +88,7 @@ public class StateCountBenignTest {
             sum += (countLefties(t));
         }
         
-        assertTrue(sum / result.size() >= 2.4);
+        assertTrue(sum / result.size() >= 1.8);
         
         sum = 0.0;
         this.acb.clear();
@@ -99,7 +99,7 @@ public class StateCountBenignTest {
             sum += (countLefties(t));
         }
         
-        assertTrue(sum / result.size() >= 2.0);
+        assertTrue(sum / result.size() >= 0.9);
     }
 
     /**
@@ -112,7 +112,7 @@ public class StateCountBenignTest {
         
         if(t.getLabel().getArity() == 2){
             Span left = this.base.getStateForId(t.getLabel().getChildren()[0]);
-            result += (left.end - left.start == 3) ? 1.0 : 0.0;
+            result += (left.end - left.start == 4) ? 1.0 : 0.0;
         }
         
         for(Tree<Rule> q : t.getChildren()){
@@ -120,5 +120,5 @@ public class StateCountBenignTest {
         }
         
         return result;
-    }   
+    }
 }
