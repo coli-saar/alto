@@ -54,7 +54,7 @@ public abstract class SampleMalign {
      * @param worker 
      */
     public SampleMalign(SampleBenign worker){
-        this(worker,0.0001);
+        this(worker,0.01);
     }
     
     /**
@@ -110,10 +110,7 @@ public abstract class SampleMalign {
             
             list = this.worker.getSample(config);
         }
-        //DEBUGGING
-        //System.out.println(benign.language().size());
-        //System.out.println(malign.language().size());
-        //DEBUGGING
+        
         return list;
     }
 
@@ -133,7 +130,7 @@ public abstract class SampleMalign {
                 
                 while (iit.hasNext()) {
                     int state = iit.nextInt();
-                    sum += this.getSmoothedStateWeigth(state);
+                    sum += this.getSmoothedStateWeight(state);
                 }
                 
                 if(sum <= 0.0){
@@ -144,7 +141,7 @@ public abstract class SampleMalign {
                 iit = this.malign.getFinalStates().iterator();
                 while (iit.hasNext()) {
                     int state = iit.nextInt();
-                    split -= this.getSmoothedStateWeigth(state);
+                    split -= this.getSmoothedStateWeight(state);
                     
                     if(split <= 0.0){
                         t = this.sampleFromState(state);
@@ -168,12 +165,31 @@ public abstract class SampleMalign {
      * @param state
      * @return 
      */
-    public double getSmoothedStateWeigth(int state) {
+    public double getSmoothedStateWeight(int state) {
         if(this.useLess.contains(state)){
             return 0.0;
         }else{
-            return this.worker.getStateCount(state)+this.smooth;
+            return this.worker.getFinalStateCount(state)+this.smooth;
         }
+    }
+    
+    /**
+     * 
+     * @param r
+     * @return 
+     */
+    public double getSmoothedRuleWeight(Rule r){
+        if(this.useLess.contains(r.getParent())){
+            return 0.0;
+        }
+        
+        for(int state : r.getChildren()){
+            if(this.useLess.contains(state)){
+                return 0.0;
+            }
+        }
+        
+        return this.worker.getRuleCount(r)+this.smooth;
     }
 
     /**
@@ -210,7 +226,6 @@ public abstract class SampleMalign {
                 
                 if(split <= 0.0){
                     children.clear();
-                    
                     
                     for(int child : r.getChildren()){
                         Tree<Rule> chVal = this.sampleFromState(child);

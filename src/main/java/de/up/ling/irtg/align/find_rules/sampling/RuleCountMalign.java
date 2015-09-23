@@ -11,12 +11,12 @@ import de.up.ling.irtg.automata.Rule;
  * 
  * @author christoph_teichmann
  */
-public class StateCountMalign extends SampleMalign {
+public class RuleCountMalign extends SampleMalign {
     /**
      * 
      * @param worker 
      */
-    public StateCountMalign(SampleBenign worker) {
+    public RuleCountMalign(SampleBenign worker) {
         super(worker);
     }
 
@@ -25,7 +25,7 @@ public class StateCountMalign extends SampleMalign {
      * @param worker
      * @param smooth 
      */
-    public StateCountMalign(SampleBenign worker, double smooth) {
+    public RuleCountMalign(SampleBenign worker, double smooth) {
         super(worker, smooth);
     }
 
@@ -35,12 +35,12 @@ public class StateCountMalign extends SampleMalign {
      * @param smooth
      * @param seed 
      */
-    public StateCountMalign(SampleBenign worker, double smooth, long seed) {
+    public RuleCountMalign(SampleBenign worker, double smooth, long seed) {
         super(worker, smooth, seed);
     }
 
     @Override
     protected double makeRuleWeight(Rule r) {
-        return this.getSmoothedStateWeigth(r.getParent());
+        return this.getSmoothedStateWeight(r.getParent());
     }
 }
