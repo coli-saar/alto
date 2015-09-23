@@ -8,7 +8,6 @@ package de.up.ling.irtg.align.pruning;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.align.Pruner;
 import de.up.ling.irtg.align.StateAlignmentMarking;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.FromRuleTreesAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
