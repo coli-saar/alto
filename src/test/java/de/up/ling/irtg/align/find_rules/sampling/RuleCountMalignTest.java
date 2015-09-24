@@ -9,10 +9,10 @@ import com.google.common.base.Function;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.Propagator;
-import de.up.ling.irtg.align.Pruner;
 import de.up.ling.irtg.align.alignment_marking.SpanAligner;
 import de.up.ling.irtg.align.find_rules.TreeAddingAutomaton;
 import de.up.ling.irtg.align.find_rules.VariableIndication;
+import de.up.ling.irtg.align.pruning.RemoveDead;
 import de.up.ling.irtg.align.pruning.StringLeftOrRight;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
@@ -58,18 +58,20 @@ public class RuleCountMalignTest {
         alg1 = new StringAlgebra();
         alg2 = new StringAlgebra();
         
-        TreeAutomaton t1 = alg1.decompose(alg1.parseString("Different aspects can be studied this way ."));
-        TreeAutomaton t2 = alg2.decompose(alg2.parseString("Auf diese Art können verschiedene aspekte studiert werden ."));
+        TreeAutomaton t1 = alg1.decompose(alg1.parseString("More recently several authors have explored supervised"
+                + " methods"));
+        TreeAutomaton t2 = alg2.decompose(alg2.parseString("Seit neuestem haben einige Authoren überwachte Methoden"
+                + " erforscht"));
         
         
-        SpanAligner spa1 = new SpanAligner("0:1:1 1:2:2 5:6:7 5:6:3", t1);
-        SpanAligner spa2 = new SpanAligner("4:5:1 5:6:2 1:2:7 0:1:3", t2);
+        SpanAligner spa1 = new SpanAligner("0:1:1 0:1:2 1:2:3 1:2:4 2:3:5 3:4:6 4:5:7 5:6:8 6:7:9 7:8:10", t1);
+        SpanAligner spa2 = new SpanAligner("0:1:1 1:2:2 0:1:3 1:2:4 3:4:5 4:5:6 2:3:7 7:8:8 5:6:9 6:7:10", t2);
         
-        Pruner prune = new StringLeftOrRight();
-        Propagator prop = new Propagator(prune);
+        Propagator prop1 = new Propagator(new StringLeftOrRight());
+        Propagator prop2 = new Propagator();
         
-        t1 = prop.convert(t1, spa1);
-        t2 = prop.convert(t2, spa2);
+        t1 = prop1.convert(t1, spa1);
+        t2 = prop2.convert(t2, spa2);
         
         homa = new HomomorphismManager(alg1.getSignature(), alg2.getSignature());
         homa.update(t1.getAllLabels(), t2.getAllLabels());
@@ -79,16 +81,17 @@ public class RuleCountMalignTest {
                 new RuleFindingIntersectionAutomaton(t1, t2, homa.getHomomorphism1(), homa.getHomomorphism2());
         sampAut = new TopDownIntersectionAutomaton(rfa, homa.getRestriction());
         
+        sampAut = RemoveDead.reduce(sampAut);
     }
 
     @Test
     public void testSampling() {
-        RuleCountMalign scm = new RuleCountMalign(new RuleCountBenign(1.0), 1.0);
+        RuleCountMalign scm = new RuleCountMalign(new RuleCountBenign(1.0, 234294299234924L), 1.0, 234294299234924L);
         SampleMalign.SamplingConfiguration cof = new SampleMalign.SamplingConfiguration();
         
-        cof.outerPreSamplingRounds = 3;
-        cof.outerSampleSize = 500;
-        cof.rounds = 3;
+        cof.outerPreSamplingRounds = 1;
+        cof.outerSampleSize = 200;
+        cof.rounds = 2;
         cof.label2TargetLabel = (Function<Rule,Integer>) (Rule input) -> {
             if(homa.isVariable(input.getLabel())){
                 return homa.getDefaultVariable();
@@ -96,7 +99,7 @@ public class RuleCountMalignTest {
                 return input.getLabel();
             }
         };
-        cof.sampleSize = (int value) -> 5000;
+        cof.sampleSize = (int value) -> 500;
         
         VariableIndication vi = new VariableIndication() {
 
@@ -116,9 +119,9 @@ public class RuleCountMalignTest {
             @Override
             public double apply(int value) {
                 if(homa.isVariable(value)){
-                    return 40.0;
+                    return 1.0;
                 }else{
-                    return 0.1;
+                    return 0.01;
                 }
             }
         };
@@ -150,30 +153,11 @@ public class RuleCountMalignTest {
             double d = cof.target.getWeightRaw(ti);
             sum += d;
             exp.put(t, d);
-            
-            Tree<String> h = t.map(cof.label2TargetLabel).map(new Function<Integer,String>() {
-
-                @Override
-                public String apply(Integer input) {
-                    return homa.getSignature().resolveSymbolId(input);
-                }
-                
-            });
-            
-            System.out.println("------------");
-            System.out.println(homa.getHomomorphism1().apply(h));
-            System.out.println(homa.getHomomorphism2().apply(h));
         }
         
         for(Tree<Rule> t : map.keySet()){
-            /**
-            System.out.println("--------");
-            System.out.println(map.getInt(t) / (double) samp.size());
-            System.out.println(exp.getDouble(t) / sum);
-            */
+            assertEquals(map.getInt(t) / (double) samp.size(),exp.getDouble(t) / sum, 0.1);
         }
-        
-        System.out.println(map.size());
-        //TODO
+        assertTrue(map.size() > 1);
     }   
 }
