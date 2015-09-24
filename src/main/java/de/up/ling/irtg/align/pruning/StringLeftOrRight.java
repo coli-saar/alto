@@ -5,7 +5,9 @@
  */
 package de.up.ling.irtg.align.pruning;
 
+import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
+import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.Pruner;
 import de.up.ling.irtg.align.StateAlignmentMarking;
 import de.up.ling.irtg.automata.FromRuleTreesAutomaton;
@@ -46,6 +48,26 @@ public class StringLeftOrRight implements Pruner<Span> {
 
     @Override
     public TreeAutomaton<Span> postPrune(TreeAutomaton<Span> automaton, StateAlignmentMarking<Span> stateMarkers) {
-        return automaton;
+        FromRuleTreesAutomaton frt = new FromRuleTreesAutomaton(automaton);
+        StringAlgebra.Span top = automaton.getStateForId(automaton.getFinalStates().iterator().nextInt());
+        int end = top.end;
+        int start = top.start;
+        
+        Iterable<Rule> it = automaton.getAllRulesTopDown();
+        for(Rule r : it){
+            if(r.getArity() == 1){
+                String symbol = automaton.getSignature().resolveSymbolId(r.getLabel());
+                if(HomomorphismManager.VARIABLE_PATTERN.test(symbol)){
+                    StringAlgebra.Span sp = automaton.getStateForId(r.getParent());
+                    if(sp.end-sp.start == 1 && (sp.end != end && sp.start != start)){
+                        continue;
+                    }
+                }
+            }
+            
+            frt.addRule(r);
+        }
+        
+        return frt;
     }
 }
