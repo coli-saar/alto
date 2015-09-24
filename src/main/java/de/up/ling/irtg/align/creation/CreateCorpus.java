@@ -40,17 +40,16 @@ public class CreateCorpus<Type1,Type2> {
      * 
      */
     private final Algebra<Type2> alg2;
-
+    
     /**
      * 
-     * @param mainMan
      * @param alg1
      * @param alg2 
      */
-    public CreateCorpus(HomomorphismManager mainMan, Algebra<Type1> alg1, Algebra<Type2> alg2) {
-        this.mainMan = mainMan;
+    public CreateCorpus(Algebra<Type1> alg1, Algebra<Type2> alg2) {
         this.alg1 = alg1;
         this.alg2 = alg2;
+        this.mainMan = new HomomorphismManager(alg1.getSignature(), alg2.getSignature());
     }
     
     /**
@@ -93,6 +92,30 @@ public class CreateCorpus<Type1,Type2> {
         ret = RemoveDead.reduce(ret);
         
         return ret;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public HomomorphismManager getMainManager() {
+        return mainMan;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public Algebra<Type1> getAlgebra1() {
+        return alg1;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public Algebra<Type2> getAlgebra2() {
+        return alg2;
     }
 
     /**
