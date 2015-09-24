@@ -16,10 +16,11 @@ import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497a;
@@ -54,6 +55,11 @@ public abstract class SampleBenign {
      * 
      */
     private final Object2DoubleOpenHashMap<Rule> ruleCounts = new Object2DoubleOpenHashMap<>();
+    
+    /**
+     * 
+     */
+    private final Int2ObjectMap<List<Rule>> options = new Int2ObjectOpenHashMap<>();
     
     /**
      * 
@@ -154,6 +160,7 @@ public abstract class SampleBenign {
         List<Tree<Rule>> sample = new ObjectArrayList<>();
         DoubleList weights = new DoubleArrayList();
         List<Tree<Rule>> resample = new ObjectArrayList<>();
+        this.options.clear();
         
         for(int round=0;round<config.rounds;++round){
             this.finalStateSum = Double.NEGATIVE_INFINITY;
@@ -267,13 +274,22 @@ public abstract class SampleBenign {
      * @return 
      */
     private Tree<Rule> sample(MutableDouble md, int state) {
-        Iterable<Rule> r = this.benign.getRulesTopDown(state);
+        List<Rule> r = this.options.get(state);
+        
+        if(r == null){
+            r = new ObjectArrayList<>();
+            Iterable<Rule> it = this.benign.getRulesTopDown(state);
+            for(Rule k : it){
+                r.add(k);
+            }
+            this.options.put(state, r);
+        }
         
         double sum = this.stateNormalizers.get(state);
         if(sum <= 0.0){
             sum = 0.0;
-            for(Rule rule : r){
-                sum += this.makeRuleWeight(rule);
+            for(int i=0;i<r.size();++i){
+                sum += this.makeRuleWeight(r.get(i));
             }
             
             this.stateNormalizers.put(state, sum);
@@ -281,7 +297,8 @@ public abstract class SampleBenign {
         
         double d = this.rg.nextDouble()*sum;
         Rule choice = null;
-        for(Rule j : r){
+        for(int k=0;k<r.size();++k){
+           Rule j = r.get(k);
            double w = this.makeRuleWeight(j);
            d -= w;
            if(d <= 0.0){
@@ -291,13 +308,12 @@ public abstract class SampleBenign {
            }
         }
         
-        List<Tree<Rule>> l = new ArrayList<>();
-        
+        Tree<Rule> t = Tree.create(choice);
         for(int child :  choice.getChildren()){
-            l.add(this.sample(md, child));
+            t.getChildren().add(this.sample(md, child));
         }
         
-        return Tree.create(choice, l);
+        return t;
     }
 
     /**
