@@ -46,6 +46,8 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
             case RIGHT_INTO_LEFT:
                 if (childrenValues.size() == 2) {
                     Tree<String> left = childrenValues.get(0);
+                    left = Tree.create(left.getLabel(), left.getChildren());
+                    
                     Tree<String> right = childrenValues.get(1);
 
                     left.getChildren().add(right);
@@ -57,11 +59,13 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
             case LEFT_INTO_RIGHT:
                 if (childrenValues.size() == 2) {
                     Tree<String> left = childrenValues.get(0);
+                    
                     Tree<String> right = childrenValues.get(1);
+                    right = Tree.create(right.getLabel(), right.getChildren());
+                    
+                    right.getChildren().add(0, left);
 
-                    right.getChildren().add(left);
-
-                    return left;
+                    return right;
                 } else {
                     return null;
                 }
