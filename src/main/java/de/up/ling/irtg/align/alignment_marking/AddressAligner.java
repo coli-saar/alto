@@ -8,6 +8,7 @@ package de.up.ling.irtg.align.alignment_marking;
 import de.up.ling.irtg.align.StateAlignmentMarking;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.ImmutableIntSet;
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -20,11 +21,15 @@ import java.util.regex.Pattern;
  * @author christoph_teichmann
  */
 public class AddressAligner extends StateAlignmentMarking<String> {
+    /**
+     * Used as return value when we need an empty set.
+     */
+    private final static IntSet EMPTY =  new ImmutableIntSet(new IntAVLTreeSet());
 
     /**
      * 
      */
-    public static final Pattern pat = Pattern.compile("(\\d+-)+:d+");
+    public static final Pattern pat = Pattern.compile("\\d-(\\d+-)+\\d+:\\d+");
     
     /**
      * 
@@ -60,7 +65,9 @@ public class AddressAligner extends StateAlignmentMarking<String> {
 
     @Override
     public IntSet getAlignmentMarkers(String state) {
-        return this.map.get(state);
+        IntSet is = this.map.get(state);
+              
+        return is == null ? EMPTY : is;
     }
 
     /**
