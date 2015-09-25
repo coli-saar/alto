@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * 
  * @author christoph_teichmann
  */
-public class SpanAligner extends StateAlignmentMarking {
+public class SpanAligner extends StateAlignmentMarking<Span> {
     /**
      * Used as return value when we need an empty set.
      */
@@ -68,7 +68,7 @@ public class SpanAligner extends StateAlignmentMarking {
     
     
     @Override
-    public IntSet getAlignmentMarkers(Object state) {
+    public IntSet getAlignmentMarkers(Span state) {
         if(state instanceof Span){
             IntSet ret = this.alignments.get((Span) state);
             
