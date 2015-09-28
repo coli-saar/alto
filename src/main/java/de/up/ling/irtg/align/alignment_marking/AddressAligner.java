@@ -84,4 +84,15 @@ public class AddressAligner extends StateAlignmentMarking<String> {
         
         return re;
     }
+    
+    /**
+     * 
+     */
+    public static class Factory implements AlignmentFactory<String>{
+
+        @Override
+        public StateAlignmentMarking<String> makeInstance(String alignments, TreeAutomaton<String> input) {
+            return new AddressAligner(input, alignments);
+        }
+    }
 }

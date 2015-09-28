@@ -131,4 +131,15 @@ public class SpanAligner extends StateAlignmentMarking<Span> {
         
         return align;
     }
+    
+    /**
+     * 
+     */
+    public static class Factory implements AlignmentFactory<Span>{
+
+        @Override
+        public StateAlignmentMarking<Span> makeInstance(String alignments, TreeAutomaton<Span> input) {
+            return new SpanAligner(alignments, input);
+        }
+    }
 }
