@@ -48,7 +48,7 @@ public class Propagator {
 
     /**
      * 
-     * @param state
+     * @param markers
      * @return 
      */
     public static String getVariableLabel(IntSet markers) {
