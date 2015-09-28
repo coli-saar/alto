@@ -99,7 +99,7 @@ public class RuleCountMalignTest {
                 return input.getLabel();
             }
         };
-        cof.sampleSize = (int value) -> 500;
+        cof.sampleSize = (int value) -> 800;
         
         VariableIndication vi = new VariableIndication() {
 
@@ -158,6 +158,6 @@ public class RuleCountMalignTest {
         for(Tree<Rule> t : map.keySet()){
             assertEquals(map.getInt(t) / (double) samp.size(),exp.getDouble(t) / sum, 0.1);
         }
-        assertTrue(map.size() > 1);
+        assertTrue(map.size() > 30);
     }   
 }
