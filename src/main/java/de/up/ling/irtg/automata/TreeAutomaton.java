@@ -1358,8 +1358,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
             while (!agenda.isEmpty()) {
                 int state = agenda.dequeue();
-
-                for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
+                IntIterator iit = this.getLabelsTopDown(state).iterator();
+                
+                for (; iit.hasNext();) {
+                    int label = iit.nextInt();
                     Iterable<Rule> rules = getRulesTopDown(label, state);
 
                     for (Rule rule : rules) {
