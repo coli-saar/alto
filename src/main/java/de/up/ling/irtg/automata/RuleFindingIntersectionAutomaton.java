@@ -8,9 +8,13 @@ package de.up.ling.irtg.automata;
 import com.google.common.collect.ImmutableSet;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.ImmutableIntSet;
 import de.up.ling.irtg.util.NumberWrapping;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntRBTreeMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -56,6 +60,10 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
      */
     private final Long2IntMap seen;
     
+    /**
+     * 
+     */
+    private final IntSet feasibleLabels;
     
     /**
      * 
@@ -89,6 +97,22 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
                 this.addFinalState(state);
             }
         }
+       
+        IntSet ffeasibleLabels = new IntOpenHashSet();
+        IntSet otherFeasibleLabels = new IntOpenHashSet();
+        
+        for(int i=1;i<=hom1.getMaxLabelSetID();++i){
+            ffeasibleLabels.addAll(hom1.getLabelSetByLabelSetID(i));
+        }
+        
+        for(int i=1;i<=hom2.getMaxLabelSetID();++i){
+            otherFeasibleLabels.addAll(hom2.getLabelSetByLabelSetID(i));
+        }
+        
+        
+        ffeasibleLabels.retainAll(otherFeasibleLabels);
+        
+        this.feasibleLabels = new ImmutableIntSet(ffeasibleLabels);
     }
 
     /**
@@ -378,5 +402,15 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
     @Override
     public boolean isBottomUpDeterministic() {
         return false;
+    }
+
+    @Override
+    public IntSet getAllLabels() {
+        return this.feasibleLabels;
+    }
+
+    @Override
+    public IntIterable getLabelsTopDown(int parentState) {
+        return this.feasibleLabels;
     }
 }
