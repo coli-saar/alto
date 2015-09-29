@@ -5,10 +5,12 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.util.ImmutableIntSet;
 import de.up.ling.irtg.util.NumberWrapping;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntRBTreeMap;
 import java.util.Arrays;
@@ -19,6 +21,16 @@ import java.util.Arrays;
  */
 public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
 
+    /**
+     * 
+     */
+    private final IntSet allLabels = new IntOpenHashSet();
+    
+    /**
+     * 
+     */
+    private final ImmutableIntSet immutableWrapper = new ImmutableIntSet(allLabels);
+    
     /**
      * 
      */
@@ -60,6 +72,9 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
                 this.addFinalState(fState);
             }
         }
+        
+        this.allLabels.addAll(left.getAllLabels());
+        this.allLabels.retainAll(right.getAllLabels());
     }
 
     /**
@@ -109,6 +124,15 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
         int leftParent = NumberWrapping.getFirst(parent);
         int rightParent = NumberWrapping.getSecond(parent);
         
+        //DEBUG
+        if(!this.getAllLabels().contains(labelId)){
+            System.out.println(labelId);
+            System.out.println(this.getSignature().resolveSymbolId(labelId));
+            System.out.println(this.getAllLabels());
+            System.out.println(this.getLabelsTopDown(parentState));
+            throw new IllegalStateException("bingo");
+        }
+        
         Iterable<Rule> itL = this.left.getRulesTopDown(labelId, leftParent);
         Iterable<Rule> itR = this.right.getRulesTopDown(labelId, rightParent);
         
@@ -139,39 +163,11 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
 
     @Override
     public IntIterable getLabelsTopDown(int parentState) {
-        long parent = this.getStateForId(parentState);
-        int lState = NumberWrapping.getFirst(parent);
-        int rState = NumberWrapping.getSecond(parent);
-        
-        IntIterable l = this.left.getLabelsTopDown(lState);
-        IntIterable r = this.right.getLabelsTopDown(rState);
-        
-        Int2IntOpenHashMap ret = new Int2IntOpenHashMap();
-        
-        IntIterator i = l.iterator();
-        int lNum = 0;
-        while(i.hasNext()){
-            ret.addTo(i.nextInt(), 1);
-            ++lNum;
-        }
-        i = r.iterator();
-        int rNum = 0;
-        while(i.hasNext()){
-            ret.addTo(i.nextInt(), 1);
-            ++rNum;
-        }
-        if(lNum < rNum){
-            i = l.iterator();
-        }else{
-            i = r.iterator();
-        }
-        while(i.hasNext()){
-            int key = i.nextInt();
-            if(ret.get(key) < 2){
-                ret.remove(key);
-            }
-        }
-        
-        return ret.keySet();
+        return this.immutableWrapper;
+    }
+
+    @Override
+    public IntSet getAllLabels() {
+        return this.immutableWrapper;
     }
 }
