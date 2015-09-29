@@ -14,8 +14,6 @@ import de.up.ling.tree.TreeParser;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.List;
 import java.util.Set;
@@ -116,11 +114,6 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
      * 
      */
     private static class MinimalTreeDecomposition extends ConcreteTreeAutomaton<String>{
-        /**
-         * 
-         */
-        private final IntSet allLabels = new IntOpenHashSet();
-        
         /**
          * 
          */
@@ -246,19 +239,8 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
         }
 
         @Override
-        public IntSet getAllLabels() {
-            return this.allLabels;
-        }
-
-        @Override
         public IntIterable getLabelsTopDown(int parentState) {
             return this.ruleStore.getLabelsTopDown(parentState);
-        }
-
-        @Override
-        public void addRule(Rule rule) {
-            this.allLabels.add(rule.getLabel());
-            super.addRule(rule);
         }
     }
 }
