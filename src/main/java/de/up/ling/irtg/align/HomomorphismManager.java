@@ -211,6 +211,9 @@ public class HomomorphismManager {
      * @param toDo2 
      */
     public void update(IntSet toDo1, IntSet toDo2){
+       toDo1 = new IntAVLTreeSet(toDo1);
+       toDo2 = new IntAVLTreeSet(toDo2);
+        
        if(this.terminationSequence == null){
            this.terminationSequence = new int[2];
            
@@ -683,6 +686,7 @@ public class HomomorphismManager {
     private Homomorphism makeShadow(Signature source, Homomorphism here,
             IntSet allLabelsHere, Homomorphism there, IntSet allLabelsThere) {
         Homomorphism ret = new Homomorphism(this.sharedSig, source);
+        
         for(int i=1;i<=this.sharedSig.getMaxSymbolId();++i){
             if(this.sharedSig.getArity(i) == 0){
                 ret.add(i, here.get(i));
@@ -706,6 +710,12 @@ public class HomomorphismManager {
         return ret;
     }
 
+    /**
+     * 
+     * @param allLabelsHere
+     * @param allLabelsThere
+     * @return 
+     */
     public Homomorphism getHomomorphismRestriction2(IntSet allLabelsHere, IntSet allLabelsThere) {
         Homomorphism here = this.hom2;
         Homomorphism there = this.hom1;
