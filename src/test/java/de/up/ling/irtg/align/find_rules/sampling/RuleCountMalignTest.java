@@ -90,7 +90,7 @@ public class RuleCountMalignTest {
         SampleMalign.SamplingConfiguration cof = new SampleMalign.SamplingConfiguration();
         
         cof.outerPreSamplingRounds = 1;
-        cof.outerSampleSize = 200;
+        cof.outerSampleSize = 100;
         cof.rounds = 2;
         cof.label2TargetLabel = (Function<Rule,Integer>) (Rule input) -> {
             if(homa.isVariable(input.getLabel())){
@@ -99,7 +99,7 @@ public class RuleCountMalignTest {
                 return input.getLabel();
             }
         };
-        cof.sampleSize = (int value) -> 800;
+        cof.sampleSize = (int value) -> 300;
         
         VariableIndication vi = new VariableIndication() {
 
@@ -156,7 +156,7 @@ public class RuleCountMalignTest {
         }
         
         for(Tree<Rule> t : map.keySet()){
-            assertEquals(map.getInt(t) / (double) samp.size(),exp.getDouble(t) / sum, 0.1);
+            assertEquals(map.getInt(t) / (double) samp.size(),exp.getDouble(t) / sum, 0.2);
         }
         assertTrue(map.size() > 30);
     }   

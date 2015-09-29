@@ -6,6 +6,7 @@ package de.up.ling.irtg.automata;
 
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.List;
 import java.util.function.Consumer;
@@ -16,6 +17,11 @@ import java.util.function.Consumer;
  * @param <State>
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
+    /**
+     * 
+     */
+    private final IntSet allLabels = new IntOpenHashSet();
+    
     public ConcreteTreeAutomaton() {
         this(new Signature());
     }
@@ -37,6 +43,7 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     
 
     public void addRule(Rule rule) {
+        this.allLabels.add(rule.getLabel());
         storeRuleBottomUp(rule);
         storeRuleTopDown(rule);
     }
@@ -59,5 +66,10 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     @Override
     public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Consumer<Rule> fn) {
         ruleStore.foreachRuleBottomUpForSets(labelIds, childStateSets, signatureMapper, fn);
+    }
+
+    @Override
+    public IntSet getAllLabels() {
+        return this.allLabels;
     }
 }
