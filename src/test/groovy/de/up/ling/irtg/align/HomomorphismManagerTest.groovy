@@ -10,6 +10,7 @@ import de.up.ling.irtg.signature.Signature;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.HashSet;
 import java.util.Set;
@@ -219,6 +220,32 @@ public class HomomorphismManagerTest {
         assertTrue(hm.getRestriction().accepts(test));
         assertEquals(hom1.apply(test),pt("a(b,a(XX(XX(a(b,mc3(d(a(mc3(d(a(d(c),vv))),XX1(b))))))),d(b)))"));
         assertEquals(hom2.apply(test),pt("hk(h(e(e(h(e(hk54,hk(hk54))),e(hk54,h(h(e(e(e(g,h(hk(h(hk54)))),e(hk(e(h(h(g)),h(e(hk(g),hk(hk54))))),hk54)),h(g)))))),XX(h(hk(h(hk(hk(XX(XX1(g)))))))))))"));
+        
+        expected = new HashSet<>();
+        expected.add(new Pair("b() / g() | 0",new Pair(pt("b"),pt("g"))));
+        expected.add(new Pair("x1 / hk54() | 1",new Pair(pt("'?1'"),pt("hk54"))));
+        expected.add(new Pair("x1 / hk(x1) | 1",new Pair(pt("'?1'"),pt("hk('?1')"))));
+        expected.add(new Pair("x2 / hk(x1) | 2",new Pair(pt("'?2'"),pt("hk('?1')"))));
+        expected.add(new Pair("vv() / x1 | 1",new Pair(pt("vv"),pt("'?1'"))));
+        expected.add(new Pair("mc3(x1) / x1 | 1",new Pair(pt("mc3('?1')"),pt("'?1'"))));
+        expected.add(new Pair("mc3(x1) / x2 | 2",new Pair(pt("mc3('?1')"),pt("'?2'"))));
+        
+        
+        hom1 = hm.getHomomorphismRestriction1(todo5,todo6);
+        hom2 = hm.getHomomorphismRestriction2(todo6,todo5);
+        
+        for(Pair<String,Pair<Tree<String>,Tree<String>>> p : expected){
+            assertEquals(hom1.get(p.getKey()),p.getValue().getKey());
+            assertEquals(hom2.get(p.getKey()),p.getValue().getValue());
+        }
+        
+        IntSet all = new IntOpenHashSet();
+        
+        for(int i=1;i<=hom1.getMaxLabelSetID();++i){
+            all.addAll(hom1.getLabelSetByLabelSetID(i));
+        }
+        
+        assertEquals(all.size(),7);
     }
     
     /**

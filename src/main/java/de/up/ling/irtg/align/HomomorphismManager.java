@@ -7,6 +7,7 @@ package de.up.ling.irtg.align;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BooleanArrayIterator;
 import de.up.ling.irtg.util.NChooseK;
@@ -224,6 +225,8 @@ public class HomomorphismManager {
                 throw new IllegalStateException("We have no 0-ary symbol for signature "+2);
            }
            this.terminationSequence[1] = def;
+           
+           ensureTermination();
        }
          
        toDo1.removeAll(this.seenAll1);
@@ -263,7 +266,6 @@ public class HomomorphismManager {
        
        this.seenAll1.addAll(toDo1);
        this.seenAll2.addAll(toDo2);
-       ensureTermination();
     }
 
     /**
@@ -653,5 +655,62 @@ public class HomomorphismManager {
     */
     public Signature getSignature(){
        return this.sharedSig;
+    }
+
+    /**
+     * 
+     * @param allLabelsHere
+     * @param allLabelsThere
+     * @return 
+     */
+    public Homomorphism getHomomorphismRestriction1(IntSet allLabelsHere, IntSet allLabelsThere) {
+        Homomorphism here = this.hom1;
+        Homomorphism there = this.hom2;
+        Signature source = this.source1;
+        
+        return makeShadow(source, here, allLabelsHere, there, allLabelsThere);
+    }
+
+    /**
+     * 
+     * @param source
+     * @param here
+     * @param allLabelsHere
+     * @param there
+     * @param allLabelsThere
+     * @return 
+     */
+    private Homomorphism makeShadow(Signature source, Homomorphism here,
+            IntSet allLabelsHere, Homomorphism there, IntSet allLabelsThere) {
+        Homomorphism ret = new Homomorphism(this.sharedSig, source);
+        for(int i=1;i<=this.sharedSig.getMaxSymbolId();++i){
+            if(this.sharedSig.getArity(i) == 0){
+                ret.add(i, here.get(i));
+                continue;
+            }
+            
+            Tree<HomomorphismSymbol> t = here.get(i);
+            
+            if(!(t.getLabel().isVariable() || allLabelsHere.contains(t.getLabel().getValue()))){
+                continue;
+            }
+            
+            t = there.get(i);
+            if(!(t.getLabel().isVariable() || allLabelsThere.contains(t.getLabel().getValue()))){
+                continue;
+            }
+            
+            ret.add(i, here.get(i));
+        }
+        
+        return ret;
+    }
+
+    public Homomorphism getHomomorphismRestriction2(IntSet allLabelsHere, IntSet allLabelsThere) {
+        Homomorphism here = this.hom2;
+        Homomorphism there = this.hom1;
+        Signature source = this.source2;
+        
+        return makeShadow(source, here, allLabelsHere, there, allLabelsThere);
     }
 }
