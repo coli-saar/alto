@@ -12,7 +12,7 @@ import de.up.ling.tree.Tree;
  * @author christoph_teichmann
  * @param <State>
  */
-public class FromRuleTreesAutomaton<State> extends TreeAutomaton<State> {
+public class FromRuleTreesAutomaton<State> extends ConcreteTreeAutomaton<State> {
 
     /**
      * 
@@ -44,15 +44,6 @@ public class FromRuleTreesAutomaton<State> extends TreeAutomaton<State> {
             this.addRules(ruleTree.getChildren().get(i));
         }
     }
-    
-    /**
-     * 
-     * @param r 
-     */
-    public void addRule(Rule r){
-       this.storeRuleBoth(r);
-    }
-    
     
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {

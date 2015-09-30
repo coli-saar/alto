@@ -7,11 +7,8 @@ package de.up.ling.irtg.automata;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ImmutableIntSet;
-import it.unimi.dsi.fastutil.ints.IntCollection;
-import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -51,11 +48,27 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
         super.addFinalState(state);
     }
     
-
     public void addRule(Rule rule) {
-        this.allLabels.add(rule.getLabel());
         storeRuleBottomUp(rule);
         storeRuleTopDown(rule);
+    }
+
+    @Override
+    protected void storeRuleBoth(Rule rule) {
+        this.allLabels.add(rule.getLabel());
+        super.storeRuleBoth(rule);
+    }
+
+    @Override
+    protected void storeRuleTopDown(Rule rule) {
+        this.allLabels.add(rule.getLabel());
+        super.storeRuleTopDown(rule);
+    }
+
+    @Override
+    protected void storeRuleBottomUp(Rule rule) {
+        this.allLabels.add(rule.getLabel());
+        super.storeRuleBottomUp(rule);
     }
 
     @Override
