@@ -10,10 +10,12 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.Propagator;
 import de.up.ling.irtg.align.StateAlignmentMarking;
+import de.up.ling.irtg.align.alignment_marking.AlignmentFactory;
 import de.up.ling.irtg.align.pruning.RemoveDead;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
 import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.Homomorphism;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import java.util.function.Function;
@@ -81,14 +83,16 @@ public class CreateCorpus<Type1,Type2> {
         TreeAutomaton ta1 = in1.convert(alg1);
         TreeAutomaton ta2 = in2.convert(alg2);
         
-        HomomorphismManager homa = new HomomorphismManager(alg1.getSignature(), alg2.getSignature(),
-                mainMan.getSignature());
         mainMan.update(ta1.getAllLabels(), ta2.getAllLabels());
-        homa.update(ta1.getAllLabels(), ta2.getAllLabels());
+        
+        Homomorphism hm1 = mainMan.getHomomorphismRestriction1(ta1.getAllLabels(), ta2.getAllLabels());
+        Homomorphism hm2 = mainMan.getHomomorphismRestriction2(ta2.getAllLabels(), ta1.getAllLabels());
         
         RuleFindingIntersectionAutomaton rfa = 
-                new RuleFindingIntersectionAutomaton(ta1, ta2, homa.getHomomorphism1(), homa.getHomomorphism2());
-        TreeAutomaton ret = new TopDownIntersectionAutomaton(rfa, homa.getRestriction());
+                new RuleFindingIntersectionAutomaton(ta1, ta2, hm1, hm2);
+        
+        TreeAutomaton ret = new TopDownIntersectionAutomaton(rfa, mainMan.getRestriction());
+        
         ret = RemoveDead.reduce(ret);
         
         return ret;
@@ -122,7 +126,7 @@ public class CreateCorpus<Type1,Type2> {
      * 
      * @param <Type> 
      */
-    public class InputPackage<Type>{
+    public static class InputPackage<Type>{
         /**
          * 
          */
@@ -136,19 +140,26 @@ public class CreateCorpus<Type1,Type2> {
         /**
          * 
          */
-        private final StateAlignmentMarking sam;
+        private final AlignmentFactory sam;
+        
+        /**
+         * 
+         */
+        private final String alignments;
         
         /**
          * 
          * @param input
+         * @param alignments
          * @param props
          * @param sam
          */
-        public InputPackage(String input, Function<Type, Propagator> props,
-                StateAlignmentMarking sam) {
+        public InputPackage(String input, String alignments, Function<Type, Propagator> props,
+                AlignmentFactory sam) {
             this.input = input;
             this.props = props;
             this.sam = sam;
+            this.alignments = alignments;
         }
         
         /**
@@ -163,7 +174,10 @@ public class CreateCorpus<Type1,Type2> {
             Propagator prop = props.apply(x);
             
             TreeAutomaton ta = alg.decompose(x);
-            ta = prop.convert(ta, sam);
+            
+            StateAlignmentMarking sta = this.sam.makeInstance(alignments, ta);
+            
+            ta = prop.convert(ta, sta);
             return ta;
         }
     }
