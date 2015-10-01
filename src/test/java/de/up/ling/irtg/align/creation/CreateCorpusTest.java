@@ -100,7 +100,7 @@ public class CreateCorpusTest {
         
         for(String[] p : new String[][] {{"c(b,a)","0-0-0-1:1 0-0-0-0:2 0-0-0:3"}}){
             this.treeInput.add(new CreateCorpus.InputPackage<>(p[0],p[1],f,addFactory));
-        }        
+        }
     }
 
     /**

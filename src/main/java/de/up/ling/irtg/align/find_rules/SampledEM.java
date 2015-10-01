@@ -201,18 +201,25 @@ public class SampledEM {
         return jobs;
     }
 
+    public LearningInstance makeLearningInstance(double adaptionSmooth, long seed,
+            IntIntFunction sampleSizes, int samplerAdaptionRounds, CreateCorpus cc){
+        DefaultVariableMapping dvm = new DefaultVariableMapping(cc.getMainManager());
+        
+        return makeLearningInstance(adaptionSmooth, seed, sampleSizes, samplerAdaptionRounds, dvm);
+    }
+    
     /**
      * 
-     * @param adaption
+     * @param adaptionSmooth
      * @param seed
      * @param sampleSizes
      * @param samplerAdaptionRounds
      * @param variableMapping
      * @return 
      */
-    public LearningInstance makeLearningInstance(double adaption, long seed,
+    public LearningInstance makeLearningInstance(double adaptionSmooth, long seed,
             IntIntFunction sampleSizes, int samplerAdaptionRounds, Function<Rule, Integer> variableMapping) {
-        SampleBenign sb = new RuleCountBenign(adaption, seed);
+        SampleBenign sb = new RuleCountBenign(adaptionSmooth, seed);
         SampleBenign.Configuration conf = new SampleBenign.Configuration();
         conf.sampleSize = sampleSizes;
         conf.rounds = samplerAdaptionRounds;
@@ -220,8 +227,7 @@ public class SampledEM {
         conf.label2TargetLabel = variableMapping;
         LearningInstance jo = new LearningInstance(sb, conf);
         return jo;
-    }
-    
+    }    
     
     /**
      * 
