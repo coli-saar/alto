@@ -7,7 +7,6 @@ package de.up.ling.irtg.align.find_rules;
 
 import com.google.common.base.Function;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.align.RuleFinder;
 import de.up.ling.irtg.align.creation.CreateCorpus;
@@ -33,22 +32,77 @@ import java.util.concurrent.Future;
  */
 public class SampledEM {
  
+    /**
+     * 
+     */
+    private final int useThreads;
     
-    public InterpretedTreeAutomaton makeGrammar(List<CreateCorpus.InputPackage> data1,
-            List<CreateCorpus.InputPackage> data2,
-            Algebra alg1, Algebra alg2, double mainSmooth, double variableSmooth,
-            long seed, double sampleSmooth, int threads, int modelSamples, int interMediateSamples,
-            int samplerAdaptionRounds, int learningRounds) throws ParserException, ExecutionException, InterruptedException{
-        
-        CreateCorpus cc = new CreateCorpus(alg1, alg2);
-        List<TreeAutomaton> l = cc.makeDataSet(data1, data2);
+    /**
+     * 
+     */
+    private final double variableInit;
+    
+    /**
+     * 
+     */
+    private final double mainInit;
+
+    /**
+     * 
+     */
+    private final int batchSize;
+    
+    /**
+     * 
+     * @param useThreads
+     * @param variableInit
+     * @param mainInit 
+     */
+    public SampledEM(int useThreads, double variableInit, double mainInit, int batchSize) {
+        this.useThreads = Math.max(useThreads, 1);
+        this.variableInit = Math.max(variableInit, 0.0);
+        this.mainInit = Math.max(mainInit, 0.0);
+        this.batchSize = Math.max(1, batchSize);
+    }
+    
+    /**
+     * 
+     * @param useThreads
+     * @param variableInit
+     * @param mainInit 
+     */
+    public SampledEM(int useThreads, double variableInit, double mainInit){
+        this(useThreads,variableInit,mainInit,3*useThreads);
+    }
+
+    /**
+     * 
+     * @param variableInit
+     * @param mainInit 
+     */
+    public SampledEM(double variableInit, double mainInit){
+        this(Runtime.getRuntime().availableProcessors()/2,
+                variableInit,mainInit,3 * (Runtime.getRuntime().availableProcessors()/2));
+    }
+    
+    
+    /**
+     * 
+     * 
+     * @param cc
+     * @param learningRounds
+     * @param jobs
+     * @return
+     * @throws ParserException
+     * @throws ExecutionException
+     * @throws InterruptedException 
+     */
+    public InterpretedTreeAutomaton makeGrammar(CreateCorpus cc, int learningRounds,
+            List<LearningInstance> jobs) throws ParserException, ExecutionException, InterruptedException{
         
         VariableIndication vi = new VariableIndicationByLookUp(cc.getMainManager());
         
-        List<Job> jobs = makeJobs(modelSamples, interMediateSamples, cc, l, sampleSmooth, seed, samplerAdaptionRounds);
-        
-        TreeAddingAutomaton currentModel = 
-                runTraining(threads, cc, variableSmooth, mainSmooth, vi, learningRounds, jobs);
+        TreeAddingAutomaton currentModel = runTraining(cc, vi, learningRounds, jobs);
         
         return new RuleFinder().getInterpretation(currentModel, cc.getMainManager(), cc.getAlgebra1(), cc.getAlgebra1());
     }
@@ -66,28 +120,34 @@ public class SampledEM {
      * @throws InterruptedException
      * @throws ExecutionException 
      */
-    private TreeAddingAutomaton runTraining(int threads, CreateCorpus cc, double variableSmooth, double mainSmooth, VariableIndication vi, int learningRounds, List<Job> jobs) throws InterruptedException, ExecutionException {
-        ExecutorService es = Executors.newFixedThreadPool(threads);
-        List<Job> intermediate = new ObjectArrayList<>();
+    private TreeAddingAutomaton runTraining(CreateCorpus cc, VariableIndication vi,
+            int learningRounds, List<LearningInstance> jobs) throws InterruptedException, ExecutionException {
+        ExecutorService es = Executors.newFixedThreadPool(this.useThreads);
+        
+        List<LearningInstance> intermediate = new ObjectArrayList<>();
         IntDoubleFunction idf = (int value) -> {
             if(cc.getMainManager().isVariable(value)){
-                return variableSmooth;
+                return this.variableInit;
             }else{
-                return mainSmooth;
+                return this.mainInit;
             }
         };
+        
         TreeAddingAutomaton estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), idf, vi);
         TreeAddingAutomaton currentModel = estimate;
+        
         for (int round = 0; round < learningRounds; ++round) {
             for (int i = 0; i < jobs.size();) {
                 int k = 0;
+
                 intermediate.clear();
-                for (; i + k < jobs.size() && k < threads; ++k) {
-                    Job j = jobs.get(i + k);
+                for (; i + k < jobs.size() && k < this.batchSize; ++k) {
+                    LearningInstance j = jobs.get(i + k);
                     j.setModel(currentModel);
 
                     intermediate.add(jobs.get(i + k));
                 }
+                
                 i += k;
 
                 Collection<Future<List<Tree<Integer>>>> results = es.invokeAll(intermediate);
@@ -97,9 +157,10 @@ public class SampledEM {
                         estimate.addVariableTree(choices.get(i), 1.0 / choices.size());
                     }
                 }
-
             }
+            
             currentModel = estimate;
+            currentModel.normalizeStart();
             estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), idf, vi);
         }
         
@@ -110,46 +171,62 @@ public class SampledEM {
 
     /**
      * 
-     * @param modelSamples
-     * @param interMediateSamples
+     * @param numberOfSamplingResults
+     * @param numberOfSamplesIntermediate
      * @param cc
-     * @param l
+     * @param data
      * @param sampleSmooth
      * @param seed
      * @param samplerAdaptionRounds
      * @return 
      */
-    private List<Job> makeJobs(int modelSamples, int interMediateSamples,
-            CreateCorpus cc, List<TreeAutomaton> l, double sampleSmooth, long seed,
-            int samplerAdaptionRounds) {
-        List<Job> jobs = new ObjectArrayList<>();
+    public List<LearningInstance> makeInstances(int numberOfSamplingResults, int numberOfSamplesIntermediate,
+            CreateCorpus cc, List<TreeAutomaton> data, double sampleSmooth, 
+            long seed, int samplerAdaptionRounds) {
+        List<LearningInstance> jobs = new ObjectArrayList<>();
         IntIntFunction sampleSize = (int value) -> {
             if(value == 0){
-                return modelSamples;
+                return numberOfSamplingResults;
             }else{
-                return interMediateSamples;
+                return numberOfSamplesIntermediate;
             }
         };
+        
+        
         Function<Rule,Integer> map = new DefaultVariableMapping(cc.getMainManager());
-        for(int i=0;i<l.size();++i){
-            SampleBenign sb = new RuleCountBenign(sampleSmooth, seed);
-            
-            SampleBenign.Configuration conf = new SampleBenign.Configuration();
-            conf.sampleSize = sampleSize;
-            conf.rounds = samplerAdaptionRounds;
-            conf.target = null;
-            conf.label2TargetLabel = map;
-            
-            Job jo = new Job(sb, conf);
+        for(int i=0;i<data.size();++i){
+            LearningInstance jo = makeLearningInstance(sampleSmooth, seed, sampleSize, samplerAdaptionRounds, map);
             jobs.add(jo);
         }
         return jobs;
     }
+
+    /**
+     * 
+     * @param adaption
+     * @param seed
+     * @param sampleSizes
+     * @param samplerAdaptionRounds
+     * @param variableMapping
+     * @return 
+     */
+    public LearningInstance makeLearningInstance(double adaption, long seed,
+            IntIntFunction sampleSizes, int samplerAdaptionRounds, Function<Rule, Integer> variableMapping) {
+        SampleBenign sb = new RuleCountBenign(adaption, seed);
+        SampleBenign.Configuration conf = new SampleBenign.Configuration();
+        conf.sampleSize = sampleSizes;
+        conf.rounds = samplerAdaptionRounds;
+        conf.target = null;
+        conf.label2TargetLabel = variableMapping;
+        LearningInstance jo = new LearningInstance(sb, conf);
+        return jo;
+    }
+    
     
     /**
      * 
      */
-    private class Job implements Callable<List<Tree<Integer>>>{
+    public class LearningInstance implements Callable<List<Tree<Integer>>>{
 
         /**
          * 
@@ -171,7 +248,7 @@ public class SampledEM {
          * @param samp
          * @param config 
          */
-        public Job(SampleBenign samp, SampleBenign.Configuration config) {
+        public LearningInstance(SampleBenign samp, SampleBenign.Configuration config) {
             this.samp = samp;
             this.config = config;
         }

@@ -146,7 +146,7 @@ public class CreateCorpusTest {
      */
     @Test
     public void testGetAlgebra1() throws ParserException {
-        List<TreeAutomaton> data = this.cc.makeDataSet(stringInputs, treeInput);
+        this.cc.makeDataSet(stringInputs, treeInput);
         
         Signature sig = this.cc.getMainManager().getHomomorphism1().getTargetSignature();
         
@@ -159,7 +159,7 @@ public class CreateCorpusTest {
      */
     @Test
     public void testGetAlgebra2() throws ParserException {
-        List<TreeAutomaton> data = this.cc.makeDataSet(stringInputs, treeInput);
+        this.cc.makeDataSet(stringInputs, treeInput);
         
         Signature sig = this.cc.getMainManager().getHomomorphism2().getTargetSignature();
         
