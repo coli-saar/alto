@@ -360,5 +360,20 @@ public abstract class SampleBenign {
          * 
          */
         public Function label2TargetLabel;
+
+        /**
+         * 
+         * @return 
+         */
+        public Configuration copy() {
+            Configuration conf = new Configuration();
+            
+            conf.label2TargetLabel = this.label2TargetLabel;
+            conf.rounds = this.rounds;
+            conf.sampleSize = this.sampleSize;
+            conf.target = this.target;
+            
+            return conf;
+        }
     }
 }

@@ -168,7 +168,7 @@ public class CreateCorpus<Type1,Type2> {
          * @return
          * @throws ParserException 
          */
-        private TreeAutomaton convert(Algebra<Type> alg) throws ParserException {
+        public TreeAutomaton convert(Algebra<Type> alg) throws ParserException {
             Type x = alg.parseString(input);
             
             Propagator prop = props.apply(x);

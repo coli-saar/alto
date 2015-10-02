@@ -14,11 +14,13 @@ import de.up.ling.irtg.align.find_rules.sampling.RuleCountBenign;
 import de.up.ling.irtg.align.find_rules.sampling.SampleBenign;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.IntDoubleFunction;
 import de.up.ling.irtg.util.IntIntFunction;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -54,15 +56,24 @@ public class SampledEM {
     
     /**
      * 
+     */
+    private final double scaling;
+    
+    /**
+     * 
      * @param useThreads
      * @param variableInit
      * @param mainInit 
+     * @param batchSize 
+     * @param scaling 
      */
-    public SampledEM(int useThreads, double variableInit, double mainInit, int batchSize) {
+    public SampledEM(int useThreads, double variableInit, double mainInit, int batchSize,
+            double scaling) {
         this.useThreads = Math.max(useThreads, 1);
         this.variableInit = Math.max(variableInit, 0.0);
         this.mainInit = Math.max(mainInit, 0.0);
         this.batchSize = Math.max(1, batchSize);
+        this.scaling = scaling;
     }
     
     /**
@@ -70,19 +81,21 @@ public class SampledEM {
      * @param useThreads
      * @param variableInit
      * @param mainInit 
+     * @param scaling 
      */
-    public SampledEM(int useThreads, double variableInit, double mainInit){
-        this(useThreads,variableInit,mainInit,3*useThreads);
+    public SampledEM(int useThreads, double variableInit, double mainInit, double scaling){
+        this(useThreads,variableInit,mainInit,3*useThreads, scaling);
     }
 
     /**
      * 
      * @param variableInit
      * @param mainInit 
+     * @param scaling 
      */
-    public SampledEM(double variableInit, double mainInit){
+    public SampledEM(double variableInit, double mainInit, double scaling){
         this(Runtime.getRuntime().availableProcessors()/2,
-                variableInit,mainInit,3 * (Runtime.getRuntime().availableProcessors()/2));
+                variableInit,mainInit,3 * (Runtime.getRuntime().availableProcessors()/2), scaling);
     }
     
     
@@ -91,20 +104,20 @@ public class SampledEM {
      * 
      * @param cc
      * @param learningRounds
-     * @param jobs
+     * @param instances
      * @return
      * @throws ParserException
      * @throws ExecutionException
      * @throws InterruptedException 
      */
     public InterpretedTreeAutomaton makeGrammar(CreateCorpus cc, int learningRounds,
-            List<LearningInstance> jobs) throws ParserException, ExecutionException, InterruptedException{
+            List<LearningInstance> instances) throws ParserException, ExecutionException, InterruptedException{
         
         VariableIndication vi = new VariableIndicationByLookUp(cc.getMainManager());
         
-        TreeAddingAutomaton currentModel = runTraining(cc, vi, learningRounds, jobs);
+        TreeAddingAutomaton currentModel = runTraining(cc, vi, learningRounds, instances);
         
-        return new RuleFinder().getInterpretation(currentModel, cc.getMainManager(), cc.getAlgebra1(), cc.getAlgebra1());
+        return new RuleFinder().getInterpretation(currentModel, cc.getMainManager(), cc.getAlgebra1(), cc.getAlgebra2());
     }
 
     /**
@@ -151,17 +164,24 @@ public class SampledEM {
                 i += k;
 
                 Collection<Future<List<Tree<Integer>>>> results = es.invokeAll(intermediate);
+                
+                int num = 0;
+                
                 for (Future<List<Tree<Integer>>> result : results) {
                     List<Tree<Integer>> choices = result.get();
                     for (int h = 0; h < choices.size(); ++h) {
-                        estimate.addVariableTree(choices.get(i), 1.0 / choices.size());
+                        estimate.addVariableTree(choices.get(h), scaling / choices.size());
                     }
                 }
             }
             
             currentModel = estimate;
+            
             currentModel.normalizeStart();
+            
             estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), idf, vi);
+            
+            System.out.println("finished one round of training");
         }
         
         es.shutdown();
@@ -195,21 +215,33 @@ public class SampledEM {
         
         Function<Rule,Integer> map = new DefaultVariableMapping(cc.getMainManager());
         for(int i=0;i<data.size();++i){
-            LearningInstance jo = makeLearningInstance(sampleSmooth, seed, sampleSize, samplerAdaptionRounds, map);
+            LearningInstance jo = makeLearningInstance(data.get(i), 
+                    sampleSmooth, seed, sampleSize, samplerAdaptionRounds, map);
             jobs.add(jo);
         }
         return jobs;
     }
 
-    public LearningInstance makeLearningInstance(double adaptionSmooth, long seed,
+    /**
+     * 
+     * @param language
+     * @param adaptionSmooth
+     * @param seed
+     * @param sampleSizes
+     * @param samplerAdaptionRounds
+     * @param cc
+     * @return 
+     */
+    public LearningInstance makeLearningInstance(TreeAutomaton language, double adaptionSmooth, long seed,
             IntIntFunction sampleSizes, int samplerAdaptionRounds, CreateCorpus cc){
         DefaultVariableMapping dvm = new DefaultVariableMapping(cc.getMainManager());
         
-        return makeLearningInstance(adaptionSmooth, seed, sampleSizes, samplerAdaptionRounds, dvm);
+        return makeLearningInstance(language, adaptionSmooth, seed, sampleSizes, samplerAdaptionRounds, dvm);
     }
     
     /**
      * 
+     * @param language
      * @param adaptionSmooth
      * @param seed
      * @param sampleSizes
@@ -217,14 +249,17 @@ public class SampledEM {
      * @param variableMapping
      * @return 
      */
-    public LearningInstance makeLearningInstance(double adaptionSmooth, long seed,
+    public LearningInstance makeLearningInstance(TreeAutomaton language, double adaptionSmooth, long seed,
             IntIntFunction sampleSizes, int samplerAdaptionRounds, Function<Rule, Integer> variableMapping) {
         SampleBenign sb = new RuleCountBenign(adaptionSmooth, seed);
         SampleBenign.Configuration conf = new SampleBenign.Configuration();
+        sb.setAutomaton(language);
+        
         conf.sampleSize = sampleSizes;
         conf.rounds = samplerAdaptionRounds;
         conf.target = null;
         conf.label2TargetLabel = variableMapping;
+        
         LearningInstance jo = new LearningInstance(sb, conf);
         return jo;
     }    
@@ -256,7 +291,7 @@ public class SampledEM {
          */
         public LearningInstance(SampleBenign samp, SampleBenign.Configuration config) {
             this.samp = samp;
-            this.config = config;
+            this.config = config.copy();
         }
 
         /**
@@ -269,15 +304,20 @@ public class SampledEM {
         
         @Override
         public List<Tree<Integer>> call() throws Exception {
-            List<Tree<Integer>> ret = new ObjectArrayList<>();
-            config.target = model;
-            List<Tree<Rule>> sample = this.samp.getSample(config);
-            
-            for(int i=0;i<sample.size();++i){
-                ret.add(sample.get(i).map(config.label2TargetLabel));
+            try {
+                List<Tree<Integer>> ret = new ObjectArrayList<>();
+                config.target = model;
+                List<Tree<Rule>> sample = this.samp.getSample(config);
+
+                for (int i = 0; i < sample.size(); ++i) {
+                    ret.add(sample.get(i).map(config.label2TargetLabel));
+                }
+
+                return ret;
+            } catch (ConcurrentModificationException cme) {
+                cme.printStackTrace();
+                throw cme;
             }
-            
-            return ret;
         }
     }
 }

@@ -45,6 +45,21 @@ public class TreeAddingAutomaton extends ConcreteTreeAutomaton<String> {
     
     /**
      * 
+     * @param sig
+     * @param indicator 
+     */
+    public TreeAddingAutomaton(Signature sig, VariableIndication indicator){
+        super(sig);
+        this.indicator = indicator;
+        
+        this.defaultState = this.addState(DEFAULT_STATE);
+        this.startState = this.addState(START_STATE);
+        
+        this.addFinalState(startState);
+    }
+    
+    /**
+     * 
      * @param signature
      * @param smooth 
      * @param indicator 
