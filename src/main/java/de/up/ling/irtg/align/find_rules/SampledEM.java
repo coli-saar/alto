@@ -14,7 +14,6 @@ import de.up.ling.irtg.align.find_rules.sampling.RuleCountBenign;
 import de.up.ling.irtg.align.find_rules.sampling.SampleBenign;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.IntDoubleFunction;
 import de.up.ling.irtg.util.IntIntFunction;
 import de.up.ling.tree.Tree;
@@ -179,7 +178,12 @@ public class SampledEM {
             
             currentModel.normalizeStart();
             
-            estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), idf, vi);
+            if(round+2 < learningRounds){
+                estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), idf, vi);
+            }
+            else{
+                estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), vi);
+            }
             
             System.out.println("finished one round of training");
         }

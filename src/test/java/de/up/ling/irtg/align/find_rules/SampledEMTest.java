@@ -141,10 +141,6 @@ public class SampledEMTest {
         
         assertEquals(ita.getInterpretation("left").interpret(t).toString(),"[a, b, d]");
         assertEquals(ita.getInterpretation("right").interpret(t).toString(),"d(b,a)");
-        System.out.println(t);
-        //TODO
-        
-        
     }
 
     /**
