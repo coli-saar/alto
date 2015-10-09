@@ -50,10 +50,10 @@ public class ExtractStringToTreeGrammar {
         
         Propagator propDef = new Propagator();
         
-        Propagator propLarge = new Propagator(new StringLeftXORRight());
+        Propagator propLarge = new Propagator(new StringLeftOrRight());
         Propagator propSmall = new Propagator();
         
-        SampledEM sem = new SampledEM(2, 0.1, 1.0, 10, 10.0);
+        SampledEM sem = new SampledEM(2, 1.0, 1.0, 10, 1.0);
         
         Function<List<String>,Propagator> funct = (List<String> in) -> {
             //TODO
