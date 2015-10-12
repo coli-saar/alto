@@ -5,16 +5,16 @@
  */
 package de.up.ling.irtg.align.find_rules;
 
-import com.google.common.base.Function;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.align.RuleFinder;
 import de.up.ling.irtg.align.creation.CreateCorpus;
+import de.up.ling.irtg.align.find_rules.sampling.InterpretingModel;
+import de.up.ling.irtg.align.find_rules.sampling.Model;
 import de.up.ling.irtg.align.find_rules.sampling.RuleCountBenign;
 import de.up.ling.irtg.align.find_rules.sampling.SampleBenign;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.util.IntDoubleFunction;
 import de.up.ling.irtg.util.IntIntFunction;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -41,12 +41,7 @@ public class SampledEM {
     /**
      * 
      */
-    private final double variableInit;
-    
-    /**
-     * 
-     */
-    private final double mainInit;
+    private final double smooth;
 
     /**
      * 
@@ -57,20 +52,19 @@ public class SampledEM {
      * 
      */
     private final double scaling;
+    private double emptynessConstraint;
     
     /**
      * 
      * @param useThreads
-     * @param variableInit
-     * @param mainInit 
+     * @param smooth
      * @param batchSize 
      * @param scaling 
      */
-    public SampledEM(int useThreads, double variableInit, double mainInit, int batchSize,
+    public SampledEM(int useThreads, double smooth, int batchSize,
             double scaling) {
         this.useThreads = Math.max(useThreads, 1);
-        this.variableInit = Math.max(variableInit, 0.0);
-        this.mainInit = Math.max(mainInit, 0.0);
+        this.smooth = Math.max(smooth, 0.0);
         this.batchSize = Math.max(1, batchSize);
         this.scaling = scaling;
     }
@@ -78,23 +72,21 @@ public class SampledEM {
     /**
      * 
      * @param useThreads
-     * @param variableInit
-     * @param mainInit 
+     * @param smooth
      * @param scaling 
      */
-    public SampledEM(int useThreads, double variableInit, double mainInit, double scaling){
-        this(useThreads,variableInit,mainInit,3*useThreads, scaling);
+    public SampledEM(int useThreads, double smooth, double scaling){
+        this(useThreads,smooth,3*useThreads, scaling);
     }
 
     /**
      * 
-     * @param variableInit
-     * @param mainInit 
+     * @param smooth 
      * @param scaling 
      */
-    public SampledEM(double variableInit, double mainInit, double scaling){
+    public SampledEM(double smooth, double scaling){
         this(Runtime.getRuntime().availableProcessors()/2,
-                variableInit,mainInit,3 * (Runtime.getRuntime().availableProcessors()/2), scaling);
+                smooth,3 * (Runtime.getRuntime().availableProcessors()/2), scaling);
     }
     
     
@@ -137,17 +129,8 @@ public class SampledEM {
         ExecutorService es = Executors.newFixedThreadPool(this.useThreads);
         
         List<LearningInstance> intermediate = new ObjectArrayList<>();
-        IntDoubleFunction idf = (int value) -> {
-            if(cc.getMainManager().isVariable(value)){
-                return this.variableInit;
-            }else{
-                return this.mainInit;
-            }
-        };
         
-        TreeAddingAutomaton estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), idf, vi);
-        TreeAddingAutomaton currentModel = estimate;
-        
+        Model mod = new InterpretingModel(cc.getMainManager(), this.smooth, this.emptynessConstraint);
         for (int round = 0; round < learningRounds; ++round) {
             for (int i = 0; i < jobs.size();) {
                 int k = 0;
@@ -155,34 +138,24 @@ public class SampledEM {
                 intermediate.clear();
                 for (; i + k < jobs.size() && k < this.batchSize; ++k) {
                     LearningInstance j = jobs.get(i + k);
-                    j.setModel(currentModel);
+                    j.setModel(mod);
 
                     intermediate.add(jobs.get(i + k));
                 }
                 
                 i += k;
 
-                Collection<Future<List<Tree<Integer>>>> results = es.invokeAll(intermediate);
+                Collection<Future<List<Tree<Rule>>>> results = es.invokeAll(intermediate);
                 
                 int num = 0;
                 
-                for (Future<List<Tree<Integer>>> result : results) {
-                    List<Tree<Integer>> choices = result.get();
+                for (Future<List<Tree<Rule>>> result : results) {
+                    List<Tree<Rule>> choices = result.get();
+                    double amount = scaling / ((double) choices.size());
                     for (int h = 0; h < choices.size(); ++h) {
-                        estimate.addVariableTree(choices.get(h), scaling / choices.size());
+                        mod.add(choices.get(h), amount);
                     }
                 }
-            }
-            
-            currentModel = estimate;
-            
-            currentModel.normalizeStart();
-            
-            if(round+2 < learningRounds){
-                estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), idf, vi);
-            }
-            else{
-                estimate = new TreeAddingAutomaton(cc.getMainManager().getSignature(), vi);
             }
             
             System.out.println("finished one round of training");
@@ -190,7 +163,8 @@ public class SampledEM {
         
         es.shutdown();
         
-        return currentModel;
+        //TODO get final model or final trees ? 
+        return null;
     }
 
     /**
@@ -216,11 +190,9 @@ public class SampledEM {
             }
         };
         
-        
-        Function<Rule,Integer> map = new DefaultVariableMapping(cc.getMainManager());
         for(int i=0;i<data.size();++i){
             LearningInstance jo = makeLearningInstance(data.get(i), 
-                    sampleSmooth, seed, sampleSize, samplerAdaptionRounds, map);
+                    sampleSmooth, seed, sampleSize, samplerAdaptionRounds);
             jobs.add(jo);
         }
         return jobs;
@@ -238,9 +210,7 @@ public class SampledEM {
      */
     public LearningInstance makeLearningInstance(TreeAutomaton language, double adaptionSmooth, long seed,
             IntIntFunction sampleSizes, int samplerAdaptionRounds, CreateCorpus cc){
-        DefaultVariableMapping dvm = new DefaultVariableMapping(cc.getMainManager());
-        
-        return makeLearningInstance(language, adaptionSmooth, seed, sampleSizes, samplerAdaptionRounds, dvm);
+        return makeLearningInstance(language, adaptionSmooth, seed, sampleSizes, samplerAdaptionRounds);
     }
     
     /**
@@ -250,11 +220,10 @@ public class SampledEM {
      * @param seed
      * @param sampleSizes
      * @param samplerAdaptionRounds
-     * @param variableMapping
      * @return 
      */
     public LearningInstance makeLearningInstance(TreeAutomaton language, double adaptionSmooth, long seed,
-            IntIntFunction sampleSizes, int samplerAdaptionRounds, Function<Rule, Integer> variableMapping) {
+            IntIntFunction sampleSizes, int samplerAdaptionRounds) {
         SampleBenign sb = new RuleCountBenign(adaptionSmooth, seed);
         SampleBenign.Configuration conf = new SampleBenign.Configuration();
         sb.setAutomaton(language);
@@ -262,7 +231,6 @@ public class SampledEM {
         conf.sampleSize = sampleSizes;
         conf.rounds = samplerAdaptionRounds;
         conf.target = null;
-        conf.label2TargetLabel = variableMapping;
         
         LearningInstance jo = new LearningInstance(sb, conf);
         return jo;
@@ -271,7 +239,7 @@ public class SampledEM {
     /**
      * 
      */
-    public class LearningInstance implements Callable<List<Tree<Integer>>>{
+    public class LearningInstance implements Callable<List<Tree<Rule>>>{
 
         /**
          * 
@@ -281,7 +249,7 @@ public class SampledEM {
         /**
          * 
          */
-        private TreeAutomaton model;
+        private Model model;
         
         /**
          * 
@@ -302,22 +270,15 @@ public class SampledEM {
          * 
          * @param model 
          */
-        public void setModel(TreeAutomaton model) {
+        public void setModel(Model model) {
             this.model = model;
         }
         
         @Override
-        public List<Tree<Integer>> call() throws Exception {
+        public List<Tree<Rule>> call() throws Exception {
             try {
-                List<Tree<Integer>> ret = new ObjectArrayList<>();
                 config.target = model;
-                List<Tree<Rule>> sample = this.samp.getSample(config);
-
-                for (int i = 0; i < sample.size(); ++i) {
-                    ret.add(sample.get(i).map(config.label2TargetLabel));
-                }
-
-                return ret;
+                return this.samp.getSample(config);
             } catch (ConcurrentModificationException cme) {
                 cme.printStackTrace();
                 throw cme;
