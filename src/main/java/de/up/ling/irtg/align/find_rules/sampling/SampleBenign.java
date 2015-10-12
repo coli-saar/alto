@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.align.find_rules.sampling;
 
-import com.google.common.base.Function;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.ArraySampler;
@@ -238,8 +237,7 @@ public abstract class SampleBenign {
      */
     private void addTargetWeight(List<Tree<Rule>> sample, DoubleList weights, Configuration config) {
         for(int i=0;i<sample.size();++i){
-            Tree<Integer> t = sample.get(i).map(config.label2TargetLabel);
-            double d = lookUpWeight(config, t);
+            double d = lookUpWeight(config, sample.get(i));
             
             weights.set(i, weights.get(i)+d);
         }
@@ -251,8 +249,8 @@ public abstract class SampleBenign {
      * @param t
      * @return 
      */
-    private double lookUpWeight(Configuration config, Tree<Integer> t) {
-        return config.target.getLogWeightRaw(t);
+    private double lookUpWeight(Configuration config, Tree<Rule> t) {
+        return config.target.getLogWeight(t);
         //return Math.log(config.target.getWeightRaw(t));
     }
 
@@ -354,12 +352,7 @@ public abstract class SampleBenign {
         /**
          * 
          */
-        public TreeAutomaton target;
-        
-        /**
-         * 
-         */
-        public Function label2TargetLabel;
+        public Model target;
 
         /**
          * 
@@ -368,7 +361,6 @@ public abstract class SampleBenign {
         public Configuration copy() {
             Configuration conf = new Configuration();
             
-            conf.label2TargetLabel = this.label2TargetLabel;
             conf.rounds = this.rounds;
             conf.sampleSize = this.sampleSize;
             conf.target = this.target;
