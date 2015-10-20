@@ -1240,32 +1240,40 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public void makeAllRulesExplicit() {
         if (!ruleStore.isExplicit()) {
-            IntSet everAddedStates = new IntOpenHashSet();
-            IntPriorityQueue agenda = new IntArrayFIFOQueue();
+            if (supportsTopDownQueries()) {
+                IntSet everAddedStates = new IntOpenHashSet();
+                IntPriorityQueue agenda = new IntArrayFIFOQueue();
 
-            for (int finalState : getFinalStates()) {
-                agenda.enqueue(finalState);
-                everAddedStates.add(finalState);
-            }
+                for (int finalState : getFinalStates()) {
+                    agenda.enqueue(finalState);
+                    everAddedStates.add(finalState);
+                }
 
-            while (!agenda.isEmpty()) {
-                int state = agenda.dequeue();
+                while (!agenda.isEmpty()) {
+                    int state = agenda.dequeue();
 
-                for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
-                    Iterable<Rule> rules = getRulesTopDown(label, state);
+                    for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
+                        Iterable<Rule> rules = getRulesTopDown(label, state);
 
-                    for (Rule rule : rules) {
-                        storeRuleBottomUp(rule);
-                        storeRuleTopDown(rule);
+                        for (Rule rule : rules) {
+                            storeRuleBottomUp(rule);
+                            storeRuleTopDown(rule);
 
-                        for (int child : rule.getChildren()) {
-                            if (!everAddedStates.contains(child)) {
-                                everAddedStates.add(child);
-                                agenda.enqueue(child);
+                            for (int child : rule.getChildren()) {
+                                if (!everAddedStates.contains(child)) {
+                                    everAddedStates.add(child);
+                                    agenda.enqueue(child);
+                                }
                             }
                         }
                     }
                 }
+            } else {
+                processAllRulesBottomUp(rule ->  {
+                    //this does currently not work properly!!
+                    //storeRuleBottomUp(rule);
+                    //storeRuleTopDown(rule);
+                });
             }
 
             ruleStore.setExplicit(true);
