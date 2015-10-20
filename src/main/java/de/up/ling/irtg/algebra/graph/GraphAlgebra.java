@@ -5,25 +5,31 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Sets;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
+import de.up.ling.irtg.codec.isiamr.IsiAmrParser;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringReader;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
@@ -101,6 +107,17 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         this.useTopDownAutomaton= useTopDownAutomaton;
     }
     
+    @Override
+    public Map<String, Function<Pair<List<Object>, Instance>, Object>> getDecompositionImplementations(String interpretationName) {
+        Map<String, Function<Pair<List<Object>, Instance>, Object>> ret = new HashMap<>();
+        try {
+            ret.put("Bottom-up", pair -> decompose((SGraph)pair.right.getInputObjects().get(interpretationName), SGraphBRDecompositionAutomatonBottomUp.class));
+            ret.put("Top-down", pair -> decompose((SGraph)pair.right.getInputObjects().get(interpretationName), SGraphBRDecompositionAutomatonTopDown.class));
+        } catch (java.lang.Exception e) {
+            System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
+        }
+        return ret;
+    }
     
 
     private Int2ObjectMap<SGraph> constantLabelInterpretations;

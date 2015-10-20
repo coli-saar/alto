@@ -5,9 +5,11 @@
 package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.Iterators;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.OutputCodec;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -16,11 +18,14 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.Function;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
@@ -144,6 +149,24 @@ public abstract class Algebra<E> implements Serializable {
      */
     abstract public E parseString(String representation) throws ParserException;
 
+    
+    /**
+     * Returns all implementations this algebra provides for decomposition.
+     * By default, his is the singleton list containing the decompose(E) function with key "Standard".
+     * @param interpretationName
+     * @return
+     */
+    public Map<String, Function<Pair<List<Object>, Instance>, Object>> getDecompositionImplementations(String interpretationName) {
+        Map<String, Function<Pair<List<Object>, Instance>, Object>> ret = new HashMap<>();
+        try {
+            ret.put("Standard", pair -> decompose((E)pair.right.getInputObjects().get(interpretationName)));
+        } catch (java.lang.Exception e) {
+            System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
+        }
+        return ret;
+    }
+    
+    
     /**
      * Sets the options of the algebra implementation. Most algebras do not have
      * options; for these algebras, it is okay to reuse the default
