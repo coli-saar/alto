@@ -14,6 +14,8 @@ import de.up.ling.tree.Tree;
  */
 public interface Model {
     /**
+     * This method MUST be thread safe with respect to multiple calls of itself!
+     * It may not be thread safe with respect to calls to add.
      * 
      * @param t
      * @return 
@@ -21,9 +23,10 @@ public interface Model {
     public double getLogWeight(Tree<Rule> t);
     
     /**
+     * This method may not be thread safe.
      * 
      * @param t
-     * @return 
+     * @param amount
      */
     public void add(Tree<Rule> t, double amount);
 }

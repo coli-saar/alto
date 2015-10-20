@@ -96,12 +96,14 @@ public abstract class SampleBenign {
      * given smoothing for the initial rule weights.
      * 
      * @param smooth
+     * @param benign
      */
-    public SampleBenign(double smooth) {
+    public SampleBenign(double smooth, TreeAutomaton benign) {
         this.smooth = smooth;
         this.arrSamp = new ArraySampler(new Well44497a());
         this.rg = new Well44497a();
         this.stateNormalizers.defaultReturnValue(Double.NEGATIVE_INFINITY);
+        this.benign = benign;
     }
     
     /**
@@ -111,13 +113,15 @@ public abstract class SampleBenign {
      * 
      * @param smooth 
      * @param seed 
+     * @param benign 
      */
-    public SampleBenign(double smooth, long seed) {
+    public SampleBenign(double smooth, long seed, TreeAutomaton benign) {
         this.smooth = smooth;
         Well44497a w = new Well44497a(seed);
         this.arrSamp = new ArraySampler(w);
         this.rg = new Well44497a(w.nextLong());
         this.stateNormalizers.defaultReturnValue(Double.NEGATIVE_INFINITY);
+        this.benign = benign;
     }
     
     /**
@@ -216,7 +220,7 @@ public abstract class SampleBenign {
         
         // here we do a number of adaption steps and take the actual sample
         // from the last round
-        for(int round=0;round<config.rounds;++round){
+        for(int round=0;round<config.getRounds();++round){
             // we reset the adapted sums for each state
             this.finalStateSum = Double.NEGATIVE_INFINITY;
             this.stateNormalizers.clear();
@@ -227,7 +231,7 @@ public abstract class SampleBenign {
             weights.clear();
             
             // then find out how many samples we are supposed to generate
-            int numberOfSamples = config.sampleSize.apply(round+1);
+            int numberOfSamples = config.getSampleSize().apply(round+1);
             
             // generate them, with the inverse proposal probabilist added to
             // weights - as logs
@@ -236,20 +240,26 @@ public abstract class SampleBenign {
             }
             
             // add the actual target weights - as logs
-            addTargetWeight(sample,weights,config);
+            addTargetWeight(sample,weights,config.getTarget());
             
             // normalize the weights and turn them into a CDF
             this.arrSamp.turnIntoCWF(weights);
             double effectiveSampleSize = makeESSFromCWF(weights);
             
+            //here we adapt the proposal probabilities according to how often we
+            // have seen certain proposals and how large our effective sample is
             for(int i=0;i<weights.size();++i){
                 this.adapt(sample.get(i),
                       effectiveSampleSize*(weights.get(i) - (i > 0 ? weights.get(i-1) : 0.0)));
             }
         }
         
+        // once we are finished we re-sample the last proposal in order to
+        // get an unweighted sample
         List<Tree<Rule>> resample = new ObjectArrayList<>();
         resample.clear();
+        
+        // the 0 indicates that we are asking for the number of final samples
         int numberOfSamples = config.sampleSize.apply(0);
         for(int samp=0;samp<numberOfSamples;++samp){
             resample.add(sample.get(this.arrSamp.produceSample(weights)));
@@ -259,13 +269,18 @@ public abstract class SampleBenign {
     }
 
     /**
+     * This method draws one sample from the proposal distribution and adds
+     * it and it's unnormalized log proposal probability to the given lists.
      * 
      * @param sample
      * @param weights 
      */
     private void addSample(List<Tree<Rule>> sample, DoubleList weights) {
+        // this will be used to store the weight in recursive steps
         MutableDouble md = new MutableDouble(0.0);
         
+        // if the final state sum is less than 0.0 then that means that we have
+        // to recompute it
         if(this.finalStateSum < 0.0){
             this.finalStateSum = 0.0;
             
@@ -275,8 +290,12 @@ public abstract class SampleBenign {
             }
         }
         
+        // we draw some fraction of the sum
         double d = this.rg.nextDouble()*this.finalStateSum;
         
+        // then we go over the states in some random order and select the first
+        // one for which the cumulative weight is larger then the fraction we
+        // proposed
         int state = -1;
         IntIterator iit = this.benign.getFinalStates().iterator();
         while(iit.hasNext()){
@@ -285,43 +304,56 @@ public abstract class SampleBenign {
             
             d -= w;
             if(d <= 0.0){
-                md.add(Math.log(w/this.finalStateSum));
+                // when we have made a decision, we need to add the corresponding
+                // weight in my experience log of division is faster than log-log
+                // when the subtracted numbers are in the same order of magnitude
+                md.add(Math.log(w / this.finalStateSum));
                 break;
             }
         }
         
+        // now we can sample a tree derived from the chosen state
         Tree<Rule> samp = sample(md,state);
         
+        // and then add the information (note that here we do the inversion of
+        // the weight)
         sample.add(samp);
         weights.add(-md.getValue());
     }
 
     /**
+     *  Adds the weight from the actual target distribution for the given sample
+     * trees.
      * 
      * @param sample
      * @param weights
      * @param config 
      */
-    private void addTargetWeight(List<Tree<Rule>> sample, DoubleList weights, Configuration config) {
+    private void addTargetWeight(List<Tree<Rule>> sample, DoubleList weights, Model mod) {
+        // we look up the weight for each tree
         for(int i=0;i<sample.size();++i){
-            double d = lookUpWeight(config, sample.get(i));
+            double d = lookUpWeight(mod, sample.get(i));
             
+            // and add it to the proposal weights
             weights.set(i, weights.get(i)+d);
         }
     }
 
     /**
+     * Retrieves the weight for a single tree from the target function.
      * 
      * @param config
      * @param t
      * @return 
      */
-    private double lookUpWeight(Configuration config, Tree<Rule> t) {
-        return config.target.getLogWeight(t);
-        //return Math.log(config.target.getWeightRaw(t));
+    private double lookUpWeight(Model mod, Tree<Rule> t) {
+        return mod.getLogWeight(t);
     }
 
     /**
+     * This method changes the proposal weight for each rule in the given
+     * three by adding the given amount; it also changes the weight of
+     * the state from which the tree was derived.
      * 
      * @param t 
      */
@@ -333,6 +365,11 @@ public abstract class SampleBenign {
     
     
     /**
+     * Draws a rule tree from a given state.
+     * 
+     * The method calls itself recursively to expand states until
+     * all rules are terminal. It keeps track of the log proposal weight
+     * in the mutable double.
      * 
      * @param md
      * @param state
@@ -341,15 +378,19 @@ public abstract class SampleBenign {
     private Tree<Rule> sample(MutableDouble md, int state) {
         List<Rule> r = this.options.get(state);
         
+        // if the cache of rules for the given state is empty, create one
+        // it's a bit ugly, but it makes a BIG difference in speed.
         if(r == null){
             r = new ObjectArrayList<>();
             Iterable<Rule> it = this.benign.getRulesTopDown(state);
             for(Rule k : it){
                 r.add(k);
             }
+            
             this.options.put(state, r);
         }
         
+        // if the normalizer has not been set, then we need to re-compute it
         double sum = this.stateNormalizers.get(state);
         if(sum <= 0.0){
             sum = 0.0;
@@ -360,12 +401,15 @@ public abstract class SampleBenign {
             this.stateNormalizers.put(state, sum);
         }
         
+        // we draw a point
         double d = this.rg.nextDouble()*sum;
         Rule choice = null;
         for(int k=0;k<r.size();++k){
            Rule j = r.get(k);
            double w = this.makeRuleWeight(j);
            d -= w;
+           
+           // find the rule that contains the point
            if(d <= 0.0){
                choice = j;
                md.add(Math.log(w / sum));
@@ -373,7 +417,10 @@ public abstract class SampleBenign {
            }
         }
         
+        //and get a tree that starts with that rule
         Tree<Rule> t = Tree.create(choice);
+        //choice will be null if something about the weights is not correct
+        // e.g. if some of them are infinite or NaN
         for(int child :  choice.getChildren()){
             t.getChildren().add(this.sample(md, child));
         }
@@ -382,7 +429,7 @@ public abstract class SampleBenign {
     }
 
     /**
-     * 
+     * This resets the cached sums for the final states and the rules.
      */
     public void clear() {
         this.finalStateCounts.clear();
@@ -390,6 +437,7 @@ public abstract class SampleBenign {
     }
 
     /**
+     * This does only the adaptation of the rules.
      * 
      * @param t
      * @param amount 
@@ -403,6 +451,8 @@ public abstract class SampleBenign {
     }
 
     /**
+     * This is used to compute the effective sample size from the
+     * cumulative weight (probability) function.
      * 
      * @param weights
      * @return 
@@ -430,12 +480,12 @@ public abstract class SampleBenign {
         /**
          * 
          */
-        public IntIntFunction sampleSize;
+        private IntIntFunction sampleSize = (int num) -> 100;
         
         /**
          * 
          */
-        public int rounds;
+        private int rounds = 5;
         
         /**
          * 
@@ -444,16 +494,77 @@ public abstract class SampleBenign {
 
         /**
          * 
+         */
+        public Configuration(Model target){
+           this.target = target; 
+        }
+        
+        
+        /**
+         * 
          * @return 
          */
         public Configuration copy() {
-            Configuration conf = new Configuration();
+            Configuration conf = new Configuration(this.target);
             
             conf.rounds = this.rounds;
             conf.sampleSize = this.sampleSize;
             conf.target = this.target;
             
             return conf;
+        }
+
+        /**
+         * 
+         * @return 
+         */
+        public IntIntFunction getSampleSize() {
+            return sampleSize;
+        }
+
+        /**
+         * 
+         * @param sampleSize 
+         * @return  
+         */
+        public Configuration setSampleSize(IntIntFunction sampleSize) {
+            this.sampleSize = sampleSize;
+            return this;
+        }
+
+        /**
+         * 
+         * @return 
+         */
+        public int getRounds() {
+            return rounds;
+        }
+
+        /**
+         * 
+         * @param rounds 
+         * @return  
+         */
+        public Configuration setRounds(int rounds) {
+            this.rounds = rounds;
+            return this;
+        }
+
+        /**
+         * 
+         * @return 
+         */
+        public Model getTarget() {
+            return target;
+        }
+
+        /**
+         * 
+         * @param target 
+         */
+        public Configuration setTarget(Model target) {
+            this.target = target;
+            return this;
         }
     }
 }
