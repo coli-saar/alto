@@ -10,10 +10,9 @@ import de.up.ling.irtg.align.SubtreeIterator;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.LogSpaceOperations;
-import de.up.ling.irtg.util.LongTrieCounter;
+import de.up.ling.irtg.util.IntTrieCounter;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
 import java.util.Iterator;
 
 /**
@@ -31,7 +30,7 @@ public class InterpretingModel implements Model {
     /**
      * 
      */
-    private final LongTrieCounter ltc = new LongTrieCounter();
+    private final IntTrieCounter ltc = new IntTrieCounter();
     
     /**
      * 
@@ -76,7 +75,6 @@ public class InterpretingModel implements Model {
 
     @Override
     public double getLogWeight(Tree<Rule> t) {
-        /**
         Iterator<IntArrayList> it = new SubtreeIterator(t, hm);
         double score = 0.0;
         
@@ -98,21 +96,15 @@ public class InterpretingModel implements Model {
         }
          
         return score;
-        */
-        //TODO
-        return 0.0;
     }
 
     @Override
     public void add(Tree<Rule> t, double amount) {
-        /**
-        Iterator<LongArrayList> it = new SubtreeIterator(t, hm);
+        Iterator<IntArrayList> it = new SubtreeIterator(t, hm);
         
         while(it.hasNext()){
             this.ltc.add(it.next(), amount);
         }
-        */
-        //TODO
     }
 
     /**
@@ -120,7 +112,7 @@ public class InterpretingModel implements Model {
      * @param example
      * @return 
      */
-    private double makeSmoothFactor(LongArrayList example) {       
+    private double makeSmoothFactor(IntArrayList example) {       
         return -example.size()*this.logLexiconSize;
     }
     
@@ -129,12 +121,12 @@ public class InterpretingModel implements Model {
      * @param example
      * @return 
      */
-    private boolean checkEmpty(LongArrayList example){
+    private boolean checkEmpty(IntArrayList example){
         boolean left  = false;
         boolean right = false;
         
         for(int i=0;i<example.size();++i){
-            int code = (int) example.getLong(i);
+            int code = example.getInt(i);
             
             Tree<HomomorphismSymbol> tl = this.hm.getHomomorphism1().get(code);
             Tree<HomomorphismSymbol> tr = this.hm.getHomomorphism2().get(code);
