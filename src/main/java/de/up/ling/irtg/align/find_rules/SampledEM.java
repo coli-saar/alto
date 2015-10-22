@@ -224,6 +224,7 @@ public class SampledEM {
      */
     public LearningInstance makeLearningInstance(TreeAutomaton language, double adaptionSmooth, long seed,
             IntIntFunction sampleSizes, int samplerAdaptionRounds) {
+        /*
         SampleBenign sb = new RuleCountBenign(adaptionSmooth, seed);
         SampleBenign.Configuration conf = new SampleBenign.Configuration();
         sb.setAutomaton(language);
@@ -234,6 +235,9 @@ public class SampledEM {
         
         LearningInstance jo = new LearningInstance(sb, conf);
         return jo;
+        */
+        //TODO
+        return null;
     }    
     
     /**
@@ -276,6 +280,7 @@ public class SampledEM {
         
         @Override
         public List<Tree<Rule>> call() throws Exception {
+            /**
             try {
                 config.target = model;
                 return this.samp.getSample(config);
@@ -283,6 +288,9 @@ public class SampledEM {
                 cme.printStackTrace();
                 throw cme;
             }
+            */
+            //TODO
+            return null;
         }
     }
 }

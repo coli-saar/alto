@@ -39,6 +39,15 @@ import org.apache.commons.math3.random.Well44497a;
 public abstract class SampleBenign {
     
     /**
+     * 
+     */
+    private boolean resetEverySample = true;
+
+    public boolean isResetEverySample() {
+        return resetEverySample;
+    }
+    
+    /**
      * The initial smoothing for the rules that can be used for expanding a
      * state.
      */
@@ -95,6 +104,9 @@ public abstract class SampleBenign {
      * Create a new instance with a random seed based on the time and with the
      * given smoothing for the initial rule weights.
      * 
+     * Smoothing should not be set at too low a value, as it will make the
+     * learner focus too much on certain examples.
+     * 
      * @param smooth
      * @param benign
      */
@@ -111,6 +123,9 @@ public abstract class SampleBenign {
      * and which is based on the given seed for the random number generation
      * (intended to improve reproducibility).
      * 
+     * Smoothing should not be set at too low a value, as it will make the
+     * learner focus too much on certain examples.
+     * 
      * @param smooth 
      * @param seed 
      * @param benign 
@@ -125,7 +140,7 @@ public abstract class SampleBenign {
     }
     
     /**
-     * Changes the given automaton.
+     * Changes the given automaton and removes any adaption.
      * 
      * When the automaton is changed, then all cached information is changed.
      * It is assumed that once an automaton has been set its rules will not
@@ -136,7 +151,29 @@ public abstract class SampleBenign {
     public void setAutomaton(TreeAutomaton to){
         this.benign = to;
         this.options.clear();
+        resetAdaption();
     }
+
+    /**
+     * Flushes all the given adaption done so far.
+     */
+    public void resetAdaption() {
+        this.finalStateCounts.clear();
+        this.ruleCounts.clear();
+    }
+    
+    /**
+     * If set to true the adaption will be flushed for every new sampling
+     * generation process.
+     * 
+     * Default value is true.
+     * 
+     * @param resetEverySample 
+     */
+    public void setResetEverySample(boolean resetEverySample) {
+        this.resetEverySample = resetEverySample;
+    }
+    
     
     /**
      * Abstract method that returns a weight for a rule.
@@ -209,6 +246,11 @@ public abstract class SampleBenign {
      * @return 
      */
     public List<Tree<Rule>> getSample(Configuration config){
+        if(this.resetEverySample){
+            this.resetAdaption();
+        }
+        
+        
         if(this.benign == null){
             throw new NullPointerException("The automaton to be sampled must"
                     + "be defined with setAutomaton before sampling starts");
@@ -231,7 +273,7 @@ public abstract class SampleBenign {
             weights.clear();
             
             // then find out how many samples we are supposed to generate
-            int numberOfSamples = config.getSampleSize().apply(round+1);
+            int numberOfSamples = config.getSampleSize(round+1);
             
             // generate them, with the inverse proposal probabilist added to
             // weights - as logs
@@ -257,10 +299,9 @@ public abstract class SampleBenign {
         // once we are finished we re-sample the last proposal in order to
         // get an unweighted sample
         List<Tree<Rule>> resample = new ObjectArrayList<>();
-        resample.clear();
         
         // the 0 indicates that we are asking for the number of final samples
-        int numberOfSamples = config.sampleSize.apply(0);
+        int numberOfSamples = config.getSampleSize(0);
         for(int samp=0;samp<numberOfSamples;++samp){
             resample.add(sample.get(this.arrSamp.produceSample(weights)));
         }
@@ -429,14 +470,6 @@ public abstract class SampleBenign {
     }
 
     /**
-     * This resets the cached sums for the final states and the rules.
-     */
-    public void clear() {
-        this.finalStateCounts.clear();
-        this.ruleCounts.clear();
-    }
-
-    /**
      * This does only the adaptation of the rules.
      * 
      * @param t
@@ -474,34 +507,38 @@ public abstract class SampleBenign {
     }
     
     /**
-     * 
+     * Used to configure the sampling process.
      */
     public static class Configuration{
         /**
-         * 
+         * The number of samples drawn in each round, the 0th round is the
+         * final resampling step.
          */
         private IntIntFunction sampleSize = (int num) -> 100;
         
         /**
-         * 
+         * The number of rounds used for adaption.
          */
         private int rounds = 5;
         
         /**
-         * 
+         * The model used for evaluation.
          */
-        public Model target;
+        private Model target;
 
         /**
+         * Create a default instance with the given model as a target weighting,
+         * with 5 rounds and 100 samples
          * 
+         * @param target
          */
         public Configuration(Model target){
            this.target = target; 
-        }
-        
+        }        
         
         /**
-         * 
+         * Create a shallow copy of this configuration (rounds are deep copied,
+         * everything else uses a shallow copy).
          * @return 
          */
         public Configuration copy() {
@@ -515,14 +552,21 @@ public abstract class SampleBenign {
         }
 
         /**
+         * Returns the target sample size for the given round.
          * 
+         * Never less than 1.
+         * 
+         * @param round
          * @return 
          */
-        public IntIntFunction getSampleSize() {
-            return sampleSize;
+        public int getSampleSize(int round) {
+            return Math.max(1, sampleSize.apply(round));
         }
 
         /**
+         * The sample size is the function that gives the number of desired
+         * samples for a round (counting from 1); with round 0 indicating the
+         * final sample number.
          * 
          * @param sampleSize 
          * @return  
@@ -533,14 +577,17 @@ public abstract class SampleBenign {
         }
 
         /**
+         * Returns the number of adaption rounds that will be done, never less
+         * than 1.
          * 
          * @return 
          */
         public int getRounds() {
-            return rounds;
+            return Math.max(1, rounds);
         }
 
         /**
+         * Returns the number of adaption rounds that will be done.
          * 
          * @param rounds 
          * @return  
@@ -551,7 +598,7 @@ public abstract class SampleBenign {
         }
 
         /**
-         * 
+         * Returns the model that is used as a target weighting.
          * @return 
          */
         public Model getTarget() {
@@ -559,8 +606,10 @@ public abstract class SampleBenign {
         }
 
         /**
+         * Configures a new target for sampling.
          * 
          * @param target 
+         * @return  
          */
         public Configuration setTarget(Model target) {
             this.target = target;

@@ -11,17 +11,25 @@ import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.align.find_rules.sampling.SampleBenign.Configuration;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.util.IntIntFunction;
+import de.up.ling.irtg.util.MutableDouble;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- *
+ * 
  * @author christoph_teichmann
  */
 public class RuleCountBenignTest {
+    
+    /**
+     * 
+     */
+    private final static int TARGET_DISTANCE = 4;
     
     /**
      * 
@@ -31,7 +39,7 @@ public class RuleCountBenignTest {
     /**
      * 
      */
-    private TreeAutomaton<Span> score;
+    private Model score;
     
     /**
      * 
@@ -41,7 +49,7 @@ public class RuleCountBenignTest {
     /**
      * 
      */
-    private RuleCountBenign acb;
+    private RuleCountBenign rcb;
     
     @Before
     public void setUp() {
@@ -50,56 +58,98 @@ public class RuleCountBenignTest {
         
         base = sag.decompose(l);
         
-        score = sag.decompose(l);
-        assertFalse(score == base);
-        
-        Iterable<Rule> it = score.getAllRulesTopDown();
-        for(Rule r : it){
-            if(r.getArity() != 2){
-                continue;
+        score = new Model() {
+            @Override
+            public double getLogWeight(Tree<Rule> t) {
+                MutableDouble md = new MutableDouble(0.0);
+                
+                getWidthAndWeight(md,t);
+                
+                return md.getValue();
             }
-            
-            Span left = this.score.getStateForId(r.getChildren()[0]);
-            
-            if((left.end-left.start) == 4){
-                r.setWeight(10.0);
-                continue;
+
+            @Override
+            public void add(Tree<Rule> t, double amount) {
             }
-            
-            r.setWeight(0.01);
-        }
+
+            private int getWidthAndWeight(MutableDouble md, Tree<Rule> t) {
+                if(t.getChildren().isEmpty()){
+                    return 1;
+                }else{
+                    int sum = 0;
+                    int length = 0;
+                    
+                    for(int i=0;i<t.getChildren().size();++i){
+                        Tree<Rule> child = t.getChildren().get(i);
+                        
+                        int size = getWidthAndWeight(md, child);
+                        if(i == 0){
+                            length = size;
+                        }
+                        
+                        sum += size;
+                    }
+                    
+                    if(length == TARGET_DISTANCE){
+                        md.add(0.0);
+                    }else{
+                        md.add(-5.0);
+                    }
+                    
+                    return sum;
+                }
+            }
+        };
         
-        config = new Configuration();
-        config.label2TargetLabel = (Function<Rule,Integer>) (Rule input) -> input.getLabel();
-        config.rounds = 5;
-        config.target = score;
-        config.sampleSize = (int value) -> 10;
+        IntIntFunction sampleSize = (int value) -> 15;
         
-        this.acb = new RuleCountBenign(0.01,928892349279L);
-        this.acb.setAutomaton(base);
+        config = new Configuration(score);
+        config.setRounds(12);
+        config.setSampleSize(sampleSize);
+        
+        this.rcb = new RuleCountBenign(1.0, 87764L, null);
+        this.rcb.setAutomaton(base);
     }
 
     @Test
     public void testGetSample() {
-        List<Tree<Rule>> result = this.acb.getSample(config);
+        List<Tree<Rule>> result = this.rcb.getSample(config);
         double sum = 0.0;
         
         for(Tree<Rule> t : result){
-            sum += (countLefties(t));
+            sum += this.countLefties(t);
         }
         
-        assertTrue(sum / result.size() >= 1.8);
+        assertTrue(sum / result.size() >= 1.9);
         
-        sum = 0.0;
-        this.acb.clear();
-        config.rounds = 1;
-        result = this.acb.getSample(config);
+        StringAlgebra sag = new StringAlgebra();
+        List<String> l = sag.parseString("1 2 3 4");
+        
+        base = sag.decompose(l);
+        
+        config.setSampleSize((int i) -> 20);
+        config.setRounds(5);
+        this.rcb.setAutomaton(base);
+        
+        result = this.rcb.getSample(config);
+        
+        Function<Rule,String> f = (Rule r) -> {
+            return base.getSignature().resolveSymbolId(r.getLabel());
+        };
+        
+        Object2DoubleOpenHashMap<Tree<String>> map = new Object2DoubleOpenHashMap<>();
         
         for(Tree<Rule> t : result){
-            sum += (countLefties(t));
+            Tree<String> q = t.map(f);
+            
+            map.addTo(q, 1.0);
         }
         
-        assertTrue(sum / result.size() >= 0.9);
+        assertEquals(map.size(),5);
+        
+        for(Tree<String> t : map.keySet()){
+            assertEquals(map.get(t) / result.size(),0.2,0.2);
+        }
     }
 
     /**
@@ -112,7 +162,7 @@ public class RuleCountBenignTest {
         
         if(t.getLabel().getArity() == 2){
             Span left = this.base.getStateForId(t.getLabel().getChildren()[0]);
-            result += (left.end - left.start == 4) ? 1.0 : 0.0;
+            result += (left.end - left.start == TARGET_DISTANCE) ? 1.0 : 0.0;
         }
         
         for(Tree<Rule> q : t.getChildren()){
