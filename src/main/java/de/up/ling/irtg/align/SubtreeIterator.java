@@ -7,16 +7,17 @@ package de.up.ling.irtg.align;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  *
  * @author christoph_teichmann
  */
-public class SubtreeIterator implements Iterator<LongArrayList> {
+public class SubtreeIterator implements Iterator<IntArrayList> {
     
     /**
      * 
@@ -31,7 +32,7 @@ public class SubtreeIterator implements Iterator<LongArrayList> {
     /**
      * 
      */
-    private final LongArrayList ret;
+    private final IntArrayList ret;
     
     /**
      * 
@@ -45,7 +46,7 @@ public class SubtreeIterator implements Iterator<LongArrayList> {
      */
     public SubtreeIterator(Tree<Rule> input, HomomorphismManager hm){
         toDo.add(input);
-        ret = new LongArrayList();
+        ret = new IntArrayList();
         
         this.hm = hm;
     }
@@ -56,7 +57,11 @@ public class SubtreeIterator implements Iterator<LongArrayList> {
     }
     
     @Override
-    public LongArrayList next() {
+    public IntArrayList next() {
+        if(pos >= this.toDo.size()){
+            throw new NoSuchElementException();
+        }
+        
         this.ret.clear();
         
         Tree<Rule> tr = this.toDo.get(pos++);
@@ -73,16 +78,16 @@ public class SubtreeIterator implements Iterator<LongArrayList> {
      * @param addChildren
      * @param hom 
      */
-    private void add(LongArrayList container, Tree<Rule> tr) {
+    private void add(IntArrayList container, Tree<Rule> tr) {
         int label = tr.getLabel().getLabel();
         
+        container.add(label);
         if(hm.isVariable(label)){
-            this.toDo.add(tr);
+            this.toDo.addAll(tr.getChildren());
             
             return;
         }
         
-        container.add(label);
         for(int i=0;i<tr.getChildren().size();++i){
             this.add(container, tr.getChildren().get(i));
         }

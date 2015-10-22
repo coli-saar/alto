@@ -12,11 +12,18 @@ import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.irtg.util.LongTrieCounter;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import java.util.Iterator;
 
 /**
  *
+ * This model is based on interpreting the given tree in two homomorphisms
+ * and then counting how often pairs occur.
+ * 
+ * The probability corresponds to the count plus a smoothing based on the 'shape'
+ * of the two trees.
+ * 
  * @author christoph_teichmann
  */
 public class InterpretingModel implements Model {
@@ -69,11 +76,12 @@ public class InterpretingModel implements Model {
 
     @Override
     public double getLogWeight(Tree<Rule> t) {
-        Iterator<LongArrayList> it = new SubtreeIterator(t, hm);
+        /**
+        Iterator<IntArrayList> it = new SubtreeIterator(t, hm);
         double score = 0.0;
         
         while(it.hasNext()){
-            LongArrayList example = it.next();
+            IntArrayList example = it.next();
             
             double count = this.ltc.get(example);
             double norm = this.ltc.getNorm()+this.smooth;
@@ -88,17 +96,23 @@ public class InterpretingModel implements Model {
                 score += this.emptynessConstraint;
             }
         }
-        
+         
         return score;
+        */
+        //TODO
+        return 0.0;
     }
 
     @Override
     public void add(Tree<Rule> t, double amount) {
+        /**
         Iterator<LongArrayList> it = new SubtreeIterator(t, hm);
         
         while(it.hasNext()){
             this.ltc.add(it.next(), amount);
         }
+        */
+        //TODO
     }
 
     /**
