@@ -113,7 +113,7 @@ public class LongTrieCounter implements Serializable
         * @return 
         */
         public double getNorm() {
-            return nodeCount;
+            return nodeNormalizer;
         }
 
 	/**

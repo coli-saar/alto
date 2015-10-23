@@ -98,7 +98,7 @@ public class IntTrieCounter implements Serializable
 	 */
 	private double get(int position, int length, int[] key){
 		if(length == 0){
-			return getNorm();
+			return this.nodeCount;
 		}
 
 		IntTrieCounter child = this.followers.get(key[position]);
@@ -111,7 +111,7 @@ public class IntTrieCounter implements Serializable
         * @return 
         */
         public double getNorm() {
-            return nodeCount;
+            return nodeNormalizer;
         }
 
 	/**
