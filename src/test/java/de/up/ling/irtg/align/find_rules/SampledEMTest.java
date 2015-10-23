@@ -69,7 +69,7 @@ public class SampledEMTest {
         Propagator propDef = new Propagator();
         Propagator propLarge = new Propagator();
         
-        sem = new SampledEM(2, 0.05, 150, 4, 15);
+        sem = new SampledEM(2, 0.05, 150, 4);
         
         Function<List<String>,Propagator> funct = (List<String> in) -> {
             if(in.size() > 0){
@@ -82,7 +82,7 @@ public class SampledEMTest {
         SpanAligner.Factory spanFactory = new SpanAligner.Factory();
         
         for(String[] p : new String[][] {{"a b c","0:1:1 1:2:2 2:3:3"},{"a b d","0:1:1 1:2:2 2:3:3"}}){
-            stringInputs.add(new CreateCorpus.InputPackage(p[0], p[1], funct, spanFactory));     
+            stringInputs.add(cc.makePackage(p[0], p[1], funct, spanFactory));     
         }
         
         Function<Tree<String>,Propagator> f = (Tree<String> in) -> {
@@ -93,7 +93,7 @@ public class SampledEMTest {
         
         for(String[] p : new String[][] {{"c(b,a)","0-0-0-1:1 0-0-0-0:2 0-0-0:3"},
             {"d(b,a)","0-0-0-1:1 0-0-0-0:2 0-0-0:3"}}){
-            treeInput.add(new CreateCorpus.InputPackage<>(p[0],p[1],f,addFactory));
+            treeInput.add(cc.makePackage(p[0],p[1],f,addFactory));
         }
         
         data = cc.makeDataSet(stringInputs, treeInput);
@@ -109,6 +109,7 @@ public class SampledEMTest {
 
     /**
      * Test of makeGrammar method, of class SampledEM.
+     * @throws java.lang.Exception
      */
     @Test
     public void testMakeGrammar() throws Exception {
@@ -166,7 +167,8 @@ public class SampledEMTest {
             return 1.0;
         };
         
-        semle.setModel(new TreeAddingAutomaton(cc.getMainManager().getSignature(), smooth, vi));
+        //TODO
+        semle.setModel(null);
         
         assertEquals(semle.call().size(),10);
     }

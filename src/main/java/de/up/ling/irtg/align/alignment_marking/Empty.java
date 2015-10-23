@@ -13,6 +13,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 /**
  *
  * @author christoph_teichmann
+ * @param <State>
  */
 public class Empty<State> extends StateAlignmentMarking {
     /**

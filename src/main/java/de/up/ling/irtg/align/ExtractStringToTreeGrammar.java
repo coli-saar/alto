@@ -41,6 +41,7 @@ public class ExtractStringToTreeGrammar {
      * @throws java.lang.InterruptedException 
      */
     public static void main(String... args) throws IOException, ParserException, ExecutionException, InterruptedException {
+        /**
         StringAlgebra str = new StringAlgebra();
         MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
         ArrayList<CreateCorpus.InputPackage> stringInputs = new ArrayList<>();
@@ -101,5 +102,6 @@ public class ExtractStringToTreeGrammar {
         BufferedWriter bw = new BufferedWriter(new FileWriter(args[2]));
         bw.write(ita.toString());
         bw.close();
+        */
     }
 }

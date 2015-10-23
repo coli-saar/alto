@@ -79,11 +79,11 @@ public class CreateCorpusTest {
         for(int i=0;i<50;++i){
             String a = "a"+i;
             String align = "";
-            this.stringInputs.add(new CreateCorpus.InputPackage(a,align,funct,spanFactory));
+            this.stringInputs.add(cc.makePackage(a,align,funct,spanFactory));
         }
         
         for(String[] p : new String[][] {{"a b c","0:1:1 1:2:2 2:3:3"}}){
-            this.stringInputs.add(new CreateCorpus.InputPackage(p[0], p[1], funct, spanFactory));     
+            this.stringInputs.add(cc.makePackage(p[0], p[1], funct, spanFactory));     
         }
         
         Function<Tree<String>,Propagator> f = (Tree<String> in) -> {
@@ -95,11 +95,11 @@ public class CreateCorpusTest {
         for(int i=0;i<50;++i){
             String a = "a"+i;
             String align = "";
-            this.treeInput.add(new CreateCorpus.InputPackage(a,align,f,addFactory));
+            this.treeInput.add(cc.makePackage(a,align,f,addFactory));
         }
         
         for(String[] p : new String[][] {{"c(b,a)","0-0-0-1:1 0-0-0-0:2 0-0-0:3"}}){
-            this.treeInput.add(new CreateCorpus.InputPackage<>(p[0],p[1],f,addFactory));
+            this.treeInput.add(cc.makePackage(p[0],p[1],f,addFactory));
         }
     }
 

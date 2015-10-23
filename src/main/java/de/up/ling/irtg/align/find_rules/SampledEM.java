@@ -280,17 +280,13 @@ public class SampledEM {
         
         @Override
         public List<Tree<Rule>> call() throws Exception {
-            /**
-            try {
-                config.target = model;
+           try {
+                config.setTarget(model);
                 return this.samp.getSample(config);
             } catch (ConcurrentModificationException cme) {
                 cme.printStackTrace();
                 throw cme;
             }
-            */
-            //TODO
-            return null;
         }
     }
 }

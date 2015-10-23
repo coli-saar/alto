@@ -124,9 +124,23 @@ public class CreateCorpus<Type1,Type2> {
 
     /**
      * 
+     * @param <Type>
+     * @param input
+     * @param alignments
+     * @param props
+     * @param sam
+     * @return 
+     */
+    public <Type> InputPackage<Type> makePackage(String input, String alignments, Function<Type, Propagator> props,
+                AlignmentFactory sam) {
+            return new InputPackage<>(input,alignments,props,sam);
+    }
+    
+    /**
+     * 
      * @param <Type> 
      */
-    public static class InputPackage<Type>{
+    public class InputPackage<Type>{
         /**
          * 
          */
@@ -154,7 +168,7 @@ public class CreateCorpus<Type1,Type2> {
          * @param props
          * @param sam
          */
-        public InputPackage(String input, String alignments, Function<Type, Propagator> props,
+        private InputPackage(String input, String alignments, Function<Type, Propagator> props,
                 AlignmentFactory sam) {
             this.input = input;
             this.props = props;
