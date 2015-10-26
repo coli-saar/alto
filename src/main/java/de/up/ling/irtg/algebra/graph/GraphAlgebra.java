@@ -108,16 +108,21 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     @Override
-    public Map<String, Function<Pair<List<Object>, Instance>, Object>> getDecompositionImplementations(String interpretationName) {
-        Map<String, Function<Pair<List<Object>, Instance>, Object>> ret = new HashMap<>();
+    public Map<String, Pair<Function<SGraph, Object>, Class>> getDecompositionImplementations(String interpretationName) {
+        Map<String, Pair<Function<SGraph, Object>, Class>> ret = new HashMap<>();
         try {
-            ret.put("Bottom-up", pair -> decompose((SGraph)pair.right.getInputObjects().get(interpretationName), SGraphBRDecompositionAutomatonBottomUp.class));
-            ret.put("Top-down", pair -> decompose((SGraph)pair.right.getInputObjects().get(interpretationName), SGraphBRDecompositionAutomatonTopDown.class));
+            Function<SGraph, Object> bottomup = graph -> decompose(graph, SGraphBRDecompositionAutomatonBottomUp.class);
+            Function<SGraph, Object> topdown = graph -> decompose(graph, SGraphBRDecompositionAutomatonTopDown.class);
+            Class returnType = getClass().getMethod("decompose", new Class[]{SGraph.class, Class.class}).getReturnType();
+            ret.put("Bottom-up", new Pair(bottomup, returnType));
+            ret.put("Top-down", new Pair(topdown, returnType));
         } catch (java.lang.Exception e) {
             System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
         }
         return ret;
     }
+    
+    
     
 
     private Int2ObjectMap<SGraph> constantLabelInterpretations;

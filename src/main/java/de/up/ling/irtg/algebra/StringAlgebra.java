@@ -5,6 +5,7 @@
 package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.Lists;
+import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -12,9 +13,11 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.irtg.util.LambdaStopwatch;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
@@ -126,6 +129,22 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         return new CkyAutomaton(words);
     }
 
+    @Override
+    public List<Evaluator> getEvaluationMethods() {
+        List<Evaluator> ret = new ArrayList<>();
+        ret.add(new Evaluator<List<String>>("Equals") {
+            
+            @Override
+            public Pair<Double, Double> evaluate(List<String> result, List<String> gold) {
+                double score = (result.equals(gold)) ? 1 : 0;
+                return new Pair(score, 1);
+            }
+        });
+        return ret;
+    }
+
+    
+    
     @Override
     public Class getClassOfValues() {
         return List.class;

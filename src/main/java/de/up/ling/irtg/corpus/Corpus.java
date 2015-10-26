@@ -12,7 +12,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -105,6 +104,7 @@ public class Corpus implements Iterable<Instance> {
     public void addInstance(Instance instance) {
         instances.add(instance);
 
+        //is this the intended behaviour??? jonas
         if (instance.getDerivationTree() != null) {
             isAnnotated = true;
         }

@@ -11,12 +11,14 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.io.Writer;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -154,18 +156,42 @@ public abstract class Algebra<E> implements Serializable {
      * Returns all implementations this algebra provides for decomposition.
      * By default, his is the singleton list containing the decompose(E) function with key "Standard".
      * @param interpretationName
-     * @return
+     * @return 
      */
-    public Map<String, Function<Pair<List<Object>, Instance>, Object>> getDecompositionImplementations(String interpretationName) {
-        Map<String, Function<Pair<List<Object>, Instance>, Object>> ret = new HashMap<>();
+    public Map<String, Pair<Function<E, Object>, Class>> getDecompositionImplementations(String interpretationName) {
+        Map<String, Pair<Function<E, Object>, Class>> ret = new HashMap<>();
         try {
-            ret.put("Standard", pair -> decompose((E)pair.right.getInputObjects().get(interpretationName)));
+            Function<E, Object> function = value -> decompose(value);
+            //getting the return type of the actual decompose function is a bit complicated... edit: did not make it work, just using TreeAutomaton for now.
+            ret.put("Standard", new Pair(function, TreeAutomaton.class));
         } catch (java.lang.Exception e) {
             System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
         }
         return ret;
     }
     
+    /**
+     * Returns all evaluation methods for this algebra. Default is an empty map.
+     * @return Maps the name of the evaluation method to a function that takes
+     * a pair of objects (result left, gold right) to a pair of doubles: left
+     * is the score, and right is the weight (if i.e. in a corpus we want to 
+     * compute the weighted average).
+     */
+    public List<Evaluator> getEvaluationMethods() {
+        return new ArrayList<>();
+    }
+    
+    /**
+     * Returns all numerical properties this algebra provides for its objects.
+     * Default is the length if the object is represented as a string.
+     * @return Maps the name of the property to a function that maps an object to the
+     * property.
+     */
+    public Map<String, Function<E, Double>> getObjectProperties() {
+        Map<String, Function<E, Double>> ret = new HashMap<>();
+        ret.put("String length", obj -> (double) obj.toString().length());
+        return ret;
+    }
     
     /**
      * Sets the options of the algebra implementation. Most algebras do not have

@@ -59,7 +59,7 @@ public class Interpretation<E> implements Serializable {
     public TreeAutomaton invhom(TreeAutomaton auto) {
         
         if (hom.isNonDeleting()) {
-            if (hom.getSourceSignature().getMaxArity() <= 2 || !auto.supportsTopDownQueries()) {
+            if (hom.getSourceSignature().getMaxArity() <= 2 || !auto.supportsTopDownQueries() || !auto.supportsBottomUpQueries()) {
                 //if source signature is binarized, use pattern matcher. Also
                 //use pattern matcher if only bottom up queries can be answered,
                 //since this is not supported by CondensedNondeletingInverseHomAutomaton
