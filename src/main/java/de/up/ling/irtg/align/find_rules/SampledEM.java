@@ -5,19 +5,17 @@
  */
 package de.up.ling.irtg.align.find_rules;
 
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.align.RuleFinder;
 import de.up.ling.irtg.align.creation.CreateCorpus;
 import de.up.ling.irtg.align.find_rules.sampling.InterpretingModel;
 import de.up.ling.irtg.align.find_rules.sampling.Model;
-import de.up.ling.irtg.align.find_rules.sampling.RuleCountBenign;
 import de.up.ling.irtg.align.find_rules.sampling.SampleBenign;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.IntIntFunction;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.List;
@@ -26,6 +24,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import org.apache.commons.math3.util.Pair;
 
 /**
  *
@@ -52,42 +51,27 @@ public class SampledEM {
      * 
      */
     private final double scaling;
-    private double emptynessConstraint;
     
     /**
      * 
-     * @param useThreads
-     * @param smooth
-     * @param batchSize 
-     * @param scaling 
      */
-    public SampledEM(int useThreads, double smooth, int batchSize,
-            double scaling) {
-        this.useThreads = Math.max(useThreads, 1);
-        this.smooth = Math.max(smooth, 0.0);
-        this.batchSize = Math.max(1, batchSize);
+    private final double emptynessConstraint;
+    
+    /**
+     * 
+     */
+    private final double delexicalizationConstraint;
+
+    public SampledEM(int useThreads, double smooth, int batchSize, double scaling, double emptynessConstraint, double delexicalizationConstraint) {
+        this.useThreads = useThreads;
+        this.smooth = smooth;
+        this.batchSize = batchSize;
         this.scaling = scaling;
-    }
-    
-    /**
-     * 
-     * @param useThreads
-     * @param smooth
-     * @param scaling 
-     */
-    public SampledEM(int useThreads, double smooth, double scaling){
-        this(useThreads,smooth,3*useThreads, scaling);
+        this.emptynessConstraint = emptynessConstraint;
+        this.delexicalizationConstraint = delexicalizationConstraint;
     }
 
-    /**
-     * 
-     * @param smooth 
-     * @param scaling 
-     */
-    public SampledEM(double smooth, double scaling){
-        this(Runtime.getRuntime().availableProcessors()/2,
-                smooth,3 * (Runtime.getRuntime().availableProcessors()/2), scaling);
-    }
+    
     
     
     /**
@@ -101,14 +85,14 @@ public class SampledEM {
      * @throws ExecutionException
      * @throws InterruptedException 
      */
-    public InterpretedTreeAutomaton makeGrammar(CreateCorpus cc, int learningRounds,
+    public List<List<Pair<Tree<String>,Tree<String>>>> makeGrammar(CreateCorpus cc, int learningRounds,
             List<LearningInstance> instances) throws ParserException, ExecutionException, InterruptedException{
         
         VariableIndication vi = new VariableIndicationByLookUp(cc.getMainManager());
         
-        TreeAddingAutomaton currentModel = runTraining(cc, vi, learningRounds, instances);
+        List<List<Pair<Tree<String>,Tree<String>>>> corpus = runTraining(cc, vi, learningRounds, instances);
         
-        return new RuleFinder().getInterpretation(currentModel, cc.getMainManager(), cc.getAlgebra1(), cc.getAlgebra2());
+        return corpus;
     }
 
     /**
@@ -124,33 +108,49 @@ public class SampledEM {
      * @throws InterruptedException
      * @throws ExecutionException 
      */
-    private TreeAddingAutomaton runTraining(CreateCorpus cc, VariableIndication vi,
+    private List<List<Pair<Tree<String>,Tree<String>>>> runTraining(CreateCorpus cc, VariableIndication vi,
             int learningRounds, List<LearningInstance> jobs) throws InterruptedException, ExecutionException {
         ExecutorService es = Executors.newFixedThreadPool(this.useThreads);
         
         List<LearningInstance> intermediate = new ObjectArrayList<>();
         
-        Model mod = new InterpretingModel(cc.getMainManager(), this.smooth, this.emptynessConstraint);
+        Model mod = new InterpretingModel(cc.getMainManager(), this.smooth, this.emptynessConstraint,
+                                                                        this.delexicalizationConstraint);
+        pushModel(jobs, mod);
+        
+        train(learningRounds, jobs, intermediate, es, mod);
+        
+        List<List<Pair<Tree<String>,Tree<String>>>> result = new ArrayList<>();
+        List<Future<List<Tree<Rule>>>> l = es.invokeAll(jobs);
+        es.shutdown();
+        
+        
+        
+        //TODO convert and then return that stuff
+        
+        
+        //TODO get final model or final trees ? 
+        return null;
+    }
+
+    private void train(int learningRounds, List<LearningInstance> jobs,
+            List<LearningInstance> intermediate, ExecutorService es, Model mod)
+                                    throws InterruptedException, ExecutionException {
         for (int round = 0; round < learningRounds; ++round) {
             for (int i = 0; i < jobs.size();) {
                 int k = 0;
 
                 intermediate.clear();
                 for (; i + k < jobs.size() && k < this.batchSize; ++k) {
-                    LearningInstance j = jobs.get(i + k);
-                    j.setModel(mod);
-
                     intermediate.add(jobs.get(i + k));
                 }
                 
                 i += k;
 
-                Collection<Future<List<Tree<Rule>>>> results = es.invokeAll(intermediate);
+                List<Future<List<Tree<Rule>>>> results = es.invokeAll(intermediate);
                 
-                int num = 0;
-                
-                for (Future<List<Tree<Rule>>> result : results) {
-                    List<Tree<Rule>> choices = result.get();
+                for (int pos=0;pos<results.size();++pos) {
+                    List<Tree<Rule>> choices = results.get(pos).get();
                     double amount = scaling / ((double) choices.size());
                     for (int h = 0; h < choices.size(); ++h) {
                         mod.add(choices.get(h), amount);
@@ -160,11 +160,17 @@ public class SampledEM {
             
             System.out.println("finished one round of training");
         }
-        
-        es.shutdown();
-        
-        //TODO get final model or final trees ? 
-        return null;
+    }
+
+    /**
+     * 
+     * @param jobs
+     * @param mod 
+     */
+    private void pushModel(List<LearningInstance> jobs, Model mod) {
+        for(int i=0;i<jobs.size();++i){
+            jobs.get(i).setModel(mod);
+        }
     }
 
     /**
@@ -284,9 +290,125 @@ public class SampledEM {
                 config.setTarget(model);
                 return this.samp.getSample(config);
             } catch (ConcurrentModificationException cme) {
-                cme.printStackTrace();
+                System.out.println(cme);
                 throw cme;
             }
+        }
+    }
+    
+    
+    
+    
+    public class SampledEMFactory{
+        /**
+         * 
+         */
+        private int numberOfThreads;
+        
+        /**
+         * 
+         */
+        private double smooth;
+        
+        /**
+         * 
+         */
+        private int batchSize;
+        
+        /**
+         * 
+         */
+        private double scaling;
+        
+        /**
+         * 
+         */
+        private double emptynessConstraint;
+        
+        /**
+         * 
+         */
+        private double delexicalizationConstraint;
+        
+        /**
+         * 
+         */
+        public SampledEMFactory(){
+            numberOfThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+            smooth = 10.0;
+            batchSize = numberOfThreads*10;
+            this.scaling = 1.0;
+            this.emptynessConstraint = Math.log(1E-5);
+            this.delexicalizationConstraint = Math.log(1E-5);
+        }
+
+        /**
+         * 
+         * @param numberOfThreads
+         * @return 
+         */
+        public SampledEMFactory setNumberOfThreads(int numberOfThreads) {
+            this.numberOfThreads = numberOfThreads;
+            return this;
+        }
+
+        /**
+         * 
+         * @param smooth
+         * @return 
+         */
+        public SampledEMFactory setSmooth(double smooth) {
+            this.smooth = smooth;
+            return this;
+        }
+
+        /**
+         * 
+         * @param batchSize
+         * @return 
+         */
+        public SampledEMFactory setBatchSize(int batchSize) {
+            this.batchSize = batchSize;
+            return this;
+        }
+
+        /**
+         * 
+         * @param scaling
+         * @return 
+         */
+        public SampledEMFactory setScaling(double scaling) {
+            this.scaling = scaling;
+            return this;
+        }
+
+        /**
+         * 
+         * @param emptynessConstraint
+         * @return 
+         */
+        public SampledEMFactory setEmptynessConstraint(double emptynessConstraint) {
+            this.emptynessConstraint = emptynessConstraint;
+            return this;
+        }
+
+        /**
+         * 
+         * @param delexicalizationConstraint 
+         * @return  
+         */
+        public SampledEMFactory setDelexicalizationConstraint(double delexicalizationConstraint) {
+            this.delexicalizationConstraint = delexicalizationConstraint;
+            return this;
+        }
+        
+        /**
+         * 
+         * @return 
+         */
+        public SampledEM getInstance(){
+            return new SampledEM(this.numberOfThreads, this.smooth, this.batchSize,
+                    this.scaling, this.emptynessConstraint, this.delexicalizationConstraint);
         }
     }
 }

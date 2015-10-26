@@ -59,6 +59,7 @@ public class SampledEMTest {
     
     @Before
     public void setUp() throws ParserException {
+        /*
         StringAlgebra sal = new StringAlgebra();
         MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
         ArrayList<CreateCorpus.InputPackage> stringInputs = new ArrayList<>();
@@ -105,6 +106,7 @@ public class SampledEMTest {
             
             return 20;
         };
+        */
     }
 
     /**
@@ -113,6 +115,7 @@ public class SampledEMTest {
      */
     @Test
     public void testMakeGrammar() throws Exception {
+        /*
         List<SampledEM.LearningInstance> insts = sem.makeInstances(500, 50, cc, data, 0.01, 9999999999L, 5);
         
         InterpretedTreeAutomaton ita = sem.makeGrammar(cc, 2, insts);
@@ -142,6 +145,7 @@ public class SampledEMTest {
         
         assertEquals(ita.getInterpretation("left").interpret(t).toString(),"[a, b, d]");
         assertEquals(ita.getInterpretation("right").interpret(t).toString(),"d(b,a)");
+        */
     }
 
     /**
