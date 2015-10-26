@@ -9,10 +9,12 @@ import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.SubtreeIterator;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.irtg.util.IntTrieCounter;
+import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Iterator;
 
 /**
@@ -45,32 +47,56 @@ public class InterpretingModel implements Model {
     /**
      * 
      */
-    private final double emptynessConstraint;
+    private final double logEmptyness;
     
     /**
      * 
      */
-    private final double logLexiconSize;
+    private final double negLogLexiconSizeLeft;
+    
+    /**
+     * 
+     */
+    private final double negLogLexiconSizeRight;
+    
+    /**
+     * 
+     */
+    private final double logDeLexicalization;
     
     /**
      * 
      * @param hm
      * @param smooth
-     * @param emptynessConstraint 
+     * @param logEmptyness 
+     * @param logDeLexicalization 
      */
-    public InterpretingModel(HomomorphismManager hm, double smooth, double emptynessConstraint) {
+    public InterpretingModel(HomomorphismManager hm, double smooth, double logEmptyness,
+                            double logDeLexicalization) {
         this.hm = hm;
         this.smooth = smooth;
-        this.emptynessConstraint = Math.log(emptynessConstraint);
+        this.logEmptyness = logEmptyness;
+        this.logDeLexicalization = logDeLexicalization;
         
-        double size = 1.0;
+        IntSet left = new IntOpenHashSet();
+        IntSet right = new IntOpenHashSet();
         for(int i=1;i<=hm.getSignature().getMaxSymbolId();++i){
             if(!hm.isVariable(i)){
-                size += 1.0;
+                HomomorphismSymbol hl = hm.getHomomorphism1().get(i).getLabel();
+                HomomorphismSymbol hr = hm.getHomomorphism2().get(i).getLabel();
+                
+                if(!hl.isVariable()){
+                    left.add(hl.getValue());
+                }
+                
+                if(!hr.isVariable()){
+                    right.add(hl.getValue());
+                }
             }
         }
         
-        this.logLexiconSize = Math.log(size);
+        this.negLogLexiconSizeLeft = -Math.log(left.size()+1);
+        this.negLogLexiconSizeRight = -Math.log(right.size()+1);
     }
 
     @Override
@@ -81,21 +107,87 @@ public class InterpretingModel implements Model {
         while(it.hasNext()){
             IntArrayList example = it.next();
             
-            double count = this.ltc.get(example);
-            double norm = this.ltc.getNorm()+this.smooth;
+            int leftSym  = 0;
+            int vars = 0;
+            int rightSym = 0;
+            boolean leftLexical  = false;
+            boolean rightLexical = false;
+            for(int i=0;i<example.size();++i){
+                int code = example.getInt(i);
+                
+                
+                if(hm.isVariable(code)){
+                    ++vars;
+                    ++leftSym;
+                    ++rightSym;
+                    continue;
+                }
+                if(hm.getSignature().getArity(code) == 0){
+                    continue;
+                }
+                
             
-            double d = Math.log(count)-Math.log(norm);
-            
-            double sm = Math.log(this.smooth)+makeSmoothFactor(example);
-            
-            score += LogSpaceOperations.addAlmostZero(d, sm);
-        
-            if(checkEmpty(example)){
-                score += this.emptynessConstraint;
+                HomomorphismSymbol hl = this.hm.getHomomorphism1().get(code).getLabel();
+                HomomorphismSymbol hr = this.hm.getHomomorphism2().get(code).getLabel();
+                
+                if(!hl.isVariable()){
+                    ++leftSym;
+                    
+                    int sym = hl.getValue();
+                    if(!leftLexical && hm.getHomomorphism1().getTargetSignature().getArity(sym) == 0){
+                        leftLexical = true;
+                    }
+                }
+               
+                if(!hr.isVariable()){
+                    ++rightSym;
+                    
+                    int sym  = hr.getValue();
+                    if(!rightLexical && hm.getHomomorphism2().getTargetSignature().getArity(sym) == 0){
+                        rightLexical = true;
+                    }
+                }
             }
+            
+            score += checkLexicalized(leftLexical, rightLexical,
+                                                   leftSym-vars, rightSym-vars);
+            
+            double count = Math.log(this.ltc.get(example));
+            double localSmooth = Math.log(this.smooth);
+            localSmooth += (leftSym*this.negLogLexiconSizeLeft);
+            localSmooth += (rightSym*this.negLogLexiconSizeRight);
+            count = LogSpaceOperations.addAlmostZero(count, localSmooth);
+            
+            double norm = Math.log(this.ltc.getNorm()+this.smooth);
+            
+            score += count-norm;
         }
          
         return score;
+    }
+    
+    /**
+     * 
+     * @param leftLexical
+     * @param rightLexical
+     * @return 
+     */
+    private double checkLexicalized(boolean leftLexical, boolean rightLexical,
+            int leftSize, int rightSize) {
+        double sc = 0.0;
+        if(!leftLexical){
+            sc += this.logDeLexicalization;
+        }
+        
+        if(!rightLexical){
+            sc += this.logDeLexicalization;
+        }
+        
+        if(leftSize <= 0 || rightSize <= 0){
+            sc += this.logEmptyness;
+        }
+        
+        return sc;
     }
 
     @Override
@@ -105,45 +197,5 @@ public class InterpretingModel implements Model {
         while(it.hasNext()){
             this.ltc.add(it.next(), amount);
         }
-    }
-
-    /**
-     * 
-     * @param example
-     * @return 
-     */
-    private double makeSmoothFactor(IntArrayList example) {       
-        return -example.size()*this.logLexiconSize;
-    }
-    
-    /**
-     * 
-     * @param example
-     * @return 
-     */
-    private boolean checkEmpty(IntArrayList example){
-        boolean left  = false;
-        boolean right = false;
-        
-        for(int i=0;i<example.size();++i){
-            int code = example.getInt(i);
-            
-            Tree<HomomorphismSymbol> tl = this.hm.getHomomorphism1().get(code);
-            Tree<HomomorphismSymbol> tr = this.hm.getHomomorphism2().get(code);
-            
-            if(tl.getLabel().isVariable() || tr.getLabel().isVariable()){
-                int lab = tl.getLabel().getValue();
-                if(hm.getHomomorphism1().getTargetSignature().getArity(lab) == 0){
-                    left = true;
-                }
-                
-                lab = tr.getLabel().getValue();
-                if(hm.getHomomorphism2().getTargetSignature().getArity(lab) == 0){
-                    right = true;
-                }
-            }
-        }
-        
-        return left && right;
     }
 }

@@ -7,7 +7,6 @@ package de.up.ling.irtg.align.find_rules.sampling;
 
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.align.HomomorphismManager;
 import de.up.ling.irtg.align.Propagator;
 import de.up.ling.irtg.align.alignment_marking.AlignmentFactory;
 import de.up.ling.irtg.align.alignment_marking.Empty;
@@ -15,7 +14,6 @@ import de.up.ling.irtg.align.creation.CreateCorpus;
 import de.up.ling.irtg.align.creation.CreateCorpus.InputPackage;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import java.util.function.Function;
 import org.junit.Before;
@@ -57,7 +55,7 @@ public class InterpretingModelTest {
         
         
         InputPackage ip1 = cc.makePackage("a(b,c)", "", f, af);
-        InputPackage ip2 = cc.makePackage("a(b,c)", "", f, af);
+        InputPackage ip2 = cc.makePackage("a(b,b)", "", f, af);
         
         TreeAutomaton ta = cc.makeEntry(ip1, ip2);
         Iterable<Rule> it = ta.getAllRulesTopDown();
@@ -65,7 +63,7 @@ public class InterpretingModelTest {
             r.setWeight(1/(100*r.getParent())+1/(r.getLabel()));
         }
         
-        this.im = new InterpretingModel(cc.getMainManager(), 0.3, 0.000001);
+        this.im = new InterpretingModel(cc.getMainManager(), 0.3, Math.log(1E-2),Math.log(1E-2));
         
         Tree<String> t = ta.viterbi();
         System.out.println(t);
@@ -86,10 +84,25 @@ public class InterpretingModelTest {
     @Test
     public void testGetLogWeight() {
         double d = this.im.getLogWeight(target);
+        assertEquals(d,-29.617524661949112,0.0000001);
         
         this.im.add(target, 5);
         
         double q = this.im.getLogWeight(target);
+        
+        assertEquals(q,-10.655747594369284,0.00000001);
+        assertTrue(q > d);
+        
+        double p = this.im.getLogWeight(target);
+        assertEquals(p,q,0.0000000000000001);
+        
+        this.im.add(target, -5);
+        double h = this.im.getLogWeight(target);
+        assertEquals(h,d,0.00000001);
+        
+        this.im.add(target, 12);
+        double k = this.im.getLogWeight(target);
+        assertTrue(k > q);
         
         System.out.println(d);
         System.out.println(q);
