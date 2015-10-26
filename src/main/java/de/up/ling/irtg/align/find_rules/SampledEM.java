@@ -9,22 +9,15 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.align.creation.CreateCorpus;
 import de.up.ling.irtg.align.find_rules.sampling.InterpretingModel;
 import de.up.ling.irtg.align.find_rules.sampling.Model;
-import de.up.ling.irtg.align.find_rules.sampling.SampleBenign;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.util.IntIntFunction;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.ConcurrentModificationException;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.apache.commons.math3.util.Pair;
 
 /**
  *
@@ -85,12 +78,12 @@ public class SampledEM {
      * @throws ExecutionException
      * @throws InterruptedException 
      */
-    public List<List<Pair<Tree<String>,Tree<String>>>> makeGrammar(CreateCorpus cc, int learningRounds,
+    public List<List<Tree<Rule>>> makeGrammar(CreateCorpus cc, int learningRounds,
             List<LearningInstance> instances) throws ParserException, ExecutionException, InterruptedException{
         
         VariableIndication vi = new VariableIndicationByLookUp(cc.getMainManager());
         
-        List<List<Pair<Tree<String>,Tree<String>>>> corpus = runTraining(cc, vi, learningRounds, instances);
+        List<List<Tree<Rule>>> corpus = runTraining(cc, vi, learningRounds, instances);
         
         return corpus;
     }
@@ -108,7 +101,7 @@ public class SampledEM {
      * @throws InterruptedException
      * @throws ExecutionException 
      */
-    private List<List<Pair<Tree<String>,Tree<String>>>> runTraining(CreateCorpus cc, VariableIndication vi,
+    private List<List<Tree<Rule>>> runTraining(CreateCorpus cc, VariableIndication vi,
             int learningRounds, List<LearningInstance> jobs) throws InterruptedException, ExecutionException {
         ExecutorService es = Executors.newFixedThreadPool(this.useThreads);
         
@@ -120,19 +113,27 @@ public class SampledEM {
         
         train(learningRounds, jobs, intermediate, es, mod);
         
-        List<List<Pair<Tree<String>,Tree<String>>>> result = new ArrayList<>();
+        List<List<Tree<Rule>>> result = new ArrayList<>();
         List<Future<List<Tree<Rule>>>> l = es.invokeAll(jobs);
         es.shutdown();
         
+        for(int i=0;i<l.size();++i){
+            result.add(l.get(i).get());   
+        }
         
-        
-        //TODO convert and then return that stuff
-        
-        
-        //TODO get final model or final trees ? 
-        return null;
+        return result;
     }
 
+    /**
+     * 
+     * @param learningRounds
+     * @param jobs
+     * @param intermediate
+     * @param es
+     * @param mod
+     * @throws InterruptedException
+     * @throws ExecutionException 
+     */
     private void train(int learningRounds, List<LearningInstance> jobs,
             List<LearningInstance> intermediate, ExecutorService es, Model mod)
                                     throws InterruptedException, ExecutionException {
@@ -172,133 +173,10 @@ public class SampledEM {
             jobs.get(i).setModel(mod);
         }
     }
-
-    /**
-     * 
-     * @param numberOfSamplingResults
-     * @param numberOfSamplesIntermediate
-     * @param cc
-     * @param data
-     * @param sampleSmooth
-     * @param seed
-     * @param samplerAdaptionRounds
-     * @return 
-     */
-    public List<LearningInstance> makeInstances(int numberOfSamplingResults, int numberOfSamplesIntermediate,
-            CreateCorpus cc, List<TreeAutomaton> data, double sampleSmooth, 
-            long seed, int samplerAdaptionRounds) {
-        List<LearningInstance> jobs = new ObjectArrayList<>();
-        IntIntFunction sampleSize = (int value) -> {
-            if(value == 0){
-                return numberOfSamplingResults;
-            }else{
-                return numberOfSamplesIntermediate;
-            }
-        };
-        
-        for(int i=0;i<data.size();++i){
-            LearningInstance jo = makeLearningInstance(data.get(i), 
-                    sampleSmooth, seed, sampleSize, samplerAdaptionRounds);
-            jobs.add(jo);
-        }
-        return jobs;
-    }
-
-    /**
-     * 
-     * @param language
-     * @param adaptionSmooth
-     * @param seed
-     * @param sampleSizes
-     * @param samplerAdaptionRounds
-     * @param cc
-     * @return 
-     */
-    public LearningInstance makeLearningInstance(TreeAutomaton language, double adaptionSmooth, long seed,
-            IntIntFunction sampleSizes, int samplerAdaptionRounds, CreateCorpus cc){
-        return makeLearningInstance(language, adaptionSmooth, seed, sampleSizes, samplerAdaptionRounds);
-    }
-    
-    /**
-     * 
-     * @param language
-     * @param adaptionSmooth
-     * @param seed
-     * @param sampleSizes
-     * @param samplerAdaptionRounds
-     * @return 
-     */
-    public LearningInstance makeLearningInstance(TreeAutomaton language, double adaptionSmooth, long seed,
-            IntIntFunction sampleSizes, int samplerAdaptionRounds) {
-        /*
-        SampleBenign sb = new RuleCountBenign(adaptionSmooth, seed);
-        SampleBenign.Configuration conf = new SampleBenign.Configuration();
-        sb.setAutomaton(language);
-        
-        conf.sampleSize = sampleSizes;
-        conf.rounds = samplerAdaptionRounds;
-        conf.target = null;
-        
-        LearningInstance jo = new LearningInstance(sb, conf);
-        return jo;
-        */
-        //TODO
-        return null;
-    }    
     
     /**
      * 
      */
-    public class LearningInstance implements Callable<List<Tree<Rule>>>{
-
-        /**
-         * 
-         */
-        private final SampleBenign samp;
-        
-        /**
-         * 
-         */
-        private Model model;
-        
-        /**
-         * 
-         */
-        private final SampleBenign.Configuration config;
-
-        /**
-         * 
-         * @param samp
-         * @param config 
-         */
-        public LearningInstance(SampleBenign samp, SampleBenign.Configuration config) {
-            this.samp = samp;
-            this.config = config.copy();
-        }
-
-        /**
-         * 
-         * @param model 
-         */
-        public void setModel(Model model) {
-            this.model = model;
-        }
-        
-        @Override
-        public List<Tree<Rule>> call() throws Exception {
-           try {
-                config.setTarget(model);
-                return this.samp.getSample(config);
-            } catch (ConcurrentModificationException cme) {
-                System.out.println(cme);
-                throw cme;
-            }
-        }
-    }
-    
-    
-    
-    
     public class SampledEMFactory{
         /**
          * 
