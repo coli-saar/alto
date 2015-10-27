@@ -96,7 +96,6 @@ public class InterpretingModelTest {
         
         ti = ta.viterbiRaw().getTree();
         this.avoid = ta.getRuleTree(ti);
-        //TODO
     }
 
     /**

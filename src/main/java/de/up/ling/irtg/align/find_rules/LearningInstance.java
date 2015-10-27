@@ -68,7 +68,7 @@ public class LearningInstance implements Callable<List<Tree<Rule>>> {
         }
     }
 
-    public class LearningInstanceFactory {
+    public static class LearningInstanceFactory {
         
         /**
          * 
@@ -102,9 +102,8 @@ public class LearningInstance implements Callable<List<Tree<Rule>>> {
         
         /**
          * 
-         * @param sampleSizes 
          */
-        public LearningInstanceFactory(IntIntFunction sampleSizes) {
+        public LearningInstanceFactory() {
             samplerAdaptionRounds = 10;
             adaptionSmooth = 1.0;
         }
@@ -116,7 +115,7 @@ public class LearningInstance implements Callable<List<Tree<Rule>>> {
          * @param sampleSizes
          * @return
          */
-        public LearningInstance makeLearningInstance(TreeAutomaton language,long seed,
+        public LearningInstance makeLearningInstance(TreeAutomaton language, long seed,
                 IntIntFunction sampleSizes) {
             SampleBenign sb = new RuleCountBenign(adaptionSmooth, seed, language);
             SampleBenign.Configuration conf = new SampleBenign.Configuration(null);

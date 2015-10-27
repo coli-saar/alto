@@ -7,7 +7,6 @@ package de.up.ling.irtg.align.find_rules;
 
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.align.creation.CreateCorpus;
-import de.up.ling.irtg.align.find_rules.sampling.InterpretingModel;
 import de.up.ling.irtg.align.find_rules.sampling.Model;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.tree.Tree;
@@ -29,11 +28,6 @@ public class SampledEM {
      * 
      */
     private final int useThreads;
-    
-    /**
-     * 
-     */
-    private final double smooth;
 
     /**
      * 
@@ -44,28 +38,21 @@ public class SampledEM {
      * 
      */
     private final double scaling;
-    
-    /**
-     * 
-     */
-    private final double emptynessConstraint;
-    
-    /**
-     * 
-     */
-    private final double delexicalizationConstraint;
 
-    public SampledEM(int useThreads, double smooth, int batchSize, double scaling, double emptynessConstraint, double delexicalizationConstraint) {
+    /**
+     * 
+     * @param useThreads
+     * @param smooth
+     * @param batchSize
+     * @param scaling
+     * @param emptynessConstraint
+     * @param delexicalizationConstraint 
+     */
+    public SampledEM(int useThreads,int batchSize, double scaling) {
         this.useThreads = useThreads;
-        this.smooth = smooth;
         this.batchSize = batchSize;
         this.scaling = scaling;
-        this.emptynessConstraint = emptynessConstraint;
-        this.delexicalizationConstraint = delexicalizationConstraint;
     }
-
-    
-    
     
     /**
      * 
@@ -73,17 +60,16 @@ public class SampledEM {
      * @param cc
      * @param learningRounds
      * @param instances
+     * @param model
      * @return
      * @throws ParserException
      * @throws ExecutionException
      * @throws InterruptedException 
      */
     public List<List<Tree<Rule>>> makeGrammar(CreateCorpus cc, int learningRounds,
-            List<LearningInstance> instances) throws ParserException, ExecutionException, InterruptedException{
-        
-        VariableIndication vi = new VariableIndicationByLookUp(cc.getMainManager());
-        
-        List<List<Tree<Rule>>> corpus = runTraining(cc, vi, learningRounds, instances);
+            List<LearningInstance> instances, Model model)
+            throws ParserException, ExecutionException, InterruptedException{
+        List<List<Tree<Rule>>> corpus = runTraining(learningRounds, instances, model);
         
         return corpus;
     }
@@ -101,14 +87,12 @@ public class SampledEM {
      * @throws InterruptedException
      * @throws ExecutionException 
      */
-    private List<List<Tree<Rule>>> runTraining(CreateCorpus cc, VariableIndication vi,
-            int learningRounds, List<LearningInstance> jobs) throws InterruptedException, ExecutionException {
+    private List<List<Tree<Rule>>> runTraining(int learningRounds, List<LearningInstance> jobs,
+            Model mod) throws InterruptedException, ExecutionException {
         ExecutorService es = Executors.newFixedThreadPool(this.useThreads);
         
         List<LearningInstance> intermediate = new ObjectArrayList<>();
         
-        Model mod = new InterpretingModel(cc.getMainManager(), this.smooth, this.emptynessConstraint,
-                                                                        this.delexicalizationConstraint);
         pushModel(jobs, mod);
         
         train(learningRounds, jobs, intermediate, es, mod);
@@ -177,16 +161,11 @@ public class SampledEM {
     /**
      * 
      */
-    public class SampledEMFactory{
+    public static class SampledEMFactory{
         /**
          * 
          */
         private int numberOfThreads;
-        
-        /**
-         * 
-         */
-        private double smooth;
         
         /**
          * 
@@ -201,23 +180,10 @@ public class SampledEM {
         /**
          * 
          */
-        private double emptynessConstraint;
-        
-        /**
-         * 
-         */
-        private double delexicalizationConstraint;
-        
-        /**
-         * 
-         */
         public SampledEMFactory(){
             numberOfThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
-            smooth = 10.0;
             batchSize = numberOfThreads*10;
             this.scaling = 1.0;
-            this.emptynessConstraint = Math.log(1E-5);
-            this.delexicalizationConstraint = Math.log(1E-5);
         }
 
         /**
@@ -227,16 +193,6 @@ public class SampledEM {
          */
         public SampledEMFactory setNumberOfThreads(int numberOfThreads) {
             this.numberOfThreads = numberOfThreads;
-            return this;
-        }
-
-        /**
-         * 
-         * @param smooth
-         * @return 
-         */
-        public SampledEMFactory setSmooth(double smooth) {
-            this.smooth = smooth;
             return this;
         }
 
@@ -259,34 +215,14 @@ public class SampledEM {
             this.scaling = scaling;
             return this;
         }
-
-        /**
-         * 
-         * @param emptynessConstraint
-         * @return 
-         */
-        public SampledEMFactory setEmptynessConstraint(double emptynessConstraint) {
-            this.emptynessConstraint = emptynessConstraint;
-            return this;
-        }
-
-        /**
-         * 
-         * @param delexicalizationConstraint 
-         * @return  
-         */
-        public SampledEMFactory setDelexicalizationConstraint(double delexicalizationConstraint) {
-            this.delexicalizationConstraint = delexicalizationConstraint;
-            return this;
-        }
         
         /**
          * 
          * @return 
          */
         public SampledEM getInstance(){
-            return new SampledEM(this.numberOfThreads, this.smooth, this.batchSize,
-                    this.scaling, this.emptynessConstraint, this.delexicalizationConstraint);
+            return new SampledEM(this.numberOfThreads, this.batchSize,
+                    this.scaling);
         }
     }
 }

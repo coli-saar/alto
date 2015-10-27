@@ -13,9 +13,13 @@ import de.up.ling.irtg.align.Propagator;
 import de.up.ling.irtg.align.alignment_marking.AddressAligner;
 import de.up.ling.irtg.align.alignment_marking.SpanAligner;
 import de.up.ling.irtg.align.creation.CreateCorpus;
+import de.up.ling.irtg.align.find_rules.sampling.InterpretingModel;
+import de.up.ling.irtg.align.find_rules.sampling.Model;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.IntDoubleFunction;
 import de.up.ling.irtg.util.IntIntFunction;
+import de.up.ling.irtg.util.MutableDouble;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,12 +39,12 @@ public class SampledEMTest {
     /**
      * 
      */
-    private CreateCorpus<List<String>, Tree<String>> cc;
+    private CreateCorpus<List<String>, List<String>> cc;
     
     /**
      * 
      */
-    private SampledEM.LearningInstance semle;
+    private List<LearningInstance> semle;
     
     /**
      * 
@@ -50,63 +54,55 @@ public class SampledEMTest {
     /**
      * 
      */
-    private IntIntFunction sampleSize;
-    
-    /**
-     * 
-     */
     private SampledEM sem;
     
     @Before
     public void setUp() throws ParserException {
-        /*
         StringAlgebra sal = new StringAlgebra();
-        MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
+        StringAlgebra sap = new StringAlgebra();
+        //MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
         ArrayList<CreateCorpus.InputPackage> stringInputs = new ArrayList<>();
         ArrayList<CreateCorpus.InputPackage> treeInput = new ArrayList<>();
         
-        cc = new CreateCorpus<>(sal,mta);
+        cc = new CreateCorpus<>(sal,sap);
         
         Propagator propDef = new Propagator();
-        Propagator propLarge = new Propagator();
         
-        sem = new SampledEM(2, 0.05, 150, 4);
+        SampledEM.SampledEMFactory fact = new SampledEM.SampledEMFactory();
+        fact.setBatchSize(2);
+        fact.setNumberOfThreads(2).setScaling(1);
+        
         
         Function<List<String>,Propagator> funct = (List<String> in) -> {
-            if(in.size() > 0){
-                return propLarge;
-            }
-            
             return propDef;
         };
         
         SpanAligner.Factory spanFactory = new SpanAligner.Factory();
         
-        for(String[] p : new String[][] {{"a b c","0:1:1 1:2:2 2:3:3"},{"a b d","0:1:1 1:2:2 2:3:3"}}){
+        for(String[] p : new String[][] {{"Resumption of the session","0:1:0 2:3:1 3:4:2"},
+            {"( The House rose and observed a minute ' s silence )","0:1:0 1:2:1 2:3:2 3:4:3 5:6:4 7:8:5 7:8:6 10:11:7 11:12:8 11:12:9"}}){
             stringInputs.add(cc.makePackage(p[0], p[1], funct, spanFactory));     
         }
         
+        /*
         Function<Tree<String>,Propagator> f = (Tree<String> in) -> {
             return propDef;
-        };
+        };*/
         
-        AddressAligner.Factory addFactory = new AddressAligner.Factory();
+        //AddressAligner.Factory addFactory = new AddressAligner.Factory();
         
-        for(String[] p : new String[][] {{"c(b,a)","0-0-0-1:1 0-0-0-0:2 0-0-0:3"},
-            {"d(b,a)","0-0-0-1:1 0-0-0-0:2 0-0-0:3"}}){
-            treeInput.add(cc.makePackage(p[0],p[1],f,addFactory));
+        for(String[] p : new String[][] {{"Wiederaufnahme der Sitzungsperiode","0:1:0 1:2:1 2:3:2"},
+            {"( Das Parlament erhebt sich zu einer Schweigeminute . )","0:1:0 1:2:1 2:3:2 3:4:3 4:5:4 5:6:5 6:7:6 7:8:7 8:9:8 9:10:9"}}){
+            treeInput.add(cc.makePackage(p[0],p[1],funct,spanFactory));
         }
         
         data = cc.makeDataSet(stringInputs, treeInput);
         
-        this.sampleSize = (int sampNum) ->{
-            if(sampNum == 0){
-                return 10;
-            }
-            
-            return 20;
-        };
-        */
+        this.sem = fact.getInstance();
+        
+        LearningInstance.LearningInstanceFactory fac = new LearningInstance.LearningInstanceFactory();
+        
+        this.semle = fac.makeInstances(5, 500, data);
     }
 
     /**
@@ -115,36 +111,83 @@ public class SampledEMTest {
      */
     @Test
     public void testMakeGrammar() throws Exception {
-        /*
-        List<SampledEM.LearningInstance> insts = sem.makeInstances(500, 50, cc, data, 0.01, 9999999999L, 5);
+        InterpretingModel im = 
+                new InterpretingModel(cc.getMainManager(), 1.0, Math.log(1E-2), Math.log(1E-2));
+        Model mod = new Model() {
+
+            @Override
+            public double getLogWeight(Tree<Rule> t) {
+                double d = im.getLogWeight(t);
+                
+                MutableDouble md = new MutableDouble(0.0);
+                
+                extend(t,md);
+                
+                return md.getValue()+d;
+            }
+
+            @Override
+            public void add(Tree<Rule> t, double amount) {
+                im.add(t, amount);
+            }
+
+            /**
+             * 
+             * @param t
+             * @param md 
+             */
+            private void extend(Tree<Rule> t, MutableDouble md) {
+                if(cc.getMainManager().isVariable(t.getLabel().getLabel())){
+                    md.add(Math.log(1E-40));
+                }
+                
+                t.getChildren().stream().forEach((q) -> {
+                    extend(q,md);
+                });
+            }
+        };
         
-        InterpretedTreeAutomaton ita = sem.makeGrammar(cc, 2, insts);
         
-        TreeAutomaton ta = ita.getAutomaton();
+        List<List<Tree<Rule>>> result = sem.makeGrammar(cc, 1, semle, mod);
         
-        Tree<String> t = ta.viterbi();
+        com.google.common.base.Function<Rule,String> f = (Rule r) -> {
+            return cc.getMainManager().getSignature().resolveSymbolId(r.getLabel());
+        };
         
-        assertTrue(ita.getInterpretation("right").interpret(t) instanceof Tree);
+        TreeAutomaton ta = data.get(0);
+        Iterable<Rule> it = ta.getAllRulesTopDown();
         
-        Map<String,String> input = new HashMap<>();
-        input.put("left", "a b c");
-        ta = ita.parse(input);
+        for(Rule r : it){
+            if(cc.getMainManager().isVariable(r.getLabel())){
+                r.setWeight(20.0);
+            }else{
+                r.setWeight(0.1);
+            }
+        }
         
-        t = ta.viterbi();
+        Tree<String> rules = ta.viterbi();
         
-        assertEquals(ita.getInterpretation("left").interpret(t).toString(),"[a, b, c]");
-        assertEquals(ita.getInterpretation("right").interpret(t).toString(),"c(b,a)");
+        //for(Tree<Rule> t : result.get(0)){
+        {
+            System.out.println("----------------");
+            //Tree<String> rules = t.map(f);
+            Tree<String> left = cc.getMainManager().getHomomorphism1().apply(rules);
+            Tree<String> right = cc.getMainManager().getHomomorphism2().apply(rules);
         
-        input.clear();
-        input.put("right", "d(b,a)");
+            System.out.println(left);
+            System.out.println(right);
+        }
         
         
-        ta = ita.parse(input);
         
-        t = ta.viterbi();
+        /**
+        System.out.println("----------");
+        rules = result.get(1).get(0).map((com.google.common.base.Function<Rule, String>) f);
+        left = cc.getMainManager().getHomomorphism1().apply(rules);
+        right = cc.getMainManager().getHomomorphism2().apply(rules);
         
-        assertEquals(ita.getInterpretation("left").interpret(t).toString(),"[a, b, d]");
-        assertEquals(ita.getInterpretation("right").interpret(t).toString(),"d(b,a)");
+        System.out.println(left);
+        System.out.println(right);
         */
     }
 
@@ -153,28 +196,9 @@ public class SampledEMTest {
      */
     @Test
     public void testMakeInstances() {
-        List<SampledEM.LearningInstance> insts = sem.makeInstances(10, 20, cc, data, 0.01, 9999999999L, 3);
+        LearningInstance.LearningInstanceFactory fac = new LearningInstance.LearningInstanceFactory();
         
-        assertEquals(insts.size(),2);
+        this.semle = fac.makeInstances(5, 100, data);
+        assertEquals(semle.size(),2);
     }
-
-    /**
-     * Test of makeLearningInstance method, of class SampledEM.
-     * @throws de.up.ling.irtg.algebra.ParserException
-     */
-    @Test
-    public void testMakeLearningInstance() throws ParserException, Exception {
-        semle = sem.makeLearningInstance(this.data.get(0), 0.1, 9999999999L, sampleSize, 3, cc);
-        
-        VariableIndication vi = new VariableIndicationByLookUp(cc.getMainManager());
-        IntDoubleFunction smooth = (int entry) -> {
-            return 1.0;
-        };
-        
-        //TODO
-        semle.setModel(null);
-        
-        assertEquals(semle.call().size(),10);
-    }
-    
 }
