@@ -13,7 +13,6 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
-import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
@@ -137,7 +136,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
             @Override
             public Pair<Double, Double> evaluate(List<String> result, List<String> gold) {
                 double score = (result.equals(gold)) ? 1 : 0;
-                return new Pair(score, 1);
+                return new Pair<>(score, 1.0);
             }
         });
         return ret;
