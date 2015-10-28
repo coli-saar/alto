@@ -6,7 +6,13 @@
 
 package de.up.ling.irtg.gui;
 
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.Frame;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
 
@@ -14,28 +20,77 @@ import javax.swing.SwingUtilities;
  *
  * @author koller
  */
-public class JOneStringInputForm extends javax.swing.JDialog {
-    private Consumer<String> fn;
+public class JGrammarFromWebSelector extends javax.swing.JDialog {
+    private List<GrammarEntry> grammars;
+    private Consumer<URL> fn;
     
     /**
-     * Creates new form JOneStringInputForm
+     * Creates new form JGrammarFromWebSelector
      */
-    public JOneStringInputForm(java.awt.Frame parent, boolean modal) {
+    public JGrammarFromWebSelector(java.awt.Frame parent, boolean modal) {
         super(parent, modal);
         initComponents();
-        
         getRootPane().setDefaultButton(bOk);
     }
     
-    public static void withString(String title, String labelText, Frame parent, boolean modal, Consumer<String> fn) {
-        JOneStringInputForm f = new JOneStringInputForm(parent, modal);
-        f.setTitle(title);
-        f.jLabel1.setText(labelText);
-        f.fn = fn;
+    public static void withSelectedURL(URL grammarListURL, Frame parent, boolean modal, Consumer<URL> fn) throws IOException {        
+        ObjectMapper mapper = new ObjectMapper();
+        JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, GrammarEntry.class);
+        List<GrammarEntry> grammars = mapper.readValue(grammarListURL, type);
         
-        f.setVisible(true);
+        JGrammarFromWebSelector js = new JGrammarFromWebSelector(parent, modal);
+        js.fn = fn;
+        js.populate(grammars);
+        js.setVisible(true);
+    }
+    
+    private void populate(List<GrammarEntry> entries) {
+        this.grammars = entries;
+        
+        cbGrammars.removeAllItems();
+        for( GrammarEntry entry : entries ) {
+            cbGrammars.addItem(entry.displayString());
+        }
     }
 
+    private static class GrammarEntry {
+        public int id;
+        public String name;
+        public String comment;
+
+        public GrammarEntry() {
+        }
+        
+        
+
+        public GrammarEntry(int id, String name, String comment) {
+            this.id = id;
+            this.name = name;
+            this.comment = comment;
+        }
+        
+        public String displayString() {
+            return id + ": " + name;
+        }
+        
+        public URL url() {
+            try {
+                return new URL(GuiMain.getGrammarServer() + "/rest/grammar_" + id + ".irtg");
+            } catch (MalformedURLException ex) {
+                // should never happen
+                return null;
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "GrammarEntry{" + "id=" + id + ", name=" + name + ", comment=" + comment + '}';
+        }
+        
+        
+        
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -46,15 +101,16 @@ public class JOneStringInputForm extends javax.swing.JDialog {
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        cbGrammars = new javax.swing.JComboBox();
         bOk = new javax.swing.JButton();
         bCancel = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Load grammar from web repository");
 
-        jLabel1.setText("jLabel1");
+        jLabel1.setText("Select grammar from web repository:");
 
-        jTextField1.setText("jTextField1");
+        cbGrammars.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         bOk.setText("Ok");
         bOk.addActionListener(new java.awt.event.ActionListener() {
@@ -75,26 +131,25 @@ public class JOneStringInputForm extends javax.swing.JDialog {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addComponent(cbGrammars, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTextField1)
+                    .addComponent(jLabel1)
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel1)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(bOk)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(bCancel)))
-                        .addGap(0, 221, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addComponent(bOk)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(bCancel)))
+                .addContainerGap(162, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(cbGrammars, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(bOk)
@@ -106,7 +161,8 @@ public class JOneStringInputForm extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void bOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bOkActionPerformed
-        SwingUtilities.invokeLater(() -> fn.accept(jTextField1.getText()));
+        GrammarEntry entry = grammars.get(cbGrammars.getSelectedIndex());
+        SwingUtilities.invokeLater(() -> fn.accept(entry.url()));
         setVisible(false);
     }//GEN-LAST:event_bOkActionPerformed
 
@@ -131,20 +187,20 @@ public class JOneStringInputForm extends javax.swing.JDialog {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(JOneStringInputForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(JGrammarFromWebSelector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(JOneStringInputForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(JGrammarFromWebSelector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(JOneStringInputForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(JGrammarFromWebSelector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(JOneStringInputForm.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(JGrammarFromWebSelector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
 
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                JOneStringInputForm dialog = new JOneStringInputForm(new javax.swing.JFrame(), true);
+                JGrammarFromWebSelector dialog = new JGrammarFromWebSelector(new javax.swing.JFrame(), true);
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
@@ -159,7 +215,7 @@ public class JOneStringInputForm extends javax.swing.JDialog {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bCancel;
     private javax.swing.JButton bOk;
+    private javax.swing.JComboBox cbGrammars;
     private javax.swing.JLabel jLabel1;
-    private javax.swing.JTextField jTextField1;
     // End of variables declaration//GEN-END:variables
 }
