@@ -32,8 +32,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringReader;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -108,6 +110,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         miLoadIrtg = new javax.swing.JMenuItem();
+        miLoadIrtgFromURL = new javax.swing.JMenuItem();
+        miLoadIrtgFromWeb = new javax.swing.JMenuItem();
         miLoadAutomaton = new javax.swing.JMenuItem();
         miLoadTemplateIrtg = new javax.swing.JMenuItem();
         jSeparator1 = new javax.swing.JPopupMenu.Separator();
@@ -130,13 +134,24 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         jMenu1.setText("File");
 
         miLoadIrtg.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.META_MASK));
-        miLoadIrtg.setText("Load IRTG ...");
+        miLoadIrtg.setText("Load IRTG from file ...");
         miLoadIrtg.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miLoadIrtgActionPerformed(evt);
             }
         });
         jMenu1.add(miLoadIrtg);
+
+        miLoadIrtgFromURL.setText("Load IRTG from URL ...");
+        miLoadIrtgFromURL.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miLoadIrtgFromURLActionPerformed(evt);
+            }
+        });
+        jMenu1.add(miLoadIrtgFromURL);
+
+        miLoadIrtgFromWeb.setText("Load IRTG from web repository ...");
+        jMenu1.add(miLoadIrtgFromWeb);
 
         miLoadAutomaton.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.META_MASK));
         miLoadAutomaton.setText("Load Tree Automaton ...");
@@ -248,6 +263,10 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         handleAbout(null);
     }//GEN-LAST:event_miAboutActionPerformed
 
+    private void miLoadIrtgFromURLActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadIrtgFromURLActionPerformed
+        loadIrtgFromURL(this);
+    }//GEN-LAST:event_miLoadIrtgFromURLActionPerformed
+
     public static void showDecompositionDialog(java.awt.Frame parent) {
         new DecompositionDialog(parent, true).setVisible(true);
     }
@@ -286,7 +305,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
             if (selected.exists()) {
                 int response = JOptionPane.showConfirmDialog(parent, "The file " + selected.getName() + " already exists. Do you want to replace the existing file?",
-                                                             "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+                        "Overwrite file", JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
 
                 if (response != JOptionPane.YES_OPTION) {
                     log("Canceled writing to file " + selected.getName());
@@ -325,16 +344,16 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
 
     public static boolean saveAutomaton(TreeAutomaton auto, Component parent) {
         return saveSomething(auto, "automaton",
-                             new FileNameExtensionFilter("Tree automata (*.auto)", "auto"),
-                             (file, exc) -> "An error occurred while attempting to save automaton as" + file.getName(),
-                             parent);
+                new FileNameExtensionFilter("Tree automata (*.auto)", "auto"),
+                (file, exc) -> "An error occurred while attempting to save automaton as" + file.getName(),
+                parent);
     }
 
     public static boolean saveIrtg(InterpretedTreeAutomaton irtg, Component parent) {
         return saveSomething(irtg, "IRTG",
-                             new FileNameExtensionFilter("Interpreted regular tree grammars (*.irtg)", "irtg"),
-                             (file, exc) -> "An error occurred while attempting to save IRTG as" + file.getName(),
-                             parent);
+                new FileNameExtensionFilter("Interpreted regular tree grammars (*.irtg)", "irtg"),
+                (file, exc) -> "An error occurred while attempting to save IRTG as" + file.getName(),
+                parent);
     }
 
     public static Corpus loadAnnotatedCorpus(InterpretedTreeAutomaton irtg, Component parent) {
@@ -451,15 +470,47 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private static class LoadingResult<T> {
 
         T object;
-        File filename;
+        String filename;
 
-        public LoadingResult(T object, File filename) {
+        public LoadingResult(T object, String filename) {
             this.object = object;
             this.filename = filename;
         }
     }
 
-    private static <T> void withLoadedObject(Class<T> objectClass, String objectDescription, Frame parent, ValueAndTimeConsumer<LoadingResult<T>> andThen) {
+    private static <T> void withLoadedObjectFromURL(Class<T> objectClass, String objectDescription, Frame parent, ValueAndTimeConsumer<LoadingResult<T>> andThen) {
+        JOneStringInputForm.withString("Open " + objectDescription + " from URL", "Enter URL for the " + objectDescription + ":", parent, true, urlString -> {
+            try {
+                String ext = Util.getFilenameExtension(urlString);
+                InputCodec<T> codec = InputCodec.getInputCodecByExtension(ext);
+
+                if (codec == null) {
+                    showError(parent, "Could not identify input codec for file extension '" + ext + "'");
+                } else if (codec.getMetadata().type() != objectClass) {
+                    showError(parent, "The codec '" + codec.getMetadata().name() + "' is not suitable for reading a " + objectDescription + ".");
+                } else {
+                    String description = "Reading " + codec.getMetadata().description() + " ...";
+                    ProgressBarWorker<LoadingResult<T>> worker = listener -> {
+                        codec.setProgressListener(listener);
+                        InputStream r = new URL(urlString).openStream();
+                        T result = codec.read(r);
+
+                        if (result == null) {
+                            throw new Exception("Error while reading from URL " + urlString);
+                        }
+
+                        return new LoadingResult<T>(result, urlString);
+                    };
+
+                    GuiUtils.withProgressBar(parent, "Grammar reading progress", description, worker, andThen);
+                }
+            } catch (Exception e) {
+                showError(new Exception("An error occurred while attempting to load or parse the URL " + urlString, e));
+            }
+        });
+    }
+
+    private static <T> void withLoadedObjectFromFileChooser(Class<T> objectClass, String objectDescription, Frame parent, ValueAndTimeConsumer<LoadingResult<T>> andThen) {
         List<FileFilter> filters = new ArrayList<>();
 
         for (InputCodec ic : InputCodec.getInputCodecs(objectClass)) {
@@ -476,7 +527,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                 if (codec == null) {
                     showError(parent, "Could not identify input codec for file extension '" + ext + "'");
                 } else if (codec.getMetadata().type() != objectClass) {
-                    showError(parent, "The codec '" + codec.getMetadata().name() + "' is not suitable for reading a" + objectDescription + ".");
+                    showError(parent, "The codec '" + codec.getMetadata().name() + "' is not suitable for reading a " + objectDescription + ".");
                 } else {
                     String description = "Reading " + codec.getMetadata().description() + " ...";
                     ProgressBarWorker<LoadingResult<T>> worker = listener -> {
@@ -487,7 +538,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                             throw new Exception("Error while reading from file " + file.getName());
                         }
 
-                        return new LoadingResult<>(result, file);
+                        return new LoadingResult<>(result, file.getName());
                     };
 
                     GuiUtils.withProgressBar(parent, "Grammar reading progress", description, worker, andThen);
@@ -499,8 +550,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void loadTemplateIrtg(Frame parent) {
-        withLoadedObject(TemplateInterpretedTreeAutomaton.class, "Template IRTG", parent, (result, time) -> {
-            log("Loaded Template IRTG from " + result.filename.getName() + ", " + Util.formatTime(time));
+        withLoadedObjectFromFileChooser(TemplateInterpretedTreeAutomaton.class, "Template IRTG", parent, (result, time) -> {
+            log("Loaded Template IRTG from " + result.filename + ", " + Util.formatTime(time));
 
             TemplateInterpretedTreeAutomaton tirtg = result.object;
 
@@ -514,7 +565,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
                     log("Instantiated Template IRTG in " + Util.formatTime(sw.getTimeBefore(1)));
 
                     JTreeAutomaton jta = new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg));
-                    jta.setTitle("Instance of template IRTG from " + result.filename.getName());
+                    jta.setTitle("Instance of template IRTG from " + result.filename);
                     jta.setIrtg(irtg);
                     jta.setParsingEnabled(true);
                     jta.pack();
@@ -527,27 +578,37 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     }
 
     public static void loadIrtg(Frame parent) {
-        withLoadedObject(InterpretedTreeAutomaton.class, "IRTG", parent, (result, time) -> {
-            log("Loaded IRTG from " + result.filename.getName() + ", " + Util.formatTime(time));
-
-            InterpretedTreeAutomaton irtg = result.object;
-
-            JTreeAutomaton jta = new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg));
-            jta.setTitle("IRTG grammar: " + result.filename.getName());
-            jta.setIrtg(irtg);
-            jta.setParsingEnabled(true);
-            jta.pack();
-            jta.setVisible(true);
+        withLoadedObjectFromFileChooser(InterpretedTreeAutomaton.class, "IRTG", parent, (result, time) -> {
+            loadIrtg(result, time);
         });
     }
 
+    public static void loadIrtgFromURL(Frame parent) {
+        withLoadedObjectFromURL(InterpretedTreeAutomaton.class, "IRTG", parent, (result, time) -> {
+            loadIrtg(result, time);
+        });
+    }
+
+    private static void loadIrtg(LoadingResult<InterpretedTreeAutomaton> result, long time) {
+        log("Loaded IRTG from " + result.filename + ", " + Util.formatTime(time));
+
+        InterpretedTreeAutomaton irtg = result.object;
+
+        JTreeAutomaton jta = new JTreeAutomaton(irtg.getAutomaton(), new IrtgTreeAutomatonAnnotator(irtg));
+        jta.setTitle("IRTG grammar: " + result.filename);
+        jta.setIrtg(irtg);
+        jta.setParsingEnabled(true);
+        jta.pack();
+        jta.setVisible(true);
+    }
+
     public static void loadAutomaton(Frame parent) {
-        withLoadedObject(TreeAutomaton.class, "tree automaton", parent, (result, time) -> {
-            log("Loaded tree automaton from " + result.filename.getName() + ", " + Util.formatTime(time));
+        withLoadedObjectFromFileChooser(TreeAutomaton.class, "tree automaton", parent, (result, time) -> {
+            log("Loaded tree automaton from " + result.filename + ", " + Util.formatTime(time));
             TreeAutomaton auto = result.object;
 
             JTreeAutomaton jta = new JTreeAutomaton(auto, null);
-            jta.setTitle("Tree automaton: " + result.filename.getName());
+            jta.setTitle("Tree automaton: " + result.filename);
             jta.pack();
             jta.setVisible(true);
         });
@@ -646,6 +707,8 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenuItem miComputeDecompositionAutomaton;
     private javax.swing.JMenuItem miLoadAutomaton;
     private javax.swing.JMenuItem miLoadIrtg;
+    private javax.swing.JMenuItem miLoadIrtgFromURL;
+    private javax.swing.JMenuItem miLoadIrtgFromWeb;
     private javax.swing.JMenuItem miLoadTemplateIrtg;
     private javax.swing.JMenuItem miQuit;
     private javax.swing.JScrollPane spLog;
