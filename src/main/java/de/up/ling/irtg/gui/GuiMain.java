@@ -276,7 +276,6 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private void miLoadIrtgFromWebDirectoryActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miLoadIrtgFromWebDirectoryActionPerformed
         try {
             JGrammarFromWebSelector.withSelectedURL(new URL(getGrammarServer() + "/rest/grammars"), this, true, url -> {
-                System.err.println("url: " + url);
                 withLoadedObjectFromURL(url.toString(), InterpretedTreeAutomaton.class, "IRTG", this, (result, time) -> {
                     loadIrtg(result, time);
                 });

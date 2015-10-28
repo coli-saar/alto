@@ -3,17 +3,21 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package de.up.ling.irtg.gui;
 
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.awt.Component;
 import java.awt.Frame;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.JComponent;
+import javax.swing.JList;
 import javax.swing.SwingUtilities;
 
 /**
@@ -21,9 +25,10 @@ import javax.swing.SwingUtilities;
  * @author koller
  */
 public class JGrammarFromWebSelector extends javax.swing.JDialog {
+
     private List<GrammarEntry> grammars;
     private Consumer<URL> fn;
-    
+
     /**
      * Creates new form JGrammarFromWebSelector
      */
@@ -32,47 +37,54 @@ public class JGrammarFromWebSelector extends javax.swing.JDialog {
         initComponents();
         getRootPane().setDefaultButton(bOk);
     }
-    
-    public static void withSelectedURL(URL grammarListURL, Frame parent, boolean modal, Consumer<URL> fn) throws IOException {        
+
+    public static void withSelectedURL(URL grammarListURL, Frame parent, boolean modal, Consumer<URL> fn) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         JavaType type = mapper.getTypeFactory().constructCollectionType(List.class, GrammarEntry.class);
         List<GrammarEntry> grammars = mapper.readValue(grammarListURL, type);
-        
+
         JGrammarFromWebSelector js = new JGrammarFromWebSelector(parent, modal);
         js.fn = fn;
         js.populate(grammars);
         js.setVisible(true);
     }
-    
+
     private void populate(List<GrammarEntry> entries) {
+        List<String> tooltips = new ArrayList<>();
+        ComboboxToolTipRenderer renderer = new ComboboxToolTipRenderer();
+
         this.grammars = entries;
-        
+
         cbGrammars.removeAllItems();
-        for( GrammarEntry entry : entries ) {
+        cbGrammars.setRenderer(renderer);
+        
+        for (GrammarEntry entry : entries) {
             cbGrammars.addItem(entry.displayString());
+            tooltips.add(entry.comment == null ? "" : entry.comment);
         }
+        
+        renderer.setTooltips(tooltips);
     }
 
     private static class GrammarEntry {
+
         public int id;
         public String name;
         public String comment;
 
         public GrammarEntry() {
         }
-        
-        
 
         public GrammarEntry(int id, String name, String comment) {
             this.id = id;
             this.name = name;
             this.comment = comment;
         }
-        
+
         public String displayString() {
             return id + ": " + name;
         }
-        
+
         public URL url() {
             try {
                 return new URL(GuiMain.getGrammarServer() + "/rest/grammar_" + id + ".irtg");
@@ -86,11 +98,30 @@ public class JGrammarFromWebSelector extends javax.swing.JDialog {
         public String toString() {
             return "GrammarEntry{" + "id=" + id + ", name=" + name + ", comment=" + comment + '}';
         }
-        
-        
-        
+
     }
-    
+
+    private static class ComboboxToolTipRenderer extends DefaultListCellRenderer {
+        List<String> tooltips;
+
+        @Override
+        public Component getListCellRendererComponent(JList list, Object value,
+                int index, boolean isSelected, boolean cellHasFocus) {
+
+            JComponent comp = (JComponent) super.getListCellRendererComponent(list,
+                    value, index, isSelected, cellHasFocus);
+
+            if (-1 < index && null != value && null != tooltips) {
+                list.setToolTipText(tooltips.get(index));
+            }
+            return comp;
+        }
+
+        public void setTooltips(List<String> tooltips) {
+            this.tooltips = tooltips;
+        }
+    }
+
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -170,47 +201,6 @@ public class JGrammarFromWebSelector extends javax.swing.JDialog {
         setVisible(false);
     }//GEN-LAST:event_bCancelActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(JGrammarFromWebSelector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(JGrammarFromWebSelector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(JGrammarFromWebSelector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(JGrammarFromWebSelector.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                JGrammarFromWebSelector dialog = new JGrammarFromWebSelector(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bCancel;
