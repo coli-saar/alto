@@ -38,7 +38,7 @@ public class LearningInstance implements Callable<List<Tree<Rule>>> {
      *
      */
     private final SampleBenign.Configuration config;
-
+    
     /**
      *
      * @param samp
@@ -49,6 +49,11 @@ public class LearningInstance implements Callable<List<Tree<Rule>>> {
         this.config = config.copy();
     }
 
+    
+    public SampleBenign.Configuration getConfiguration(){
+        return this.config;
+    }
+    
     /**
      *
      * @param model

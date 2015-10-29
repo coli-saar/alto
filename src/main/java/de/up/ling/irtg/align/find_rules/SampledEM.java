@@ -42,11 +42,8 @@ public class SampledEM {
     /**
      * 
      * @param useThreads
-     * @param smooth
      * @param batchSize
      * @param scaling
-     * @param emptynessConstraint
-     * @param delexicalizationConstraint 
      */
     public SampledEM(int useThreads,int batchSize, double scaling) {
         this.useThreads = useThreads;
@@ -57,7 +54,6 @@ public class SampledEM {
     /**
      * 
      * 
-     * @param cc
      * @param learningRounds
      * @param instances
      * @param model
@@ -66,7 +62,7 @@ public class SampledEM {
      * @throws ExecutionException
      * @throws InterruptedException 
      */
-    public List<List<Tree<Rule>>> makeGrammar(CreateCorpus cc, int learningRounds,
+    public List<List<Tree<Rule>>> makeTrees(int learningRounds,
             List<LearningInstance> instances, Model model)
             throws ParserException, ExecutionException, InterruptedException{
         List<List<Tree<Rule>>> corpus = runTraining(learningRounds, instances, model);
@@ -76,13 +72,9 @@ public class SampledEM {
 
     /**
      * 
-     * @param threads
-     * @param cc
-     * @param variableSmooth
-     * @param mainSmooth
-     * @param vi
      * @param learningRounds
      * @param jobs
+     * @param mod
      * @return
      * @throws InterruptedException
      * @throws ExecutionException 
@@ -95,17 +87,7 @@ public class SampledEM {
         
         pushModel(jobs, mod);
         
-        train(learningRounds, jobs, intermediate, es, mod);
-        
-        List<List<Tree<Rule>>> result = new ArrayList<>();
-        List<Future<List<Tree<Rule>>>> l = es.invokeAll(jobs);
-        es.shutdown();
-        
-        for(int i=0;i<l.size();++i){
-            result.add(l.get(i).get());   
-        }
-        
-        return result;
+        return train(learningRounds, jobs, intermediate, es, mod);
     }
 
     /**
@@ -118,10 +100,13 @@ public class SampledEM {
      * @throws InterruptedException
      * @throws ExecutionException 
      */
-    private void train(int learningRounds, List<LearningInstance> jobs,
+    private List<List<Tree<Rule>>> train(int learningRounds, List<LearningInstance> jobs,
             List<LearningInstance> intermediate, ExecutorService es, Model mod)
                                     throws InterruptedException, ExecutionException {
+        List<List<Tree<Rule>>> list = new ArrayList<>();
+        
         for (int round = 0; round < learningRounds; ++round) {
+            list.clear();
             for (int i = 0; i < jobs.size();) {
                 int k = 0;
 
@@ -136,15 +121,20 @@ public class SampledEM {
                 
                 for (int pos=0;pos<results.size();++pos) {
                     List<Tree<Rule>> choices = results.get(pos).get();
+                    
+                    list.add(choices);
+                    
                     double amount = scaling / ((double) choices.size());
                     for (int h = 0; h < choices.size(); ++h) {
                         mod.add(choices.get(h), amount);
                     }
                 }
             }
-            
+                  
             System.out.println("finished one round of training");
         }
+        
+        return list;
     }
 
     /**

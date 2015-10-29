@@ -5,26 +5,24 @@
  */
 package de.up.ling.irtg.align.find_rules;
 
-import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.align.Propagator;
-import de.up.ling.irtg.align.alignment_marking.AddressAligner;
 import de.up.ling.irtg.align.alignment_marking.SpanAligner;
 import de.up.ling.irtg.align.creation.CreateCorpus;
 import de.up.ling.irtg.align.find_rules.sampling.InterpretingModel;
 import de.up.ling.irtg.align.find_rules.sampling.Model;
+import de.up.ling.irtg.align.find_rules.sampling.SplitIndicatedImage;
+import de.up.ling.irtg.align.pruning.StringLeftOrRight;
+import de.up.ling.irtg.align.pruning.StringLeftXORRight;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.util.IntDoubleFunction;
-import de.up.ling.irtg.util.IntIntFunction;
 import de.up.ling.irtg.util.MutableDouble;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,11 +64,11 @@ public class SampledEMTest {
         
         cc = new CreateCorpus<>(sal,sap);
         
-        Propagator propDef = new Propagator();
+        final Propagator propDef = new Propagator();
         
         SampledEM.SampledEMFactory fact = new SampledEM.SampledEMFactory();
-        fact.setBatchSize(2);
-        fact.setNumberOfThreads(2).setScaling(1);
+        fact.setBatchSize(1);
+        fact.setNumberOfThreads(2).setScaling(30);
         
         
         Function<List<String>,Propagator> funct = (List<String> in) -> {
@@ -79,21 +77,26 @@ public class SampledEMTest {
         
         SpanAligner.Factory spanFactory = new SpanAligner.Factory();
         
-        for(String[] p : new String[][] {{"Resumption of the session","0:1:0 2:3:1 3:4:2"},
-            {"( The House rose and observed a minute ' s silence )","0:1:0 1:2:1 2:3:2 3:4:3 5:6:4 7:8:5 7:8:6 10:11:7 11:12:8 11:12:9"}}){
+        for(String[] p : new String[][] {{"Jede Nacht geht John Hering angeln",
+            "0:1:0 1:2:1 2:3:3 3:4:4 4:5:5 5:6:6 5:6:7"},
+            {"Täglich geht Mary Lachs angeln",
+                "0:1:1 1:2:2 2:3:3 3:4:4 4:5:5 4:5:6"}}){
             stringInputs.add(cc.makePackage(p[0], p[1], funct, spanFactory));     
         }
         
-        /*
-        Function<Tree<String>,Propagator> f = (Tree<String> in) -> {
-            return propDef;
-        };*/
         
+        Propagator prop = new Propagator(new StringLeftOrRight());
+        Function<List<String>, Propagator> f = (List<String> in) -> {
+            return prop;
+        };
         //AddressAligner.Factory addFactory = new AddressAligner.Factory();
         
-        for(String[] p : new String[][] {{"Wiederaufnahme der Sitzungsperiode","0:1:0 1:2:1 2:3:2"},
-            {"( Das Parlament erhebt sich zu einer Schweigeminute . )","0:1:0 1:2:1 2:3:2 3:4:3 4:5:4 5:6:5 6:7:6 7:8:7 8:9:8 9:10:9"}}){
-            treeInput.add(cc.makePackage(p[0],p[1],funct,spanFactory));
+        
+        for(String[] p : new String[][] {{"Nightly John goes fishing for herring",
+            "0:1:0 0:1:1 1:2:4 2:3:3 3:4:6 4:5:7 5:6:5"},
+            {"Daily Mary goes fishing for salmon",
+                "0:1:1 1:2:3 2:3:2 3:4:5 4:5:6 5:6:4"}}){
+            treeInput.add(cc.makePackage(p[0],p[1],f,spanFactory));
         }
         
         data = cc.makeDataSet(stringInputs, treeInput);
@@ -101,8 +104,17 @@ public class SampledEMTest {
         this.sem = fact.getInstance();
         
         LearningInstance.LearningInstanceFactory fac = new LearningInstance.LearningInstanceFactory();
+        fac.setSamplerAdaptionRounds(5);
+        fac.setAdaptionSmooth(1.0);
         
-        this.semle = fac.makeInstances(5, 500, data);
+        this.semle = fac.makeInstances(20, 2000, data);
+        
+        IntSet iset = new IntAVLTreeSet(data.get(0).getAllLabels());
+        iset.retainAll(data.get(1).getAllLabels());
+        System.out.println(iset.size());
+        
+        
+        
     }
 
     /**
@@ -111,34 +123,36 @@ public class SampledEMTest {
      */
     @Test
     public void testMakeGrammar() throws Exception {
+        /*
         InterpretingModel im = 
-                new InterpretingModel(cc.getMainManager(), 1.0, Math.log(1E-2), Math.log(1E-2));
+                new InterpretingModel(cc.getMainManager(), 0.1, Math.log(1E-2), Math.log(1E-2));
         Model mod = new Model() {
-
+            
+            private double d = 1E12;
+            
             @Override
             public double getLogWeight(Tree<Rule> t) {
-                double d = im.getLogWeight(t);
+                double q = im.getLogWeight(t);
                 
                 MutableDouble md = new MutableDouble(0.0);
                 
                 extend(t,md);
                 
-                return md.getValue()+d;
+                return md.getValue()+q;
             }
 
             @Override
             public void add(Tree<Rule> t, double amount) {
                 im.add(t, amount);
+                //this.d = Math.max(1.0, d / 10.0);
             }
 
-            /**
-             * 
-             * @param t
-             * @param md 
-             */
+            
             private void extend(Tree<Rule> t, MutableDouble md) {
                 if(cc.getMainManager().isVariable(t.getLabel().getLabel())){
-                    md.add(Math.log(1E-40));
+                    md.add(Math.log(d));
+                }else{
+                    //md.add(Math.log(1E-50));
                 }
                 
                 t.getChildren().stream().forEach((q) -> {
@@ -147,38 +161,19 @@ public class SampledEMTest {
             }
         };
         
+        List<List<Tree<Rule>>> result = sem.makeTrees(1, semle, mod);
+        SplitIndicatedImage sii = new SplitIndicatedImage(cc.getMainManager(), "----------");
         
-        List<List<Tree<Rule>>> result = sem.makeGrammar(cc, 1, semle, mod);
+        //Tree<String> rules = ta.viterbi();
         
-        com.google.common.base.Function<Rule,String> f = (Rule r) -> {
-            return cc.getMainManager().getSignature().resolveSymbolId(r.getLabel());
-        };
-        
-        TreeAutomaton ta = data.get(0);
-        Iterable<Rule> it = ta.getAllRulesTopDown();
-        
-        for(Rule r : it){
-            if(cc.getMainManager().isVariable(r.getLabel())){
-                r.setWeight(20.0);
-            }else{
-                r.setWeight(0.1);
-            }
-        }
-        
-        Tree<String> rules = ta.viterbi();
-        
-        //for(Tree<Rule> t : result.get(0)){
+        for(int i=0;i<2;++i)
         {
-            System.out.println("----------------");
-            //Tree<String> rules = t.map(f);
-            Tree<String> left = cc.getMainManager().getHomomorphism1().apply(rules);
-            Tree<String> right = cc.getMainManager().getHomomorphism2().apply(rules);
+            TreeAutomaton ta = this.data.get(i);
+            System.out.println(ta.language().size());
+            String s = sii.convert(result.get(i));
         
-            System.out.println(left);
-            System.out.println(right);
+            System.out.println(s);
         }
-        
-        
         
         /**
         System.out.println("----------");
