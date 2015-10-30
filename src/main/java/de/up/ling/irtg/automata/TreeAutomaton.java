@@ -34,7 +34,6 @@ import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.DebuggingWriter;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
-import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
@@ -1264,6 +1263,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
                                     everAddedStates.add(child);
                                     agenda.enqueue(child);
                                 }
+                            }
+                            if (Thread.interrupted()) {
+                                return;
                             }
                         }
                     }
@@ -2882,6 +2884,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
         IntList constants = symbols.get(0);
         if (constants != null) {
             for (int c : constants) {
+                if (Thread.interrupted()) {
+                    return ret;
+                }
                 //try {
                 Iterator<Rule> it = getRulesBottomUp(c, new int[]{}).iterator();
                 while (it.hasNext()) {
@@ -2908,6 +2913,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
         BinaryPartnerFinder bpFinder = makeNewBinaryPartnerFinder();
 
         for (int i = 0; i < agenda.size(); i++) {
+            if (Thread.interrupted()) {
+                return ret;
+            }
             int a = agenda.get(i);
             if (getFinalStates().contains(a)) {
                 ret = true;
