@@ -17,20 +17,21 @@ public class Variables {
     /**
      * 
      */
-    private static final String variablePrefix = "X";
+    private static final String VARIABLE_PREFIX = "X";
     
     /**
      * 
      */
-    public static final Predicate<String> isVariable = Pattern.compile("^X.*").asPredicate();
+    public static final Predicate<String> IS_VARIABLE = 
+            (String t) -> t.codePointAt(0) == VARIABLE_PREFIX.codePointAt(0);
     
     /**
      * 
      * @param additionalInformation
      * @return 
      */
-    public String makeVariable(Object... additionalInformation){
-        StringBuffer sb = new StringBuffer(variablePrefix);
+    public static String makeVariable(Object... additionalInformation){
+        StringBuilder sb = new StringBuilder(VARIABLE_PREFIX);
         
         for(Object o : additionalInformation){
             sb.append("_").append(o.toString());
@@ -45,13 +46,13 @@ public class Variables {
      * @param additionalInformation
      * @return 
      */
-    public String makeVariable(String original, Object... additionalInformation){
+    public static String makeVariable(String original, Object... additionalInformation){
         StringBuffer sb;
         
-        if(isVariable.test(original)){
+        if(IS_VARIABLE.test(original)){
             sb = new StringBuffer(original);
         }else{
-            sb = new StringBuffer(variablePrefix).append("_").append(original);
+            sb = new StringBuffer(VARIABLE_PREFIX).append("_").append(original);
         }
         
         for(Object o : additionalInformation){

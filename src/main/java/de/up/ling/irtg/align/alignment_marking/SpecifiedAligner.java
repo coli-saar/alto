@@ -51,5 +51,10 @@ public class SpecifiedAligner<State> extends StateAlignmentMarking<State> {
      */
     public IntSet put(State key, IntSet value) {
         return map.put(key, value);
-    }    
+    }
+
+    @Override
+    public String toString() {
+        return "SpecifiedAligner{" + "map=" + map + '}';
+    }
 }
