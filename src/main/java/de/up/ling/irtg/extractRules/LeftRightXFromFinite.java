@@ -16,6 +16,7 @@ import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.TupleIterator;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -51,7 +52,13 @@ public class LeftRightXFromFinite<Type1> implements
         List<Set<Pair<String,String>>> holder = new ArrayList<>();
         for(Rule r : it){
             Type1 parent = tBase.getStateForId(r.getParent());
-            IntSet al = alBase.getAlignmentMarkers(parent);
+            
+            IntSet al;
+            if(alBase == null){
+                al  = new IntOpenHashSet();
+            }else{
+                al = alBase.getAlignmentMarkers(parent);
+            }
             
             String label = tBase.getSignature().resolveSymbolId(r.getLabel());
             int lCode = cta.getSignature().addSymbol(label, r.getArity());

@@ -3,8 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align;
+package de.up.ling.irtg.align.creation;
 
+import de.up.ling.irtg.align.HomomorphismManager;
+import de.up.ling.irtg.align.Pruner;
+import de.up.ling.irtg.align.StateAlignmentMarking;
 import de.up.ling.irtg.align.alignment_marking.SpecifiedAligner;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;

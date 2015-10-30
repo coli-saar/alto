@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.align;
 
+import de.up.ling.irtg.align.creation.Propagator;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.StringAlgebra;

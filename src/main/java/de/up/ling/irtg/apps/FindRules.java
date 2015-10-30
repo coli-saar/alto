@@ -8,7 +8,7 @@ package de.up.ling.irtg.apps;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.align.HomomorphismManager;
-import de.up.ling.irtg.align.Propagator;
+import de.up.ling.irtg.align.creation.Propagator;
 import de.up.ling.irtg.align.RuleFinder;
 import de.up.ling.irtg.align.alignment_marking.SpanAligner;
 import de.up.ling.irtg.automata.FromRuleTreesAutomaton;

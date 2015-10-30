@@ -7,7 +7,7 @@ package de.up.ling.irtg.align.find_rules.sampling;
 
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.align.Propagator;
+import de.up.ling.irtg.align.creation.Propagator;
 import de.up.ling.irtg.align.alignment_marking.AlignmentFactory;
 import de.up.ling.irtg.align.alignment_marking.Empty;
 import de.up.ling.irtg.align.creation.CreateCorpus;

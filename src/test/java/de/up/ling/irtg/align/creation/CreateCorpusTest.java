@@ -8,7 +8,6 @@ package de.up.ling.irtg.align.creation;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.align.Propagator;
 import de.up.ling.irtg.align.alignment_marking.AddressAligner;
 import de.up.ling.irtg.align.alignment_marking.SpanAligner;
 import de.up.ling.irtg.align.pruning.StringLeftXORRight;

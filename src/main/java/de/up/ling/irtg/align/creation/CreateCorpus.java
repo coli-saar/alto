@@ -8,7 +8,6 @@ package de.up.ling.irtg.align.creation;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.align.HomomorphismManager;
-import de.up.ling.irtg.align.Propagator;
 import de.up.ling.irtg.align.StateAlignmentMarking;
 import de.up.ling.irtg.align.alignment_marking.AlignmentFactory;
 import de.up.ling.irtg.align.pruning.RemoveDead;
