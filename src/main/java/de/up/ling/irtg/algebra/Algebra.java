@@ -153,15 +153,23 @@ public abstract class Algebra<E> implements Serializable {
     /**
      * Returns all implementations this algebra provides for decomposition.
      * By default, his is the singleton list containing the decompose(E) function with key "Standard".
+     * Returns a list of implementations. Each implementation is a pair of pairs.
+     * The left pair has the name of the implementation on its left, this is shown
+     * to the user and has no internal consequences. The right String of the left
+     * pair is the code of the implementation, changing it removes backward
+     * compatibility when recovering this implementation from a string.
+     * The right pair has the actual implementing function on its left, and the return
+     * type on its right.
      * @param interpretationName
      * @return 
      */
-    public Map<String, Pair<Function<E, Object>, Class>> getDecompositionImplementations(String interpretationName) {
-        Map<String, Pair<Function<E, Object>, Class>> ret = new HashMap<>();
+    public List<Pair<Pair<String,String>,  Pair<Function<E, Object>, Class>>> getDecompositionImplementations(String interpretationName) {
+        List<Pair<Pair<String,String>,  Pair<Function<E, Object>, Class>>> ret = new ArrayList<>();
         try {
             Function<E, Object> function = value -> decompose(value);
+            Pair<String, String> nameAndCode = new Pair("Standard", "std");
             //getting the return type of the actual decompose function is a bit complicated... edit: did not make it work, just using TreeAutomaton for now.
-            ret.put("Standard", new Pair(function, TreeAutomaton.class));
+            ret.add(new Pair(nameAndCode, new Pair(function, TreeAutomaton.class)));
         } catch (java.lang.Exception e) {
             System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
         }
@@ -185,9 +193,9 @@ public abstract class Algebra<E> implements Serializable {
      * @return Maps the name of the property to a function that maps an object to the
      * property.
      */
-    public Map<String, Function<E, Double>> getObjectProperties() {
-        Map<String, Function<E, Double>> ret = new HashMap<>();
-        ret.put("String length", obj -> (double) obj.toString().length());
+    public List<Pair<Pair<String, String>, Function<E, Double>>> getObjectProperties() {
+        List<Pair<Pair<String, String>, Function<E, Double>>> ret = new ArrayList<>();
+        ret.add(new Pair(new Pair("String length", "string_length"), (Function<E, Double>) (E t) -> (double) t.toString().length()));
         return ret;
     }
     

@@ -29,6 +29,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Produces pattern matcher automata to compute the inverse of decomposition
@@ -227,6 +229,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 intPair = new Pair(matcherStateID, rhsStateID);
             }
             if (!seen.contains(intPair)) {
+                //System.err.println("------- Adding ("+intPair.getLeft()+", "+intPair.getRight()+") to agenda -------------");
                 agenda.add(intPair);
                 seen.add(intPair);
             }
@@ -442,6 +445,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             Pair<Integer, Integer> pq = agenda.get(i);
             int matcherChildID = pq.getLeft();
             int rhsChildID = pq.getRight();
+            //System.err.println("-----------Removed ("+matcherChildID+", "+rhsChildID+") from agenda ----------");
 
             if (matcherChildID == startStateRepresentativeID) {//(isStartState.get(matcherChildID)) {
                 for (Pair<Rule, Integer> ruleAndPos : posOfStartStateRepInRules) {
@@ -567,7 +571,9 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
              }
              }
              }*/
+            //int count = 0;
             for (Rule rhsRule : rhs.getRulesBottomUp(rhsLabelID, rhsProcessedChildIDs)) {
+                //count++;
                 Pair<String, State> intersParent = makeDuoStateAndPutOnAgenda(matcherRule.getParent(), rhsRule.getParent(), rhs, agenda, seen);
                 Pair<String, State>[] intersChildren = new Pair[arity];
                 for (int j = 0; j < arity; j++) {
@@ -576,6 +582,10 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
                 intersectionAutomaton.addRule(intersectionAutomaton.createRule(intersParent, matcherRule.getLabel(matcher), intersChildren));
 
             }
+            //if (count > 0) {
+                //System.err.println("Added "+count + " rules for label "+rhs.getSignature().resolveSymbolId(rhsLabelID)+" with children "
+                //        +Arrays.stream(rhsProcessedChildIDs).mapToObj(id -> rhs.getStateForId(id).toString()).collect(Collectors.toList()));
+            //}
         });
     }
 

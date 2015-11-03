@@ -12,7 +12,6 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.codec.isiamr.IsiAmrParser;
-import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -23,11 +22,9 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.logging.Level;
@@ -108,14 +105,14 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     }
     
     @Override
-    public Map<String, Pair<Function<SGraph, Object>, Class>> getDecompositionImplementations(String interpretationName) {
-        Map<String, Pair<Function<SGraph, Object>, Class>> ret = new HashMap<>();
+    public List<Pair<Pair<String,String>,  Pair<Function<SGraph, Object>, Class>>> getDecompositionImplementations(String interpretationName) {
+        List<Pair<Pair<String,String>,  Pair<Function<SGraph, Object>, Class>>> ret = new ArrayList<>();
         try {
             Function<SGraph, Object> bottomup = graph -> decompose(graph, SGraphBRDecompositionAutomatonBottomUp.class);
             Function<SGraph, Object> topdown = graph -> decompose(graph, SGraphBRDecompositionAutomatonTopDown.class);
             Class returnType = getClass().getMethod("decompose", new Class[]{SGraph.class, Class.class}).getReturnType();
-            ret.put("Bottom-up", new Pair(bottomup, returnType));
-            ret.put("Top-down", new Pair(topdown, returnType));
+            ret.add(new Pair(new Pair("Bottom-up", "bup"), new Pair(bottomup, returnType)));
+            ret.add(new Pair(new Pair("Top-down", "tdown"), new Pair(topdown, returnType)));
         } catch (java.lang.Exception e) {
             System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
         }

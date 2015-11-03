@@ -6,7 +6,6 @@
 package de.up.ling.irtg.util;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.corpus.Instance;
 
 /**
  *
@@ -15,15 +14,34 @@ import de.up.ling.irtg.corpus.Instance;
 public abstract class Evaluator<T> {
     
     private final String name;
+    private final String code;
     
-    public Evaluator(String name) {
+    /**
+     * Creates a new evaluator.
+     * @param name The name shown to the user, has no internal consequences
+     * @param code The code identifying this evaluator, if this is changed
+     * backward compatibility may be lost. This should be unique to an extend
+     * depending on the context.
+     */
+    public Evaluator(String name, String code) {
         this.name = name;
+        this.code = code;
     }
     
     @Override
     public String toString() {
         return name;
     }
+
+    public String getCode() {
+        return code;
+    }
+
+    public String getName() {
+        return name;
+    }
+    
+    
     
     /**
      * evaluates the Object result with respect to the gold value contained in

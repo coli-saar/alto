@@ -131,7 +131,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     @Override
     public List<Evaluator> getEvaluationMethods() {
         List<Evaluator> ret = new ArrayList<>();
-        ret.add(new Evaluator<List<String>>("Equals") {
+        ret.add(new Evaluator<List<String>>("Equals", "equals") {
             
             @Override
             public Pair<Double, Double> evaluate(List<String> result, List<String> gold) {

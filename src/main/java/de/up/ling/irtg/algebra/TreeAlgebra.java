@@ -68,7 +68,7 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
     @Override
     public List<Evaluator> getEvaluationMethods() {
         List<Evaluator> ret = new ArrayList<>();
-        ret.add(new Evaluator<Tree<String>>("Recall") {
+        ret.add(new Evaluator<Tree<String>>("Recall", "recall") {
             
             @Override
             public Pair<Double, Double> evaluate(Tree<String> result, Tree<String> gold) {
@@ -85,7 +85,7 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
                 return new Pair(score, weight);
             }
         });
-        ret.add(new Evaluator<Tree<String>>("Precision") {
+        ret.add(new Evaluator<Tree<String>>("Precision", "precision") {
             
             @Override
             public Pair<Double, Double> evaluate(Tree<String> result, Tree<String> gold) {
