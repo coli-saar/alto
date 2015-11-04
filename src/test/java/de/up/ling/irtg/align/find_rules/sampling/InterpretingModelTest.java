@@ -7,11 +7,11 @@ package de.up.ling.irtg.align.find_rules.sampling;
 
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.align.creation.Propagator;
-import de.up.ling.irtg.align.alignment_marking.AlignmentFactory;
-import de.up.ling.irtg.align.alignment_marking.Empty;
-import de.up.ling.irtg.align.creation.CreateCorpus;
-import de.up.ling.irtg.align.creation.CreateCorpus.InputPackage;
+import de.up.ling.irtg.rule_finding.create_automaton.Propagator;
+import de.up.ling.irtg.rule_finding.alignments.AlignmentFactory;
+import de.up.ling.irtg.rule_finding.alignments.Empty;
+import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
+import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator.InputPackage;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
@@ -57,8 +57,8 @@ public class InterpretingModelTest {
         MinimalTreeAlgebra mtaL = new MinimalTreeAlgebra();
         MinimalTreeAlgebra mtaR = new MinimalTreeAlgebra();
         
-        CreateCorpus<Tree<String>,Tree<String>> cc =
-                                                new CreateCorpus<>(mtaL,mtaR);
+        CorpusCreator<Tree<String>,Tree<String>> cc =
+                                                new CorpusCreator<>(mtaL,mtaR);
         
         final Propagator prop = new Propagator();
         

@@ -5,11 +5,13 @@
  */
 package de.up.ling.irtg.align;
 
-import de.up.ling.irtg.align.creation.Propagator;
+import de.up.ling.irtg.rule_finding.RuleFinder;
+import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
+import de.up.ling.irtg.rule_finding.create_automaton.Propagator;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.align.alignment_marking.SpanAligner;
+import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.automata.FromRuleTreesAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;

@@ -7,9 +7,9 @@ package de.up.ling.irtg.align.find_rules;
 
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.align.creation.Propagator;
-import de.up.ling.irtg.align.alignment_marking.SpanAligner;
-import de.up.ling.irtg.align.creation.CreateCorpus;
+import de.up.ling.irtg.rule_finding.create_automaton.Propagator;
+import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.align.find_rules.sampling.InterpretingModel;
 import de.up.ling.irtg.align.find_rules.sampling.Model;
 import de.up.ling.irtg.align.find_rules.sampling.SplitIndicatedImage;
@@ -37,7 +37,7 @@ public class SampledEMTest {
     /**
      * 
      */
-    private CreateCorpus<List<String>, List<String>> cc;
+    private CorpusCreator<List<String>, List<String>> cc;
     
     /**
      * 
@@ -59,10 +59,10 @@ public class SampledEMTest {
         StringAlgebra sal = new StringAlgebra();
         StringAlgebra sap = new StringAlgebra();
         //MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
-        ArrayList<CreateCorpus.InputPackage> stringInputs = new ArrayList<>();
-        ArrayList<CreateCorpus.InputPackage> treeInput = new ArrayList<>();
+        ArrayList<CorpusCreator.InputPackage> stringInputs = new ArrayList<>();
+        ArrayList<CorpusCreator.InputPackage> treeInput = new ArrayList<>();
         
-        cc = new CreateCorpus<>(sal,sap);
+        cc = new CorpusCreator<>(sal,sap);
         
         final Propagator propDef = new Propagator();
         

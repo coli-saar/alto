@@ -7,9 +7,9 @@ package de.up.ling.irtg.align.find_rules;
 
 import com.google.common.base.Function;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.align.HomomorphismManager;
-import de.up.ling.irtg.align.creation.Propagator;
-import de.up.ling.irtg.align.alignment_marking.SpanAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
+import de.up.ling.irtg.rule_finding.create_automaton.Propagator;
+import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
 import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;

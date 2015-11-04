@@ -6,7 +6,7 @@
 package de.up.ling.irtg.align.find_rules.sampling;
 
 import com.google.common.base.Function;
-import de.up.ling.irtg.align.HomomorphismManager;
+import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.align.find_rules.DefaultVariableMapping;
 import de.up.ling.irtg.align.find_rules.TreeAddingAutomaton;
 import de.up.ling.irtg.align.find_rules.VariableIndicationByLookUp;

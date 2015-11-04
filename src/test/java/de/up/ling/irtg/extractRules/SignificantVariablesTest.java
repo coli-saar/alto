@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.extractRules;
 
+import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;

@@ -3,12 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.creation;
+package de.up.ling.irtg.rule_finding.create_automaton;
 
-import de.up.ling.irtg.align.HomomorphismManager;
-import de.up.ling.irtg.align.Pruner;
-import de.up.ling.irtg.align.StateAlignmentMarking;
-import de.up.ling.irtg.align.alignment_marking.SpecifiedAligner;
+import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -28,35 +25,6 @@ public class Propagator {
      * 
      */
     private final VariablePropagator vp = new VariablePropagator();
- 
-    /**
-     * 
-     */
-    private final Pruner pruner;
-    
-    /**
-     * 
-     */
-    public Propagator(){
-        this(Pruner.DEFAULT_PRUNER);
-    }
-    
-    /**
-     * 
-     * @param pruner 
-     */
-    public Propagator(Pruner pruner){
-        this.pruner = pruner;
-    }
-
-    /**
-     * 
-     * @param markers
-     * @return 
-     */
-    public static String getVariableLabel(IntSet markers) {
-        return HomomorphismManager.VARIABLE_PREFIX+"_"+markers.toString();
-    }
     
     
     /**
@@ -73,22 +41,65 @@ public class Propagator {
     /**
      * 
      * @param <State>
-     * @param input
-     * @param alignments
+     * @param in
      * @return 
      */
-    public <State> TreeAutomaton convert(TreeAutomaton<State> input, StateAlignmentMarking<State> alignments){
-        Int2ObjectMap markings = this.propagate(input, alignments);
-        final ConcreteTreeAutomaton<State> output = new ConcreteTreeAutomaton<>(input.getSignature());
-        final SpecifiedAligner map = new SpecifiedAligner(output);
+    public <State> AlignedTrees<State> convert(AlignedTrees<State> in){
+        Int2ObjectMap<IntSet> markings = this.propagate(in.getTrees(), in.getAlignments());
+        ConcreteTreeAutomaton<State> output = new ConcreteTreeAutomaton<>(in.getTrees().getSignature());
+        SpecifiedAligner<State> map = new SpecifiedAligner<>(output);
         
-        input = this.pruner.prePrune(input, alignments);
+        Visitor visit = new Visitor(markings, output, in.getTrees(), map, in.getAlignments());
         
-        Visitor visit = new Visitor(markings, output, input, map, alignments);
-        input.foreachStateInBottomUpOrder(visit);
+        in.getTrees().foreachStateInBottomUpOrder(visit);
         
-        return this.pruner.postPrune(output, map);
+        return new AlignedTrees<>(output,map);
     }
+    
+    /**
+     * 
+     * @param label
+     * @param vars
+     * @return 
+     */
+    public static String makeExtendedVariable(String label, Int2ObjectMap<IntSet> vars) {
+        return Variables.makeVariable(vars.toString()+"_"+label);
+    }
+    
+    /**
+     * 
+     * @param variable
+     * @return 
+     */
+    public static String getOriginalVariable(String variable) {
+        String pair = Variables.getInformation(variable);
+        int i=0;
+        for(;i<pair.length();++i){
+            if('_' == pair.charAt(i)){
+                break;
+            }
+        }
+        
+        return pair.substring(0, i);
+    }
+    
+    /**
+     * 
+     * @param variable
+     * @return 
+     */
+    public String getOriginalInformation(String variable) {
+        String pair = Variables.getInformation(variable);
+        int i=0;
+        for(;i<pair.length();++i){
+            if('_' == pair.charAt(i)){
+                break;
+            }
+        }
+        
+        return pair.substring(i+1);
+    }
+    
     
     /**
      * 
@@ -141,7 +152,6 @@ public class Propagator {
         }
     };
     
-    
     /**
      * A simple visitor used to construct the new automaton by copying the rules of the old and introducing some
      * extra labels.
@@ -193,20 +203,25 @@ public class Propagator {
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
             Object st = this.original.getStateForId(state);
-            String loopLabel = getVariableLabel(this.vars.get(state));
-            // here we add a loop for the alignments
-            this.goal.addRule(this.goal.createRule(st, loopLabel, new Object[] {st}));
-            this.local.put(this.goal.getIdForState(st), this.mark.getAlignmentMarkers(st));
+            IntSet propagatedAligments = this.vars.get(st);
             
+            // here we add a loop for the alignments
+            this.local.put(this.goal.getIdForState(st), propagatedAligments);
             if(original.getFinalStates().contains(state))
             {
                 this.goal.addFinalState(this.goal.getIdForState(st));
             }
             
+            
             for(Rule r : rulesTopDown)
             {
                 Object[] arr = makeCopy(r.getChildren());
                 String label = r.getLabel(original);
+                
+                if(Variables.IS_VARIABLE.test(label)) {
+                    label = makeExtendedVariable(label,vars);
+                }
+                                
                 double weight = r.getWeight();
                 
                 this.goal.addRule(goal.createRule(st, label, arr, weight));
@@ -228,6 +243,5 @@ public class Propagator {
             
             return obs;
         }
-        
     }
 }

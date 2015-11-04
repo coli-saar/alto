@@ -5,11 +5,13 @@
  */
 package de.up.ling.irtg.align.creation;
 
+import de.up.ling.irtg.rule_finding.create_automaton.Propagator;
+import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.align.alignment_marking.AddressAligner;
-import de.up.ling.irtg.align.alignment_marking.SpanAligner;
+import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
+import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.align.pruning.StringLeftXORRight;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
@@ -30,7 +32,7 @@ public class CreateCorpusTest {
     /**
      * 
      */
-    private CreateCorpus<List<String>,Tree<String>> cc;
+    private CorpusCreator<List<String>,Tree<String>> cc;
     
     /**
      * 
@@ -45,12 +47,12 @@ public class CreateCorpusTest {
     /**
      * 
      */
-    private List<CreateCorpus.InputPackage> stringInputs;
+    private List<CorpusCreator.InputPackage> stringInputs;
     
     /**
      * 
      */
-    private List<CreateCorpus.InputPackage> treeInput;
+    private List<CorpusCreator.InputPackage> treeInput;
     
     @Before
     public void setUp() {
@@ -59,7 +61,7 @@ public class CreateCorpusTest {
         this.stringInputs = new ArrayList<>();
         this.treeInput = new ArrayList<>();
         
-        cc = new CreateCorpus<>(sal,mta);
+        cc = new CorpusCreator<>(sal,mta);
         
         Propagator propDef = new Propagator();
         Propagator propLarge = new Propagator(new StringLeftXORRight());

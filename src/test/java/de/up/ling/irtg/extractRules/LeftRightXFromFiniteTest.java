@@ -5,11 +5,13 @@
  */
 package de.up.ling.irtg.extractRules;
 
+import de.up.ling.irtg.rule_finding.create_automaton.Variables;
+import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
-import de.up.ling.irtg.align.StateAlignmentMarking;
-import de.up.ling.irtg.align.alignment_marking.SpanAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
+import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import static de.up.ling.irtg.util.TestingTools.pt;

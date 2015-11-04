@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.align;
 
+import de.up.ling.irtg.rule_finding.SubtreeIterator;
+import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.signature.Signature;

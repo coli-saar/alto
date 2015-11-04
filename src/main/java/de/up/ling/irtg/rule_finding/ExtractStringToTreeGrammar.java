@@ -3,19 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align;
+package de.up.ling.irtg.rule_finding;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.align.alignment_marking.AddressAligner;
-import de.up.ling.irtg.align.alignment_marking.SpanAligner;
-import de.up.ling.irtg.align.creation.CreateCorpus;
+import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
+import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.align.find_rules.SampledEM;
-import de.up.ling.irtg.align.pruning.StringLeftOrRight;
-import de.up.ling.irtg.align.pruning.StringLeftXORRight;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

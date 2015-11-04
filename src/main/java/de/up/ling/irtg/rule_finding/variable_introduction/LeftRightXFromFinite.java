@@ -3,15 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.extractRules;
+package de.up.ling.irtg.rule_finding.variable_introduction;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.align.StateAlignmentMarking;
-import de.up.ling.irtg.align.alignment_marking.SpecifiedAligner;
+import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.RuleEvaluator;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
+import de.up.ling.irtg.rule_finding.create_automaton.Variables;
+import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.TupleIterator;
@@ -23,60 +25,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  *
  * @author christoph_teichmann
  * @param <Type1>
  */
-public class LeftRightXFromFinite<Type1> implements 
-                   Function<Pair<TreeAutomaton<Type1>,StateAlignmentMarking<Type1>>,
-                            Pair<TreeAutomaton<Pair<Type1,Pair<String,String>>>,StateAlignmentMarking<Pair<Type1,Pair<String,String>>>>> {
-
-    
-    @Override
-    public Pair<TreeAutomaton<Pair<Type1, Pair<String, String>>>, StateAlignmentMarking<Pair<Type1, Pair<String, String>>>> apply(Pair<TreeAutomaton<Type1>, StateAlignmentMarking<Type1>> t) {
-        ConcreteTreeAutomaton<Pair<Type1,Pair<String,String>>> cta = new ConcreteTreeAutomaton<>(t.getLeft().getSignature());
-        SpecifiedAligner<Pair<Type1, Pair<String, String>>> spa = new SpecifiedAligner<>(cta);
-        
-        TreeAutomaton<Type1> tBase = t.getLeft();
-        StateAlignmentMarking<Type1> alBase = t.getRight();
-        
-        RuleEvaluator<Set<Pair<String,String>>> re = new Evaluator(tBase.getSignature());
-        Semiring<Set<Pair<String,String>>> sem = new LeftRightSemiRing();
-        
-        Map<Integer,Set<Pair<String,String>>> map = tBase.evaluateInSemiring(sem, re);
-        Iterable<Rule> it = tBase.getAllRulesTopDown();
-        
-        List<Set<Pair<String,String>>> holder = new ArrayList<>();
-        for(Rule r : it){
-            Type1 parent = tBase.getStateForId(r.getParent());
-            
-            IntSet al;
-            if(alBase == null){
-                al  = new IntOpenHashSet();
-            }else{
-                al = alBase.getAlignmentMarkers(parent);
-            }
-            
-            String label = tBase.getSignature().resolveSymbolId(r.getLabel());
-            int lCode = cta.getSignature().addSymbol(label, r.getArity());
-            
-            if(r.getArity() == 0){
-                handleUnaryRule(label, parent, cta, lCode, r, tBase, spa, al);
-                continue;
-            }
-            
-            handleNonUnary(r, map, holder, parent, cta, tBase, lCode, spa, al);
-        }
-        
-        
-        addVariables(cta);
-        
-        
-        return new Pair<>(cta,spa);
-    }
+public class LeftRightXFromFinite<Type1> 
+        implements VariableIntroduction<Type1,Pair<Type1, Pair<String, String>>>{
 
     /**
      * 
@@ -88,7 +44,7 @@ public class LeftRightXFromFinite<Type1> implements
             int state = iit.nextInt();
             Pair<Type1,Pair<String,String>> pair = cta.getStateForId(state);
             
-            String var = Variables.makeVariable(pair.getRight().getLeft(),pair.right.getRight());
+            String var = Variables.makeVariable(""+pair.getRight().getLeft()+"_"+pair.right.getRight());
             int code = cta.getSignature().addSymbol(var, 1);
             
             Rule r = cta.createRule(state, code, new int[] {state}, 1.0);
@@ -195,6 +151,50 @@ public class LeftRightXFromFinite<Type1> implements
         }
         
         return par;
+    }
+
+    @Override
+    public AlignedTrees<Pair<Type1, Pair<String, String>>> apply(AlignedTrees<Type1> t) {
+        ConcreteTreeAutomaton<Pair<Type1,Pair<String,String>>> cta =
+                    new ConcreteTreeAutomaton<>(t.getTrees().getSignature());
+        SpecifiedAligner<Pair<Type1, Pair<String, String>>> spa = new SpecifiedAligner<>(cta);
+        
+        TreeAutomaton<Type1> tBase = t.getTrees();
+        StateAlignmentMarking<Type1> alBase = t.getAlignments();
+        
+        RuleEvaluator<Set<Pair<String,String>>> re = new Evaluator(tBase.getSignature());
+        Semiring<Set<Pair<String,String>>> sem = new LeftRightSemiRing();
+        
+        Map<Integer,Set<Pair<String,String>>> map = tBase.evaluateInSemiring(sem, re);
+        Iterable<Rule> it = tBase.getAllRulesTopDown();
+        
+        List<Set<Pair<String,String>>> holder = new ArrayList<>();
+        for(Rule r : it){
+            Type1 parent = tBase.getStateForId(r.getParent());
+            
+            IntSet al;
+            if(alBase == null){
+                al  = new IntOpenHashSet();
+            }else{
+                al = alBase.getAlignmentMarkers(parent);
+            }
+            
+            String label = tBase.getSignature().resolveSymbolId(r.getLabel());
+            int lCode = cta.getSignature().addSymbol(label, r.getArity());
+            
+            if(r.getArity() == 0){
+                handleUnaryRule(label, parent, cta, lCode, r, tBase, spa, al);
+                continue;
+            }
+            
+            handleNonUnary(r, map, holder, parent, cta, tBase, lCode, spa, al);
+        }
+        
+        
+        addVariables(cta);
+        
+        
+        return new AlignedTrees<>(cta,spa);
     }
     
     /**

@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.align.alignment_marking;
 
+import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;

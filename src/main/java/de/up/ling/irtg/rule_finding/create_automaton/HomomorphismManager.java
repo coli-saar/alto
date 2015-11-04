@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align;
+package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -722,5 +722,9 @@ public class HomomorphismManager {
         Signature source = this.source2;
         
         return makeShadow(source, here, allLabelsHere, there, allLabelsThere);
+    }
+
+    TreeAutomaton reduceToOriginalVariablePairs(TreeAutomaton done) {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }

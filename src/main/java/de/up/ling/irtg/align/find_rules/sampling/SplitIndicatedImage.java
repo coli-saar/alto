@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.align.find_rules.sampling;
 
-import de.up.ling.irtg.align.HomomorphismManager;
+import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;

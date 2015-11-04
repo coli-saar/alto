@@ -3,10 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.alignment_marking;
+package de.up.ling.irtg.rule_finding.alignments;
 
+import de.up.ling.irtg.rule_finding.alignments.AlignmentFactory;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
-import de.up.ling.irtg.align.StateAlignmentMarking;
+import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.ImmutableIntSet;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
