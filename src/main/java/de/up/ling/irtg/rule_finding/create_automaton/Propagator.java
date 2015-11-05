@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
+import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;

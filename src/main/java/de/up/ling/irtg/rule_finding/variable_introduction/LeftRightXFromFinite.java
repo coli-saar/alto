@@ -12,7 +12,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.RuleEvaluator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
-import de.up.ling.irtg.rule_finding.create_automaton.Variables;
+import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.signature.Signature;
@@ -44,7 +44,7 @@ public class LeftRightXFromFinite<Type1>
             int state = iit.nextInt();
             Pair<Type1,Pair<String,String>> pair = cta.getStateForId(state);
             
-            String var = Variables.makeVariable(""+pair.getRight().getLeft()+"_"+pair.right.getRight());
+            String var = Variables.makeVariable(pair.getRight().getLeft()+"_"+pair.right.getRight());
             int code = cta.getSignature().addSymbol(var, 1);
             
             Rule r = cta.createRule(state, code, new int[] {state}, 1.0);

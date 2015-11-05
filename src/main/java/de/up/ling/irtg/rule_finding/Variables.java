@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.rule_finding.create_automaton;
+package de.up.ling.irtg.rule_finding;
 
 import java.util.function.Predicate;
 
@@ -39,6 +39,6 @@ public class Variables {
      * @return 
      */
     public static String getInformation(String variable){
-        return variable.substring(2);
+        return variable.substring(1);
     }
 }

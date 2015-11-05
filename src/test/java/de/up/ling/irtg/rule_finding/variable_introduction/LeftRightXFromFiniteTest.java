@@ -3,10 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.extractRules;
+package de.up.ling.irtg.rule_finding.variable_introduction;
 
-import de.up.ling.irtg.rule_finding.create_automaton.Variables;
-import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
+import de.up.ling.irtg.rule_finding.Variables;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
@@ -14,9 +13,8 @@ import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import static de.up.ling.irtg.util.TestingTools.pt;
-import de.up.ling.tree.Tree;
-import java.util.Iterator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -68,25 +66,26 @@ public class LeftRightXFromFiniteTest {
 
     /**
      * Test of apply method, of class LeftRightXFromFinite.
+     * @throws java.lang.Exception
      */
     @Test
     public void testApply() throws Exception {
-        Pair<TreeAutomaton<Pair<StringAlgebra.Span,Pair<String,String>>>,
-                StateAlignmentMarking<Pair<StringAlgebra.Span,Pair<String,String>>>> result;
-        result = funct.apply(new Pair<>(this.ta,this.spal));
+        AlignedTrees<Pair<StringAlgebra.Span,Pair<String,String>>> result;
+        AlignedTrees input = new AlignedTrees(ta, spal);
         
-        TreeAutomaton<Pair<StringAlgebra.Span,Pair<String,String>>> aRes = result.getLeft();
-        StateAlignmentMarking<Pair<StringAlgebra.Span,Pair<String,String>>> sRes = result.getRight();
+        result = funct.apply(input);
+        
+        TreeAutomaton<Pair<StringAlgebra.Span,Pair<String,String>>> aRes = result.getTrees();
+        StateAlignmentMarking<Pair<StringAlgebra.Span,Pair<String,String>>> sRes = result.getAlignments();
         
         Iterable<Rule> it = aRes.getAllRulesTopDown();
         for(Rule r : it){
             String label = aRes.getSignature().resolveSymbolId(r.getLabel());
             Pair<Span,Pair<String,String>> stat = aRes.getStateForId(r.getParent());
             
-            
             if(Variables.IS_VARIABLE.test(label)){
                 assertEquals(r.getWeight(),1.0,0.0000001);
-                assertEquals(label,Variables.makeVariable(stat.getRight().getLeft(),stat.getRight().getRight()));
+                assertEquals(label,Variables.makeVariable(stat.getRight().getLeft()+"_"+stat.getRight().getRight()));
             }else{
                 assertEquals(r.getWeight(),1.0/(stat.getLeft().end-stat.getLeft().start),0.00000001);
                 
@@ -103,9 +102,9 @@ public class LeftRightXFromFiniteTest {
         }
         
         assertTrue(aRes.accepts(pt("*(*(a,b),*(c,d))")));
-        assertTrue(aRes.accepts(pt("*(X_a_b(X_a_b(*(X_a_a(a),X_b_b(b)))),X_c_d(*(X_c_c(c),X_d_d(X_d_d(d)))))")));
+        assertTrue(aRes.accepts(pt("*(Xa_b(Xa_b(*(Xa_a(a),Xb_b(b)))),Xc_d(*(Xc_c(c),Xd_d(Xd_d(d)))))")));
         assertTrue(aRes.accepts(pt("*(a,*(b,*(c,d)))")));
-        assertTrue(aRes.accepts(pt("*(a,X_b_d(*(b,*(c,d))))")));
-        assertTrue(aRes.accepts(pt("X_a_d(*(a,X_b_d(*(b,*(c,d)))))")));
+        assertTrue(aRes.accepts(pt("*(a,Xb_d(*(b,*(c,d))))")));
+        assertTrue(aRes.accepts(pt("Xa_d(*(a,Xb_d(*(b,*(c,d)))))")));
     }
 }
