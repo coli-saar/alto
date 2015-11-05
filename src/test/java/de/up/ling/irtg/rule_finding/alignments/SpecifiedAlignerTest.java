@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.alignment_marking;
+package de.up.ling.irtg.rule_finding.alignments;
 
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
@@ -38,20 +38,16 @@ public class SpecifiedAlignerTest {
         
         align = new SpecifiedAligner<>(t);
         
-        for(Integer i : t.getAllStates()){
-            Span s = t.getStateForId(i);
+        t.getAllStates().stream().map((i) -> t.getStateForId(i)).forEach((s) -> {
             int l = s.end-s.start;
-            
-            if(l > 2){
-                continue;
+            if (!(l > 2)) {
+                int marker = (l*100) + s.start;
+                IntSet is = new IntRBTreeSet();
+                is.add(marker);
+                
+                align.put(s, is);
             }
-            
-            int marker = (l*100) + s.start;
-            IntSet is = new IntRBTreeSet();
-            is.add(marker);
-            
-            align.put(s, is);
-        }
+        });
     }
 
     /**
@@ -59,8 +55,7 @@ public class SpecifiedAlignerTest {
      */
     @Test
     public void testGetAlignmentMarkers() {
-        for(Integer i : t.getAllStates()){
-            Span s = t.getStateForId(i);
+        t.getAllStates().stream().map((i) -> t.getStateForId(i)).forEach((s) -> {
             int l = s.end-s.start;
             
             int marker = (l*100) + s.start;
@@ -71,6 +66,6 @@ public class SpecifiedAlignerTest {
                 assertEquals(this.align.getAlignmentMarkers(s).size(),1);
                 assertTrue(this.align.getAlignmentMarkers(s).contains(marker));
             }
-        }
+        });
     }
 }

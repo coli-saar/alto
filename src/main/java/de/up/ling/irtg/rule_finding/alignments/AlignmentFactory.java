@@ -11,12 +11,13 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 /**
  *
  * @author christoph_teichmann
+ * @param <Type>
  */
 public interface AlignmentFactory<Type> {
     /**
      * 
-     * @param <Type>
      * @param alignments
+     * @param input
      * @return 
      */
     public StateAlignmentMarking<Type> makeInstance(String alignments, TreeAutomaton<Type> input);

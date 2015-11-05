@@ -3,13 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.alignment_marking;
+package de.up.ling.irtg.rule_finding.alignments;
 
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton.BottomUpStateVisitor
+import de.up.ling.irtg.automata.TreeAutomaton.BottomUpStateVisitor;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -26,7 +26,7 @@ public class SpanAlignerTest {
     /**
      * 
      */
-    private String sentence = "a b c d e f g h i j k l m n o p";
+    private final String sentence = "a b c d e f g h i j k l m n o p";
     
     /**
      * 
@@ -60,31 +60,27 @@ public class SpanAlignerTest {
     @Test
     public void testGetAlignmentMarkers() {
         
-        BottomUpStateVisitor vis = new BottomUpStateVisitor(){
-            
-            public void visit(int state, Iterable<Rule> rulesTopDown){
-                Span s = (Span) decomp.getStateForId(state);
-                IntSet ins = sp.getAlignmentMarkers(s);
-                if(s.start == 0 && s.end == 2){
-                    assertEquals(ins.size(),2);
-                    assertTrue(ins.contains(17));
-                    assertTrue(ins.contains(5));
-                }else if(s.start == 1 && s.end == 2){
-                    assertEquals(ins.size(),1);
-                    assertTrue(ins.contains(7));
-                }else if(s.start == 9 && s.end == 10){
-                    assertEquals(ins.size(),1);
-                    assertTrue(ins.contains(12));
-                }else{
-                    assertTrue(ins.isEmpty());
-                }
-                
-                for(Rule r : rulesTopDown){
-                    assertEquals(sp.getAlignmentMarkers(s),sp.evaluateRule(r));
-                }
+        BottomUpStateVisitor vis = (int state, Iterable<Rule> rulesTopDown) -> {
+            Span s = (Span) decomp.getStateForId(state);
+            IntSet ins = sp.getAlignmentMarkers(s);
+            if(s.start == 0 && s.end == 2){
+                assertEquals(ins.size(),2);
+                assertTrue(ins.contains(17));
+                assertTrue(ins.contains(5));
+            }else if(s.start == 1 && s.end == 2){
+                assertEquals(ins.size(),1);
+                assertTrue(ins.contains(7));
+            }else if(s.start == 9 && s.end == 10){
+                assertEquals(ins.size(),1);
+                assertTrue(ins.contains(12));
+            }else{
+                assertTrue(ins.isEmpty());
             }
             
-        }
+            for(Rule r : rulesTopDown){
+                assertEquals(sp.getAlignmentMarkers(s),sp.evaluateRule(r));
+            }
+        };
         
         decomp.foreachStateInBottomUpOrder(vis);
     }

@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.rule_finding.alignments;
 
-import de.up.ling.irtg.rule_finding.alignments.AlignmentFactory;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -117,6 +116,12 @@ public class SpanAligner extends StateAlignmentMarking<Span> {
         return ret;
     }
 
+    @Override
+    public String toString() {
+        return "SpanAligner{" + "alignments=" + alignments + '}';
+    }
+    
+    
     /**
      * Makes an immutable copy of the given alignments.
      * 
@@ -126,9 +131,9 @@ public class SpanAligner extends StateAlignmentMarking<Span> {
     private Object2ObjectMap<Span, IntSet> makeImmutable(Object2ObjectMap<Span, IntSet> alignments) {
         Object2ObjectMap<Span, IntSet> align = new Object2ObjectOpenHashMap<>();
         
-        for(Span sp : alignments.keySet()){
+        alignments.keySet().forEach((sp) -> {
             align.put(sp, new ImmutableIntSet(new IntOpenHashSet(alignments.get(sp))));
-        }
+        });
         
         return align;
     }

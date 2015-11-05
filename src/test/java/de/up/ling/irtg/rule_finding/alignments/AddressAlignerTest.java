@@ -3,9 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.alignment_marking;
+package de.up.ling.irtg.rule_finding.alignments;
 
-import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;

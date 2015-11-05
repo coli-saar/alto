@@ -84,6 +84,11 @@ public class AddressAligner extends StateAlignmentMarking<String> {
         
         return re;
     }
+
+    @Override
+    public String toString() {
+        return "AddressAligner{" + "map=" + map + '}';
+    }
     
     /**
      * 

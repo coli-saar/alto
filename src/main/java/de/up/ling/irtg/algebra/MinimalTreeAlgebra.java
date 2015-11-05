@@ -182,6 +182,7 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
             String rightState = makeRules(ial, start+1, end, input, done);
             r = createRule(state, LEFT_INTO_RIGHT, new String[] {cState,rightState});
             this.addRule(r);
+            
             child = input.getChildren().get(end-1);
             ial.add(end-1);
             cState = makeRules(ial, 0, child.getChildren().size(), child, done);

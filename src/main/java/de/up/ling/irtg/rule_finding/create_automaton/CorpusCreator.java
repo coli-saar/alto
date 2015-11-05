@@ -201,13 +201,29 @@ public class CorpusCreator<InputType1,InputType2> {
     public Algebra<InputType2> getSecondAlgebra() {
         return secondAlgebra;
     }
-
+    
     /**
      * 
      * @return 
      */
     public HomomorphismManager getHomomorphismManager() {
         return hm;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public AlignmentFactory getFirtAL() {
+        return firtAL;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public AlignmentFactory getSecondAL() {
+        return secondAL;
     }
     
     /**
