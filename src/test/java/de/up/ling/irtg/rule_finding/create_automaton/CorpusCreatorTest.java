@@ -95,6 +95,14 @@ public class CorpusCreatorTest {
         //TODO
     }
 
+    @Test
+    public void testMakeFirstPruning() throws ParserException{
+        List<AlignedTrees> list1  = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, this.cc.getFirtAL());
+        List<AlignedTrees> pruned = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
+        
+        System.out.println(pruned.get(0).getTrees());
+        //TODO
+    }
     
     @Test
     public void testMakeInitialAlignedTrees() throws ParserException, Exception{

@@ -59,4 +59,9 @@ public class AlignedTrees<Type> {
     public StateAlignmentMarking<Type> getAlignments() {
         return alignments;
     }
+
+    @Override
+    public String toString() {
+        return "AlignedTrees{" + "trees=" + trees + ", alignments=" + alignments + '}';
+    }
 }

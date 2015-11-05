@@ -47,4 +47,11 @@ public abstract class StateAlignmentMarking<States> implements RuleEvaluator<Int
      * @return 
      */
     public abstract IntSet getAlignmentMarkers(States state);
+
+    /**
+     * 
+     * @param ins
+     * @return 
+     */
+    public abstract boolean containsVarSet(IntSet ins);
 }

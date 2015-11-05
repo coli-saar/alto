@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.rule_finding.pruning;
 
-import de.saar.basic.Pair;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import java.util.List;
 
@@ -18,21 +17,21 @@ import java.util.List;
 public interface Pruner<State1,State2> {
     
     /**
-     * @param variableFree
+     * @param alignmentFree
      * 
      * @return 
      */
-    public List<AlignedTrees<State1>> prePrune(List<AlignedTrees<State1>> variableFree);
+    public List<AlignedTrees<State1>> prePrune(List<AlignedTrees<State1>> alignmentFree);
     
     
     /**
      * 
-     * @param toPrune
+     * @param variablesPushed
      * @param otherSide
      * @return 
      */
     public List<AlignedTrees<State1>> postPrune(
-            List<AlignedTrees<State1>> toPrune, List<AlignedTrees<State2>> otherSide);
+            List<AlignedTrees<State1>> variablesPushed, List<AlignedTrees<State2>> otherSide);
     
     /**
      * 
@@ -40,8 +39,8 @@ public interface Pruner<State1,State2> {
     public Pruner DEFAULT_PRUNER = new Pruner<Object, Object>(){
 
         @Override
-        public List<AlignedTrees<Object>> prePrune(List<AlignedTrees<Object>> variableFree) {
-            return variableFree;
+        public List<AlignedTrees<Object>> prePrune(List<AlignedTrees<Object>> alignmentFree) {
+            return alignmentFree;
         }
 
         @Override

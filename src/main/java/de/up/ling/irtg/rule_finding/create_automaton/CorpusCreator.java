@@ -109,22 +109,14 @@ public class CorpusCreator<InputType1,InputType2> {
         int maxSize = Math.min(firstInputs.size(), Math.min(secondInputs.size(),
                     Math.min(firstAlignments.size(), secondAlignments.size())));
         
-        List<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(maxSize, firstInputs,
-                                                firstAlignments, this.firstAlgebra, this.secondAL);
-        
-        List<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(maxSize, secondInputs,
-                                                secondAlignments, secondAlgebra, secondAL);
         
         Propagator pro = new Propagator();
-        for(int i=0;i<firstRoundOne.size();++i){
-            firstRoundOne.set(i, this.firstVI.apply(firstRoundOne.get(i)));
-        }
-        for(int i=0;i<secondRoundOne.size();++i){
-            secondRoundOne.set(i, this.secondVI.apply(secondRoundOne.get(i)));
-        }
-        
-        List<AlignedTrees> firstRoundTwo = firstPruner.prePrune(firstRoundOne);
-        List<AlignedTrees> secondRoundTwo = secondPruner.prePrune(secondRoundOne);
+        List<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(maxSize, firstInputs,
+                                                firstAlignments, this.firstAlgebra, this.secondAL);
+        List<AlignedTrees> firstRoundTwo = makeFirstPruning(firstRoundOne, firstPruner, firstVI);
+        List<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(maxSize, secondInputs,
+                                                secondAlignments, secondAlgebra, secondAL);
+        List<AlignedTrees> secondRoundTwo = makeFirstPruning(secondRoundOne, secondPruner, secondVI);
         
         for(int i=0;i<firstRoundTwo.size();++i){
             firstRoundTwo.set(i, pro.convert(firstRoundTwo.get(i)));
@@ -159,6 +151,22 @@ public class CorpusCreator<InputType1,InputType2> {
         }
         
         return result;
+    }
+
+    /**
+     * 
+     * @param firstRoundOne
+     * @param p
+     * @param vi
+     * @return 
+     */
+    public static List<AlignedTrees> makeFirstPruning(List<AlignedTrees> firstRoundOne,
+            Pruner p, VariableIntroduction vi) {
+        for(int i=0;i<firstRoundOne.size();++i){
+            firstRoundOne.set(i, vi.apply(firstRoundOne.get(i)));
+        }
+        List<AlignedTrees> firstRoundTwo = p.prePrune(firstRoundOne);
+        return firstRoundTwo;
     }
 
     /**
@@ -224,6 +232,38 @@ public class CorpusCreator<InputType1,InputType2> {
      */
     public AlignmentFactory getSecondAL() {
         return secondAL;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public Pruner getFirstPruner() {
+        return firstPruner;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public Pruner getSecondPruner() {
+        return secondPruner;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public VariableIntroduction getFirstVI() {
+        return firstVI;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public VariableIntroduction getSecondVI() {
+        return secondVI;
     }
     
     /**
