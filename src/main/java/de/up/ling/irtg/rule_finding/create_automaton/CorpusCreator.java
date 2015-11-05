@@ -106,23 +106,16 @@ public class CorpusCreator<InputType1,InputType2> {
      */
     public List<TreeAutomaton> makeRuleTrees(List<String> firstInputs, List<String> secondInputs,
                                             List<String> firstAlignments, List<String> secondAlignments) throws ParserException{
-        List<AlignedTrees> firstRoundOne = new ArrayList<>();
-        List<AlignedTrees> secondRoundOne = new ArrayList<>();
+        int maxSize = Math.min(firstInputs.size(), Math.min(secondInputs.size(),
+                    Math.min(firstAlignments.size(), secondAlignments.size())));
+        
+        List<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(maxSize, firstInputs,
+                                                firstAlignments, this.firstAlgebra, this.secondAL);
+        
+        List<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(maxSize, secondInputs,
+                                                secondAlignments, secondAlgebra, secondAL);
         
         Propagator pro = new Propagator();
-        
-        for(int i=0;i<firstInputs.size() && i<secondInputs.size() &&
-                i<firstAlignments.size() && i<secondAlignments.size();++i){
-            TreeAutomaton ft = this.firstAlgebra.decompose(this.firstAlgebra.parseString(firstInputs.get(i)));
-            TreeAutomaton st = this.secondAlgebra.decompose(this.secondAlgebra.parseString(secondInputs.get(i)));
-            
-            StateAlignmentMarking fal = this.firtAL.makeInstance(firstAlignments.get(i), ft);
-            StateAlignmentMarking sal = this.secondAL.makeInstance(secondAlignments.get(i), st);
-            
-            firstRoundOne.add(new AlignedTrees<>(ft,fal));
-            secondRoundOne.add(new AlignedTrees<>(st,sal));
-        }
-        
         for(int i=0;i<firstRoundOne.size();++i){
             firstRoundOne.set(i, this.firstVI.apply(firstRoundOne.get(i)));
         }
@@ -170,6 +163,31 @@ public class CorpusCreator<InputType1,InputType2> {
 
     /**
      * 
+     * @param maxSize
+     * @param firstInputs
+     * @param firstAlignments
+     * @param algebra
+     * @param aL
+     * @return
+     * @throws ParserException 
+     */
+    public static List<AlignedTrees> makeInitialAlignedTrees(int maxSize,
+                                                       List<String> firstInputs,
+                                                       List<String> firstAlignments,
+                                                       Algebra algebra,
+                                                       AlignmentFactory aL) throws ParserException {
+        List<AlignedTrees> firstRoundOne = new ArrayList<>();
+        for(int i=0;i<maxSize;++i){
+            TreeAutomaton ft = algebra.decompose(algebra.parseString(firstInputs.get(i)));
+            StateAlignmentMarking fal = aL.makeInstance(firstAlignments.get(i), ft);
+            firstRoundOne.add(new AlignedTrees<>(ft,fal));
+        }
+        
+        return firstRoundOne;
+    }
+
+    /**
+     * 
      * @return 
      */
     public Algebra<InputType1> getFirstAlgebra() {
@@ -192,7 +210,9 @@ public class CorpusCreator<InputType1,InputType2> {
         return hm;
     }
     
-    
+    /**
+     * 
+     */
     public static class Factory {
         /**
          * 
