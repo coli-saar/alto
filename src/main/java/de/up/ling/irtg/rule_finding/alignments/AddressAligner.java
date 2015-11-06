@@ -89,6 +89,11 @@ public class AddressAligner extends StateAlignmentMarking<String> {
     public String toString() {
         return "AddressAligner{" + "map=" + map + '}';
     }
+
+    @Override
+    public boolean containsVarSet(IntSet ins) {
+        return this.map.containsKey(ins);
+    }
     
     /**
      * 

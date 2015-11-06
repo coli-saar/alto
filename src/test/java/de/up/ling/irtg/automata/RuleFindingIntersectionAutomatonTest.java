@@ -52,8 +52,8 @@ public class RuleFindingIntersectionAutomatonTest {
         
         Propagator prop = new Propagator();
         
-        t1 = prop.convert(t1, spa1);
-        t2 = prop.convert(t2, spa2);
+        //t1 = prop.convert(t1, spa1);
+        //t2 = prop.convert(t2, spa2);
         
         hm.update(t1.getAllLabels(), t2.getAllLabels());
         
@@ -148,8 +148,8 @@ public class RuleFindingIntersectionAutomatonTest {
         
         t2 = makeSample(t2, 10);
         
-        t1 = prop.convert(t1, spa1);
-        t2 = prop.convert(t2, spa2);
+        //t1 = prop.convert(t1, spa1);
+        //t2 = prop.convert(t2, spa2);
         
         hm.update(t1.getAllLabels(), t2.getAllLabels());
         

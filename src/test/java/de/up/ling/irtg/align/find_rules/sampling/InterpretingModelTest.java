@@ -11,7 +11,6 @@ import de.up.ling.irtg.rule_finding.create_automaton.Propagator;
 import de.up.ling.irtg.rule_finding.alignments.AlignmentFactory;
 import de.up.ling.irtg.rule_finding.alignments.Empty;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
-import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator.InputPackage;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
@@ -54,6 +53,7 @@ public class InterpretingModelTest {
     
     @Before
     public void setUp() throws ParserException, Exception {
+        /**
         MinimalTreeAlgebra mtaL = new MinimalTreeAlgebra();
         MinimalTreeAlgebra mtaR = new MinimalTreeAlgebra();
         
@@ -96,6 +96,7 @@ public class InterpretingModelTest {
         
         ti = ta.viterbiRaw().getTree();
         this.avoid = ta.getRuleTree(ti);
+        */
     }
 
     /**

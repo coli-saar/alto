@@ -33,4 +33,9 @@ public class Empty<State> extends StateAlignmentMarking {
     public IntSet getAlignmentMarkers(Object state) {
         return EMPTY;
     }
+
+    @Override
+    public boolean containsVarSet(IntSet ins) {
+        return ins == null ? false : ins.isEmpty();
+    }
 }

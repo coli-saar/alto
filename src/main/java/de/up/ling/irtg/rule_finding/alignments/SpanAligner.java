@@ -137,6 +137,11 @@ public class SpanAligner extends StateAlignmentMarking<Span> {
         
         return align;
     }
+
+    @Override
+    public boolean containsVarSet(IntSet ins) {
+        return this.alignments.values().contains(ins);
+    }
     
     /**
      * 

@@ -57,4 +57,9 @@ public class SpecifiedAligner<State> extends StateAlignmentMarking<State> {
     public String toString() {
         return "SpecifiedAligner{" + "map=" + map + '}';
     }
+
+    @Override
+    public boolean containsVarSet(IntSet ins) {
+        return this.map.values().contains(ins);
+    }
 }
