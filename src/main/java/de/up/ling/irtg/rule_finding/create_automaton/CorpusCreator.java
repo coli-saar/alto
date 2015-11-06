@@ -113,13 +113,13 @@ public class CorpusCreator<InputType1,InputType2> {
         List<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(maxSize, firstInputs,
                                                 firstAlignments, this.firstAlgebra, this.secondAL);
         List<AlignedTrees> firstRoundTwo = makeFirstPruning(firstRoundOne, firstPruner, firstVI);
-        List<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(maxSize, secondInputs,
-                                                secondAlignments, secondAlgebra, secondAL);
-        List<AlignedTrees> secondRoundTwo = makeFirstPruning(secondRoundOne, secondPruner, secondVI);
-        
         for(int i=0;i<firstRoundTwo.size();++i){
             firstRoundTwo.set(i, pro.convert(firstRoundTwo.get(i)));
         }
+        
+        List<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(maxSize, secondInputs,
+                                                secondAlignments, secondAlgebra, secondAL);
+        List<AlignedTrees> secondRoundTwo = makeFirstPruning(secondRoundOne, secondPruner, secondVI);
         for(int i=0;i<secondRoundTwo.size();++i){
             secondRoundTwo.set(i, pro.convert(secondRoundTwo.get(i)));
         }
@@ -134,6 +134,7 @@ public class CorpusCreator<InputType1,InputType2> {
             
             hm.update(first.getAllLabels(), second.getAllLabels());
         }
+        
         for(int i=0;i<firstRoundThree.size();++i){
             TreeAutomaton first = firstRoundThree.get(i).getTrees();
             TreeAutomaton second = secondRoundThree.get(i).getTrees();

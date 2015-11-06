@@ -73,7 +73,7 @@ public class RuleFinder {
         for(String i : vsv.getWithX()){
             for(String j : vsv.getWithX()){
                 Rule r;
-                cta.addRule(r = cta.createRule( i, HomomorphismManager.VARIABLE_PREFIX, new String[] {j}));
+                cta.addRule(r = cta.createRule( i, Variables.makeVariable(""), new String[] {j}));
                 r.setWeight(0.5);
             }
         }
@@ -119,7 +119,7 @@ public class RuleFinder {
             String label = r.getLabel(rest);
             String[] to = transfer(r.getChildren());
             
-            if(HomomorphismManager.VARIABLE_PATTERN.test(label)){
+            if(Variables.IS_VARIABLE.test(label)){
                 int[] st = new int[] {start};
                 Iterable<Rule> cand = cta.getRulesBottomUp(cta.getSignature().getIdForSymbol(label), st);
                 Rule choice = this.pick(cand, cta.addState(from));
@@ -270,7 +270,7 @@ public class RuleFinder {
         Homomorphism ret = new Homomorphism(hom.getSourceSignature(), algebra.getSignature());
         
         for(String s : hom.getSourceSignature().getSymbols()){
-            if(HomomorphismManager.VARIABLE_PATTERN.test(s)){
+            if(Variables.IS_VARIABLE.test(s)){
                 ret.add(s, Tree.create("?1"));
             }else{
                 ret.add(s, hom.get(s));
@@ -309,7 +309,7 @@ public class RuleFinder {
         String label = ob.getLabel();
         int l = cta.getSignature().addSymbol(label, ob.getChildren().size());
         
-        if(HomomorphismManager.VARIABLE_PATTERN.test(label)){
+        if(Variables.IS_VARIABLE.test(label)){
             cta.addRule(cta.createRule(state, l, new int[start], 1.0));
             cta.addRule(cta.createRule(start, l, new int[] {makeState(ob.getChildren().get(0),cta)}, 1.0));
         }else{
@@ -363,7 +363,7 @@ public class RuleFinder {
     private String makeString(Tree<String> ob) {
         String label = ob.getLabel();
         
-        if(HomomorphismManager.VARIABLE_PATTERN.test(label)){
+        if(Variables.IS_VARIABLE.test(label)){
             return label;
         }else{
             StringBuilder sb = new StringBuilder();
@@ -486,7 +486,7 @@ public class RuleFinder {
             {
                 String[] arr = makeCopy(r.getChildren());
                 String label = r.getLabel(original);
-                if(HomomorphismManager.VARIABLE_PATTERN.test(st)){
+                if(Variables.IS_VARIABLE.test(st)){
                     this.withX.add(st);
                     this.fromX.add(arr[0]);
                     this.goal.addFinalState(this.goal.getIdForState(arr[0]));
@@ -571,8 +571,8 @@ public class RuleFinder {
             {
                 Object[] arr = makeCopy(r.getChildren());
                 String label = r.getLabel(original);
-                if(HomomorphismManager.VARIABLE_PATTERN.test(label)){
-                    label = HomomorphismManager.VARIABLE_PREFIX;
+                if(Variables.IS_VARIABLE.test(label)){
+                    label = Variables.makeVariable(label);
                 }
                 
                 double weight = r.getWeight();

@@ -8,6 +8,7 @@ package de.up.ling.irtg.rule_finding.create_automaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BooleanArrayIterator;
 import de.up.ling.irtg.util.NChooseK;
@@ -24,8 +25,6 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.Iterator;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  *
@@ -36,16 +35,6 @@ public class HomomorphismManager {
      * 
      */
     private static final boolean[] RE_USE_FOR_SHARED = new boolean[] {true,true};
-    
-    /**
-     * 
-     */
-    public final static Predicate<String> VARIABLE_PATTERN = Pattern.compile("^XX.*$").asPredicate();  
-    
-    /**
-     * 
-     */
-    public final static String VARIABLE_PREFIX = "XX";
     
     /**
      * 
@@ -153,8 +142,9 @@ public class HomomorphismManager {
         
         this.rm = new RestrictionManager(this.sharedSig);
         
-        int symName = this.source1.addSymbol(VARIABLE_PREFIX, 1);
-        int sumName = this.source2.addSymbol(VARIABLE_PREFIX, 1);
+        String var  = Variables.makeVariable("");
+        int symName = this.source1.addSymbol(var, 1);
+        int sumName = this.source2.addSymbol(var, 1);
         this.defaultVariable = this.handleVariable(0, symName);
         
         this.seenAll1.add(symName);
@@ -439,7 +429,7 @@ public class HomomorphismManager {
     private boolean isVariable(int sigNum, int symName) {
         String s = (sigNum == 0 ? this.source1 : this.source2).resolveSymbolId(symName);
         
-        return VARIABLE_PATTERN.test(s);
+        return Variables.IS_VARIABLE.test(s);
     }
 
     

@@ -3,14 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align;
+package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.HashSet;
 import java.util.Set;
@@ -114,16 +114,6 @@ public class HomomorphismManagerTest {
         todo6 = new IntAVLTreeSet();
         todo6.add(sig2.addSymbol("hk", 1));
         todo6.add(sig2.addSymbol("hk54", 0));
-    }
-    
-    
-    @Test
-    public void testVariable(){
-        assertEquals(HomomorphismManager.VARIABLE_PREFIX,"XX");
-        assertTrue(HomomorphismManager.VARIABLE_PATTERN.test(HomomorphismManager.VARIABLE_PREFIX));
-        assertTrue(HomomorphismManager.VARIABLE_PATTERN.test(HomomorphismManager.VARIABLE_PREFIX+"asfdjöhg"));
-        assertFalse(HomomorphismManager.VARIABLE_PATTERN.test("k"));
-        assertFalse(HomomorphismManager.VARIABLE_PATTERN.test("k"+HomomorphismManager.VARIABLE_PREFIX));
     }
 
     /**

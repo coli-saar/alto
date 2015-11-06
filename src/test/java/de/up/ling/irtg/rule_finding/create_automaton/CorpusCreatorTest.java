@@ -8,10 +8,12 @@ package de.up.ling.irtg.rule_finding.create_automaton;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.alignments.AlignmentFactory;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
+import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
@@ -97,12 +99,26 @@ public class CorpusCreatorTest {
     }
 
     @Test
-    public void testMakeFirstPruning() throws ParserException{
+    public void testMakeFirstPruning() throws ParserException, Exception{
         List<AlignedTrees> list1  = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, this.cc.getFirtAL());
         List<AlignedTrees> pruned = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
         
-        System.out.println(pruned.get(0).getTrees());
-        //TODO
+        assertTrue(pruned.get(0).getAlignments() instanceof SpecifiedAligner);
+        assertEquals(pruned.size(),2);
+        
+        assertTrue(pruned.get(0).getTrees().accepts(pt("*(John,*(went,home))")));
+        assertTrue(pruned.get(0).getTrees().accepts(pt("*(John,Xwent_home(*(went,home)))")));
+        assertFalse(pruned.get(0).getTrees().accepts(pt("*(John,XJohn_home(*(went,home)))")));
+        
+        assertTrue(pruned.get(1).getTrees().accepts(pt("*(Frank,Xwent_home(*(went,home)))")));
+        
+        TreeAutomaton t = pruned.get(0).getTrees();
+        int label = t.getSignature().getIdForSymbol("John");
+        Rule r = (Rule) t.getRulesBottomUp(label, new int[0]).iterator().next();
+        Object o = t.getStateForId(r.getParent());
+        
+        assertEquals(pruned.get(0).getAlignments().getAlignmentMarkers(o).size(),1);
+        assertTrue(pruned.get(0).getAlignments().getAlignmentMarkers(o).contains(1));
     }
     
     @Test

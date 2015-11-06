@@ -5,10 +5,10 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
-import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -146,7 +146,7 @@ public class RestrictionManager {
         String label1 = mapping1.getLabel();
         this.fullRestriction = null;
         
-        if(HomomorphismManager.VARIABLE_PATTERN.test(label1)){
+        if(Variables.IS_VARIABLE.test(label1)){
             this.handleVariable(symbol);
         }
         

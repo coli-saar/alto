@@ -63,7 +63,7 @@ public class Propagator {
      * @param vars
      * @return 
      */
-    public static String makeExtendedVariable(String label, Int2ObjectMap<IntSet> vars) {
+    public static String makeExtendedVariable(String label, IntSet vars) {
         return Variables.makeVariable(vars.toString()+"_"+label);
     }
     
@@ -203,14 +203,15 @@ public class Propagator {
 
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
-            Object st = this.original.getStateForId(state);
-            IntSet propagatedAligments = this.vars.get(st);
+            Object stateName = this.original.getStateForId(state);
+            int code = this.goal.addState(stateName);
+            IntSet propagatedAligments = this.vars.get(code);
             
             // here we add a loop for the alignments
-            this.local.put(this.goal.getIdForState(st), propagatedAligments);
+            this.local.put(stateName, propagatedAligments);
             if(original.getFinalStates().contains(state))
             {
-                this.goal.addFinalState(this.goal.getIdForState(st));
+                this.goal.addFinalState(code);
             }
             
             
@@ -220,12 +221,12 @@ public class Propagator {
                 String label = r.getLabel(original);
                 
                 if(Variables.IS_VARIABLE.test(label)) {
-                    label = makeExtendedVariable(label,vars);
+                    label = makeExtendedVariable(label,vars.get(r.getParent()));
                 }
                                 
                 double weight = r.getWeight();
                 
-                this.goal.addRule(goal.createRule(st, label, arr, weight));
+                this.goal.addRule(goal.createRule(stateName, label, arr, weight));
             }
         }
 
