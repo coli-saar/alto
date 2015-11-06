@@ -12,6 +12,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.alignments.AlignmentFactory;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
+import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
@@ -68,7 +69,7 @@ public class CorpusCreatorTest {
     @Before
     public void setUp() {
         CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(Pruner.DEFAULT_PRUNER).setSecondPruner(Pruner.DEFAULT_PRUNER)
+        fact.setFirstPruner(new PruneOneSideTerminating()).setSecondPruner(Pruner.DEFAULT_PRUNER)
                 .setFirstVariableSource(new LeftRightXFromFinite())
                 .setSecondVariableSource(new JustXEveryWhere());
         

@@ -108,8 +108,7 @@ public class CorpusCreator<InputType1,InputType2> {
                                             List<String> firstAlignments, List<String> secondAlignments) throws ParserException{
         int maxSize = Math.min(firstInputs.size(), Math.min(secondInputs.size(),
                     Math.min(firstAlignments.size(), secondAlignments.size())));
-        
-        
+                
         Propagator pro = new Propagator();
         List<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(maxSize, firstInputs,
                                                 firstAlignments, this.firstAlgebra, this.secondAL);
