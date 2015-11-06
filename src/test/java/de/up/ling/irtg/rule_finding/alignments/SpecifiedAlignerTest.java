@@ -8,6 +8,7 @@ package de.up.ling.irtg.rule_finding.alignments;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.junit.Before;
@@ -67,5 +68,19 @@ public class SpecifiedAlignerTest {
                 assertTrue(this.align.getAlignmentMarkers(s).contains(marker));
             }
         });
+        
+        IntSet lookUp = new IntOpenHashSet();
+        lookUp.add(101);
+        
+        assertTrue(this.align.containsVarSet(lookUp));
+        lookUp.clear();
+        assertTrue(this.align.containsVarSet(lookUp));
+        lookUp.add(200);
+        assertTrue(this.align.containsVarSet(lookUp));
+        lookUp.add(19);
+        assertFalse(this.align.containsVarSet(lookUp));
+        lookUp.clear();
+        lookUp.add(110);
+        assertFalse(this.align.containsVarSet(lookUp));
     }
 }

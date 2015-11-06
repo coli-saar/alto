@@ -60,6 +60,10 @@ public class SpecifiedAligner<State> extends StateAlignmentMarking<State> {
 
     @Override
     public boolean containsVarSet(IntSet ins) {
+        if(ins.isEmpty()){
+            return true;
+        }
+        
         return this.map.values().contains(ins);
     }
 }

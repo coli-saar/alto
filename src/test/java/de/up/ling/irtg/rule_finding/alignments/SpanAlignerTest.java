@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton.BottomUpStateVisitor;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.ObjectIterator;
@@ -83,6 +84,21 @@ public class SpanAlignerTest {
         };
         
         decomp.foreachStateInBottomUpOrder(vis);
+        
+        IntSet lookUp = new IntOpenHashSet();
+        lookUp.add(17);
+        lookUp.add(5);
+        
+        assertTrue(sp.containsVarSet(lookUp));
+        lookUp.clear();
+        assertTrue(sp.containsVarSet(lookUp));
+        lookUp.add(12);
+        assertTrue(sp.containsVarSet(lookUp));
+        lookUp.add(19);
+        assertFalse(sp.containsVarSet(lookUp));
+        lookUp.clear();
+        lookUp.add(100);
+        assertFalse(sp.containsVarSet(lookUp));
     }
 
     /**

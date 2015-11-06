@@ -92,7 +92,11 @@ public class AddressAligner extends StateAlignmentMarking<String> {
 
     @Override
     public boolean containsVarSet(IntSet ins) {
-        return this.map.containsKey(ins);
+        if(ins.isEmpty()){
+            return true;
+        }
+        
+        return this.map.values().contains(ins);
     }
     
     /**

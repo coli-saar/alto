@@ -9,6 +9,7 @@ import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,5 +78,19 @@ public class AddressAlignerTest {
         
         assertTrue(seenFirst);
         assertTrue(seenSecond);
+        
+        IntSet lookUp = new IntOpenHashSet();
+        lookUp.add(7);
+        
+        assertTrue(aa.containsVarSet(lookUp));
+        lookUp.clear();
+        assertTrue(aa.containsVarSet(lookUp));
+        lookUp.add(5);
+        assertTrue(aa.containsVarSet(lookUp));
+        lookUp.add(12);
+        assertFalse(aa.containsVarSet(lookUp));
+        lookUp.clear();
+        lookUp.add(100);
+        assertFalse(aa.containsVarSet(lookUp));
     }
 }
