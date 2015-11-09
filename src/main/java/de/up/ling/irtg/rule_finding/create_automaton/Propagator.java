@@ -72,16 +72,15 @@ public class Propagator {
      * @param variable
      * @return 
      */
-    public static String getOriginalVariable(String variable) {
-        String pair = Variables.getInformation(variable);
+    public static String getAlignments(String variable) {
         int i=0;
-        for(;i<pair.length();++i){
-            if('_' == pair.charAt(i)){
+        for(;i<variable.length();++i){
+            if('_' == variable.charAt(i)){
                 break;
             }
         }
         
-        return pair.substring(0, i);
+        return variable.substring(1, i);
     }
     
     /**
@@ -89,21 +88,20 @@ public class Propagator {
      * @param variable
      * @return 
      */
-    public String getOriginalInformation(String variable) {
-        String pair = Variables.getInformation(variable);
+    public static String getOriginalVariable(String variable) {
         int i=0;
-        for(;i<pair.length();++i){
-            if('_' == pair.charAt(i)){
+        for(;i<variable.length();++i){
+            if('_' == variable.charAt(i)){
                 break;
             }
         }
         
-        return pair.substring(i+1);
+        return variable.substring(i+1);
     }
     
-    
     /**
-     * 
+     * It is very important that we only use sorted sets here, so that equals
+     * sets can be identified by their string representation being equal.
      */
     private static class VariablePropagator implements Semiring<IntSet> {
 
@@ -178,11 +176,6 @@ public class Propagator {
          * 
          */
         private final SpecifiedAligner local;
-        
-        /**
-         * 
-         */
-        private final StateAlignmentMarking mark;
 
         /**
          * 
@@ -198,14 +191,13 @@ public class Propagator {
             this.goal = goal;
             this.original = original;
             this.local = local;
-            this.mark = mark;
         }
 
         @Override
         public void visit(int state, Iterable<Rule> rulesTopDown) {
             Object stateName = this.original.getStateForId(state);
             int code = this.goal.addState(stateName);
-            IntSet propagatedAligments = this.vars.get(code);
+            IntSet propagatedAligments = this.vars.get(state);
             
             // here we add a loop for the alignments
             this.local.put(stateName, propagatedAligments);
@@ -213,7 +205,6 @@ public class Propagator {
             {
                 this.goal.addFinalState(code);
             }
-            
             
             for(Rule r : rulesTopDown)
             {
