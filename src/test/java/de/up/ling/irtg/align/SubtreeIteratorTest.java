@@ -38,6 +38,7 @@ public class SubtreeIteratorTest {
     
     @Before
     public void setUp() {
+        /*
         Signature sig1 = new Signature();
         Signature sig2 = new Signature();
         
@@ -71,7 +72,7 @@ public class SubtreeIteratorTest {
         Tree<Rule> t10 = Tree.create(un, t9);
         
         si2 = new SubtreeIterator(t10, hm);
-        
+        */
     }
 
     /**

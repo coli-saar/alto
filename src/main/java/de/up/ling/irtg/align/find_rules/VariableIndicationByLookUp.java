@@ -33,6 +33,6 @@ public class VariableIndicationByLookUp implements VariableIndication {
 
     @Override
     public boolean isIgnorableVariable(int label) {
-        return this.isVariable(label) && label != hom.getDefaultVariable();
+        return false;//this.isVariable(label) && label != hom.getDefaultVariable();
     }
 }

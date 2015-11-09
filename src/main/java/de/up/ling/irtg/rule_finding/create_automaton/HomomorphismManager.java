@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
@@ -23,8 +25,12 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  *
@@ -105,11 +111,6 @@ public class HomomorphismManager {
      * 
      */
     private final IntSet seenAll2;
-    
-    /**
-     * 
-     */
-    private final int defaultVariable;
 
     /**
      * 
@@ -141,14 +142,6 @@ public class HomomorphismManager {
         this.terminationSequence = null;
         
         this.rm = new RestrictionManager(this.sharedSig);
-        
-        String var  = Variables.makeVariable("");
-        int symName = this.source1.addSymbol(var, 1);
-        int sumName = this.source2.addSymbol(var, 1);
-        this.defaultVariable = this.handleVariable(0, symName);
-        
-        this.seenAll1.add(symName);
-        this.seenAll2.add(sumName);
     }
     
     /**
@@ -160,7 +153,6 @@ public class HomomorphismManager {
         this(source1,source2, new Signature());
     }
 
-
     /**
      * 
      * @param k
@@ -168,14 +160,6 @@ public class HomomorphismManager {
      */
     public boolean isVariable(int k){
         return this.mapsToVariable.contains(k);
-    }
-    
-    /**
-     * 
-     * @return 
-     */
-    public int getDefaultVariable() {
-        return defaultVariable;
     }
     
     /**
@@ -221,6 +205,8 @@ public class HomomorphismManager {
            
            ensureTermination();
        }
+       
+       makeVariables(toDo1,toDo2);
          
        toDo1.removeAll(this.seenAll1);
        IntIterator iit = toDo1.iterator();
@@ -231,10 +217,7 @@ public class HomomorphismManager {
            
             if(arity == 0){
                 handle0Ary(0,symName);
-            }else if(isVariable(0,symName)){
-                handleVariable(0,symName);
-            }
-            else{
+            }else if(!isVariable(0,symName)){
                 handleSym(0,symName);                  
                 this.seen1.add(symName);
             }
@@ -248,10 +231,7 @@ public class HomomorphismManager {
            
             if(arity == 0){
                 handle0Ary(1,symName);
-            }else if(isVariable(1,symName)){
-                handleVariable(1,symName);
-            }
-            else{
+            }else if(!isVariable(1,symName)){
                 handleSym(1,symName);  
                 this.seen2.add(symName);
             }
@@ -383,6 +363,11 @@ public class HomomorphismManager {
         
         String sym = symbol.toString();
         varPos = 0;
+        
+        if(sharedSig.contains(sym)){
+            return sym;
+        }
+        
         this.sharedSig.addSymbol(sym, totalVariables);
         
         ObjectArrayList<Tree<String>> storage = new ObjectArrayList<>();
@@ -438,23 +423,17 @@ public class HomomorphismManager {
      * @param sigNum
      * @param symName 
      */
-    private int handleVariable(int sigNum, int symName) {
+    private int handleVariablePair(int symName1, int symName2) {
         this.isJustInsert.clear();
         this.symbols.clear();
         this.insertionPoints.clear();
         
-        String sym = (sigNum == 0 ? this.source1 : this.source2).resolveSymbolId(symName);
-        
-        if(!source1.contains(sym) || !source2.contains(sym)){
-            return -1;
-        }
-        
         this.isJustInsert.add(false);
         this.isJustInsert.add(false);
         this.insertionPoints.add(0);
         this.insertionPoints.add(0);
-        this.symbols.add(source1.getIdForSymbol(sym));
-        this.symbols.add(source2.getIdForSymbol(sym));
+        this.symbols.add(symName1);
+        this.symbols.add(symName2);
         
         int k = this.sharedSig.getIdForSymbol(this.addMapping(symbols, insertionPoints, isJustInsert, 1));
         this.mapsToVariable.add(k);
@@ -714,7 +693,111 @@ public class HomomorphismManager {
         return makeShadow(source, here, allLabelsHere, there, allLabelsThere);
     }
 
-    TreeAutomaton reduceToOriginalVariablePairs(TreeAutomaton done) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    /**
+     * 
+     * @param done
+     * @return 
+     */
+    public TreeAutomaton reduceToOriginalVariablePairs(TreeAutomaton done) {
+        ConcreteTreeAutomaton cta = new ConcreteTreeAutomaton(done.getSignature());
+        
+        IntSet seen = new IntOpenHashSet(done.getFinalStates());
+        IntList toDo = new IntArrayList(done.getFinalStates());
+        
+        List<Object> children = new ArrayList<>();
+        
+        for(int i=0;i<toDo.size();++i){
+            int org = toDo.getInt(i);
+            Object state = done.getStateForId(org);
+            int stan = cta.addState(state);
+            
+            if(done.getFinalStates().contains(org)){
+                cta.addFinalState(stan);
+            }
+            
+            Iterator<Rule> rules = done.getRulesTopDown(org).iterator();
+            while(rules.hasNext()){
+                children.clear();
+                Rule rul = rules.next();
+                String label = makeReducedLabel(rul.getLabel());
+                for(int child : rul.getChildren()){
+                    children.add(done.getStateForId(org));
+                    
+                    if(!seen.contains(child)){
+                        seen.add(child);
+                        toDo.add(child);
+                    }
+                }
+                
+                cta.addRule(cta.createRule(state, label, children, rul.getWeight()));
+            }
+        }
+        
+        return cta;
+    }
+
+    /**
+     * 
+     * @param toDo1
+     * @param toDo2 
+     */
+    private void makeVariables(IntSet toDo1, IntSet toDo2) {
+        Object2ObjectMap<String,IntList> alignMap1 = new Object2ObjectOpenHashMap<>();
+        IntIterator iit = toDo1.iterator();
+        
+        while(iit.hasNext()){
+            int sym = iit.nextInt();
+            String name = this.source1.resolveSymbolId(sym);
+            
+            String align = Propagator.getAlignments(name);
+            IntList list = alignMap1.get(align);
+            if(list == null){
+                list = new IntArrayList();
+                alignMap1.put(align, list);
+            }
+            
+            list.add(sym);
+        }
+        
+        iit = toDo2.iterator();
+        while(iit.hasNext()){
+            int sym = iit.nextInt();
+            String name = this.source2.resolveSymbolId(sym);
+            
+            String align = Propagator.getAlignments(name);
+            IntList options = alignMap1.get(align);
+            
+            for(int i=0;i<options.size();++i){
+                int osym = options.get(i);
+                
+                this.handleVariablePair(osym, sym);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param label
+     * @return 
+     */
+    public String makeReducedLabel(int label) {
+        if(!this.isVariable(label)){
+            return this.sharedSig.resolveSymbolId(label);
+        }
+        
+        String varName = this.sharedSig.resolveSymbolId(label);
+        String[] leftRight = varName.split("|")[0].split("/");
+        leftRight[0] = leftRight[0].trim();
+        leftRight[1] = leftRight[1].trim();
+        
+        String left = Propagator.getOriginalVariable(leftRight[0]);
+        String right = Propagator.getOriginalVariable(leftRight[1]);
+        
+        int l = this.source1.addSymbol(left, 1);
+        int r = this.source2.addSymbol(right, 1);
+        
+        int sym = this.handleVariablePair(l, r);
+        
+        return this.sharedSig.resolveSymbolId(sym);
     }
 }

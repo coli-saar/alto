@@ -32,7 +32,7 @@ public class DefaultVariableMapping implements Function<Rule,Integer> {
         int label = input.getLabel();
         
         if(homa.isVariable(label)){
-            return homa.getDefaultVariable();
+            return  10;//homa.getDefaultVariable();
         }else{
             return label;
         }
