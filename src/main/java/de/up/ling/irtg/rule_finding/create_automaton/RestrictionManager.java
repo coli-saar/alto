@@ -25,7 +25,7 @@ public class RestrictionManager {
      * Ensures that there is no sequence of variable nodes and that we never start with a variable or
      * end without having read anything under a variable.
      */
-    private final ConcreteTreeAutomaton<Boolean> variableSequenceing;
+    private final ConcreteTreeAutomaton<Boolean> variableSequencing;
     
     /**
      * Ensures that once we have produced a constant on one side, the only symbol
@@ -36,7 +36,7 @@ public class RestrictionManager {
     /**
      * Makes sure that sequences of symbols that are only productive on one side are ordered
      * to have first the left productive and then the right productive ones until we see the next
-     * 'double productive' symbol.
+     * ' double productive ' symbol.
      */
     private final ConcreteTreeAutomaton<Boolean> ordering;
     
@@ -86,8 +86,8 @@ public class RestrictionManager {
         this.termination = new ConcreteTreeAutomaton<>(this.sig);
         this.termination.addFinalState(this.termination.addState(Belnapian.BOTH_FALSE));
         
-        this.variableSequenceing = new ConcreteTreeAutomaton<>(this.sig);
-        this.variableSequenceing.addFinalState(this.variableSequenceing.addState(Boolean.TRUE));
+        this.variableSequencing = new ConcreteTreeAutomaton<>(this.sig);
+        this.variableSequencing.addFinalState(this.variableSequencing.addState(Boolean.TRUE));
     }
 
     /**
@@ -95,7 +95,7 @@ public class RestrictionManager {
      * @return 
      */
     public ConcreteTreeAutomaton<Boolean> getVariableSequenceing() {
-        return variableSequenceing;
+        return variableSequencing;
     }
 
     /**
@@ -130,7 +130,7 @@ public class RestrictionManager {
         if(fullRestriction != null){
             return fullRestriction;
         }else{
-            TreeAutomaton cta = this.variableSequenceing.intersect(ordering)
+            TreeAutomaton cta = this.variableSequencing.intersect(ordering)
                     .intersect(this.termination).intersect(this.splitOrderedPairing);
             return this.fullRestriction = cta;
         }
@@ -171,7 +171,7 @@ public class RestrictionManager {
     private void handleVariable(String symbol) {
         this.children.clear();
         this.children.add(Boolean.TRUE);
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
+        this.variableSequencing.addRule(this.variableSequencing.createRule(Boolean.FALSE, symbol, children));
         
         this.children.clear();
         this.children.add(Boolean.FALSE);
@@ -208,8 +208,8 @@ public class RestrictionManager {
         {
             this.children.add(Boolean.FALSE);
         }
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, children));
+        this.variableSequencing.addRule(this.variableSequencing.createRule(Boolean.FALSE, symbol, children));
+        this.variableSequencing.addRule(this.variableSequencing.createRule(Boolean.TRUE, symbol, children));
         
         this.children.clear();
         for(int i=0;i<vars;++i){
@@ -292,7 +292,7 @@ public class RestrictionManager {
     private void handleTermination(String symbol) {
         this.children.clear();
         
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
+        this.variableSequencing.addRule(this.variableSequencing.createRule(Boolean.FALSE, symbol, children));
         
         this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));
         this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
@@ -328,8 +328,8 @@ public class RestrictionManager {
             return;
         }
         
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.TRUE, symbol, children));
-        this.variableSequenceing.addRule(this.variableSequenceing.createRule(Boolean.FALSE, symbol, children));
+        this.variableSequencing.addRule(this.variableSequencing.createRule(Boolean.TRUE, symbol, children));
+        this.variableSequencing.addRule(this.variableSequencing.createRule(Boolean.FALSE, symbol, children));
         
         this.ordering.addRule(this.ordering.createRule(Boolean.FALSE, symbol, children));
         this.ordering.addRule(this.ordering.createRule(Boolean.TRUE, symbol, children));

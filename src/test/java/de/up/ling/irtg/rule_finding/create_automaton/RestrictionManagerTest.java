@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align;
+package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -102,23 +102,25 @@ public class RestrictionManagerTest {
         rm.addSymbol(s, t1, t2);
     }
 
-    
-    private final static String V_AUTOMATON = """false -> 'k / g' [1.0]\n
-            true! -> 'z / x1'(false) [1.0]\n
-            false -> 'z / x1'(false) [1.0]\n
-            false -> 'x1 / g'(false) [1.0]\n
-            true! -> 'x1 / g'(false) [1.0]\n
-            false -> 'x1 / m(x1,x2)'(false, false) [1.0]\n
-            true! -> 'x1 / m(x1,x2)'(false, false) [1.0]\n
-            false -> 'm(x1,x2) / x2'(false, false) [1.0]\n
-            true! -> 'm(x1,x2) / x2'(false, false) [1.0]\n
-            false -> 'm(x1,x2) / x3'(false, false, false) [1.0]\n
-            true! -> 'm(x1,x2) / x3'(false, false, false) [1.0]\n
-            true! -> 'x3 / m(x1,x2)'(false, false, false) [1.0]\n
-            false -> 'x3 / m(x1,x2)'(false, false, false) [1.0]\n
-            false -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, false, false, false, false) [1.0]\n
-            true! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, false, false, false, false) [1.0]\n
-            false -> 'XXX(x1) / XXX(x1)'(true) [1.0]""";
+    /**
+     * 
+     */
+    private final static String V_AUTOMATON = "false -> 'k / g' [1.0]\n"+
+            "true! -> 'z / x1'(false) [1.0]\n"+
+            "false -> 'z / x1'(false) [1.0]\n"+
+            "false -> 'x1 / g'(false) [1.0]\n"+
+            "true! -> 'x1 / g'(false) [1.0]\n"+
+            "false -> 'x1 / m(x1,x2)'(false, false) [1.0]\n"+
+            "true! -> 'x1 / m(x1,x2)'(false, false) [1.0]\n"+
+            "false -> 'm(x1,x2) / x2'(false, false) [1.0]\n"+
+            "true! -> 'm(x1,x2) / x2'(false, false) [1.0]\n"+
+            "false -> 'm(x1,x2) / x3'(false, false, false) [1.0]\n"+
+            "true! -> 'm(x1,x2) / x3'(false, false, false) [1.0]\n"+
+            "true! -> 'x3 / m(x1,x2)'(false, false, false) [1.0]\n"+
+            "false -> 'x3 / m(x1,x2)'(false, false, false) [1.0]\n"+
+            "false -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, false, false, false, false) [1.0]\n"+
+            "true! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, false, false, false, false) [1.0]\n"+
+            "false -> 'XXX(x1) / XXX(x1)'(true) [1.0]";
     
     /**
      * Test of getVariableSequenceing method, of class RestrictionManager.
@@ -167,21 +169,21 @@ public class RestrictionManagerTest {
         assertEquals(automatonFromItsString(ta),correct);
     }
 
-    private static final String T_AUTOMATON = """BOTH_TRUE -> 'k / g' [1.0]\n
-            RIGHT_TRUE -> 'z / x1'(BOTH_TRUE) [1.0]\n
-            LEFT_TRUE -> 'x1 / g'(BOTH_TRUE) [1.0]\n
-            BOTH_FALSE! -> 'z / x1'(LEFT_TRUE) [1.0]\n
-            LEFT_TRUE -> 'x1 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE) [1.0]\n
-            LEFT_TRUE -> 'x3 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE, BOTH_TRUE) [1.0]\n
-            BOTH_FALSE! -> 'x3 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE, RIGHT_TRUE) [1.0]\n
-            BOTH_FALSE! -> 'XXX(x1) / XXX(x1)'(BOTH_FALSE) [1.0]\n
-            BOTH_FALSE! -> 'x1 / m(x1,x2)'(BOTH_FALSE, LEFT_TRUE) [1.0]\n
-            BOTH_FALSE! -> 'x1 / g'(RIGHT_TRUE) [1.0]\n
-            BOTH_FALSE! -> 'm(x1,x2) / x2'(RIGHT_TRUE, BOTH_FALSE) [1.0]\n
-            BOTH_FALSE! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(RIGHT_TRUE, BOTH_FALSE, RIGHT_TRUE, BOTH_FALSE, LEFT_TRUE) [1.0]\n
-            RIGHT_TRUE -> 'm(x1,x2) / x2'(RIGHT_TRUE, RIGHT_TRUE) [1.0]\n
-            RIGHT_TRUE -> 'm(x1,x2) / x3'(RIGHT_TRUE, RIGHT_TRUE, BOTH_TRUE) [1.0]\n
-            BOTH_FALSE! -> 'm(x1,x2) / x3'(RIGHT_TRUE, RIGHT_TRUE, LEFT_TRUE) [1.0]""";
+    private static final String T_AUTOMATON = "BOTH_TRUE -> 'k / g' [1.0]\n"+
+            "RIGHT_TRUE -> 'z / x1'(BOTH_TRUE) [1.0]\n"+
+            "LEFT_TRUE -> 'x1 / g'(BOTH_TRUE) [1.0]\n"+
+            "BOTH_FALSE! -> 'z / x1'(LEFT_TRUE) [1.0]\n"+
+            "LEFT_TRUE -> 'x1 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE) [1.0]\n"+
+            "LEFT_TRUE -> 'x3 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE, BOTH_TRUE) [1.0]\n"+
+            "BOTH_FALSE! -> 'x3 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE, RIGHT_TRUE) [1.0]\n"+
+            "BOTH_FALSE! -> 'XXX(x1) / XXX(x1)'(BOTH_FALSE) [1.0]\n"+
+            "BOTH_FALSE! -> 'x1 / m(x1,x2)'(BOTH_FALSE, LEFT_TRUE) [1.0]\n"+
+            "BOTH_FALSE! -> 'x1 / g'(RIGHT_TRUE) [1.0]\n"+
+            "BOTH_FALSE! -> 'm(x1,x2) / x2'(RIGHT_TRUE, BOTH_FALSE) [1.0]\n"+
+            "BOTH_FALSE! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(RIGHT_TRUE, BOTH_FALSE, RIGHT_TRUE, BOTH_FALSE, LEFT_TRUE) [1.0]\n"+
+            "RIGHT_TRUE -> 'm(x1,x2) / x2'(RIGHT_TRUE, RIGHT_TRUE) [1.0]\n"+
+            "RIGHT_TRUE -> 'm(x1,x2) / x3'(RIGHT_TRUE, RIGHT_TRUE, BOTH_TRUE) [1.0]\n"+
+            "BOTH_FALSE! -> 'm(x1,x2) / x3'(RIGHT_TRUE, RIGHT_TRUE, LEFT_TRUE) [1.0]";
     
     /**
      * Test of getTermination method, of class RestrictionManager.
@@ -195,22 +197,23 @@ public class RestrictionManagerTest {
     }
 
     
-    private final static String S_AUTOMATON = """false! -> 'k / g' [1.0]\n
-            true -> 'x1 / m(x1,x2)'(true, false) [1.0]\n
-            false! -> 'x1 / m(x1,x2)'(true, false) [1.0]\n
-            false! -> 'z / x1'(false) [1.0]\n
-            false! -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n
-            true -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n
-            false! -> 'x1 / g'(false) [1.0]\n
-            false! -> 'm(x1,x2) / x2'(false, true) [1.0]\n
-            true -> 'm(x1,x2) / x2'(false, true) [1.0]\n
-            false! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, true, false, true, false) [1.0]\n
-            true -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, true, false, true, false) [1.0]\n
-            false! -> 'm(x1,x2) / x3'(false, false, false) [1.0]\n
-            false! -> 'x3 / m(x1,x2)'(false, false, false) [1.0]""";
+    private final static String S_AUTOMATON = "false! -> 'k / g' [1.0]\n"+
+            "true -> 'x1 / m(x1,x2)'(true, false) [1.0]\n"+
+            "false! -> 'x1 / m(x1,x2)'(true, false) [1.0]\n"+
+            "false! -> 'z / x1'(false) [1.0]\n"+
+            "false! -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n"+
+            "true -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n"+
+            "false! -> 'x1 / g'(false) [1.0]\n"+
+            "false! -> 'm(x1,x2) / x2'(false, true) [1.0]\n"+
+            "true -> 'm(x1,x2) / x2'(false, true) [1.0]\n"+
+            "false! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, true, false, true, false) [1.0]\n"+
+            "true -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, true, false, true, false) [1.0]\n"+
+            "false! -> 'm(x1,x2) / x3'(false, false, false) [1.0]\n"+
+            "false! -> 'x3 / m(x1,x2)'(false, false, false) [1.0]";
     
     /**
      * Test of getSplitOrderedPairing method, of class RestrictionManager.
+     * @throws java.io.IOException
      */
     @Test
     public void testGetSplitOrderedPairing() throws IOException {
@@ -221,10 +224,11 @@ public class RestrictionManagerTest {
 
     /**
      * Test of getRestriction method, of class RestrictionManager.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetRestriction() throws Exception {
-        CondensedTreeAutomaton cta = rm.getRestriction();
+        TreeAutomaton cta = rm.getRestriction();
         
         Iterable<Rule> rs = cta.getAllRulesTopDown();
         for(Rule r : rs){
@@ -244,8 +248,10 @@ public class RestrictionManagerTest {
         
         TreeAutomaton t = rm.getVariableSequenceing().intersect(rm.getOrdering())
                     .intersect(rm.getTermination()).intersect(rm.getSplitOrderedPairing());
-        CondensedTreeAutomaton con = ConcreteCondensedTreeAutomaton.fromTreeAutomaton(t);
+        TreeAutomaton con = automatonFromItsString(t);
+        cta = automatonFromItsString(cta);
         
+        System.out.println(con);
         assertEquals(con,cta);
     }
 }
