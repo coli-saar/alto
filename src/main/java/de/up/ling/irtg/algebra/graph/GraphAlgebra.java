@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.IsiAmrInputCodec;
+import de.up.ling.irtg.codec.SGraphInputCodec;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.codec.isiamr.IsiAmrParser;
 import de.up.ling.irtg.signature.Signature;
@@ -118,6 +119,29 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         }
         return ret;
     }
+
+    @Override
+    public List<Pair<Pair<String, String>, Function<SGraph, Double>>> getObjectProperties() {
+        List<Pair<Pair<String, String>, Function<SGraph, Double>>> ret = new ArrayList<>();
+        Function<SGraph, Double> nodeCountFunction = (SGraph graph) -> (double)graph.getGraph().vertexSet().size();
+        ret.add(new Pair(new Pair("Node count", "node_count"), nodeCountFunction));
+        
+        Function<SGraph, Double> maxDegFunction = (SGraph graph) -> {
+            double maxDeg = 0;
+            for (GraphNode node : graph.getGraph().vertexSet()) {
+                int degHere = graph.getGraph().inDegreeOf(node)+graph.getGraph().outDegreeOf(node);
+                if (node.getLabel() != null && !node.getLabel().equals("")) {
+                    degHere++;
+                }
+                maxDeg = Math.max(maxDeg, degHere);
+            }
+            return maxDeg;
+        };
+        ret.add(new Pair(new Pair("Maximum degree", "max_deg_labels_as_loops"), maxDegFunction));
+        return ret;
+    }
+    
+    
     
     
     
@@ -361,7 +385,15 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
      */
     @Override
     public SGraph parseString(String representation) throws ParserException {
-        return new IsiAmrInputCodec().read(representation);
+        try {
+            return new IsiAmrInputCodec().read(representation);
+        } catch (Throwable ex) {
+            try {
+                return new SGraphInputCodec().read(representation);
+            } catch (java.lang.Exception ex2) {
+                throw new ParserException("Could not parse: "+ex.toString()+" and "+ex2.toString());
+            }
+        }
     }
 
     /**
