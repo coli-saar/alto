@@ -18,11 +18,9 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Function;
@@ -190,7 +188,7 @@ public abstract class Algebra<E> implements Serializable {
     /**
      * Returns all numerical properties this algebra provides for its objects.
      * Default is the length if the object is represented as a string.
-     * @return Maps the name of the property to a function that maps an object to the
+     * @return Maps a pair of name and code of the property to a function that maps an object to the
      * property.
      */
     public List<Pair<Pair<String, String>, Function<E, Double>>> getObjectProperties() {
