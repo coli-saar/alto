@@ -210,15 +210,16 @@ public class HomomorphismManager {
          
        toDo1.removeAll(this.seenAll1);
        IntIterator iit = toDo1.iterator();
+       
        while(iit.hasNext()){
-           int symName = iit.nextInt();
+           int symName = iit.nextInt();    
            
            int arity = this.source1.getArity(symName);
            
             if(arity == 0){
                 handle0Ary(0,symName);
             }else if(!isVariable(0,symName)){
-                handleSym(0,symName);                  
+                handleSym(0,symName);
                 this.seen1.add(symName);
             }
        }
@@ -739,7 +740,7 @@ public class HomomorphismManager {
     /**
      * 
      * @param toDo1
-     * @param toDo2 
+     * @param toDo2
      */
     private void makeVariables(IntSet toDo1, IntSet toDo2) {
         Object2ObjectMap<String,IntList> alignMap1 = new Object2ObjectOpenHashMap<>();
@@ -748,6 +749,10 @@ public class HomomorphismManager {
         while(iit.hasNext()){
             int sym = iit.nextInt();
             String name = this.source1.resolveSymbolId(sym);
+            
+            if(!Variables.IS_VARIABLE.test(name)){
+                continue;
+            }
             
             String align = Propagator.getAlignments(name);
             IntList list = alignMap1.get(align);
@@ -764,8 +769,15 @@ public class HomomorphismManager {
             int sym = iit.nextInt();
             String name = this.source2.resolveSymbolId(sym);
             
+            if(!Variables.IS_VARIABLE.test(name)){
+                continue;
+            }
+            
             String align = Propagator.getAlignments(name);
             IntList options = alignMap1.get(align);
+            if(options == null){
+                continue;
+            }
             
             for(int i=0;i<options.size();++i){
                 int osym = options.get(i);
@@ -786,12 +798,11 @@ public class HomomorphismManager {
         }
         
         String varName = this.sharedSig.resolveSymbolId(label);
-        String[] leftRight = varName.split("|")[0].split("/");
-        leftRight[0] = leftRight[0].trim();
-        leftRight[1] = leftRight[1].trim();
+        String left = this.hom1.get(varName).getLabel();
+        String right = this.hom2.get(varName).getLabel();
         
-        String left = Propagator.getOriginalVariable(leftRight[0]);
-        String right = Propagator.getOriginalVariable(leftRight[1]);
+        left = Propagator.getOriginalVariable(left);
+        right = Propagator.getOriginalVariable(right);
         
         int l = this.source1.addSymbol(left, 1);
         int r = this.source2.addSymbol(right, 1);

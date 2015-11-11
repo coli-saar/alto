@@ -189,6 +189,9 @@ public class CorpusCreator<InputType1,InputType2> {
             TreeAutomaton ft = algebra.decompose(algebra.parseString(firstInputs.get(i)));
             StateAlignmentMarking fal = aL.makeInstance(firstAlignments.get(i), ft);
             firstRoundOne.add(new AlignedTrees<>(ft,fal));
+            if(ft.getSignature() != algebra.getSignature()){
+                throw new IllegalStateException("Signatures changed during processing");
+            }
         }
         
         return firstRoundOne;

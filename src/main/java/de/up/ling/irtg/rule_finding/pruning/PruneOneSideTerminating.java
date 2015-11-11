@@ -62,7 +62,7 @@ public class PruneOneSideTerminating<X,Y> implements Pruner<X,Y> {
             }
         }
         
-        ConcreteTreeAutomaton<X> cta = new ConcreteTreeAutomaton<>();
+        ConcreteTreeAutomaton<X> cta = new ConcreteTreeAutomaton<>(tx.getSignature());
         SpecifiedAligner<X> spa = new SpecifiedAligner<>(cta);
         StateAlignmentMarking<X> ali = at.getAlignments();
         iit = tx.getAllStates().iterator();
