@@ -111,7 +111,7 @@ public class CorpusCreator<InputType1,InputType2> {
                 
         Propagator pro = new Propagator();
         List<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(maxSize, firstInputs,
-                                                firstAlignments, this.firstAlgebra, this.secondAL);
+                                                firstAlignments, this.firstAlgebra, this.firtAL);
         List<AlignedTrees> firstRoundTwo = makeFirstPruning(firstRoundOne, firstPruner, firstVI);
         for(int i=0;i<firstRoundTwo.size();++i){
             firstRoundTwo.set(i, pro.convert(firstRoundTwo.get(i)));

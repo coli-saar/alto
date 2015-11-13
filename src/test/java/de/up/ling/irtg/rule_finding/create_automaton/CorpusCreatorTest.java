@@ -10,8 +10,9 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
-import de.up.ling.irtg.rule_finding.alignments.AlignmentFactory;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
@@ -95,7 +96,6 @@ public class CorpusCreatorTest {
         this.secondAlign = new ArrayList<>();
         this.secondAlign.add("0-0-0-0-0:1 0-0-0-1-0:2 0-0-0-1-1-0:3");
         this.secondAlign.add("0-0-0-0-0:1 0-0-0-1-0:2 0-0-0-1-1-0:3");
-        //TODO
     }
 
     @Test
@@ -147,11 +147,80 @@ public class CorpusCreatorTest {
     
     /**
      * Test of getAlgebra2 method, of class CreateCorpus.
-     * @throws de.up.ling.irtg.algebra.ParserException
      */
     @Test
-    public void testGetAlgebra() throws ParserException {
+    public void testGetAlgebra() {
         assertEquals(cc.getSecondAlgebra(),this.mta);
         assertEquals(cc.getFirstAlgebra(),this.sal);
+    }
+    
+    @Test
+    public void testFinalResult() throws ParserException, Exception {
+        List<TreeAutomaton> result = this.cc.makeRuleTrees(firstInputs, secondInputs, firstAlign, secondAlign);
+        
+        assertEquals(result.size(),2);
+        
+        TreeAutomaton first = result.get(0);
+        TreeAutomaton second = result.get(1);
+        
+        assertEquals(first.language().size(),second.language().size());
+        
+        for(Rule r : (Iterable<Rule>) first.getAllRulesTopDown()){
+            if(this.cc.getHomomorphismManager().getSignature().resolveSymbolId(r.getLabel()).equals("Xwent_home(x1) / X(x1) | 1")
+                    || this.cc.getHomomorphismManager().getSignature().resolveSymbolId(r.getLabel()).equals("*(x1, x2) / __LEFT__INTO__RIGHT__(x1, x2) | 2")){
+                r.setWeight(2.0);
+            }
+            else{
+                r.setWeight(0.2);
+            }
+        }
+        
+        Tree<String> ts = first.viterbi();
+        
+        Homomorphism hm1 = this.cc.getHomomorphismManager().getHomomorphism1();
+        Homomorphism hm2 = this.cc.getHomomorphismManager().getHomomorphism2();
+        
+        assertEquals(hm1.apply(ts),pt("*(XJohn_John(John),Xwent_home(Xwent_home(*(Xwent_went(went),Xhome_home(home)))))"));
+        Tree<String> q = shorten(hm2.apply(ts));
+        System.out.println(q);
+        assertEquals(this.mta.evaluate(q),pt("S(NP(John),VP(went,NP(home)))"));
+        
+        Tree<String> l = hm1.apply(ts);
+        Tree<String> r = hm2.apply(ts);
+        
+        int firstVariables = 0;
+        for(Tree<String> node : l.getAllNodes()){
+            if(Variables.IS_VARIABLE.test(node.getLabel())){
+                ++firstVariables;
+            }
+        }
+        
+        int secondVariables = 0;
+        for(Tree<String> node : r.getAllNodes()){
+            if(Variables.IS_VARIABLE.test(node.getLabel())){
+                ++secondVariables;
+            }
+        }
+        
+        assertEquals(firstVariables,5);
+        assertEquals(secondVariables,firstVariables);
+    }
+    
+    /**
+     * 
+     * @param tr
+     * @return 
+     */
+    private Tree<String> shorten(Tree<String> tr){
+        if(Variables.IS_VARIABLE.test(tr.getLabel())){
+            return shorten(tr.getChildren().get(0));
+        }
+        
+        List<Tree<String>> children = new ArrayList<>();
+        tr.getChildren().forEach((child) -> {
+            children.add(shorten(child));
+        });
+        
+        return Tree.create(tr.getLabel(), children);
     }
 }
