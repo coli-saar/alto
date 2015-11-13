@@ -721,8 +721,9 @@ public class HomomorphismManager {
                 children.clear();
                 Rule rul = rules.next();
                 String label = makeReducedLabel(rul.getLabel());
+                
                 for(int child : rul.getChildren()){
-                    children.add(done.getStateForId(org));
+                    children.add(done.getStateForId(child));
                     
                     if(!seen.contains(child)){
                         seen.add(child);
@@ -730,7 +731,9 @@ public class HomomorphismManager {
                     }
                 }
                 
-                cta.addRule(cta.createRule(state, label, children, rul.getWeight()));
+                Rule neW = cta.createRule(state, label, children, rul.getWeight());
+                
+                cta.addRule(neW);
             }
         }
         

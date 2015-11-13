@@ -5,16 +5,33 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
+import de.saar.basic.Pair;
+import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
+import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
+import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.rule_finding.Variables;
+import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
+import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
+import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
+import de.up.ling.irtg.rule_finding.pruning.Pruner;
+import de.up.ling.irtg.rule_finding.pruning.RemoveDead;
+import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
+import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.signature.Signature;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-import org.apache.commons.math3.util.Pair;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -38,82 +55,62 @@ public class HomomorphismManagerTest {
     /**
      * 
      */
+    private Signature shared;
+    
+    /**
+     * 
+     */
     private HomomorphismManager hm;
     
     /**
      * 
      */
-    private IntSet todo1;
+    private List<AlignedTrees> pruned1;
     
     /**
      * 
      */
-    private IntSet todo2;
-    
-    /**
-     * 
-     */
-    private IntSet todo3;
-    
-    /**
-     * 
-     */
-    private IntSet todo4;
-    
-    /**
-     * 
-     */
-    private IntAVLTreeSet todo5;
-    
-    /**
-     * 
-     */
-    private IntAVLTreeSet todo6;
-    
+    private List<AlignedTrees> pruned2;
     
     @Before
-    public void setUp() {
-        sig1 = new Signature();
-        sig2 = new Signature();
+    public void setUp() throws ParserException {
+        CorpusCreator.Factory fact = new CorpusCreator.Factory();
+        fact.setFirstPruner(new PruneOneSideTerminating()).setSecondPruner(Pruner.DEFAULT_PRUNER)
+                .setFirstVariableSource(new LeftRightXFromFinite())
+                .setSecondVariableSource(new JustXEveryWhere());
         
-        hm = new HomomorphismManager(sig1, sig2);
+        StringAlgebra sal = new StringAlgebra();
+        StringAlgebra mta = new StringAlgebra();
         
-        int n1 = sig1.addSymbol("a", 2);
-        int n2 = sig1.addSymbol("b", 0);
-        int n3 = sig1.addSymbol("c", 0);
-        int n4 = sig1.addSymbol("d", 1);
-        int n5 = sig1.addSymbol("XX_87", 1);
-        int n6 = sig1.addSymbol("XX1", 1);
+        CorpusCreator cc = fact.getInstance(sal, mta, new SpanAligner.Factory(), new SpanAligner.Factory());
         
-        todo1 = new IntAVLTreeSet();
-        todo1.add(n1);
-        todo1.add(n2);
-        todo1.add(n3);
-        todo1.add(n4);
-        todo1.add(n5);
-        todo1.add(n6);
+        ArrayList<String> firstInputs = new ArrayList<>();
+        firstInputs.add("John went home");
+        firstInputs.add("Frank went home");
         
-        todo2 = new IntAVLTreeSet();
-        todo2.add(sig2.addSymbol("e", 2));
-        todo2.add(sig2.addSymbol("g", 0));
-        todo2.add(sig2.addSymbol("h", 1));
-        todo2.add(sig2.addSymbol("XX1", 1));
+        ArrayList<String> firstAlign = new ArrayList<>();
+        firstAlign.add("0:1:1 1:2:2 2:3:3");
+        firstAlign.add("0:1:4 1:2:5 2:3:6");
         
-        todo3 = new IntAVLTreeSet(todo1);
-        todo3.add(sig1.addSymbol("i", 3));
-        todo3.add(sig1.addSymbol("ii", 2));
+        ArrayList<String> secondInputs = new ArrayList<>();
+        secondInputs.add("John ging heim");
+        secondInputs.add("Frank ging heim");
         
-        todo4 = new IntAVLTreeSet(todo2);
-        todo4.add(sig2.addSymbol("j", 3));
-        todo4.add(sig2.addSymbol("jj", 2));
+        ArrayList<String> secondAlign = new ArrayList<>();
+        secondAlign.add("0:1:1 1:2:2 2:3:5");
+        secondAlign.add("0:1:4 1:2:5 2:3:6 2:3:7");
         
-        todo5 = new IntAVLTreeSet();
-        todo5.add(sig1.addSymbol("mc3", 1));
-        todo5.add(sig1.addSymbol("vv", 0));
+        List<AlignedTrees> list1  = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, cc.getFirtAL());
+        pruned1 = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
         
-        todo6 = new IntAVLTreeSet();
-        todo6.add(sig2.addSymbol("hk", 1));
-        todo6.add(sig2.addSymbol("hk54", 0));
+        list1 = CorpusCreator.makeInitialAlignedTrees(2, secondInputs, secondAlign, mta, cc.getSecondAL());
+        pruned2 = CorpusCreator.makeFirstPruning(list1, cc.getSecondPruner(), cc.getSecondVI());
+
+        this.sig1 = sal.getSignature();
+        this.sig2 = mta.getSignature();
+        this.shared = new Signature();
+        
+        this.hm = new HomomorphismManager(this.sig1, this.sig2, this.shared);
     }
 
     /**
@@ -122,144 +119,58 @@ public class HomomorphismManagerTest {
      */
     @Test
     public void testUpdate() throws Exception {
-        hm.update(todo1, todo2);
+        Propagator pg = new Propagator();
+        TreeAutomaton ta1= pg.convert(this.pruned1.get(0)).getTrees();
+        TreeAutomaton ta2 = pg.convert(this.pruned2.get(0)).getTrees();
         
-        Homomorphism hom1 = hm.getHomomorphism1();
-        Homomorphism hom2 = hm.getHomomorphism2();
+        hm.update(ta1.getAllLabels(), ta2.getAllLabels());
         
-        Signature source = hom1.getSourceSignature();
-        assertEquals(hom1.getSourceSignature(),hom2.getSourceSignature());
+        ta1= pg.convert(this.pruned1.get(0)).getTrees();
+        ta2 = pg.convert(this.pruned2.get(0)).getTrees();
+        hm.update(ta1.getAllLabels(), ta2.getAllLabels());
+
+        Homomorphism hm1 = hm.getHomomorphismRestriction1(ta1.getAllLabels(), ta2.getAllLabels());
+        Homomorphism hm2 = hm.getHomomorphismRestriction2(ta2.getAllLabels(), ta1.getAllLabels());
         
-        Set<Pair<String,Pair<Tree<String>,Tree<String>>>> expected = new HashSet<>();
+        RuleFindingIntersectionAutomaton rfi = new RuleFindingIntersectionAutomaton(ta1, ta2, hm1, hm2);
+        TreeAutomaton done = new TopDownIntersectionAutomaton(rfi, hm.getRestriction());
+            
+        done = RemoveDead.reduce(done);
+        Set<Tree<String>> oldLang = done.language();
         
-        expected.add(new Pair("a(x1, x2) / x1 | 2",new Pair(pt("a('?1','?2')"),pt("'?1'"))));
-        expected.add(new Pair("a(x1, x2) / x2 | 2",new Pair(pt("a('?1','?2')"),pt("'?2'"))));
-        expected.add(new Pair("a(x1, x2) / x3 | 3",new Pair(pt("a('?1','?2')"),pt("'?3'"))));
-        expected.add(new Pair("a(x1, x2) / e(x1, x2) | 2",new Pair(pt("a('?1','?2')"),pt("e('?1','?2')"))));
-        expected.add(new Pair("a(x1, x2) / e(x2, x1) | 2",new Pair(pt("a('?1','?2')"),pt("e('?2','?1')"))));
+        done = hm.reduceToOriginalVariablePairs(done);
+        hm1 = hm.getHomomorphism1();
+        hm2 = hm.getHomomorphism2();
         
-        expected.add(new Pair("b() / x1 | 1",new Pair(pt("b"),pt("'?1'"))));
-        expected.add(new Pair("b() / g() | 0",new Pair(pt("b"),pt("g"))));
-        expected.add(new Pair("c() / x1 | 1",new Pair(pt("c"),pt("'?1'"))));
-        expected.add(new Pair("d(x1) / x1 | 1",new Pair(pt("d('?1')"),pt("'?1'"))));
-        expected.add(new Pair("d(x1) / x2 | 2",new Pair(pt("d('?1')"),pt("'?2'"))));
-        expected.add(new Pair("XX1(x1) / XX1(x1) | 1",new Pair(pt("XX1('?1')"),pt("XX1('?1')"))));
-        expected.add(new Pair("XX(x1) / XX(x1) | 1",new Pair(pt("XX('?1')"),pt("XX('?1')"))));
+        Set<Pair<Tree<String>,Tree<String>>> pairs = new HashSet<>();
         
-        expected.add(new Pair("x1 / e(x1, x2) | 2",new Pair(pt("'?1'"),pt("e('?1','?2')"))));
-        expected.add(new Pair("x2 / e(x1, x2) | 2",new Pair(pt("'?2'"),pt("e('?1','?2')"))));
-        expected.add(new Pair("x3 / e(x1, x2) | 3",new Pair(pt("'?3'"),pt("e('?1','?2')"))));
-        
-        expected.add(new Pair("x1 / g() | 1",new Pair(pt("'?1'"),pt("g"))));
-        expected.add(new Pair("x1 / h(x1) | 1",new Pair(pt("'?1'"),pt("h('?1')"))));
-        expected.add(new Pair("x2 / h(x1) | 2",new Pair(pt("'?2'"),pt("h('?1')"))));
-        
-        assertFalse(hom1.isNonDeleting());
-        assertFalse(hom2.isNonDeleting());        
-        
-        for(Pair<String,Pair<Tree<String>,Tree<String>>> p : expected){
-            assertEquals(hom1.get(p.getKey()),p.getValue().getKey());
-            assertEquals(hom2.get(p.getKey()),p.getValue().getValue());
+        for(Tree<String> t : (Iterable<Tree<String>>) done.language()){
+            Tree<String> t1 = hm1.apply(t);
+            Tree<String> t2 = hm2.apply(t);
+            
+            Pair<Tree<String>,Tree<String>> p = new Pair<>(t1,t2);
+            assertFalse(pairs.contains(p));
+            pairs.add(p);
+            
+            for(Tree<String> node : t.getAllNodes()){
+                String label = node.getLabel();
+                String left = hm1.get(label).getLabel();
+                String right = hm2.get(label).getLabel();
+                
+                if(Variables.IS_VARIABLE.test(left)){
+                    assertTrue(Variables.IS_VARIABLE.test(left));
+                    assertTrue(hm.isVariable(hm.getSignature().getIdForSymbol(label)));
+                    assertEquals(right,"X");
+                }else{
+                    assertFalse(Variables.IS_VARIABLE.test(right));
+                    assertFalse(hm.isVariable(hm.getSignature().getIdForSymbol(label)));
+                }   
+            }
         }
         
-        assertEquals(source.getMaxSymbolId(),source.getMaxSymbolId());
+        assertTrue(done.accepts(pt("'*(x1, x2) / x1 | 2'('x1 / *(x1, x2) | 2'('XJohn_went(x1) / X(x1) | 1'('*(x1, x2) / *(x1, x2) | 2'('XJohn_John(x1) / X(x1) | 1'('John() / x1 | 1'('x1 / John() | 1'('John() / John() | 0'))),'Xwent_went(x1) / X(x1) | 1'('went() / x1 | 1'('x1 / ging() | 1'('John() / John() | 0'))))),'x1 / heim() | 1'('John() / John() | 0')),'home() / x1 | 1'('John() / John() | 0'))")));
         
-        hm.update(todo1, todo2);
-        
-        assertEquals(source.getMaxSymbolId(),source.getMaxSymbolId());
-        
-        hm.update(todo5, todo6);
-        
-        expected.add(new Pair("x1 / hk54() | 1",new Pair(pt("'?1'"),pt("hk54"))));
-        expected.add(new Pair("x1 / hk(x1) | 1",new Pair(pt("'?1'"),pt("hk('?1')"))));
-        expected.add(new Pair("x2 / hk(x1) | 2",new Pair(pt("'?2'"),pt("hk('?1')"))));
-        expected.add(new Pair("vv() / x1 | 1",new Pair(pt("vv"),pt("'?1'"))));
-        expected.add(new Pair("mc3(x1) / x1 | 1",new Pair(pt("mc3('?1')"),pt("'?1'"))));
-        expected.add(new Pair("mc3(x1) / x2 | 2",new Pair(pt("mc3('?1')"),pt("'?2'"))));
-        
-        for(Pair<String,Pair<Tree<String>,Tree<String>>> p : expected){
-            assertEquals(hom1.get(p.getKey()),p.getValue().getKey());
-            assertEquals(hom2.get(p.getKey()),p.getValue().getValue());
-        }
-        
-        assertEquals(hom1,hm.getHomomorphism1());
-        assertEquals(hom2,hm.getHomomorphism2());
-        
-        assertEquals(source.getMaxSymbolId(),24);
-        assertEquals(source.getMaxSymbolId(),expected.size());
-        
-        assertFalse(hm.getRestrictionManager().getVariableSequenceing().accepts(pt(TEST_ONE)));
-        assertFalse(hm.getRestrictionManager().getTermination().accepts(pt(TEST_ONE)));
-        
-        assertTrue(hm.getRestrictionManager().getRestriction() == hm.getRestriction());
-        
-        assertTrue(hm.getRestriction().accepts(pt(TEST_TWO)));
-        assertFalse(hm.getRestriction().accepts(pt(TEST_ONE)));
-        
-        Tree<String> test = pt(TEST_THREE);
-        assertTrue(hm.getRestriction().accepts(test));
-        assertEquals(hom1.apply(test),pt("c"));
-        assertEquals(hom2.apply(test),pt("hk(hk54)")); 
-        
-        test = pt(TEST_FOUR);
-        assertTrue(hm.getRestriction().accepts(test));
-        assertEquals(hom1.apply(test),pt("XX(a(mc3(XX1(d(c))),d(mc3(vv))))"));
-        assertEquals(hom2.apply(test),pt("e(g,h(XX(XX1(e(hk54,e(hk54,e(hk54,g)))))))"));
-        
-        test = pt(TEST_FIVE);
-        assertTrue(hm.getRestriction().accepts(test));
-        assertEquals(hom1.apply(test),pt("a(b,a(XX(XX(a(b,mc3(d(a(mc3(d(a(d(c),vv))),XX1(b))))))),d(b)))"));
-        assertEquals(hom2.apply(test),pt("hk(h(e(e(h(e(hk54,hk(hk54))),e(hk54,h(h(e(e(e(g,h(hk(h(hk54)))),e(hk(e(h(h(g)),h(e(hk(g),hk(hk54))))),hk54)),h(g)))))),XX(h(hk(h(hk(hk(XX(XX1(g)))))))))))"));
-        
-        expected = new HashSet<>();
-        expected.add(new Pair("b() / g() | 0",new Pair(pt("b"),pt("g"))));
-        expected.add(new Pair("x1 / hk54() | 1",new Pair(pt("'?1'"),pt("hk54"))));
-        expected.add(new Pair("x1 / hk(x1) | 1",new Pair(pt("'?1'"),pt("hk('?1')"))));
-        expected.add(new Pair("x2 / hk(x1) | 2",new Pair(pt("'?2'"),pt("hk('?1')"))));
-        expected.add(new Pair("vv() / x1 | 1",new Pair(pt("vv"),pt("'?1'"))));
-        expected.add(new Pair("mc3(x1) / x1 | 1",new Pair(pt("mc3('?1')"),pt("'?1'"))));
-        expected.add(new Pair("mc3(x1) / x2 | 2",new Pair(pt("mc3('?1')"),pt("'?2'"))));
-        
-        
-        hom1 = hm.getHomomorphismRestriction1(todo5,todo6);
-        hom2 = hm.getHomomorphismRestriction2(todo6,todo5);
-        
-        for(Pair<String,Pair<Tree<String>,Tree<String>>> p : expected){
-            assertEquals(hom1.get(p.getKey()),p.getValue().getKey());
-            assertEquals(hom2.get(p.getKey()),p.getValue().getValue());
-        }
-        
-        IntSet all = new IntOpenHashSet();
-        
-        for(int i=1;i<=hom1.getMaxLabelSetID();++i){
-            all.addAll(hom1.getLabelSetByLabelSetID(i));
-        }
-        
-        assertEquals(all.size(),7);
+        assertEquals(oldLang.size(),done.language().size());
+        assertEquals(done.language().size(),20);
     }
-    
-    /**
-     * 
-     */
-    private final static String TEST_ONE = "'XX1(x1) / XX1(x1) | 1'('a(x1, x2) / x1 | 2'('x1 / hk54() | 1'('b() / g() | 0'),'x1 / g() | 1'('b() / g() | 0')))";
-    
-    /**
-     * 
-     */
-    private final static String TEST_TWO = "'c() / x1 | 1'('x3 / e(x1, x2) | 3'('x1 / g() | 1'('b() / g() | 0'),'x3 / e(x1, x2) | 3'('x1 / g() | 1'('b() / g() | 0'),'x1 / g() | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'))";
-    
-    /**
-     * 
-     */
-    private final static String TEST_THREE = "'c() / x1 | 1'('x2 / hk(x1) | 2'('x1 / hk54() | 1'('b() / g() | 0'),'b() / g() | 0'))";
-    
-    /**
-     * 
-     */
-    private final static String TEST_FOUR = "'x2 / e(x1, x2) | 2'('x1 / g() | 1'('b() / g() | 0'),'x1 / h(x1) | 1'('XX(x1) / XX(x1) | 1'('a(x1, x2) / x1 | 2'('mc3(x1) / x1 | 1'('XX1(x1) / XX1(x1) | 1'('d(x1) / x2 | 2'('c() / x1 | 1'('b() / g() | 0'),'x3 / e(x1, x2) | 3'('x1 / hk54() | 1'('b() / g() | 0'),'x3 / e(x1, x2) | 3'('x1 / hk54() | 1'('b() / g() | 0'),'x3 / e(x1, x2) | 3'('x1 / hk54() | 1'('b() / g() | 0'),'x1 / g() | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0')))),'d(x1) / x2 | 2'('mc3(x1) / x2 | 2'('vv() / x1 | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0')))))";
-    
-    /**
-     * 
-     */
-    private final static String TEST_FIVE = "'a(x1, x2) / x2 | 2'('b() / x1 | 1'('b() / g() | 0'),'a(x1, x2) / x1 | 2'('x1 / hk(x1) | 1'('x1 / h(x1) | 1'('x2 / e(x1, x2) | 2'('x3 / e(x1, x2) | 3'('x2 / h(x1) | 2'('x3 / e(x1, x2) | 3'('x1 / hk54() | 1'('b() / g() | 0'),'x2 / hk(x1) | 2'('x1 / hk54() | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'x3 / e(x1, x2) | 3'('x1 / hk54() | 1'('b() / g() | 0'),'x2 / h(x1) | 2'('x2 / h(x1) | 2'('x3 / e(x1, x2) | 3'('x3 / e(x1, x2) | 3'('x3 / e(x1, x2) | 3'('x1 / g() | 1'('b() / g() | 0'),'x2 / h(x1) | 2'('x2 / hk(x1) | 2'('x2 / h(x1) | 2'('x1 / hk54() | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'x3 / e(x1, x2) | 3'('x2 / hk(x1) | 2'('x3 / e(x1, x2) | 3'('x2 / h(x1) | 2'('x2 / h(x1) | 2'('x1 / g() | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'x2 / h(x1) | 2'('x3 / e(x1, x2) | 3'('x2 / hk(x1) | 2'('x1 / g() | 1'('b() / g() | 0'),'b() / g() | 0'),'x2 / hk(x1) | 2'('x1 / hk54() | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'x1 / hk54() | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'x2 / h(x1) | 2'('x1 / g() | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'XX(x1) / XX(x1) | 1'('x1 / h(x1) | 1'('x1 / hk(x1) | 1'('x1 / h(x1) | 1'('x1 / hk(x1) | 1'('x1 / hk(x1) | 1'('XX(x1) / XX(x1) | 1'('a(x1, x2) / x2 | 2'('b() / x1 | 1'('b() / g() | 0'),'mc3(x1) / x1 | 1'('d(x1) / x1 | 1'('a(x1, x2) / x2 | 2'('mc3(x1) / x2 | 2'('d(x1) / x2 | 2'('a(x1, x2) / x3 | 3'('d(x1) / x2 | 2'('c() / x1 | 1'('b() / g() | 0'),'b() / g() | 0'),'vv() / x1 | 1'('b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'b() / g() | 0'),'XX1(x1) / XX1(x1) | 1'('b() / x1 | 1'('x1 / g() | 1'('b() / g() | 0'))))))))))))))))),'d(x1) / x2 | 2'('b() / x1 | 1'('b() / g() | 0'),'b() / g() | 0')))";
 }
