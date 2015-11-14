@@ -13,6 +13,7 @@ import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
+import de.up.ling.irtg.rule_finding.pruning.strings.RightbranchingPuner;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import java.io.BufferedWriter;
@@ -29,7 +30,7 @@ public class DumpSmallExample {
    
     public static void main(String... args) throws ParserException, IOException{
                 CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new PruneOneSideTerminating()).setSecondPruner(Pruner.DEFAULT_PRUNER)
+        fact.setFirstPruner(new RightbranchingPuner()).setSecondPruner(new RightbranchingPuner())
                 .setFirstVariableSource(new JustXEveryWhere())
                 .setSecondVariableSource(new JustXEveryWhere());
         
@@ -59,6 +60,8 @@ public class DumpSmallExample {
         BufferedWriter bw = new BufferedWriter(new FileWriter("finished"));
         bw.write(result.get(0).toString());
         bw.close();
+        
+        System.out.println(result.get(0).language().size());
     }
     
     

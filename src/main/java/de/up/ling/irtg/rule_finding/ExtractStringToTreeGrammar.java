@@ -51,6 +51,7 @@ public class ExtractStringToTreeGrammar {
         Propagator propLarge = new Propagator(new StringLeftOrRight());
         Propagator propSmall = new Propagator();
         
+        //TODO
         SampledEM sem = new SampledEM(2, 1.0, 1.0, 10, 1.0);
         
         Function<List<String>,Propagator> funct = (List<String> in) -> {
