@@ -24,10 +24,15 @@ public class RightbranchingPuner implements Pruner<Object,Object> {
 
     @Override
     public List<AlignedTrees<Object>> prePrune(List<AlignedTrees<Object>> alignmentFree) {
+        return alignmentFree;
+    }
+
+    @Override
+    public List<AlignedTrees<Object>> postPrune(List<AlignedTrees<Object>> variablesPushed, List<AlignedTrees<Object>> otherSide) {
         List<AlignedTrees<Object>> result = new ArrayList<>();
         
-        for(int i=0;i<alignmentFree.size();++i){
-            AlignedTrees at = alignmentFree.get(i);
+        for(int i=0;i<variablesPushed.size();++i){
+            AlignedTrees at = variablesPushed.get(i);
             TreeAutomaton base = at.getTrees();
             
             RightBranchingNormalForm rbnf = new RightBranchingNormalForm(base.getSignature(), base.getAllLabels());
@@ -39,18 +44,11 @@ public class RightbranchingPuner implements Pruner<Object,Object> {
             while(iit.hasNext()){
                 Pair<Object,RightBranchingNormalForm.State> state = (Pair<Object,RightBranchingNormalForm.State>) aut.getStateForId(iit.nextInt());
                 
-                if(state.getRight().equals(RightBranchingNormalForm.State.VARIABLE)){
-                    spal.put(state, at.getAlignments().getAlignmentMarkers(state.getLeft()));
-                }
+                spal.put(state, at.getAlignments().getAlignmentMarkers(state.getLeft()));
             }
             
-            result.add(new AlignedTrees<>(base,spal));
+            result.add(new AlignedTrees<>(aut,spal));
         }
         return result;
-    }
-
-    @Override
-    public List<AlignedTrees<Object>> postPrune(List<AlignedTrees<Object>> variablesPushed, List<AlignedTrees<Object>> otherSide) {
-        return variablesPushed;
     }
 }

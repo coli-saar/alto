@@ -5,8 +5,11 @@
  */
 package apps;
 
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
@@ -57,11 +60,19 @@ public class DumpSmallExample {
         
         List<TreeAutomaton> result = cc.makeRuleTrees(firstInputs, secondInputs, firstAlign, secondAlign);
         
-        BufferedWriter bw = new BufferedWriter(new FileWriter("finished"));
-        bw.write(result.get(0).toString());
+        
+        
+        Interpretation i1 = new Interpretation(new TreeAlgebra(), cc.getHomomorphismManager().getHomomorphism1());
+        Interpretation i2 = new Interpretation(new TreeAlgebra(), cc.getHomomorphismManager().getHomomorphism2());
+        
+        InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(result.get(0));
+        ita.addInterpretation("first", i1);
+        ita.addInterpretation("second", i2);
+        
+        BufferedWriter bw = new BufferedWriter(new FileWriter("finished.irtg"));
+        bw.write(ita.toString());
         bw.close();
         
-        System.out.println(result.get(0).language().size());
     }
     
     
