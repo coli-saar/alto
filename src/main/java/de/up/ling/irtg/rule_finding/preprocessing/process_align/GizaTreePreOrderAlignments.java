@@ -37,7 +37,7 @@ public class GizaTreePreOrderAlignments implements BinaryOperator<String> {
     public String apply(String input, String alignments) {
         Tree<String> tree;
         try {
-            tree = TreeParser.parse(input.trim());
+            tree = TreeParser.parse(input.trim().replaceAll("\\d", "num"));
         } catch (ParseException ex) {
             Logger.getLogger(GizaTreePreOrderAlignments.class.getName()).log(Level.SEVERE, null, ex);
             return null;

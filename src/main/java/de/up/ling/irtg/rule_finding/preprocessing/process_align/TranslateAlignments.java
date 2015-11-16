@@ -47,8 +47,8 @@ public class TranslateAlignments {
         sb.append(lineTwo);
         sb.append('\n');
         
-        sb.append(this.converterOne.apply(lineTwo, alignments)).append("\n");
-        sb.append(this.converterTwo.apply(lineOne, alignments));
+        sb.append(this.converterOne.apply(lineOne, alignments)).append("\n");
+        sb.append(this.converterTwo.apply(lineTwo, alignments));
         
         return sb.toString();
     }
