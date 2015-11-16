@@ -29,9 +29,8 @@ public class GeoQueryForFastAlign {
         int pos1 = Integer.parseInt(args[2]);
         int pos2 = Integer.parseInt(args[3]);
         
-        ExtractLinesforFastAlign.getQueryFunql(pos1, pos2, in, out);
+        ExtractLinesforFastAlign.getGeoQueryFunql(pos1, pos2, in, out);
         in.close();
         out.close();
     }
-    
 }

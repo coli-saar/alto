@@ -49,7 +49,7 @@ public class ExtractLinesforFastAlignTest {
         InputStream  in = new ByteArrayInputStream(TEST_INPUT.getBytes());
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         
-        ExtractLinesforFastAlign.getQueryFunql(1, 3, in, out);
+        ExtractLinesforFastAlign.getGeoQueryFunql(1, 3, in, out);
         
         in.close();
         out.close();

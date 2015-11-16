@@ -29,10 +29,10 @@ public class ExtractLinesforFastAlign {
      * @param out
      * @throws IOException 
      */
-    public static void getQueryFunql(int sentenceLine, int funqlLine, InputStream in, OutputStream out)
+    public static void getGeoQueryFunql(int sentenceLine, int funqlLine, InputStream in, OutputStream out)
                                                         throws IOException{
         Function<String,String> sent = (String s) -> s;
-        Function<String, String> funql = (String s) -> s.replaceAll("[\\(\\)]", " ");
+        Function<String, String> funql = (String s) -> s.replaceAll("[\\(\\)]", " ").replaceAll(",", "");
 
         getLines(sent, funql, sentenceLine, funqlLine, in, out);
     }
