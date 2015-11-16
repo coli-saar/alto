@@ -16,7 +16,8 @@ import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
-import de.up.ling.irtg.rule_finding.pruning.strings.RightbranchingPuner;
+import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;
+import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import java.io.BufferedWriter;
@@ -33,7 +34,8 @@ public class DumpSmallExample {
    
     public static void main(String... args) throws ParserException, IOException{
                 CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new RightbranchingPuner()).setSecondPruner(new RightbranchingPuner())
+        fact.setFirstPruner(new IntersectionPruner((TreeAutomaton ta) -> new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels())))
+                .setSecondPruner(new IntersectionPruner((TreeAutomaton ta) -> new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels())))
                 .setFirstVariableSource(new JustXEveryWhere())
                 .setSecondVariableSource(new JustXEveryWhere());
         

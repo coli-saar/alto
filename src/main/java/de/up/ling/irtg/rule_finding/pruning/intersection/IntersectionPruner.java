@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.rule_finding.pruning.strings;
+package de.up.ling.irtg.rule_finding.pruning.intersection;
 
+import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
@@ -15,13 +15,27 @@ import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  *
  * @author christoph
  */
-public class RightbranchingPuner implements Pruner<Object,Object> {
+public class IntersectionPruner implements Pruner<Object,Object> {
 
+    /**
+     * 
+     */
+    private final Function<TreeAutomaton,TreeAutomaton> mapToIntersect;
+
+    /**
+     * 
+     * @param mapToIntersect 
+     */
+    public IntersectionPruner(Function<TreeAutomaton, TreeAutomaton> mapToIntersect) {
+        this.mapToIntersect = mapToIntersect;
+    }
+    
     @Override
     public List<AlignedTrees<Object>> prePrune(List<AlignedTrees<Object>> alignmentFree) {
         return alignmentFree;
@@ -35,9 +49,9 @@ public class RightbranchingPuner implements Pruner<Object,Object> {
             AlignedTrees at = variablesPushed.get(i);
             TreeAutomaton base = at.getTrees();
             
-            RightBranchingNormalForm rbnf = new RightBranchingNormalForm(base.getSignature(), base.getAllLabels());
+            TreeAutomaton intersect = this.mapToIntersect.apply(base);
             TreeAutomaton<Pair<? extends Object, ? extends Object>> aut
-                    = new IntersectionAutomaton<>(base,rbnf);
+                    = new IntersectionAutomaton<>(base,intersect);
             
             SpecifiedAligner spal = new SpecifiedAligner(aut);
             IntIterator iit = aut.getAllStates().iterator();

@@ -3,8 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.rule_finding.pruning.strings;
+package de.up.ling.irtg.rule_finding.pruning.intersection;
 
+import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
@@ -14,9 +15,7 @@ import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.Propagator;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import static de.up.ling.irtg.util.TestingTools.pt;
-import de.up.ling.tree.Tree;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -26,7 +25,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph
  */
-public class RightbranchingPunerTest {
+public class IntersectionPrunerTest {
     
     /**
      * 
@@ -36,7 +35,7 @@ public class RightbranchingPunerTest {
     /**
      * 
      */
-    private RightbranchingPuner rbp;
+    private IntersectionPruner rbp;
     
     
     @Before
@@ -48,7 +47,7 @@ public class RightbranchingPunerTest {
         
         at = new AlignedTrees(aut, spal);
         
-        rbp = new RightbranchingPuner();
+        rbp = new IntersectionPruner((TreeAutomaton ta) -> new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels()));
     }
 
     /**
