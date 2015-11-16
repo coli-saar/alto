@@ -91,6 +91,7 @@ public class ExtractStringFunqlGeoqueryTest {
      * 
      * 
      * Test of obtain method, of class ExtractStringFunqlGeoquery.
+     * @throws java.lang.Exception
      */
     @Test
     public void testObtain() throws Exception {
@@ -103,11 +104,6 @@ public class ExtractStringFunqlGeoqueryTest {
         out.close();
         
         String s = new String(out.toByteArray());
-        System.out.println(s);
-        System.out.println("+++++++++++++");
-        System.out.println(SOLUTION);
-        
         assertEquals(s,SOLUTION);
     }
-    
 }
