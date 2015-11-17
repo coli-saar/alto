@@ -32,7 +32,7 @@ public class MakeSplit {
        OutputStream out1 = new FileOutputStream(args[1]);
        OutputStream out2 = new FileOutputStream(args[2]);
        
-        makeSplit(in, out2, out2, args[3]);
+        makeSplit(in, out1, out2, args[3]);
     }
     
     
