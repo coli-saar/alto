@@ -78,4 +78,28 @@ public class MinimalTreeAlgebraTest {
         assertEquals(t, pa(SOLUTION));
     }
     
+    
+    @Test
+    public void testNumbers() throws ParserException {
+        String input = "zz(j(m,l(b,v)),k)";
+        Tree<String> t = this.mta.parseString(input);
+        
+        assertEquals(t.toString(),"zz(j(m,l(b,v)),k)");
+        
+        input = "00zz( 77 8 8 88( 7 ( 7 8 ( 12j(5  , 6l (4, 3v)),  12k  3) )),'hhhh')";
+        t = this.mta.parseString(input);
+        
+        assertEquals(t.toString(),"'00zz'('77 8 8 88'('7'('7 8'('12j'('5','6l'('4','3v')),'12k  3'))),hhhh)");
+            
+        input = "answer(highest(place(loc_2(state(loc_1(place(elevation_2(0))))))))";
+        t = this.mta.parseString(input);
+        
+        assertEquals(t.toString(),"answer(highest(place(loc_2(state(loc_1(place(elevation_2('0'))))))))");
+        
+        input = "answer(size(city(cityid('new york', _))))";
+        t = this.mta.parseString(input);
+        
+        assertEquals(t.toString(),"answer(size(city(cityid('new york',_))))");
+    }
+    
 }

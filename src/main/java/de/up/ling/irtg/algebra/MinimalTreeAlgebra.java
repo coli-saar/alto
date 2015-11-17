@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -30,8 +31,20 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
      */
     public final static String RIGHT_INTO_LEFT = "__RIGHT__INTO__LEFT__";
     
-    
+    /**
+     * 
+     */
     public final static String LEFT_INTO_RIGHT  = "__LEFT__INTO__RIGHT__";
+    
+    /**
+     * 
+     */
+    public static Pattern ALL_QUOTE = Pattern.compile("([^\\(\\),\'\\s][^\\(\\),\']*[^\\(\\),\'\\s])|([^\\(\\),\'\\s])");
+    
+    /**
+     * 
+     */
+    public static Pattern NO_DOUBLE_QUOTE = Pattern.compile("'+");
     
     /**
      * 
@@ -83,6 +96,9 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
         try {
+            representation = ALL_QUOTE.matcher(representation).replaceAll("'$0'");
+            representation = NO_DOUBLE_QUOTE.matcher(representation).replaceAll("'");
+            
             Tree<String> t = TreeParser.parse(representation);
             addSymbols(t);
             return t;
