@@ -52,6 +52,4 @@ public class TranslateAlignments {
         
         return sb.toString();
     }
-    
-    
 }

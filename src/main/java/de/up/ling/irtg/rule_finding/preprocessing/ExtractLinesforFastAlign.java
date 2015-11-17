@@ -5,6 +5,9 @@
  */
 package de.up.ling.irtg.rule_finding.preprocessing;
 
+import de.up.ling.tree.ParseException;
+import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeParser;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -14,6 +17,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -32,9 +37,19 @@ public class ExtractLinesforFastAlign {
     public static void getGeoQueryFunql(int sentenceLine, int funqlLine, InputStream in, OutputStream out)
                                                         throws IOException{
         Function<String,String> sent = (String s) -> s;
-        Function<String, String> funql = (String s) -> s.replaceAll("[\\(\\)]", " ").replaceAll(",", "");
+        Function<String, String> funql = (String s) ->  {
+            try {
+                Tree<String> t = TreeParser.parse(s);
+                t = t.map((String q) -> q.replaceAll("\\s+", "__WHITESPACE__"));
+                s = t.toString();
+            } catch (ParseException ex) {
+                Logger.getLogger(ExtractLinesforFastAlign.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            return s.replaceAll("[\\(\\)]+", " ").replaceAll(",+", "");
+        };
 
-        getLines(sent, funql, sentenceLine, funqlLine, in, out);
+        getLines(funql, sent, funqlLine, sentenceLine, in, out);
     }
 
     /**

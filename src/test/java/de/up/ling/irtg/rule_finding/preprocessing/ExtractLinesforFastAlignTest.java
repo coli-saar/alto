@@ -29,7 +29,12 @@ public class ExtractLinesforFastAlignTest {
                         "Which states lie on the largest river in the United States ?\n" +
                         "answer(A,(state(A),traverse(B,A),longest(B,(river(B),loc(B,C),const(C,countryid(usa))))))\n" +
                         "answer(state(traverse_1(longest(river(loc_2(countryid('usa')))))))\n" +
-                        "\n" +
+                        "\n"+
+                        "22\n"+
+                        "How big is the city of New York ?\n" +
+                        "answer(A,(size(B,A),const(B,cityid('new york',_))))\n" +
+                        "answer(size(city(cityid('new york', _))))\n" +
+                        "\n"+
                         "879\n" +
                         "Which US city has the highest population density ?\n" +
                         "answer(A,largest(B,(city(A),density(A,B))))\n" +
@@ -37,9 +42,10 @@ public class ExtractLinesforFastAlignTest {
                         "\n\n";
 
     
-    private final static String GOAL =  "Which states have points that are higher than the highest point in Texas ? ||| answer state loc_1 place higher_2 highest place loc_2 stateid 'texas'\n" +
-                                        "Which states lie on the largest river in the United States ? ||| answer state traverse_1 longest river loc_2 countryid 'usa'\n" +
-                                        "Which US city has the highest population density ? ||| answer largest_one density_1 city all";
+    private final static String GOAL =  "answer state loc_1 place higher_2 highest place loc_2 stateid texas ||| Which states have points that are higher than the highest point in Texas ?\n" +
+                                        "answer state traverse_1 longest river loc_2 countryid usa ||| Which states lie on the largest river in the United States ?\n" +
+                                        "answer size city cityid new__WHITESPACE__york_ ||| How big is the city of New York ?\n" +
+                                        "answer largest_one density_1 city all ||| Which US city has the highest population density ?";
     
     /**
      * Test of getQueryFunql method, of class ExtractLinesforFastAlign.
@@ -55,6 +61,7 @@ public class ExtractLinesforFastAlignTest {
         out.close();
         
         String s = new String(out.toByteArray());
+        System.out.println(s);
         assertEquals(s,GOAL);
     }
 }
