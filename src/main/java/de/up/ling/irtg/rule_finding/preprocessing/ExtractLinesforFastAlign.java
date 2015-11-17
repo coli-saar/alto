@@ -39,17 +39,17 @@ public class ExtractLinesforFastAlign {
         Function<String,String> sent = (String s) -> s;
         Function<String, String> funql = (String s) ->  {
             try {
-                Tree<String> t = TreeParser.parse(s);
+                Tree<String> t = TreeParser.parse(s.replaceAll("\\d+", "__NUMBER__"));
                 t = t.map((String q) -> q.replaceAll("\\s+", "__WHITESPACE__"));
                 s = t.toString();
             } catch (ParseException ex) {
                 Logger.getLogger(ExtractLinesforFastAlign.class.getName()).log(Level.SEVERE, null, ex);
             }
             
-            return s.replaceAll("[\\(\\)]+", " ").replaceAll(",+", "");
+            return s.replaceAll("[\\(\\)]+", " ").replaceAll(",+", " ").replaceAll("\\s+"," ");
         };
 
-        getLines(funql, sent, funqlLine, sentenceLine, in, out);
+        getLines(sent, funql, sentenceLine, funqlLine, in, out);
     }
 
     /**

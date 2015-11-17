@@ -59,7 +59,7 @@ public class GizaTreePreOrderAlignments implements BinaryOperator<String> {
             String p = parts[i].split("-")[useLeft ? 0 : 1];
             int pos = Integer.parseInt(p.trim());
             
-            sb.append(addresses.get(pos)).append(':').append(Integer.toString(i));
+            sb.append(addresses.get(pos)).append(':').append(Integer.toString(i+1));
         }
         
         return sb.toString();

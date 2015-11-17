@@ -41,7 +41,7 @@ public class GizaTreePreOrderAlignmentsTest {
         String align = "0-0 1-1 1-2 2-3 3-4 4-5 10-6 7-7 9-8 9-9";
         
         String result = this.gtp.apply(line, align);
-        assertEquals(result,"0-0-0:0 0-0-0-0:1 0-0-0-0-0:2 0-0-0-0-0-0:3 0-0-0-0-0-0-0:4 0-0-0-0-0-0-0-0:5 0-0-0-0-0-0-0-1:6 0-0-0-0-0-1:7 0-0-0-0-0-1-0:8 0-0-0-0-0-1-0-0:9");
+        assertEquals(result,"0-0-0:1 0-0-0-0:2 0-0-0-0-0:3 0-0-0-0-0-0:4 0-0-0-0-0-0-0:5 0-0-0-0-0-0-0-0:6 0-0-0-0-0-0-0-1:7 0-0-0-0-0-1:8 0-0-0-0-0-1-0:9 0-0-0-0-0-1-0-0:10");
 
         MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
         TreeAutomaton ta = mta.decompose(mta.parseString("answer(population_1(cityid('austin', 'tx')))"));
@@ -56,11 +56,11 @@ public class GizaTreePreOrderAlignmentsTest {
             }else{
                 switch(ta.getSignature().resolveSymbolId(r.getLabel())){
                     case "austin":
-                        assertTrue(ins.contains(3));
+                        assertTrue(ins.contains(4));
                         assertEquals(ins.size(),1);
                         break;
                     case "tx":
-                        assertTrue(ins.contains(4));
+                        assertTrue(ins.contains(5));
                         assertEquals(ins.size(),1);
                         break;
                 }
