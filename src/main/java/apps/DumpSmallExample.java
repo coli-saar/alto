@@ -11,15 +11,11 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
-import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
-import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
-import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,7 +27,12 @@ import java.util.List;
  * @author christoph_teichmann
  */
 public class DumpSmallExample {
-   
+    /**
+     * 
+     * @param args
+     * @throws ParserException
+     * @throws IOException 
+     */
     public static void main(String... args) throws ParserException, IOException{
                 CorpusCreator.Factory fact = new CorpusCreator.Factory();
         fact.setFirstPruner(new IntersectionPruner((TreeAutomaton ta) -> new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels())))
@@ -61,9 +62,7 @@ public class DumpSmallExample {
         secondAlign.add("0:1:1 1:2:2 2:3:3 3:4:4 4:5:5 4:5:6");
         
         List<TreeAutomaton> result = cc.makeRuleTrees(firstInputs, secondInputs, firstAlign, secondAlign);
-        
-        
-        
+                
         Interpretation i1 = new Interpretation(new TreeAlgebra(), cc.getHomomorphismManager().getHomomorphism1());
         Interpretation i2 = new Interpretation(new TreeAlgebra(), cc.getHomomorphismManager().getHomomorphism2());
         

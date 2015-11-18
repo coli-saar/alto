@@ -5,101 +5,103 @@
  */
 package de.up.ling.irtg.rule_finding;
 
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
-import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
+import de.up.ling.irtg.algebra.TreeAlgebra;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
-import de.up.ling.irtg.align.find_rules.SampledEM;
-import de.up.ling.tree.Tree;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  *
  * @author christoph_teichmann
  */
 public class ExtractStringToTreeGrammar {
+       
     /**
      * 
-     * @param args 
-     * @throws java.io.IOException 
-     * @throws de.up.ling.irtg.algebra.ParserException 
-     * @throws java.util.concurrent.ExecutionException 
-     * @throws java.lang.InterruptedException 
      */
-    public static void main(String... args) throws IOException, ParserException, ExecutionException, InterruptedException {
-        /**
-        StringAlgebra str = new StringAlgebra();
-        MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
-        ArrayList<CreateCorpus.InputPackage> stringInputs = new ArrayList<>();
-        ArrayList<CreateCorpus.InputPackage> treeInput = new ArrayList<>();
+    private final CorpusCreator cc;
+
+    /**
+     * 
+     * @param cc 
+     */
+    public ExtractStringToTreeGrammar(CorpusCreator cc) {
+        this.cc = cc;
+    }
+    
+    /**
+     * 
+     * @param in
+     * @param outs
+     * @return 
+     * @throws java.io.IOException
+     * @throws de.up.ling.irtg.algebra.ParserException
+     */
+    public double getAutomataAndMakeStatistics(InputStream in, Supplier<OutputStream> outs) 
+                                                throws IOException, ParserException {
+        ArrayList<String> firstInputs = new ArrayList<>();
+        ArrayList<String> secondInputs = new ArrayList<>();
         
-        CreateCorpus<List<String>,Tree<String>> cc = new CreateCorpus<>(str,mta);
+        ArrayList<String> firstAlignments = new ArrayList<>();
+        ArrayList<String> secondAlignments = new ArrayList<>();
         
-        Propagator propDef = new Propagator();
-        
-        Propagator propLarge = new Propagator(new StringLeftOrRight());
-        Propagator propSmall = new Propagator();
-        
-        //TODO
-        SampledEM sem = new SampledEM(2, 1.0, 1.0, 10, 1.0);
-        
-        Function<List<String>,Propagator> funct = (List<String> in) -> {
-            //TODO
-            //if(in.size() > 15){
-            //    return propLarge;
-            //}
+        try(BufferedReader input = new BufferedReader(new InputStreamReader(in))) {
+            String line;
             
-            return propLarge;
-        };
-        SpanAligner.Factory spanFactory = new SpanAligner.Factory();
-        
-        BufferedReader br = new BufferedReader(new FileReader(args[0]));
-        String line;
-        while((line = br.readLine()) != null){
-            line = line.trim();
-            if(line.equals("")){
-                continue;
+            while((line = input.readLine()) != null){
+                line = line.trim();
+                if(line.equals("")){
+                    firstInputs.add(line);
+                }
+                
+                secondInputs.add(input.readLine().trim());
+                
+                firstAlignments.add(input.readLine().trim());
+                secondAlignments.add(input.readLine().trim());
             }
-            
-            stringInputs.add(new CreateCorpus.InputPackage(line, "", funct, spanFactory));     
         }
-        br.close();
-        
-        Function<Tree<String>,Propagator> f = (Tree<String> in) -> {
-            return propDef;
-        };
-        AddressAligner.Factory addFactory = new AddressAligner.Factory();
-        
-        br = new BufferedReader(new FileReader(args[1]));
-        while((line = br.readLine()) != null){
-            line = line.trim();
-            if(line.equals("")){
-                continue;
+
+        List<TreeAutomaton> results
+                = cc.makeRuleTrees(firstInputs, secondInputs, firstAlignments, secondAlignments);
+
+        double sumOfSizes = 0;
+        double length = results.size();
+
+        for (TreeAutomaton ta : results) {
+            InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(ta);
+
+            sumOfSizes += ta.language().size();
+            
+            TreeAlgebra algebra1 = new TreeAlgebra();
+            TreeAlgebra algebra2 = new TreeAlgebra();
+
+            Homomorphism hm1 = cc.getHomomorphismManager().getHomomorphism1();
+            Homomorphism hm2 = cc.getHomomorphismManager().getHomomorphism2();
+
+            Interpretation inpre1 = new Interpretation(algebra1, hm1);
+            Interpretation inpre2 = new Interpretation(algebra2, hm2);
+
+            ita.addInterpretation("FirstInput", inpre1);
+            ita.addInterpretation("SecondInput", inpre2);
+
+            try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outs.get()))) {
+                out.write(ita.toString());
             }
-            
-            treeInput.add(new CreateCorpus.InputPackage(line, "", f, addFactory));
         }
-        br.close();
         
-        List<TreeAutomaton> data = cc.makeDataSet(stringInputs, treeInput);
-        
-        List<SampledEM.LearningInstance> insts = sem.makeInstances(2, 500, cc, data, 0.01, 29919799895L, 5);
-        InterpretedTreeAutomaton ita = sem.makeGrammar(cc, 20, insts);
-        
-        BufferedWriter bw = new BufferedWriter(new FileWriter(args[2]));
-        bw.write(ita.toString());
-        bw.close();
-        */
+        return sumOfSizes / length;
     }
 }
