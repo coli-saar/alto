@@ -27,7 +27,7 @@ import java.util.function.Supplier;
  *
  * @author christoph_teichmann
  */
-public class ExtractStringToTreeGrammar {
+public class ExtractTrees {
        
     /**
      * 
@@ -38,7 +38,7 @@ public class ExtractStringToTreeGrammar {
      * 
      * @param cc 
      */
-    public ExtractStringToTreeGrammar(CorpusCreator cc) {
+    public ExtractTrees(CorpusCreator cc) {
         this.cc = cc;
     }
     
@@ -50,7 +50,7 @@ public class ExtractStringToTreeGrammar {
      * @throws java.io.IOException
      * @throws de.up.ling.irtg.algebra.ParserException
      */
-    public double getAutomataAndMakeStatistics(InputStream in, Supplier<OutputStream> outs) 
+    public double[] getAutomataAndMakeStatistics(InputStream in, Supplier<OutputStream> outs) 
                                                 throws IOException, ParserException {
         ArrayList<String> firstInputs = new ArrayList<>();
         ArrayList<String> secondInputs = new ArrayList<>();
@@ -63,27 +63,32 @@ public class ExtractStringToTreeGrammar {
             
             while((line = input.readLine()) != null){
                 line = line.trim();
-                if(line.equals("")){
+                if(!line.equals("")){
                     firstInputs.add(line);
+                    secondInputs.add(input.readLine().trim());
+                
+                    firstAlignments.add(input.readLine().trim());
+                    secondAlignments.add(input.readLine().trim());
                 }
-                
-                secondInputs.add(input.readLine().trim());
-                
-                firstAlignments.add(input.readLine().trim());
-                secondAlignments.add(input.readLine().trim());
             }
         }
-
+        
         List<TreeAutomaton> results
                 = cc.makeRuleTrees(firstInputs, secondInputs, firstAlignments, secondAlignments);
 
         double sumOfSizes = 0;
         double length = results.size();
-
+        double min = Double.POSITIVE_INFINITY;
+        double max = Double.NEGATIVE_INFINITY;
+        
+        
         for (TreeAutomaton ta : results) {
             InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(ta);
 
-            sumOfSizes += ta.language().size();
+            double size = (ta.countTrees());
+            sumOfSizes += size;
+            min = Math.min(min, size);
+            max = Math.max(size, max);
             
             TreeAlgebra algebra1 = new TreeAlgebra();
             TreeAlgebra algebra2 = new TreeAlgebra();
@@ -102,6 +107,6 @@ public class ExtractStringToTreeGrammar {
             }
         }
         
-        return sumOfSizes / length;
+        return new double[] {sumOfSizes / length, min, max};
     }
 }

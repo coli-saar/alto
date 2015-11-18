@@ -148,6 +148,8 @@ public class CorpusCreator<InputType1,InputType2> {
             done = RemoveDead.reduce(done);
             done = hm.reduceToOriginalVariablePairs(done);
             result.add(done);
+            
+            System.out.println("computed joint trees for pair number: "+(i+1));
         }
         
         return result;
