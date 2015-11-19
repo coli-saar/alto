@@ -42,10 +42,10 @@ public class ExtractLinesforFastAlignTest {
                         "\n\n";
 
     
-    private final static String GOAL =  "answer state loc_1 place higher_2 highest place loc_2 stateid texas ||| Which states have points that are higher than the highest point in Texas ?\n" +
-                                        "answer state traverse_1 longest river loc_2 countryid usa ||| Which states lie on the largest river in the United States ?\n" +
-                                        "answer size city cityid new__WHITESPACE__york_ ||| How big is the city of New York ?\n" +
-                                        "answer largest_one density_1 city all ||| Which US city has the highest population density ?";
+    private final static String GOAL =  "Which states have points that are higher than the highest point in Texas ? ||| answer state loc___NUMBER__ place higher___NUMBER__ highest place loc___NUMBER__ stateid texas\n" +
+                                        "Which states lie on the largest river in the United States ? ||| answer state traverse___NUMBER__ longest river loc___NUMBER__ countryid usa\n" +
+                                        "How big is the city of New York ? ||| answer size city cityid new__WHITESPACE__york _\n" +
+                                        "Which US city has the highest population density ? ||| answer largest_one density___NUMBER__ city all";
     
     /**
      * Test of getQueryFunql method, of class ExtractLinesforFastAlign.
@@ -61,7 +61,6 @@ public class ExtractLinesforFastAlignTest {
         out.close();
         
         String s = new String(out.toByteArray());
-        System.out.println(s);
         assertEquals(s,GOAL);
     }
 }

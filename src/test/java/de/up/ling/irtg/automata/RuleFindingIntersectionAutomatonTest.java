@@ -13,9 +13,12 @@ import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.rule_finding.create_automaton.Propagator;
 import de.up.ling.irtg.rule_finding.RuleFinder;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
+import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,13 +54,37 @@ public class RuleFindingIntersectionAutomatonTest {
         SpanAligner spa2 = new SpanAligner("0:1:3 1:2:4 2:3:1 3:4:2", t2);
         
         Propagator prop = new Propagator();
+        JustXEveryWhere jxw = new JustXEveryWhere();
         
-        //t1 = prop.convert(t1, spa1);
-        //t2 = prop.convert(t2, spa2);
+        Iterable<AlignedTrees> it = () -> {
+            return new Iterator<AlignedTrees>() {
+                private int pos = 0;
+                
+                @Override
+                public boolean hasNext() {
+                    return pos < 2;
+                }
+
+                @Override
+                public AlignedTrees next() {
+                    int num = pos;
+                    ++pos;
+                    if(num == 0){
+                        return new AlignedTrees<>(t1,spa1);
+                    }else{
+                        return new AlignedTrees<>(t2,spa2);
+                    }
+                }
+            };
+        };
         
-        hm.update(t1.getAllLabels(), t2.getAllLabels());
+        Iterator<AlignedTrees> its = it.iterator();
+        TreeAutomaton q1 = prop.convert(jxw.apply(its.next())).getTrees();
+        TreeAutomaton q2 = prop.convert(jxw.apply(its.next())).getTrees();
         
-        this.rfi = new RuleFindingIntersectionAutomaton(t1, t2, hm.getHomomorphism1(), hm.getHomomorphism2());
+        hm.update(q1.getAllLabels(), q2.getAllLabels());
+        
+        this.rfi = new RuleFindingIntersectionAutomaton(q1, q2, hm.getHomomorphism1(), hm.getHomomorphism2());
     }
 
     /**
@@ -104,21 +131,23 @@ public class RuleFindingIntersectionAutomatonTest {
         
         expected.add(new Pair<>(pt("*(a1,a2)"),pt("*(*(*(a1,a2),a3),a4)")));
         expected.add(new Pair<>(pt("*(a1,a2)"),pt("*(a1,*(*(a2,a3),a4))")));
-        expected.add(new Pair<>(pt("*('XX_{1, 2}'(a1),a2)"),pt("*(*(a1,a2),'XX_{1, 2}'(*(a3,a4)))")));
+        expected.add(new Pair<>(pt("*('X{1, 2}_X'(a1),a2)"),pt("*(*(a1,a2),'X{1, 2}_X'(*(a3,a4)))")));
         expected.add(new Pair<>(pt("*(a1,a2)"),pt("*(a1,*(a2,*(a3,a4)))")));
-        expected.add(new Pair<>(pt("*('XX_{1, 2}'(a1),'XX_{3, 4}'(a2))"),pt("*('XX_{3, 4}'(*(a1,a2)),'XX_{1, 2}'(*(a3,a4)))")));
+        expected.add(new Pair<>(pt("*('X{1, 2}_X'(a1),'X{3, 4}_X'(a2))"),pt("*('X{3, 4}_X'(*(a1,a2)),'X{1, 2}_X'(*(a3,a4)))")));
         expected.add(new Pair<>(pt("*(a1,a2)"),pt("*(*(a1,a2),*(a3,a4))")));
-        expected.add(new Pair<>(pt("*(a1,'XX_{3, 4}'(a2))"),pt("*('XX_{3, 4}'(*(a1,a2)),*(a3,a4))")));
+        expected.add(new Pair<>(pt("*(a1,'X{3, 4}_X'(a2))"),pt("*('X{3, 4}_X'(*(a1,a2)),*(a3,a4))")));
         expected.add(new Pair<>(pt("*(a1,a2)"),pt("*(*(a1,*(a2,a3)),a4)")));
-        expected.add(new Pair<>(pt("*(a1,'XX_{3, 4}'(a2))"),pt("*(*('XX_{3, 4}'(*(a1,a2)),a3),a4)")));
-        expected.add(new Pair<>(pt("*('XX_{1, 2}'(a1),a2)"),pt("*(a1,*(a2,'XX_{1, 2}'(*(a3,a4))))")));
+        expected.add(new Pair<>(pt("*(a1,'X{3, 4}_X'(a2))"),pt("*(*('X{3, 4}_X'(*(a1,a2)),a3),a4)")));
+        expected.add(new Pair<>(pt("*('X{1, 2}_X'(a1),a2)"),pt("*(a1,*(a2,'X{1, 2}_X'(*(a3,a4))))")));
         
         
         for(Tree<String> t : tdi.language()){
             assertTrue(hm.getRestriction().accepts(t));
             
             Pair<Tree<String>,Tree<String>> p = new Pair<>(hm.getHomomorphism1().apply(t),hm.getHomomorphism2().apply(t));
+            
             assertTrue(expected.contains(p));
+            expected.remove(p);
         }
         
         assertEquals(tdi.language().size(),10);

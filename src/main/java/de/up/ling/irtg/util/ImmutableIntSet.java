@@ -8,13 +8,19 @@ package de.up.ling.irtg.util;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
  *
  * @author christoph_teichmann
  */
-public class ImmutableIntSet implements IntSet {
+public class ImmutableIntSet implements IntSet, Serializable {
+    
+    /**
+     * 
+     */
+    public static long serialVersionUID = 1L;
     
     /**
      * 
