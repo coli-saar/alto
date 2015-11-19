@@ -12,16 +12,15 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
+import de.up.ling.irtg.util.FunctionIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Function;
 
 /**
  *
  * @author christoph
  */
-public class IntersectionPruner implements Pruner<Object,Object> {
+public class IntersectionPruner<X,Y> implements Pruner<X,Y,X,Pair<X,? extends Object>> {
 
     /**
      * 
@@ -35,34 +34,30 @@ public class IntersectionPruner implements Pruner<Object,Object> {
     public IntersectionPruner(Function<TreeAutomaton, TreeAutomaton> mapToIntersect) {
         this.mapToIntersect = mapToIntersect;
     }
-    
+
     @Override
-    public List<AlignedTrees<Object>> prePrune(List<AlignedTrees<Object>> alignmentFree) {
+    public Iterable<AlignedTrees<X>> prePrune(Iterable<AlignedTrees<X>> alignmentFree) {
         return alignmentFree;
     }
 
     @Override
-    public List<AlignedTrees<Object>> postPrune(List<AlignedTrees<Object>> variablesPushed, List<AlignedTrees<Object>> otherSide) {
-        List<AlignedTrees<Object>> result = new ArrayList<>();
-        
-        for(int i=0;i<variablesPushed.size();++i){
-            AlignedTrees at = variablesPushed.get(i);
+    public Iterable<AlignedTrees<Pair<X, ? extends Object>>> postPrune(Iterable<AlignedTrees<X>> variablesPushed, Iterable<AlignedTrees<Y>> otherSide) {
+        return new FunctionIterable<>(variablesPushed, (AlignedTrees<X> at) -> {
             TreeAutomaton base = at.getTrees();
             
-            TreeAutomaton intersect = this.mapToIntersect.apply(base);
-            TreeAutomaton<Pair<? extends Object, ? extends Object>> aut
+            TreeAutomaton intersect = mapToIntersect.apply(base);
+            TreeAutomaton<Pair<X, ? extends Object>> aut
                     = new IntersectionAutomaton<>(base,intersect);
             
             SpecifiedAligner spal = new SpecifiedAligner(aut);
             IntIterator iit = aut.getAllStates().iterator();
             while(iit.hasNext()){
-                Pair<Object,RightBranchingNormalForm.State> state = (Pair<Object,RightBranchingNormalForm.State>) aut.getStateForId(iit.nextInt());
+                Pair<X,? extends Object> state = aut.getStateForId(iit.nextInt());
                 
                 spal.put(state, at.getAlignments().getAlignmentMarkers(state.getLeft()));
             }
             
-            result.add(new AlignedTrees<>(aut,spal));
-        }
-        return result;
+            return new AlignedTrees<>(aut,spal);
+        });
     }
 }

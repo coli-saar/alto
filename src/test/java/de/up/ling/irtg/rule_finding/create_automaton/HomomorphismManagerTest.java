@@ -94,10 +94,10 @@ public class HomomorphismManagerTest {
         secondAlign.add("0:1:1 1:2:2 2:3:5");
         secondAlign.add("0:1:4 1:2:5 2:3:6 2:3:7");
         
-        List<AlignedTrees> list1  = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, cc.getFirtAL());
+        List<AlignedTrees> list1  = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, cc.getFirtAlignmentFactory());
         pruned1 = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
         
-        list1 = CorpusCreator.makeInitialAlignedTrees(2, secondInputs, secondAlign, mta, cc.getSecondAL());
+        list1 = CorpusCreator.makeInitialAlignedTrees(2, secondInputs, secondAlign, mta, cc.getSecondAlignmentFactory());
         pruned2 = CorpusCreator.makeFirstPruning(list1, cc.getSecondPruner(), cc.getSecondVI());
 
         this.sig1 = sal.getSignature();

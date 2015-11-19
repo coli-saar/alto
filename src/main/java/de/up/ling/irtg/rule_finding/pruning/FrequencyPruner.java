@@ -12,17 +12,19 @@ import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
 import de.up.ling.irtg.semiring.Semiring;
+import de.up.ling.irtg.util.FunctionIterable;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.function.Function;
 
 
-public class FrequencyPruner<State1, State2> implements Pruner<State1, State2> {
+public class FrequencyPruner<State1, State2> implements Pruner<State1, State2, State1, State1> {
     /**
      * 
      */
@@ -43,37 +45,21 @@ public class FrequencyPruner<State1, State2> implements Pruner<State1, State2> {
         this.maxTransitions = maxTransitions;
     }
     
-    @Override
-    public List<AlignedTrees<State1>> prePrune(List<AlignedTrees<State1>> alignmentFree) {
-        if(when == Mode.POST){
-            return alignmentFree;
-        }
-        
-        Object2DoubleMap<String> counts = this.getVariableCounts(alignmentFree, null);
-        return reduce(alignmentFree,counts);
-    }
-
-    @Override
-    public List<AlignedTrees<State1>> postPrune(List<AlignedTrees<State1>> toPrune, List<AlignedTrees<State2>> otherSide) {
-        if(when == Mode.PRE){
-            return toPrune;
-        }
-        Object2DoubleMap<String> counts = this.getVariableCounts(toPrune, otherSide);
-        return reduce(toPrune, counts);
-    }
-    
     /**
      * 
      * @param toPrune
      * @param otherSide
      * @return 
      */
-    public  Object2DoubleMap<String> getVariableCounts(List<AlignedTrees<State1>> toPrune, List<AlignedTrees<State2>> otherSide){
+    public  Object2DoubleMap<String> getVariableCounts(Iterable<AlignedTrees<State1>> toPrune, Iterable<AlignedTrees<State2>> otherSide){
         Object2DoubleOpenHashMap<String> counts = new Object2DoubleOpenHashMap<>();
         
-        for(int i=0;i<toPrune.size();++i){
-            AlignedTrees<State1> tP = toPrune.get(i);
-            StateAlignmentMarking<State2> there = otherSide == null ? null : otherSide.get(i).getAlignments();
+        Iterator<AlignedTrees<State1>> input = toPrune.iterator();
+        Iterator<AlignedTrees<State2>> control = otherSide == null ? null : otherSide.iterator();
+        
+        while(input.hasNext() && (control == null || control.hasNext())){
+            AlignedTrees<State1> tP = input.next();
+            StateAlignmentMarking<State2> there = (control == null ? null : control.next().getAlignments());
             TreeAutomaton<State1> trees = tP.getTrees();
             StateAlignmentMarking<State1> here = tP.getAlignments();
             
@@ -98,13 +84,11 @@ public class FrequencyPruner<State1, State2> implements Pruner<State1, State2> {
 
     /**
      * 
-     * @param alignmentFree
+     * @param org
      * @param counts
      * @return 
      */
-    private List<AlignedTrees<State1>> reduce(List<AlignedTrees<State1>> alignmentFree, Object2DoubleMap<String> counts) {
-        List<AlignedTrees<State1>> result = new ArrayList<>();
-        
+    private AlignedTrees<State1> reduce(AlignedTrees<State1> org, Object2DoubleMap<String> counts) {
         Object2DoubleMap<Rule> weights = new Object2DoubleOpenHashMap<>();
         List<Rule> iter = new ArrayList<>();
         PriorityQueue<Rule> queue = new PriorityQueue<>((Rule r1, Rule r2) -> {
@@ -114,52 +98,45 @@ public class FrequencyPruner<State1, State2> implements Pruner<State1, State2> {
             return Double.compare(d1, d2);
         });
         
-        for(int i=0;i<alignmentFree.size();++i){
-            AlignedTrees<State1> org = alignmentFree.get(i);
-            TreeAutomaton<State1> oTa = org.getTrees();
+        TreeAutomaton<State1> oTa = org.getTrees();
             
-            RuleEvaluator<Double> re = (Rule r) -> {
-              String label = oTa.getSignature().resolveSymbolId(r.getLabel());
-              double count = counts.get(label);
-              
-              return Math.log(count);
-            };
+        RuleEvaluator<Double> re = (Rule r) -> {
+            String label = oTa.getSignature().resolveSymbolId(r.getLabel());
+            return counts.get(label);
+        };
             
-            Map<Integer,Double> inside = oTa.evaluateInSemiring(maxAdd, re);
+        Map<Integer,Double> inside = oTa.evaluateInSemiring(maxAdd, re);
             
-            Function<Iterable<Rule>,Iterable<Rule>> selector = (Iterable<Rule> rules) -> {
-                iter.clear();
-                weights.clear();
-                queue.clear();
+        Function<Iterable<Rule>,Iterable<Rule>> selector = (Iterable<Rule> rules) -> {
+            iter.clear();
+            weights.clear();
+            queue.clear();
                 
-                for(Rule rule : rules){
-                    String label = oTa.getSignature().resolveSymbolId(rule.getLabel());
-                    if(Variables.IS_VARIABLE.test(label)){
-                        iter.add(rule);
-                    }
+            for(Rule rule : rules){
+                String label = oTa.getSignature().resolveSymbolId(rule.getLabel());
+                if(Variables.IS_VARIABLE.test(label)){
+                      iter.add(rule);
+                }
                     
-                    double sum = 0.0;
-                    for(int child : rule.getChildren()){
-                        sum += inside.get(child);
-                    }
-                    weights.put(rule, sum);
-                    queue.add(rule);
-                    if(queue.size() > maxTransitions){
-                        queue.poll();
-                    }
+                double sum = 0.0;
+                for(int child : rule.getChildren()){
+                    sum += inside.get(child);
                 }
-                
-                while(!queue.isEmpty()){
-                    iter.add(queue.poll());
+                weights.put(rule, sum);
+                queue.add(rule);
+                if(queue.size() > maxTransitions){
+                    queue.poll();
                 }
+            }
                 
-                return iter;
-            };
-            
-            result.add(SelectRules.select(org, selector));
-        }
+            while(!queue.isEmpty()){
+                iter.add(queue.poll());
+            }
+                
+            return iter;
+        };
         
-        return result;
+        return SelectRules.select(org, selector);
     }
     
     /**
@@ -182,6 +159,30 @@ public class FrequencyPruner<State1, State2> implements Pruner<State1, State2> {
             return Double.NEGATIVE_INFINITY;
         }
     };
+
+    @Override
+    public Iterable<AlignedTrees<State1>> prePrune(Iterable<AlignedTrees<State1>> alignmentFree) {
+        if(when == Mode.POST){
+            return alignmentFree;
+        }
+        
+        final Object2DoubleMap<String> counts = this.getVariableCounts(alignmentFree, null);
+        return new FunctionIterable<>(alignmentFree,(AlignedTrees<State1> at) -> {
+            return reduce(at, counts);
+        });
+    }
+
+    @Override
+    public Iterable<AlignedTrees<State1>> postPrune(Iterable<AlignedTrees<State1>> variablesPushed, Iterable<AlignedTrees<State2>> otherSide) {
+        if(this.when == Mode.PRE){
+            return variablesPushed;
+        }
+        
+        final Object2DoubleMap<String> counts = this.getVariableCounts(variablesPushed, otherSide);
+        return new FunctionIterable<>(variablesPushed,(AlignedTrees<State1> at) -> {
+            return reduce(at, counts);
+        });
+    }
     
     /**
      * 

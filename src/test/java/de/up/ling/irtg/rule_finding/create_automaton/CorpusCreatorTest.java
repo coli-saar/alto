@@ -100,7 +100,7 @@ public class CorpusCreatorTest {
 
     @Test
     public void testMakeFirstPruning() throws ParserException, Exception {
-        List<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, this.cc.getFirtAL());
+        List<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, this.cc.getFirtAlignmentFactory());
         List<AlignedTrees> pruned = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
 
         assertTrue(pruned.get(0).getAlignments() instanceof SpecifiedAligner);
@@ -123,7 +123,7 @@ public class CorpusCreatorTest {
 
     @Test
     public void testMakeInitialAlignedTrees() throws ParserException, Exception {
-        List<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, this.cc.getFirtAL());
+        List<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, this.cc.getFirtAlignmentFactory());
         assertEquals(list1.size(), 2);
 
         Set<Tree<String>> lang1 = list1.get(0).getTrees().language();
@@ -139,7 +139,7 @@ public class CorpusCreatorTest {
         assertEquals(list1.get(0).getAlignments().toString(), "SpanAligner{alignments={1-2=>{2}, 0-1=>{1}, 2-3=>{3}}}");
         assertEquals(list1.get(1).getAlignments().toString(), "SpanAligner{alignments={1-2=>{2}, 0-1=>{1}, 2-3=>{3}}}");
 
-        List<AlignedTrees> list2 = CorpusCreator.makeInitialAlignedTrees(1, secondInputs, secondAlign, mta, this.cc.getSecondAL());
+        List<AlignedTrees> list2 = CorpusCreator.makeInitialAlignedTrees(1, secondInputs, secondAlign, mta, this.cc.getSecondAlignmentFactory());
         assertEquals(list2.size(), 1);
         assertEquals(list2.get(0).getTrees().language().size(), 64);
         assertEquals(list2.get(0).getAlignments().toString(), "AddressAligner{map={0-0-0-1-1-0=>{3}, 0-0-0-1-0=>{2}, 0-0-0-0-0=>{1}}}");

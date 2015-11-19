@@ -11,6 +11,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
+import de.up.ling.irtg.util.FunctionIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -22,26 +23,7 @@ import java.util.List;
  * @param <X>
  * @param <Y>
  */
-public class PruneOneSideTerminating<X,Y> implements Pruner<X,Y> {    
-
-    @Override
-    public List<AlignedTrees<X>> prePrune(List<AlignedTrees<X>> alignmentFree) {
-        List<AlignedTrees<X>> result = new ArrayList<>();
-        
-        for(int i=0;i<alignmentFree.size();++i){
-            AlignedTrees<X> at = alignmentFree.get(i);
-            at = transfer(at);
-            result.add(at);
-        }
-        
-        return result;
-    }
-
-    @Override
-    public List<AlignedTrees<X>> postPrune(List<AlignedTrees<X>> toPrune, List<AlignedTrees<Y>> otherSide) {
-        return toPrune;
-    }
-
+public class PruneOneSideTerminating<X,Y> implements Pruner<X,Y,X,X> {
     /**
      * 
      * @param at
@@ -104,5 +86,17 @@ public class PruneOneSideTerminating<X,Y> implements Pruner<X,Y> {
         }
         
         return new AlignedTrees<>(cta,spa);
+    }
+
+    @Override
+    public Iterable<AlignedTrees<X>> prePrune(Iterable<AlignedTrees<X>> alignmentFree) {
+        return new FunctionIterable<>(alignmentFree, (AlignedTrees<X> at) -> {
+            return transfer(at);
+        });
+    }
+
+    @Override
+    public Iterable<AlignedTrees<X>> postPrune(Iterable<AlignedTrees<X>> variablesPushed, Iterable<AlignedTrees<Y>> otherSide) {
+        return variablesPushed;
     }
 }

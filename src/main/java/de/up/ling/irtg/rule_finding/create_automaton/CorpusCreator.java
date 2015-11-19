@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.rule_finding.alignments.AlignmentFactory;
@@ -16,8 +17,10 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.rule_finding.variable_introduction.VariableIntroduction;
-import java.util.ArrayList;
-import java.util.List;
+import de.up.ling.irtg.util.BiFunctionIterable;
+import de.up.ling.irtg.util.FunctionIterable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -60,11 +63,6 @@ public class CorpusCreator<InputType1,InputType2> {
     /**
      * 
      */
-    private final HomomorphismManager hm;
-    
-    /**
-     * 
-     */
     private final VariableIntroduction firstVI;
     
     /**
@@ -90,7 +88,6 @@ public class CorpusCreator<InputType1,InputType2> {
         this.secondAL = secondAL;
         this.firstPruner = firstPruner;
         this.secondPruner = secondPruner;
-        this.hm = new HomomorphismManager(firstAlgebra.getSignature(), secondAlgebra.getSignature());
         this.firstVI = firstVI;
         this.secondVI = secondVI;
     }
@@ -101,43 +98,34 @@ public class CorpusCreator<InputType1,InputType2> {
      * @param secondInputs
      * @param firstAlignments
      * @param secondAlignments
-     * @return 
-     * @throws de.up.ling.irtg.algebra.ParserException 
+     * @return
      */
-    public List<TreeAutomaton> makeRuleTrees(List<String> firstInputs, List<String> secondInputs,
-                                            List<String> firstAlignments, List<String> secondAlignments) throws ParserException{
-        int maxSize = Math.min(firstInputs.size(), Math.min(secondInputs.size(),
-                    Math.min(firstAlignments.size(), secondAlignments.size())));
-                
+    public Iterable<Pair<TreeAutomaton,HomomorphismManager>> makeRuleTrees(Iterable<String> firstInputs, Iterable<String> secondInputs,
+                                            Iterable<String> firstAlignments, Iterable<String> secondAlignments) {
         Propagator pro = new Propagator();
-        List<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(maxSize, firstInputs,
+        Iterable<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(firstInputs,
                                                 firstAlignments, this.firstAlgebra, this.firtAL);
-        List<AlignedTrees> firstRoundTwo = makeFirstPruning(firstRoundOne, firstPruner, firstVI);
-        for(int i=0;i<firstRoundTwo.size();++i){
-            firstRoundTwo.set(i, pro.convert(firstRoundTwo.get(i)));
-        }
+        Iterable<AlignedTrees> firstRoundTwo = makeFirstPruning(firstRoundOne, firstPruner, firstVI);
+        Iterable<AlignedTrees> allFirst = new FunctionIterable<>(firstRoundTwo, (AlignedTrees at) -> {
+            return pro.convert(at);
+        });
         
-        List<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(maxSize, secondInputs,
+        Iterable<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(secondInputs,
                                                 secondAlignments, secondAlgebra, secondAL);
-        List<AlignedTrees> secondRoundTwo = makeFirstPruning(secondRoundOne, secondPruner, secondVI);
-        for(int i=0;i<secondRoundTwo.size();++i){
-            secondRoundTwo.set(i, pro.convert(secondRoundTwo.get(i)));
-        }
+        Iterable<AlignedTrees> secondRoundTwo = makeFirstPruning(secondRoundOne, secondPruner, secondVI);
+        Iterable<AlignedTrees> allSecond = new FunctionIterable<>(secondRoundTwo, (AlignedTrees at) -> {
+            return pro.convert(at);
+        });
         
-        List<AlignedTrees> firstRoundThree = this.firstPruner.postPrune(firstRoundTwo, secondRoundTwo);
-        List<AlignedTrees> secondRoundThree = this.secondPruner.postPrune(secondRoundTwo, firstRoundTwo);
+        Iterable<AlignedTrees> firstRoundThree = this.firstPruner.postPrune(allFirst, allSecond);
+        Iterable<AlignedTrees> secondRoundThree = this.secondPruner.postPrune(allSecond, allFirst);
         
-        List<TreeAutomaton> result = new ArrayList<>();
-        for(int i=0;i<firstRoundThree.size();++i){
-            TreeAutomaton first = firstRoundThree.get(i).getTrees();
-            TreeAutomaton second = secondRoundThree.get(i).getTrees();
+        return new BiFunctionIterable<>(firstRoundThree,
+        secondRoundTwo, (AlignedTrees at1, AlignedTrees at2) -> {
+            TreeAutomaton first = at1.getTrees();
+            TreeAutomaton second = at2.getTrees();
             
-            hm.update(first.getAllLabels(), second.getAllLabels());
-        }
-        
-        for(int i=0;i<firstRoundThree.size();++i){
-            TreeAutomaton first = firstRoundThree.get(i).getTrees();
-            TreeAutomaton second = secondRoundThree.get(i).getTrees();
+            HomomorphismManager hm = new HomomorphismManager(first.getSignature(), second.getSignature());
             
             Homomorphism hm1 = hm.getHomomorphismRestriction1(first.getAllLabels(), second.getAllLabels());
             Homomorphism hm2 = hm.getHomomorphismRestriction2(second.getAllLabels(), first.getAllLabels());
@@ -147,56 +135,47 @@ public class CorpusCreator<InputType1,InputType2> {
             
             done = RemoveDead.reduce(done);
             done = hm.reduceToOriginalVariablePairs(done);
-            result.add(done);
             
-            System.out.println("computed joint trees for pair number: "+(i+1));
-        }
-        
-        return result;
+            return new Pair<>(done,hm);
+        });
     }
 
     /**
      * 
-     * @param firstRoundOne
+     * @param firstRound
      * @param p
      * @param vi
      * @return 
      */
-    public static List<AlignedTrees> makeFirstPruning(List<AlignedTrees> firstRoundOne,
-            Pruner p, VariableIntroduction vi) {
-        for(int i=0;i<firstRoundOne.size();++i){
-            firstRoundOne.set(i, vi.apply(firstRoundOne.get(i)));
-        }
-        List<AlignedTrees> firstRoundTwo = p.prePrune(firstRoundOne);
-        return firstRoundTwo;
+    public static Iterable<AlignedTrees> makeFirstPruning(final Iterable<AlignedTrees> firstRound,
+            final Pruner p, final VariableIntroduction vi) {
+        return p.prePrune(new FunctionIterable(firstRound, vi));
     }
 
     /**
      * 
-     * @param maxSize
-     * @param firstInputs
-     * @param firstAlignments
+     * @param inputs
+     * @param alignments
      * @param algebra
      * @param aL
      * @return
-     * @throws ParserException 
      */
-    public static List<AlignedTrees> makeInitialAlignedTrees(int maxSize,
-                                                       List<String> firstInputs,
-                                                       List<String> firstAlignments,
-                                                       Algebra algebra,
-                                                       AlignmentFactory aL) throws ParserException {
-        List<AlignedTrees> firstRoundOne = new ArrayList<>();
-        for(int i=0;i<maxSize;++i){
-            TreeAutomaton ft = algebra.decompose(algebra.parseString(firstInputs.get(i)));
-            StateAlignmentMarking fal = aL.makeInstance(firstAlignments.get(i), ft);
-            firstRoundOne.add(new AlignedTrees<>(ft,fal));
-            if(ft.getSignature() != algebra.getSignature()){
-                throw new IllegalStateException("Signatures changed during processing");
+    public static Iterable<AlignedTrees> makeInitialAlignedTrees(final Iterable<String> inputs,
+                                                       final Iterable<String> alignments,
+                                                       final Algebra algebra,
+                                                       final AlignmentFactory aL) {
+        return new BiFunctionIterable<>(alignments, inputs, (String in, String align) -> {
+            try {
+                TreeAutomaton ft = algebra.decompose(algebra.parseString(in));
+                StateAlignmentMarking fal = aL.makeInstance(align, ft);
+                
+                return new AlignedTrees(ft, fal);
+            } catch (ParserException ex) {
+                Logger.getLogger(CorpusCreator.class.getName()).log(Level.SEVERE, null, ex);
             }
-        }
-        
-        return firstRoundOne;
+            
+            return null;
+        });
     }
 
     /**
@@ -214,20 +193,12 @@ public class CorpusCreator<InputType1,InputType2> {
     public Algebra<InputType2> getSecondAlgebra() {
         return secondAlgebra;
     }
-    
-    /**
-     * 
-     * @return 
-     */
-    public HomomorphismManager getHomomorphismManager() {
-        return hm;
-    }
 
     /**
      * 
      * @return 
      */
-    public AlignmentFactory getFirtAL() {
+    public AlignmentFactory getFirtAlignmentFactory() {
         return firtAL;
     }
 
@@ -235,7 +206,7 @@ public class CorpusCreator<InputType1,InputType2> {
      * 
      * @return 
      */
-    public AlignmentFactory getSecondAL() {
+    public AlignmentFactory getSecondAlignmentFactory() {
         return secondAL;
     }
 

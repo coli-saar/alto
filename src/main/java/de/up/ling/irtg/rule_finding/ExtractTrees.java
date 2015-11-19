@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
@@ -12,6 +13,7 @@ import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
+import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -20,7 +22,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Supplier;
 
 /**
@@ -73,16 +74,20 @@ public class ExtractTrees {
             }
         }
         
-        List<TreeAutomaton> results
+        Iterable<Pair<TreeAutomaton,HomomorphismManager>> results
                 = cc.makeRuleTrees(firstInputs, secondInputs, firstAlignments, secondAlignments);
 
         double sumOfSizes = 0;
-        double length = results.size();
+        double length = 0;
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;
         
         
-        for (TreeAutomaton ta : results) {
+        for (Pair<TreeAutomaton,HomomorphismManager> pair : results) {
+            ++length;
+            
+            TreeAutomaton ta = pair.getLeft();
+            HomomorphismManager hm = pair.getRight();
             InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(ta);
 
             double size = (ta.countTrees());
@@ -93,8 +98,8 @@ public class ExtractTrees {
             TreeAlgebra algebra1 = new TreeAlgebra();
             TreeAlgebra algebra2 = new TreeAlgebra();
 
-            Homomorphism hm1 = cc.getHomomorphismManager().getHomomorphism1();
-            Homomorphism hm2 = cc.getHomomorphismManager().getHomomorphism2();
+            Homomorphism hm1 = hm.getHomomorphism1();
+            Homomorphism hm2 = hm.getHomomorphism2();
 
             Interpretation inpre1 = new Interpretation(algebra1, hm1);
             Interpretation inpre2 = new Interpretation(algebra2, hm2);

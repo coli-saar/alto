@@ -42,10 +42,10 @@ public class CreateStringToTree {
      */
     public static void main(String... args) throws IOException, ParserException{
         CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new IntersectionPruner((TreeAutomaton ta) -> {
+        fact.setFirstPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
             return new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels());
         }));
-        fact.setSecondPruner(new IntersectionPruner((TreeAutomaton ta) -> {
+        fact.setSecondPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
             return new NoLeftIntoRight(ta.getSignature(), ta.getAllLabels());
         }));
         fact.setFirstVariableSource(new LeftRightXFromFinite());
