@@ -6,16 +6,13 @@
 package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
 import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.Variables;
-import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
@@ -25,9 +22,6 @@ import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.signature.Signature;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -168,7 +162,7 @@ public class HomomorphismManagerTest {
             }
         }
         
-        assertTrue(done.accepts(pt("'*(x1, x2) / x1 | 2'('x1 / *(x1, x2) | 2'('XJohn_went(x1) / X(x1) | 1'('*(x1, x2) / *(x1, x2) | 2'('XJohn_John(x1) / X(x1) | 1'('John() / x1 | 1'('x1 / John() | 1'('John() / John() | 0'))),'Xwent_went(x1) / X(x1) | 1'('went() / x1 | 1'('x1 / ging() | 1'('John() / John() | 0'))))),'x1 / heim() | 1'('John() / John() | 0')),'home() / x1 | 1'('John() / John() | 0'))")));
+        assertTrue(done.accepts(pt("'*(x1, x2) / x1 | 2'('x1 / *(x1, x2) | 2'('XJohn_went(x1) / X(x1) | 1'('*(x1, x2) / *(x1, x2) | 2'('XJohn_John(x1) / X(x1) | 1'('John() / x1 | 1'('x1 / John() | 1'('___END___() / ___END___() | 0'))),'Xwent_went(x1) / X(x1) | 1'('went() / x1 | 1'('x1 / ging() | 1'('___END___() / ___END___() | 0'))))),'x1 / heim() | 1'('___END___() / ___END___() | 0')),'home() / x1 | 1'('___END___() / ___END___() | 0'))")));
         
         assertEquals(oldLang.size(),done.language().size());
         assertEquals(done.language().size(),20);

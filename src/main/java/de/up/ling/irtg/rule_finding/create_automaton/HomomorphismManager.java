@@ -76,11 +76,6 @@ public class HomomorphismManager {
      * 
      */
     private final Signature sharedSig;
-    
-    /**
-     * 
-     */
-    private int[] terminationSequence;
 
     /**
      * 
@@ -117,6 +112,9 @@ public class HomomorphismManager {
      */
     private final IntSet mapsToVariable;
     
+    
+    public static String TERMINATOR = "___END___";
+    
     /**
      * 
      * @param source1
@@ -139,9 +137,12 @@ public class HomomorphismManager {
         this.hom1 = new Homomorphism(sharedSig, source1);
         this.hom2 = new Homomorphism(sharedSig, source2);
         
-        this.terminationSequence = null;
-        
         this.rm = new RestrictionManager(this.sharedSig);
+        
+        int leftTerm = this.source1.addSymbol(TERMINATOR, 0);
+        int rightTerm = this.source2.addSymbol(TERMINATOR, 0);
+        
+        this.ensureTermination(leftTerm, rightTerm);
     }
     
     /**
@@ -187,24 +188,6 @@ public class HomomorphismManager {
     public void update(IntSet toDo1, IntSet toDo2){
        toDo1 = new IntAVLTreeSet(toDo1);
        toDo2 = new IntAVLTreeSet(toDo2);
-        
-       if(this.terminationSequence == null){
-           this.terminationSequence = new int[2];
-           
-           Integer def = findDefault(this.source1,toDo1);
-           if(def == null){
-                throw new IllegalStateException("We have no 0-ary symbol for signature "+1);
-           }
-           this.terminationSequence[0] = def;
-           
-           def = findDefault(this.source2,toDo2);
-           if(def == null){
-                throw new IllegalStateException("We have no 0-ary symbol for signature "+2);
-           }
-           this.terminationSequence[1] = def;
-           
-           ensureTermination();
-       }
        
        makeVariables(toDo1,toDo2);
          
@@ -266,15 +249,16 @@ public class HomomorphismManager {
     /**
      * 
      */
-    private void ensureTermination() {
+    private void ensureTermination(int leftTermination, int rightTermination) {
         this.symbols.clear();
         this.insertionPoints.clear();
         this.isJustInsert.clear();
         
-        for(int sym : this.terminationSequence){
-            symbols.add(sym);
-            isJustInsert.add(false);
-        }
+        symbols.add(leftTermination);
+        isJustInsert.add(false);
+        
+        symbols.add(rightTermination);
+        isJustInsert.add(false);
         
         addMapping(symbols,insertionPoints,isJustInsert, 0);
     }

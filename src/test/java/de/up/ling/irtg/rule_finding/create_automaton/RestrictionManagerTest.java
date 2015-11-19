@@ -7,8 +7,6 @@ package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
-import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import org.junit.Before;
@@ -251,7 +249,6 @@ public class RestrictionManagerTest {
         TreeAutomaton con = automatonFromItsString(t);
         cta = automatonFromItsString(cta);
         
-        System.out.println(con);
         assertEquals(con,cta);
     }
 }
