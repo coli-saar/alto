@@ -82,7 +82,7 @@ public class ExtractTreesTest {
         double[] d = gram.getAutomataAndMakeStatistics(in, supp);
         assertEquals(d[0],708.0,0.00000001);
         assertEquals(d[1],392,0.00000001);
-        assertEquals(d[1],1024,0.00000001);
+        assertEquals(d[2],1024,0.00000001);
         assertEquals(results.size(),2);
     }
     

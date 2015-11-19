@@ -82,7 +82,6 @@ public class ExtractTrees {
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;
         
-        
         for (Pair<TreeAutomaton,HomomorphismManager> pair : results) {
             ++length;
             

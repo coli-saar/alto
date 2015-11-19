@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
@@ -15,13 +16,15 @@ import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
-import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
-import de.up.ling.irtg.rule_finding.pruning.Pruner;
+import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;
+import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
+import de.up.ling.irtg.rule_finding.pruning.intersection.tree.NoLeftIntoRight;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import org.junit.Before;
@@ -72,7 +75,12 @@ public class CorpusCreatorTest {
     @Before
     public void setUp() {
         CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new PruneOneSideTerminating()).setSecondPruner(Pruner.DEFAULT_PRUNER)
+        fact.setFirstPruner(new IntersectionPruner<>((TreeAutomaton t) -> {
+            return new RightBranchingNormalForm(t.getSignature(),t.getAllLabels());
+        }))
+                .setSecondPruner(new IntersectionPruner<>((TreeAutomaton t) -> {
+            return new NoLeftIntoRight(t.getSignature(),t.getAllLabels());
+        }))
                 .setFirstVariableSource(new LeftRightXFromFinite())
                 .setSecondVariableSource(new JustXEveryWhere());
 
@@ -100,35 +108,45 @@ public class CorpusCreatorTest {
 
     @Test
     public void testMakeFirstPruning() throws ParserException, Exception {
-        List<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, this.cc.getFirtAlignmentFactory());
-        List<AlignedTrees> pruned = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
+        Iterable<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(firstInputs, firstAlign, sal, this.cc.getFirtAlignmentFactory());
+        Iterable<AlignedTrees> pruned = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
 
-        assertTrue(pruned.get(0).getAlignments() instanceof SpecifiedAligner);
-        assertEquals(pruned.size(), 2);
+        Iterator<AlignedTrees> it = pruned.iterator();
+        AlignedTrees at1 = it.next();
+        AlignedTrees at2 = it.next();
+        
+        
+        assertTrue(at1.getAlignments() instanceof SpecifiedAligner);
+        assertFalse(it.hasNext());
 
-        assertTrue(pruned.get(0).getTrees().accepts(pt("*(John,*(went,home))")));
-        assertTrue(pruned.get(0).getTrees().accepts(pt("*(John,Xwent_home(*(went,home)))")));
-        assertFalse(pruned.get(0).getTrees().accepts(pt("*(John,XJohn_home(*(went,home)))")));
+        assertTrue(at1.getTrees().accepts(pt("*(John,*(went,home))")));
+        assertTrue(at1.getTrees().accepts(pt("*(John,Xwent_home(*(went,home)))")));
+        assertFalse(at1.getTrees().accepts(pt("*(John,XJohn_home(*(went,home)))")));
 
-        assertTrue(pruned.get(1).getTrees().accepts(pt("*(Frank,Xwent_home(*(went,home)))")));
+        assertTrue(at2.getTrees().accepts(pt("*(Frank,Xwent_home(*(went,home)))")));
 
-        TreeAutomaton t = pruned.get(0).getTrees();
+        TreeAutomaton t = at1.getTrees();
         int label = t.getSignature().getIdForSymbol("John");
         Rule r = (Rule) t.getRulesBottomUp(label, new int[0]).iterator().next();
         Object o = t.getStateForId(r.getParent());
 
-        assertEquals(pruned.get(0).getAlignments().getAlignmentMarkers(o).size(), 1);
-        assertTrue(pruned.get(0).getAlignments().getAlignmentMarkers(o).contains(1));
+        assertEquals(at1.getAlignments().getAlignmentMarkers(o).size(), 1);
+        assertTrue(at1.getAlignments().getAlignmentMarkers(o).contains(1));
     }
 
     @Test
     public void testMakeInitialAlignedTrees() throws ParserException, Exception {
-        List<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, this.cc.getFirtAlignmentFactory());
-        assertEquals(list1.size(), 2);
+        Iterable<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(firstInputs, firstAlign, sal, this.cc.getFirtAlignmentFactory());
+        
+        Iterator<AlignedTrees> it = list1.iterator();
+        AlignedTrees at1 = it.next();
+        AlignedTrees at2 = it.next();
+        
+        Set<Tree<String>> lang1 = at1.getTrees().language();
+        Set<Tree<String>> lang2 = at2.getTrees().language();
 
-        Set<Tree<String>> lang1 = list1.get(0).getTrees().language();
-        Set<Tree<String>> lang2 = list1.get(1).getTrees().language();
-
+        assertFalse(it.hasNext());
+        
         assertEquals(lang1.size(), 2);
         assertEquals(lang2.size(), 2);
         assertTrue(lang1.contains(pt("*(John,*(went,home))")));
@@ -136,13 +154,12 @@ public class CorpusCreatorTest {
         assertTrue(lang2.contains(pt("*(*(Frank,went),home)")));
         assertTrue(lang2.contains(pt("*(Frank,*(went,home))")));
 
-        assertEquals(list1.get(0).getAlignments().toString(), "SpanAligner{alignments={1-2=>{2}, 0-1=>{1}, 2-3=>{3}}}");
-        assertEquals(list1.get(1).getAlignments().toString(), "SpanAligner{alignments={1-2=>{2}, 0-1=>{1}, 2-3=>{3}}}");
+        assertEquals(at1.getAlignments().toString(), "SpanAligner{alignments={1-2=>{2}, 0-1=>{1}, 2-3=>{3}}}");
+        assertEquals(at2.getAlignments().toString(), "SpanAligner{alignments={1-2=>{2}, 0-1=>{1}, 2-3=>{3}}}");
 
-        List<AlignedTrees> list2 = CorpusCreator.makeInitialAlignedTrees(1, secondInputs, secondAlign, mta, this.cc.getSecondAlignmentFactory());
-        assertEquals(list2.size(), 1);
-        assertEquals(list2.get(0).getTrees().language().size(), 64);
-        assertEquals(list2.get(0).getAlignments().toString(), "AddressAligner{map={0-0-0-1-1-0=>{3}, 0-0-0-1-0=>{2}, 0-0-0-0-0=>{1}}}");
+        Iterable<AlignedTrees> list2 = CorpusCreator.makeInitialAlignedTrees(secondInputs, secondAlign, mta, this.cc.getSecondAlignmentFactory());
+        assertEquals(list2.iterator().next().getTrees().language().size(), 64);
+        assertEquals(list2.iterator().next().getAlignments().toString(), "AddressAligner{map={0-0-0-1-1-0=>{3}, 0-0-0-1-0=>{2}, 0-0-0-0-0=>{1}}}");
     }
 
     /**
@@ -156,30 +173,30 @@ public class CorpusCreatorTest {
 
     @Test
     public void testFinalResult() throws ParserException, Exception {
-        List<TreeAutomaton> result = this.cc.makeRuleTrees(firstInputs, secondInputs, firstAlign, secondAlign);
+        Iterable<Pair<TreeAutomaton,HomomorphismManager>> result =
+                this.cc.makeRuleTrees(firstInputs, secondInputs, firstAlign, secondAlign);
 
-        assertEquals(result.size(), 2);
+        Iterator<Pair<TreeAutomaton,HomomorphismManager>> it = result.iterator();
+        Pair<TreeAutomaton,HomomorphismManager> p1 = it.next();
+        Pair<TreeAutomaton,HomomorphismManager> p2 = it.next();
+        
+        assertFalse(it.hasNext());
 
-        TreeAutomaton first = result.get(0);
-        TreeAutomaton second = result.get(1);
+        TreeAutomaton first = p1.getLeft();
+        TreeAutomaton second = p2.getLeft();
 
         assertEquals(first.language().size(), second.language().size());
 
         for (Rule r : (Iterable<Rule>) first.getAllRulesTopDown()) {
-            if (this.cc.getHomomorphismManager().getSignature().resolveSymbolId(r.getLabel()).equals("Xwent_home(x1) / X(x1) | 1")
-                    || this.cc.getHomomorphismManager().getSignature().resolveSymbolId(r.getLabel()).equals("*(x1, x2) / __LEFT__INTO__RIGHT__(x1, x2) | 2")) {
-                r.setWeight(2.0);
-            } else {
-                r.setWeight(0.2);
-            }
+            r.setWeight(0.2);
         }
 
         Tree<String> ts = first.viterbi();
 
-        Homomorphism hm1 = this.cc.getHomomorphismManager().getHomomorphism1();
-        Homomorphism hm2 = this.cc.getHomomorphismManager().getHomomorphism2();
-
-        assertEquals(hm1.apply(ts), pt("*(XJohn_John(John),Xwent_home(Xwent_home(*(Xwent_went(went),Xhome_home(home)))))"));
+        Homomorphism hm1 = p1.getRight().getHomomorphism1();
+        Homomorphism hm2 = p1.getRight().getHomomorphism2();
+        
+        assertEquals(hm1.apply(ts), pt("*(XJohn_John(John),*(Xwent_went(went),Xhome_home(home)))"));
         Tree<String> q = shorten(hm2.apply(ts));
         assertEquals(this.mta.evaluate(q), pt("S(NP(John),VP(went,NP(home)))"));
 
@@ -192,7 +209,7 @@ public class CorpusCreatorTest {
         int secondVariables = 0;
         secondVariables = r.getAllNodes().stream().filter((node) -> (Variables.IS_VARIABLE.test(node.getLabel()))).map((_item) -> 1).reduce(secondVariables, Integer::sum);
 
-        assertEquals(firstVariables, 5);
+        assertEquals(firstVariables, 3);
         assertEquals(secondVariables, firstVariables);
     }
 

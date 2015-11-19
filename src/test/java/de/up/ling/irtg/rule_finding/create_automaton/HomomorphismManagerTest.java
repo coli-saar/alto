@@ -24,7 +24,6 @@ import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
@@ -143,7 +142,7 @@ public class HomomorphismManagerTest {
             Tree<String> t2 = hm2.apply(t);
             
             Pair<Tree<String>,Tree<String>> p = new Pair<>(t1,t2);
-            System.out.println(p);
+            
             assertFalse(pairs.contains(p));
             pairs.add(p);
             

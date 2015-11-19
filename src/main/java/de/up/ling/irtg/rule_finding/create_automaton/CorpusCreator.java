@@ -121,11 +121,12 @@ public class CorpusCreator<InputType1,InputType2> {
         Iterable<AlignedTrees> secondRoundThree = this.secondPruner.postPrune(allSecond, allFirst);
         
         return new BiFunctionIterable<>(firstRoundThree,
-        secondRoundTwo, (AlignedTrees at1, AlignedTrees at2) -> {
+        secondRoundThree, (AlignedTrees at1, AlignedTrees at2) -> {
             TreeAutomaton first = at1.getTrees();
             TreeAutomaton second = at2.getTrees();
             
             HomomorphismManager hm = new HomomorphismManager(first.getSignature(), second.getSignature());
+            hm.update(first.getAllLabels(), second.getAllLabels());
             
             Homomorphism hm1 = hm.getHomomorphismRestriction1(first.getAllLabels(), second.getAllLabels());
             Homomorphism hm2 = hm.getHomomorphismRestriction2(second.getAllLabels(), first.getAllLabels());
@@ -164,7 +165,7 @@ public class CorpusCreator<InputType1,InputType2> {
                                                        final Iterable<String> alignments,
                                                        final Algebra algebra,
                                                        final AlignmentFactory aL) {
-        return new BiFunctionIterable<>(alignments, inputs, (String in, String align) -> {
+        return new BiFunctionIterable<>(inputs, alignments, (String in, String align) -> {
             try {
                 TreeAutomaton ft = algebra.decompose(algebra.parseString(in));
                 StateAlignmentMarking fal = aL.makeInstance(align, ft);
