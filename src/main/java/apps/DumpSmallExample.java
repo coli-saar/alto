@@ -75,9 +75,6 @@ public class DumpSmallExample {
         
         try (BufferedWriter bw = new BufferedWriter(new FileWriter("finished.irtg"))) {
             bw.write(ita.toString());
-        }
-        
-    }
-    
-    
+        }   
+    }    
 }

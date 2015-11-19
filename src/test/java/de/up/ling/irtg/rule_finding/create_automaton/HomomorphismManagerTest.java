@@ -59,12 +59,12 @@ public class HomomorphismManagerTest {
     /**
      * 
      */
-    private List<AlignedTrees> pruned1;
+    private Iterable<AlignedTrees> pruned1;
     
     /**
      * 
      */
-    private List<AlignedTrees> pruned2;
+    private Iterable<AlignedTrees> pruned2;
     
     @Before
     public void setUp() throws ParserException {
@@ -94,10 +94,10 @@ public class HomomorphismManagerTest {
         secondAlign.add("0:1:1 1:2:2 2:3:5");
         secondAlign.add("0:1:4 1:2:5 2:3:6 2:3:7");
         
-        List<AlignedTrees> list1  = CorpusCreator.makeInitialAlignedTrees(2, firstInputs, firstAlign, sal, cc.getFirtAlignmentFactory());
+        Iterable<AlignedTrees> list1  = CorpusCreator.makeInitialAlignedTrees(firstInputs, firstAlign, sal, cc.getFirtAlignmentFactory());
         pruned1 = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
         
-        list1 = CorpusCreator.makeInitialAlignedTrees(2, secondInputs, secondAlign, mta, cc.getSecondAlignmentFactory());
+        list1 = CorpusCreator.makeInitialAlignedTrees(secondInputs, secondAlign, mta, cc.getSecondAlignmentFactory());
         pruned2 = CorpusCreator.makeFirstPruning(list1, cc.getSecondPruner(), cc.getSecondVI());
 
         this.sig1 = sal.getSignature();
@@ -114,13 +114,13 @@ public class HomomorphismManagerTest {
     @Test
     public void testUpdate() throws Exception {
         Propagator pg = new Propagator();
-        TreeAutomaton ta1= pg.convert(this.pruned1.get(0)).getTrees();
-        TreeAutomaton ta2 = pg.convert(this.pruned2.get(0)).getTrees();
+        TreeAutomaton ta1= pg.convert(this.pruned1.iterator().next()).getTrees();
+        TreeAutomaton ta2 = pg.convert(this.pruned2.iterator().next()).getTrees();
         
         hm.update(ta1.getAllLabels(), ta2.getAllLabels());
         
-        ta1= pg.convert(this.pruned1.get(0)).getTrees();
-        ta2 = pg.convert(this.pruned2.get(0)).getTrees();
+        ta1= pg.convert(this.pruned1.iterator().next()).getTrees();
+        ta2 = pg.convert(this.pruned2.iterator().next()).getTrees();
         hm.update(ta1.getAllLabels(), ta2.getAllLabels());
 
         Homomorphism hm1 = hm.getHomomorphismRestriction1(ta1.getAllLabels(), ta2.getAllLabels());
@@ -143,6 +143,7 @@ public class HomomorphismManagerTest {
             Tree<String> t2 = hm2.apply(t);
             
             Pair<Tree<String>,Tree<String>> p = new Pair<>(t1,t2);
+            System.out.println(p);
             assertFalse(pairs.contains(p));
             pairs.add(p);
             

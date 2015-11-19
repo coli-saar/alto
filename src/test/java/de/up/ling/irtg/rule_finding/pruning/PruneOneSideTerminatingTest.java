@@ -74,9 +74,9 @@ public class PruneOneSideTerminatingTest {
      */
     @Test
     public void testPrePrune() throws Exception {
-        List<AlignedTrees> pruned = this.pruner.prePrune(list);
+        Iterable<AlignedTrees> pruned = this.pruner.prePrune(list);
         
-        TreeAutomaton ta = pruned.get(0).getTrees();
+        TreeAutomaton ta = pruned.iterator().next().getTrees();
         
         assertTrue(ta.accepts(pt("*(a,*(b,*(c,*(d,e))))")));
         assertTrue(ta.accepts(pt("Xa_e(*(a,*(b,*(c,*(d,e)))))")));
@@ -94,18 +94,21 @@ public class PruneOneSideTerminatingTest {
             String s = state.toString();
             if(s.equals("0-2,a,b")){
                 seen = true;
-                IntSet ins = pruned.get(0).getAlignments().getAlignmentMarkers(state);
+                IntSet ins = pruned.iterator().next().getAlignments().getAlignmentMarkers(state);
                 assertEquals(ins.size(),2);
                 assertTrue(ins.contains(1));
                 assertTrue(ins.contains(4));
             }else{
-                assertTrue(pruned.get(0).getAlignments().getAlignmentMarkers(state).isEmpty());
+                assertTrue(pruned.iterator().next().getAlignments().getAlignmentMarkers(state).isEmpty());
             }
             
         }
         assertTrue(seen);
         
-        TreeAutomaton t = pruned.get(1).getTrees();
+        Iterator<AlignedTrees> iterator = pruned.iterator();
+        iterator.next();
+        
+        TreeAutomaton t = iterator.next().getTrees();
         assertTrue(t.accepts(pt("*(a,*(*(b,*(c,d)),e))")));
         assertFalse(t.accepts(pt("*(a,*(*(b,c),*(d,e)))")));
         assertTrue(t.accepts(pt("*(*(*(*(a,b),c),d),e)")));

@@ -36,7 +36,7 @@ public class NoLeftIntoRightTest {
     
     @Before
     public void setUp() throws ParserException {
-        ip = new IntersectionPruner((TreeAutomaton ta) -> new NoLeftIntoRight(ta.getSignature(), ta.getAllLabels()));
+        ip = new IntersectionPruner<>((TreeAutomaton ta) -> new NoLeftIntoRight(ta.getSignature(), ta.getAllLabels()));
         
         MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
         
@@ -51,12 +51,12 @@ public class NoLeftIntoRightTest {
         List<AlignedTrees<Object>> l = new ArrayList<>();
         l.add(at);
         
-        List<AlignedTrees<Object>> l2 = ip.prePrune(l);
+        Iterable<AlignedTrees<Object>> l2 = ip.prePrune(l);
         assertTrue(l==l2);
         
         l2 = ip.postPrune(l, null);
         
-        TreeAutomaton ta = l2.get(0).getTrees();
+        TreeAutomaton ta = l2.iterator().next().getTrees();
         
         assertEquals(ta.language().size(),1);
         assertTrue(ta.language().contains(pt("__RIGHT__INTO__LEFT__(answer,__RIGHT__INTO__LEFT__(count,__RIGHT__INTO__LEFT__(state,__RIGHT__INTO__LEFT__(__RIGHT__INTO__LEFT__(intersection,__RIGHT__INTO__LEFT__(next_to_2,__RIGHT__INTO__LEFT__(stateid,colorado))),__RIGHT__INTO__LEFT__(next_to_2,__RIGHT__INTO__LEFT__(stateid,'new mexico'))))))")));

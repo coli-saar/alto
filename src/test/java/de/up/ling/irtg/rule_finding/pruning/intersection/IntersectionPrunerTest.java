@@ -47,7 +47,7 @@ public class IntersectionPrunerTest {
         
         at = new AlignedTrees(aut, spal);
         
-        rbp = new IntersectionPruner((TreeAutomaton ta) -> new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels()));
+        rbp = new IntersectionPruner<>((TreeAutomaton ta) -> new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels()));
     }
 
     /**
@@ -74,16 +74,16 @@ public class IntersectionPrunerTest {
         List<AlignedTrees<Object>> l = new ArrayList<>();
         l.add(ab);
         
-        l = rbp.postPrune(l,null);
+        Iterable<AlignedTrees<Object>> result = rbp.postPrune(l,null);
         assertEquals(l.size(),1);
         
-        for(Rule r : (Iterable<Rule>) l.get(0).getTrees().getAllRulesTopDown()){
-            Pair<Object,Object> p = (Pair<Object,Object>) l.get(0).getTrees().getStateForId(r.getParent());
-            assertEquals(l.get(0).getAlignments().getAlignmentMarkers(p),ab.getAlignments().getAlignmentMarkers(p.getLeft()));
+        for(Rule r : (Iterable<Rule>) result.iterator().next().getTrees().getAllRulesTopDown()){
+            Pair<Object,Object> p = (Pair<Object,Object>) result.iterator().next().getTrees().getStateForId(r.getParent());
+            assertEquals(result.iterator().next().getAlignments().getAlignmentMarkers(p),ab.getAlignments().getAlignmentMarkers(p.getLeft()));
         }
         
-        assertTrue(l.get(0).getTrees().accepts(pt("*('X{1, 2}_X'('X{1, 2}_X'(*(a,b))),*(c,*(d,e)))")));
-        assertFalse(l.get(0).getTrees().accepts(pt("*(*(a,b),*(c,*(d,e)))")));
+        assertTrue(result.iterator().next().getTrees().accepts(pt("*('X{1, 2}_X'('X{1, 2}_X'(*(a,b))),*(c,*(d,e)))")));
+        assertFalse(result.iterator().next().getTrees().accepts(pt("*(*(a,b),*(c,*(d,e)))")));
     }
     
 }

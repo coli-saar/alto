@@ -51,10 +51,10 @@ public class ExtractTreesTest {
     @Test
     public void testGetAutomataAndMakeStatistics() throws Exception {
         CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new IntersectionPruner((TreeAutomaton ta) -> {
+        fact.setFirstPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
             return new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels());
         }));
-        fact.setSecondPruner(new IntersectionPruner((TreeAutomaton ta) -> {
+        fact.setSecondPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
             return new NoLeftIntoRight(ta.getSignature(), ta.getAllLabels());
         }));
         fact.setFirstVariableSource(new LeftRightXFromFinite());
