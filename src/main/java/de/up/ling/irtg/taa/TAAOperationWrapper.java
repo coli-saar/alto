@@ -56,7 +56,7 @@ public abstract class TAAOperationWrapper extends ObjectWithStringCode {
         return null;
     }
     
-    private TAAOperationWrapper(int arity, Object implementationsParameters, List<NodeResultEvaluator> evaluations) {
+    protected TAAOperationWrapper(int arity, Object implementationsParameters, List<NodeResultEvaluator> evaluations) {
         //this.properties = new ArrayList<>();
         this.arity = arity;
         this.implementations = makeImplementations(implementationsParameters);//this is not clean, but I haven't found a better solution yet.
