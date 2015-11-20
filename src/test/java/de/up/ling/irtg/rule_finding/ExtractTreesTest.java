@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding;
 
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -16,11 +17,13 @@ import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNo
 import de.up.ling.irtg.rule_finding.pruning.intersection.tree.NoLeftIntoRight;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
+import de.up.ling.tree.Tree;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Supplier;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -47,6 +50,7 @@ public class ExtractTreesTest {
 
     /**
      * Test of getAutomataAndMakeStatistics method, of class ExtractStringToTreeGrammar.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetAutomataAndMakeStatistics() throws Exception {
@@ -60,13 +64,16 @@ public class ExtractTreesTest {
         fact.setFirstVariableSource(new LeftRightXFromFinite());
         fact.setSecondVariableSource(new JustXEveryWhere());
         
-        StringAlgebra st = new StringAlgebra();
-        MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
+        final StringAlgebra st = new StringAlgebra();
+        final MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
         
         SpanAligner.Factory ffact = new SpanAligner.Factory();
         AddressAligner.Factory sfact = new AddressAligner.Factory();
         
-        CorpusCreator cc = fact.getInstance(st, mta, ffact, sfact);
+        Supplier<Algebra<List<String>>> supp1 = () -> st;
+        Supplier<Algebra<Tree<String>>> supp2 = () -> mta;
+        
+        CorpusCreator cc = fact.getInstance(supp1, supp2, ffact, sfact);
         ExtractTrees gram = new ExtractTrees(cc);
         
         InputStream in = new ByteArrayInputStream(TEST_INPUT.getBytes());

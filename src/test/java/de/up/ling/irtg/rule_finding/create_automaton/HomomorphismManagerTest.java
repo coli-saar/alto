@@ -6,6 +6,7 @@
 package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
@@ -24,7 +25,9 @@ import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -34,16 +37,6 @@ import static org.junit.Assert.*;
  * @author christoph_teichmann
  */
 public class HomomorphismManagerTest {
-    
-    /**
-     * 
-     */
-    private Signature sig1;
-    
-    /**
-     * 
-     */
-    private Signature sig2;
     
     /**
      * 
@@ -72,8 +65,8 @@ public class HomomorphismManagerTest {
                 .setFirstVariableSource(new LeftRightXFromFinite())
                 .setSecondVariableSource(new JustXEveryWhere());
         
-        StringAlgebra sal = new StringAlgebra();
-        StringAlgebra mta = new StringAlgebra();
+        Supplier<Algebra<List<String>>> sal = () -> new StringAlgebra();
+        Supplier<Algebra<List<String>>> mta = () -> new StringAlgebra();
         
         CorpusCreator cc = fact.getInstance(sal, mta, new SpanAligner.Factory(), new SpanAligner.Factory());
         
@@ -98,12 +91,6 @@ public class HomomorphismManagerTest {
         
         list1 = CorpusCreator.makeInitialAlignedTrees(secondInputs, secondAlign, mta, cc.getSecondAlignmentFactory());
         pruned2 = CorpusCreator.makeFirstPruning(list1, cc.getSecondPruner(), cc.getSecondVI());
-
-        this.sig1 = sal.getSignature();
-        this.sig2 = mta.getSignature();
-        this.shared = new Signature();
-        
-        this.hm = new HomomorphismManager(this.sig1, this.sig2, this.shared);
     }
 
     /**
@@ -116,6 +103,8 @@ public class HomomorphismManagerTest {
         TreeAutomaton ta1= pg.convert(this.pruned1.iterator().next()).getTrees();
         TreeAutomaton ta2 = pg.convert(this.pruned2.iterator().next()).getTrees();
         
+        this.shared = new Signature();
+        this.hm = new HomomorphismManager(ta1.getSignature(), ta2.getSignature(), this.shared);
         hm.update(ta1.getAllLabels(), ta2.getAllLabels());
         
         ta1= pg.convert(this.pruned1.iterator().next()).getTrees();

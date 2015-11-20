@@ -8,6 +8,7 @@ package apps;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.TreeAlgebra;
@@ -22,6 +23,8 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Supplier;
 
 /**
  *
@@ -41,10 +44,9 @@ public class DumpSmallExample {
                 .setFirstVariableSource(new JustXEveryWhere())
                 .setSecondVariableSource(new JustXEveryWhere());
         
-        StringAlgebra sal1 = new StringAlgebra();
-        StringAlgebra sal2 = new StringAlgebra();
+        Supplier<Algebra<List<String>>> supp = () -> new StringAlgebra();
         
-        CorpusCreator cc = fact.getInstance(sal1, sal2, new SpanAligner.Factory(), new SpanAligner.Factory());
+        CorpusCreator cc = fact.getInstance(supp, supp, new SpanAligner.Factory(), new SpanAligner.Factory());
         
         ArrayList firstInputs = new ArrayList<>();
         firstInputs.add("Nightly John goes fishing for herring");

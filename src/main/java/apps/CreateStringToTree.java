@@ -5,6 +5,7 @@
  */
 package apps;
 
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
@@ -18,12 +19,14 @@ import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNo
 import de.up.ling.irtg.rule_finding.pruning.intersection.tree.NoLeftIntoRight;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
+import de.up.ling.tree.Tree;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -51,8 +54,8 @@ public class CreateStringToTree {
         fact.setFirstVariableSource(new LeftRightXFromFinite());
         fact.setSecondVariableSource(new JustXEveryWhere());
         
-        StringAlgebra st = new StringAlgebra();
-        MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
+        Supplier<Algebra<List<String>>> st = () -> new StringAlgebra();
+        Supplier<Algebra<Tree<String>>> mta = () -> new MinimalTreeAlgebra();
         
         SpanAligner.Factory ffact = new SpanAligner.Factory();
         AddressAligner.Factory sfact = new AddressAligner.Factory();

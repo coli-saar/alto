@@ -6,6 +6,7 @@
 package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -45,12 +47,12 @@ public class CorpusCreatorTest {
     /**
      *
      */
-    private StringAlgebra sal;
+    private Supplier<Algebra<List<String>>> sal;
 
     /**
      *
      */
-    private MinimalTreeAlgebra mta;
+    private Supplier<Algebra<Tree<String>>> mta;
 
     /**
      *
@@ -84,9 +86,10 @@ public class CorpusCreatorTest {
                 .setFirstVariableSource(new LeftRightXFromFinite())
                 .setSecondVariableSource(new JustXEveryWhere());
 
-        sal = new StringAlgebra();
-        mta = new MinimalTreeAlgebra();
+        sal = () -> new StringAlgebra();
+        mta = () -> new MinimalTreeAlgebra();
 
+        
         cc = fact.getInstance(sal, mta, new SpanAligner.Factory(), new AddressAligner.Factory());
 
         this.firstInputs = new ArrayList<>();
@@ -198,7 +201,7 @@ public class CorpusCreatorTest {
         
         assertEquals(hm1.apply(ts), pt("*(XJohn_John(John),*(Xwent_went(went),Xhome_home(home)))"));
         Tree<String> q = shorten(hm2.apply(ts));
-        assertEquals(this.mta.evaluate(q), pt("S(NP(John),VP(went,NP(home)))"));
+        assertEquals(this.mta.get().evaluate(q), pt("S(NP(John),VP(went,NP(home)))"));
 
         Tree<String> l = hm1.apply(ts);
         Tree<String> r = hm2.apply(ts);

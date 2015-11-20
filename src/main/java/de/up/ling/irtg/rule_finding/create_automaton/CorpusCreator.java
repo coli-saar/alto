@@ -19,6 +19,7 @@ import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.rule_finding.variable_introduction.VariableIntroduction;
 import de.up.ling.irtg.util.BiFunctionIterable;
 import de.up.ling.irtg.util.FunctionIterable;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,12 +34,12 @@ public class CorpusCreator<InputType1,InputType2> {
     /**
      * 
      */
-    private final Algebra<InputType1> firstAlgebra;
+    private final Supplier<Algebra<InputType1>> firstAlgebra;
     
     /**
      * 
      */
-    private final Algebra<InputType2> secondAlgebra;
+    private final Supplier<Algebra<InputType2>> secondAlgebra;
     
     /**
      * 
@@ -81,7 +82,7 @@ public class CorpusCreator<InputType1,InputType2> {
      * @param firstVI
      * @param secondVI
      */
-    protected CorpusCreator(Algebra<InputType1> firstAlgebra, Algebra<InputType2> secondAlgebra, AlignmentFactory firtAL, AlignmentFactory secondAL, Pruner firstPruner, Pruner secondPruner, VariableIntroduction firstVI, VariableIntroduction secondVI) {
+    protected CorpusCreator(Supplier<Algebra<InputType1>> firstAlgebra, Supplier<Algebra<InputType2>> secondAlgebra, AlignmentFactory firtAL, AlignmentFactory secondAL, Pruner firstPruner, Pruner secondPruner, VariableIntroduction firstVI, VariableIntroduction secondVI) {
         this.firstAlgebra = firstAlgebra;
         this.secondAlgebra = secondAlgebra;
         this.firtAL = firtAL;
@@ -155,16 +156,18 @@ public class CorpusCreator<InputType1,InputType2> {
 
     /**
      * 
+     * @param <Input>
      * @param inputs
      * @param alignments
-     * @param algebra
+     * @param alSupp
      * @param aL
      * @return
      */
-    public static Iterable<AlignedTrees> makeInitialAlignedTrees(final Iterable<String> inputs,
+    public static <Input> Iterable<AlignedTrees> makeInitialAlignedTrees(final Iterable<String> inputs,
                                                        final Iterable<String> alignments,
-                                                       final Algebra algebra,
+                                                       final Supplier<Algebra<Input>> alSupp,
                                                        final AlignmentFactory aL) {
+        Algebra algebra = alSupp.get();
         return new BiFunctionIterable<>(inputs, alignments, (String in, String align) -> {
             try {
                 TreeAutomaton ft = algebra.decompose(algebra.parseString(in));
@@ -183,7 +186,7 @@ public class CorpusCreator<InputType1,InputType2> {
      * 
      * @return 
      */
-    public Algebra<InputType1> getFirstAlgebra() {
+    public Supplier<Algebra<InputType1>> getFirstAlgebra() {
         return firstAlgebra;
     }
 
@@ -191,7 +194,7 @@ public class CorpusCreator<InputType1,InputType2> {
      * 
      * @return 
      */
-    public Algebra<InputType2> getSecondAlgebra() {
+    public Supplier<Algebra<InputType2>> getSecondAlgebra() {
         return secondAlgebra;
     }
 
@@ -309,7 +312,7 @@ public class CorpusCreator<InputType1,InputType2> {
         
         
         public <Type1,Type2> CorpusCreator<Type1,Type2> getInstance(
-                                                     Algebra<Type1> al1, Algebra<Type2> al2,
+                                                     Supplier<Algebra<Type1>> al1, Supplier<Algebra<Type2>> al2,
                                                      AlignmentFactory af1, AlignmentFactory af2){
             return new CorpusCreator<>(al1, al2, af1, af2, firstPruner, secondPruner, firstVI, secondVI);
         }
