@@ -114,7 +114,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             Class returnType = getClass().getMethod("decompose", new Class[]{SGraph.class, Class.class}).getReturnType();
             ret.add(new Pair(new Pair("Bottom-up", "bup"), new Pair(bottomup, returnType)));
             ret.add(new Pair(new Pair("Top-down", "tdown"), new Pair(topdown, returnType)));
-        } catch (java.lang.Exception e) {
+        } catch (NoSuchMethodException | SecurityException e) {
             System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
         }
         return ret;
