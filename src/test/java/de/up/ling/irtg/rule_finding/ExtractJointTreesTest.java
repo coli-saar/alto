@@ -32,7 +32,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph_teichmann
  */
-public class ExtractTreesTest {
+public class ExtractJointTreesTest {
     
     /**
      * 
@@ -74,7 +74,7 @@ public class ExtractTreesTest {
         Supplier<Algebra<Tree<String>>> supp2 = () -> mta;
         
         CorpusCreator cc = fact.getInstance(supp1, supp2, ffact, sfact);
-        ExtractTrees gram = new ExtractTrees(cc);
+        ExtractJointTrees gram = new ExtractJointTrees(cc);
         
         InputStream in = new ByteArrayInputStream(TEST_INPUT.getBytes());
         final ArrayList<ByteArrayOutputStream> results = new ArrayList<>();

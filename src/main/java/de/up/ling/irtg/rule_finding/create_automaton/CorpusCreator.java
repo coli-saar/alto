@@ -18,6 +18,7 @@ import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.rule_finding.variable_introduction.VariableIntroduction;
 import de.up.ling.irtg.util.BiFunctionIterable;
+import de.up.ling.irtg.util.BiFunctionParallelIterable;
 import de.up.ling.irtg.util.FunctionIterable;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -70,6 +71,11 @@ public class CorpusCreator<InputType1,InputType2> {
      * 
      */
     private final VariableIntroduction secondVI;
+    
+    /**
+     * 
+     */
+    private final int maxThreads;
 
     /**
      * 
@@ -81,8 +87,9 @@ public class CorpusCreator<InputType1,InputType2> {
      * @param secondPruner
      * @param firstVI
      * @param secondVI
+     * @param maxThreads
      */
-    protected CorpusCreator(Supplier<Algebra<InputType1>> firstAlgebra, Supplier<Algebra<InputType2>> secondAlgebra, AlignmentFactory firtAL, AlignmentFactory secondAL, Pruner firstPruner, Pruner secondPruner, VariableIntroduction firstVI, VariableIntroduction secondVI) {
+    protected CorpusCreator(Supplier<Algebra<InputType1>> firstAlgebra, Supplier<Algebra<InputType2>> secondAlgebra, AlignmentFactory firtAL, AlignmentFactory secondAL, Pruner firstPruner, Pruner secondPruner, VariableIntroduction firstVI, VariableIntroduction secondVI, int maxThreads) {
         this.firstAlgebra = firstAlgebra;
         this.secondAlgebra = secondAlgebra;
         this.firtAL = firtAL;
@@ -91,6 +98,7 @@ public class CorpusCreator<InputType1,InputType2> {
         this.secondPruner = secondPruner;
         this.firstVI = firstVI;
         this.secondVI = secondVI;
+        this.maxThreads = maxThreads;
     }
     
     /**
@@ -121,8 +129,8 @@ public class CorpusCreator<InputType1,InputType2> {
         Iterable<AlignedTrees> firstRoundThree = this.firstPruner.postPrune(allFirst, allSecond);
         Iterable<AlignedTrees> secondRoundThree = this.secondPruner.postPrune(allSecond, allFirst);
         
-        return new BiFunctionIterable<>(firstRoundThree,
-        secondRoundThree, (AlignedTrees at1, AlignedTrees at2) -> {
+        return new BiFunctionParallelIterable<>(firstRoundThree,
+        secondRoundThree, maxThreads, (AlignedTrees at1, AlignedTrees at2) -> {
             TreeAutomaton first = at1.getTrees();
             TreeAutomaton second = at2.getTrees();
             
@@ -253,6 +261,11 @@ public class CorpusCreator<InputType1,InputType2> {
         /**
          * 
          */
+        private int maxThreads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+        
+        /**
+         * 
+         */
         private Pruner firstPruner = Pruner.DEFAULT_PRUNER;
     
         /**
@@ -302,6 +315,16 @@ public class CorpusCreator<InputType1,InputType2> {
         
         /**
          * 
+         * @param maxThreads
+         * @return 
+         */
+        public Factory setMaxThreads(int maxThreads){
+            this.maxThreads = maxThreads;
+            return this;
+        }
+        
+        /**
+         * 
          * @param prun
          * @return 
          */
@@ -314,7 +337,7 @@ public class CorpusCreator<InputType1,InputType2> {
         public <Type1,Type2> CorpusCreator<Type1,Type2> getInstance(
                                                      Supplier<Algebra<Type1>> al1, Supplier<Algebra<Type2>> al2,
                                                      AlignmentFactory af1, AlignmentFactory af2){
-            return new CorpusCreator<>(al1, al2, af1, af2, firstPruner, secondPruner, firstVI, secondVI);
+            return new CorpusCreator<>(al1, al2, af1, af2, firstPruner, secondPruner, firstVI, secondVI, maxThreads);
         }
     }
 }

@@ -84,6 +84,7 @@ public class CorpusCreatorTest {
             return new NoLeftIntoRight(t.getSignature(),t.getAllLabels());
         }))
                 .setFirstVariableSource(new LeftRightXFromFinite())
+                .setMaxThreads(4)
                 .setSecondVariableSource(new JustXEveryWhere());
 
         sal = () -> new StringAlgebra();

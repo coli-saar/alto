@@ -28,7 +28,7 @@ import java.util.function.Supplier;
  *
  * @author christoph_teichmann
  */
-public class ExtractTrees {
+public class ExtractJointTrees {
        
     /**
      * 
@@ -39,7 +39,7 @@ public class ExtractTrees {
      * 
      * @param cc 
      */
-    public ExtractTrees(CorpusCreator cc) {
+    public ExtractJointTrees(CorpusCreator cc) {
         this.cc = cc;
     }
     
@@ -82,6 +82,7 @@ public class ExtractTrees {
         double min = Double.POSITIVE_INFINITY;
         double max = Double.NEGATIVE_INFINITY;
         
+        int i = 0;
         for (Pair<TreeAutomaton,HomomorphismManager> pair : results) {
             ++length;
             
@@ -109,6 +110,8 @@ public class ExtractTrees {
             try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outs.get()))) {
                 out.write(ita.toString());
             }
+            
+            System.out.println("handeled input pair: "+(++i));
         }
         
         return new double[] {sumOfSizes / length, min, max};

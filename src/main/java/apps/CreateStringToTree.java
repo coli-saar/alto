@@ -10,7 +10,7 @@ import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.ExtractTrees;
+import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
@@ -61,7 +61,7 @@ public class CreateStringToTree {
         AddressAligner.Factory sfact = new AddressAligner.Factory();
         
         CorpusCreator cc = fact.getInstance(st, mta, ffact, sfact);
-        ExtractTrees et = new ExtractTrees(cc);
+        ExtractJointTrees et = new ExtractJointTrees(cc);
         
         InputStream in = new FileInputStream(args[0]);
         Supplier<OutputStream> sup = new Supplier<OutputStream>(){
