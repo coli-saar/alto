@@ -7,10 +7,12 @@ package de.up.ling.irtg.util;
 
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -60,14 +62,14 @@ public class BiFunctionParallelIterable<InputType1,InputType2,OutputType> implem
     }
     
     @Override
-    public Iterator<OutputType> iterator() {
+    public ParallelIterator iterator() {
         return new ParallelIterator(this.firstInput.iterator(), this.secondInput.iterator(), maxThreads);
     }
     
     /**
      * 
      */
-    private class ParallelIterator implements Iterator<OutputType> {
+    public class ParallelIterator implements Iterator<OutputType> {
         
         /**
          * 
@@ -126,13 +128,30 @@ public class BiFunctionParallelIterable<InputType1,InputType2,OutputType> implem
          * 
          */
         private void addToResults() {
-            if(this.it1.hasNext() && this.it2.hasNext()){
+            if(this.it1.hasNext() && this.it2.hasNext() && !this.executor.isShutdown()){
                 InputType1 in1 = it1.next();
                 InputType2 in2 = it2.next();
                 
                 this.expected.add(this.executor.submit(() -> transform.apply(in1, in2)));
+            }else{
+                this.shutdown();
             }
         }
-        
+    
+        /**
+         * 
+         */
+        public void shutdown(){
+            this.executor.shutdown();
+        }
+
+        /**
+         * 
+         * @return 
+         */
+        public List<Runnable> shutdownNow() {
+            this.expected.clear();
+            return executor.shutdownNow();
+        }
     }
 }

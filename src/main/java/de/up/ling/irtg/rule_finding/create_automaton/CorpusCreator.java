@@ -176,13 +176,14 @@ public class CorpusCreator<InputType1,InputType2> {
                                                        final Supplier<Algebra<Input>> alSupp,
                                                        final AlignmentFactory aL) {
         Algebra algebra = alSupp.get();
-        return new BiFunctionIterable<>(inputs, alignments, (String in, String align) -> {
+        return new BiFunctionIterable<>(inputs, alignments, (String in, String align) -> {          
             try {
                 TreeAutomaton ft = algebra.decompose(algebra.parseString(in));
                 StateAlignmentMarking fal = aL.makeInstance(align, ft);
                 
                 return new AlignedTrees(ft, fal);
             } catch (ParserException ex) {
+                System.out.println("cannot process: "+in+"\nwith alignments: "+align);               
                 Logger.getLogger(CorpusCreator.class.getName()).log(Level.SEVERE, null, ex);
             }
             

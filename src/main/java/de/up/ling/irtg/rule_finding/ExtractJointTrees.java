@@ -109,6 +109,7 @@ public class ExtractJointTrees {
 
             try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outs.get()))) {
                 out.write(ita.toString());
+                out.flush();
             }
             
             System.out.println("handeled input pair: "+(++i));

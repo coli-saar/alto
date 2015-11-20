@@ -51,6 +51,21 @@ public class ExtractLinesforFastAlign {
 
         getLines(sent, funql, sentenceLine, funqlLine, in, out);
     }
+    
+    /**
+     * 
+     * @param sentenceLine
+     * @param otherLine
+     * @param in
+     * @param out
+     * @throws IOException 
+     */
+    public static void getStringToString(int sentenceLine, int otherLine, InputStream in, OutputStream out)
+                                            throws IOException{
+        Function<String,String> f = (String s) -> s;
+        
+        getLines(f, f, sentenceLine, otherLine, in, out);
+    }
 
     /**
      *

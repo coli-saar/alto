@@ -6,7 +6,6 @@
 package de.up.ling.irtg.util;
 
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
-import java.util.Iterator;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
