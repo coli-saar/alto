@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.preprocessing.process_align;
 
+import java.util.Arrays;
 import java.util.function.BinaryOperator;
 
 /**
@@ -27,6 +28,11 @@ public class GizaStringAlignments implements BinaryOperator<String> {
     
     @Override
     public String apply(String input, String alignments) {
+        alignments = alignments.trim();
+        if(alignments.equals("")){
+            return "";
+        }
+        
         String[] parts = alignments.split("\\s+");
         
         StringBuilder sb = new StringBuilder();

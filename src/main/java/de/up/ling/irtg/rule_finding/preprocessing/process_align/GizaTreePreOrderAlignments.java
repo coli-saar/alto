@@ -35,12 +35,17 @@ public class GizaTreePreOrderAlignments implements BinaryOperator<String> {
     
     @Override
     public String apply(String input, String alignments) {
+        alignments = alignments.trim();
+        if(alignments.equals("")){
+            return "";
+        }
+        
         Tree<String> tree;
         try {
             tree = TreeParser.parse(input.trim().replaceAll("\\d", "num"));
         } catch (ParseException ex) {
             Logger.getLogger(GizaTreePreOrderAlignments.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
+            return "";
         }
         
         Int2ObjectMap<String> addresses = new Int2ObjectOpenHashMap<>();
