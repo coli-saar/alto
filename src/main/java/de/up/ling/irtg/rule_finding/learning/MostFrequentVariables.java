@@ -5,15 +5,15 @@
  */
 package de.up.ling.irtg.rule_finding.learning;
 
-import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.RuleEvaluator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.Variables;
-import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.Int2DoubleAVLTreeMap;
+import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
@@ -23,6 +23,7 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  *
@@ -49,27 +50,36 @@ public class MostFrequentVariables {
      * @param counts
      * @return 
      */
-    public Tree<String> getBestAnalysis(TreeAutomaton data, Object2DoubleMap<String> counts){
-        CountWeight cw = new CountWeight(counts, data.getSignature());
-        SumViterbiWithBackPointers ring = new SumViterbiWithBackPointers();
+    public Tree<String> getBestAnalysis(final TreeAutomaton data, Object2DoubleMap<String> counts){
+        final Int2DoubleMap score = new Int2DoubleAVLTreeMap();
+        final Int2ObjectMap<Rule> expandChoice = new Int2ObjectAVLTreeMap<>();
         
-        Int2ObjectMap<Pair<Double,Rule>> result = data.evaluateInSemiring(ring, cw);
-        
-        IntIterator finals = data.getFinalStates().iterator();
-        
-        int best = -1;
-        double max = Double.NEGATIVE_INFINITY;
-        while(finals.hasNext()){
-            int state = finals.nextInt();
+        TreeAutomaton.BottomUpStateVisitor visitor = (int state, Iterable<Rule> rulesTopDown) -> {
             
-            Pair<Double,Rule> p = result.get(state);
-            if(p.left > max){
-                max = p.left;
-                best = p.right.getParent();
+            TrackingConsumer con = new TrackingConsumer(data, score, counts);
+            rulesTopDown.forEach(con);
+            
+            expandChoice.put(state, con.bestRule);
+            score.put(state, con.bestScore);
+        };
+        
+        data.foreachStateInBottomUpOrder(visitor);
+        IntIterator iit = data.getFinalStates().iterator();
+        
+        double bestScore = Double.NEGATIVE_INFINITY;
+        int bestFinal = -1;
+        
+        while(iit.hasNext()){
+            int state = iit.nextInt();
+            double val = score.get(state);
+            
+            if(val > bestScore){
+                bestScore = val;
+                bestFinal = state;
             }
         }
         
-        return findTree(best,result, data.getSignature());
+        return findTree(bestFinal,expandChoice, data.getSignature());
     }
     
     /**
@@ -116,93 +126,66 @@ public class MostFrequentVariables {
     /**
      * 
      * @param state
-     * @param result
+     * @param expandChoice
+     * @param varChoice
+     * @param signature
      * @return 
      */
-    private Tree<String> findTree(int state, Int2ObjectMap<Pair<Double, Rule>> result, Signature s) {
-        Rule r = result.get(state).getRight();
+    private Tree<String> findTree(int state,
+            Int2ObjectMap<Rule> expandChoice,
+            Signature signature) {
+        Rule ex = expandChoice.get(state);
         
-        String label = s.resolveSymbolId(r.getLabel());
+        String label = signature.resolveSymbolId(ex.getLabel());
         List<Tree<String>> children = new ArrayList<>();
-        
-        for(int child : r.getChildren()){
-            children.add(this.findTree(child, result, s));
+        for(int child : ex.getChildren()){
+            children.add(findTree(child, expandChoice, signature));
         }
         
         return Tree.create(label, children);
     }
-    
-    
+
     /**
-     * 
+     *
      */
-    public static class CountWeight implements RuleEvaluator<Pair<Double,Rule>> {
-        /**
-         * 
-         */
+    private class TrackingConsumer implements Consumer<Rule> {
+
+        private final TreeAutomaton data;
+        private final Int2DoubleMap score;
         private final Object2DoubleMap<String> counts;
 
-        /**
-         * 
-         */
-        private final Signature sig;
+        private Rule bestRule = null;
+        private double bestScore = Double.NEGATIVE_INFINITY;
 
         /**
-         * 
+         *
+         * @param data
+         * @param score
          * @param counts
-         * @param sig 
          */
-        public CountWeight(Object2DoubleMap<String> counts, Signature sig) {
+        public TrackingConsumer(TreeAutomaton data, Int2DoubleMap score, Object2DoubleMap<String> counts) {
+            this.data = data;
+            this.score = score;
             this.counts = counts;
-            this.sig = sig;
-        }
-        
-        @Override
-        public Pair<Double, Rule> evaluateRule(Rule rule) {
-            String label = this.sig.resolveSymbolId(rule.getLabel());
-            
-            double d = this.counts.getDouble(label);
-            
-            return new Pair<>(d,rule);
         }
 
-        
-        
-    }
-    
-    /**
-     * 
-     */
-    public static class SumViterbiWithBackPointers implements Semiring<Pair<Double,Rule>> {
-        /**
-         * 
-         */
-        private final static Pair<Double,Rule> ZERO = new Pair<>(Double.NEGATIVE_INFINITY, null);
-        
-        
         @Override
-        public Pair<Double, Rule> add(Pair<Double, Rule> x, Pair<Double, Rule> y) {
-            if(y.getLeft()  > x.getLeft()){
-                return y;
-            }else{
-                return x;
+        public void accept(Rule rule) {
+            String label = data.getSignature().resolveSymbolId(rule.getLabel());
+
+            double value = 0.0;
+            for (int child : rule.getChildren()) {
+                value += score.get(child);
             }
-        }
 
-        @Override
-        public Pair<Double, Rule> multiply(Pair<Double, Rule> x, Pair<Double, Rule> y) {
-            if (x.left == Double.NEGATIVE_INFINITY || y.left == Double.NEGATIVE_INFINITY) {
-                // ensure that zero * x = x * zero = zero;
-                // otherwise could get zero * zero = +Infinity
-                return new Pair<>(Double.NEGATIVE_INFINITY, x.right);
-            } else {
-                return new Pair<>(x.left + y.left, x.right);
+            if (Variables.IS_VARIABLE.test(label)) {
+                value += counts.get(label);
             }
-        }
 
-        @Override
-        public Pair<Double, Rule> zero() {
-            return ZERO;
+            if (value > bestScore) {
+                bestRule = rule;
+                bestScore = value;
+            }
         }
     }
 }
