@@ -5,29 +5,33 @@
  */
 package de.up.ling.irtg.rule_finding.learning;
 
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.Variables;
-import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.signature.Interner;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.commons.math3.util.Pair;
 
 /**
  *
  * @author christoph_teichmann
+ * @param <Type1>
+ * @param <Type2>
  */
-public class RulePostProcessing {
+public class RulePostProcessing<Type1,Type2> {
     /**
      * 
      */
     private final AtomicInteger ai = new AtomicInteger(0);
-    
-    /**
-     * 
-     */
-    private final String LABEL_BASE_NAME = "rule_";
     
     /**
      * 
@@ -46,13 +50,33 @@ public class RulePostProcessing {
 
     /**
      * 
-     * @param firstTarget
-     * @param secondTarget
      */
-    public RulePostProcessing(Signature firstTarget, Signature secondTarget) {
+    private final Interner<Pair<Tree<String>,Tree<String>>> intern;
+    
+    /**
+     * 
+     */
+    private final Algebra<Type1> alg1;
+    
+    /**
+     * 
+     */
+    private final Algebra<Type2> alg2;
+    
+    /**
+     * 
+     * @param firstAlg
+     * @param secondAlg 
+     */
+    public RulePostProcessing(Algebra<Type1> firstAlg, Algebra<Type2> secondAlg) {
         this.underConstruction = new ConcreteTreeAutomaton<>();
-        firstBuildImage = new Homomorphism(this.underConstruction.getSignature(), firstTarget);
-        secondBuildImage = new Homomorphism(this.underConstruction.getSignature(), secondTarget);
+        firstBuildImage = new Homomorphism(this.underConstruction.getSignature(), firstAlg.getSignature());
+        secondBuildImage = new Homomorphism(this.underConstruction.getSignature(), secondAlg.getSignature());
+        
+        intern = new Interner<>();
+        
+        this.alg1 = firstAlg;
+        this.alg2 = secondAlg;
     }
     
     /**
@@ -63,7 +87,6 @@ public class RulePostProcessing {
      * @param isStart 
      */
     public void addRule(Tree<String> input, Homomorphism firstImage, Homomorphism secondImage, boolean isStart){
-        String label = LABEL_BASE_NAME+this.ai.getAndIncrement();
         String parent = input.getLabel();
         
         List<String> children = new ArrayList<>();
@@ -73,13 +96,20 @@ public class RulePostProcessing {
         
         Tree<String> firstIm = makeImage(numbered, firstImage);
         Tree<String> secondIm = makeImage(numbered, secondImage);
+        int num = this.intern.addObject(new Pair<>(firstIm,secondIm));
+        
+        String label = parent+"_"+num+"_"+children;
         
         int par = this.underConstruction.addState(parent);
         if(isStart){
             this.underConstruction.addFinalState(par);
         }
         
-        this.underConstruction.addRule(this.underConstruction.createRule(parent, label, children));
+        this.makeRule(par,label,children);
+        //TODO
+        //TODO
+        
+        
         this.firstBuildImage.add(label, firstIm);
         this.secondBuildImage.add(label, secondIm);
     }
@@ -96,7 +126,7 @@ public class RulePostProcessing {
             for(int i=0;i<get.getChildren().size();++i){
                 Tree<String> child = get.getChildren().get(i);
                 
-                addChildren(get, children);
+                addChildren(child, children);
             }
         }
     }
@@ -170,7 +200,7 @@ public class RulePostProcessing {
      */
     private Tree<String> makeFromOtherSide(Tree<String> mapped, Tree<String> numbered, Homomorphism imager) {
         if(mapped.getLabel().startsWith("?")){
-            int pos = Integer.parseInt(mapped.getLabel().substring(1));
+            int pos = Integer.parseInt(mapped.getLabel().substring(1))-1;
             
             return makeImage(numbered.getChildren().get(pos), imager);
         }else{
@@ -183,5 +213,67 @@ public class RulePostProcessing {
             
             return Tree.create(label, children);
         }
+    }
+
+    /**
+     * 
+     * @param parent
+     * @param label
+     * @param children
+     * @return 
+     */
+    private void makeRule(int parent, String label, List<String> children) {
+        int lab = this.underConstruction.getSignature().addSymbol(label, children.size());
+        String par = this.underConstruction.getStateForId(parent);
+        Rule r = null;
+        
+        Iterator<Rule> options = this.underConstruction.getRulesTopDown(lab, parent).iterator();
+        int[] kids = toIntArray(children);
+            
+        while(options.hasNext()){
+            Rule option = options.next();
+            if(Arrays.equals(option.getChildren(), kids)){
+                r = option;
+            }
+        }
+        
+        if(r == null){
+            this.underConstruction.addRule(this.underConstruction.createRule(parent, lab, kids, 1.0));
+        }else{
+            r.setWeight(r.getWeight()+1.0);
+        }
+    }
+
+    /**
+     * 
+     * @param children
+     * @return 
+     */
+    private int[] toIntArray(List<String> children) {
+        int[] arr = new int[children.size()];
+        
+        for(int i=0;i<children.size();++i){
+            arr[i] = this.underConstruction.addState(children.get(i));
+        }
+        
+        return arr;
+    }
+    
+    /**
+     * 
+     * @param name1
+     * @param name2
+     * @return 
+     */
+    public InterpretedTreeAutomaton getIRTG(String name1, String name2){
+        InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(underConstruction);
+        
+        Interpretation<Type1> inter1 = new Interpretation<>(alg1, this.firstBuildImage);
+        ita.addInterpretation(name1, inter1);
+        
+        Interpretation<Type2> inter2 = new Interpretation<>(alg2, this.secondBuildImage);
+        ita.addInterpretation(name2, inter2);
+        
+        return ita;
     }
 }
