@@ -10,9 +10,9 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +43,16 @@ public class ExtractGrammar<Type1,Type2> {
     /**
      * 
      */
+    private final String interpretation1ID;
+    
+    /**
+     * 
+     */
+    private final String interpretation2ID;
+    
+    /**
+     * 
+     */
     private final StringSubtreeIterator.VariableMapping nonterminals;
 
     /**
@@ -50,11 +60,16 @@ public class ExtractGrammar<Type1,Type2> {
      * @param algebra1
      * @param algebra2
      * @param nonterminals 
+     * @param interpretation1ID 
+     * @param interpretation2ID 
      */
-    public ExtractGrammar(Algebra<Type1> algebra1, Algebra<Type2> algebra2, StringSubtreeIterator.VariableMapping nonterminals) {
+    public ExtractGrammar(Algebra<Type1> algebra1, Algebra<Type2> algebra2, StringSubtreeIterator.VariableMapping nonterminals,
+            String interpretation1ID, String interpretation2ID) {
         this.algebra1 = algebra1;
         this.algebra2 = algebra2;
         this.nonterminals = nonterminals;
+        this.interpretation1ID = interpretation1ID;
+        this.interpretation2ID = interpretation2ID;
     }
     
     /**
@@ -104,13 +119,22 @@ public class ExtractGrammar<Type1,Type2> {
                     solutionWriter.write(ent.getValue().toString());
                 }
                 
+                final Homomorphism hom1 = ita.getInterpretation(interpretation1ID).getHomomorphism();
+                final Homomorphism hom2 = ita.getInterpretation(interpretation2ID).getHomomorphism();
+                
                 Iterator<Tree<String>> subtrees = StringSubtreeIterator.getSubtrees(solution, nonterminals);
+                if(subtrees.hasNext()){
+                    rpp.addRule(subtrees.next(), hom1, hom2, true);
+                }
                 subtrees.forEachRemaining((Tree<String> t) -> {
-                    //TODO, identify interpretation.
+                    rpp.addRule(t, hom1, hom2, false);
                 });
             }
         }
         
-        //TODO
+        InterpretedTreeAutomaton ita = rpp.getIRTG(interpretation1ID, interpretation2ID);
+        try(BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(irtg))){
+            bw.write(ita.toString());
+        }
     }
 }

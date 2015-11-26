@@ -18,6 +18,7 @@ import java.util.List;
 public class StringSubtreeIterator {
     
     /**
+     * Iterator MUST always return root first.
      * 
      * @param sub
      * @param vm
