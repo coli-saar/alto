@@ -66,10 +66,15 @@ public class ExtractJointTrees {
                 line = line.trim();
                 if(!line.equals("")){
                     firstInputs.add(line);
-                    secondInputs.add(input.readLine().trim());
+                    
+                    line = input.readLine().trim();
+                    secondInputs.add(line);
                 
-                    firstAlignments.add(input.readLine().trim());
-                    secondAlignments.add(input.readLine().trim());
+                    line = input.readLine().trim();
+                    firstAlignments.add(line);
+                    
+                    line = input.readLine().trim();
+                    secondAlignments.add(line);
                 }
             }
         }

@@ -32,7 +32,6 @@ public class RestrictToWSTokenizationLength {
             String line;
             
             while((line = in.readLine()) != null){
-                ///TODO
                 if(line.trim().equals("")){
                     conditionalDump(lines, maxLength, out);
                 }else{
@@ -40,7 +39,8 @@ public class RestrictToWSTokenizationLength {
                 }
             }
             
-            conditionalDump(lines, maxLength, out);   
+            conditionalDump(lines, maxLength, out);
+            out.flush();
         }
     }
 
