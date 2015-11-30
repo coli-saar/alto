@@ -199,7 +199,7 @@ public class RulePostProcessing<Type1,Type2> {
      * @return 
      */
     private Tree<String> makeFromOtherSide(Tree<String> mapped, Tree<String> numbered, Homomorphism imager) {
-        if(mapped.getLabel().startsWith("?")){
+        if(mapped.getLabel().matches("\\?\\d+")){
             int pos = Integer.parseInt(mapped.getLabel().substring(1))-1;
             
             return makeImage(numbered.getChildren().get(pos), imager);

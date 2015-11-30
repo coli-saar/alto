@@ -10,7 +10,6 @@ import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
-import de.up.ling.irtg.rule_finding.SubtreeIterator;
 import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.signature.Signature;
 import static de.up.ling.irtg.util.TestingTools.pt;

@@ -77,6 +77,7 @@ public class ExtractGrammar<Type1,Type2> {
      * @param inputs
      * @param trees
      * @param irtg 
+     * @throws java.io.IOException 
      */
     public void extract(Iterable<InputStream> inputs, OutputStream trees, OutputStream irtg) throws IOException {
         IrtgInputCodec iic = new IrtgInputCodec();
@@ -117,7 +118,9 @@ public class ExtractGrammar<Type1,Type2> {
                     solutionWriter.write(ent.getKey());
                     solutionWriter.write('\t');
                     solutionWriter.write(ent.getValue().toString());
+                    solutionWriter.newLine();
                 }
+                solutionWriter.newLine();
                 
                 final Homomorphism hom1 = ita.getInterpretation(interpretation1ID).getHomomorphism();
                 final Homomorphism hom2 = ita.getInterpretation(interpretation2ID).getHomomorphism();
