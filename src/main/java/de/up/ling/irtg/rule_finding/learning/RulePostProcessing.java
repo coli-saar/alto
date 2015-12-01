@@ -106,9 +106,6 @@ public class RulePostProcessing<Type1,Type2> {
         }
         
         this.makeRule(par,label,children);
-        //TODO
-        //TODO
-        
         
         this.firstBuildImage.add(label, firstIm);
         this.secondBuildImage.add(label, secondIm);
@@ -224,7 +221,6 @@ public class RulePostProcessing<Type1,Type2> {
      */
     private void makeRule(int parent, String label, List<String> children) {
         int lab = this.underConstruction.getSignature().addSymbol(label, children.size());
-        String par = this.underConstruction.getStateForId(parent);
         Rule r = null;
         
         Iterator<Rule> options = this.underConstruction.getRulesTopDown(lab, parent).iterator();
