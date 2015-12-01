@@ -82,10 +82,11 @@ public class ExtractGrammar<Type1,Type2> {
     public void extract(Iterable<InputStream> inputs, OutputStream trees, OutputStream irtg) throws IOException {
         IrtgInputCodec iic = new IrtgInputCodec();
         
-        Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream) -> {
+        Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream in) -> {
             InterpretedTreeAutomaton ita;
             try {
-                ita = iic.read(InputStream);
+                ita = iic.read(in);
+                in.close();
             } catch (IOException | CodecParseException ex) {
                 Logger.getLogger(ExtractGrammar.class.getName()).log(Level.SEVERE, null, ex);
                 ita = null;
@@ -136,6 +137,7 @@ public class ExtractGrammar<Type1,Type2> {
         }
         
         InterpretedTreeAutomaton ita = rpp.getIRTG(interpretation1ID, interpretation2ID);
+        ita.getAutomaton().normalizeRuleWeights();
         try(BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(irtg))){
             bw.write(ita.toString());
         }
