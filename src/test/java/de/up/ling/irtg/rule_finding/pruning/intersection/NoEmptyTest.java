@@ -43,7 +43,6 @@ public class NoEmptyTest {
     public void testSomeMethod() throws Exception {
         NoEmpty no = new NoEmpty(at.getTrees().getSignature(), at.getTrees().getAllLabels());
         
-        System.out.println(no);
         assertTrue(no.accepts(pt("*(a,*(b,*(c,*(d,e))))")));
         assertTrue(no.accepts(pt("*(a,*(b,*(X(c),*(d,e))))")));
         assertFalse(no.accepts(pt("*(a,*(b,*(X(X(c)),*(d,e))))")));
