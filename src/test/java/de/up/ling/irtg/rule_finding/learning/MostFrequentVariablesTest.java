@@ -10,7 +10,7 @@ import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
-import de.up.ling.irtg.rule_finding.pruning.intersection.NoVariableSequences;
+import de.up.ling.irtg.rule_finding.pruning.intersection.NoEmpty;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
@@ -49,35 +49,35 @@ public class MostFrequentVariablesTest {
         TreeAutomaton ta = sta.decompose(sta.parseString("Hans geht heim"));
         AlignedTrees at = new AlignedTrees(ta, new SpecifiedAligner(ta));
         ta = variables.apply(at).getTrees();
-        TreeAutomaton constrain = new NoVariableSequences(ta.getSignature(), ta.getAllLabels());
+        TreeAutomaton constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
         ta = new IntersectionAutomaton(ta, constrain);
         list.add(ta);
         
         ta = sta.decompose(sta.parseString("Mary geht morgen heim"));
         at = new AlignedTrees(ta, new SpecifiedAligner(ta));
         ta = variables.apply(at).getTrees();
-        constrain = new NoVariableSequences(ta.getSignature(), ta.getAllLabels());
+        constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
         ta = new IntersectionAutomaton(ta, constrain);
         list.add(ta);
         
         ta = sta.decompose(sta.parseString("Der Jüngste geht heute heim"));
         at = new AlignedTrees(ta, new SpecifiedAligner(ta));
         ta = variables.apply(at).getTrees();
-        constrain = new NoVariableSequences(ta.getSignature(), ta.getAllLabels());
+        constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
         ta = new IntersectionAutomaton(ta, constrain);
         list.add(ta);
         
         ta = sta.decompose(sta.parseString("dann heute heim"));
         at = new AlignedTrees(ta, new SpecifiedAligner(ta));
         ta = variables.apply(at).getTrees();
-        constrain = new NoVariableSequences(ta.getSignature(), ta.getAllLabels());
+        constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
         ta = new IntersectionAutomaton(ta, constrain);
         list.add(ta);
         
         ta = sta.decompose(sta.parseString("Der Jüngste kommt"));
         at = new AlignedTrees(ta, new SpecifiedAligner(ta));
         ta = variables.apply(at).getTrees();
-        constrain = new NoVariableSequences(ta.getSignature(), ta.getAllLabels());
+        constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
         ta = new IntersectionAutomaton(ta, constrain);
         list.add(ta);
         
