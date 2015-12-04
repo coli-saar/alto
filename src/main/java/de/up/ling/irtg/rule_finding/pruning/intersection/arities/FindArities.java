@@ -7,6 +7,7 @@ package de.up.ling.irtg.rule_finding.pruning.intersection.arities;
 
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -75,5 +76,24 @@ public class FindArities {
         }
         
         ars.add(arity);
+    }
+
+    /**
+     * 
+     * @param arities
+     * @return 
+     */
+    public static int max(Object2ObjectMap<String, IntSet> arities) {
+        int max = 0;
+        
+        for(IntSet ins : arities.values()){
+            IntIterator iit = ins.iterator();
+            
+            while(iit.hasNext()){
+                max = Math.max(max, iit.nextInt());
+            }
+        }
+        
+        return max;
     }
 }
