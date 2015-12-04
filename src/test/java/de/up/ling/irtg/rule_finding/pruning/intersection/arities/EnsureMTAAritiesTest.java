@@ -79,14 +79,14 @@ public class EnsureMTAAritiesTest {
         ta1 = new IntersectionAutomaton(ta1, new NoEmpty(ta1.getSignature(), ta1.getAllLabels()));
         ta2 = new IntersectionAutomaton(ta2, new NoEmpty(ta2.getSignature(), ta2.getAllLabels()));
         
-        assertTrue(ta1.accepts(pt("__RIGHT__INTO__LEFT__(__LEFT__INTO__RIGHT__(a,__LEFT__INTO__RIGHT__(X(m),p)),X(b))")));
-        assertFalse(ta1.accepts(pt("__RIGHT__INTO__LEFT__(__LEFT__INTO__RIGHT__(a,X(__LEFT__INTO__RIGHT__(X(m),p))),X(b))")));
+        assertTrue(ta1.accepts(pt("__RL__(__LR__(a,__LR__(X(m),p)),X(b))")));
+        assertFalse(ta1.accepts(pt("__RL__(__LR__(a,X(__LR__(X(m),p))),X(b))")));
         
         
-        assertTrue(ta2.accepts(pt("__LEFT__INTO__RIGHT__(__RIGHT__INTO__LEFT__(__LEFT__INTO__RIGHT__(where,is),X(waldo)),p)")));
-        assertFalse(ta2.accepts(pt("__LEFT__INTO__RIGHT__(__RIGHT__INTO__LEFT__(__LEFT__INTO__RIGHT__(where,is),X(waldo)),X(p))")));
-        assertFalse(ta2.accepts(pt("__LEFT__INTO__RIGHT__(__RIGHT__INTO__LEFT__(X(__LEFT__INTO__RIGHT__(where,is)),X(waldo)),p)")));
-        assertTrue(ta2.accepts(pt("__LEFT__INTO__RIGHT__(X(__RIGHT__INTO__LEFT__(__LEFT__INTO__RIGHT__(where,is),X(waldo))),p)")));
+        assertTrue(ta2.accepts(pt("__LR__(__RL__(__LR__(where,is),X(waldo)),p)")));
+        assertFalse(ta2.accepts(pt("__LR__(__RL__(__LR__(where,is),X(waldo)),X(p))")));
+        assertFalse(ta2.accepts(pt("__LR__(__RL__(X(__LR__(where,is)),X(waldo)),p)")));
+        assertTrue(ta2.accepts(pt("__LR__(X(__RL__(__LR__(where,is),X(waldo))),p)")));
     }
     
 }

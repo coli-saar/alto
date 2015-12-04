@@ -10,6 +10,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreePanel;
 import de.up.ling.tree.TreeParser;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
@@ -20,6 +21,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.swing.JComponent;
 
 /**
  *
@@ -29,12 +31,12 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     /**
      * 
      */
-    public final static String RIGHT_INTO_LEFT = "__RIGHT__INTO__LEFT__";
+    public final static String RIGHT_INTO_LEFT = "__RL__";
     
     /**
      * 
      */
-    public final static String LEFT_INTO_RIGHT  = "__LEFT__INTO__RIGHT__";
+    public final static String LEFT_INTO_RIGHT  = "__LR__";
     
     /**
      * 
@@ -121,9 +123,14 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     private void addSymbols(Tree<String> t) {
         this.getSignature().addSymbol(t.getLabel(), 0);
         
-        for(Tree<String> q : t.getChildren()){
+        t.getChildren().stream().forEach((q) -> {
             addSymbols(q);
-        }
+        });
+    }
+    
+    @Override
+    public JComponent visualize(Tree<String> object) {
+        return new TreePanel(object);
     }
     
     /**

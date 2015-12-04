@@ -59,6 +59,6 @@ public class NoLeftIntoRightTest {
         TreeAutomaton ta = l2.iterator().next().getTrees();
         
         assertEquals(ta.language().size(),1);
-        assertTrue(ta.language().contains(pt("__RIGHT__INTO__LEFT__(answer,__RIGHT__INTO__LEFT__(count,__RIGHT__INTO__LEFT__(state,__RIGHT__INTO__LEFT__(__RIGHT__INTO__LEFT__(intersection,__RIGHT__INTO__LEFT__(next_to_2,__RIGHT__INTO__LEFT__(stateid,colorado))),__RIGHT__INTO__LEFT__(next_to_2,__RIGHT__INTO__LEFT__(stateid,'new mexico'))))))")));
+        assertTrue(ta.language().contains(pt("__RL__(answer,__RL__(count,__RL__(state,__RL__(__RL__(intersection,__RL__(next_to_2,__RL__(stateid,colorado))),__RL__(next_to_2,__RL__(stateid,'new mexico'))))))")));
     }
 }
