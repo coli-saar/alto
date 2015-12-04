@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.rule_finding.pruning.intersection;
 
-import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -19,6 +18,8 @@ import java.util.function.Function;
 /**
  *
  * @author christoph
+ * @param <X>
+ * @param <Y>
  */
 public class IntersectionPruner<X,Y> implements Pruner<X,Y,X,Pair<X,? extends Object>> {
 
