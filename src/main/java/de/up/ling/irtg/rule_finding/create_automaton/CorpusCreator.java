@@ -111,17 +111,30 @@ public class CorpusCreator<InputType1,InputType2> {
      */
     public Iterable<Pair<TreeAutomaton,HomomorphismManager>> makeRuleTrees(Iterable<String> firstInputs, Iterable<String> secondInputs,
                                             Iterable<String> firstAlignments, Iterable<String> secondAlignments) {
-        Propagator pro = new Propagator();
         Iterable<AlignedTrees> firstRoundOne = makeInitialAlignedTrees(firstInputs,
                                                 firstAlignments, this.firstAlgebra, this.firtAL);
+        Iterable<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(secondInputs,
+                                                secondAlignments, secondAlgebra, secondAL);
+        
+        return makeRuleTrees(firstRoundOne, secondRoundOne);
+    }
+
+    /**
+     * 
+     * @param firstRoundOne
+     * @param secondRoundOne
+     * @return 
+     */
+    public Iterable<Pair<TreeAutomaton, HomomorphismManager>> makeRuleTrees(Iterable<AlignedTrees> firstRoundOne, Iterable<AlignedTrees> secondRoundOne) {
         Iterable<AlignedTrees> firstRoundTwo = makeFirstPruning(firstRoundOne, firstPruner, firstVI);
+        Iterable<AlignedTrees> secondRoundTwo = makeFirstPruning(secondRoundOne, secondPruner, secondVI);
+        
+        Propagator pro = new Propagator();
+        
         Iterable<AlignedTrees> allFirst = new FunctionIterable<>(firstRoundTwo, (AlignedTrees at) -> {
             return pro.convert(at);
         });
         
-        Iterable<AlignedTrees> secondRoundOne = makeInitialAlignedTrees(secondInputs,
-                                                secondAlignments, secondAlgebra, secondAL);
-        Iterable<AlignedTrees> secondRoundTwo = makeFirstPruning(secondRoundOne, secondPruner, secondVI);
         Iterable<AlignedTrees> allSecond = new FunctionIterable<>(secondRoundTwo, (AlignedTrees at) -> {
             return pro.convert(at);
         });
@@ -130,24 +143,24 @@ public class CorpusCreator<InputType1,InputType2> {
         Iterable<AlignedTrees> secondRoundThree = this.secondPruner.postPrune(allSecond, allFirst);
         
         return new BiFunctionParallelIterable<>(firstRoundThree,
-        secondRoundThree, maxThreads, (AlignedTrees at1, AlignedTrees at2) -> {
-            TreeAutomaton first = at1.getTrees();
-            TreeAutomaton second = at2.getTrees();
-            
-            HomomorphismManager hm = new HomomorphismManager(first.getSignature(), second.getSignature());
-            hm.update(first.getAllLabels(), second.getAllLabels());
-            
-            Homomorphism hm1 = hm.getHomomorphismRestriction1(first.getAllLabels(), second.getAllLabels());
-            Homomorphism hm2 = hm.getHomomorphismRestriction2(second.getAllLabels(), first.getAllLabels());
-            
-            RuleFindingIntersectionAutomaton rfi = new RuleFindingIntersectionAutomaton(first, second, hm1, hm2);
-            TreeAutomaton done = new TopDownIntersectionAutomaton(rfi, hm.getRestriction());
-            
-            done = RemoveDead.reduce(done);
-            done = hm.reduceToOriginalVariablePairs(done);
-            
-            return new Pair<>(done,hm);
-        });
+                secondRoundThree, maxThreads, (AlignedTrees at1, AlignedTrees at2) -> {
+                    TreeAutomaton first = at1.getTrees();
+                    TreeAutomaton second = at2.getTrees();
+                    
+                    HomomorphismManager hm = new HomomorphismManager(first.getSignature(), second.getSignature());
+                    hm.update(first.getAllLabels(), second.getAllLabels());
+                    
+                    Homomorphism hm1 = hm.getHomomorphismRestriction1(first.getAllLabels(), second.getAllLabels());
+                    Homomorphism hm2 = hm.getHomomorphismRestriction2(second.getAllLabels(), first.getAllLabels());
+                    
+                    RuleFindingIntersectionAutomaton rfi = new RuleFindingIntersectionAutomaton(first, second, hm1, hm2);
+                    TreeAutomaton done = new TopDownIntersectionAutomaton(rfi, hm.getRestriction());
+                    
+                    done = RemoveDead.reduce(done);
+                    done = hm.reduceToOriginalVariablePairs(done);
+                    
+                    return new Pair<>(done,hm);
+                });
     }
 
     /**

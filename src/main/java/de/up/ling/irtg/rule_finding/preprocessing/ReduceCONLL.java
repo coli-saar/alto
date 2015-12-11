@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  *
@@ -23,6 +24,9 @@ public class ReduceCONLL {
      * @throws IOException 
      */
     public static void main(String... args) throws IOException {
+        boolean berkeley = args[0].equals("berkeley");
+        args = berkeley ? Arrays.copyOfRange(args, 1, args.length) : args;
+        
         int[] keepFields = new int[args.length-2];
         for(int i=2;i<args.length;++i) {
             keepFields[i-2] = Integer.parseInt(args[i]);
@@ -35,14 +39,23 @@ public class ReduceCONLL {
             boolean first = true;
             while((line = input.readLine()) != null) {
                 line = line.trim();
+                if(line.isEmpty() || line.matches("\\s*#.*")) {
+                    if(!berkeley || line.isEmpty()){
+                        if(first) {
+                            first = false;
+                        }else {
+                            output.newLine();
+                        }
+                        
+                        output.write(line);
+                    }
+                    continue;
+                }
+                
                 if(first) {
                     first = false;
                 }else {
                     output.newLine();
-                }
-                if(line.isEmpty() || line.matches("\\s*#.*")) {
-                    output.write(line);
-                    continue;
                 }
                 
                 String[] parts = line.split("\t+");
@@ -63,6 +76,9 @@ public class ReduceCONLL {
                 output.write(sb.toString());
             }
             
+            if(berkeley) {
+                output.newLine();
+            }
             output.flush();
         }
     }
