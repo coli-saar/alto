@@ -51,6 +51,11 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     /**
      * 
      */
+    public static String QUOTE = "__QUOTE__";
+    
+    /**
+     * 
+     */
     public MinimalTreeAlgebra(){
         this.getSignature().addSymbol(RIGHT_INTO_LEFT, 2);
         this.getSignature().addSymbol(LEFT_INTO_RIGHT, 2);
@@ -88,7 +93,7 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
             default:
                 if(childrenValues.isEmpty()){
                     this.getSignature().addSymbol(label, 0);
-                    return Tree.create(label);
+                    return Tree.create(label.replaceAll(QUOTE, "'"));
                 }else{
                     return null;
                 }
@@ -98,6 +103,7 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
         try {
+            representation = representation.replaceAll("'", QUOTE);
             representation = ALL_QUOTE.matcher(representation).replaceAll("'$0'");
             representation = NO_DOUBLE_QUOTE.matcher(representation).replaceAll("'");
             
