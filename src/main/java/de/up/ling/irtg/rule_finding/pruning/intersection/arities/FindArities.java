@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.pruning.intersection.arities;
 
+import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import it.unimi.dsi.fastutil.ints.IntIterator;
@@ -43,6 +44,8 @@ public class FindArities {
                     pos = 0;
                 }else{
                     if(pos == posUsed){
+                        line = MinimalTreeAlgebra.preProcess(line);
+                        
                         Tree<String> t = TreeParser.parse(line);
                         
                         t.getAllNodes().forEach((Tree<String> node) -> {

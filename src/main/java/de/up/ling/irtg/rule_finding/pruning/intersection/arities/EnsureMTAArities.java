@@ -49,6 +49,7 @@ public class EnsureMTAArities extends ConcreteTreeAutomaton<Integer> {
                 this.addRule(r);
             } else if(arity == 0) {
                 IntSet arits = arities.get(label);
+                
                 IntIterator ars = arits.iterator();
                 
                 while(ars.hasNext()) {

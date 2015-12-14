@@ -103,9 +103,7 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
         try {
-            representation = representation.replaceAll("'", QUOTE);
-            representation = ALL_QUOTE.matcher(representation).replaceAll("'$0'");
-            representation = NO_DOUBLE_QUOTE.matcher(representation).replaceAll("'");
+            representation = preProcess(representation);
             
             Tree<String> t = TreeParser.parse(representation);
             addSymbols(t);
@@ -114,6 +112,18 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
             Logger.getLogger(MinimalTreeAlgebra.class.getName()).log(Level.SEVERE, null, ex);
             return null;
         }
+    }
+
+    /**
+     * 
+     * @param representation
+     * @return 
+     */
+    public static String preProcess(String representation) {
+        representation = representation.replaceAll("'", QUOTE);
+        representation = ALL_QUOTE.matcher(representation).replaceAll("'$0'");
+        representation = NO_DOUBLE_QUOTE.matcher(representation).replaceAll("'");
+        return representation;
     }
 
     @Override
