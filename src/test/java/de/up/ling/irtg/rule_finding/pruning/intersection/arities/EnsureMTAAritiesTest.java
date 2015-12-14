@@ -82,7 +82,6 @@ public class EnsureMTAAritiesTest {
         assertTrue(ta1.accepts(pt("__RL__(__LR__(a,__LR__(X(m),p)),X(b))")));
         assertFalse(ta1.accepts(pt("__RL__(__LR__(a,X(__LR__(X(m),p))),X(b))")));
         
-        
         assertTrue(ta2.accepts(pt("__LR__(__RL__(__LR__(where,is),X(waldo)),p)")));
         assertFalse(ta2.accepts(pt("__LR__(__RL__(__LR__(where,is),X(waldo)),X(p))")));
         assertFalse(ta2.accepts(pt("__LR__(__RL__(X(__LR__(where,is)),X(waldo)),p)")));

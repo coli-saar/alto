@@ -6,12 +6,17 @@
 package de.up.ling.irtg.rule_finding.pruning.intersection;
 
 import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.VariableIntroduction;
 import static de.up.ling.irtg.util.TestingTools.pt;
+import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -44,6 +49,8 @@ public class LexicalizedTest {
         TreeAutomaton from = at.getTrees();
         TreeAutomaton lex = new Lexicalized(from.getSignature(), from.getAllLabels());
         
+        TreeAutomaton ta = new IntersectionAutomaton(lex, from);
+        
         assertTrue(lex.accepts(pt("d")));
         assertFalse(lex.accepts(pt("X(d)")));
         assertTrue(lex.accepts(pt("*(X(d),c)")));
@@ -52,6 +59,14 @@ public class LexicalizedTest {
         assertFalse(lex.accepts(pt("*(X(*(X(a),X(d))),c)")));
         assertTrue(lex.accepts(pt("*(X(*(X(a),d)),c)")));
         assertTrue(lex.accepts(pt("*(*(a,b),*(c,*(d,e)))")));
+        
+        Object2IntOpenHashMap<Tree<String>> counts = new Object2IntOpenHashMap<>();
+        for(Tree<String> t : (Iterable<Tree<String>>) ta.languageIterable()) {
+            counts.addTo(t, 1);
+        }
+        
+        IntSet set = new IntOpenHashSet(counts.values());
+        assertEquals(set.size(),1);
     }
     
 }
