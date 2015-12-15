@@ -7,6 +7,7 @@ package de.up.ling.irtg.rule_finding.pruning.intersection;
 
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
@@ -67,6 +68,14 @@ public class LexicalizedTest {
         
         IntSet set = new IntOpenHashSet(counts.values());
         assertEquals(set.size(),1);
+        assertTrue(lex.isBottomUpDeterministic());
+        
+        int num = 0;
+        for(Rule r : (Iterable<Rule>) lex.getAllRulesTopDown()) {
+            ++num;
+        }
+        
+        assertEquals(num,10);
     }
     
 }
