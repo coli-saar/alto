@@ -137,7 +137,8 @@ public class ExtractGrammarTest {
         };
         
         extract = new ExtractGrammar<>(new StringAlgebra(),new MinimalTreeAlgebra(), ssi,
-                        ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID);
+                        ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID,
+                        new MostFrequentVariables());
     }
 
     /**

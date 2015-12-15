@@ -89,7 +89,7 @@ public class MostFrequentVariablesTest {
      */
     @Test
     public void testGetOptimalChoices() {
-        Iterable<Tree<String>> it = mfv.getOptimalChoices(data);
+        Iterable<Tree<String>> it = mfv.getChoices(data);
         Object2DoubleMap<String> counts = mfv.countVariablesTopDown(data);
         Iterator<Tree<String>> iter = it.iterator();
         

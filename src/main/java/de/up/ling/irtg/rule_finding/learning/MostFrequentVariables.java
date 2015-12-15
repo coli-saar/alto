@@ -29,14 +29,14 @@ import java.util.function.Consumer;
  *
  * @author christoph_teichmann
  */
-public class MostFrequentVariables {
-    
+public class MostFrequentVariables implements TreeExtractor {    
     /**
      * 
      * @param it
      * @return 
      */
-    public Iterable<Tree<String>> getOptimalChoices(Iterable<TreeAutomaton> it){
+    @Override
+    public Iterable<Tree<String>> getChoices(final Iterable<TreeAutomaton> it){
         Object2DoubleMap<String> counts = this.countVariablesTopDown(it);
         
         return new FunctionIterable<>(it,(TreeAutomaton ta) -> {

@@ -53,6 +53,11 @@ public class ExtractGrammar<Type1,Type2> {
     /**
      * 
      */
+    private final TreeExtractor trex;
+    
+    /**
+     * 
+     */
     private final StringSubtreeIterator.VariableMapping nonterminals;
 
     /**
@@ -63,13 +68,16 @@ public class ExtractGrammar<Type1,Type2> {
      * @param interpretation1ID 
      * @param interpretation2ID 
      */
-    public ExtractGrammar(Algebra<Type1> algebra1, Algebra<Type2> algebra2, StringSubtreeIterator.VariableMapping nonterminals,
-            String interpretation1ID, String interpretation2ID) {
+    public ExtractGrammar(Algebra<Type1> algebra1, Algebra<Type2> algebra2,
+            StringSubtreeIterator.VariableMapping nonterminals,
+            String interpretation1ID, String interpretation2ID,
+            TreeExtractor trex) {
         this.algebra1 = algebra1;
         this.algebra2 = algebra2;
         this.nonterminals = nonterminals;
         this.interpretation1ID = interpretation1ID;
         this.interpretation2ID = interpretation2ID;
+        this.trex = trex;
     }
     
     /**
@@ -100,7 +108,7 @@ public class ExtractGrammar<Type1,Type2> {
         });
         
         MostFrequentVariables mfv = new MostFrequentVariables();
-        Iterable<Tree<String>> solutions = mfv.getOptimalChoices(automata);
+        Iterable<Tree<String>> solutions = mfv.getChoices(automata);
         
         RulePostProcessing<Type1,Type2> rpp = new RulePostProcessing<>(algebra1, algebra2);
         

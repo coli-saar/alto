@@ -9,6 +9,7 @@ import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
+import de.up.ling.irtg.rule_finding.learning.MostFrequentVariables;
 import de.up.ling.irtg.rule_finding.learning.StringSubtreeIterator;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
@@ -69,7 +70,8 @@ public class ExtractStringToTreeGrammar {
         
         ExtractGrammar<List<String>,Tree<String>> gram = new ExtractGrammar<>(new StringAlgebra(),
                         new MinimalTreeAlgebra(), vars,
-                        ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID);
+                        ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID,
+                        new MostFrequentVariables());
         
         OutputStream trees = new FileOutputStream(args[1]);
         OutputStream grammar = new FileOutputStream(args[2]);
