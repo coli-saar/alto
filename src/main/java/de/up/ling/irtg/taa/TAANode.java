@@ -171,9 +171,19 @@ public class TAANode {
     public Object apply(List<Object> input, Instance instance, InterpretedTreeAutomaton irtg) {
         try {
             lastResult = getImplementation().apply(input, instance, irtg);
-        } catch (java.lang.Exception e) {
-            System.err.println("error in applying a TAANode: " + e.toString());
-            lastResult = "ERROR: " +e.toString();
+        } catch (NullPointerException ex) {
+            boolean anInputIsNull = false;
+            for (Object obj : input) {
+                if (obj == null) {
+                    anInputIsNull = true;
+                }
+            }
+            if (anInputIsNull) {
+                //simply propagate the null
+                lastResult = null;
+            } else {
+                throw ex;
+            }
         }
         return lastResult;
     }

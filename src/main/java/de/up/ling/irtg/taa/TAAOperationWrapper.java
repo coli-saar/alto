@@ -10,6 +10,7 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.ObjectWithStringCode;
 import de.up.ling.irtg.util.Evaluator;
@@ -267,6 +268,9 @@ public abstract class TAAOperationWrapper extends ObjectWithStringCode {
             try {
                 ret.add(new TAAOperationImplementation("Standard", "std", (Pair<InterpretedTreeAutomaton, Pair<List<Object>, Instance>> pair) -> {
                         return pair.left.getInterpretation((String)parameters).invhom((TreeAutomaton)pair.right.left.get(0));
+                    }, null, new Class[]{TreeAutomaton.class}, Interpretation.class.getMethod("invhom", new Class[]{TreeAutomaton.class}).getReturnType()));// cannot take the stored irtg since this is called in the constructor of super
+                ret.add(new TAAOperationImplementation("Condensed nondeleting", "condNondel", (Pair<InterpretedTreeAutomaton, Pair<List<Object>, Instance>> pair) -> {
+                        return new CondensedNondeletingInverseHomAutomaton((TreeAutomaton)pair.right.left.get(0), pair.left.getInterpretation((String)parameters).getHomomorphism());
                     }, null, new Class[]{TreeAutomaton.class}, Interpretation.class.getMethod("invhom", new Class[]{TreeAutomaton.class}).getReturnType()));// cannot take the stored irtg since this is called in the constructor of super
                 
             } catch (NoSuchMethodException | SecurityException ex) {

@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
@@ -22,6 +23,7 @@ import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -32,9 +34,11 @@ import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * The binary string algebra. The elements of this algebra are lists of strings,
@@ -167,6 +171,15 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     public String representAsString(List<String> object) {
         return StringTools.join(object, " ");
     }
+
+    @Override
+    public List<Pair<Pair<String, String>, Function<List<String>, Double>>> getObjectProperties() {
+        List<Pair<Pair<String, String>, Function<List<String>, Double>>> ret = new ArrayList<>();
+        ret.add(new Pair(new Pair("length", "length"), (Function<List<String>, Double>) (List<String> t) -> (double)t.size()));
+        return ret;
+    }
+    
+    
 
     private class CkyAutomaton extends TreeAutomaton<Span> {
 
@@ -505,6 +518,8 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
             return ret;
         }
     }
+    
+    
 
     public static void main(String[] args) throws Exception {
 //        String grammar = "a.irtg";
