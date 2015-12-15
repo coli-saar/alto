@@ -11,6 +11,7 @@ import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
 import de.up.ling.irtg.rule_finding.learning.MostFrequentVariables;
 import de.up.ling.irtg.rule_finding.learning.StringSubtreeIterator;
+import de.up.ling.irtg.rule_finding.learning.VariableWeightedRandomPick;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
 import java.io.File;
@@ -64,14 +65,14 @@ public class ExtractStringToTreeGrammar {
 
             @Override
             public String get(Tree<String> child, Tree<String> whole) {
-                return child.getLabel();
+                return "X";
             }
         };
         
         ExtractGrammar<List<String>,Tree<String>> gram = new ExtractGrammar<>(new StringAlgebra(),
                         new MinimalTreeAlgebra(), vars,
                         ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID,
-                        new MostFrequentVariables());
+                        new VariableWeightedRandomPick(2.0, 30, 400, 0.5));
         
         OutputStream trees = new FileOutputStream(args[1]);
         OutputStream grammar = new FileOutputStream(args[2]);
