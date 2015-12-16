@@ -41,8 +41,6 @@ public class DowncaseAndRemovePunctuation {
                 }else {
                     lines.add(line);
                 }
-                
-                
             }
             
             dump(lines, output, applicableLines);

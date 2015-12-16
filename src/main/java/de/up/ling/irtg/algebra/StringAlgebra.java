@@ -19,7 +19,6 @@ import de.up.ling.irtg.util.LambdaStopwatch;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -52,6 +51,9 @@ import java.util.Set;
  */
 public class StringAlgebra extends Algebra<List<String>> implements Serializable {
 
+    /**
+     * 
+     */
     public static final String CONCAT = "*";
 
     /**
@@ -65,10 +67,19 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
      */
     protected int specialStarId;
 
+    /**
+     * 
+     */
     protected final int concatSymbolId;
 
+    /**
+     * 
+     */
     private IntSet concatSet;
 
+    /**
+     * 
+     */
     public StringAlgebra() {
         concatSymbolId = signature.addSymbol(CONCAT, 2);
 
