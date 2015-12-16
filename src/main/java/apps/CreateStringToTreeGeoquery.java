@@ -24,6 +24,7 @@ import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNo
 import de.up.ling.irtg.rule_finding.pruning.intersection.tree.NoLeftIntoRight;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
+import de.up.ling.irtg.rule_finding.variable_introduction.TreeTop;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -63,13 +64,12 @@ public class CreateStringToTreeGeoquery {
         }));
         fact.setSecondPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
             TreeAutomaton a = new NoLeftIntoRight(ta.getSignature(), ta.getAllLabels());
-            a = new IntersectionAutomaton(a, new NoEmpty(ta.getSignature(),ta.getAllLabels()));
             a = new IntersectionAutomaton(a, new EnsureMTAArities(ta.getSignature(), ta.getAllLabels(), maxArity, arities));
             
             return a;
         }));
         fact.setFirstVariableSource(new LeftRightXFromFinite());
-        fact.setSecondVariableSource(new JustXEveryWhere());
+        fact.setSecondVariableSource(new TreeTop());
         
         Supplier<Algebra<List<String>>> st = () -> new StringAlgebra();
         Supplier<Algebra<Tree<String>>> mta = () -> new MinimalTreeAlgebra();
