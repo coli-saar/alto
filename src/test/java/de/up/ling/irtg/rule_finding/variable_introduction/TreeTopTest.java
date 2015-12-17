@@ -11,9 +11,11 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import static de.up.ling.irtg.util.TestingTools.pt;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.Iterator;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -40,7 +42,7 @@ public class TreeTopTest {
         tt = new TreeTop();
         
         MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
-        TreeAutomaton ta = mta.decompose(mta.parseString("al(hj(t),q)"));
+        TreeAutomaton ta = mta.decompose(mta.parseString("al(hj_2(t),q)"));
         
         SpecifiedAligner spec = new SpecifiedAligner(ta);
         Object state = ta.getStateForId(ta.getFinalStates().iterator().next());
@@ -69,9 +71,10 @@ public class TreeTopTest {
             assertTrue(isOne == isTwo);
         }
         
-        assertTrue(qt.getTrees().accepts(pt("__LR__(__LR__(t,hj),Xal_treeType(__LR__(Xq_term(q),al)))")));
-        assertTrue(qt.getTrees().accepts(pt("Xal_treeType(__LR__(__LR__(t,hj),Xal_treeType(__LR__(Xq_term(q),al))))")));
-        assertTrue(qt.getTrees().accepts(pt("Xal_treeType(__LR__(Xhj_treeType(__RL__(hj,t)),Xal_treeType(__LR__(Xq_term(q),al))))")));
+        System.out.println(qt.getTrees());
+        assertTrue(qt.getTrees().accepts(pt("__LR__(__LR__(t,hj_2),'Xal||treeType'(__LR__('Xq||term'(q),al)))")));
+        assertTrue(qt.getTrees().accepts(pt("'Xal||treeType'(__LR__(__LR__(t,'hj_2'),'Xal||treeType'(__LR__('Xq||term'(q),al))))")));
+        assertTrue(qt.getTrees().accepts(pt("'Xal||treeType'(__LR__('Xhj_2||treeType'(__RL__('hj_2',t)),'Xal||treeType'(__LR__('Xq||term'(q),al))))")));
     }
     
 }

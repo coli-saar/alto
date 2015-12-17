@@ -33,19 +33,19 @@ public class TreeTop<Type> implements VariableIntroduction<Type, Type> {
             if(ru.hasNext()) {
                 Rule r = ru.next();
                 if(r.getArity() == 0) {
-                    map.put(state, ta.getSignature().resolveSymbolId(r.getLabel())+"_term");
+                    map.put(state, ta.getSignature().resolveSymbolId(r.getLabel())+"||term");
                 }else {
                     String label = ta.getSignature().resolveSymbolId(r.getLabel());
                     if(r.getArity() == 2) {
                         switch(label) {
                             case MinimalTreeAlgebra.LEFT_INTO_RIGHT:
                                 String child = map.get(r.getChildren()[1]);
-                                map.put(state, child.split("_")[0]+"_treeType");
+                                map.put(state, child.split("\\|\\|")[0]+"||treeType");
                                 
                                 break;
                             case MinimalTreeAlgebra.RIGHT_INTO_LEFT:
                                 child = map.get(r.getChildren()[0]);
-                                map.put(state, child.split("_")[0]+"_treeType");
+                                map.put(state, child.split("\\|\\|")[0]+"||treeType");
                                 
                                 break;
                             default:
