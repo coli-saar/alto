@@ -64,14 +64,11 @@ public class ExtractJointTreesTest {
         fact.setFirstVariableSource(new LeftRightXFromFinite());
         fact.setSecondVariableSource(new JustXEveryWhere());
         
-        final StringAlgebra st = new StringAlgebra();
-        final MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
-        
         SpanAligner.Factory ffact = new SpanAligner.Factory();
         AddressAligner.Factory sfact = new AddressAligner.Factory();
         
-        Supplier<Algebra<List<String>>> supp1 = () -> st;
-        Supplier<Algebra<Tree<String>>> supp2 = () -> mta;
+        Supplier<Algebra<List<String>>> supp1 = () -> new StringAlgebra();
+        Supplier<Algebra<Tree<String>>> supp2 = () -> new MinimalTreeAlgebra();
         
         CorpusCreator cc = fact.getInstance(supp1, supp2, ffact, sfact);
         ExtractJointTrees gram = new ExtractJointTrees(cc);

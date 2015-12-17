@@ -8,7 +8,7 @@ package apps;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.algebra.string_cleaning.PrefixAlgebra;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
@@ -17,12 +17,10 @@ import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.Lexicalized;
-import de.up.ling.irtg.rule_finding.pruning.intersection.NoEmpty;
 import de.up.ling.irtg.rule_finding.pruning.intersection.arities.EnsureMTAArities;
 import de.up.ling.irtg.rule_finding.pruning.intersection.arities.FindArities;
 import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.up.ling.irtg.rule_finding.pruning.intersection.tree.NoLeftIntoRight;
-import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.rule_finding.variable_introduction.TreeTop;
 import de.up.ling.tree.Tree;
@@ -71,7 +69,7 @@ public class CreateStringToTreeGeoquery {
         fact.setFirstVariableSource(new LeftRightXFromFinite());
         fact.setSecondVariableSource(new TreeTop());
         
-        Supplier<Algebra<List<String>>> st = () -> new StringAlgebra();
+        Supplier<Algebra<List<String>>> st = () -> new PrefixAlgebra();
         Supplier<Algebra<Tree<String>>> mta = () -> new MinimalTreeAlgebra();
         
         SpanAligner.Factory ffact = new SpanAligner.Factory();
@@ -103,10 +101,11 @@ public class CreateStringToTreeGeoquery {
                 }
                 
                 return out;
-            }            
+            }
         };
         
         double[] res = et.getAutomataAndMakeStatistics(in, sup);
+
         System.out.println("average: "+res[0]);
         System.out.println("min: "+res[1]);
         System.out.println("max: "+res[2]);

@@ -87,14 +87,11 @@ public class ExtractGrammarTest {
         fact.setFirstVariableSource(new LeftRightXFromFinite());
         fact.setSecondVariableSource(new JustXEveryWhere());
         
-        StringAlgebra st1 = new StringAlgebra();
-        MinimalTreeAlgebra st2 = new MinimalTreeAlgebra();
-        
         SpanAligner.Factory ffact = new SpanAligner.Factory();
         AddressAligner.Factory sfact = new AddressAligner.Factory();
         
-        Supplier<Algebra<List<String>>> supp1 = () -> st1;
-        Supplier<Algebra<Tree<String>>> supp2 = () -> st2;
+        Supplier<Algebra<List<String>>> supp1 = () -> new StringAlgebra();
+        Supplier<Algebra<Tree<String>>> supp2 = () -> new MinimalTreeAlgebra();
         
         CorpusCreator cc = fact.getInstance(supp1, supp2, ffact, sfact);
         ExtractJointTrees gram = new ExtractJointTrees(cc);

@@ -72,8 +72,6 @@ public class TreeTopTest {
         assertTrue(qt.getTrees().accepts(pt("__LR__(__LR__(t,hj),Xal_treeType(__LR__(Xq_term(q),al)))")));
         assertTrue(qt.getTrees().accepts(pt("Xal_treeType(__LR__(__LR__(t,hj),Xal_treeType(__LR__(Xq_term(q),al))))")));
         assertTrue(qt.getTrees().accepts(pt("Xal_treeType(__LR__(Xhj_treeType(__RL__(hj,t)),Xal_treeType(__LR__(Xq_term(q),al))))")));
-        
-        System.out.println(qt.getTrees());
     }
     
 }

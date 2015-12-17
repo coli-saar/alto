@@ -17,9 +17,13 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.rule_finding.variable_introduction.VariableIntroduction;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BiFunctionIterable;
 import de.up.ling.irtg.util.BiFunctionParallelIterable;
 import de.up.ling.irtg.util.FunctionIterable;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -147,7 +151,11 @@ public class CorpusCreator<InputType1,InputType2> {
                     TreeAutomaton first = at1.getTrees();
                     TreeAutomaton second = at2.getTrees();
                     
-                    HomomorphismManager hm = new HomomorphismManager(first.getSignature(), second.getSignature());
+                    Signature sig1 = first.getSignature();
+                    Signature sig2 = second.getSignature();
+                    HomomorphismManager hm = new HomomorphismManager(sig1, sig2);
+                    
+                    Signature sig3 = hm.getSignature();
                     hm.update(first.getAllLabels(), second.getAllLabels());
                     
                     Homomorphism hm1 = hm.getHomomorphismRestriction1(first.getAllLabels(), second.getAllLabels());
@@ -188,9 +196,9 @@ public class CorpusCreator<InputType1,InputType2> {
                                                        final Iterable<String> alignments,
                                                        final Supplier<Algebra<Input>> alSupp,
                                                        final AlignmentFactory aL) {
-        Algebra algebra = alSupp.get();
         return new BiFunctionIterable<>(inputs, alignments, (String in, String align) -> {          
             try {
+                Algebra algebra = alSupp.get();
                 TreeAutomaton ft = algebra.decompose(algebra.parseString(in));
                 StateAlignmentMarking fal = aL.makeInstance(align, ft);
                 
