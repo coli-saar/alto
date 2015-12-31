@@ -176,7 +176,7 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
             int start = this.addState(top);
             this.addFinalState(start);
             
-            addTransitions(top,algebra,value, value.getType());
+            addTransitions(top,algebra,value);
         }
 
         /**
@@ -185,40 +185,37 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
          * @param algebra
          * @param value 
          */
-        private void addTransitions(GraphBounds state, KuhlmannAlgebra algebra, NoncrossingGraph value,
-                NoncrossingGraph.KuhlmannType kt) {
+        private void addTransitions(GraphBounds state, KuhlmannAlgebra algebra, NoncrossingGraph value) {
             if(state.from == state.to) {
                 handleSingleNode(state,algebra,value);
             }
             
-            if(kt.equals(NoncrossingGraph.KuhlmannType.MIN_MAX_COVERED)) {
-                
-                
-                //TODO
-            }else if(kt.equals(NoncrossingGraph.KuhlmannType.MAX_MIN_COVERED)) {
-                //TODO
-            }
-            
-            
-            //TODO
             int left = state.from;
             
             Iterator<Int2ObjectMap.Entry<String>> nextOut = value.getFromSmaller(state.from, state.to);
             Iterator<Int2ObjectMap.Entry<String>> nextIn = value.getToSmaller(state.from, state.to);
             
-            Int2ObjectMap.Entry<String> ent = null;
+            Int2ObjectMap.Entry<String> longestEdge = null;
             boolean minMax = true;
+            boolean cover = !state.edgeDone;
             if(nextOut.hasNext()) {
-                ent = nextOut.next();
+                longestEdge = nextOut.next();
+                
+                if(longestEdge.getIntKey() == state.to) {
+                    cover &= state.edgeDone;
+                }
             }
+            //TODO
             if(nextIn.hasNext()) {
                 Int2ObjectMap.Entry<String> alt = nextIn.next();
                 
-                if(ent.getIntKey() < alt.getIntKey()) {
-                    ent = alt;
+                if(longestEdge.getIntKey() < alt.getIntKey()) {
+                    longestEdge = alt;
                     minMax = false;
                 }
             }
+            
+            
             
             
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -232,7 +229,7 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
          */
         private void handleSingleNode(GraphBounds state, KuhlmannAlgebra algebra, NoncrossingGraph value) {
             boolean couldTag = value.getTag(state.from) != null && !state.generatedTag;
-            boolean couldRoot = value.rootEdge(state.from) != null && !state.generatedRootEdge;
+            boolean couldRoot = value.rootEdge(state.from) != null && !state.edgeDone;
             
             if(!couldRoot && !couldTag) {
                 this.addRule(this.createRule(state, value.getNode(state.from), new GraphBounds[0]));
@@ -242,19 +239,21 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
                     String label = EDGE_ROOT_PREFIX+value.rootEdge(state.from);
                     
                     this.addRule(this.createRule(state, label, new GraphBounds[] {child}));
-                    this.addTransitions(child, algebra, value, null);
+                    this.addTransitions(child, algebra, value);
                 }else if(couldTag) {
-                    GraphBounds child = new GraphBounds(true, state.generatedRootEdge, state.from);
+                    GraphBounds child = new GraphBounds(true, state.edgeDone, state.from);
                     String label = TAG_PREFIX+value.getTag(state.from);
                     
                     this.addRule(this.createRule(state, label, new GraphBounds[] {child}));
-                    this.addTransitions(child, algebra, value, null);
+                    this.addTransitions(child, algebra, value);
                 }
             }
         }
     }
     
-    
+    /**
+     * 
+     */
     public static class GraphBounds {
         /**
          * 
@@ -264,7 +263,7 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
         /**
          * 
          */
-        private final boolean generatedRootEdge;
+        private final boolean edgeDone;
         
         /**
          * 
@@ -284,7 +283,7 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
          */
         public GraphBounds(boolean generatedTag, boolean generatedRootEdge, int position) {
             this.generatedTag = generatedTag;
-            this.generatedRootEdge = generatedRootEdge;
+            this.edgeDone = generatedRootEdge;
             this.from = position;
             this.to = position;
         }
@@ -299,7 +298,7 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
             this.to = to;
             
             this.generatedTag = false;
-            this.generatedRootEdge = false;
+            this.edgeDone = false;
         }
     }
     

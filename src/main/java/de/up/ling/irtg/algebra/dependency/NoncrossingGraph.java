@@ -13,6 +13,7 @@ import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
@@ -243,6 +244,44 @@ public class NoncrossingGraph {
             
             return result;
         }
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final NoncrossingGraph other = (NoncrossingGraph) obj;
+        if (!Arrays.deepEquals(this.nodes, other.nodes)) {
+            return false;
+        }
+        if (!Arrays.deepEquals(this.tags, other.tags)) {
+            return false;
+        }
+        if (!Arrays.deepEquals(this.edges, other.edges)) {
+            return false;
+        }
+        if (!Arrays.deepEquals(this.reverseEdges, other.reverseEdges)) {
+            return false;
+        }
+        if (this.type != other.type) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 41 * hash + Arrays.deepHashCode(this.nodes);
+        hash = 41 * hash + Arrays.deepHashCode(this.tags);
+        hash = 41 * hash + Arrays.deepHashCode(this.edges);
+        hash = 41 * hash + Arrays.deepHashCode(this.reverseEdges);
+        hash = 41 * hash + Objects.hashCode(this.type);
+        return hash;
     }
     
     /**
