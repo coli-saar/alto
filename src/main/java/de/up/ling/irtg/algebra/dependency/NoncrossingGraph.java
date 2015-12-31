@@ -6,16 +6,10 @@
 package de.up.ling.irtg.algebra.dependency;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap.Entry;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
-import it.unimi.dsi.fastutil.ints.IntIterable;
-import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.Objects;
-import java.util.TreeSet;
-import java.util.stream.Stream;
 
 /**
  *  The root is always positioned at 0.
@@ -108,8 +102,8 @@ public class NoncrossingGraph {
      * @param largerEqual
      * @return 
      */
-    public Iterator<Int2ObjectMap.Entry<String>> getToLarger(int position, int largerEqual) {
-        return this.reverseEdges[position].tailMap(largerEqual).int2ObjectEntrySet().iterator();
+    public Int2ObjectSortedMap<String> getToLargerOrEquals(int position, int largerEqual) {
+        return this.reverseEdges[position].tailMap(largerEqual);
     }
     
     /**
@@ -118,8 +112,8 @@ public class NoncrossingGraph {
      * @param lessThan
      * @return 
      */
-    public Iterator<Int2ObjectMap.Entry<String>> getToSmaller(int position, int lessThan){
-        return this.reverseEdges[position].headMap(lessThan).int2ObjectEntrySet().iterator();
+    public Int2ObjectSortedMap<String> getToSmallerOrEquals(int position, int lessThan){
+        return this.reverseEdges[position].headMap(lessThan);
     }
     
     /**
@@ -128,8 +122,8 @@ public class NoncrossingGraph {
      * @param lessThan
      * @return 
      */
-    public Iterator<Int2ObjectMap.Entry<String>> getFromSmaller(int position, int lessThan){
-        return this.edges[position].headMap(lessThan).int2ObjectEntrySet().iterator();
+    public Int2ObjectSortedMap<String> getFromSmallerOrEquals(int position, int lessThan){
+        return this.edges[position].headMap(lessThan);
     }
     
     /**
@@ -138,8 +132,8 @@ public class NoncrossingGraph {
      * @param moreThan
      * @return 
      */
-    public Iterator<Int2ObjectMap.Entry<String>> getFromLarger(int position, int moreThan){
-        return this.edges[position].headMap(moreThan).int2ObjectEntrySet().iterator();
+    public Int2ObjectSortedMap<String> getFromLargerOrEquals(int position, int moreThan){
+        return this.edges[position].tailMap(moreThan);
     }
     
     /**
@@ -267,10 +261,8 @@ public class NoncrossingGraph {
         if (!Arrays.deepEquals(this.reverseEdges, other.reverseEdges)) {
             return false;
         }
-        if (this.type != other.type) {
-            return false;
-        }
-        return true;
+        
+        return this.type == other.type;
     }
 
     @Override
@@ -289,48 +281,47 @@ public class NoncrossingGraph {
      * @param nc
      * @return 
      */
-    public NoncrossingGraph append(NoncrossingGraph nc) {
+    public NoncrossingGraph connect(NoncrossingGraph nc) {
         KuhlmannType kt = this.type.append(nc.type);
         
-        int offset = this.length()-1;
+        int offset = this.length() == 2 ? this.length() : this.length()-1;
         
-        String[] newNodes = Arrays.copyOf(this.nodes, offset+nc.length());
+        String[] newNodes = Arrays.copyOf(this.nodes, offset+(nc.length()-1));
         
-        Int2ObjectSortedMap<String>[] newEdges = Arrays.copyOf(this.edges, offset+nc.length());
-        Int2ObjectSortedMap<String>[] newReverse = Arrays.copyOf(this.reverseEdges, offset+nc.length());
+        Int2ObjectSortedMap<String>[] newEdges = Arrays.copyOf(this.edges, offset+(nc.length()-1));
+        Int2ObjectSortedMap<String>[] newReverse = Arrays.copyOf(this.reverseEdges, offset+(nc.length()-1));
                 
         String[] newTags = Arrays.copyOf(this.tags, offset+nc.length());
         
-        
-        Iterator<Int2ObjectMap.Entry<String>> rootEdges = nc.getFromLarger(0, 0);
-        while(rootEdges.hasNext()) {
-            Entry<String> e = rootEdges.next();
-            
+        for(Entry<String> e : nc.getFromLargerOrEquals(0, 0).int2ObjectEntrySet()) { 
             newEdges[0].put(e.getIntKey()+offset, e.getValue());
         }
         
         for(int i=1;i<nc.length();++i) {
             int herePos = i+offset;
             newNodes[herePos] = nc.getNode(i);
-            newTags[herePos] = nc.getTag(i);
+            if(newTags[herePos]  != null) {
+                newTags[herePos] = nc.getTag(i);
+            }
             
-            Int2ObjectSortedMap<String> outgoing = newEdges[herePos] = new Int2ObjectAVLTreeMap<>();
-            Int2ObjectSortedMap<String> incoming = newReverse[herePos] = new Int2ObjectAVLTreeMap<>();
+            Int2ObjectSortedMap<String> outgoing = newEdges[herePos] =
+                    newEdges[herePos] != null ? newEdges[herePos] : new Int2ObjectAVLTreeMap<>();
+            Int2ObjectSortedMap<String> incoming = newReverse[herePos] = 
+                    newEdges[herePos] != null ? newEdges[herePos] : new Int2ObjectAVLTreeMap<>();
             
-            Iterator<Int2ObjectMap.Entry<String>> it = nc.getFromLarger(i, 0);
-            while(it.hasNext()) {
-                Entry<String> e = it.next();
+            for(Entry<String> e : nc.getFromLargerOrEquals(i, 0).int2ObjectEntrySet()) {
                 outgoing.put(e.getIntKey()+offset, e.getValue());
             }
             
-            it = nc.getToLarger(i, 0);
-            while(it.hasNext()) {
-                Entry<String> e = it.next();
-                incoming.put(e.getIntKey(), e.getValue());
+            for(Entry<String> e : nc.getToLargerOrEquals(i, 0).int2ObjectEntrySet()) {
+                int node = e.getIntKey();
+                node = node == 0 ? 0 : node+offset;
+                
+                incoming.put(node, e.getValue());
             }
         }
         
-        return new NoncrossingGraph(nodes, tags, edges, newReverse, type);
+        return new NoncrossingGraph(newNodes, newTags, newEdges, newReverse, kt);
     }
     
     /**
@@ -365,6 +356,16 @@ public class NoncrossingGraph {
      */
     public String getTag(int pos) {
         return this.tags[pos];
+    }
+
+    /**
+     * 
+     * @param from
+     * @param to
+     * @return 
+     */
+    public String getEdge(int from, int to) {
+        return this.edges[from].get(to);
     }
     
     /**
@@ -534,6 +535,9 @@ public class NoncrossingGraph {
 
     @Override
     public String toString() {
-        return "NoncrossingGraph{" + "nodes=" + nodes + ", tags=" + tags + ", edges=" + edges + ", reverseEdges=" + reverseEdges + ", type=" + type + '}';
+        return "NoncrossingGraph{" + "nodes=" + Arrays.toString(nodes) +
+                ", tags=" + Arrays.toString(tags) + ", edges=" +
+                Arrays.toString(edges) + ", reverseEdges=" +
+                Arrays.toString(reverseEdges) + ", type=" + type + '}';
     }
 }
