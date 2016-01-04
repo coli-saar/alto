@@ -25,17 +25,7 @@ public class NoncrossingGraph {
     /**
      * 
      */
-    public static final String ROOT_TAG = "ROOT_TAG";
-    
-    /**
-     * 
-     */
     private final String[] nodes;
-    
-    /***
-     * 
-     */
-    private final String[] tags;
     
     /**
      * 
@@ -60,11 +50,10 @@ public class NoncrossingGraph {
      * @param edges
      * @param type 
      */
-    private NoncrossingGraph(String[] nodes, String[] tags,
+    private NoncrossingGraph(String[] nodes,
             Int2ObjectSortedMap<String>[] edges, Int2ObjectSortedMap<String>[] reverse,
             KuhlmannType type) {
         this.nodes = nodes;
-        this.tags = tags;
         this.edges = edges;
         this.reverseEdges = reverse;
         this.type = type;
@@ -76,7 +65,6 @@ public class NoncrossingGraph {
      */
     public NoncrossingGraph(String nodeName) {
         this.nodes = new String[] {ROOT_NAME,nodeName};
-        this.tags = new String[] {ROOT_TAG,null};
         this.edges = new Int2ObjectSortedMap[] {new Int2ObjectAVLTreeMap<>(),new Int2ObjectAVLTreeMap<>()};
         this.reverseEdges = new Int2ObjectSortedMap[] {new Int2ObjectAVLTreeMap<>(),new Int2ObjectAVLTreeMap<>()};
         this.type = KuhlmannType.BLAND;
@@ -89,7 +77,6 @@ public class NoncrossingGraph {
      */
     private NoncrossingGraph(NoncrossingGraph aThis, KuhlmannType kt) {
         this.nodes = aThis.nodes;
-        this.tags = aThis.tags;
         this.edges = aThis.edges;
         this.reverseEdges = aThis.reverseEdges;
         
@@ -134,22 +121,6 @@ public class NoncrossingGraph {
      */
     public Int2ObjectSortedMap<String> getFromLargerOrEquals(int position, int moreThan){
         return this.edges[position].tailMap(moreThan);
-    }
-    
-    /**
-     * 
-     * @param tag
-     * @return 
-     */
-    public NoncrossingGraph addTag(String tag) {
-        if(this.length() > 2 || this.tags[1] != null || !this.edges[0].isEmpty()) {
-            return null;
-        }else {
-            NoncrossingGraph copy = new NoncrossingGraph(this.getNode(1));
-            
-            copy.tags[1] = tag;
-            return copy;
-        }
     }
     
     /**
@@ -252,9 +223,6 @@ public class NoncrossingGraph {
         if (!Arrays.deepEquals(this.nodes, other.nodes)) {
             return false;
         }
-        if (!Arrays.deepEquals(this.tags, other.tags)) {
-            return false;
-        }
         if (!Arrays.deepEquals(this.edges, other.edges)) {
             return false;
         }
@@ -269,7 +237,6 @@ public class NoncrossingGraph {
     public int hashCode() {
         int hash = 7;
         hash = 41 * hash + Arrays.deepHashCode(this.nodes);
-        hash = 41 * hash + Arrays.deepHashCode(this.tags);
         hash = 41 * hash + Arrays.deepHashCode(this.edges);
         hash = 41 * hash + Arrays.deepHashCode(this.reverseEdges);
         hash = 41 * hash + Objects.hashCode(this.type);
@@ -291,18 +258,13 @@ public class NoncrossingGraph {
         Int2ObjectSortedMap<String>[] newEdges = Arrays.copyOf(this.edges, offset+(nc.length()-1));
         Int2ObjectSortedMap<String>[] newReverse = Arrays.copyOf(this.reverseEdges, offset+(nc.length()-1));
                 
-        String[] newTags = Arrays.copyOf(this.tags, offset+nc.length());
-        
-        for(Entry<String> e : nc.getFromLargerOrEquals(0, 0).int2ObjectEntrySet()) { 
+        nc.getFromLargerOrEquals(0, 0).int2ObjectEntrySet().stream().forEach((e) -> { 
             newEdges[0].put(e.getIntKey()+offset, e.getValue());
-        }
+        });
         
         for(int i=1;i<nc.length();++i) {
             int herePos = i+offset;
             newNodes[herePos] = nc.getNode(i);
-            if(newTags[herePos]  != null) {
-                newTags[herePos] = nc.getTag(i);
-            }
             
             Int2ObjectSortedMap<String> outgoing = newEdges[herePos] =
                     newEdges[herePos] != null ? newEdges[herePos] : new Int2ObjectAVLTreeMap<>();
@@ -321,7 +283,7 @@ public class NoncrossingGraph {
             }
         }
         
-        return new NoncrossingGraph(newNodes, newTags, newEdges, newReverse, kt);
+        return new NoncrossingGraph(newNodes, newEdges, newReverse, kt);
     }
     
     /**
@@ -347,15 +309,6 @@ public class NoncrossingGraph {
      */
     public KuhlmannType getType() {
         return type;
-    }
-
-    /**
-     * 
-     * @param pos
-     * @return 
-     */
-    public String getTag(int pos) {
-        return this.tags[pos];
     }
 
     /**
@@ -536,8 +489,7 @@ public class NoncrossingGraph {
     @Override
     public String toString() {
         return "NoncrossingGraph{" + "nodes=" + Arrays.toString(nodes) +
-                ", tags=" + Arrays.toString(tags) + ", edges=" +
-                Arrays.toString(edges) + ", reverseEdges=" +
+                ", edges=" + Arrays.toString(edges) + ", reverseEdges=" +
                 Arrays.toString(reverseEdges) + ", type=" + type + '}';
     }
 }

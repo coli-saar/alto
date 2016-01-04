@@ -28,11 +28,6 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
     /**
      * 
      */
-    public static final String TAG_PREFIX = "__TAG__";
-    
-    /**
-     * 
-     */
     public static final String EDGE_MIN_MAX_PREFIX = "__MIN__";
     
     /**
@@ -44,16 +39,6 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
      * 
      */
     public static final String EDGE_ROOT_PREFIX = "__ROOT__";
-    
-    
-    /**
-     * 
-     * @param s
-     * @return 
-     */
-    public static boolean isTagging(String s){
-        return s.startsWith(TAG_PREFIX);
-    }
     
     /**
      * 
@@ -87,16 +72,7 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
      * @param s
      * @return 
      */
-    public static String getTaggingLabel(String s) {
-        return s.substring(TAG_PREFIX.length());
-    }
-    
-    /**
-     * 
-     * @param s
-     * @return 
-     */
-    public String getRootEdgeLabel(String s) {
+    public static String getRootEdgeLabel(String s) {
         return s.substring(EDGE_ROOT_PREFIX.length());
     }
     
@@ -114,18 +90,48 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
      * @param s
      * @return 
      */
+    public static String makeRootLabel(String s) {
+        return EDGE_ROOT_PREFIX+s;
+    }
+    
+    /**
+     * 
+     * @param s
+     * @return 
+     */
+    public static String makeEdgeMinMaxLabel(String s) {
+        return EDGE_MIN_MAX_PREFIX+s;
+    }
+    
+    /**
+     * 
+     * @param s
+     * @return 
+     */
+    public static String makeEdgeMaxMinLabel(String s) {
+        return EDGE_MAX_MIN_PREFIX+s;
+    }
+    
+    /**
+     * 
+     * @param s
+     * @return 
+     */
     public static String getEdgeMaxMinLabel(String s) {
         return s.substring(EDGE_MAX_MIN_PREFIX.length());
     }
     
+    /**
+     * 
+     */
+    public KuhlmannAlgebra() {
+        super.getSignature().addSymbol(APPEND, 2);
+    }
+    
+    
     @Override
     protected NoncrossingGraph evaluate(String label, List<NoncrossingGraph> childrenValues) {
-        if(isTagging(label) && childrenValues.isEmpty()) {
-            this.getSignature().addSymbol(label, 1);
-            
-            return childrenValues.get(0).addTag(getTaggingLabel(label));
-            
-        } else if(introducesRootEdge(label) && childrenValues.size() == 1) {
+        if(introducesRootEdge(label) && childrenValues.size() == 1) {
           this.getSignature().addSymbol(label, 1);
           
           return childrenValues.get(0).addRootEdge(getRootEdgeLabel(label));
@@ -171,7 +177,6 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
          * 
          */
         private Set<GraphBounds> seen;
-        
         
         /**
          * 
@@ -256,25 +261,16 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
          * @param value 
          */
         private void handleSingleNode(GraphBounds state, KuhlmannAlgebra algebra, NoncrossingGraph value) {
-            boolean couldTag = value.getTag(state.from) != null && !state.generatedTag;
             boolean couldRoot = value.rootEdge(state.from) != null && !state.edgeDone;
             
-            if(!couldRoot && !couldTag) {
-                this.addRule(this.createRule(state, value.getNode(state.from), new GraphBounds[0]));
+            if(!couldRoot) {
+                GraphBounds child = new GraphBounds(true, state.from);
+                String label = EDGE_ROOT_PREFIX+value.rootEdge(state.from);
+                    
+                this.addRule(this.createRule(state, label, new GraphBounds[] {child}));
+                this.addTransitions(child, algebra, value);
             }else {
-                if(couldRoot) {
-                    GraphBounds child = new GraphBounds(state.generatedTag, true, state.from);
-                    String label = EDGE_ROOT_PREFIX+value.rootEdge(state.from);
-                    
-                    this.addRule(this.createRule(state, label, new GraphBounds[] {child}));
-                    this.addTransitions(child, algebra, value);
-                }else if(couldTag) {
-                    GraphBounds child = new GraphBounds(true, state.edgeDone, state.from);
-                    String label = TAG_PREFIX+value.getTag(state.from);
-                    
-                    this.addRule(this.createRule(state, label, new GraphBounds[] {child}));
-                    this.addTransitions(child, algebra, value);
-                }
+                this.addRule(this.createRule(state, value.getNode(state.from), new GraphBounds[0]));
             }
         }
         
@@ -350,8 +346,6 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
             GraphBounds lChild = new GraphBounds(left, middle, false);
             GraphBounds rChild = new GraphBounds(middle, right, false);
             
-            //TODO check if state is already done
-            
             this.addRule(this.createRule(state, APPEND, new GraphBounds[] {lChild,rChild}));
             
             this.addTransitions(lChild, algebra, value);
@@ -363,11 +357,6 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
      * 
      */
     public static class GraphBounds {
-        /**
-         * 
-         */
-        private final boolean generatedTag;
-        
         /**
          * 
          */
@@ -385,12 +374,10 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
 
         /**
          * 
-         * @param generatedTag
          * @param generatedRootEdge
          * @param position 
          */
-        public GraphBounds(boolean generatedTag, boolean generatedRootEdge, int position) {
-            this.generatedTag = generatedTag;
+        public GraphBounds(boolean generatedRootEdge, int position) {
             this.edgeDone = generatedRootEdge;
             this.from = position;
             this.to = position;
@@ -406,14 +393,12 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
             this.from = from;
             this.to = to;
             
-            this.generatedTag = false;
             this.edgeDone = generatedEdge;
         }
 
         @Override
         public int hashCode() {
             int hash = 3;
-            hash = 59 * hash + (this.generatedTag ? 1 : 0);
             hash = 59 * hash + (this.edgeDone ? 1 : 0);
             hash = 59 * hash + this.from;
             hash = 59 * hash + this.to;
@@ -429,19 +414,14 @@ public class KuhlmannAlgebra extends Algebra<NoncrossingGraph> {
                 return false;
             }
             final GraphBounds other = (GraphBounds) obj;
-            if (this.generatedTag != other.generatedTag) {
-                return false;
-            }
             if (this.edgeDone != other.edgeDone) {
                 return false;
             }
             if (this.from != other.from) {
                 return false;
             }
-            if (this.to != other.to) {
-                return false;
-            }
-            return true;
+            
+            return this.to == other.to;
         }
     }
 }
