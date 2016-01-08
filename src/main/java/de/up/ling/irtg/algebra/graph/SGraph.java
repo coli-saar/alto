@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.jgrapht.DirectedGraph;
@@ -50,7 +51,7 @@ public class SGraph{
     private Map<String, String> sourceToNodename;
     private SetMultimap<String, String> nodenameToSources;
     private ListMultimap<String, String> labelToNodename;
-    private static long nextGensym = 1;
+    private static AtomicLong nextGensym = new AtomicLong(1);
     private boolean hasCachedHashcode;
     private int cachedHashcode;
     private boolean equalsMeansIsomorphy;
@@ -269,7 +270,7 @@ public class SGraph{
         }
 
         SGraph ret = new SGraph();
-        copyInto(ret);
+        SGraph.this.copyInto(ret);
         boolean ok = other.copyInto(ret, renamingF(nodeRenaming));
 
         return ok ? ret : null;
@@ -433,7 +434,7 @@ public class SGraph{
         }
 
         SGraph ret = new SGraph();
-        copyInto(ret, renamingF(renaming));
+        SGraph.this.copyInto(ret, renamingF(renaming));
 
         return ret;
     }
@@ -445,8 +446,18 @@ public class SGraph{
         into.nodenameToSources = nodenameToSources;
     }
 
+    /**
+     * 
+     * @param into
+     * @param nodeRenaming
+     * @return 
+     */
+    protected boolean copyInto(SGraph into, Map<String,String> nodeRenaming) {
+        return this.copyInto(into, renamingF(nodeRenaming));
+    }
+    
     private void copyInto(SGraph into) {
-        copyInto(into, x -> {
+        SGraph.this.copyInto(into, x -> {
             return x;
         });
     }
@@ -522,7 +533,7 @@ public class SGraph{
     }
 
     private static String gensym(String prefix) {
-        return prefix + "_" + (nextGensym++);
+        return prefix + "_" + (nextGensym.getAndIncrement());
     }
 
 //    private static final Pattern TOKEN_PATTERN = Pattern.compile("[-a-zA-z0-9]+");
