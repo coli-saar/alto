@@ -65,8 +65,8 @@ public class SGraph{
      * Creates an empty s-graph.
      */
     public SGraph() {
-        graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
-        nameToNode = new HashMap<String, GraphNode>();
+        graph = new DefaultDirectedGraph<>(new GraphEdgeFactory());
+        nameToNode = new HashMap<>();
         sourceToNodename = new HashMap<>();
         nodenameToSources = HashMultimap.create();
         hasCachedHashcode = false;
@@ -137,11 +137,8 @@ public class SGraph{
      */
     public GraphNode addAnonymousNode(String label) {
         String anonymousName = gensym("_u");
-        GraphNode u = new GraphNode(anonymousName, label);
-        graph.addVertex(u);
-        nameToNode.put(anonymousName, u);
-        invalidate();
-        return u;
+        
+        return this.addNode(anonymousName, label);
     }
 
     /**

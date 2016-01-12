@@ -7,7 +7,6 @@ package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.algebra.graph.GraphNode;
 import de.up.ling.irtg.algebra.graph.OrderedSGraph;
-import de.up.ling.irtg.algebra.graph.SGraph;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import java.io.BufferedReader;
