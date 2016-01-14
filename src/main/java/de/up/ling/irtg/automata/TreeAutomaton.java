@@ -3156,4 +3156,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public BinaryPartnerFinder makeNewBinaryPartnerFinder() {
         return new BinaryPartnerFinder.DummyBinaryPartnerFinder();
     }
+
+    /**
+     * 
+     * @return 
+     */
+    protected RuleStore getRuleStore() {
+        return ruleStore;
+    }
 }

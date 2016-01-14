@@ -9,7 +9,6 @@ import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
-import de.up.ling.irtg.rule_finding.learning.MostFrequentVariables;
 import de.up.ling.irtg.rule_finding.learning.StringSubtreeIterator;
 import de.up.ling.irtg.rule_finding.learning.VariableWeightedRandomPick;
 import de.up.ling.irtg.util.FunctionIterable;
@@ -30,8 +29,7 @@ import java.util.logging.Logger;
  *
  * @author christoph_teichmann
  */
-public class ExtractStringToTreeGrammar {
-    
+public class ExtractStringToTreeGrammar {    
     /**
      * 
      * @param args
@@ -65,7 +63,10 @@ public class ExtractStringToTreeGrammar {
 
             @Override
             public String get(Tree<String> child, Tree<String> whole) {
-                return "X";
+                String l = child.getLabel();
+                String lbar = l.split("/")[1].trim().split("\\|")[0].trim();
+                
+                return lbar;
             }
         };
         
@@ -82,7 +83,5 @@ public class ExtractStringToTreeGrammar {
         grammar.flush();
         trees.close();
         grammar.close();
-    }
-    
-    
+    }    
 }
