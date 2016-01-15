@@ -30,7 +30,7 @@ public interface AlignedTree {
      * @param i
      * @return 
      */
-    public int getVariable(int i);
+    public int getStateForVariable(int i);
     
     /**
      * 
@@ -50,4 +50,10 @@ public interface AlignedTree {
      * @return 
      */
     public IntCollection getAlignmentsForVariable(int i);
+    
+    /**
+     * 
+     * @return 
+     */
+    public boolean isEmpty();
 }

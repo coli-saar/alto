@@ -8,41 +8,94 @@ package de.up.ling.irtg.paired_lookup.aligned_pair.aligned_trees;
 import de.up.ling.irtg.paired_lookup.aligned_pair.AlignedTree;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntCollection;
+import it.unimi.dsi.fastutil.ints.IntList;
+import java.util.List;
 
 /**
  *
  * @author christoph
  */
 public class BaseAlignedTree implements AlignedTree {
+    
+    /**
+     * 
+     */
+    private final Tree<String> content;
+    
+    /**
+     * 
+     */
+    private final List<IntCollection> alignments;
+
+    /**
+     * 
+     */
+    private final IntList states;
+    
+    /**
+     * 
+     */
+    private final double weight;
+    
+    /**
+     * 
+     */
+    private final boolean isEmpty;
+
+    /**
+     * first entry in alignments and states is for root.
+     * 
+     * @param content
+     * @param alignments
+     * @param states 
+     */
+    public BaseAlignedTree(Tree<String> content, List<IntCollection> alignments, IntList states,
+                                double weight) {
+        this.content = content;
+        this.alignments = alignments;
+        this.states = states;
+        
+        if(this.alignments.size() != this.states.size()) {
+            throw new IllegalArgumentException("Number of alignments and states does not match.");
+        }
+        
+        this.weight = weight;
+        
+        this.isEmpty =  content.getChildren().isEmpty() && content.getLabel().startsWith("?");
+    }
 
     @Override
     public Tree<String> getTree() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.content;
     }
 
     @Override
     public int getNumberVariables() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.states.size()-1;
     }
 
     @Override
-    public int getVariable(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public int getStateForVariable(int i) {
+        return this.states.getInt(i+1);
     }
 
     @Override
     public double getWeight() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.weight;
     }
 
     @Override
     public IntCollection getRootAlignments() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.alignments.get(0);
     }
 
     @Override
     public IntCollection getAlignmentsForVariable(int i) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        return this.alignments.get(i);
     }
-    
+
+    @Override
+    public boolean isEmpty() {
+        return this.isEmpty;
+    }
 }

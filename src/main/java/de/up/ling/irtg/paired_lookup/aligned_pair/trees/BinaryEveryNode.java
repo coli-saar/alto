@@ -53,7 +53,14 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
      */
     private final int[] fin;
 
-    public BinaryEveryNode(Tree<String> base, Map<Tree<String>,IntCollection> baseAlignments) {
+    /**
+     * 
+     */
+    private final boolean includeEmpty;
+    
+    
+    public BinaryEveryNode(Tree<String> base, Map<Tree<String>,IntCollection> baseAlignments,
+                                boolean includeEmpty) {
         this.base = base;
         
         this.numbers = new Interner<>();
@@ -64,11 +71,17 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         int top = addNodeInfo(base, baseAlignments);
         
         this.fin = new int[] {top};
+        
+        this.includeEmpty = includeEmpty;
     }
 
     @Override
     public Stream<AlignedTree> getAlignedTrees(int state1) {
         Stream.Builder<AlignedTree> build = Stream.builder();
+        
+        if(includeEmpty) {
+            build.add(makeEmpty());
+        }
         
         Int2IntMap vars = new Int2IntOpenHashMap();
         vars.defaultReturnValue(-1);
@@ -120,6 +133,12 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         if(at.getNumberVariables() == 0) {
             build.add(this.makeTree(parent, vars));
             return build.build();
+        }
+        
+        if(at.getNumberVariables() == 1) {
+            if(here.equals(at.getAlignmentsForVariable(0)) && this.includeEmpty) {
+                build.add(this.makeEmpty());
+            }
         }
         
         IntArrayList il = new IntArrayList();
@@ -233,5 +252,9 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         }
         
         return here.containsAll(ic);
+    }
+
+    private AlignedTree makeEmpty() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 }
