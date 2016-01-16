@@ -7,8 +7,11 @@ package de.up.ling.irtg.paired_lookup.aligned_pair.trees;
 
 import de.up.ling.irtg.paired_lookup.aligned_pair.AlignedStructure;
 import de.up.ling.irtg.paired_lookup.aligned_pair.AlignedTree;
+import de.up.ling.irtg.paired_lookup.aligned_pair.aligned_trees.BaseAlignedTree;
 import de.up.ling.irtg.signature.Interner;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeParser;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -16,9 +19,12 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -28,6 +34,12 @@ import java.util.stream.Stream;
  * @author christoph
  */
 public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
+    
+    /**
+     * 
+     */
+    public String divider = "::";
+    
     /**
      * 
      */
@@ -58,7 +70,12 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
      */
     private final boolean includeEmpty;
     
-    
+    /**
+     * 
+     * @param base
+     * @param baseAlignments
+     * @param includeEmpty 
+     */
     public BinaryEveryNode(Tree<String> base, Map<Tree<String>,IntCollection> baseAlignments,
                                 boolean includeEmpty) {
         this.base = base;
@@ -75,12 +92,33 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         this.includeEmpty = includeEmpty;
     }
 
+    /**
+     * 
+     * @param input
+     * @param includeEmpty
+     * @throws ParseException 
+     */
+    public BinaryEveryNode(String input, boolean includeEmpty) throws ParseException {
+        Tree<String> withAlignments = TreeParser.parse(input);
+        this.numbers = new Interner<>();
+        
+        this.align = new Int2ObjectOpenHashMap<>();
+        this.dominate = new Int2ObjectOpenHashMap<>();
+        
+        this.base = addTreeInfo(withAlignments);
+        
+        
+        this.fin = new int[] {this.numbers.addObject(base)};
+        this.includeEmpty = includeEmpty;
+    }
+    
+    
     @Override
     public Stream<AlignedTree> getAlignedTrees(int state1) {
         Stream.Builder<AlignedTree> build = Stream.builder();
         
         if(includeEmpty) {
-            build.add(makeEmpty());
+            build.add(makeEmpty(state1));
         }
         
         Int2IntMap vars = new Int2IntOpenHashMap();
@@ -137,7 +175,7 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         
         if(at.getNumberVariables() == 1) {
             if(here.equals(at.getAlignmentsForVariable(0)) && this.includeEmpty) {
-                build.add(this.makeEmpty());
+                build.add(this.makeEmpty(parent));
             }
         }
         
@@ -174,37 +212,61 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
     private int addNodeInfo(Tree<String> base, Map<Tree<String>,IntCollection> baseAlignments) {
         int num = this.numbers.addObject(base);
         
-        IntSet propoagatedAlignments = new IntOpenHashSet();
+        IntSet propagatedAlignments = new IntOpenHashSet();
         IntSet dom = new IntOpenHashSet();
         
-        propoagatedAlignments.addAll(baseAlignments.get(base));
+        propagatedAlignments.addAll(baseAlignments.get(base));
         dom.add(num);
         
         for(int i=0;i<base.getChildren().size();++i) {
             Tree<String> child = base.getChildren().get(i);
             int code = addNodeInfo(child, baseAlignments);
             
-            propoagatedAlignments.addAll(this.align.get(code));
+            propagatedAlignments.addAll(this.align.get(code));
             dom.addAll(this.dominate.get(code));
         }
         
-        this.align.put(num, propoagatedAlignments);
+        this.align.put(num, propagatedAlignments);
         this.dominate.put(num, dom);
         
         return num;
     }
 
+    /**
+     * 
+     * @param state1
+     * @param vars
+     * @return 
+     */
     private AlignedTree makeTree(int state1, Int2IntMap vars) {
         Tree<String> t = this.numbers.resolveId(state1);
+        IntList states = new IntArrayList();
+        List<IntCollection> alignments = new ArrayList<>();
         
+        states.add(state1);
+            
+        alignments.add(this.align.get(state1));
+            
         if(vars.isEmpty()) {
-            //TODO write an implementation for aligned trees.
+            return new BaseAlignedTree(t, alignments, states, 1.0);
+        } else {
+            
+            Tree<String> q = makeTree(state1,vars,alignments,states);
+            
+            return new BaseAlignedTree(t, alignments, states, state1);
         }
-        
-        
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    /**
+     * 
+     * @param at
+     * @param parent
+     * @param children
+     * @param vars
+     * @param il
+     * @param build
+     * @param i 
+     */
     private void addToBuild(AlignedTree at, int parent, IntCollection children, Int2IntMap vars,
                             IntArrayList il, Stream.Builder<AlignedTree> build, int i) {
         IntIterator iit = children.iterator();
@@ -254,7 +316,101 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         return here.containsAll(ic);
     }
 
-    private AlignedTree makeEmpty() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    /**
+     * 
+     * @return 
+     */
+    private AlignedTree makeEmpty(int state1) {
+        IntList states = new IntArrayList();
+        List<IntCollection> alignments = new ArrayList<>();
+        
+        states.add(state1);
+            
+        alignments.add(this.align.get(state1));
+        
+        Tree<String> t = Tree.create("?1");
+        
+        return new BaseAlignedTree(t, alignments, states, state1);
+    }
+
+    /**
+     * 
+     * @param state1
+     * @param vars
+     * @param alignments
+     * @param states
+     * @return 
+     */
+    private Tree<String> makeTree(int state1, Int2IntMap vars, List<IntCollection> alignments, IntList states) {
+        int var = vars.get(state1);
+        
+        if(var >= 0) {
+            if(states.size() <= var) {
+                states.size(var+1);
+            }
+            
+            while(alignments.size() <= var) {
+                alignments.add(null);
+            }
+            
+            states.set(var, state1);
+            alignments.set(var, this.align.get(state1));
+            
+            return Tree.create("?"+var);
+        }
+        
+        List<Tree<String>> children = new ArrayList<>();
+        Tree<String> t = this.numbers.resolveId(state1);
+        
+        for(int i=0;i<t.getChildren().size();++i) {
+            Tree<String> child = t.getChildren().get(i);
+            int state = this.numbers.addObject(child);
+            
+            children.add(makeTree(state, vars, alignments, states));
+        }
+        
+        return Tree.create(t.getLabel(), children);
+    }
+
+    /**
+     * 
+     * @param withAlignments
+     * @return 
+     */
+    private Tree<String> addTreeInfo(Tree<String> withAlignments) {
+        String[] q = withAlignments.getLabel().split(divider);
+        String label = q[0].trim();
+        String[] alignments = q[1].trim().split("\\s+");
+        
+        List<Tree<String>> children = new ArrayList<>();
+        for(int i=0;i<withAlignments.getChildren().size();++i) {
+            Tree<String> child = withAlignments.getChildren().get(i);
+            
+            children.add(addTreeInfo(child));
+        }
+        
+        Tree<String> normal = Tree.create(label, children);
+        int name = this.numbers.addObject(normal);
+        
+        IntSet align = new IntOpenHashSet();
+        for(String s : alignments) {
+            align.add(Integer.parseInt(s));
+        }
+        
+        IntCollection propagatedAlignments = new IntOpenHashSet();
+        IntCollection dominated = new IntOpenHashSet();
+        
+        for(int i=0;i<base.getChildren().size();++i) {
+            Tree<String> child = normal.getChildren().get(i);
+            int code = this.numbers.addObject(child);
+            
+            propagatedAlignments.addAll(this.align.get(code));
+            dominated.addAll(this.dominate.get(code));
+        }
+        
+        this.align.put(name, propagatedAlignments);
+        this.dominate.put(name, dominated);
+        
+        return normal;
     }
 }
