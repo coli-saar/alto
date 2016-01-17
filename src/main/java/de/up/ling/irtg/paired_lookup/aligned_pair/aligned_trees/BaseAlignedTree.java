@@ -47,7 +47,8 @@ public class BaseAlignedTree implements AlignedTree {
      * 
      * @param content
      * @param alignments
-     * @param states 
+     * @param states
+     * @param weight 
      */
     public BaseAlignedTree(Tree<String> content, List<IntCollection> alignments, IntList states,
                                 double weight) {
@@ -91,7 +92,7 @@ public class BaseAlignedTree implements AlignedTree {
 
     @Override
     public IntCollection getAlignmentsForVariable(int i) {
-        return this.alignments.get(i);
+        return this.alignments.get(i+1);
     }
 
     @Override
