@@ -9,6 +9,7 @@ import de.up.ling.irtg.paired_lookup.aligned_pair.AlignedTree;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -98,5 +99,40 @@ public class BaseAlignedTree implements AlignedTree {
     @Override
     public boolean isEmpty() {
         return this.isEmpty;
+    }
+
+    @Override
+    public String toString() {
+        Tree<String> solution = constructToString(this.content, true);
+        
+        return solution.toString();
+    }
+
+    /**
+     * 
+     * @param content
+     * @return 
+     */
+    private Tree<String> constructToString(Tree<String> content, boolean root) {
+        String label;
+        if(root || content.getLabel().startsWith("?")) {
+            if(root) {
+                label = content.getLabel()+"::"+this.alignments.get(0)+"::"+this.states.get(0);
+            } else {
+                int pos = Integer.parseInt(content.getLabel().substring(1));
+                
+                label = content.getLabel()+"::"+this.alignments.get(pos)+"::"+this.states.get(pos);
+            }
+        }else {
+            label = content.getLabel();
+        }
+        
+        List<Tree<String>> children = new ArrayList<>();
+        
+        for(int i=0;i<content.getChildren().size();++i) {
+            children.add(constructToString(content.getChildren().get(i), false));
+        }
+        
+        return Tree.create(label, children);
     }
 }

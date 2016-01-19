@@ -25,7 +25,6 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -38,7 +37,12 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
     /**
      * 
      */
-    public String divider = "::";
+    private final static String[] EMPTY = {};
+    
+    /**
+     * 
+     */
+    public static String DIVIDER = "::";
     
     /**
      * 
@@ -69,28 +73,6 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
      * 
      */
     private final boolean includeEmpty;
-    
-    /**
-     * 
-     * @param base
-     * @param baseAlignments
-     * @param includeEmpty 
-     */
-    public BinaryEveryNode(Tree<String> base, Map<Tree<String>,IntCollection> baseAlignments,
-                                boolean includeEmpty) {
-        this.base = base;
-        
-        this.numbers = new Interner<>();
-        
-        this.align = new Int2ObjectOpenHashMap<>();
-        this.dominate = new Int2ObjectOpenHashMap<>();
-        
-        int top = addNodeInfo(base, baseAlignments);
-        
-        this.fin = new int[] {top};
-        
-        this.includeEmpty = includeEmpty;
-    }
 
     /**
      * 
@@ -129,10 +111,6 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         IntIterator iterator = this.dominate.get(state1).iterator();
         while(iterator.hasNext()) {
             int child = iterator.nextInt();
-            
-            if(child == state1) {
-                continue;
-            }
             
             vars.clear();
             vars.put(child, 1);
@@ -205,35 +183,6 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
 
     /**
      * 
-     * @param base
-     * @param baseAlignments
-     * @return 
-     */
-    private int addNodeInfo(Tree<String> base, Map<Tree<String>,IntCollection> baseAlignments) {
-        int num = this.numbers.addObject(base);
-        
-        IntSet propagatedAlignments = new IntOpenHashSet();
-        IntSet dom = new IntOpenHashSet();
-        
-        propagatedAlignments.addAll(baseAlignments.get(base));
-        dom.add(num);
-        
-        for(int i=0;i<base.getChildren().size();++i) {
-            Tree<String> child = base.getChildren().get(i);
-            int code = addNodeInfo(child, baseAlignments);
-            
-            propagatedAlignments.addAll(this.align.get(code));
-            dom.addAll(this.dominate.get(code));
-        }
-        
-        this.align.put(num, propagatedAlignments);
-        this.dominate.put(num, dom);
-        
-        return num;
-    }
-
-    /**
-     * 
      * @param state1
      * @param vars
      * @return 
@@ -246,7 +195,7 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         states.add(state1);
             
         alignments.add(this.align.get(state1));
-            
+        
         if(vars.isEmpty()) {
             return new BaseAlignedTree(t, alignments, states, 1.0);
         } else {
@@ -280,6 +229,7 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
             if(!equals(there,here)) {
                 continue;
             }
+
             for(int k=1;k<il.size();++k) {
                 int other = il.getInt(k);
                 
@@ -378,9 +328,14 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
      * @return 
      */
     private Tree<String> addTreeInfo(Tree<String> withAlignments) {
-        String[] q = withAlignments.getLabel().split(divider);
+        String[] q = withAlignments.getLabel().split(DIVIDER);
         String label = q[0].trim();
-        String[] alignments = q[1].trim().split("\\s+");
+        String[] alignments;
+        if(q.length > 1) {
+            alignments = q[1].trim().split("\\s+");
+        } else {
+            alignments = EMPTY;
+        }
         
         List<Tree<String>> children = new ArrayList<>();
         for(int i=0;i<withAlignments.getChildren().size();++i) {
@@ -392,25 +347,29 @@ public class BinaryEveryNode implements AlignedStructure<Tree<String>> {
         Tree<String> normal = Tree.create(label, children);
         int name = this.numbers.addObject(normal);
         
-        IntSet align = new IntOpenHashSet();
+        IntSet localAlignments = new IntOpenHashSet();
         for(String s : alignments) {
-            align.add(Integer.parseInt(s));
+            localAlignments.add(Integer.parseInt(s));
         }
         
-        IntCollection propagatedAlignments = new IntOpenHashSet();
         IntCollection dominated = new IntOpenHashSet();
-        
-        for(int i=0;i<base.getChildren().size();++i) {
+        for(int i=0;i<normal.getChildren().size();++i) {
             Tree<String> child = normal.getChildren().get(i);
             int code = this.numbers.addObject(child);
             
-            propagatedAlignments.addAll(this.align.get(code));
+            localAlignments.addAll(this.align.get(code));
             dominated.addAll(this.dominate.get(code));
+            dominated.add(code);
         }
         
-        this.align.put(name, propagatedAlignments);
+        this.align.put(name, localAlignments);
         this.dominate.put(name, dominated);
         
         return normal;
+    }
+
+    @Override
+    public String toString() {
+        return "BinaryEveryNode{" + "base=" + base + ", numbers=" + numbers + ", align=" + align + ", dominate=" + dominate + ", fin=" + fin + ", includeEmpty=" + includeEmpty + '}';
     }
 }

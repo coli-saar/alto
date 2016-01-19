@@ -148,6 +148,7 @@ public class BaseAlignedTreeTest {
 
     /**
      * Test of isEmpty method, of class BaseAlignedTree.
+     * @throws de.up.ling.tree.ParseException
      */
     @Test
     public void testIsEmpty() throws ParseException {
