@@ -3,8 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.algebra.graph;
+package de.up.ling.irtg.algebra.graph.ordered;
 
+import de.up.ling.irtg.algebra.graph.GraphNode;
+import de.up.ling.irtg.algebra.graph.SGraph;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,7 +18,7 @@ import java.util.TreeSet;
  *
  * @author christoph_teichmann
  */
-public class OrderedSGraph extends SGraph {
+public class OrderedDependencyGraph extends SGraph {
     /**
      * 
      */
@@ -41,7 +43,7 @@ public class OrderedSGraph extends SGraph {
     }
     
     @Override
-    public OrderedSGraph merge(SGraph other) {
+    public OrderedDependencyGraph merge(SGraph other) {
         long name = 0;
         SortedSet<String> nodes = new TreeSet<>(ORDER);
         nodes.addAll(this.getAllNodeNames());
@@ -52,7 +54,7 @@ public class OrderedSGraph extends SGraph {
             nodeRenaming.put(node, Long.toString(name++));
         }
         
-        OrderedSGraph result = new OrderedSGraph();
+        OrderedDependencyGraph result = new OrderedDependencyGraph();
         
         Map<String,String> otherRenaming = new HashMap<>();        
         Set<String> sourcesHere = this.getAllSources();
@@ -72,9 +74,32 @@ public class OrderedSGraph extends SGraph {
             }
         }
         
-        other.copyInto(result, otherRenaming);
+        ((OrderedDependencyGraph) other).copyInto(result, otherRenaming);
         this.copyInto(result, nodeRenaming);
         
         return result;
+    }
+
+    @Override
+    protected SGraph makeShallowCopy() {
+        OrderedDependencyGraph odg = new OrderedDependencyGraph();
+        shallowCopyInto(odg);
+        
+        return odg;
+    }
+
+    @Override
+    public OrderedDependencyGraph forgetSourcesExcept(Set<String> retainedSources) {
+        return (OrderedDependencyGraph) super.forgetSourcesExcept(retainedSources);
+    }
+
+    @Override
+    public OrderedDependencyGraph swapSources(String sourceName1, String sourceName2) {
+        return (OrderedDependencyGraph) super.swapSources(sourceName1, sourceName2);
+    }
+
+    @Override
+    public OrderedDependencyGraph renameSource(String oldName, String newName) {
+        return (OrderedDependencyGraph) super.renameSource(oldName, newName);
     }
 }

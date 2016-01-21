@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
+import de.up.ling.irtg.algebra.graph.ordered.OrderedDependencyGraph;
+import java.util.HashSet;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -12,7 +14,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph_teichmann
  */
-public class OrderedSGraphTest {
+public class OrderedDependencyGraphTest {
 
     /**
      * Test of merge method, of class OrderedSGraph.
@@ -20,7 +22,7 @@ public class OrderedSGraphTest {
     @Test
     public void testMerge() {
         //(a<1> b<2> c)
-        OrderedSGraph osg1 = new OrderedSGraph();
+        OrderedDependencyGraph osg1 = new OrderedDependencyGraph();
         osg1.addNode("0", "a");
         osg1.addNode("1", "b");
         osg1.addNode("2", "c");
@@ -29,7 +31,7 @@ public class OrderedSGraphTest {
         osg1.addSource("2", "1");
         
         //(""<1> -label-> ""<2>)
-        OrderedSGraph osg2 = new OrderedSGraph();
+        OrderedDependencyGraph osg2 = new OrderedDependencyGraph();
         GraphNode g1 = osg2.addNode("0", "");
         GraphNode g2 = osg2.addNode("1", "");
         
@@ -38,19 +40,19 @@ public class OrderedSGraphTest {
         
         osg2.addEdge(g1, g2, "label");
         
-        OrderedSGraph osg4 = osg1.merge(osg2);
+        OrderedDependencyGraph osg4 = osg1.merge(osg2);
         
         //(d e<3>)
-        OrderedSGraph osg3 = new OrderedSGraph();
+        OrderedDependencyGraph osg3 = new OrderedDependencyGraph();
         osg3.addNode("0", "d");
         osg3.addNode("1", "e");
         
         osg3.addSource("3", "1");
         
-        OrderedSGraph osg5 = osg4.merge(osg3);
+        OrderedDependencyGraph osg5 = osg4.merge(osg3);
         
         //(""<3> -otherlabel-> ""<2>)
-        OrderedSGraph osg6 = new OrderedSGraph();
+        OrderedDependencyGraph osg6 = new OrderedDependencyGraph();
         GraphNode gn1 = osg6.addNode("1", "");
         GraphNode gn2 = osg6.addNode("2", "");
         
@@ -59,9 +61,7 @@ public class OrderedSGraphTest {
         
         osg6.addEdge(gn1, gn2, "otherlabel");
         
-        OrderedSGraph osg7 = osg5.merge(osg6);
-        
-        System.out.println(osg7);
+        OrderedDependencyGraph osg7 = osg5.merge(osg6);
         
         assertEquals(osg7.getNode("0").getLabel(),"a");
         assertEquals(osg7.getNodeForSource("1"),"0");
@@ -74,11 +74,19 @@ public class OrderedSGraphTest {
         
         osg7.getAllNodeNames().forEach((String node) -> {
             osg7.getAllNodeNames().forEach((String otherNode) -> {
-                if(OrderedSGraph.ORDER.compare(node,otherNode) < 0) {
+                if(OrderedDependencyGraph.ORDER.compare(node,otherNode) < 0) {
                     assertTrue(osg7.getNode(node).getLabel().compareTo(osg7.getNode(otherNode).getLabel()) < 0);
                 }
             });
         });
+        
+        OrderedDependencyGraph odg8 = osg7.renameSource("1", "5");
+        assertEquals(odg8.getSourceLabel("0"),"<5>");
+        
+        odg8 = odg8.swapSources("3", "5");
+        assertEquals(odg8.getSourceLabel("0"),"<3>");
+        
+        odg8 = odg8.forgetSourcesExcept(new HashSet<>());
+        assertEquals(odg8.getSourceLabel("0"),"<>");
     }
-    
 }

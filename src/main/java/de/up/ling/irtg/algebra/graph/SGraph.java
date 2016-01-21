@@ -298,8 +298,7 @@ public class SGraph{
 
         // make fast, shallow copy of sgraph; this is okay if this sgraph
         // is not modified after making the copy
-        SGraph ret = new SGraph();
-        shallowCopyInto(ret);
+        SGraph ret = makeShallowCopy();
 
         // rename the source
         ret.sourceToNodename = new HashMap<>();
@@ -326,8 +325,7 @@ public class SGraph{
 
         // make fast, shallow copy of sgraph; this is okay if this sgraph
         // is not modified after making the copy
-        SGraph ret = new SGraph();
-        shallowCopyInto(ret);
+        SGraph ret = makeShallowCopy();
 
         // rename the source
         ret.sourceToNodename = new HashMap<>();
@@ -356,10 +354,7 @@ public class SGraph{
      * @return 
      */
     public SGraph forgetSourcesExcept(Set<String> retainedSources) {
-        // make fast, shallow copy of sgraph; this is okay if this sgraph
-        // is not modified after making the copy
-        SGraph ret = new SGraph();
-        shallowCopyInto(ret);
+        SGraph ret = makeShallowCopy();
 
         // forget the other sources
         ret.sourceToNodename = new HashMap<>();
@@ -375,6 +370,18 @@ public class SGraph{
             }
         }
 
+        return ret;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    protected SGraph makeShallowCopy() {
+        // make fast, shallow copy of sgraph; this is okay if this sgraph
+        // is not modified after making the copy
+        SGraph ret = new SGraph();
+        shallowCopyInto(ret);
         return ret;
     }
 
@@ -436,7 +443,7 @@ public class SGraph{
         return ret;
     }
 
-    private void shallowCopyInto(SGraph into) {
+    protected void shallowCopyInto(SGraph into) {
         into.graph = graph;
         into.nameToNode = nameToNode;
         into.sourceToNodename = sourceToNodename;
