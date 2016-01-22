@@ -14,7 +14,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectSortedMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -22,7 +21,6 @@ import java.util.Objects;
  * @author christoph_teichmann
  */
 public class DependencyGraph {
-    //TODO: refactor to include reverse index from node to open
     /**
      * 
      */
@@ -32,6 +30,16 @@ public class DependencyGraph {
      * 
      */
     private final Object2ObjectSortedMap<String,IntArrayList> open = new Object2ObjectAVLTreeMap<>(); 
+    
+    /**
+     * 
+     */
+    private final IntList openPosition = new IntArrayList();
+    
+    /**
+     * 
+     */
+    private final List<String> openLabel = new ArrayList();
     
     /**
      * 
@@ -53,6 +61,8 @@ public class DependencyGraph {
         this.edges.add(new Int2ObjectOpenHashMap<>());
         
         this.rootEdge.add(null);
+        this.openPosition.add(-1);
+        this.openLabel.add(null);
     }
     
     /**
@@ -70,9 +80,13 @@ public class DependencyGraph {
         if(il == null) {
             this.open.put(open, il = new IntArrayList());
         }
+        int oPos = il.size();
         il.add(pos);
         
         this.rootEdge.add(null);
+        
+        this.openPosition.add(oPos);
+        this.openLabel.add(open);
     }
     
     
@@ -125,10 +139,13 @@ public class DependencyGraph {
             throw new IllegalArgumentException("No such open node: "+name+" "+position);
         } 
         
-        il.removeInt(position);
+        int old = il.removeInt(position);
         if(il.isEmpty()) {
             this.open.remove(name);
         }
+        
+        this.openPosition.set(old, -1);
+        this.openLabel.set(old, null);
     }
     
     /**
@@ -175,16 +192,19 @@ public class DependencyGraph {
         DependencyGraph ret = new DependencyGraph();
         ret.nodes.addAll(this.nodes);
         
-        for(Map.Entry<String,IntArrayList> ent : this.open.entrySet()) {
+        this.open.entrySet().stream().forEach((ent) -> {
             ret.open.put(ent.getKey(), new IntArrayList(ent.getValue()));
-        }
+        });
         for(int i=0;i<this.edges.size();++i) {
            ret.edges.add(new Int2ObjectOpenHashMap<>(this.edges.get(i)));
         }
         
+        ret.rootEdge.addAll(this.rootEdge);
+        ret.openLabel.addAll(this.openLabel);
+        ret.openPosition.addAll(this.openPosition);
+        
         return ret;
     }
-    
     /**
      * 
      * @param other
@@ -197,17 +217,14 @@ public class DependencyGraph {
         
         dg.nodes.addAll(other.nodes);
         
-        for(Map.Entry<String,IntArrayList> ent : other.open.entrySet()) {
+        other.open.entrySet().stream().forEach((ent) -> {
             String label = ent.getKey();
             IntArrayList nPos = shift(ent.getValue(),offset);
             
-            IntArrayList il = dg.open.get(label);
-            if(il == null) {
-                dg.open.put(label, nPos);
-            } else {
-                il.addAll(nPos);
+            for(int i=0;i<nPos.size();++i) {
+                dg.addOpen(label,nPos.getInt(i));
             }
-        }
+        });
         
         for(int i=0;i<other.edges.size();++i) {
             Int2ObjectMap<String> map;
@@ -275,13 +292,17 @@ public class DependencyGraph {
     /**
      * 
      * @param label 
+     * @return  
      */
-    public void addRootEdge(String label) {
+    public DependencyGraph addRootEdge(String label) {
         if(this.nodes.size() != 1) {
             throw new IllegalStateException("Only applicable when there is exactly 1 node.");
         }
         
-        this.rootEdge.set(0, label);
+        DependencyGraph dg = this.deepCopy();
+        
+        dg.rootEdge.set(0, label);
+        return dg;
     }
     
     /**
@@ -348,6 +369,9 @@ public class DependencyGraph {
             il.add(old);
         }
         
+        dg.openLabel.set(old, name);
+        dg.openPosition.set(old, insert);
+        
         return dg;
     }
 
@@ -378,5 +402,53 @@ public class DependencyGraph {
             return false;
         }
         return Objects.equals(this.rootEdge, other.rootEdge);
+    }
+    
+    /**
+     * 
+     * @param node
+     * @return 
+     */
+    public boolean isOpen(int node) {
+        return this.openPosition.get(node) >= 0;
+    }
+
+    /**
+     * 
+     * @param node
+     * @return 
+     */
+    public int getOpenPosition(int node) {
+        return this.openPosition.getInt(node);
+    }
+    
+    /**
+     * 
+     * @param node
+     * @return 
+     */
+    public String getOpenLabel(int node) {
+        return this.openLabel.get(node);
+    }
+    
+    /**
+     * 
+     * @param openLabel
+     * @param node 
+     */
+    private void addOpen(String openLabel, int node) {
+        IntArrayList ili  = this.open.get(openLabel);
+        
+        if(ili == null) {
+            this.open.put(openLabel, ili = new IntArrayList());
+        }
+        
+        int insertion = Arrays.binarySearch(ili.elements(), 0, ili.size(), node);
+        insertion = (-insertion)+1;
+        
+        ili.add(insertion, node);
+        
+        this.openPosition.set(node, insertion);
+        this.openLabel.set(node, openLabel);
     }
 }
