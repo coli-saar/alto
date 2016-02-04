@@ -7,7 +7,7 @@ package de.up.ling.irtg.rule_finding.preprocessing.geoquery;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.rule_finding.handle_unknown.ReduceAndDrop;
-import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon.Check;
+import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon.SimpleCheck;
 import de.up.ling.irtg.util.FunctionIterable;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -223,7 +223,7 @@ public class AntiUnknown {
      * @return 
      */
     public Iterable<Pair<String, String>> reduceUnknownWithoutFacts(Iterable<Pair<String, String>> data) {
-        Check check = this.cl.getCheck();
+        SimpleCheck check = this.cl.getCheck();
         
         Iterable<String[]> statStream = new FunctionIterable<>(data, (Pair<String, String> in) -> {
             return in.getLeft().trim().split("\\s+");
@@ -231,7 +231,7 @@ public class AntiUnknown {
         
         ReduceAndDrop rad = new ReduceAndDrop(minNumber, unknown, known);
         
-        Function<String[],String> f = rad.getCheckedReduction(statStream,check);
+        Function<String[],String> f = rad.getCheckedReduction(statStream.iterator(),check);
         
         return new FunctionIterable<>(data,(Pair<String,String> p) -> {
             String[] fos = p.getLeft().trim().split("\\s+");

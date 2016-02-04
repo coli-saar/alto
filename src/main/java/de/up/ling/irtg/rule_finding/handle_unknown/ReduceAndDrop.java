@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.handle_unknown;
 
+import de.up.ling.irtg.rule_finding.preprocessing.geoquery.Check;
 import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Iterator;
@@ -90,10 +91,10 @@ public class ReduceAndDrop {
      * @param check
      * @return 
      */
-    public Function<String[], String> getCheckedReduction(Iterable<String[]> statStream,
-                                                            CreateLexicon.Check check) {
+    public Function<String[], String> getCheckedReduction(Iterator<String[]> statStream,
+                                                            Check check) {
         Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>();
-        statStream.forEach((line) -> {
+        statStream.forEachRemaining((line) -> {
             for(String s : line) {
                 counts.addTo(s, 1);
             }
@@ -107,12 +108,10 @@ public class ReduceAndDrop {
                   sb.append(" ");
               }
               
-              String s = input[i];
-              
               int l = check.knownPattern(i, input);
               
               if(l > 0) {
-                  for(int add=0;add<l;++add) {
+                  for(int add=0;add<l && i+add < input.length;++add) {
                       if(add != 0) {
                           sb.append(" ");
                       }
@@ -120,8 +119,9 @@ public class ReduceAndDrop {
                       sb.append(input[i+add]);
                   }
                   
-                  i += l;
+                  i += l-1;
               } else {
+                  String s = input[i];
                   int count = counts.getInt(s);
                   
                   if(count < this.minNumber) {

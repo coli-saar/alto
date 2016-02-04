@@ -6,7 +6,7 @@
 package de.up.ling.irtg.rule_finding.preprocessing.geoquery;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon.Check;
+import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon.SimpleCheck;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -150,7 +150,7 @@ public class CreateLexiconTest {
     
     @Test
     public void testGetCheck() {
-        Check check = this.cl.getCheck();
+        SimpleCheck check = this.cl.getCheck();
         
         String[] portions = "Which states border New     York ?".toLowerCase().trim().split("\\s+");
         

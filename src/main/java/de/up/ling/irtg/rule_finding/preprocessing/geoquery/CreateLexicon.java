@@ -391,15 +391,15 @@ public class CreateLexicon {
      * 
      * @return 
      */
-    public Check getCheck() {
-        return new Check();
+    public SimpleCheck getCheck() {
+        return new SimpleCheck();
     }
     
     
     /**
      * 
      */
-    public class Check {
+    public class SimpleCheck implements Check {
         /**
          * 
          */
@@ -408,7 +408,7 @@ public class CreateLexicon {
         /**
          * 
          */
-        public Check() {
+        public SimpleCheck() {
             Set<String> container = new HashSet<>();
             reducePattern.forEach((pair) -> container.add(pair.getLeft()));
             
@@ -427,6 +427,7 @@ public class CreateLexicon {
          * @param arr
          * @return 
          */
+        @Override
         public int knownPattern(int pos, String[] arr) {
             main : for(int i=0;i<this.patts.size();++i) {
                 String[] patt = patts.get(i);
