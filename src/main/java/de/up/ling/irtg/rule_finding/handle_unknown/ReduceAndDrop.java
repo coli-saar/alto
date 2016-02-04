@@ -5,16 +5,9 @@
  */
 package de.up.ling.irtg.rule_finding.handle_unknown;
 
+import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Iterator;
 import java.util.function.Function;
 
 /**
@@ -22,11 +15,6 @@ import java.util.function.Function;
  * @author christoph
  */
 public class ReduceAndDrop {
-    
-    /**
-     * 
-     */
-    private final int relevantLine;
     
     /**
      * 
@@ -45,13 +33,12 @@ public class ReduceAndDrop {
 
     /**
      * 
-     * @param relevantLine
      * @param minNumber
      * @param unknown
      * @param known 
      */
-    public ReduceAndDrop(int relevantLine, int minNumber, Function<String, String> unknown, Function<String, String> known) {
-        this.relevantLine = relevantLine;
+    public ReduceAndDrop(int minNumber,
+            Function<String, String> unknown, Function<String, String> known) {
         this.minNumber = minNumber;
         this.unknown = unknown;
         this.known = known;
@@ -59,87 +46,93 @@ public class ReduceAndDrop {
     
     /**
      * 
-     * @param lines
-     * @param result
-     * @throws IOException 
+     * @param training
+     * @return
      */
-    public void reduce(InputStream lines, OutputStream result) throws IOException {
-        List<List<String[]>> portions = getAllLines(lines);
-        
+    public Function<String[],String> getReduction(Iterator<String[]> training) {
         Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>();
-        portions.stream().map((group) -> group.get(relevantLine)).forEach((line) -> {
+        training.forEachRemaining((line) -> {
             for(String s : line) {
                 counts.addTo(s, 1);
             }
         });
         
-        try (BufferedWriter buw = new BufferedWriter(new OutputStreamWriter(result))) {
-            boolean first = true;
-            for(List<String[]> group : portions) {
-                if(first) {
-                    first = false;
-                } else {
-                    buw.newLine();
-                    buw.newLine();
-                }
-                
-                boolean lf = true;
-                for(String[] words : group) {
-                    if(lf) {
-                        lf = false;
-                    } else {
-                        buw.newLine();
-                    }
-                    
-                    for(int i=0;i<words.length;++i) {
-                        if(i != 0) {
-                            buw.write(" ");
-                        }
-                        
-                        String word = words[i];
-                        int count = counts.getInt(word);
-                        
-                        if(count < this.minNumber) {
-                            buw.write(this.unknown.apply(word));
-                        } else {
-                            buw.write(this.known.apply(word));
-                        }
-                    }
-                }
-            }
-        }
-    }    
+        return (String[] input) -> {
+          StringBuilder sb = new StringBuilder();
+          
+          for(int i=0;i<input.length;++i) {
+              if(i != 0) {
+                  sb.append(" ");
+              }
+              
+              String s = input[i];
+              
+              if(CreateLexicon.isSpecial(s)) {
+                  sb.append(s);
+              } else {
+                  int count = counts.getInt(s);
+                  
+                  if(count < this.minNumber) {
+                      sb.append(this.unknown.apply(s));
+                  } else {
+                      sb.append(this.known.apply(s));
+                  }
+              }
+          }
+          
+          return sb.toString();  
+        };
+    }
 
     /**
      * 
-     * @param lines
-     * @return
-     * @throws IOException 
+     * @param statStream
+     * @param check
+     * @return 
      */
-    private List<List<String[]>> getAllLines(InputStream lines) throws IOException {
-        List<List<String[]>> result = new ArrayList<>();
-        
-        try(BufferedReader in = new BufferedReader(new InputStreamReader(lines))) {
-            String line;
-            List<String[]> inner = new ArrayList<>();
-            
-            while((line = in.readLine()) != null) {
-                line = line.trim();
-                if(line.equals("")) {
-                    if(!inner.isEmpty()) {
-                        result.add(inner);
-                        inner = new ArrayList<>();
-                    }
-                }else {
-                    inner.add(line.split("\\s+"));
-                }
+    public Function<String[], String> getCheckedReduction(Iterable<String[]> statStream,
+                                                            CreateLexicon.Check check) {
+        Object2IntOpenHashMap<String> counts = new Object2IntOpenHashMap<>();
+        statStream.forEach((line) -> {
+            for(String s : line) {
+                counts.addTo(s, 1);
             }
-            
-            if(!inner.isEmpty()) {
-                result.add(inner);
-            }
-        }
+        });
         
-        return result;
+        return (String[] input) -> {
+          StringBuilder sb = new StringBuilder();
+          
+          for(int i=0;i<input.length;++i) {
+              if(i != 0) {
+                  sb.append(" ");
+              }
+              
+              String s = input[i];
+              
+              int l = check.knownPattern(i, input);
+              
+              if(l > 0) {
+                  for(int add=0;add<l;++add) {
+                      if(add != 0) {
+                          sb.append(" ");
+                      }
+                      
+                      sb.append(input[i+add]);
+                  }
+                  
+                  i += l;
+              } else {
+                  int count = counts.getInt(s);
+                  
+                  if(count < this.minNumber) {
+                      sb.append(this.unknown.apply(s));
+                  } else {
+                      sb.append(this.known.apply(s));
+                  }
+              }
+          }
+          
+          return sb.toString();  
+        };
     }
 }

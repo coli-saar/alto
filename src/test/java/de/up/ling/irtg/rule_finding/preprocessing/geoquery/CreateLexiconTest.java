@@ -6,6 +6,7 @@
 package de.up.ling.irtg.rule_finding.preprocessing.geoquery;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon.Check;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -13,7 +14,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -48,12 +48,13 @@ public class CreateLexiconTest {
             + "lake(name, area, [states it is in])\n"
             + "\n"
             + "****************************************************/\n"
-            + "state('district of columbia', 'dc','washington',638.0e+3,1100,0,'tenleytown','washington','georgetown','duval circle').\n"
+            + "state('District of Columbia', 'dc','washington',638.0e+3,1100,0,'tenleytown','washington','georgetown','duval circle').\n"
             + "state('pennsylvania','pa','harrisburg',11.863e+6,45308,2,'philadelphia','pittsburgh','erie','allentown').\n"
             + "state('rhode island','ri','providence',947.2e+3,1212,13,'providence','warwick','cranston','pawtucket').\n"
             + "city('alabama','al','tuscaloosa',75143).\n"
             + "city('alaska','ak','anchorage',174431).\n"
-            + "city('district of columbia','dc','washington',638333).\n"
+            + "city('alaska','ak','columbia',174431).\n"
+            + "city('District of Columbia','dc','washington',638333).\n"
             + "river('san juan',579,['colorado','new mexico','colorado','utah']).\n"
             + "river('tennessee',1049,['tennessee','alabama','tennessee','kentucky']).\n"
             + "river('wabash',764,['ohio','indiana','illinois']).\n"
@@ -66,7 +67,7 @@ public class CreateLexiconTest {
             + "mountain('california','ca','whitney',4418).\n"
             + "mountain('colorado','co','elbert',4399).\n"
             + "road('80',['new york','new jersey','pennsylvania','ohio','indiana','illinois','iowa','nebraska','wyoming','utah','nevada','california']).\n"
-            + "road('70',['district of columbia','maryland','pennsylvania','ohio','indiana','illinois','missouri','kansas','colorado','utah']).\n"
+            + "road('70',['District of Columbia','maryland','pennsylvania','ohio','indiana','illinois','missouri','kansas','colorado','utah']).\n"
             + "lake('great salt lake',5180,['utah']).\n"
             + "lake('lake of the woods',4391,['minnesota']).\n"
             + "lake('iliamna',2675,['alaska']).\n"
@@ -98,6 +99,12 @@ public class CreateLexiconTest {
         p1 = new Pair<>("How many cities are there in USA ?","answer(count(city(loc_2(countryid('usa')))))");
         ins.add(p1);
         
+        p1 = new Pair<>("How many cities are there in district of columbia ?","answer(count(city(loc_2(countryid('district of columbia')))))");
+        ins.add(p1);
+        
+        p1 = new Pair<>("How many cities are there in district columbia ?","answer(count(city(loc_2(countryid('columbia')))))");
+        ins.add(p1);
+        
         p1 = new Pair<>("How many cities are there in the US ?","answer(count(city(loc_2(countryid('usa')))))");
         ins.add(p1);
         
@@ -115,13 +122,13 @@ public class CreateLexiconTest {
         
         Set<Pair<String,String>> set = new HashSet<>();
         
-        Stream<Pair<String,String>> stream = ins.stream();
+        Iterable<Pair<String,String>> stream = ins;
         stream = cl.replace(stream);
         stream.forEach((Pair<String,String> p) -> {
             set.add(p);
         });
         
-        assertEquals(set.size(),7);
+        assertEquals(set.size(),9);
         
         assertTrue(set.contains(new Pair<>("how many capitals does state_____1 have ?","answer(count(capital(loc_2(stateid('state_____1')))))")));
         assertTrue(set.contains(new Pair<>("how many cities are there in country_____1 ?","answer(count(city(loc_2(countryid('country_____1')))))")));
@@ -129,6 +136,39 @@ public class CreateLexiconTest {
         assertTrue(set.contains(new Pair<>("how many people live in city_____1 abbrev_____1 ?","answer(population_1(cityid('city_____1', 'abbrev_____1')))")));
         assertTrue(set.contains(new Pair<>("count the states which have elevations lower than what state_____1 has .","answer(count(state(low_point_2(lower_2(low_point_1(stateid('state_____1')))))))")));
         assertTrue(set.contains(new Pair<>("how many cities named city_____1 are there in the country_____1 ?","answer(count(intersection(city(cityid('city_____1', _)), loc_2(countryid('country_____1')))))")));
-        assertTrue(set.contains(new Pair<>("which states border state_____1 ?","answer(state(next_to_2(stateid('state_____1'))))")));        
+        assertTrue(set.contains(new Pair<>("which states border state_____1 ?","answer(state(next_to_2(stateid('state_____1'))))")));
+        assertTrue(set.contains(new Pair<>("how many cities are there in district city_____1 ?","answer(count(city(loc_2(countryid('city_____1')))))")));
+        assertTrue(set.contains(new Pair<>("how many cities are there in state_____1 ?","answer(count(city(loc_2(countryid('state_____1')))))")));
+        
+        
+        assertTrue(CreateLexicon.isSpecial("state_____1"));
+        assertTrue(CreateLexicon.isSpecial(CreateLexicon.makeSpecial("u", 2)));
+        assertFalse(CreateLexicon.isSpecial("state____1"));
+        assertFalse(CreateLexicon.isSpecial("state_____1d"));
+    }
+    
+    
+    @Test
+    public void testGetCheck() {
+        Check check = this.cl.getCheck();
+        
+        String[] portions = "Which states border New     York ?".toLowerCase().trim().split("\\s+");
+        
+        for(int i=0;i<portions.length;++i) {
+            if(i != 3) {
+                assertEquals(check.knownPattern(i, portions),0);
+            } else {
+                assertEquals(check.knownPattern(i, portions),2);
+            }
+        }
+        
+        portions = "How many cities named Austin are there in the USA ?".toLowerCase().trim().split("\\s+");
+        for(int i=0;i<portions.length;++i) {
+            if(i != 4 && i != 9) {
+                assertEquals(check.knownPattern(i, portions),0);
+            } else {
+                assertEquals(check.knownPattern(i, portions),1);
+            }
+        }
     }
 }

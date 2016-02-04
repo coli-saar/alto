@@ -35,7 +35,9 @@ public class ExtractJointTrees {
      */
     public static final String FIRST_ALGEBRA_ID = "FirstInput";
     
-    
+    /**
+     * 
+     */
     public static final String SECOND_ALGEBRA_ID = "SecondInput";
     
     

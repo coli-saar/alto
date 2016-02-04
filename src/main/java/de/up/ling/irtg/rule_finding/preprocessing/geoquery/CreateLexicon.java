@@ -6,6 +6,7 @@
 package de.up.ling.irtg.rule_finding.preprocessing.geoquery;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.util.FunctionIterable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,7 +19,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 /**
  *
@@ -29,6 +29,25 @@ public class CreateLexicon {
      * 
      */
     private static final Pattern PREFIX_CONTENT = Pattern.compile("([^\\(\\)]+)\\(([^\\(\\)]+)\\).*");
+
+    /**
+     * 
+     * @param s
+     * @return 
+     */
+    public static boolean isSpecial(String s) {
+        return s.matches(".*_____\\d+");
+    }
+
+    /**
+     * 
+     * @param type
+     * @param code
+     * @return 
+     */
+    public static String makeSpecial(String type, Integer code) {
+        return type+"_____"+code;
+    }
     
     /**
      * 
@@ -48,7 +67,7 @@ public class CreateLexicon {
             String line;
             
             while((line = input.readLine()) != null) {
-                line = line.trim();
+                line = line.toLowerCase().trim();
                 if(isComment) {
                     if(line.matches(".*\\*\\/.*")) {
                         isComment = false;
@@ -285,7 +304,7 @@ public class CreateLexicon {
      * @param input
      * @return 
      */
-    public Stream<Pair<String,String>> replace(Stream<Pair<String,String>> input) {
+    public Iterable<Pair<String,String>> replace(Iterable<Pair<String,String>> input) {
         List<Pair<String,Pair<String,String>>> list = new ArrayList<>();
         
         this.reducePattern.stream().forEach((p) -> {
@@ -296,7 +315,7 @@ public class CreateLexicon {
             int l1 = i1.getLeft().length();
             int l2 = i2.getLeft().length();
             
-            int comp = Integer.compare(l1, l2);
+            int comp = -Integer.compare(l1, l2);
             if(comp != 0) {
                 return comp;
             }
@@ -304,10 +323,10 @@ public class CreateLexicon {
             l1 = i1.getRight().getLeft().length();
             l2 = i2.getRight().getLeft().length();
             
-            return Integer.compare(l1, l2);
+            return -Integer.compare(l1, l2);
         });
         
-        return input.map((Pair<String,String> original) -> {
+        return new FunctionIterable<>(input,(Pair<String,String> original) -> {
             String from = " "+original.getLeft().toLowerCase()+" ";
             String to = (" "+original.getRight().toLowerCase()+" ");
             
@@ -332,7 +351,7 @@ public class CreateLexicon {
                     }
                     counter.put(type, code);
                     
-                    String encoding = type+"_____"+code;
+                    String encoding = makeSpecial(type, code);
                     
                     String fromPattern = "([ '])("+pattern.getLeft()+")([ '])";
                     String toPattern = "([ '])("+pattern.getRight().getLeft()+")([ '])";
@@ -366,5 +385,66 @@ public class CreateLexicon {
      */
     public Set<Pair<String, Pair<String, String>>> getReducePattern() {
         return reducePattern;
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    public Check getCheck() {
+        return new Check();
+    }
+    
+    
+    /**
+     * 
+     */
+    public class Check {
+        /**
+         * 
+         */
+        private final List<String[]> patts;
+        
+        /**
+         * 
+         */
+        public Check() {
+            Set<String> container = new HashSet<>();
+            reducePattern.forEach((pair) -> container.add(pair.getLeft()));
+            
+            patts = new ArrayList<>();
+            
+            container.forEach((entry) -> {
+                patts.add(entry.trim().split("\\s+"));
+            });
+            
+            patts.sort((String[] patt1, String[] patt2) -> -Integer.compare(patt1.length, patt2.length));
+        }
+        
+        /**
+         * 
+         * @param pos
+         * @param arr
+         * @return 
+         */
+        public int knownPattern(int pos, String[] arr) {
+            main : for(int i=0;i<this.patts.size();++i) {
+                String[] patt = patts.get(i);
+                
+                if(patt.length+pos > arr.length) {
+                    continue;
+                }
+                
+                for(int j=0;j<patt.length;++j) {
+                    if(!patt[j].equals(arr[pos+j])) {
+                        continue main;
+                    }
+                }
+                
+                return patt.length;
+            }
+            
+            return 0;
+        }
     }
 }
