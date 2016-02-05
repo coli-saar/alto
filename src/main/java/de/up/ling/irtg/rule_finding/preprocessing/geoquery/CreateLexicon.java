@@ -328,7 +328,7 @@ public class CreateLexicon {
         
         return new FunctionIterable<>(input,(Pair<String,String> original) -> {
             String from = " "+original.getLeft().toLowerCase()+" ";
-            String to = (" "+original.getRight().toLowerCase()+" ");
+            String to = " "+original.getRight().toLowerCase()+" ";
             
             from = from.replaceAll("\\s+", " ");
             to = to.replaceAll("\\s+", " ");

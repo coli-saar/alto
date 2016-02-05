@@ -23,7 +23,6 @@ import static org.junit.Assert.*;
  * @author christoph_teichmann
  */
 public class CreateLexiconTest {
-
     /**
      *
      */

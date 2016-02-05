@@ -90,113 +90,6 @@ public class AntiUnknown {
     /**
      *
      * @param original
-     * @param firstLine
-     * @param secondLine
-     * @return
-     * @throws IOException
-     */
-    public Iterable<Pair<String, String>> reduceUnknownWithFacts(Supplier<InputStream> original,
-                            int firstLine, int secondLine) throws IOException {
-        Iterable<Pair<String, String>> source = new Iterable<Pair<String, String>>() {
-            @Override
-            public Iterator<Pair<String, String>> iterator() {
-                Iterator<Pair<String, String>> it = new Iterator() {
-                    /**
-                     *
-                     */
-                    private final BufferedReader br;
-                    {
-                        br = new BufferedReader(new InputStreamReader(original.get()));
-                        updateMain();
-                    }
-
-                    /**
-                     *
-                     */
-                    private Pair<String, String> main;
-
-                    /**
-                     *
-                     */
-                    private boolean closed = false;
-
-                    @Override
-                    public boolean hasNext() {
-                        return main != null;
-                    }
-
-                    @Override
-                    public Object next() {
-                        Pair<String, String> m = this.main;
-                        this.updateMain();
-                        return m;
-                    }
-
-                    /**
-                     *
-                     */
-                    private void updateMain() {
-                        if (this.closed) {
-                            this.main = null;
-                            return;
-                        }
-
-                        try {
-                            String line = this.br.readLine();
-                            if (line == null) {
-                                this.main = null;
-
-                                closeUp();
-                                return;
-                            }
-
-                            List<String> list = new ArrayList<>();
-                            list.add(line);
-
-                            while ((line = br.readLine()) != null) {
-                                line = line.trim();
-
-                                if (line.isEmpty()) {
-                                    break;
-                                }
-
-                                list.add(line);
-                            }
-
-                            if (line == null) {
-                                this.closeUp();
-                            }
-
-                            if (firstLine > 0 && secondLine > 0 && firstLine < list.size()
-                                    && secondLine < list.size()) {
-                                main = new Pair<>(list.get(firstLine), list.get(secondLine));
-                            }
-                        } catch (IOException ex) {
-                            Logger.getLogger(AntiUnknown.class.getName()).log(Level.SEVERE, null, ex);
-                            throw new RuntimeException("IO problem in iteration .");
-                        }
-                    }
-
-                    /**
-                     *
-                     * @throws IOException
-                     */
-                    private void closeUp() throws IOException {
-                        this.br.close();
-                        this.closed = true;
-                    }
-                };
-
-                return it;
-            }
-        };
-
-        return this.reduceUnknownWithFacts(source);
-    }
-
-    /**
-     *
-     * @param original
      * @return
      * @throws java.io.IOException
      */
@@ -204,7 +97,7 @@ public class AntiUnknown {
             throws IOException {
         ReduceAndDrop rad = new ReduceAndDrop(minNumber, unknown, known);
         Iterable<String[]> statStream = new FunctionIterable<>(original, (Pair<String, String> in) -> {
-            return in.getLeft().trim().split("\\s+");
+            return in.getLeft().toLowerCase().trim().split("\\s+");
         });
 
         Function<String[], String> unk = rad.getReduction(statStream.iterator());
@@ -226,7 +119,7 @@ public class AntiUnknown {
         SimpleCheck check = this.cl.getCheck();
         
         Iterable<String[]> statStream = new FunctionIterable<>(data, (Pair<String, String> in) -> {
-            return in.getLeft().trim().split("\\s+");
+            return in.getLeft().toLowerCase().trim().split("\\s+");
         });
         
         ReduceAndDrop rad = new ReduceAndDrop(minNumber, unknown, known);
@@ -234,7 +127,7 @@ public class AntiUnknown {
         Function<String[],String> f = rad.getCheckedReduction(statStream.iterator(),check);
         
         return new FunctionIterable<>(data,(Pair<String,String> p) -> {
-            String[] fos = p.getLeft().trim().split("\\s+");
+            String[] fos = p.getLeft().toLowerCase().trim().split("\\s+");
             
             return new Pair<>(f.apply(fos),p.getRight());
         });
