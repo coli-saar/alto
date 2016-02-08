@@ -238,7 +238,7 @@ public class BoundaryRepresentation {
      */
     public SGraph getGraph() {
         SGraph wholeGraph = completeGraphInfo.getSGraph();
-        SGraph T = new SGraph();
+        SGraph ret = new SGraph();
         DirectedGraph<GraphNode, GraphEdge> g = wholeGraph.getGraph();
         List<String> activeNodes = new ArrayList<>();
 
@@ -250,8 +250,8 @@ public class BoundaryRepresentation {
             int node = sourceToNode[source];
             if (node >= 0) {
                 String nodeName = completeGraphInfo.getNodeForInt(node);
-                T.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, completeGraphInfo));
-                T.addSource(completeGraphInfo.getSourceForInt(source), nodeName);
+                ret.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, completeGraphInfo));
+                ret.addSource(completeGraphInfo.getSourceForInt(source), nodeName);
                 activeNodes.add(nodeName);
             }
         }
@@ -261,26 +261,26 @@ public class BoundaryRepresentation {
             GraphNode v = wholeGraph.getNode(vName);
             boolean isSource = isSource(vName, completeGraphInfo);
             for (GraphEdge e : g.edgeSet()) {
-                if (!isSource || isInBoundary(e, completeGraphInfo)) {
-                    GraphNode target = e.getTarget();
-                    GraphNode source = e.getSource();
-                    if (source == v && !(target == v)) {
-                        if (!T.containsNode(target.getName())) {
-                            T.addNode(target.getName(), target.getLabel());
-                            activeNodes.add(target.getName());
+                if (!isSource || isInBoundary(e)) {
+                    GraphNode eTarget = e.getTarget();
+                    GraphNode eSource = e.getSource();
+                    if (eSource == v && !(eTarget == v)) {
+                        if (!ret.containsNode(eTarget.getName())) {
+                            ret.addNode(eTarget.getName(), eTarget.getLabel());
+                            activeNodes.add(eTarget.getName());
                         }
-                        T.addEdge(source, target, e.getLabel());
-                    } else if (target == v && !(source == v)) {
-                        if (!T.containsNode(source.getName())) {
-                            T.addNode(source.getName(), source.getLabel());
-                            activeNodes.add(source.getName());
+                        ret.addEdge(eSource, eTarget, e.getLabel());
+                    } else if (eTarget == v && !(eSource == v)) {
+                        if (!ret.containsNode(eSource.getName())) {
+                            ret.addNode(eSource.getName(), eSource.getLabel());
+                            activeNodes.add(eSource.getName());
                         }
-                        T.addEdge(source, target, e.getLabel());
+                        ret.addEdge(eSource, eTarget, e.getLabel());
                     }
                 }
             }
         }
-        return T;
+        return ret;
     }
 
     private boolean arrayContains(int[] array, int value) {
@@ -320,12 +320,17 @@ public class BoundaryRepresentation {
     private boolean isSource(String nodeName, GraphInfo completeGraphInfo) {
         return isSource(completeGraphInfo.getIntForNode(nodeName));
     }
-
+    
+    /**
+     * returns -1 if s is not assigned.
+     * @param s
+     * @return 
+     */
     int getSourceNode(int s) {
         return sourceToNode[s];
     }
 
-    boolean isInBoundary(GraphEdge e, GraphInfo completeGraphInfo) {
+    boolean isInBoundary(GraphEdge e) {
         return inBoundaryEdges.contains(e, completeGraphInfo);
     }
 
@@ -905,7 +910,7 @@ public class BoundaryRepresentation {
         return stringRep;
     }
 
-    private IntList getAssignedSources(int vNr) {
+    IntList getAssignedSources(int vNr) {
         IntList ret = new IntArrayList();
         for (int source = 0; source < sourceToNode.length; source++) {
             if (sourceToNode[source] == vNr) {

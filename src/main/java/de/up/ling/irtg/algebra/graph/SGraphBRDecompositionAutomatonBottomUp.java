@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import com.google.common.collect.ImmutableMap;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
@@ -19,7 +18,6 @@ import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.AverageLogger;
-import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -39,6 +37,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.ByteArrayOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -51,8 +50,11 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 
 /**
@@ -63,7 +65,7 @@ import java.util.Set;
  */
 public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<BoundaryRepresentation> {
 //    private final BottomUpRuleIndex storedRules;    
-    private final GraphInfo completeGraphInfo;    
+    protected final GraphInfo completeGraphInfo;    
     private final GraphAlgebra algebra;
     
     private Long2ObjectMap<Long2IntMap> storedStates;
@@ -470,9 +472,9 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     
     
     //this part is only for writing
-    private boolean actuallyWrite=true;
+    protected boolean actuallyWrite=true;
     private final int flushThreshold = 10000;
-    private int count;
+    protected int count;
     private final BitSet foundByR = new BitSet();
     private final BitSet foundByO = new BitSet();
     
@@ -489,7 +491,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     private final Object2IntMap<String> rule2Parent = new Object2IntOpenHashMap<>();//if the int is negative, the state comes from a rename rule.
     
     
-    private void foundO(Writer writer, int state) throws Exception {
+    private void foundO(Writer writer, int state) throws IOException {
         
         foundByO.set(state);
         
@@ -555,7 +557,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         }
     }
     
-    private void foundR(Writer writer, int state) throws Exception {
+    private void foundR(Writer writer, int state) throws IOException {
         
         foundByR.set(state);
         
@@ -634,7 +636,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * @return
      * @throws Exception 
      */
-    public boolean writeAutomatonRestricted(Writer writer) throws Exception {
+    public boolean writeAutomatonRestricted(Writer writer) {
         stateInterner.setTrustingMode(true);
         count = 0;
 
@@ -645,7 +647,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
             if (actuallyWrite) {
                 try {
                     writeRule(writer, rule);
-                } catch (Exception ex) {
+                } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 }
             }
@@ -656,7 +658,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return ret;
     }
     
-    private void writeRule(Writer writer, Rule rule) throws Exception {
+    protected void writeRule(Writer writer, Rule rule) throws IOException {
 
         
         boolean found = false;
@@ -774,7 +776,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return sb.toString();
     }
     
-    private String encodeShort(int stateId){
+    protected String encodeShort(int stateId){
         return String.valueOf(stateId)+"_"+getStateForId(stateId).allSourcesToString();
     }
 
@@ -800,7 +802,8 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * should be examined.
      * @throws Exception
      */
-    public static void writeDecompositionAutomata(String targetFolderPath, Corpus corpus, int startIndex, int stopIndex, int sourceCount, int maxNodes, int maxPerNodeCount, boolean onlyBolinas) throws Exception {
+    public static void writeDecompositionAutomata(String targetFolderPath, Corpus corpus, int startIndex, int stopIndex, int sourceCount, int maxNodes, int maxPerNodeCount,
+            boolean onlyBolinas) throws Exception {
         
         
         BolinasGraphOutputCodec bolCodec = new BolinasGraphOutputCodec();
@@ -901,7 +904,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * 5. A hard cap on the number of nodes allowed per graph
      * (violating graphs are not parsed). 0 for no restriction.
      * 6. A parameter k. If for a node count n, k is less then the number
-     * of graphs with n nodes, then k are chosen randomly.
+     * of graphs with n nodes, then k are chosen randomly. Use 0 to use all graphs.
      * 7. targetFolderPath: The folder into which the automata are written.
      * 8. 'onlyBolinas' or 'all', depending on whether only graphs expressible
      * in the Bolinas format should be examined.
@@ -938,6 +941,17 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         Corpus corpus = Corpus.readCorpus(corpusReader, irtg);
         writeDecompositionAutomata(targetPath, corpus, start, stop, sourceCount, maxNodes, maxPerNodeCount, onlyBolinas);
     }
+    
+    
+    private static void writeAlignmentMatchingAutomata() {
+        SGraph input;
+        
+        Map<GraphEdge, Integer> edgeAlignment;
+        Map<GraphNode, Integer> nodeAlignment;
+    }
+    
+    
+    
     
     
     private static interface MergePartnerFinder {

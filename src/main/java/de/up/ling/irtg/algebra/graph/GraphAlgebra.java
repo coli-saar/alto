@@ -239,7 +239,7 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
     
     /**
      * Returns all sources that are forgotten if {@code opString} is applied to {@code sgraph}.
-     * Only works if {@code opString} is one of the forget operations (includeing forget all etc).
+     * Only works if {@code opString} is one of the forget operations (including forget all etc).
      * @param opString
      * @param sgraph
      * @return 

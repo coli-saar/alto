@@ -92,7 +92,7 @@ public class GraphInfo {
         int n = getNrNodes();
         int m = graph.getGraph().edgeSet().size();
         
-        useBytes = (n<256 && m<256);
+        useBytes = (n+m<128);
         
         edgesBySourceAndTarget = new int[n][n];
         for (int j = 0; j<n; j++){
@@ -370,6 +370,9 @@ public class GraphInfo {
      * @return
      */
     public int getEdgeSource(int e) {
+        if (e < 0) {
+            return -1;
+        }
         return edgeSources[e];
     }
     
