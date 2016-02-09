@@ -54,6 +54,7 @@ public class CreateStringsToFiles {
         fact.setFirstPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
             return new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels());
         }));
+
         fact.setFirstVariableSource(new JustXEveryWhere());
         fact.setSecondVariableSource(new JustXEveryWhere());
         
@@ -82,7 +83,7 @@ public class CreateStringsToFiles {
             
             while((line = br.readLine()) != null) {
                 line = line.trim();
-                String aline = br.readLine();
+                String aline = br.readLine().trim();
                 
                 leff.add(new Pair<>(line,aline));
             }
@@ -101,10 +102,6 @@ public class CreateStringsToFiles {
                 public AlignedTrees next() {
                     Pair<String,String> pa = leff.get(pos++);
                     StringAlgebra sal = new StringAlgebra();
-                    
-                    System.out.println("--------");
-                    System.out.println(pa.toString());
-                    System.out.println("--------");
                     
                     TreeAutomaton<StringAlgebra.Span> ta = sal.decompose(sal.parseString(pa.getLeft()));
                     SpanAligner span = new SpanAligner(pa.getRight(), ta);
@@ -142,11 +139,6 @@ public class CreateStringsToFiles {
                     SpecifiedAligner<String> spec = new SpecifiedAligner<>(ta);
                     String s = f.getAbsolutePath().replaceAll("\\.rtg$", ".align");
                     
-                    System.out.println("--------");
-                    System.out.println(f);
-                    System.out.println(s);
-                    System.out.println("--------");
-                    
                     try(BufferedReader br = new BufferedReader(new FileReader(s))) {
                         String line;
                         while((line = br.readLine()) != null) {
@@ -155,7 +147,7 @@ public class CreateStringsToFiles {
                             
                             IntSet aligns = new IntOpenHashSet();
                             for(int i=1;i<parts.length;++i) {
-                                aligns.add(Integer.parseInt(parts[i]));
+                                aligns.add(Integer.parseInt(parts[i].trim()));
                             }
                             
                             spec.put(state, aligns);
