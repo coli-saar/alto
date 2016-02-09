@@ -5,17 +5,23 @@
  */
 package apps;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
-import de.up.ling.irtg.rule_finding.alignments.Empty;
+import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
+import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -54,28 +60,60 @@ public class CreateStringsToFiles {
         CorpusCreator cc = fact.getInstance(null, null, null, null);
         ExtractJointTrees et = new ExtractJointTrees(cc);
         
-        List<AlignedTrees> left = new ArrayList<>();
+        final List<File> files = new ArrayList<>();
+        Object2IntMap<File> nums = new Object2IntOpenHashMap<>();
+        
+        
+        File f = new File(args[1]);
+        File[] fs = f.listFiles();
+        for(File k : fs) {
+            if(k.isFile() && k.getAbsolutePath().endsWith(".rtg")) {
+                String s = k.getName();
+                nums.put(k, Integer.parseInt(s.trim().split("_")[0].trim()));
+                
+                files.add(k);
+            }
+        }
+        files.sort((File o1, File o2) -> Integer.compare(nums.getInt(o1), nums.getInt(o2)));
+        
+        List<Pair<String,String>> leff = new ArrayList<>();
         try(BufferedReader br = new BufferedReader(new FileReader(args[0]))) {
             String line;
             
             while((line = br.readLine()) != null) {
                 line = line.trim();
-                StringAlgebra sal = new StringAlgebra();
-                TreeAutomaton<StringAlgebra.Span> ta = sal.decompose(sal.parseString(line));
+                String aline = br.readLine();
                 
-                AlignedTrees at = new AlignedTrees(ta, new Empty(ta));
-                left.add(at);
+                leff.add(new Pair<>(line,aline));
             }
         }
         
-        final List<File> files = new ArrayList<>();
-        File f = new File(args[1]);
-        File[] fs = f.listFiles();
-        for(File k : fs) {
-            if(k.isFile()) {
-                files.add(k);
-            }
-        }
+        Iterable<AlignedTrees> left = () -> {
+            return new Iterator<AlignedTrees>() {
+                private int pos = 0;
+                
+                @Override
+                public boolean hasNext() {
+                    return pos < leff.size();
+                }
+
+                @Override
+                public AlignedTrees next() {
+                    Pair<String,String> pa = leff.get(pos++);
+                    StringAlgebra sal = new StringAlgebra();
+                    
+                    System.out.println("--------");
+                    System.out.println(pa.toString());
+                    System.out.println("--------");
+                    
+                    TreeAutomaton<StringAlgebra.Span> ta = sal.decompose(sal.parseString(pa.getLeft()));
+                    SpanAligner span = new SpanAligner(pa.getRight(), ta);
+                    
+                    return new AlignedTrees(ta, span);
+                }
+            };
+        };
+        
         
         Iterable<AlignedTrees> right = () -> {
             return new Iterator<AlignedTrees>() {
@@ -92,38 +130,46 @@ public class CreateStringsToFiles {
                     TreeAutomatonInputCodec tic = new TreeAutomatonInputCodec();
                     
                     TreeAutomaton ta;
+                    File f = files.get(pos++);
                     
-                    try (InputStream in = new FileInputStream(files.get(pos++))) {
+                    try (InputStream in = new FileInputStream(f)) {
                         ta = tic.read(in);
                     } catch (IOException ex) {
                         Logger.getLogger(CreateStringsToFiles.class.getName()).log(Level.SEVERE, null, ex);
                         return null;
                     }
                     
-                    AlignedTrees at = new AlignedTrees(ta, new Empty(ta));
+                    SpecifiedAligner<String> spec = new SpecifiedAligner<>(ta);
+                    String s = f.getAbsolutePath().replaceAll("\\.rtg$", ".align");
+                    
+                    System.out.println("--------");
+                    System.out.println(f);
+                    System.out.println(s);
+                    System.out.println("--------");
+                    
+                    try(BufferedReader br = new BufferedReader(new FileReader(s))) {
+                        String line;
+                        while((line = br.readLine()) != null) {
+                            String[] parts = line.split(" ");
+                            String state = parts[0].trim();
+                            
+                            IntSet aligns = new IntOpenHashSet();
+                            for(int i=1;i<parts.length;++i) {
+                                aligns.add(Integer.parseInt(parts[i]));
+                            }
+                            
+                            spec.put(state, aligns);
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(CreateStringsToFiles.class.getName()).log(Level.SEVERE, null, ex);
+                        return null;
+                    }
+                    
+                    AlignedTrees at = new AlignedTrees(ta, spec);
                     return at;
                 }
             };
         };
-        
-        int i = 0;
-        Iterator<AlignedTrees> it = left.iterator();
-        while(it.hasNext()) {
-            it.next();
-            ++i;
-        }
-        
-        System.out.println(i);
-        
-        i = 0;
-        it = right.iterator();
-        while(it.hasNext()) {
-            it.next();
-            ++i;
-        }
-        
-        System.out.println(i);
-        
         
         Supplier<OutputStream> sup = new Supplier<OutputStream>(){
             /**
