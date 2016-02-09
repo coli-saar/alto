@@ -9,17 +9,9 @@ import de.saar.basic.Pair;
 import de.up.ling.irtg.rule_finding.handle_unknown.ReduceAndDrop;
 import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon.SimpleCheck;
 import de.up.ling.irtg.util.FunctionIterable;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *

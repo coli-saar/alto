@@ -111,7 +111,6 @@ public class CreateStringsToFiles {
             };
         };
         
-        
         Iterable<AlignedTrees> right = () -> {
             return new Iterator<AlignedTrees>() {
                 
