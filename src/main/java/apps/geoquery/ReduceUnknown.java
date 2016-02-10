@@ -47,7 +47,7 @@ public class ReduceUnknown {
                     pos = 0;
                 } else {
                     if(pos == firstPos) {
-                        estimateLines.add(line);
+                        estimateLines.add(line.replaceAll("\\p{Punct}+", "").trim());
                     }
                     
                     ++pos;
@@ -68,7 +68,7 @@ public class ReduceUnknown {
                 
                 if(line.isEmpty()) {
                     if(seen.size() > secondPos && seen.size() > firstPos ) {
-                        pairs.add(new Pair<>(seen.get(firstPos),seen.get(secondPos)));
+                        pairs.add(new Pair<>(seen.get(firstPos).replaceAll("\\p{Punct}+", "").trim(),seen.get(secondPos)));
                     }
                     
                     seen.clear();
@@ -79,7 +79,7 @@ public class ReduceUnknown {
         }
         
         if(seen.size() > secondPos && seen.size() > firstPos ) {
-            pairs.add(new Pair<>(seen.get(firstPos),seen.get(secondPos)));
+            pairs.add(new Pair<>(seen.get(firstPos).replaceAll("\\p{Punct}+", "").trim(),seen.get(secondPos)));
         }
         
         Iterable<Pair<String,String>> result = anti.reduceUnknownWithFacts(pairs,estimateLines);
