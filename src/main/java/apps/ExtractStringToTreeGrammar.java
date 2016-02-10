@@ -63,10 +63,7 @@ public class ExtractStringToTreeGrammar {
 
             @Override
             public String get(Tree<String> child, Tree<String> whole) {
-                String l = child.getLabel();
-                String lbar = l.split("/")[1].trim().split("\\|")[0].trim();
-                
-                return lbar;
+                return "X";
             }
         };
         
