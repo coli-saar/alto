@@ -11,6 +11,7 @@ import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon.SimpleC
 import de.up.ling.irtg.util.FunctionIterable;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Iterator;
 import java.util.function.Function;
 
 /**
@@ -80,19 +81,21 @@ public class AntiUnknown {
     }
 
     /**
-     *
+     * 
      * @param original
+     * @param knownUnknownStatSource
      * @return
-     * @throws java.io.IOException
+     * @throws IOException 
      */
-    public Iterable<Pair<String, String>> reduceUnknownWithFacts(Iterable<Pair<String, String>> original)
+    public Iterable<Pair<String, String>> reduceUnknownWithFacts(Iterable<Pair<String, String>> original,
+            Iterable<String> knownUnknownStatSource)
             throws IOException {
         ReduceAndDrop rad = new ReduceAndDrop(minNumber, unknown, known);
-        Iterable<String[]> statStream = new FunctionIterable<>(original, (Pair<String, String> in) -> {
-            return in.getLeft().toLowerCase().trim().split("\\s+");
-        });
 
-        Function<String[], String> unk = rad.getReduction(statStream.iterator());
+        Iterable<String[]> relevant = new FunctionIterable<>(knownUnknownStatSource, (String s) -> {
+            return s.trim().toLowerCase().split("\\s+");
+        });
+        Function<String[], String> unk = rad.getReduction(relevant.iterator());
 
         Iterable<Pair<String, String>> main = cl.replace(original);
         return new FunctionIterable<>(main, (Pair<String, String> p) -> {

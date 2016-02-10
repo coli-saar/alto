@@ -6,11 +6,13 @@
 package de.up.ling.irtg.rule_finding.preprocessing.geoquery;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.util.FunctionIterable;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import org.junit.Before;
@@ -112,8 +114,10 @@ public class AntiUnknownTest {
         for(int i=0;i<TEST_CORPUS.length;i += 2) {
             list.add(new Pair<>(TEST_CORPUS[i], TEST_CORPUS[i+1]));
         }
+        Iterable<String> statSource =
+                new FunctionIterable<>(list,(Pair<String,String> pa) -> pa.getLeft());
         
-        Iterable<Pair<String,String>> it = this.anu.reduceUnknownWithFacts(list);
+        Iterable<Pair<String,String>> it = this.anu.reduceUnknownWithFacts(list,statSource);
         Set<String> seen = new HashSet<>();
         
         
@@ -122,6 +126,8 @@ public class AntiUnknownTest {
         }
         
         assertEquals(seen.size(),7);
+        
+        System.out.println(seen);
         
         assertTrue(seen.contains("how many citi does the country_____1 have ?,answer(count(city(loc_2(countryid('country_____1')))))"));
         assertTrue(seen.contains("how many citi __unknown__ city_____1 __unknown__ __unknown__ in the country_____1 ?,answer(count(intersection(city(cityid('city_____1', _)), loc_2(countryid('country_____1')))))"));
