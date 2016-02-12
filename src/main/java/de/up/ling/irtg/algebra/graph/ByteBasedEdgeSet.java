@@ -9,6 +9,8 @@ import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.ByteIterator;
 import it.unimi.dsi.fastutil.bytes.ByteArraySet;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -130,10 +132,10 @@ class ByteBasedEdgeSet implements IdBasedEdgeSet {
     }
 
     @Override
-    public long smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
+    public IntList smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
         if (reference instanceof ByteBasedEdgeSet) {
             ByteIterator li = ((ByteBasedEdgeSet) reference).edges.iterator();
-            long res = 0;
+            IntList res = new IntArrayList();
         //System.err.println("Next test: "+reference.ID);
             //System.err.println(reference.edges.size());
             //int i = 0;
@@ -144,9 +146,9 @@ class ByteBasedEdgeSet implements IdBasedEdgeSet {
 
                 byte otherNr = ((ByteBasedEdgeSet) reference).getOtherNode(e, (byte) vNr, graphInfo);
                 if (otherNr != -1) {
-                    res += BoundaryRepresentation.getEdgeIDSummand(e, vNr, source, graphInfo);
                     if (!br.isSource(otherNr) || otherNr == vNr) {
                         edges.remove(e);
+                        res.add(e);
                     }
                 }
 
@@ -154,65 +156,13 @@ class ByteBasedEdgeSet implements IdBasedEdgeSet {
             return res;//returns the decrease in edgeID.
         } else {
             System.err.println("Conflicting types: was expecting ByteBasedEdgeSet!");
-            return 0;
+            return new IntArrayList();
         }
 
     }
     
+
     
-    @Override
-    public long smartAddIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
-        if (reference instanceof ByteBasedEdgeSet) {
-            int[] incidentEdges = graphInfo.getIncidentEdges(vNr);
-            long res = 0;
-        //System.err.println("Next test: "+reference.ID);
-            //System.err.println(reference.edges.size());
-            
-            for (int i = 0; i<incidentEdges.length;i++) {
-                //System.err.println(String.valueOf(i));
-                
-                byte e = (byte)incidentEdges[i];
-
-                byte otherNr = ((ByteBasedEdgeSet) reference).getOtherNode(e, (byte) vNr, graphInfo);
-                if (otherNr != -1) {//this should always be the case, maybe drop the check?
-                    res += br.getEdgeIDSummand(e, vNr, source, graphInfo);
-                    if (!((ByteBasedEdgeSet) reference).contains(e)) {//pretty much unnecessary, since the check is done in edges.add anyway
-                        edges.add(e);
-                    }
-                }
-
-            }
-            return res;//returns the increase in edgeID.
-        } else {
-            System.err.println("Conflicting types: was expecting ByteBasedEdgeSet!");
-            return 0;
-        }
-    }
-
-    /*public long computeEdgeIdBonus(int source, BitSet isSourceNode, BoundaryRepresentation br, SGraphBRDecompositionAutomaton graphInfo){
-     ByteIterator li = edges.iterator();
-     long res = 0;
-     while (li.hasNext()) {
-     long edge = li.nextLong();
-     if (isSourceNode.get(NumbersCombine.getFirst(edge)) && isSourceNode.get(NumbersCombine.getSecond(edge))){
-     res += br.getEdgeIDSummand(edge, br.getSourceNode(source), source, graphInfo);
-     }
-     }
-     return res;
-     }*/
-    
-    @Override
-    public long computeEdgeIdSummand(int vNr, int source, GraphInfo graphInfo){
-        long res = 0;
-        ByteIterator it = edges.iterator();
-        while (it.hasNext()) {
-           byte edge = it.nextByte();
-           if (graphInfo.isIncident(vNr, edge)){
-              res += BoundaryRepresentation.getEdgeIDSummand(edge, vNr, source, graphInfo);
-           }
-        }
-        return res;
-    }
     
     
     private byte getOtherNode(byte e, byte v, GraphInfo graphInfo) {

@@ -12,6 +12,7 @@ import static de.up.ling.irtg.util.TestingTools.*;
 import static org.junit.Assert.*
 import de.up.ling.irtg.InterpretedTreeAutomaton
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton
+import de.up.ling.irtg.automata.TreeAutomaton
 import java.io.StringWriter
 
 import java.nio.charset.Charset
@@ -55,10 +56,44 @@ class DecompAutomataTest {
         Writer writer = new StringWriter()
         SGraph input = pg("(c / chapter :mod 2)")
         GraphAlgebra.writeRestrictedDecompositionAutomaton(input, 2, writer)
-//        System.err.println(writer.toString())
-//        System.err.println(decompAutoGold)
+        //System.err.println(writer.toString())
+        //System.err.println(decompAutoGold)
         assertEquals(decompAutoGold, writer.toString())
     }
+    
+    @Test
+    public void largeAutomatonTest() {
+        SGraph graph = new GraphAlgebra().parseString(largeGraphString);
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream(recursiveGraphGrammar.getBytes( Charset.defaultCharset() ) ));
+        TreeAutomaton invhom = irtg.getInterpretation("graph").parse(graph);
+        invhom.makeAllRulesExplicit();
+        assert(invhom.getFinalStates().size() == 3);
+    }
+    
+    public static final String largeGraphString = "(pc3  :o-of (sc3 / sc  :u (pc4  :o-of (sc4 / sc  :u (pc5  :o-of (sc5 / sc  :u (pc6  :o-of (sc6 / sc  :u (pc7  :o-of (sc7 / sc  :u (pc8  :o-of (sc8 / sc  :u (pc9  :c-of (p9 / p  :A-of (r  :A sc8  :A (p8 / p  :c pc8)  :A sc7  :A (p7 / p  :c pc7)  :A sc6  :A (p6 / p  :c pc6)  :A sc5  :A (p5 / p  :c pc5)  :A sc4  :A (p4 / p  :c pc4)  :A sc3  :A (p3 / p  :c pc3)  :A (sc2 / sc  :o (pc2  :c-of (p2 / p  :A-of r)  :u-of (sc1 / sc  :o (pc1  :c-of (p1 / p  :A-of r))  :A-of r))  :u pc3))))))))))))))))";
+    
+    public static final String recursiveGraphGrammar = """\n\
+interpretation graph: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+DONE_STACK! -> done_stacking1(PLATE_STACK)
+[graph] f_root_plt(?1)
+
+
+PLATE_STACK -> basic_stack1(PLATE)
+[graph] ?1
+
+PLATE_STACK -> bring_another_plate2(PRIMED_STACK, PLATE)
+[graph] merge(?1, ?2)
+
+PRIMED_STACK -> prep_push(PLATE_STACK, SUPCON)
+[graph] f_stk(merge(r_plt_stk(?1), r_undr_stk(r_ovr_plt(?2))))
+
+PLATE -> plate0
+[graph] '(r<root> :A (p / p :c (plt<plt>)))'
+
+SUPCON -> supcon0
+[graph] '(r<root> :A (sc/sc :o (ovr<ovr>) :u (undr<undr>)))'""";
+    
     
     public static final String HRGCleanS = """\n\
 

@@ -6,6 +6,7 @@
 package de.up.ling.irtg.algebra.graph;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.BitSet;
 import java.util.List;
 import java.util.function.IntConsumer;
@@ -90,14 +91,6 @@ abstract interface IdBasedEdgeSet {
      */
     public abstract boolean containsAll(int[] other);
 
-    /**
-     * Computes the summand for a BoundaryRepresentation's EdgeID corresponding to node vNr, with source assigned to it.
-     * @param vNr
-     * @param source
-     * @param graphInfo
-     * @return
-     */
-    public abstract long computeEdgeIdSummand(int vNr, int source, GraphInfo graphInfo);
     
     /**
      * deals with the consequences for the edges, if source is forgotton at vNr, assuming this is the last source at this node.
@@ -110,20 +103,8 @@ abstract interface IdBasedEdgeSet {
      * @param graphInfo
      * @return
      */
-    public abstract long smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo);
+    public abstract IntList smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo);
     
-    /**
-     * deals with the consequences for the edges, if source is added at vNr, assuming this is the first source at this node.
-     * Needs a different copy of the IdBasedEdgeSet before the source is added as reference.
-     * returns the corresponding summand for the EdgeID of the BoundaryRepresentation.
-     * @param vNr
-     * @param source
-     * @param reference
-     * @param br
-     * @param graphInfo
-     * @return
-     */
-    public abstract long smartAddIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo);
     
     /**
      * Clones the set.

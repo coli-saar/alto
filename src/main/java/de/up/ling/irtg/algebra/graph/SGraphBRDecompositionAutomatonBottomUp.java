@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import com.google.common.collect.ImmutableMap;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
@@ -19,7 +18,6 @@ import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.AverageLogger;
-import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
@@ -32,8 +30,6 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2IntMap;
 import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.ByteArrayOutputStream;
@@ -66,7 +62,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     private final GraphInfo completeGraphInfo;    
     private final GraphAlgebra algebra;
     
-    private Long2ObjectMap<Long2IntMap> storedStates;
 
     /**
      * Initializes a decomposition automaton for {@code completeGraph} with respect to {@code algebra}.
@@ -87,8 +82,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
         
         
-        stateInterner.setTrustingMode(true);
-        storedStates = new Long2ObjectOpenHashMap<>();
         Long2IntMap edgeIDMap = new Long2IntOpenHashMap();
         edgeIDMap.defaultReturnValue(-1);
         
@@ -107,32 +100,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
 
 
-    /**
-     * Adds the state {@code stateBR} and assigns it an ID. This uses a custom,
-     * more efficient way of storing states than the default implementation,
-     * using properties of boundary representations.
-     * @param stateBR
-     * @return 
-     */
-    @Override
-    protected int addState(BoundaryRepresentation stateBR) {
-        int stateID = -1;
-        Long2IntMap edgeIDMap = storedStates.get(stateBR.vertexID);
-        if (edgeIDMap != null){
-            stateID = edgeIDMap.get(stateBR.edgeID);
-        }
-        
-        if (stateID == -1){
-            stateID = super.addState(stateBR);//this is kind of ugly?
-            if (edgeIDMap == null){
-                edgeIDMap = new Long2IntOpenHashMap();
-                edgeIDMap.defaultReturnValue(-1);
-                storedStates.put(stateBR.vertexID, edgeIDMap);
-            }
-            edgeIDMap.put(stateBR.edgeID, stateID);
-        }
-        return stateID;
-    }
+    
     
 
     private static <E> Collection<E> sing(E object) {
@@ -635,7 +603,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
      * @throws Exception 
      */
     public boolean writeAutomatonRestricted(Writer writer) throws Exception {
-        stateInterner.setTrustingMode(true);
         count = 0;
 
         boolean tempDoStore = isStoring();
@@ -654,6 +621,11 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         setStoring(tempDoStore);
         
         return ret;
+    }
+    
+    @Override
+    public String toString() {
+        return "";
     }
     
     private void writeRule(Writer writer, Rule rule) throws Exception {
