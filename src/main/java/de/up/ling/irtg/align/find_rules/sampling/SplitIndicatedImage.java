@@ -41,9 +41,6 @@ public class SplitIndicatedImage implements RuleTreeConverter<String> {
         this.marker = marker;
     }
     
-    
-    
-    
     @Override
     public String convert(List<Tree<Rule>> input) {
         StringBuilder sb = new StringBuilder();

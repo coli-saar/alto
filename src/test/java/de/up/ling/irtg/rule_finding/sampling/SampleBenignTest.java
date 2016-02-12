@@ -26,7 +26,6 @@ import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
-import it.unimi.dsi.fastutil.doubles.DoubleList;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
@@ -221,7 +220,7 @@ public class SampleBenignTest {
                     d1 += 1;
                 }
             }
-        };
+        }
         
         assertTrue(d1 > 800.0);
     }
