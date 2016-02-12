@@ -7,7 +7,7 @@ package de.up.ling.irtg.align.find_rules;
 
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
-import de.up.ling.irtg.align.find_rules.sampling.Model;
+import de.up.ling.irtg.rule_finding.sampling.Model;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;

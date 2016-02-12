@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.find_rules.sampling;
+package de.up.ling.irtg.rule_finding.sampling;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -28,21 +28,25 @@ import org.apache.commons.math3.random.Well44497a;
  * This class uses adaptive iterated importance sampling in order to draw a
  * sample of rule trees from a given automaton.
  * 
- * The automaton MUST be well behaved: it must have at least one final states
+ * The automaton MUST be well behaved: it must have at least one final state
  * and from any state reachable top down from the final states, there must be
- * a sequence of rules that terminates. It is also assumed that the automaton
- * has no cycles. The sampler actually draws multiple samples and attempts to
- * improve the proposal distribution from each intermediate sample.
+ * a complete derivation (i.e. there are no states that derive no trees).
+ * It is also assumed that the automaton has no cycles. The sampler actually
+ * draws multiple samples and attempts to improve the proposal distribution
+ * from each intermediate sample.
  * 
  * @author christoph_teichmann
  */
 public abstract class SampleBenign {
-    
     /**
      * 
      */
     private boolean resetEverySample = true;
 
+    /**
+     * 
+     * @return 
+     */
     public boolean isResetEverySample() {
         return resetEverySample;
     }
@@ -250,7 +254,6 @@ public abstract class SampleBenign {
             this.resetAdaption();
         }
         
-        
         if(this.benign == null){
             throw new NullPointerException("The automaton to be sampled must"
                     + "be defined with setAutomaton before sampling starts");
@@ -290,9 +293,10 @@ public abstract class SampleBenign {
             
             //here we adapt the proposal probabilities according to how often we
             // have seen certain proposals and how large our effective sample is
+            
             for(int i=0;i<weights.size();++i){
                 this.adapt(sample.get(i),
-                      effectiveSampleSize*(weights.get(i) - (i > 0 ? weights.get(i-1) : 0.0)));
+                        effectiveSampleSize*(weights.get(i) - (i > 0 ? weights.get(i-1) : 0.0)));
             }
         }
         
@@ -363,14 +367,14 @@ public abstract class SampleBenign {
     }
 
     /**
-     *  Adds the weight from the actual target distribution for the given sample
+     * Adds the weight from the actual target distribution for the given sample
      * trees.
      * 
      * @param sample
      * @param weights
-     * @param config 
+     * @param mod 
      */
-    private void addTargetWeight(List<Tree<Rule>> sample, DoubleList weights, Model mod) {
+    protected void addTargetWeight(List<Tree<Rule>> sample, DoubleList weights, Model mod) {
         // we look up the weight for each tree
         for(int i=0;i<sample.size();++i){
             double d = lookUpWeight(mod, sample.get(i));
@@ -387,7 +391,7 @@ public abstract class SampleBenign {
      * @param t
      * @return 
      */
-    private double lookUpWeight(Model mod, Tree<Rule> t) {
+    protected double lookUpWeight(Model mod, Tree<Rule> t) {
         return mod.getLogWeight(t);
     }
 
@@ -514,12 +518,12 @@ public abstract class SampleBenign {
          * The number of samples drawn in each round, the 0th round is the
          * final resampling step.
          */
-        private IntIntFunction sampleSize = (int num) -> 100;
+        private IntIntFunction sampleSize = (int num) -> 1000;
         
         /**
          * The number of rounds used for adaption.
          */
-        private int rounds = 5;
+        private int rounds = 20;
         
         /**
          * The model used for evaluation.

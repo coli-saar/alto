@@ -5,9 +5,9 @@
  */
 package de.up.ling.irtg.align.find_rules;
 
-import de.up.ling.irtg.align.find_rules.sampling.Model;
-import de.up.ling.irtg.align.find_rules.sampling.RuleCountBenign;
-import de.up.ling.irtg.align.find_rules.sampling.SampleBenign;
+import de.up.ling.irtg.rule_finding.sampling.Model;
+import de.up.ling.irtg.rule_finding.sampling.RuleCountBenign;
+import de.up.ling.irtg.rule_finding.sampling.SampleBenign;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.IntIntFunction;

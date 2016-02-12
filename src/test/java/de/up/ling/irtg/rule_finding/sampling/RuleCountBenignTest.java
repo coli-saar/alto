@@ -3,12 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.find_rules.sampling;
+package de.up.ling.irtg.rule_finding.sampling;
 
 import com.google.common.base.Function;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
-import de.up.ling.irtg.align.find_rules.sampling.SampleBenign.Configuration;
+import de.up.ling.irtg.rule_finding.sampling.SampleBenign.Configuration;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.IntIntFunction;

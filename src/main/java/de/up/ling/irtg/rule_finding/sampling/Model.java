@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.align.find_rules.sampling;
+package de.up.ling.irtg.rule_finding.sampling;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.tree.Tree;

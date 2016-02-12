@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.align.find_rules.sampling;
 
+import de.up.ling.irtg.rule_finding.sampling.Model;
 import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.rule_finding.SubtreeIterator;
 import de.up.ling.irtg.automata.Rule;
@@ -115,7 +116,6 @@ public class InterpretingModel implements Model {
             for(int i=0;i<example.size();++i){
                 int code = example.getInt(i);
                 
-                
                 if(hm.isVariable(code)){
                     ++vars;
                     ++leftSym;
@@ -125,7 +125,6 @@ public class InterpretingModel implements Model {
                 if(hm.getSignature().getArity(code) == 0){
                     continue;
                 }
-                
             
                 HomomorphismSymbol hl = this.hm.getHomomorphism1().get(code).getLabel();
                 HomomorphismSymbol hr = this.hm.getHomomorphism2().get(code).getLabel();
