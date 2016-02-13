@@ -38,16 +38,16 @@ public class ProjectedSubtreeIterator<Type> implements Iterator<IntList> {
     /**
      * 
      */
-    private final IntPredicate isVar;
+    private final IntPredicate isCutPoint;
     
     /**
      * 
      * @param basis
      * @param map
-     * @param isVar 
+     * @param isCutPoint  
      */
     public ProjectedSubtreeIterator(Tree<Type> basis, Function<Type,Integer> map,
-                                        IntPredicate isVar) {
+                                        IntPredicate isCutPoint) {
         this.pos = 0;
         
         construction = new IntArrayList();
@@ -56,7 +56,7 @@ public class ProjectedSubtreeIterator<Type> implements Iterator<IntList> {
         Tree<Integer> ti = basis.map(map);
         toDo.add(ti);
         
-        this.isVar = isVar;
+        this.isCutPoint = isCutPoint;
     }
     
     @Override
@@ -80,15 +80,14 @@ public class ProjectedSubtreeIterator<Type> implements Iterator<IntList> {
      */
     private void visit(Tree<Integer> portion) {
         int label = portion.getLabel();
+        this.construction.add(label);
         
-        if(this.isVar.test(label)) {
+        if(this.isCutPoint.test(label)) {
             this.toDo.add(portion.getChildren().get(0));
-        } else {
-            this.construction.add(label);
-            
+        } else {            
             List<Tree<Integer>> children = portion.getChildren();
             for(int i=0;i<children.size();++i) {
-                visit(portion);
+                visit(children.get(i));
             }
         }
     }

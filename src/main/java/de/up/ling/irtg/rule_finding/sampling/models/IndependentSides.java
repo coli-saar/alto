@@ -90,8 +90,8 @@ public class IndependentSides implements Model {
     public IndependentSides(Signature left, Signature right, IntPredicate lVars, IntPredicate rVars,
             double adaptionStepSize, double smooth, Function<Rule,Integer> lDecoder,
             Function<Rule,Integer> rDecoder) {
-        this.oneOverLeftSignature = 1.0 / ((double) left.getMaxSymbolId());
-        this.oneOverRightSignature = 1.0 / ((double) right.getMaxSymbolId());
+        this.oneOverLeftSignature = 1.0 / ((double) left.getMaxSymbolId()+1);
+        this.oneOverRightSignature = 1.0 / ((double) right.getMaxSymbolId()+1);
         
         this.lVars = lVars;
         this.rVars = rVars;
