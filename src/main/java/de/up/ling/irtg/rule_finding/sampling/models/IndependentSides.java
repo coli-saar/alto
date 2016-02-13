@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.rule_finding.sampling.models;
 
-import com.google.common.base.Function;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.Variables;
@@ -13,11 +12,10 @@ import de.up.ling.irtg.rule_finding.sampling.Model;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.IntTrieCounter;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.function.Function;
 import java.util.function.IntPredicate;
 
 /**
@@ -43,17 +41,12 @@ public class IndependentSides implements Model {
     /**
      * 
      */
-    private final Function<Rule,Integer> leftResolve;
+    private final Function<Tree<Rule>,Tree<Integer>> leftResolve;
     
     /**
      * 
      */
-    private final Function<Rule,Integer> rightResolve;
-    
-    /**
-     * 
-     */
-    private final double adaptionSizeStep;
+    private final Function<Tree<Rule>,Tree<Integer>> rightResolve;
     
     /**
      * 
@@ -82,14 +75,13 @@ public class IndependentSides implements Model {
      * @param right
      * @param lVars
      * @param rVars
-     * @param adaptionStepSize
      * @param smooth
      * @param lDecoder
      * @param rDecoder 
      */
     public IndependentSides(Signature left, Signature right, IntPredicate lVars, IntPredicate rVars,
-            double adaptionStepSize, double smooth, Function<Rule,Integer> lDecoder,
-            Function<Rule,Integer> rDecoder) {
+            double smooth, Function<Tree<Rule>,Tree<Integer>> lDecoder,
+            Function<Tree<Rule>,Tree<Integer>> rDecoder) {
         this.oneOverLeftSignature = 1.0 / ((double) left.getMaxSymbolId()+1);
         this.oneOverRightSignature = 1.0 / ((double) right.getMaxSymbolId()+1);
         
@@ -99,7 +91,6 @@ public class IndependentSides implements Model {
         this.leftCounter = new IntTrieCounter();
         this.rightCounter = new IntTrieCounter();
         
-        this.adaptionSizeStep = adaptionStepSize;
         this.smooth = smooth;
         
         this.leftResolve = lDecoder;
@@ -115,7 +106,7 @@ public class IndependentSides implements Model {
             IntArrayList il = lIt.next();
             
             double seen = this.leftCounter.get(il);
-            double smoothed = Math.min(Math.pow(this.oneOverLeftSignature, il.size())*smooth, Double.MIN_VALUE);
+            double smoothed = Math.max(Math.pow(this.oneOverLeftSignature, il.size())*smooth, Double.MIN_VALUE);
             
             double allSeen = this.leftCounter.getNorm();
             
@@ -127,7 +118,7 @@ public class IndependentSides implements Model {
             IntArrayList il = rIt.next();
             
             double seen = this.rightCounter.get(il);
-            double smoothed = Math.min(Math.pow(this.oneOverRightSignature, il.size())*smooth, Double.MIN_VALUE);
+            double smoothed = Math.max(Math.pow(this.oneOverRightSignature, il.size())*smooth, Double.MIN_VALUE);
             
             double allSeen = this.rightCounter.getNorm();
             
@@ -144,12 +135,12 @@ public class IndependentSides implements Model {
         
         while(lIt.hasNext()) {
             IntArrayList construction = lIt.next();
-            this.leftCounter.add(construction, this.adaptionSizeStep);
+            this.leftCounter.add(construction, amount);
         }
         
         while(rIt.hasNext()) {
             IntArrayList construction = rIt.next();
-            this.rightCounter.add(construction, this.adaptionSizeStep);
+            this.rightCounter.add(construction, amount);
         }
     }
     
@@ -158,14 +149,11 @@ public class IndependentSides implements Model {
      * @param hom
      * @return 
      */
-    public static Function<Rule,Integer> createDecoder(Homomorphism hom) {
-        Int2IntMap map = new Int2IntOpenHashMap();
-        for(int i=1;i<hom.getSourceSignature().getMaxSymbolId();++i) {
-            map.put(i, hom.get(i).getLabel().getValue());
-        }
+    public static Function<Tree<Rule>,Tree<Integer>> createDecoder(Homomorphism hom) {
+        com.google.common.base.Function<Rule, Integer> intermediate = (Rule r) -> r.getLabel();
         
-        return (Rule r) -> {
-            return map.get(r.getLabel());
+        return (Tree<Rule> tr) -> {
+            return hom.applyRaw(tr.map(intermediate));
         };
     }
     

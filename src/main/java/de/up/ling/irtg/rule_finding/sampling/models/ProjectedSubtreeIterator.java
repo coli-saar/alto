@@ -5,13 +5,13 @@
  */
 package de.up.ling.irtg.rule_finding.sampling.models;
 
-import com.google.common.base.Function;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.IntPredicate;
 
 /**
@@ -46,14 +46,14 @@ public class ProjectedSubtreeIterator<Type> implements Iterator<IntList> {
      * @param map
      * @param isCutPoint  
      */
-    public ProjectedSubtreeIterator(Tree<Type> basis, Function<Type,Integer> map,
+    public ProjectedSubtreeIterator(Tree<Type> basis, Function<Tree<Type>,Tree<Integer>> map,
                                         IntPredicate isCutPoint) {
         this.pos = 0;
         
         construction = new IntArrayList();
         toDo = new ArrayList<>();
         
-        Tree<Integer> ti = basis.map(map);
+        Tree<Integer> ti = map.apply(basis);
         toDo.add(ti);
         
         this.isCutPoint = isCutPoint;

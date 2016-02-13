@@ -5,11 +5,11 @@
  */
 package de.up.ling.irtg.rule_finding.sampling.models;
 
-import com.google.common.base.Function;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.IntPredicate;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +28,7 @@ public class ProjectedSubtreeIteratorTest {
     /**
      * 
      */
-    private Function<Integer,Integer> mapping;
+    private Function<Tree<Integer>,Tree<Integer>> mapping;
     
     /**
      * 
@@ -68,7 +68,10 @@ public class ProjectedSubtreeIteratorTest {
         
         ti = Tree.create(5, children);
         
-        mapping = (Integer k) -> k+1;
+        com.google.common.base.Function<Integer, Integer> f = (Integer i) -> i+1;
+        mapping = (Tree<Integer> k) -> {
+            return k.map(f);
+        };
         
         choicePoint = (int i) -> (i > 10);
     }
