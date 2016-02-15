@@ -5,8 +5,8 @@
  */
 package de.up.ling.irtg.rule_finding.sampling;
 
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.TreeAutomaton;
 
 /**
  * Implements the Abstract SampleBenign interface by weighting each rule
@@ -21,7 +21,7 @@ public class RuleCountBenign extends SampleBenign {
      * @param benign
      * @param smooth 
      */
-    public RuleCountBenign(double smooth, TreeAutomaton benign) {
+    public RuleCountBenign(double smooth, InterpretedTreeAutomaton benign) {
         super(smooth, benign);
     }
 
@@ -35,12 +35,12 @@ public class RuleCountBenign extends SampleBenign {
      * @param seed 
      * @param benign 
      */
-    public RuleCountBenign(double smooth, long seed, TreeAutomaton benign) {
+    public RuleCountBenign(double smooth, long seed, InterpretedTreeAutomaton benign) {
         super(smooth, seed, benign);
     }
 
     @Override
-    protected double makeRuleWeight(Rule r) {    
+    protected double makeRuleWeight(Rule r) {
         return this.getSmoothedRuleCount(r);
     }
 }

@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.rule_finding.sampling.models;
 
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
@@ -19,7 +21,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph
  */
-public class ProjectedSubtreeIteratorTest {
+public class SubtreeIteratorTest {
     /**
      * 
      */
@@ -81,8 +83,25 @@ public class ProjectedSubtreeIteratorTest {
      */
     @Test
     public void testNext() {
-        ProjectedSubtreeIterator<Integer> psi =
-                new ProjectedSubtreeIterator<>(this.ti,this.mapping,this.choicePoint);
+        ConcreteTreeAutomaton<Integer> cta = new ConcreteTreeAutomaton<>();
+        int pNum = cta.addState(1);
+        com.google.common.base.Function<Integer,Rule> funct = (Integer i) -> {
+            String s = "";
+            
+            while(true) {
+                int num = cta.getSignature().addSymbol(s, 0);
+                
+                if(num == i+1) {
+                    Rule r = cta.createRule(pNum, num, new int[0], 1.0);
+                    
+                    return r;
+                } else {
+                    s += "a";
+                }
+            }
+        };
+        
+        SubtreeIterator psi = new SubtreeIterator(this.ti.map(funct),this.choicePoint);
         
         int number = 0;
         IntList last = null;

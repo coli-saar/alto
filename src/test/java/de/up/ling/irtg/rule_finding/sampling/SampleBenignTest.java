@@ -7,6 +7,7 @@ package de.up.ling.irtg.rule_finding.sampling;
 
 import com.google.common.base.Function;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
@@ -46,7 +47,7 @@ public class SampleBenignTest {
     /**
      *
      */
-    private TreeAutomaton solution;
+    private InterpretedTreeAutomaton solution;
 
     /**
      *
@@ -100,9 +101,10 @@ public class SampleBenignTest {
                 = corp.makeRuleTrees(stringList1, stringList2);
 
         Pair<TreeAutomaton, HomomorphismManager> example = solutions.iterator().next();
-        this.solution = example.getLeft();
+               
+        this.solution = new InterpretedTreeAutomaton(example.getLeft());
         this.homomorphismHolder = example.getRight();
-
+        
         this.sampler = new RuleCountBenign(0.01, 926986467599918617L, this.solution);
     }
 
@@ -113,23 +115,23 @@ public class SampleBenignTest {
     public void testSetAutomaton() {
         Configuration config = new Configuration(new Model() {
             @Override
-            public double getLogWeight(Tree<Rule> t) {
+            public double getLogWeight(Tree<Rule> t, InterpretedTreeAutomaton ita) {
                 return 0.0;
             }
 
             @Override
-            public void add(Tree<Rule> t, double amount) {
+            public void add(Tree<Rule> t, InterpretedTreeAutomaton ita, double amount) {
             }
         });
 
         this.sampler.getSample(config);
 
-        int start = this.solution.getFinalStates().iterator().nextInt();
+        int start = this.solution.getAutomaton().getFinalStates().iterator().nextInt();
 
         assertTrue(this.sampler.getFinalStateCount(start) > 10.0);
 
         TreeAutomaton t = new ConcreteTreeAutomaton();
-        this.sampler.setAutomaton(t);
+        this.sampler.setAutomaton(new InterpretedTreeAutomaton(t));
 
         assertEquals(this.sampler.getFinalStateCount(start), 0.0, 0.00001);
 
@@ -176,7 +178,7 @@ public class SampleBenignTest {
             };
 
             @Override
-            public double getLogWeight(Tree<Rule> t) {
+            public double getLogWeight(Tree<Rule> t, InterpretedTreeAutomaton ita) {
                 Tree<Integer> tq = t.map(funct);
                 tq = homomorphismHolder.getHomomorphism1().applyRaw(tq);
                 double sum = 0.0;
@@ -191,7 +193,7 @@ public class SampleBenignTest {
             }
 
             @Override
-            public void add(Tree<Rule> t, double amount) {}
+            public void add(Tree<Rule> t, InterpretedTreeAutomaton it, double amount) {}
         });
         
         config.setSampleSize((int i) -> 1000);

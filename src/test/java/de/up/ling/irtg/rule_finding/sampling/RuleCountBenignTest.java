@@ -6,6 +6,7 @@
 package de.up.ling.irtg.rule_finding.sampling;
 
 import com.google.common.base.Function;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.rule_finding.sampling.SampleBenign.Configuration;
@@ -34,7 +35,7 @@ public class RuleCountBenignTest {
     /**
      * 
      */
-    private TreeAutomaton<Span> base;
+    private TreeAutomaton<String> base;
     
     /**
      * 
@@ -56,11 +57,13 @@ public class RuleCountBenignTest {
         StringAlgebra sag = new StringAlgebra();
         List<String> l = sag.parseString("1 2 3 4 5 6 7 8 9 10");
         
-        base = sag.decompose(l);
+        TreeAutomaton<Span> b = sag.decompose(l);
+        
+        this.base = b.asConcreteTreeAutomatonWithStringStates();
         
         score = new Model() {
             @Override
-            public double getLogWeight(Tree<Rule> t) {
+            public double getLogWeight(Tree<Rule> t, InterpretedTreeAutomaton ita) {
                 MutableDouble md = new MutableDouble(0.0);
                 
                 getWidthAndWeight(md,t);
@@ -69,7 +72,7 @@ public class RuleCountBenignTest {
             }
 
             @Override
-            public void add(Tree<Rule> t, double amount) {
+            public void add(Tree<Rule> t, InterpretedTreeAutomaton ita, double amount) {
             }
 
             private int getWidthAndWeight(MutableDouble md, Tree<Rule> t) {
@@ -108,7 +111,8 @@ public class RuleCountBenignTest {
         config.setSampleSize(sampleSize);
         
         this.rcb = new RuleCountBenign(1.0, 87764L, null);
-        this.rcb.setAutomaton(base);
+        
+        this.rcb.setAutomaton(new InterpretedTreeAutomaton(base));
     }
 
     @Test
@@ -120,6 +124,8 @@ public class RuleCountBenignTest {
             sum += this.countLefties(t);
         }
         
+        System.out.println(this.base);
+        
         assertTrue(sum / result.size() >= 1.9);
         
         StringAlgebra sag = new StringAlgebra();
@@ -129,7 +135,7 @@ public class RuleCountBenignTest {
         
         config.setSampleSize((int i) -> 20);
         config.setRounds(5);
-        this.rcb.setAutomaton(base);
+        this.rcb.setAutomaton(new InterpretedTreeAutomaton(base));
         
         result = this.rcb.getSample(config);
         
@@ -161,8 +167,9 @@ public class RuleCountBenignTest {
         double result= 0.0;
         
         if(t.getLabel().getArity() == 2){
-            Span left = this.base.getStateForId(t.getLabel().getChildren()[0]);
-            result += (left.end - left.start == TARGET_DISTANCE) ? 1.0 : 0.0;
+            String[] parts = this.base.getStateForId(t.getLabel().getChildren()[0]).trim().split("-");
+            
+            result += (Integer.parseInt(parts[1]) - Integer.parseInt(parts[0])) == TARGET_DISTANCE ? 1.0 : 0.0;
         }
         
         for(Tree<Rule> q : t.getChildren()){

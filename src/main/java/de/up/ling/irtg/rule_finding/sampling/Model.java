@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.sampling;
 
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.tree.Tree;
 
@@ -23,9 +24,10 @@ public interface Model {
      * It may not be thread safe with respect to calls to add.
      * 
      * @param t
+     * @param context
      * @return 
      */
-    public double getLogWeight(Tree<Rule> t);
+    public double getLogWeight(Tree<Rule> t, InterpretedTreeAutomaton context);
     
     /**
      * Allows the model to be adapted according to the given observations,
@@ -34,7 +36,8 @@ public interface Model {
      * This method may not be thread safe.
      * 
      * @param t
+     * @param context
      * @param amount
      */
-    public void add(Tree<Rule> t, double amount);
+    public void add(Tree<Rule> t, InterpretedTreeAutomaton context , double amount);
 }

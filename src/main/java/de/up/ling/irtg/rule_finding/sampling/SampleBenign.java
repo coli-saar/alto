@@ -5,8 +5,8 @@
  */
 package de.up.ling.irtg.rule_finding.sampling;
 
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.ArraySampler;
 import de.up.ling.irtg.util.IntIntFunction;
 import de.up.ling.irtg.util.MutableDouble;
@@ -60,7 +60,7 @@ public abstract class SampleBenign {
     /**
      * The automaton being sampled.
      */
-    private TreeAutomaton benign;
+    private InterpretedTreeAutomaton benign;
     
     /**
      * The sums of weights for each state, these are computed again for every
@@ -114,7 +114,7 @@ public abstract class SampleBenign {
      * @param smooth
      * @param benign
      */
-    public SampleBenign(double smooth, TreeAutomaton benign) {
+    public SampleBenign(double smooth, InterpretedTreeAutomaton benign) {
         this.smooth = smooth;
         this.arrSamp = new ArraySampler(new Well44497a());
         this.rg = new Well44497a();
@@ -134,7 +134,7 @@ public abstract class SampleBenign {
      * @param seed 
      * @param benign 
      */
-    public SampleBenign(double smooth, long seed, TreeAutomaton benign) {
+    public SampleBenign(double smooth, long seed, InterpretedTreeAutomaton benign) {
         this.smooth = smooth;
         Well44497a w = new Well44497a(seed);
         this.arrSamp = new ArraySampler(w);
@@ -152,7 +152,7 @@ public abstract class SampleBenign {
      * 
      * @param to 
      */
-    public void setAutomaton(TreeAutomaton to){
+    public void setAutomaton(InterpretedTreeAutomaton to){
         this.benign = to;
         this.options.clear();
         resetAdaption();
@@ -329,7 +329,7 @@ public abstract class SampleBenign {
         if(this.finalStateSum < 0.0){
             this.finalStateSum = 0.0;
             
-            IntIterator iit = this.benign.getFinalStates().iterator();
+            IntIterator iit = this.benign.getAutomaton().getFinalStates().iterator();
             while(iit.hasNext()){
                 this.finalStateSum += this.getSmoothedFinalStateCount(iit.nextInt());
             }
@@ -342,7 +342,7 @@ public abstract class SampleBenign {
         // one for which the cumulative weight is larger then the fraction we
         // proposed
         int state = -1;
-        IntIterator iit = this.benign.getFinalStates().iterator();
+        IntIterator iit = this.benign.getAutomaton().getFinalStates().iterator();
         while(iit.hasNext()){
             state = iit.nextInt();
             double w = this.getSmoothedFinalStateCount(state);
@@ -387,12 +387,12 @@ public abstract class SampleBenign {
     /**
      * Retrieves the weight for a single tree from the target function.
      * 
-     * @param config
+     * @param mod
      * @param t
      * @return 
      */
     protected double lookUpWeight(Model mod, Tree<Rule> t) {
-        return mod.getLogWeight(t);
+        return mod.getLogWeight(t,this.benign);
     }
 
     /**
@@ -427,7 +427,7 @@ public abstract class SampleBenign {
         // it's a bit ugly, but it makes a BIG difference in speed.
         if(r == null){
             r = new ObjectArrayList<>();
-            Iterable<Rule> it = this.benign.getRulesTopDown(state);
+            Iterable<Rule> it = this.benign.getAutomaton().getRulesTopDown(state);
             for(Rule k : it){
                 r.add(k);
             }

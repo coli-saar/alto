@@ -5,25 +5,24 @@
  */
 package de.up.ling.irtg.rule_finding.sampling.models;
 
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.IntPredicate;
 
 /**
  *
  * @author christoph_teichmann
- * @param <Type>
  */
-public class ProjectedSubtreeIterator<Type> implements Iterator<IntList> {
+public class SubtreeIterator implements Iterator<IntList> {
     /**
      * 
      */
-    private final List<Tree<Integer>> toDo;
+    private final List<Tree<Rule>> toDo;
     
     /**
      * 
@@ -43,17 +42,15 @@ public class ProjectedSubtreeIterator<Type> implements Iterator<IntList> {
     /**
      * 
      * @param basis
-     * @param map
      * @param isCutPoint  
      */
-    public ProjectedSubtreeIterator(Tree<Type> basis, Function<Tree<Type>,Tree<Integer>> map,
-                                        IntPredicate isCutPoint) {
+    public SubtreeIterator(Tree<Rule> basis, IntPredicate isCutPoint) {
         this.pos = 0;
         
         construction = new IntArrayList();
         toDo = new ArrayList<>();
         
-        Tree<Integer> ti = map.apply(basis);
+        Tree<Rule> ti = basis;
         toDo.add(ti);
         
         this.isCutPoint = isCutPoint;
@@ -68,7 +65,7 @@ public class ProjectedSubtreeIterator<Type> implements Iterator<IntList> {
     public IntArrayList next() {
         this.construction.clear();
         
-        Tree<Integer> todo = this.toDo.get(pos++);
+        Tree<Rule> todo = this.toDo.get(pos++);
         visit(todo);
         
         return this.construction;
@@ -78,14 +75,14 @@ public class ProjectedSubtreeIterator<Type> implements Iterator<IntList> {
      * 
      * @param portion 
      */
-    private void visit(Tree<Integer> portion) {
-        int label = portion.getLabel();
+    private void visit(Tree<Rule> portion) {
+        int label = portion.getLabel().getLabel();
         this.construction.add(label);
         
         if(this.isCutPoint.test(label)) {
             this.toDo.add(portion.getChildren().get(0));
         } else {            
-            List<Tree<Integer>> children = portion.getChildren();
+            List<Tree<Rule>> children = portion.getChildren();
             for(int i=0;i<children.size();++i) {
                 visit(children.get(i));
             }

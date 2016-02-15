@@ -64,9 +64,10 @@ public class ExtractGrammar<Type1,Type2> {
      * 
      * @param algebra1
      * @param algebra2
-     * @param nonterminals 
-     * @param interpretation1ID 
-     * @param interpretation2ID 
+     * @param nonterminals
+     * @param interpretation1ID
+     * @param interpretation2ID
+     * @param trex 
      */
     public ExtractGrammar(Algebra<Type1> algebra1, Algebra<Type2> algebra2,
             StringSubtreeIterator.VariableMapping nonterminals,
@@ -87,7 +88,8 @@ public class ExtractGrammar<Type1,Type2> {
      * @param irtg 
      * @throws java.io.IOException 
      */
-    public void extract(Iterable<InputStream> inputs, OutputStream trees, OutputStream irtg) throws IOException {
+    public void extract(Iterable<InputStream> inputs, OutputStream trees, OutputStream irtg)
+                                                                                throws IOException {
         IrtgInputCodec iic = new IrtgInputCodec();
         
         Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream in) -> {
@@ -149,5 +151,36 @@ public class ExtractGrammar<Type1,Type2> {
         try(BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(irtg))){
             bw.write(ita.toString());
         }
+    }
+    
+    
+    public void extractBySampling(Iterable<InputStream> inputs, OutputStream trees, OutputStream irtg)
+                                                                                throws IOException {
+        IrtgInputCodec iic = new IrtgInputCodec();
+        
+        Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream in) -> {
+            InterpretedTreeAutomaton ita;
+            try {
+                ita = iic.read(in);
+                in.close();
+            } catch (IOException | CodecParseException ex) {
+                Logger.getLogger(ExtractGrammar.class.getName()).log(Level.SEVERE, null, ex);
+                ita = null;
+            }
+            
+            return ita;
+        });
+        
+        Iterable<TreeAutomaton> automata = new FunctionIterable<>(analyses, (InterpretedTreeAutomaton ita) -> {
+            return ita.getAutomaton();
+        });
+        
+        SampleOnlineEM soe = new SampleOnlineEM();
+        
+        InterpretedTreeAutomaton ita = analyses.iterator().next();
+        
+        //TODO
+        
+        //TODO
     }
 }

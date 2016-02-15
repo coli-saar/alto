@@ -34,10 +34,18 @@ public class CombineParseAndGold {
             while((line = mainInput.readLine()) != null) {
                 line = line.trim();
                 if(line.isEmpty()) {
+                    out.write("--------------------");
+                    out.newLine();
                     while((line = parseInput.readLine().trim()).isEmpty()){}
                     
                     out.write(line.replaceAll("(\"')|('\")", "'"));
-                    out.newLine();out.newLine();
+                    out.newLine();
+                    while(!(line = parseInput.readLine()).trim().isEmpty()) {
+                        out.write(line);
+                        out.newLine();
+                    }
+                    out.newLine();
+                    
                 }else {
                     out.write(line);
                     out.newLine();

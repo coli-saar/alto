@@ -10,7 +10,6 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
@@ -23,7 +22,6 @@ import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.IntPredicate;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,38 +45,22 @@ public class IndependentSidesTest {
     /**
      * 
      */
-    private IntPredicate ipL;
+    private IntPredicate choices;
     
     /**
      * 
      */
-    private IntPredicate ipR;
+    private Tree<Rule> imp1;
     
     /**
      * 
      */
-    private Function<Tree<Rule>,Tree<Integer>> lMap;
-    
-    /**
-     * 
-     */
-    private Function<Tree<Rule>,Tree<Integer>> rMap;
-    
-    /**
-     * 
-     */
-    private Tree imp1;
-    
-    /**
-     * 
-     */
-    private Tree imp2;
+    private Tree<Rule> imp2;
     
     /**
      * 
      */
     private IndependentSides ins;
-    
     
     @Before
     public void setUp() throws Exception {
@@ -126,18 +108,9 @@ public class IndependentSidesTest {
         Iterable<Pair<TreeAutomaton, HomomorphismManager>> solutions
                 = corp.makeRuleTrees(stringList1, stringList2);
         
-        Pair<TreeAutomaton,HomomorphismManager> pair  = solutions.iterator().next();
+        Pair<TreeAutomaton,HomomorphismManager> pair = solutions.iterator().next();
         this.solution = pair.getLeft();
         this.homm = pair.getRight();
-        
-        
-        Homomorphism homL = homm.getHomomorphism1();
-        this.ipL = IndependentSides.makeIntPredictate(homL.getTargetSignature());
-        this.lMap = IndependentSides.createDecoder(homL);
-        
-        Homomorphism homR = homm.getHomomorphism2();
-        this.ipR = IndependentSides.makeIntPredictate(homR.getTargetSignature());
-        this.rMap = IndependentSides.createDecoder(homR);
         
         Iterable<Rule> rules = this.solution.getAllRulesTopDown();
         for(Rule r : rules) {
@@ -151,13 +124,7 @@ public class IndependentSidesTest {
         imp1 = this.solution.getRuleTree(t1);
         imp2 = this.solution.getRuleTree(t2);
         
-        this.ins = 
-                new IndependentSides(homL.getTargetSignature(), homR.getTargetSignature(),
-                        ipL, ipR, 1.0, lMap, rMap);
-        
-        
-        com.google.common.base.Function<Integer,String> f1 = (Integer i ) -> homL.getTargetSignature().resolveSymbolId(i);
-        com.google.common.base.Function<Integer,String> f2 = (Integer i ) -> homR.getTargetSignature().resolveSymbolId(i);
+        this.ins = new IndependentSides(this.solution.getSignature(), 0.1);
     }
 
     /**
@@ -168,28 +135,28 @@ public class IndependentSidesTest {
         double d1;
         double d2;
         
-        d1 = this.ins.getLogWeight(imp1);
-        d2 = this.ins.getLogWeight(imp2);
+        d1 = this.ins.getLogWeight(imp1,null);
+        d2 = this.ins.getLogWeight(imp2,null);
         
         assertEquals(d1,d2,0.00001);
-        assertEquals(d1,-58.88877958332882,0.00001);
+        assertEquals(d1,-69.93015122932961,0.00001);
         
-        this.ins.add(this.imp1, 20.0);
+        this.ins.add(this.imp1, null, 200.0);
         
         double d3;
         double d4;
-        System.out.println(d3 = this.ins.getLogWeight(imp1));
-        System.out.println(d4 = this.ins.getLogWeight(imp2));
+        d3 = this.ins.getLogWeight(imp1, null);
+        d4 = this.ins.getLogWeight(imp2, null);
         
-        assertEquals(d3,-11.173966314398093,0.000001);
-        assertEquals(d4,-70.27317532020153,0.000001);
+        assertEquals(d3,-5.545427415797533,0.000001);
+        assertEquals(d4,-71.08463256348892,0.000001);
         
         assertTrue(d3 > d1);
         assertTrue(d4 < d1);
         
-        this.ins.add(this.imp1, -20.0);
+        this.ins.add(this.imp1, null, -200.0);
         
-        assertEquals(d1,this.ins.getLogWeight(imp1),0.00001);
-        assertEquals(this.ins.getLogWeight(imp2),this.ins.getLogWeight(imp1),0.00001);
+        assertEquals(d1,this.ins.getLogWeight(imp1, null),0.00001);
+        assertEquals(this.ins.getLogWeight(imp2, null),this.ins.getLogWeight(imp1, null),0.00001);
     }
 }
