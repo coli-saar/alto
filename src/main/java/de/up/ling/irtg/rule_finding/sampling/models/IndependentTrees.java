@@ -13,15 +13,13 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.IntTrieCounter;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.function.IntPredicate;
 
 /**
  *
  * @author christoph_teichmann
  */
-public class IndependentSides implements Model {
+public class IndependentTrees implements Model {
     /**
      * 
      */
@@ -32,27 +30,12 @@ public class IndependentSides implements Model {
      */
     private final double smooth;
     
-    /**
-     * 
-     */
-    private final IntPredicate vars;
     
     /**
      * 
-     */
-    private final double oneOverSignature;
-    
-    
-    /**
-     * 
-     * @param sig
      * @param smooth 
      */
-    public IndependentSides(Signature sig, double smooth) {
-        this.oneOverSignature = 1.0 / ((double) sig.getMaxSymbolId()+1);
-        
-        this.vars = makeIntPredictate(sig);
-        
+    public IndependentTrees(double smooth) {
         this.counter = new IntTrieCounter();
         
         this.smooth = smooth;
@@ -62,16 +45,18 @@ public class IndependentSides implements Model {
     public double getLogWeight(Tree<Rule> t, InterpretedTreeAutomaton ita) {
         double logFactor = 0.0;
         
-        SubtreeIterator lIt = new SubtreeIterator(t, vars);
+        SubtreeIterator lIt = new SubtreeIterator(t, createPredicate(ita));
         while(lIt.hasNext()) {
             IntArrayList il = lIt.next();
             
             double seen = this.counter.get(il);
-            double smoothed = Math.max(Math.pow(this.oneOverSignature, il.size())*smooth, Double.MIN_VALUE);
+            if(seen <= 0.0) {
+                seen = this.smooth;
+            }
             
             double allSeen = this.counter.getNorm();
             
-            logFactor += Math.log(seen+smoothed)-Math.log(allSeen+this.smooth);
+            logFactor += Math.log(seen)-Math.log(allSeen+this.smooth);
         }
         
         return logFactor;
@@ -79,33 +64,26 @@ public class IndependentSides implements Model {
 
     @Override
     public void add(Tree<Rule> t, InterpretedTreeAutomaton ita, double amount) {
-        SubtreeIterator lIt = new SubtreeIterator(t, vars);
-        SubtreeIterator rIt = new SubtreeIterator(t, vars);
+        IntPredicate vars = createPredicate(ita);
         
-        while(lIt.hasNext()) {
-            IntArrayList construction = lIt.next();
-            this.counter.add(construction, amount);
-        }
+        SubtreeIterator it = new SubtreeIterator(t, vars);
         
-        while(rIt.hasNext()) {
-            IntArrayList construction = rIt.next();
+        while(it.hasNext()) {
+            IntArrayList construction = it.next();
             this.counter.add(construction, amount);
         }
     }
     
     /**
      * 
-     * @param sig
+     * @param ita
      * @return 
      */
-    public static IntPredicate makeIntPredictate(Signature sig) {
-        IntSet ins = new IntOpenHashSet();
-        for(int i=1;i<sig.getMaxSymbolId();++i) {
-            if(sig.getArity(i) == 1 && Variables.IS_VARIABLE.test(sig.resolveSymbolId(i))){
-                ins.add(i);
-            }
-        }
-        
-        return ins::contains;
+    private static IntPredicate createPredicate(InterpretedTreeAutomaton ita) {
+        final Signature sig = ita.getAutomaton().getSignature();
+        IntPredicate choice = (int i) -> {
+            return Variables.IS_VARIABLE.test(sig.resolveSymbolId(i));
+        };
+        return choice;
     }
 }

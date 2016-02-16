@@ -29,7 +29,7 @@ public class SampleOnlineEM {
     /**
      * 
      */
-    private double samplerSmooth = 0.1;
+    private double samplerSmooth = 1;
     
     /**
      * 
@@ -44,7 +44,7 @@ public class SampleOnlineEM {
     /**
      * 
      */
-    private double learnSize = 50;
+    private double learnSize = 5;
 
     /**
      * 
@@ -54,7 +54,7 @@ public class SampleOnlineEM {
     /**
      * 
      */
-    private int trainIterations = 20;
+    private int trainIterations = 100;
     
     /**
      * 
@@ -87,7 +87,7 @@ public class SampleOnlineEM {
                 return null;
             }
         };
-            
+        
         Configuration config = new Configuration(mod);
         config.setRounds(this.adaptionRounds);
         config.setSampleSize((int num) -> num == 0 ? this.learnSampleSize : sampleSize);

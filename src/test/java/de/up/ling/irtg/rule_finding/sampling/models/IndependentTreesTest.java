@@ -6,6 +6,7 @@
 package de.up.ling.irtg.rule_finding.sampling.models;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -31,7 +32,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph
  */
-public class IndependentSidesTest {
+public class IndependentTreesTest {
     /**
      *
      */
@@ -60,7 +61,12 @@ public class IndependentSidesTest {
     /**
      * 
      */
-    private IndependentSides ins;
+    private IndependentTrees ins;
+    
+    /**
+     * 
+     */
+    private InterpretedTreeAutomaton ita;
     
     @Before
     public void setUp() throws Exception {
@@ -124,7 +130,9 @@ public class IndependentSidesTest {
         imp1 = this.solution.getRuleTree(t1);
         imp2 = this.solution.getRuleTree(t2);
         
-        this.ins = new IndependentSides(this.solution.getSignature(), 0.1);
+        this.ins = new IndependentTrees(0.00000001);
+        
+        this.ita = new InterpretedTreeAutomaton(solution);
     }
 
     /**
@@ -135,28 +143,29 @@ public class IndependentSidesTest {
         double d1;
         double d2;
         
-        d1 = this.ins.getLogWeight(imp1,null);
-        d2 = this.ins.getLogWeight(imp2,null);
+        d1 = this.ins.getLogWeight(imp1,this.ita);
+        d2 = this.ins.getLogWeight(imp2,this.ita);
         
         assertEquals(d1,d2,0.00001);
-        assertEquals(d1,-69.93015122932961,0.00001);
+        assertEquals(d1,0.0,0.00001);
         
-        this.ins.add(this.imp1, null, 200.0);
+        this.ins.add(this.imp1, ita, 200.0);
         
         double d3;
         double d4;
-        d3 = this.ins.getLogWeight(imp1, null);
-        d4 = this.ins.getLogWeight(imp2, null);
+        d3 = this.ins.getLogWeight(imp1, ita);
+        d4 = this.ins.getLogWeight(imp2, ita);
         
-        assertEquals(d3,-5.545427415797533,0.000001);
-        assertEquals(d4,-71.08463256348892,0.000001);
+        System.out.println(d3);
+        System.out.println(d4);
+        assertEquals(d3,-5.545177444529564,0.000001);
+        assertEquals(d4,-52.98317366553037,0.000001);
         
-        assertTrue(d3 > d1);
         assertTrue(d4 < d1);
         
-        this.ins.add(this.imp1, null, -200.0);
+        this.ins.add(this.imp1, ita, -200.0);
         
-        assertEquals(d1,this.ins.getLogWeight(imp1, null),0.00001);
-        assertEquals(this.ins.getLogWeight(imp2, null),this.ins.getLogWeight(imp1, null),0.00001);
+        assertEquals(d1,this.ins.getLogWeight(imp1, ita),0.00001);
+        assertEquals(this.ins.getLogWeight(imp2, ita),this.ins.getLogWeight(imp1, ita),0.00001);
     }
 }
