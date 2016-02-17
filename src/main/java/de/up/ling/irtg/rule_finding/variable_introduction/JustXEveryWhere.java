@@ -58,7 +58,6 @@ public class JustXEveryWhere<Type1> implements VariableIntroduction<Type1, Type1
                 String label = tBase.getSignature().resolveSymbolId(r.getLabel());
                 cta.addRule(cta.createRule(state, label, children));
             }
-            
         }
         
         

@@ -119,10 +119,10 @@ public class SubtreeIteratorTest {
                     assertEquals(current.toString(),"[6, 9, 8, 21, 10, 2, 2, 2, 13]");
                     break;
                 case 1:
-                    assertEquals(current.toString(),"[10, 2, 2, 2]");
+                    assertEquals(current.toString(),"[21, 10, 2, 2, 2]");
                     break;
                 case 2:
-                    assertEquals(current.toString(),"[9, 6, 7]");
+                    assertEquals(current.toString(),"[13, 9, 6, 7]");
                     break;
                 default:
                     throw new IllegalStateException();

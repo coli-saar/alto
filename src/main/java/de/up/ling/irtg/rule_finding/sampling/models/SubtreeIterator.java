@@ -66,25 +66,26 @@ public class SubtreeIterator implements Iterator<IntList> {
         this.construction.clear();
         
         Tree<Rule> todo = this.toDo.get(pos++);
-        visit(todo);
+        visit(todo, true);
         
         return this.construction;
     }
     
     /**
      * 
-     * @param portion 
+     * @param portion
+     * @param start 
      */
-    private void visit(Tree<Rule> portion) {
+    private void visit(Tree<Rule> portion, boolean start) {
         int label = portion.getLabel().getLabel();
         this.construction.add(label);
         
-        if(this.isCutPoint.test(label)) {
-            this.toDo.add(portion.getChildren().get(0));
+        if(!start && this.isCutPoint.test(label)) {
+            this.toDo.add(portion);
         } else {            
             List<Tree<Rule>> children = portion.getChildren();
             for(int i=0;i<children.size();++i) {
-                visit(children.get(i));
+                visit(children.get(i),false);
             }
         }
     }

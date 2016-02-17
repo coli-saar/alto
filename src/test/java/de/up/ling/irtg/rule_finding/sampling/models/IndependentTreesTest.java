@@ -19,6 +19,7 @@ import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.Lexicalized;
 import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -130,9 +131,12 @@ public class IndependentTreesTest {
         imp1 = this.solution.getRuleTree(t1);
         imp2 = this.solution.getRuleTree(t2);
         
-        this.ins = new IndependentTrees(0.00000001);
         
         this.ita = new InterpretedTreeAutomaton(solution);
+        List<Signature> list = new ArrayList<>();
+        list.add(ita.getAutomaton().getSignature());
+        this.ins = new IndependentTrees(0.5, list, "S");
+        
     }
 
     /**
@@ -146,8 +150,11 @@ public class IndependentTreesTest {
         d1 = this.ins.getLogWeight(imp1,this.ita);
         d2 = this.ins.getLogWeight(imp2,this.ita);
         
+        
+        System.out.println(d1);
+        System.out.println(d2);
         assertEquals(d1,d2,0.00001);
-        assertEquals(d1,0.0,0.00001);
+        assertEquals(d1,-69.31471805599452,0.00001);
         
         this.ins.add(this.imp1, ita, 200.0);
         
@@ -156,12 +163,12 @@ public class IndependentTreesTest {
         d3 = this.ins.getLogWeight(imp1, ita);
         d4 = this.ins.getLogWeight(imp2, ita);
         
-        System.out.println(d3);
-        System.out.println(d4);
-        assertEquals(d3,-5.545177444529564,0.000001);
-        assertEquals(d4,-52.98317366553037,0.000001);
         
-        assertTrue(d4 < d1);
+        assertEquals(d3,-3.300832476232765,0.000001);
+        assertEquals(d4,-63.80406428593885,0.000001);
+        
+        assertTrue(d3 > d1);
+        assertTrue(d4 > d1);
         
         this.ins.add(this.imp1, ita, -200.0);
         

@@ -14,6 +14,7 @@ import de.up.ling.irtg.rule_finding.sampling.SampleBenign;
 import de.up.ling.irtg.rule_finding.sampling.SampleBenign.Configuration;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BiFunctionParallelIterable;
+import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,7 +30,7 @@ public class SampleOnlineEM {
     /**
      * 
      */
-    private double samplerSmooth = 1;
+    private double samplerSmooth = 0.1;
     
     /**
      * 
@@ -44,7 +45,7 @@ public class SampleOnlineEM {
     /**
      * 
      */
-    private double learnSize = 5;
+    private double learnSize = 10;
 
     /**
      * 
@@ -54,7 +55,7 @@ public class SampleOnlineEM {
     /**
      * 
      */
-    private int trainIterations = 100;
+    private int trainIterations = 5;
     
     /**
      * 
@@ -73,7 +74,7 @@ public class SampleOnlineEM {
      * @param seed
      * @return 
      */
-    public Iterable<Tree<String>> getChoices(Iterable<InterpretedTreeAutomaton> data, Model mod, long seed) {
+    public Iterable<Iterable<Tree<String>>> getChoices(Iterable<InterpretedTreeAutomaton> data, Model mod, long seed) {
         Well44497b seeder = new Well44497b(seed);
         
         Iterable<Object> allNull = () -> new Iterator<Object>() {
@@ -99,18 +100,19 @@ public class SampleOnlineEM {
             
             sb.setResetEverySample(this.resetEveryRound);
             
-            System.out.println("Initialized.");
         }
+        System.out.println("Initialized.");
         
-        BiFunctionParallelIterable<SampleBenign,Object,List<Tree<Rule>>> bfpi =
-                new BiFunctionParallelIterable<>(sampler, allNull, this.threads, 
-                        (SampleBenign sb, Object o) -> {
+        FunctionIterable<List<Tree<Rule>>, SampleBenign> bfpi =
+                new FunctionIterable<>(sampler, 
+                        (SampleBenign sb) -> {
                             return sb.getSample(config);
                         });
         
         for(int i=0;i<trainIterations;++i) {
             Iterator<InterpretedTreeAutomaton> ita = data.iterator();
             
+            int counter = 0;
             for(List<Tree<Rule>> samples : bfpi) {
                 InterpretedTreeAutomaton gram = ita.next();
                 
@@ -119,21 +121,29 @@ public class SampleOnlineEM {
                     
                     config.getTarget().add(sample, gram, learnSize);
                 }
+                
+                if((counter+1) % 10 == 0) {
+                    System.out.println("finished "+(counter+1)+" examples.");
+                }
+                ++counter;
             }
             
             System.out.println("Finished training round: "+(i+1));
         }
         
         Iterator<InterpretedTreeAutomaton> tas = data.iterator();
-        List<Tree<String>> fin = new ArrayList<>();
+        List<Iterable<Tree<String>>> fin = new ArrayList<>();
         for(List<Tree<Rule>> sample : bfpi) {
             Signature sig = tas.next().getAutomaton().getSignature();
             
             Function<Rule,String> func = (Rule rul) -> sig.resolveSymbolId(rul.getLabel());
+            List<Tree<String>> inner = new ArrayList<>();
             
             for(int i=0;i<sample.size();++i) {
-                fin.add(sample.get(i).map(func));
+                inner.add(sample.get(i).map(func));
             }
+            
+            fin.add(inner);
         }
         
         return fin;

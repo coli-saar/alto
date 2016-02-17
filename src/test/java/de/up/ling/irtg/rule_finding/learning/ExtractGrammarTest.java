@@ -194,4 +194,55 @@ public class ExtractGrammarTest {
         }
     }
     
+    @Test
+    public void testExtractBySampling() throws Exception {
+        ByteArrayOutputStream trees = new ByteArrayOutputStream();
+        ByteArrayOutputStream grammar = new ByteArrayOutputStream();
+        
+        FunctionIterable<InputStream,String> fi = new FunctionIterable<>(inputs, (String s) ->
+        {
+            return new ByteArrayInputStream(s.getBytes());
+        });
+        
+        extract.extractBySampling(fi, trees, grammar);
+        
+        String one = new String(trees.toByteArray());
+        String two = new String(grammar.toByteArray());
+        
+        String[] arr = one.split("\n");
+        assertEquals(arr.length,799);
+        
+        IrtgInputCodec iic = new IrtgInputCodec();
+        InterpretedTreeAutomaton ita = iic.read(new ByteArrayInputStream(two.getBytes()));
+        
+        TreeAutomaton ta = ita.getAutomaton();
+        ta.normalizeRuleWeights();
+        
+        assertTrue(ta.countTrees() >= 2);
+        
+        Map<String,String> input = new HashMap<>();
+        input.put("FirstInput", "What river flows through Kansas ?");
+        
+        TreeAutomaton parse = ita.parse(input);
+        
+        Iterator<Tree<String>> it = parse.languageIterator();
+        assertTrue(parse.countTrees() >= 1);
+        
+        Set<Pair<List<String>,Tree<String>>> pairs = new HashSet<>();
+        for(int i=0;i<1;++i){
+            Tree<String> t = it.next();
+            
+            Map<String,Object> inter = ita.interpret(t);
+            Pair<List<String>,Tree<String>> p = 
+                    new Pair<>((List<String>) inter.get("FirstInput"), (Tree<String>) inter.get("SecondInput"));
+            pairs.add(p);
+        }
+        
+        StringAlgebra sal = new StringAlgebra();
+        assertEquals(pairs.size(),1);
+        for(Pair<List<String>,Tree<String>> p : pairs){
+            assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(\"'kansas'\"))))")); 
+            assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas ?"));
+        }
+    }
 }
