@@ -8,7 +8,7 @@ package de.up.ling.irtg.rule_finding.pruning;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.Empty;
-import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.rule_finding.variable_introduction.VariableIntroduction;

@@ -12,7 +12,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
-import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;

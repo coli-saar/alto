@@ -8,7 +8,7 @@ package de.up.ling.irtg.rule_finding.pruning;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
 import it.unimi.dsi.fastutil.ints.IntArrayList;

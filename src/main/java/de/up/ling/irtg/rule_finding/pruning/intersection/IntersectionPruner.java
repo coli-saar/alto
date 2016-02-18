@@ -8,7 +8,7 @@ package de.up.ling.irtg.rule_finding.pruning.intersection;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.util.FunctionIterable;

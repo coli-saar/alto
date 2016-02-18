@@ -25,8 +25,14 @@ public class VariablesTest {
     @Test
     public void testMakeVariable() {
         String k = "usdfls";
-        String s = Variables.makeVariable(k);
-        assertEquals(s,"X"+k);
+        String s = Variables.createVariable(k);
+        assertEquals(s,"__X__{"+k+"}");
         assertEquals(Variables.getInformation(s),k);
+        
+        assertTrue(Variables.isVariable("__X__{5}"));
+        assertTrue(Variables.isVariable("__X__5"));
+        assertFalse(Variables.isVariable("__X_5"));
+        
+        assertEquals(Variables.getInformation("__X__{5}"),"5");
     }
 }

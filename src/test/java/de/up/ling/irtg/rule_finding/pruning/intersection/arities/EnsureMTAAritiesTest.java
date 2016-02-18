@@ -8,7 +8,7 @@ package de.up.ling.irtg.rule_finding.pruning.intersection.arities;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.pruning.intersection.NoEmpty;
 import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;

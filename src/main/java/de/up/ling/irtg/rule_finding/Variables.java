@@ -5,40 +5,40 @@
  */
 package de.up.ling.irtg.rule_finding;
 
-import java.util.function.Predicate;
-
 /**
  *
  * @author christoph_teichmann
  */
 public class Variables {
-    
     /**
      * 
      */
-    private static final String VARIABLE_PREFIX = "X";
+    public static final String VARIABLE_PREFIX = "__X__";
     
     /**
      * 
-     */
-    public static final Predicate<String> IS_VARIABLE = 
-            (String t) -> t.codePointAt(0) == VARIABLE_PREFIX.codePointAt(0);
-    
-    /**
-     * 
-     * @param additionalInformation
+     * @param input
      * @return 
      */
-    public static String makeVariable(String additionalInformation){
-        return VARIABLE_PREFIX+additionalInformation;
+    public static boolean isVariable(String input) {
+        return input.startsWith(VARIABLE_PREFIX);
     }
     
     /**
      * 
-     * @param variable
+     * @param input
      * @return 
      */
-    public static String getInformation(String variable){
-        return variable.substring(1);
+    public static String getInformation(String input) {
+        return input.substring(VARIABLE_PREFIX.length()+1, input.length()-1);
+    }
+    
+    /**
+     * 
+     * @param input
+     * @return 
+     */
+    public static String createVariable(String input) {
+        return VARIABLE_PREFIX+"{"+input+"}";
     }
 }

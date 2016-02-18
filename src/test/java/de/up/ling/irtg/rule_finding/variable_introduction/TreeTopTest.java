@@ -8,7 +8,7 @@ package de.up.ling.irtg.rule_finding.variable_introduction;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
+import de.up.ling.irtg.rule_finding.create_automaton.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;

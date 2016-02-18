@@ -5,16 +5,13 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
-import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
-import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
-import static de.up.ling.irtg.util.TestingTools.pt;
+import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.ArrayList;
-import java.util.List;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -24,85 +21,87 @@ import static org.junit.Assert.*;
  * @author christoph_teichmann
  */
 public class PropagatorTest {
-    
+
+    /**
+     *
+     */
+    private static final String TEST_AUTOMATON
+            = "q_1_0 -> d [1.0]\n"
+            + "q_0 -> b [1.0]\n"
+            + "q! -> a(q_0, q_1) [0.5]\n"
+            + "q_1 -> c(q_1_0) [1.0]";
+
+    /**
+     *
+     */
+    private static final String ALIGNMENTS
+            = "q_1 ||| 0 1\n"
+            + "q_0 ||| 4 3";
+
+    /**
+     *
+     */
+    private TreeAutomaton<String> ta;
+
     /**
      * 
      */
-    private AlignedTrees pair;
-    
-    
+    private static final String GOAL_AUTOMATON
+            = "q_0 -> b [1.0]\n"
+            + "q_1_0 -> d [1.0]\n"
+            + "q_1_0 -> '__X__{ _@_ q_1_0}'(q_1_0) [1.0]\n"
+            + "q_1 -> c(q_1_0) [1.0]\n"
+            + "q! -> '__X__{0,1,3,4 _@_ q}'(q) [1.0]\n"
+            + "q_0 -> '__X__{3,4 _@_ q_0}'(q_0) [1.0]\n"
+            + "q! -> a(q_0, q_1) [1.0]\n"
+            + "q_1 -> '__X__{0,1 _@_ q_1}'(q_1) [1.0]";
+
+    /**
+     *
+     */
+    private SpecifiedAligner spac;
+
+    /**
+     *
+     */
+    private Propagator prop;
+
     @Before
-    public void setUp() {
-        StringAlgebra sal = new StringAlgebra();
-        
-        List<AlignedTrees> l = new ArrayList<>();
-        
-        TreeAutomaton decomp = sal.decompose(sal.parseString("This is a test case ."));
-        
-        StateAlignmentMarking spa = new SpanAligner("1:2:14 0:6:44 5:6:2", decomp);
-        
-        LeftRightXFromFinite lrf = new LeftRightXFromFinite();
-        l.add(new AlignedTrees(decomp,spa));
-        
-        this.pair = lrf.apply(l.get(0));
+    public void setUp() throws IOException {
+        TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
+        ta = taic.read(new ByteArrayInputStream(TEST_AUTOMATON.getBytes()));
+        spac = new SpecifiedAligner(ta, new ByteArrayInputStream(ALIGNMENTS.getBytes()));
+
+        prop = new Propagator();
     }
 
     /**
      * Test of propagate method, of class Propagator.
+     *
      * @throws java.lang.Exception
      */
     @Test
-    public void testPropagate() throws Exception {
-        Propagator prop = new Propagator();
-        
-        AlignedTrees t = prop.convert(pair);
-        
-        TreeAutomaton ta = t.getTrees();
-        assertTrue(ta.accepts(pt("*(*(*('X{}_XThis_This'(This),is),a),*(*(test,case),'.'))")));
-        assertFalse(ta.accepts(pt("*(*(*('X{1}_XThis_This'(This),is),a),*(*(test,case),'.'))")));
-        assertTrue(ta.accepts(pt("*(*('X{14}_XThis_is'(*(This,is)),a),*(*(test,case),'.'))")));
-        assertTrue(ta.accepts(pt("'X{2, 14, 44}_XThis_.'(*(*('X{14}_XThis_is'(*(This,is)),a),*(*(test,case),'.')))")));
-        
-        int thi = ta.getSignature().getIdForSymbol("This");
-        int left = ((Rule) ta.getRulesBottomUp(thi, new int[0]).iterator().next()).getParent();
-        
-        int is = ta.getSignature().getIdForSymbol("is");
-        int right = ((Rule) ta.getRulesBottomUp(is, new int[0]).iterator().next()).getParent();
-        
-        int star = ta.getSignature().getIdForSymbol("*");
-        int both = ((Rule) ta.getRulesBottomUp(star, new int[] {left,right}).iterator().next()).getParent();
-        Object o = ta.getStateForId(both);
-        
-        IntSet set = t.getAlignments().getAlignmentMarkers(o);
-        assertEquals(set.size(),1);
-        assertTrue(set.contains(14));
-        
-        o = ta.getStateForId(ta.getFinalStates().iterator().nextInt());
-        set = t.getAlignments().getAlignmentMarkers(o);
-        assertEquals(set.size(),3);
-        assertTrue(set.contains(14));
-        assertTrue(set.contains(44));
-        assertTrue(set.contains(2));
+    public void testConvert() throws Exception {
+        TreeAutomaton<String> ta = this.prop.convert(this.ta, spac);
+
+        TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
+        TreeAutomaton<String> goal = taic.read(GOAL_AUTOMATON);
+
+        assertEquals(goal,ta);
     }
-    
+
     @Test
-    public void getOriginalInformation(){
-        IntSet ins1 = new IntAVLTreeSet();
-        IntSet ins2 = new IntAVLTreeSet();
+    public void getOriginalInformation() {
+        IntSortedSet iss = new IntAVLTreeSet();
+        iss.add(4);
+        iss.add(2);
+        iss.add(19);
         
-        ins1.add(5);
-        ins1.add(2);
+        String q  = Propagator.createVariableWithContent(iss, "a65");
+        assertEquals(q,"__X__{2,4,19 _@_ a65}");
+        assertEquals(Propagator.getAlignments(q),"2,4,19");
+        assertEquals(Propagator.getAlignments("__X__{ _@_ a65}"),"");
         
-        String s1 = Propagator.makeExtendedVariable("Xa_b", ins1);
-        String s2 = Propagator.makeExtendedVariable("Xff32", ins2);
-        
-        assertEquals(s1,"X{2, 5}_Xa_b");
-        assertEquals(s2,"X{}_Xff32");
-        
-        assertEquals(Propagator.getAlignments(s1),"{2, 5}");
-        assertEquals(Propagator.getAlignments(s2),"{}");
-        
-        assertEquals(Propagator.getOriginalVariable(s1),"Xa_b");
-        assertEquals(Propagator.getOriginalVariable(s2),"Xff32");
+        assertEquals(Propagator.getStateDescription(q),"a65");
     }
 }

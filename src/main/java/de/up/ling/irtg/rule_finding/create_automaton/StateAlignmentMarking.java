@@ -9,6 +9,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.RuleEvaluator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 
 /**
  * An abstract class that provides access to state-wise markers for alignments between
@@ -35,7 +36,7 @@ public abstract class StateAlignmentMarking<States> implements RuleEvaluator<Int
     }
     
     @Override
-    public IntSet evaluateRule(Rule rule) {
+    public IntSortedSet evaluateRule(Rule rule) {
         return this.getAlignmentMarkers(reference.getStateForId(rule.getParent()));
     }
     
@@ -46,7 +47,7 @@ public abstract class StateAlignmentMarking<States> implements RuleEvaluator<Int
      * @param state
      * @return 
      */
-    public abstract IntSet getAlignmentMarkers(States state);
+    public abstract IntSortedSet getAlignmentMarkers(States state);
 
     /**
      * 

@@ -16,7 +16,6 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
-import de.up.ling.irtg.rule_finding.alignments.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
 import de.up.ling.irtg.rule_finding.pruning.intersection.tree.NoLeftIntoRight;
