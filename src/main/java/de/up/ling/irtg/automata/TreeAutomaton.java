@@ -313,7 +313,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * side. The method uses getRulesTopDown to collect all rules for this state
      * and any label that is returned by getLabelsTopDown. The method
      * necessarily enforces the computation of all top-down rules for the given
-     * parentState, but does no further copying of rules beyond this.
+     * parentState, but does no further copying of rules beyond this. Due to the way
+     * the top-down index data structures are implemented, this method
+     * is significantly faster if the tree automaton is explicit.
      *
      * @param parentState
      * @return
@@ -332,11 +334,28 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
     
+    /**
+     * Iterates over all rules with the given parent. The consumer fn
+     * is applied to each rule. Because construction of iterables and
+     * iterators is avoided, this iteration can be a bit faster than
+     * iterating over {@link #getRulesTopDown(int) }. Due to the way
+     * the top-down index data structures are implemented, this method
+     * is significantly faster if the tree automaton is explicit.
+     * 
+     * @param parentState
+     * @param fn 
+     */
     public void foreachRuleTopDown(int parentState, Consumer<Rule> fn) {
         if( ruleStore.isExplicit() ) {
             ruleStore.foreachRuleTopDown(parentState, fn);
         } else {
-            throw new UnsupportedOperationException("foreachRuleTopDown not yet implemented for non-explicit automata");
+            // this is a slow implementation for now
+            for (int label : getLabelsTopDown(parentState)) {
+                Iterable<Rule> rules = getRulesTopDown(label, parentState);
+                if( rules != null ) {
+                    rules.forEach(fn);
+                }
+            }
         }
     }
 
