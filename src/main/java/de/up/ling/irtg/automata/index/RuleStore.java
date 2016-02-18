@@ -79,6 +79,10 @@ public class RuleStore implements Serializable {
         return topDown.getRules(parentState);
     }
     
+    public void foreachRuleTopDown(int parentState, Consumer<Rule> fn) {
+        topDown.foreachRule(parentState, fn);
+    }
+    
     private static void DEBUG(Supplier<String> s) {
         if( TreeAutomaton.DEBUG_STORE ) {
             System.err.println(s.get());

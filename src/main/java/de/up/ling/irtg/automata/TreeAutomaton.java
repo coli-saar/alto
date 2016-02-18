@@ -331,6 +331,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return Iterables.concat(ruleLists);
         }
     }
+    
+    public void foreachRuleTopDown(int parentState, Consumer<Rule> fn) {
+        if( ruleStore.isExplicit() ) {
+            ruleStore.foreachRuleTopDown(parentState, fn);
+        } else {
+            throw new UnsupportedOperationException("foreachRuleTopDown not yet implemented for non-explicit automata");
+        }
+    }
 
     /**
      * Determines whether the automaton is deterministic if read as a bottom-up
