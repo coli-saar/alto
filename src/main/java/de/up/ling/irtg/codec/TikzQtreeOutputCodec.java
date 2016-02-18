@@ -20,7 +20,7 @@ import java.io.PrintWriter;
  * 
  * @author koller
  */
-@CodecMetadata(name = "tikz-qtree", description = "tikz-qtree", type = Tree.class)
+@CodecMetadata(name = "tikz-qtree", description = "encodes a tree as LaTeX code using the tikz-qtree package", type = Tree.class)
 public class TikzQtreeOutputCodec extends OutputCodec<Tree> {
     @Override
     public void write(Tree tree, OutputStream ostream) throws IOException {

@@ -6,24 +6,26 @@
 
 package de.up.ling.irtg.codec;
 
+import de.up.ling.tree.Tree;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 
 /**
- * An output codec that encodes arbitrary objects by simply
- * calling their {@link Object#toString() } method.
- * 
+ *
  * @author koller
  */
-@CodecMetadata(name = "toString", description = "encodes an object using its toString method", type = Object.class, displayInPopup = false)
-public class ToStringOutputCodec extends OutputCodec<Object> {
+@CodecMetadata(name = "ptb-out", description = "encodes a tree as a PTB-style Lisp string", type = Tree.class)
+public class PtbTreeOutputCodec extends OutputCodec<Tree> {
     @Override
-    public void write(Object object, OutputStream ostream) throws IOException {
+    public void write(Tree tree, OutputStream ostream) throws IOException, UnsupportedOperationException {
+        if( hasTrueOption("top")) {
+            tree = Tree.create("TOP", tree);
+        }
+        
         PrintWriter w = new PrintWriter(new OutputStreamWriter(ostream));
-        w.write(object.toString());
+        w.write(tree.toLispString());
         w.flush();
     }
-    
 }

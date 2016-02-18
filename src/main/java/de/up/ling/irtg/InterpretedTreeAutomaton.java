@@ -23,11 +23,15 @@ import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeBottomUpVisitor;
 import de.up.ling.tree.TreeVisitor;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -876,4 +880,107 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return irtg;
     }
+    
+    
+    public InterpretedTreeAutomaton filterForAppearingConstants(String interpName, Object input) {
+        
+        TreeAutomaton decompositionAutomaton = getInterpretation(interpName).getAlgebra().decompose(input);
+        Int2IntMap old2NewSignature = new Int2IntOpenHashMap();
+        Signature filteredSourceSignature = new Signature();
+        InterpretedTreeAutomaton filteredIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>(filteredSourceSignature));
+        Map<String, Algebra> filteredAlgebras = new HashMap<>();
+        Map<String, Homomorphism> filteredHomomorphisms = new HashMap<>();
+        
+        //getting matching rules
+        Iterable<Rule> matchingRules = getConstantMatchingRules(interpName, decompositionAutomaton);
+        
+        //build the signatures and algebras
+        for (String interpNameHere: getInterpretations().keySet()) {
+            try {
+                filteredAlgebras.put(interpNameHere, getInterpretation(interpNameHere).getAlgebra().getClass().newInstance());
+            } catch (InstantiationException | IllegalAccessException ex) {
+                System.err.println("Cound not instantiate algebra for interpretation "+interpNameHere +": "+ex.toString());
+            }
+        }
+        for (Rule matchingRule : matchingRules) {
+            //using that each label only appears in one rule
+            int newSymbolID = filteredSourceSignature.addSymbol(matchingRule.getLabel(this.automaton), matchingRule.getArity());
+            old2NewSignature.put(matchingRule.getLabel(), newSymbolID);
+            
+            //now the signatures in the algebras
+            getInterpretations().entrySet().stream().forEach((entry) -> {
+                Algebra algebraHere = filteredAlgebras.get(entry.getKey());
+                entry.getValue().getHomomorphism().get(matchingRule.getLabel()).dfs(new TreeBottomUpVisitor<HomomorphismSymbol, Void>() {
+
+                    @Override
+                    public Void combine(Tree<HomomorphismSymbol> tree, List<Void> list) {
+                        if (!tree.getLabel().isVariable()) {
+                            algebraHere.getSignature().addSymbol(entry.getValue().getHomomorphism().getTargetSignature().resolveSymbolId(tree.getLabel().getValue()), list.size());
+                        }
+                        return null;
+                    }
+                });
+            });
+        }
+        
+        //building the homomorphisms
+        for (String interpNameHere: getInterpretations().keySet()) {
+            filteredHomomorphisms.put(interpNameHere, new Homomorphism(filteredSourceSignature, filteredAlgebras.get(interpNameHere).getSignature()));
+        }
+        for (Rule matchingRule : matchingRules) {
+            getInterpretations().entrySet().stream().forEach((entry) -> {
+                Homomorphism filteredHomomorphism = filteredHomomorphisms.get(entry.getKey());
+                filteredHomomorphism.add(filteredSourceSignature.resolveSymbolId(old2NewSignature.get(matchingRule.getLabel())),
+                        entry.getValue().getHomomorphism().get(entry.getValue().getHomomorphism().getSourceSignature().resolveSymbolId(matchingRule.getLabel())));
+            });
+        }
+        
+        
+        
+        //add interpretations
+        for (String interpNameHere: getInterpretations().keySet()) {
+            Algebra algebraHere = filteredAlgebras.get(interpNameHere);
+            Interpretation filteredInterpretation = new Interpretation(algebraHere, filteredHomomorphisms.get(interpNameHere));
+            filteredIRTG.addInterpretation(interpNameHere, filteredInterpretation);
+        }
+        
+        //add states to automaton
+        for (int stateID : automaton.getStateInterner().getKnownIds()) {
+            filteredIRTG.automaton.getStateInterner().addObjectWithIndex(stateID, automaton.getStateInterner().resolveId(stateID));
+        }
+        //add rules and labels to automaton
+        for (Rule matchingRule : matchingRules) {
+            ((ConcreteTreeAutomaton)filteredIRTG.automaton).addRule(filteredIRTG.automaton.createRule(
+                    matchingRule.getParent(), old2NewSignature.get(matchingRule.getLabel()), matchingRule.getChildren(), matchingRule.getWeight()));
+        }
+        
+        //set final states
+        for (int finalState : automaton.getFinalStates()) {
+            ((ConcreteTreeAutomaton)filteredIRTG.automaton).addFinalState(finalState);
+        }
+        
+        return filteredIRTG;
+        
+    }
+    
+    
+    private Iterable<Rule> getConstantMatchingRules(String interpName, TreeAutomaton decompositionAutomaton) {
+        Homomorphism hom = getInterpretation(interpName).getHomomorphism();
+        List<Rule> ret = new ArrayList<>();
+        for (Rule rule : automaton.getRuleSet()) {
+            //check if constant rules are in decomposition automaton
+            boolean allConstantsFound = true;
+            for (HomomorphismSymbol label : hom.get(rule.getLabel()).getLeafLabels()) {
+                if (label.isConstant() && (!decompositionAutomaton.getRulesBottomUp(label.getValue(), new int[]{}).iterator().hasNext())) {
+                    allConstantsFound = false;
+                }
+            }
+            if (allConstantsFound) {
+                //System.out.println("All constants found!");
+                ret.add(rule);
+            }
+        }
+        return ret;
+    }
+    
 }

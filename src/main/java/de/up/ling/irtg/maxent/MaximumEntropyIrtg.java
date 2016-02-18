@@ -442,14 +442,14 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
              * sum_x : sum over every instance of training data p~(x) : 1/N
              * sum_y(e^(sum_i(lambda_i*f_i(x,y)))) : inside(S)
              *
-             * gradient (<f~i> - <fi>): g_i = sum_x,y(p~(x,y)*f_i(x,y)) -
-             * sum_x,y(p~(x)*p_lambda(y|x)*f_i(x,y)) sum_x,y : in both cases sum
-             * over every instance of training data f_i(x,y) : sum over all
-             * f_i(r) with Rule r used in a node of the tree
-             * p_lambda(y|x)*f_i(x,y) : E(f_i|S) (Chiang, 04) E(f_i|S) =
-             * sum_r(f_i(r)*E(r)) sum_r : sum over all rules of the parse chart
-             * E(r) = outside(A)*p(r)*inside(B)*inside(C) / inside(S) | for r(A
-             * -> B C) p(r) : r.getWeight()
+             * gradient (<f~i> - <fi>): 
+             * g_i = sum_x,y(p~(x,y)*f_i(x,y)) - sum_x,y(p~(x)*p_lambda(y|x)*f_i(x,y)) 
+             * sum_x,y : in both cases sum over every instance of training data 
+             * f_i(x,y) : sum over all f_i(r) with Rule r used in a node of the tree
+             * p_lambda(y|x)*f_i(x,y) : E(f_i|S) (Chiang, 04) 
+             * E(f_i|S) = sum_r(f_i(r)*E(r)) 
+             * sum_r : sum over all rules of the parse chart
+             * E(r) = outside(A)*p(r)*inside(B)*inside(C) / inside(S) | for r(A -> B C) p(r) : r.getWeight()
              */
             if (cachedStale) {
                 // recompute

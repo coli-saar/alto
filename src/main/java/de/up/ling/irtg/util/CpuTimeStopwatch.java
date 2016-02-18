@@ -18,6 +18,7 @@ public class CpuTimeStopwatch {
 
     private final Int2LongMap timestamps;
     private final ThreadMXBean benchmarkBean;
+    private int nextId = 0;
 
     public CpuTimeStopwatch() {
         timestamps = new Int2LongOpenHashMap();
@@ -26,6 +27,10 @@ public class CpuTimeStopwatch {
 
     public void record(int id) {
         timestamps.put(id, benchmarkBean.getCurrentThreadCpuTime());
+    }
+    
+    public void record() {
+        record(nextId++);
     }
 
     public long getTimeBefore(int id) {

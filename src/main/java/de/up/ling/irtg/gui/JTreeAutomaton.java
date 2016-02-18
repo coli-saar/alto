@@ -6,13 +6,27 @@ package de.up.ling.irtg.gui;
 
 import com.bric.window.WindowMenu;
 import com.google.common.collect.Iterables;
+import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
+import de.up.ling.gui.datadialog.DataDialog;
+import de.up.ling.gui.datadialog.entries.DataField;
+import de.up.ling.gui.datadialog.DataPanelContainer;
+import de.up.ling.gui.datadialog.entries.DataPanelEntry;
+import de.up.ling.gui.datadialog.entries.ReflectionEntry;
+import de.up.ling.gui.datadialog.entries.ConcreteBooleanDataPanelEntry;
+import de.up.ling.gui.datadialog.entries.ConcreteListDataPanelEntry;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.binarization.BkvBinarizer;
+import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
+import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.CorpusWriter;
+import de.up.ling.irtg.corpus.InterpretationPrintingPolicy;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.LambdaStopwatch;
@@ -21,17 +35,17 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.awt.Color;
 import java.awt.Component;
-import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
@@ -56,13 +70,12 @@ public class JTreeAutomaton extends javax.swing.JFrame {
      */
     public JTreeAutomaton(TreeAutomaton<?> automaton, TreeAutomatonAnnotator annotator) {
         initComponents();
-        
+
         jMenuBar2.add(new WindowMenu(this));
 
         if (!SHOW_DEBUG_MENU) {
             jMenuBar2.remove(debugMenu);
         }
-
 
         if (!GuiMain.isMac()) {
             GuiUtils.replaceMetaByCtrl(jMenuBar2);
@@ -540,28 +553,28 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
             if (inputs != null) {
                 GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
-                                         listener -> {
-                                             GuiUtils.setGlobalListener(listener);
+                        listener -> {
+                            GuiUtils.setGlobalListener(listener);
 
-                                             for (String intp : options.keySet()) {
-                                                 irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
-                                             }
+                            for (String intp : options.keySet()) {
+                                irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
+                            }
 
-                                             TreeAutomaton chart = irtg.parse(inputs);
+                            TreeAutomaton chart = irtg.parse(inputs);
 
-                                             GuiUtils.setGlobalListener(null);
-                                             return chart;
-                                         },
-                                         (chart, time) -> {
-                                             GuiMain.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
-                                             if (chart != null) {
-                                                 JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                                                 jta.setIrtg(irtg);
-                                                 jta.setTitle("Parse chart: " + inputs);
-                                                 jta.pack();
-                                                 jta.setVisible(true);
-                                             }
-                                         });
+                            GuiUtils.setGlobalListener(null);
+                            return chart;
+                        },
+                        (chart, time) -> {
+                            GuiMain.log("Computed parse chart for " + inputs + ", " + Util.formatTime(time));
+                            if (chart != null) {
+                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
+                                jta.setIrtg(irtg);
+                                jta.setTitle("Parse chart: " + inputs);
+                                jta.pack();
+                                jta.setVisible(true);
+                            }
+                        });
 
 //                new Thread() {
 //                    @Override
@@ -615,28 +628,28 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private void miTrainEMActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainEMActionPerformed
         GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
             GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing EM training ...",
-                                     listener -> {
-                                         irtg.trainEM(corpus, listener);
-                                         return null;
-                                     },
-                                     (result, time) -> {
-                                         GuiMain.log("Performed EM training, " + Util.formatTime(time));
-                                         updateWeights();
-                                     });
+                    listener -> {
+                        irtg.trainEM(corpus, listener);
+                        return null;
+                    },
+                    (result, time) -> {
+                        GuiMain.log("Performed EM training, " + Util.formatTime(time));
+                        updateWeights();
+                    });
         });
     }//GEN-LAST:event_miTrainEMActionPerformed
 
     private void miTrainVBActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miTrainVBActionPerformed
         GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, corpus -> {
             GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing VB training ...",
-                                     listener -> {
-                                         irtg.trainVB(corpus, listener);
-                                         return null;
-                                     },
-                                     (result, time) -> {
-                                         GuiMain.log("Performed VB training, " + Util.formatTime(time));
-                                         updateWeights();
-                                     });
+                    listener -> {
+                        irtg.trainVB(corpus, listener);
+                        return null;
+                    },
+                    (result, time) -> {
+                        GuiMain.log("Performed VB training, " + Util.formatTime(time));
+                        updateWeights();
+                    });
         });
     }//GEN-LAST:event_miTrainVBActionPerformed
 
@@ -657,15 +670,15 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             final Corpus corpus = GuiMain.loadAnnotatedCorpus(irtg, miMaxent);
 
             GuiUtils.withProgressBar(GuiMain.getApplication(), "Training progress", "Performing Maximum Entropy training ...",
-                                     listener -> {
-                                         ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, listener);
-                                         return null;
-                                     },
-                                     (result, time) -> {
-                                         GuiMain.log("Trained maxent model, " + Util.formatTime(time));
-                                         miShowMaxentWeights.setEnabled(true);
-                                         miShowMaxentWeightsActionPerformed(null);
-                                     });
+                    listener -> {
+                        ((MaximumEntropyIrtg) irtg).trainMaxent(corpus, listener);
+                        return null;
+                    },
+                    (result, time) -> {
+                        GuiMain.log("Trained maxent model, " + Util.formatTime(time));
+                        miShowMaxentWeights.setEnabled(true);
+                        miShowMaxentWeightsActionPerformed(null);
+                    });
         }
     }//GEN-LAST:event_miTrainMaxentActionPerformed
 
@@ -700,21 +713,21 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
             if (rsc.getSelectedAlgebras() != null) {
                 GuiUtils.withProgressBar(JTreeAutomaton.this, "Binarization", "Binarizing IRTG ...",
-                                         listener -> {
-                                             BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
-                                             InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
-                                             return binarized;
-                                         },
-                                         (binarized, time) -> {
-                                             GuiMain.log("Binarized IRTG, " + Util.formatTime(time));
+                        listener -> {
+                            BkvBinarizer binarizer = new BkvBinarizer(rsc.getSelectedSeeds());
+                            InterpretedTreeAutomaton binarized = binarizer.binarize(irtg, rsc.getSelectedAlgebras(), listener);
+                            return binarized;
+                        },
+                        (binarized, time) -> {
+                            GuiMain.log("Binarized IRTG, " + Util.formatTime(time));
 
-                                             JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
-                                             jta.setTitle("Binarization of " + getTitle());
-                                             jta.setIrtg(binarized);
-                                             jta.setParsingEnabled(true);
-                                             jta.pack();
-                                             jta.setVisible(true);
-                                         });
+                            JTreeAutomaton jta = new JTreeAutomaton(binarized.getAutomaton(), new IrtgTreeAutomatonAnnotator(binarized));
+                            jta.setTitle("Binarization of " + getTitle());
+                            jta.setIrtg(binarized);
+                            jta.setParsingEnabled(true);
+                            jta.pack();
+                            jta.setVisible(true);
+                        });
             }
         }
 
@@ -736,32 +749,147 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         GuiMain.saveIrtg(irtg, this);
     }//GEN-LAST:event_miSaveIrtgActionPerformed
 
-    private void miBulkParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miBulkParseActionPerformed
-        GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
-            try {
-                File outputCorpusFile = GuiMain.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
+    public static class InputOutputCorpus {
 
-                if (outputCorpusFile != null) {
-                    final FileWriter w = new FileWriter(outputCorpusFile);
-                    String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
-                    final CorpusWriter cw = new CorpusWriter(irtg, s, w);
-                    cw.setAnnotated(true);
+        @DataField(label = "Input corpus")
+        public String inputCorpusName;
 
-                    GuiUtils.withProgressBar(JTreeAutomaton.this, "Parsing progress", "Bulk parsing of input corpus ...",
-                                             listener -> {
-                                                 irtg.bulkParse(inputCorpus, cw, listener);
-                                                 w.flush();
-                                                 w.close();
-                                                 return null;
-                                             },
-                                             (result, time) -> {
-                                                 GuiMain.log("Finished bulk parsing, " + Util.formatTime(time));
-                                             });
-                }
-            } catch (IOException e) {
-                GuiUtils.showError(e);
+        @DataField(label = "Output corpus")
+        public String outputCorpusName;
+    }
+
+    private List<OutputCodec> collectOutputCodecs(Algebra alg) {
+        Class classOfValues = alg.getClassOfValues();
+
+        List<OutputCodec> outputCodecs = new ArrayList<>();
+        outputCodecs.add(new AlgebraStringRepresentationOutputCodec(alg));
+        outputCodecs.addAll(OutputCodec.getOutputCodecs(classOfValues));
+
+        return outputCodecs;
+    }
+
+    private DataPanelContainer dataPanelContainerWithInterpretations() {
+        DataPanelContainer ret = new DataPanelContainer("Interpretations");
+
+        // derivation tree
+        List<OutputCodec> outputCodecs = collectOutputCodecs(new TreeAlgebra());
+        ConcreteListDataPanelEntry<OutputCodec> dpeList = new ConcreteListDataPanelEntry<OutputCodec>("derivation tree", "Output codec for derivation tree:", outputCodecs, oc -> oc.getMetadata().name() + ": " + oc.getMetadata().description());
+
+        DataPanelEntry<Boolean> dpeCheck = new ConcreteBooleanDataPanelEntry("derivation tree_use", "Generate output for derivation tree:");
+        ret.addEntry(dpeCheck);
+        
+        dpeCheck = new ConcreteBooleanDataPanelEntry("_print_comments_", "Print comments:");
+        dpeCheck.setValue(true);
+        ret.addEntry(dpeCheck);
+        
+        dpeCheck = new ConcreteBooleanDataPanelEntry("_print_separators_", "Print empty lines between instances:");        
+        dpeCheck.setValue(true);
+        ret.addEntry(dpeCheck);
+
+        for (String interpName : irtg.getInterpretations().keySet()) {
+            Algebra alg = irtg.getInterpretation(interpName).getAlgebra();
+            Class classOfValues = alg.getClassOfValues();
+
+            outputCodecs = new ArrayList<>();
+            outputCodecs.add(new AlgebraStringRepresentationOutputCodec(alg));
+            outputCodecs.addAll(OutputCodec.getOutputCodecs(classOfValues));
+
+            dpeList = new ConcreteListDataPanelEntry<OutputCodec>(interpName, "Output codec for interpretation '" + interpName + "':", outputCodecs, oc -> oc.getMetadata().name() + ": " + oc.getMetadata().description());
+            dpeCheck = new ConcreteBooleanDataPanelEntry(interpName + "_use", "Generate output for interpretation '" + interpName + "':");
+
+            ret.addEntry(dpeCheck);
+            ret.addEntry(dpeList);
+        }
+
+        return ret;
+    }
+
+    private InterpretationPrintingPolicy createPolicy(DataPanelContainer corpusOptions) {
+        List<Pair<String, OutputCodec>> interpretationToCodec = new ArrayList<>();
+        
+        for (String interpName : irtg.getInterpretations().keySet()) {
+            if( (Boolean) corpusOptions.getEntry(interpName + "_use").getValue() ) {
+                ConcreteListDataPanelEntry<OutputCodec> dpeList = (ConcreteListDataPanelEntry<OutputCodec>) corpusOptions.getEntry(interpName);
+                OutputCodec oc = dpeList.getSelectedElement();
+                Pair<String,OutputCodec> p = new Pair(interpName, oc);
+                interpretationToCodec.add(p);
             }
-        });
+        }
+        
+        
+        
+        return new InterpretationPrintingPolicy(interpretationToCodec, new TreeAlgebra());
+    }
+
+    private void miBulkParseActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miBulkParseActionPerformed
+        final InputOutputCorpus corpusNames = new InputOutputCorpus();
+
+        DataDialog.withValues(this, "Bulk Parse",
+                Arrays.asList(
+                        ReflectionEntry.forObject("Corpus files", corpusNames),
+                        dataPanelContainerWithInterpretations()
+                ),
+                (dpc) -> {
+                    try {
+                        DataPanelContainer codecOptions = dpc.get(1);
+                        Corpus inputCorpus = Corpus.readCorpus(new FileReader(corpusNames.inputCorpusName), irtg);
+                        FileWriter w = new FileWriter(corpusNames.outputCorpusName);
+                        String s = "Parsed from " + corpusNames.inputCorpusName + "\nat " + new Date().toString();
+                        
+                        String commentPrefix = ((Boolean) codecOptions.getEntry("_print_comments_").getValue()) ? "# " : null;
+                        
+                        final CorpusWriter cw = new CorpusWriter(irtg, s, commentPrefix, createPolicy(codecOptions), w);
+                        cw.setPrintSeparatorLines(((Boolean) codecOptions.getEntry("_print_separators_").getValue()));
+
+                        boolean annotated = (Boolean) (codecOptions.getEntry("derivation tree_use").getValue());
+                        cw.setAnnotated(annotated);
+
+                        GuiUtils.withProgressBar(JTreeAutomaton.this, "Parsing progress", "Bulk parsing of input corpus ...",
+                                listener -> {
+                                    irtg.bulkParse(inputCorpus, cw, listener);
+                                    w.flush();
+                                    w.close();
+                                    return null;
+                                },
+                                (result, time) -> {
+                                    GuiMain.log("Finished bulk parsing, " + Util.formatTime(time));
+                                });
+                    } catch (IOException | CorpusReadingException ex) {
+                        GuiUtils.showError(ex);
+                    }
+
+                    System.err.println(dpc.get(1));
+                });
+
+//        GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
+//            try {
+//                
+//                
+//                
+//                
+//                File outputCorpusFile = GuiMain.chooseFileForSaving(new FileNameExtensionFilter("Output corpus file (*.txt)", "txt"), this);
+//
+//                if (outputCorpusFile != null) {
+//                    final FileWriter w = new FileWriter(outputCorpusFile);
+//                    String s = "Parsed from " + inputCorpus.getSource() + "\nat " + new Date().toString();
+//                    final CorpusWriter cw = new CorpusWriter(irtg, s, w);
+//                    cw.setAnnotated(true);
+//
+//                    GuiUtils.withProgressBar(JTreeAutomaton.this, "Parsing progress", "Bulk parsing of input corpus ...",
+//                                             listener -> {
+//                                                 irtg.bulkParse(inputCorpus, cw, listener);
+//                                                 w.flush();
+//                                                 w.close();
+//                                                 return null;
+//                                             },
+//                                             (result, time) -> {
+//                                                 GuiMain.log("Finished bulk parsing, " + Util.formatTime(time));
+//                                             });
+//                }
+//            } catch (IOException e) {
+//                GuiUtils.showError(e);
+//            }
+//        });
     }//GEN-LAST:event_miBulkParseActionPerformed
 
     private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed

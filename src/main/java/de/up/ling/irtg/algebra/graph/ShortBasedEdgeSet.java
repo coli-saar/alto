@@ -7,6 +7,8 @@ package de.up.ling.irtg.algebra.graph;
 
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.shorts.ShortIterator;
 import it.unimi.dsi.fastutil.shorts.ShortArraySet;
 import java.util.ArrayList;
@@ -130,11 +132,11 @@ class ShortBasedEdgeSet implements IdBasedEdgeSet {
     }
 
     @Override
-    public long smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
+    public IntList smartForgetIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
         if (reference instanceof ShortBasedEdgeSet) {
 
             ShortIterator li = ((ShortBasedEdgeSet)reference).edges.iterator();
-            long res = 0;
+            IntList res = new IntArrayList();
             //System.err.println("Next test: "+reference.ID);
             //System.err.println(reference.edges.size());
             int i = 0;
@@ -145,9 +147,9 @@ class ShortBasedEdgeSet implements IdBasedEdgeSet {
 
                 short otherNr = ((ShortBasedEdgeSet)reference).getOtherNode(e, (short) vNr, graphInfo);
                 if (otherNr != -1) {
-                    res += br.getEdgeIDSummand(e, vNr, source, graphInfo);
                     if (!br.isSource(otherNr) || otherNr == vNr) {
                         edges.remove(e);
+                        res.add(e);
                     }
                 }
 
@@ -155,63 +157,11 @@ class ShortBasedEdgeSet implements IdBasedEdgeSet {
             return res;//returns the decrease in edgeID.
         } else {
             System.err.println("Conflicting types: was expecting ShortBasedEdgeSet!");
-            return 0;
+            return new IntArrayList();
         }
     }
     
-    @Override
-    public long smartAddIncident(int vNr, int source, IdBasedEdgeSet reference, BoundaryRepresentation br, GraphInfo graphInfo) {
-        if (reference instanceof ShortBasedEdgeSet) {
-            int[] incidentEdges = graphInfo.getIncidentEdges(vNr);
-            long res = 0;
-        //System.err.println("Next test: "+reference.ID);
-            //System.err.println(reference.edges.size());
-            
-            for (int i = 0; i<incidentEdges.length;i++) {
-                //System.err.println(String.valueOf(i));
-                
-                short e = (short)incidentEdges[i];
 
-                short otherNr = ((ShortBasedEdgeSet) reference).getOtherNode(e, (short) vNr, graphInfo);
-                if (otherNr != -1) {//this should always be the case, maybe drop the check?
-                    res += br.getEdgeIDSummand(e, vNr, source, graphInfo);
-                    if (!((ShortBasedEdgeSet) reference).contains(e)) {//pretty much unnecessary, since the check is done in edges.add anyway
-                        edges.add(e);
-                    }
-                }
-
-            }
-            return res;//returns the increase in edgeID.
-        } else {
-            System.err.println("Conflicting types: was expecting ByteBasedEdgeSet!");
-            return 0;
-        }
-    }
-
-    /*public long computeEdgeIdBonus(int source, BitSet isSourceNode, BoundaryRepresentation br, SGraphBRDecompositionAutomaton graphInfo){
-     ShortIterator li = edges.iterator();
-     long res = 0;
-     while (li.hasNext()) {
-     long edge = li.nextLong();
-     if (isSourceNode.get(NumbersCombine.getFirst(edge)) && isSourceNode.get(NumbersCombine.getSecond(edge))){
-     res += br.getEdgeIDSummand(edge, br.getSourceNode(source), source, graphInfo);
-     }
-     }
-     return res;
-     }*/
-    
-    @Override
-    public long computeEdgeIdSummand(int vNr, int source, GraphInfo graphInfo){
-        long res = 0;
-        ShortIterator it = edges.iterator();
-        while (it.hasNext()) {
-           short edge = it.nextShort();
-           if (graphInfo.isIncident(vNr, edge)){
-              res += BoundaryRepresentation.getEdgeIDSummand(edge, vNr, source, graphInfo);
-           }
-        }
-        return res;
-    }
     
     
     private short getOtherNode(short e, short v, GraphInfo graphInfo) {

@@ -5,6 +5,7 @@
 package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.Lists;
+import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -15,6 +16,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.irtg.util.LambdaStopwatch;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
@@ -33,6 +35,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * The binary string algebra. The elements of this algebra are lists of strings,
@@ -139,6 +142,27 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     }
 
     @Override
+    public List<Evaluator> getEvaluationMethods() {
+        List<Evaluator> ret = new ArrayList<>();
+        ret.add(new Evaluator<List<String>>("Equals", "equals") {
+            
+            @Override
+            public Pair<Double, Double> evaluate(List<String> result, List<String> gold) {
+                double score = (result.equals(gold)) ? 1 : 0;
+                return new Pair<>(score, 1.0);
+            }
+        });
+        return ret;
+    }
+
+    
+    
+    @Override
+    public Class getClassOfValues() {
+        return List.class;
+    }
+
+    @Override
     public List<String> parseString(String representation) {
         final List<String> symbols = Arrays.asList(representation.split("\\s+"));
 
@@ -152,14 +176,19 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         return symbols;
     }
 
-//    @Override
-//    public JComponent visualize(List<String> object) {
-//        return new JLabel(StringTools.join(object, " "));
-//    }
     @Override
     public String representAsString(List<String> object) {
         return StringTools.join(object, " ");
     }
+
+    @Override
+    public List<Pair<Pair<String, String>, Function<List<String>, Double>>> getObjectProperties() {
+        List<Pair<Pair<String, String>, Function<List<String>, Double>>> ret = new ArrayList<>();
+        ret.add(new Pair(new Pair("length", "length"), (Function<List<String>, Double>) (List<String> t) -> (double)t.size()));
+        return ret;
+    }
+    
+    
 
     private class CkyAutomaton extends TreeAutomaton<Span> {
 
@@ -183,7 +212,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                         code = specialStarId;
                         break;
                     default:
-                        code = StringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
+                        code = StringAlgebra.this.getSignature().addSymbol(words.get(i), 0);  // if word was not in the algebra's signature yet, add it now
                         break;
                 }
 
@@ -498,6 +527,8 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
             return ret;
         }
     }
+    
+    
 
     public static void main(String[] args) throws Exception {
 //        String grammar = "a.irtg";

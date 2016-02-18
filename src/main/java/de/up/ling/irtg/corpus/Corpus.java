@@ -12,13 +12,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,6 +106,7 @@ public class Corpus implements Iterable<Instance> {
     public void addInstance(Instance instance) {
         instances.add(instance);
 
+        //is this the intended behaviour??? jonas
         if (instance.getDerivationTree() != null) {
             isAnnotated = true;
         }
@@ -233,6 +235,144 @@ public class Corpus implements Iterable<Instance> {
                 currentInputs.put(current, inputObject);
             } catch (Throwable ex) {
                 throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + lineNumber + ", expected interpretation " + current + ": " + ex.getMessage(), ex);
+            }
+
+            if (currentInterpretationIndex == interpretationOrder.size()) {
+                Instance inst = new Instance();
+                inst.setInputObjects(currentInputs);
+
+                if (annotated) {
+                    String annoLine = readNextLine(br, lineNumber);
+
+                    if (annoLine == null) {
+                        throw new CorpusReadingException("Expected a derivation tree in line " + lineNumber);
+                    }
+
+                    try {
+                        Tree<String> derivationTree = TreeParser.parse(annoLine);
+                        inst.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(derivationTree));
+                    } catch (Throwable ex) {  // TreeParser#parse can throw weird Errors, hence Throwable
+                        throw new CorpusReadingException("An error occurred while reading the derivation tree in line " + lineNumber + ": " + ex.getMessage(), ex);
+                    }
+                }
+
+                ret.instances.add(inst);
+                currentInputs = new HashMap<String, Object>();
+                currentInterpretationIndex = 0;
+            }
+
+            line = readNextLine(br, lineNumber);
+        }
+    }
+    
+    /**
+     * A version of readCorpus that allows interpretations in the corpus file to not be declared in the grammar.
+     * These interpretations are omitted in the returned corpus. Returns an error if none of the interpretations
+     * are declared in the grammar.
+     * @param reader
+     * @param irtg
+     * @return
+     * @throws IOException
+     * @throws CorpusReadingException 
+     */
+    public static Corpus readCorpusLenient(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
+        Corpus ret = new Corpus();
+        boolean annotated = false;
+
+        BufferedReader br = new BufferedReader(reader);
+        List<String> interpretationOrder = new ArrayList<String>();
+        Map<String, Object> currentInputs = new HashMap<String, Object>();
+        int currentInterpretationIndex = 0;
+        MutableInteger lineNumber = new MutableInteger(0);
+        String commentPrefix = null;
+
+        // first non-blank line is declaration of annotated or unannotated corpus
+        String line = readNextLine(br, lineNumber);
+
+        Matcher unannoMatcher = UNANNOTATED_CORPUS_DECLARATION_PATTERN.matcher(line);
+        if (unannoMatcher.matches()) {
+            annotated = false;
+            commentPrefix = unannoMatcher.group(1);
+            if (!CORPUS_VERSION.equals(unannoMatcher.group(2))) {
+                throw new CorpusReadingException("Expecting corpus file format version " + CORPUS_VERSION + ", but file is version " + unannoMatcher.group(1));
+            }
+        } else {
+            Matcher annoMatcher = ANNOTATED_CORPUS_DECLARATION_PATTERN.matcher(line);
+            if (annoMatcher.matches()) {
+                annotated = true;
+                commentPrefix = annoMatcher.group(1);
+                if (!CORPUS_VERSION.equals(annoMatcher.group(2))) {
+                    throw new CorpusReadingException("Expecting corpus file format version " + CORPUS_VERSION + ", but file is version " + annoMatcher.group(1));
+                }
+            }
+        }
+
+        if (commentPrefix == null) {
+            throw new CorpusReadingException("First non-blank line of corpus must be corpus declaration, but was " + line);
+        }
+
+//        System.err.println("comment pattern: |" + commentPrefix + "|");
+        // read and check header
+        boolean foundInterpretation = false;
+        Set<String> ungrammaticalInterpretations = new HashSet<>();
+        while (true) {
+            line = readNextLine(br, lineNumber);
+
+            if (line == null) {
+                return ret;
+            }
+
+            String stripped = readAsComment(line, commentPrefix);
+            if (stripped == null) {
+                // first non-comment, non-empty, non-metadata-declaring line => finished reading metadata
+                break;
+            } else {
+                Matcher interpretationMatcher = INTERPRETATION_DECLARATION_PATTERN.matcher(stripped);
+                if (interpretationMatcher.matches()) {
+                    String interpretationName = interpretationMatcher.group(1);
+
+                    if (irtg.getInterpretations().containsKey(interpretationName)) {
+                        foundInterpretation = true;
+                    } else {
+                        ungrammaticalInterpretations.add(interpretationName);
+                    }
+
+                    interpretationOrder.add(interpretationName);
+                }
+            }
+        }
+
+        if (!foundInterpretation) {
+            throw new CorpusReadingException("Corpus and grammar share no common interpretation");
+        }
+        
+        if (interpretationOrder.isEmpty()) {
+            throw new CorpusReadingException("Corpus defined no interpretations");
+        }
+
+        ret.isAnnotated = annotated;
+
+        // read actual corpus
+        while (true) {
+            if (line == null) {
+                return ret;
+            }
+
+            String stripped = readAsComment(line, commentPrefix);
+            if (stripped != null) {
+                line = readNextLine(br, lineNumber);
+                continue;
+            }
+
+            String current = interpretationOrder.get(currentInterpretationIndex++);
+
+            if (!ungrammaticalInterpretations.contains(current)) {
+                try {
+                    Object inputObject = irtg.parseString(current, line);
+                    currentInputs.put(current, inputObject);
+                } catch (Throwable ex) {
+                    throw new CorpusReadingException("An error occurred while parsing " + reader + ", line " + lineNumber + ", expected interpretation " + current + ": " + ex.getMessage(), ex);
+                }
             }
 
             if (currentInterpretationIndex == interpretationOrder.size()) {

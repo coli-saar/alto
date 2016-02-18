@@ -8,6 +8,7 @@ package de.up.ling.irtg.automata.index;
 
 import de.up.ling.irtg.automata.Rule;
 import it.unimi.dsi.fastutil.ints.IntIterable;
+import java.util.function.Consumer;
 
 /**
  * Generic interface for a data structure representing
@@ -77,4 +78,6 @@ public interface TopDownRuleIndex {
     public boolean useCachedRule(int label, int parent);
 
     public abstract Iterable<Rule> getAllRules();
+
+    public abstract void foreachRule(int parentState, Consumer<Rule> fn);
 }

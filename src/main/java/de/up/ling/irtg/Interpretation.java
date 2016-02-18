@@ -51,14 +51,15 @@ public class Interpretation<E> implements Serializable {
         return hom;
     }
 
-    public TreeAutomaton parse(E object) {
-        TreeAutomaton decompositionAutomaton = algebra.decompose(object);
-
-        // It is much preferable to return a condensed automaton for the
-        // inverse homomorphism, if that is possible. Pattern matching works for both top down
-        // and bottom up queries.
+    /**
+     * Returns the image under inverse homomorphism of the given automaton.
+     * @param auto
+     * @return 
+     */
+    public TreeAutomaton invhom(TreeAutomaton auto) {
+        
         if (hom.isNonDeleting()) {
-            if (hom.getSourceSignature().getMaxArity() <= 2 || !decompositionAutomaton.supportsTopDownQueries()) {
+            if (hom.getSourceSignature().getMaxArity() <= 2 || !auto.supportsTopDownQueries() || !auto.supportsBottomUpQueries()) {
                 //if source signature is binarized, use pattern matcher. Also
                 //use pattern matcher if only bottom up queries can be answered,
                 //since this is not supported by CondensedNondeletingInverseHomAutomaton
@@ -66,23 +67,35 @@ public class Interpretation<E> implements Serializable {
                     pmFactory = new PMFactoryRestrictive(hom);
                 }
                 Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching.");
-                return pmFactory.invhom(decompositionAutomaton);
+                return pmFactory.invhom(auto);
             } else {
                 Logging.get().info(() -> "Using condensed inverse hom automaton.");
-                return new CondensedNondeletingInverseHomAutomaton(decompositionAutomaton, hom);
+                return new CondensedNondeletingInverseHomAutomaton(auto, hom);
             }
 
             //return new CondensedNondeletingInverseHomAutomaton(decompositionAutomaton, hom);//this works only using top down queries.
         } else {
-            if (decompositionAutomaton.supportsTopDownQueries()) {
+            if (auto.supportsTopDownQueries()) {
 
                 Logging.get().info(() -> "Using inverse hom automaton for deleting homomorphisms.");
-                return new InverseHomAutomaton(decompositionAutomaton, hom);
+                return new InverseHomAutomaton(auto, hom);
             } else {
                 Logging.get().info(() -> "Using non-condensed inverse hom automaton.");
-                return decompositionAutomaton.inverseHomomorphism(hom);
+                return auto.inverseHomomorphism(hom);
             }
         }
+        
+    }
+
+    public TreeAutomaton parse(E object) {
+        TreeAutomaton decompositionAutomaton = algebra.decompose(object);
+
+        // It is much preferable to return a condensed automaton for the
+        // inverse homomorphism, if that is possible. Pattern matching works for both top down
+        // and bottom up queries.
+        
+        return invhom(decompositionAutomaton);
+        
     }
 
     public CondensedTreeAutomaton parseToCondensed(E object) {

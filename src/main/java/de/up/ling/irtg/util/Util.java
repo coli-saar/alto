@@ -11,6 +11,8 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
@@ -290,5 +292,12 @@ public class Util {
         ThreadMXBean bean = ManagementFactory.getThreadMXBean();
         return bean.isCurrentThreadCpuTimeSupported()
                 ? bean.getCurrentThreadCpuTime() : 0L;
+    }
+    
+    public static String getStackTrace(Throwable ex) {
+        //as given in http://stackoverflow.com/questions/1149703/how-can-i-convert-a-stack-trace-to-a-string
+        StringWriter sw = new StringWriter();
+        ex.printStackTrace(new PrintWriter(sw));
+        return sw.toString();
     }
 }

@@ -6,6 +6,7 @@ package de.up.ling.irtg.algebra;
 
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
@@ -101,4 +102,12 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
             }           
         });
     }
+
+    @Override
+    public List<Evaluator> getEvaluationMethods() {
+        return new TreeAlgebra().getEvaluationMethods(); //To change body of generated methods, choose Tools | Templates.
+    }
+    
+    
+    
 }

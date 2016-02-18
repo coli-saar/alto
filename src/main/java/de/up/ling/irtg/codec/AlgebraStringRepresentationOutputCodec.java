@@ -25,7 +25,7 @@ import java.io.PrintWriter;
  * 
  * @author koller
  */
-@CodecMetadata(name = "text", description = "text", type = Object.class, displayInPopup = false)
+@CodecMetadata(name = "text", description = "encodes an object using its algebra's default method", type = Object.class, displayInPopup = false)
 public class AlgebraStringRepresentationOutputCodec<E> extends OutputCodec<E> {
     private Algebra<E> algebra;
 

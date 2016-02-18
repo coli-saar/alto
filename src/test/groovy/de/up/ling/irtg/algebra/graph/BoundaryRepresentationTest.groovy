@@ -44,22 +44,6 @@ class BoundaryRepresentationTest {
         assertEquals(br.toString(), "[b<subj> {u_b, b_b}, u<root> {u_b, u_g, u_u}, g<vcomp> {u_g}]")
     }
     
-    @Test
-    public void testEdgeAndVertexIDs() {
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new ByteArrayInputStream(HRGCleanS.getBytes( Charset.defaultCharset() ) ))
-        GraphAlgebra alg = (GraphAlgebra)irtg.getInterpretation("graph").getAlgebra()
-        String input = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)"
-        SGraph sgraph = alg.parseString(input)
-        TreeAutomaton<BoundaryRepresentation> chart = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class)
-        chart.makeAllRulesExplicit()
-        GraphInfo graphInfo = new GraphInfo(sgraph, alg)
-        
-        for (BoundaryRepresentation br : chart.getStateInterner().getKnownObjects()) {
-            assert (br.edgeID == br.computeEdgeID(graphInfo))
-            assert (br.vertexID == br.computeVertexID(graphInfo))
-        }
-    }
- 
     
     public static final String HRGCleanS = """\n\
 

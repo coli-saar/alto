@@ -5,28 +5,31 @@
  */
 package de.up.ling.irtg.corpus;
 
-import com.diffplug.common.base.Errors;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.codec.OutputCodec;
 import java.io.IOException;
 import java.io.Writer;
 
 /**
+ * Comment lines are prepended with the <code>commentPrefix</code>. If
+ * commentPrefix is null, then comments are not printed at all.
  *
  * @author koller
  */
 public class CorpusWriter extends AbstractCorpusWriter {
 
+    private boolean printSeparatorLines;
     private final Writer writer;
 //    private final InterpretationPrintingPolicy printingPolicy;
     private boolean isHeaderWritten;
     private String comment;
     public static final String NULL = "_null_";
     private String commentPrefix;
+    private InterpretedTreeAutomaton irtg;
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, Writer writer) throws IOException {
-        this(comment, commentPrefix, InterpretationPrintingPolicy.fromIrtg(irtg), writer);
+        this(irtg, comment, commentPrefix, InterpretationPrintingPolicy.fromIrtg(irtg), writer);
     }
 
     /**
@@ -39,15 +42,19 @@ public class CorpusWriter extends AbstractCorpusWriter {
      * @param writer
      * @throws IOException
      */
-    public CorpusWriter(String comment, String commentPrefix, InterpretationPrintingPolicy printingPolicy, Writer writer) throws IOException {
+    public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, String commentPrefix, InterpretationPrintingPolicy printingPolicy, Writer writer) throws IOException {
         super(printingPolicy, false);
 
         this.writer = writer;
         this.comment = comment;
         this.commentPrefix = commentPrefix;
         this.printingPolicy = printingPolicy;
+        this.irtg = irtg;
+
+        printSeparatorLines = true;
 
         isHeaderWritten = false;
+
     }
 
     public CorpusWriter(InterpretedTreeAutomaton irtg, String comment, Writer writer) throws IOException {
@@ -65,40 +72,56 @@ public class CorpusWriter extends AbstractCorpusWriter {
         boolean isn = inst.isNull();
 
         if (!isHeaderWritten) {
-            writer.write(makeHeader(comment) + "\n");
+            writer.write(makeHeader(comment));
+            
+            if( printSeparatorLines ) {
+                writer.write("\n");
+            }
+            
             isHeaderWritten = true;
         }
 
-        if (inst.getComments() != null && commentPrefix != null) {
-            for (String key : inst.getComments().keySet()) {
-                writer.write(commentPrefix + key + ": " + inst.getComments().get(key) + "\n");
+        if (commentPrefix != null) {
+            if (inst.getComments() != null && commentPrefix != null) {
+                for (String key : inst.getComments().keySet()) {
+                    writer.write(commentPrefix + key + ": " + inst.getComments().get(key) + "\n");
+                }
             }
         }
 
-        withDerivationTree(inst, repr -> writer.write(repr + "\n"));
+        withDerivationTree(inst, irtg.getAutomaton().getSignature(), repr -> writer.write(repr + "\n"));
         forEachInterpretation(inst, (key, repr) -> writer.write(repr + "\n"));
-        
-        writer.write("\n");
+
+        if (printSeparatorLines) {
+            writer.write("\n");
+        }
+
         writer.flush();
     }
 
     private String makeHeader(String comment) {
         StringBuilder buf = new StringBuilder();
 
-        buf.append(commentPrefix + "IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
-        buf.append(commentPrefix + "\n");
-
-        if (comment != null) {
-            for (String line : comment.split("\n")) {
-                buf.append(commentPrefix + line + "\n");
-            }
+        if (commentPrefix != null) {
+            buf.append(commentPrefix + "IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
             buf.append(commentPrefix + "\n");
-        }
 
-        for (Pair<String, Algebra> interp : printingPolicy.get()) {
-            buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + interp.getRight().getClass() + "\n");
+            if (comment != null) {
+                for (String line : comment.split("\n")) {
+                    buf.append(commentPrefix + line + "\n");
+                }
+                buf.append(commentPrefix + "\n");
+            }
+
+            for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
+                buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + irtg.getInterpretation(interp.getLeft()).getAlgebra().getClass() + "\n");
+            }
         }
 
         return buf.toString();
+    }
+
+    public void setPrintSeparatorLines(boolean printSeparatorLines) {
+        this.printSeparatorLines = printSeparatorLines;
     }
 }
