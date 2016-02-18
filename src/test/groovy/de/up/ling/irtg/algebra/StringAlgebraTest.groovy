@@ -166,4 +166,26 @@ class StringAlgebraTest {
         assertEquals(lang.size(),1);
         assertTrue(lang.contains(pt("conc1(conc1(a))")));
     }
+    
+    
+    // checks that asConcreteTA still yields the right automaton
+    // when applied to the decomp automaton of a string algebra
+    // where the words were not added to the signature beforehand
+    @Test
+    public void testStringDecompAsConcrete() {
+        StringAlgebra sal = new StringAlgebra();
+        List<String> input = new ArrayList<>();
+        
+        for (int i = 0; i < 3; ++i) {
+            input.add("a");
+        }
+        
+        Set L1 = sal.decompose(input).asConcreteTreeAutomaton().language()
+        Set L2 = sal.decompose(input).language()
+        
+        assertEquals(L2, L1)
+    }
+    
+
+    
 }

@@ -183,8 +183,8 @@ class TreeAutomatonTest{
         assertEquals(pre, pre.asConcreteTreeAutomaton());
     }
     
-
     
+
     @Test
     public void testInvHom() {
         TreeAutomaton rhs = parse("q13 -> c(q12,q23) \n q24 -> c(q23,q34) \n q14! -> c(q12,q24) \n" +
@@ -772,7 +772,6 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
         assertEquals(ti.getTree(), tv.getTree())
         assertAlmostEquals(ti.getWeight(), tv.getWeight())
     }
-    
     /*
     def "testing whether automaton is bottom-up deterministic"() {
     expect:
