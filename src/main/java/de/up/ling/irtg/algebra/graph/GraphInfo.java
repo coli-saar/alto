@@ -370,9 +370,6 @@ public class GraphInfo {
      * @return
      */
     public int getEdgeSource(int e) {
-        if (e < 0) {
-            return -1;
-        }
         return edgeSources[e];
     }
     
@@ -460,8 +457,5 @@ public class GraphInfo {
      */
     public int dist(int vNr1, int vNr2) {
         return pwsp.getDistance(vNr1, vNr2);
-    }
-
-    
-    
+    }   
 }

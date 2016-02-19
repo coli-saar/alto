@@ -50,12 +50,6 @@ public class Homomorphism implements Serializable {
 
     private SignatureMapper signatureMapper;
 
-    /**
-     * 
-     */
-    private transient Boolean  isHeight1 = null;
-    
-    
     public Homomorphism(Signature src, Signature tgt) {
         srcSignature = src;
         tgtSignature = tgt;
@@ -74,13 +68,11 @@ public class Homomorphism implements Serializable {
         signatureMapper = null;
     }
 
-    public void add(String label, Tree<String> mapping) {   
+    public void add(String label, Tree<String> mapping) {
         add(srcSignature.getIdForSymbol(label), HomomorphismSymbol.treeFromNames(mapping, tgtSignature));
     }
 
     public void add(int label, Tree<HomomorphismSymbol> mapping) {
-        this.nondeleting = null;
-        this.isHeight1 = null;
         labelSetsDirty = true;
 
         if (termToId.containsKey(mapping)) {
@@ -463,32 +455,5 @@ public class Homomorphism implements Serializable {
         }
 
         return signatureMapper;
-    }
-
-    /**
-     * 
-     * @return 
-     */
-    public boolean isHeight1() {
-        if(this.isHeight1 == null){
-            checkHeight1();
-        }
-        
-        return this.isHeight1;
-    }
-
-    /**
-     * 
-     */
-    private void checkHeight1() {
-        for (int label : labelToLabelSet.keySet()) {
-            Tree<HomomorphismSymbol> rhs = get(label);
-            if (rhs.getHeight() > 1) {
-                    isHeight1 = Boolean.FALSE;
-                    return;
-            }
-        }
-
-        isHeight1 = Boolean.TRUE;
     }
 }

@@ -134,7 +134,7 @@ public class BoundaryRepresentation {
      */
     public SGraph getGraph() {
         SGraph wholeGraph = completeGraphInfo.getSGraph();
-        SGraph ret = new SGraph();
+        SGraph T = new SGraph();
         DirectedGraph<GraphNode, GraphEdge> g = wholeGraph.getGraph();
         List<String> activeNodes = new ArrayList<>();
 
@@ -146,8 +146,8 @@ public class BoundaryRepresentation {
             int node = sourceToNode[source];
             if (node >= 0) {
                 String nodeName = completeGraphInfo.getNodeForInt(node);
-                ret.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, completeGraphInfo));
-                ret.addSource(completeGraphInfo.getSourceForInt(source), nodeName);
+                T.addNode(nodeName, getNodeLabel(wholeGraph, nodeName, true, completeGraphInfo));
+                T.addSource(completeGraphInfo.getSourceForInt(source), nodeName);
                 activeNodes.add(nodeName);
             }
         }
@@ -158,25 +158,25 @@ public class BoundaryRepresentation {
             boolean isSource = isSource(vName, completeGraphInfo);
             for (GraphEdge e : g.edgeSet()) {
                 if (!isSource || isInBoundary(e)) {
-                    GraphNode eTarget = e.getTarget();
-                    GraphNode eSource = e.getSource();
-                    if (eSource == v && !(eTarget == v)) {
-                        if (!ret.containsNode(eTarget.getName())) {
-                            ret.addNode(eTarget.getName(), eTarget.getLabel());
-                            activeNodes.add(eTarget.getName());
+                    GraphNode target = e.getTarget();
+                    GraphNode source = e.getSource();
+                    if (source == v && !(target == v)) {
+                        if (!T.containsNode(target.getName())) {
+                            T.addNode(target.getName(), target.getLabel());
+                            activeNodes.add(target.getName());
                         }
-                        ret.addEdge(eSource, eTarget, e.getLabel());
-                    } else if (eTarget == v && !(eSource == v)) {
-                        if (!ret.containsNode(eSource.getName())) {
-                            ret.addNode(eSource.getName(), eSource.getLabel());
-                            activeNodes.add(eSource.getName());
+                        T.addEdge(source, target, e.getLabel());
+                    } else if (target == v && !(source == v)) {
+                        if (!T.containsNode(source.getName())) {
+                            T.addNode(source.getName(), source.getLabel());
+                            activeNodes.add(source.getName());
                         }
-                        ret.addEdge(eSource, eTarget, e.getLabel());
+                        T.addEdge(source, target, e.getLabel());
                     }
                 }
             }
         }
-        return ret;
+        return T;
     }
 
     private boolean arrayContains(int[] array, int value) {
@@ -216,12 +216,7 @@ public class BoundaryRepresentation {
     private boolean isSource(String nodeName, GraphInfo completeGraphInfo) {
         return isSource(completeGraphInfo.getIntForNode(nodeName));
     }
-    
-    /**
-     * returns -1 if s is not assigned.
-     * @param s
-     * @return 
-     */
+
     int getSourceNode(int s) {
         return sourceToNode[s];
     }

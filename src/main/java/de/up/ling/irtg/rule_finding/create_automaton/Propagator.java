@@ -83,7 +83,11 @@ public class Propagator {
      * @return 
      */
     public static String getStateDescription(String variable) {
-        String all = makeParts(variable)[1].trim();
+        String[] q = makeParts(variable);
+        if(q.length < 2) {
+            return q[0].trim();
+        }
+        String all = q[1].trim();
         
         return all;
     }
@@ -223,10 +227,11 @@ public class Propagator {
             {
                 String[] arr = makeCopy(r.getChildren());
                 String label = r.getLabel(original);
-                                
-                double weight = r.getWeight();
                 
-                this.goal.addRule(goal.createRule(stateName, label, arr, weight));
+                double weight = r.getWeight();
+                Rule newRule = goal.createRule(stateName, label, arr, weight);
+                
+                this.goal.addRule(newRule);
             }
         }
 

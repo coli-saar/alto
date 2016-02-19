@@ -6,28 +6,20 @@
 package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.algebra.TreeAlgebra;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
 import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import de.up.ling.irtg.rule_finding.Variables;
-import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
-import de.up.ling.irtg.rule_finding.pruning.PruneOneSideTerminating;
-import de.up.ling.irtg.rule_finding.pruning.Pruner;
-import de.up.ling.irtg.rule_finding.pruning.RemoveDead;
-import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
-import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.signature.Signature;
-import static de.up.ling.irtg.util.TestingTools.pt;
 import de.up.ling.tree.Tree;
-import java.util.ArrayList;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -37,123 +29,241 @@ import static org.junit.Assert.*;
  * @author christoph_teichmann
  */
 public class HomomorphismManagerTest {
+
+    /**
+     *
+     */
+    private HomomorphismManager hom;
+
+    /**
+     * 
+     */
+    private TreeAutomaton leftAut;
+
+    /**
+     * 
+     */
+    private TreeAutomaton rightAut;
+
+    /**
+     * 
+     */
+    private final static String LEFT_TEST_AUTOMATON
+            = "q_0 -> b [1.0]\n"
+            + "q_1 -> b [1.0]\n"
+            + "q! -> a(q_0, q_1) [1.0]";
+
+    /**
+     * 
+     */
+    private final static String RIGHT_TEST_AUTOMATON
+            = "q_0 -> u [1.0]\n"
+            + "q! -> o(q_0, q_1) [1.0]\n"
+            + "q_1 -> u [1.0]";
+
+    /**
+     * 
+     */
+    private static final String LEFT_ALIGNMENT =
+            "q_1 ||| 1\n"
+            + "q_0 ||| 2";
     
     /**
      * 
      */
-    private Signature shared;
+    private static final String RIGHT_ALIGNMENT = 
+              "q_0 ||| 1\n"
+            + "q_1 ||| 2";
     
     /**
      * 
      */
-    private HomomorphismManager hm;
+    private SpecifiedAligner samL;
     
     /**
      * 
      */
-    private Iterable<AlignedTrees> pruned1;
+    private SpecifiedAligner samR;
     
     /**
      * 
      */
-    private Iterable<AlignedTrees> pruned2;
+    private Signature sharedSig;
     
     @Before
-    public void setUp() throws ParserException {
-        CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new PruneOneSideTerminating()).setSecondPruner(Pruner.DEFAULT_PRUNER)
-                .setFirstVariableSource(new LeftRightXFromFinite())
-                .setSecondVariableSource(new JustXEveryWhere());
+    public void setUp() throws ParserException, IOException {
+        TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
+        this.leftAut = taic.read(new ByteArrayInputStream(LEFT_TEST_AUTOMATON.getBytes()));
+
+        this.rightAut = taic.read(RIGHT_TEST_AUTOMATON);
         
-        Supplier<Algebra<List<String>>> sal = () -> new StringAlgebra();
-        Supplier<Algebra<List<String>>> mta = () -> new StringAlgebra();
+        assertFalse(leftAut.getSignature() == rightAut.getSignature());
         
-        CorpusCreator cc = fact.getInstance(sal, mta, new SpanAligner.Factory(), new SpanAligner.Factory());
+        samL = new SpecifiedAligner(leftAut, new ByteArrayInputStream(LEFT_ALIGNMENT.getBytes()));
+        samR = new SpecifiedAligner(rightAut, new ByteArrayInputStream(RIGHT_ALIGNMENT.getBytes()));
         
-        ArrayList<String> firstInputs = new ArrayList<>();
-        firstInputs.add("John went home");
-        firstInputs.add("Frank went home");
+        Propagator prop = new Propagator();
         
-        ArrayList<String> firstAlign = new ArrayList<>();
-        firstAlign.add("0:1:1 1:2:2 2:3:3");
-        firstAlign.add("0:1:4 1:2:5 2:3:6");
+        this.leftAut = prop.convert(leftAut, samL);
+        this.rightAut = prop.convert(rightAut, samR);
         
-        ArrayList<String> secondInputs = new ArrayList<>();
-        secondInputs.add("John ging heim");
-        secondInputs.add("Frank ging heim");
-        
-        ArrayList<String> secondAlign = new ArrayList<>();
-        secondAlign.add("0:1:1 1:2:2 2:3:5");
-        secondAlign.add("0:1:4 1:2:5 2:3:6 2:3:7");
-        
-        Iterable<AlignedTrees> list1  = CorpusCreator.makeInitialAlignedTrees(firstInputs, firstAlign, sal, cc.getFirtAlignmentFactory());
-        pruned1 = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
-        
-        list1 = CorpusCreator.makeInitialAlignedTrees(secondInputs, secondAlign, mta, cc.getSecondAlignmentFactory());
-        pruned2 = CorpusCreator.makeFirstPruning(list1, cc.getSecondPruner(), cc.getSecondVI());
+        this.sharedSig = new Signature();
+        this.hom = new HomomorphismManager(this.leftAut.getSignature(), this.rightAut.getSignature(), sharedSig);
     }
 
     /**
      * Test of update method, of class HomomorphismManager.
+     *
      * @throws java.lang.Exception
      */
     @Test
     public void testUpdate() throws Exception {
-        Propagator pg = new Propagator();
-        TreeAutomaton ta1= pg.convert(this.pruned1.iterator().next()).getTrees();
-        TreeAutomaton ta2 = pg.convert(this.pruned2.iterator().next()).getTrees();
+        this.hom.update(this.leftAut.getAllLabels(), this.rightAut.getAllLabels());
         
-        this.shared = new Signature();
-        this.hm = new HomomorphismManager(ta1.getSignature(), ta2.getSignature(), this.shared);
-        hm.update(ta1.getAllLabels(), ta2.getAllLabels());
+        RuleFindingIntersectionAutomaton rfi = new RuleFindingIntersectionAutomaton(leftAut, rightAut, this.hom.getHomomorphism1(), this.hom.getHomomorphism2());
+        TopDownIntersectionAutomaton tdi = new TopDownIntersectionAutomaton(rfi, hom.getRestriction());
         
-        ta1= pg.convert(this.pruned1.iterator().next()).getTrees();
-        ta2 = pg.convert(this.pruned2.iterator().next()).getTrees();
-        hm.update(ta1.getAllLabels(), ta2.getAllLabels());
-
-        Homomorphism hm1 = hm.getHomomorphismRestriction1(ta1.getAllLabels(), ta2.getAllLabels());
-        Homomorphism hm2 = hm.getHomomorphismRestriction2(ta2.getAllLabels(), ta1.getAllLabels());
-        
-        RuleFindingIntersectionAutomaton rfi = new RuleFindingIntersectionAutomaton(ta1, ta2, hm1, hm2);
-        TreeAutomaton done = new TopDownIntersectionAutomaton(rfi, hm.getRestriction());
-            
-        done = RemoveDead.reduce(done);
-        Set<Tree<String>> oldLang = done.language();
-        
-        done = hm.reduceToOriginalVariablePairs(done);
-        hm1 = hm.getHomomorphism1();
-        hm2 = hm.getHomomorphism2();
-        
-        Set<Pair<Tree<String>,Tree<String>>> pairs = new HashSet<>();
-        
-        for(Tree<String> t : (Iterable<Tree<String>>) done.language()){
-            Tree<String> t1 = hm1.apply(t);
-            Tree<String> t2 = hm2.apply(t);
-            
-            Pair<Tree<String>,Tree<String>> p = new Pair<>(t1,t2);
-            
-            assertFalse(pairs.contains(p));
-            pairs.add(p);
-            
-            for(Tree<String> node : t.getAllNodes()){
-                String label = node.getLabel();
-                String left = hm1.get(label).getLabel();
-                String right = hm2.get(label).getLabel();
-                
-                if(Variables.IS_VARIABLE.test(left)){
-                    assertTrue(Variables.IS_VARIABLE.test(left));
-                    assertTrue(hm.isVariable(hm.getSignature().getIdForSymbol(label)));
-                    assertEquals(right,"X");
-                }else{
-                    assertFalse(Variables.IS_VARIABLE.test(right));
-                    assertFalse(hm.isVariable(hm.getSignature().getIdForSymbol(label)));
-                }   
-            }
+        Set<Pair<String,String>> proposals = new HashSet<>();
+        for(Tree<String> tree : tdi.languageIterable()) {
+            proposals.add(new Pair<>(hom.getHomomorphism1().apply(tree).toString(),hom.getHomomorphism2().apply(tree).toString()));
         }
         
-        assertTrue(done.accepts(pt("'*(x1, x2) / x1 | 2'('x1 / *(x1, x2) | 2'('XJohn_went(x1) / X(x1) | 1'('*(x1, x2) / *(x1, x2) | 2'('XJohn_John(x1) / X(x1) | 1'('John() / x1 | 1'('x1 / John() | 1'('___END___() / ___END___() | 0'))),'Xwent_went(x1) / X(x1) | 1'('went() / x1 | 1'('x1 / ging() | 1'('___END___() / ___END___() | 0'))))),'x1 / heim() | 1'('___END___() / ___END___() | 0')),'home() / x1 | 1'('___END___() / ___END___() | 0'))")));
+        assertEquals(proposals.size(),4);
         
-        assertEquals(oldLang.size(),done.language().size());
-        assertEquals(done.language().size(),20);
+        Pair<String,String> p =
+                new Pair<>("a('__X__{2 _@_ q_0}'(b),'__X__{1 _@_ q_1}'(b))","o('__X__{1 _@_ q_0}'(u),'__X__{2 _@_ q_1}'(u))");
+        assertTrue(proposals.contains(p));
+        proposals.remove(p);
+        
+        p = new Pair<>("a(b,b)","o(u,u)");
+        assertTrue(proposals.contains(p));
+        proposals.remove(p);
+        
+        p = new Pair<>("a(b,'__X__{1 _@_ q_1}'(b))","o('__X__{1 _@_ q_0}'(u),u)");
+        assertTrue(proposals.contains(p));
+        proposals.remove(p);
+        
+        p = new Pair<>("a('__X__{2 _@_ q_0}'(b),b)","o(u,'__X__{2 _@_ q_1}'(u))");
+        assertTrue(proposals.contains(p));
+        proposals.remove(p);
+        
+        assertTrue(proposals.isEmpty());
+        
+        Set<Pair<String,Pair<String,String>>> mappings = new HashSet();
+        for(int i=1;i<this.hom.getSignature().getMaxSymbolId();++i) {
+            String label = this.hom.getSignature().resolveSymbolId(i);
+            
+            if(Variables.isVariable(label)) {
+                assertTrue(this.hom.isVariable(i));
+            } else {
+                assertFalse(this.hom.isVariable(i));
+            }
+            
+            Tree<String> ts1 = this.hom.getHomomorphism1().get(label);
+            Tree<String> ts2 = this.hom.getHomomorphism2().get(label);
+            
+            Pair<String,String> right = new Pair<>(ts1.toString(),ts2.toString());
+            Pair<String,Pair<String,String>> whole = new Pair<>(label,right);
+            
+            mappings.add(whole);
+        }
+        
+        assertEquals(mappings.size(),13);
+        
+        Pair<String,String> pa = new Pair<>("b","'?1'");
+        Pair<String,Pair<String,String>> q = new Pair<>("b() / x1 | 1",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("a('?1','?2')","'?2'");
+        q = new Pair<>("a(x1, x2) / x2 | 2",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("'?3'","o('?1','?2')");
+        q = new Pair<>("x3 / o(x1, x2) | 3",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("a('?1','?2')","'?1'");
+        q = new Pair<>("a(x1, x2) / x1 | 2",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("'?1'","u");
+        q = new Pair<>("x1 / u() | 1",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("'__X__{1 _@_ q_1}'('?1')","'__X__{1 _@_ q_0}'('?1')");
+        q = new Pair<>("__X__{q_1 ||| q_0}",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("'?1'","o('?1','?2')");
+        q = new Pair<>("x1 / o(x1, x2) | 2",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("'__X__{2 _@_ q_0}'('?1')","'__X__{2 _@_ q_1}'('?1')");
+        q = new Pair<>("__X__{q_0 ||| q_1}",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("___END___","___END___");
+        q = new Pair<>("___END___() / ___END___() | 0",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("a('?1','?2')","o('?1','?2')");
+        q = new Pair<>("a(x1, x2) / o(x1, x2) | 2",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("'__X__{1,2 _@_ q}'('?1')","'__X__{1,2 _@_ q}'('?1')");
+        q = new Pair<>("__X__{q ||| q}",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("'?2'","o('?1','?2')");
+        q = new Pair<>("x2 / o(x1, x2) | 2",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        pa = new Pair<>("a('?1','?2')","'?3'");
+        q = new Pair<>("a(x1, x2) / x3 | 3",pa);
+        assertTrue(mappings.contains(q));
+        mappings.remove(q);
+        
+        assertTrue(mappings.isEmpty());
+        
+        TreeAutomaton<String> reduced =
+                this.hom.reduceToOriginalVariablePairs(tdi, hom.getHomomorphism1(), hom.getHomomorphism2());
+        proposals = new HashSet<>();
+        for(Tree<String> tree : reduced.languageIterable()) {
+            proposals.add(new Pair<>(hom.getHomomorphism1().apply(tree).toString(),hom.getHomomorphism2().apply(tree).toString()));
+        }
+        
+        assertEquals(proposals.size(),4);
+        
+        Pair<String,String> target = new Pair<>("'__X__{__UAS__}'(a(b,b))","'__X__{__UAS__}'(o(u,u))");
+        assertTrue(proposals.contains(target));
+        proposals.remove(target);
+        
+        target = new Pair<>("'__X__{__UAS__}'(a(b,'__X__{1 _@_ q_1}'(b)))","'__X__{__UAS__}'(o('__X__{1 _@_ q_0}'(u),u))");
+        assertTrue(proposals.contains(target));
+        proposals.remove(target);
+        
+        target = new Pair<>("'__X__{__UAS__}'(a('__X__{2 _@_ q_0}'(b),b))","'__X__{__UAS__}'(o(u,'__X__{2 _@_ q_1}'(u)))");
+        assertTrue(proposals.contains(target));
+        proposals.remove(target);
+        
+        target = new Pair<>("'__X__{__UAS__}'(a('__X__{2 _@_ q_0}'(b),'__X__{1 _@_ q_1}'(b)))","'__X__{__UAS__}'(o('__X__{1 _@_ q_0}'(u),'__X__{2 _@_ q_1}'(u)))");
+        assertTrue(proposals.contains(target));
+        proposals.remove(target);
+        
+        assertTrue(proposals.isEmpty());
+        
+        //TODO
     }
 }

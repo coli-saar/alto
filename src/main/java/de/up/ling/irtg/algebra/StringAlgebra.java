@@ -54,9 +54,6 @@ import java.util.function.Function;
  */
 public class StringAlgebra extends Algebra<List<String>> implements Serializable {
 
-    /**
-     * 
-     */
     public static final String CONCAT = "*";
 
     /**
@@ -70,19 +67,10 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
      */
     protected int specialStarId;
 
-    /**
-     * 
-     */
     protected final int concatSymbolId;
 
-    /**
-     * 
-     */
     private IntSet concatSet;
 
-    /**
-     * 
-     */
     public StringAlgebra() {
         concatSymbolId = signature.addSymbol(CONCAT, 2);
 

@@ -183,7 +183,7 @@ public class IndependentTrees implements Model {
     private static IntPredicate createPredicate(InterpretedTreeAutomaton ita) {
         final Signature sig = ita.getAutomaton().getSignature();
         IntPredicate choice = (int i) -> {
-            return Variables.IS_VARIABLE.test(sig.resolveSymbolId(i));
+            return Variables.isVariable(sig.resolveSymbolId(i));
         };
         return choice;
     }

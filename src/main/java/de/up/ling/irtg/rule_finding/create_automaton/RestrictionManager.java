@@ -146,7 +146,7 @@ public class RestrictionManager {
         String label1 = mapping1.getLabel();
         this.fullRestriction = null;
         
-        if(Variables.IS_VARIABLE.test(label1)){
+        if(Variables.isVariable(label1)){
             this.handleVariable(symbol);
         }
         

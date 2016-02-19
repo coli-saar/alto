@@ -33,16 +33,11 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.DebuggingWriter;
 import de.up.ling.irtg.util.FastutilUtils;
-import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.irtg.util.Logging;
-import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
-import de.up.ling.tree.TreeBottomUpVisitor;
 import de.up.ling.tree.TreeVisitor;
-import it.unimi.dsi.fastutil.ints.Int2DoubleAVLTreeMap;
-import it.unimi.dsi.fastutil.ints.Int2DoubleArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -55,21 +50,8 @@ import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
-import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
-import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
-import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongList;
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
-import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
-import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import java.io.Serializable;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -85,11 +67,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.ToIntFunction;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.random.Well44497a;
 
 /**
  * A finite tree automaton. Objects of this class can be simultaneously seen as
@@ -335,7 +313,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * side. The method uses getRulesTopDown to collect all rules for this state
      * and any label that is returned by getLabelsTopDown. The method
      * necessarily enforces the computation of all top-down rules for the given
-     * parentState, but does no further copying of rules beyond this.
+     * parentState, but does no further copying of rules beyond this. Due to the way
+     * the top-down index data structures are implemented, this method
+     * is significantly faster if the tree automaton is explicit.
      *
      * @param parentState
      * @return
@@ -351,6 +331,31 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
 
             return Iterables.concat(ruleLists);
+        }
+    }
+    
+    /**
+     * Iterates over all rules with the given parent. The consumer fn
+     * is applied to each rule. Because construction of iterables and
+     * iterators is avoided, this iteration can be a bit faster than
+     * iterating over {@link #getRulesTopDown(int) }. Due to the way
+     * the top-down index data structures are implemented, this method
+     * is significantly faster if the tree automaton is explicit.
+     * 
+     * @param parentState
+     * @param fn 
+     */
+    public void foreachRuleTopDown(int parentState, Consumer<Rule> fn) {
+        if( ruleStore.isExplicit() ) {
+            ruleStore.foreachRuleTopDown(parentState, fn);
+        } else {
+            // this is a slow implementation for now
+            for (int label : getLabelsTopDown(parentState)) {
+                Iterable<Rule> rules = getRulesTopDown(label, parentState);
+                if( rules != null ) {
+                    rules.forEach(fn);
+                }
+            }
         }
     }
 
@@ -999,93 +1004,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
     }
 
-    /**
-     * 
-     * @return 
-     */
-    public Tree<String> getRandomDiverseTree(){
-        Set<Rule> seen = new ObjectOpenHashSet<>();
-        IntSet states = new IntRBTreeSet();
-        RandomGenerator rnd = new Well44497a();
-        
-        if (getFinalStates().isEmpty()) {
-            return null;
-        } else {
-            int finalState = getFinalStates().toIntArray()[rnd.nextInt(getFinalStates().size())];
-            return getRandomDiverseTree(seen, states, finalState, rnd, rule -> rule.getLabel(this));
-        }
-    }
-    
-    /**
-     * 
-     * @param <E>
-     * @param seenRules
-     * @param state
-     * @param rnd
-     * @param makeLabel
-     * @return 
-     */
-    private <E> Tree<E> getRandomDiverseTree(Set<Rule> seenRules, IntSet seenStates, int state, RandomGenerator rnd, Function<Rule, E> makeLabel){
-        List<Rule> rulesHere = new ArrayList<>();
-        seenStates.add(state);
-        double totalWeight = 0;
-
-        for (Rule r : getRulesTopDown(state)) {
-            rulesHere.add(r);
-            totalWeight += this.diverseWeight(seenRules, seenStates, r);
-        }
-        
-        boolean def;
-        if(def = (totalWeight <= 0.0)){
-            totalWeight = 0.0;
-            for (int i = 0; i < rulesHere.size(); i++) {
-                Rule rule = rulesHere.get(i);
-                totalWeight += rule.getWeight();
-            }
-        }
-
-        double selectWeight = rnd.nextDouble() * totalWeight;
-        double cumulativeWeight = 0;
-
-        for (int i = 0; i < rulesHere.size(); i++) {
-            Rule rule = rulesHere.get(i);
-            cumulativeWeight += def ? rule.getWeight() : this.diverseWeight(seenRules, seenStates, rule);
-
-            if (cumulativeWeight >= selectWeight) {
-                seenRules.add(rule);
-                
-                List<Tree<E>> subtrees = new ArrayList<>();
-                for (int j = 0; j < rule.getArity(); j++) {
-                    subtrees.add(getRandomDiverseTree(seenRules, seenStates, rule.getChildren()[j], rnd, makeLabel));
-                }
-                return Tree.create(makeLabel.apply(rule), subtrees);
-            }
-        }
-
-        // should be unreachable
-        return null;
-    }
-    
-    /**
-     * 
-     * @param seenRules
-     * @param seenStates
-     * @param r
-     * @return 
-     */
-    private double diverseWeight(Set<Rule> seenRules, IntSet seenStates, Rule r){
-        if(seenRules.contains(r)){
-            return 0.0;
-        }
-        for(int i : r.getChildren()){
-            if(seenStates.contains(i)){
-                return 0.0;
-            }
-        }
-        
-        return r.getWeight();
-    }
-    
     private <E> Tree<E> getRandomTree(int state, Random rnd, Function<Rule, E> makeLabel) {
         List<Rule> rulesHere = new ArrayList<>();
         double totalWeight = 0;
@@ -1348,34 +1266,43 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public void makeAllRulesExplicit() {
         if (!ruleStore.isExplicit()) {
-            IntSet everAddedStates = new IntOpenHashSet();
-            IntPriorityQueue agenda = new IntArrayFIFOQueue();
+            if (supportsTopDownQueries()) {
+                IntSet everAddedStates = new IntOpenHashSet();
+                IntPriorityQueue agenda = new IntArrayFIFOQueue();
 
-            for (int finalState : getFinalStates()) {
-                agenda.enqueue(finalState);
-                everAddedStates.add(finalState);
-            }
+                for (int finalState : getFinalStates()) {
+                    agenda.enqueue(finalState);
+                    everAddedStates.add(finalState);
+                }
 
-            while (!agenda.isEmpty()) {
-                int state = agenda.dequeue();
-                IntIterator iit = this.getLabelsTopDown(state).iterator();
-                
-                for (; iit.hasNext();) {
-                    int label = iit.nextInt();
-                    Iterable<Rule> rules = getRulesTopDown(label, state);
+                while (!agenda.isEmpty()) {
+                    int state = agenda.dequeue();
 
-                    for (Rule rule : rules) {
-                        storeRuleBottomUp(rule);
-                        storeRuleTopDown(rule);
+                    for (int label = 1; label <= getSignature().getMaxSymbolId(); label++) {
+                        Iterable<Rule> rules = getRulesTopDown(label, state);
 
-                        for (int child : rule.getChildren()) {
-                            if (!everAddedStates.contains(child)) {
-                                everAddedStates.add(child);
-                                agenda.enqueue(child);
+                        for (Rule rule : rules) {
+                            storeRuleBottomUp(rule);
+                            storeRuleTopDown(rule);
+
+                            for (int child : rule.getChildren()) {
+                                if (!everAddedStates.contains(child)) {
+                                    everAddedStates.add(child);
+                                    agenda.enqueue(child);
+                                }
+                            }
+                            if (Thread.interrupted()) {
+                                return;
                             }
                         }
                     }
                 }
+            } else {
+                processAllRulesBottomUp(rule ->  {
+                    //this does currently not work properly!!
+                    //storeRuleBottomUp(rule);
+                    //storeRuleTopDown(rule);
+                });
             }
 
             ruleStore.setExplicit(true);
@@ -1583,10 +1510,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public TreeAutomaton inverseHomomorphism(Homomorphism hom) {
         if (hom.isNonDeleting()) {
-            return new NondeletingInverseHomAutomaton<>(this, hom);
-        }else
-        {
-            return new InverseHomAutomaton<>(this, hom);
+            return new NondeletingInverseHomAutomaton<State>(this, hom);
+        } else {
+            return new InverseHomAutomaton<State>(this, hom);
         }
     }
 
@@ -2084,77 +2010,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        }
 //    }
 
-    /**
-     * 
-     * @param tree
-     * @return 
-     */
-    public double getLogWeightRaw(final Tree<Integer> tree){
-        Int2ObjectMap<Object2DoubleMap<Tree<Integer>>> inside = new Int2ObjectOpenHashMap<>();
-        
-        TreeBottomUpVisitor<Integer,Iterable<Int2DoubleMap.Entry>> tbv = 
-            (Tree<Integer> tree1, List<Iterable<Int2DoubleMap.Entry>> list) -> {
-                int labelId = tree1.getLabel();
-            if (tree1.getChildren().isEmpty()) {
-                Int2DoubleMap m = new Int2DoubleArrayMap();
-                
-                for(Rule r : getRulesBottomUp(labelId, new int[0])){
-                    // here we assume that every rule (irrespective of weight) exists exactly once
-                    m.put(r.getParent(), Math.log(r.getWeight()));
-                }
-                
-                return m.int2DoubleEntrySet();
-            }
-            
-            int[] children = new int[tree1.getChildren().size()];
-            Int2DoubleMap.Entry[] idp = new Int2DoubleMap.Entry[list.size()];
-            Iterable<Int2DoubleMap.Entry>[] it = list.toArray(new Iterable[list.size()]);
-            
-            Int2DoubleMap results = new Int2DoubleOpenHashMap();
-            results.defaultReturnValue(Double.NEGATIVE_INFINITY);
-            
-            TupleIterator<Int2DoubleMap.Entry> combos = new TupleIterator<>(it,idp);
-            while(combos.hasNext()){
-                Int2DoubleMap.Entry[] combo = combos.next();
-                double weight = 0.0;
-                int pos = 0;
-                
-                for(Int2DoubleMap.Entry pair : combo){
-                    weight += pair.getDoubleValue();
-                    children[pos++] = pair.getIntKey();
-                }
-                
-                for(Rule rule : getRulesBottomUp(labelId, children)){
-                    double all = weight + Math.log(rule.getWeight());
-                    
-                    double old = results.get(rule.getParent());
-                    
-                    if(old == results.defaultReturnValue()){
-                        results.put(rule.getParent(), all);
-                    }
-                    
-                    old = LogSpaceOperations.addAlmostZero(all, old);
-                    
-                    results.put(rule.getParent(), old);
-                }
-            }
-            
-            return results.int2DoubleEntrySet();
-        };
-        
-        double sum = Double.NEGATIVE_INFINITY;
-        
-        Iterable<Int2DoubleMap.Entry> fin = tree.dfs(tbv);
-        
-        for(Int2DoubleMap.Entry ent : fin){
-            if(this.getFinalStates().contains(ent.getIntKey())){
-                sum = LogSpaceOperations.addAlmostZero(sum, ent.getDoubleValue());
-            }
-        }
-        
-        return sum;
-    }
-    
     /**
      * Computes the weight of the tree, given the (weighted) tree automaton. The
      * weight is the sum of the weights of all runs with which the automaton can
@@ -3056,6 +2911,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
         IntList constants = symbols.get(0);
         if (constants != null) {
             for (int c : constants) {
+                if (Thread.interrupted()) {
+                    return ret;
+                }
                 //try {
                 Iterator<Rule> it = getRulesBottomUp(c, new int[]{}).iterator();
                 while (it.hasNext()) {
@@ -3082,6 +2940,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
         BinaryPartnerFinder bpFinder = makeNewBinaryPartnerFinder();
 
         for (int i = 0; i < agenda.size(); i++) {
+            if (Thread.interrupted()) {
+                return ret;
+            }
             int a = agenda.get(i);
             if (getFinalStates().contains(a)) {
                 ret = true;
@@ -3155,13 +3016,5 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public BinaryPartnerFinder makeNewBinaryPartnerFinder() {
         return new BinaryPartnerFinder.DummyBinaryPartnerFinder();
-    }
-
-    /**
-     * 
-     * @return 
-     */
-    protected RuleStore getRuleStore() {
-        return ruleStore;
     }
 }

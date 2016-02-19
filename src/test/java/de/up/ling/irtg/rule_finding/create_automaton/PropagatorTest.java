@@ -5,13 +5,15 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
+import de.up.ling.irtg.rule_finding.Variables;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.Iterator;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -27,9 +29,9 @@ public class PropagatorTest {
      */
     private static final String TEST_AUTOMATON
             = "q_1_0 -> d [1.0]\n"
-            + "q_0 -> b [1.0]\n"
+            + "q_0 -> b [0.5]\n"
             + "q! -> a(q_0, q_1) [0.5]\n"
-            + "q_1 -> c(q_1_0) [1.0]";
+            + "q_1 -> c(q_1_0) [0.5]";
 
     /**
      *
@@ -47,13 +49,13 @@ public class PropagatorTest {
      * 
      */
     private static final String GOAL_AUTOMATON
-            = "q_0 -> b [1.0]\n"
+            = "q_0 -> b [0.5]\n"
             + "q_1_0 -> d [1.0]\n"
             + "q_1_0 -> '__X__{ _@_ q_1_0}'(q_1_0) [1.0]\n"
-            + "q_1 -> c(q_1_0) [1.0]\n"
+            + "q_1 -> c(q_1_0) [0.5]\n"
             + "q! -> '__X__{0,1,3,4 _@_ q}'(q) [1.0]\n"
             + "q_0 -> '__X__{3,4 _@_ q_0}'(q_0) [1.0]\n"
-            + "q! -> a(q_0, q_1) [1.0]\n"
+            + "q! -> a(q_0, q_1) [0.5]\n"
             + "q_1 -> '__X__{0,1 _@_ q_1}'(q_1) [1.0]";
 
     /**
@@ -82,12 +84,23 @@ public class PropagatorTest {
      */
     @Test
     public void testConvert() throws Exception {
-        TreeAutomaton<String> ta = this.prop.convert(this.ta, spac);
+        TreeAutomaton<String> solution = this.prop.convert(this.ta, spac);
 
         TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
         TreeAutomaton<String> goal = taic.read(GOAL_AUTOMATON);
 
-        assertEquals(goal,ta);
+        assertEquals(goal,solution);
+        
+        Iterator<Rule> r = goal.getRulesTopDown(goal.getFinalStates().iterator().nextInt()).iterator();
+        while(r.hasNext()) {
+            Rule rule = r.next();
+            
+            if(rule.getArity() == 1) {
+                assertEquals(rule.getWeight(),1.0,0.0000000001);
+            } else {
+                assertEquals(rule.getWeight(), 0.5, 0.000000001);
+            }
+        }
     }
 
     @Test
@@ -103,5 +116,8 @@ public class PropagatorTest {
         assertEquals(Propagator.getAlignments("__X__{ _@_ a65}"),"");
         
         assertEquals(Propagator.getStateDescription(q),"a65");
+        
+        String s = Variables.createVariable("uuu");
+        assertEquals(Propagator.getStateDescription(s),"uuu");
     }
 }
