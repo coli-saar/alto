@@ -54,6 +54,9 @@ public class SpecifiedAligner extends StateAlignmentMarking<String> {
             
             while((line = read.readLine()) != null) {
                 line = line.trim();
+                if(line.isEmpty()) {
+                    continue;
+                }
                 String[] portions = line.split("\\|\\|\\|");
                 
                 String state = portions[0].trim().replaceAll("(^')|('$)", "");

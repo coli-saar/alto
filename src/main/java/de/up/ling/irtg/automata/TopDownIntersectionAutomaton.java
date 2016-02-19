@@ -124,15 +124,6 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
         int leftParent = NumberWrapping.getFirst(parent);
         int rightParent = NumberWrapping.getSecond(parent);
         
-        //DEBUG
-        if(!this.getAllLabels().contains(labelId)){
-            System.out.println(labelId);
-            System.out.println(this.getSignature().resolveSymbolId(labelId));
-            System.out.println(this.getAllLabels());
-            System.out.println(this.getLabelsTopDown(parentState));
-            throw new IllegalStateException("bingo");
-        }
-        
         Iterable<Rule> itL = this.left.getRulesTopDown(labelId, leftParent);
         Iterable<Rule> itR = this.right.getRulesTopDown(labelId, rightParent);
         
