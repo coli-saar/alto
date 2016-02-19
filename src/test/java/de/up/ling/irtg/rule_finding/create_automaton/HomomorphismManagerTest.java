@@ -7,8 +7,6 @@ package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.algebra.TreeAlgebra;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
 import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -238,7 +236,7 @@ public class HomomorphismManagerTest {
         assertTrue(mappings.isEmpty());
         
         TreeAutomaton<String> reduced =
-                this.hom.reduceToOriginalVariablePairs(tdi, hom.getHomomorphism1(), hom.getHomomorphism2());
+                this.hom.reduceToOriginalVariablePairs(tdi);
         proposals = new HashSet<>();
         for(Tree<String> tree : reduced.languageIterable()) {
             proposals.add(new Pair<>(hom.getHomomorphism1().apply(tree).toString(),hom.getHomomorphism2().apply(tree).toString()));

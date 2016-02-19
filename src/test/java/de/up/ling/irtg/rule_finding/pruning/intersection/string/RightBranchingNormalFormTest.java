@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.pruning.intersection.string;
 
-import de.up.ling.irtg.rule_finding.pruning.intersection.string.RightBranchingNormalForm;
+import de.up.ling.irtg.rule_finding.pruning.intersection.RightBranchingNormalForm;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.Rule;

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.rule_finding.pruning.intersection.tree;
+package de.up.ling.irtg.rule_finding.pruning.intersection;
 
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;

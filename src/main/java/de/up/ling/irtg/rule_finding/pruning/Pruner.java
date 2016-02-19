@@ -5,48 +5,22 @@
  */
 package de.up.ling.irtg.rule_finding.pruning;
 
-import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
+import de.up.ling.irtg.automata.TreeAutomaton;
 
 /**
- *
+ * 
  * @author christoph_teichmann
- * @param <State1>
- * @param <State2>
- * @param <State3>
- * @param <State4>
  */
-public interface Pruner<State1,State2,State3,State4> {
-    
+public interface Pruner {
     /**
-     * @param alignmentFree
      * 
+     * @param ta
      * @return 
      */
-    public Iterable<AlignedTrees<State3>> prePrune(Iterable<AlignedTrees<State1>> alignmentFree);
-    
-    
-    /**
-     * 
-     * @param variablesPushed
-     * @param otherSide
-     * @return 
-     */
-    public Iterable<AlignedTrees<State4>> postPrune(
-            Iterable<AlignedTrees<State1>> variablesPushed, Iterable<AlignedTrees<State2>> otherSide);
+    public TreeAutomaton apply(TreeAutomaton<String> ta);
     
     /**
      * 
      */
-    public Pruner DEFAULT_PRUNER = new Pruner() {
-
-        @Override
-        public Iterable prePrune(Iterable alignmentFree) {
-            return alignmentFree;
-        }
-
-        @Override
-        public Iterable postPrune(Iterable variablesPushed, Iterable otherSide) {
-            return variablesPushed;
-        }
-    };
+    public Pruner DEFAULT_PRUNER = (TreeAutomaton<String> ta) -> ta;
 }

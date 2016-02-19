@@ -66,7 +66,7 @@ public class StringSubtreeIterator {
             position = 0;
             this.vm = vm;
             
-            while(Variables.IS_VARIABLE.test(whole.getLabel())){
+            while(Variables.isVariable(whole.getLabel())){
                 whole = whole.getChildren().get(0);
             }
             this.whole = whole;
@@ -97,7 +97,7 @@ public class StringSubtreeIterator {
          * @return 
          */
         private Tree<String> buildTree(Tree<String> t, VariableMapping vm) {
-            if(Variables.IS_VARIABLE.test(t.getLabel())){
+            if(Variables.isVariable(t.getLabel())){
                 String label = this.vm.get(t, whole);
                 this.toDo.add(t.getChildren().get(0));
                 this.labels.add(label);

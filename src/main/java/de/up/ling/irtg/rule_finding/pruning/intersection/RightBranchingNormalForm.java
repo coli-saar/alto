@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.rule_finding.pruning.intersection.string;
+package de.up.ling.irtg.rule_finding.pruning.intersection;
 
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.rule_finding.Variables;
@@ -38,7 +38,7 @@ public class RightBranchingNormalForm extends ConcreteTreeAutomaton<RightBranchi
             String label = signature.resolveSymbolId(symbol);
             int arity = signature.getArity(symbol);
             
-            if(Variables.IS_VARIABLE.test(label)){
+            if(Variables.isVariable(label)){
                 this.addRule(this.createRule(var, symbol, new int[] {var}, 1.0));
                 this.addRule(this.createRule(var, symbol, new int[] {gen}, 1.0));
                 this.addRule(this.createRule(gen, symbol, new int[] {gen}, 1.0));

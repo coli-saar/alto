@@ -7,6 +7,7 @@ package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import org.junit.Before;
@@ -36,9 +37,9 @@ public class RestrictionManagerTest {
     @Before
     public void setUp() throws Exception {
         rm = new RestrictionManager(this.sig = new Signature());
-        String s = "XXX(x1) / XXX(x1)";
-        Tree<String> t1 = pt("XXX(?1)");
-        Tree<String> t2 = pt("XXX(?1)");
+        String s = Variables.createVariable("XXX");
+        Tree<String> t1 = pt("__X__(?1)");
+        Tree<String> t2 = pt("__X__(?1)");
         
         this.sig.addSymbol(s, 1);
         rm.addSymbol(s, t1, t2);
@@ -118,7 +119,7 @@ public class RestrictionManagerTest {
             "false -> 'x3 / m(x1,x2)'(false, false, false) [1.0]\n"+
             "false -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, false, false, false, false) [1.0]\n"+
             "true! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, false, false, false, false) [1.0]\n"+
-            "false -> 'XXX(x1) / XXX(x1)'(true) [1.0]";
+            "false -> '__X__{XXX}'(true) [1.0]";
     
     /**
      * Test of getVariableSequenceing method, of class RestrictionManager.
@@ -129,11 +130,11 @@ public class RestrictionManagerTest {
         TreeAutomaton t = rm.getVariableSequenceing();
         TreeAutomaton correct = pa(V_AUTOMATON);
         
-        assertFalse(t.accepts(pt("'XXX(x1) / XXX(x1)'('XXX(x1) / XXX(x1)'('k / g'))")));
-        assertFalse(t.accepts(pt("'XXX(x1) / XXX(x1)'('x1 / g'('XXX(x1) / XXX(x1)'('XXX(x1) / XXX(x1)'('k / g'))))")));
+        assertFalse(t.accepts(pt("'__X__{XXX}'('__X__{XXX}'('k / g'))")));
+        assertFalse(t.accepts(pt("'__X__{XXX}'('x1 / g'('__X__{XXX}'('__X__{XXX}'('k / g'))))")));
         
-        assertTrue(t.accepts(pt("'x3 / m(x1,x2)'('XXX(x1) / XXX(x1)'('x1 / g'('XXX(x1) / XXX(x1)'('x1 / g'('k / g')))),'k / g','k / g')")));
-        assertFalse(t.accepts(pt("'x3 / m(x1,x2)'('XXX(x1) / XXX(x1)'('XXX(x1) / XXX(x1)'('x1 / g'('XXX(x1) / XXX(x1)'('k / g')))),'k / g','k / g')")));
+        assertTrue(t.accepts(pt("'x3 / m(x1,x2)'('__X__{XXX}'('x1 / g'('__X__{XXX}'('x1 / g'('k / g')))),'k / g','k / g')")));
+        assertFalse(t.accepts(pt("'x3 / m(x1,x2)'('__X__{XXX}'('__X__{XXX}'('x1 / g'('__X__{XXX}'('k / g')))),'k / g','k / g')")));
         
         assertEquals(automatonFromItsString(t),correct);
     }
@@ -148,8 +149,8 @@ public class RestrictionManagerTest {
                                                 "false! -> 'x3 / m(x1,x2)'(true, true, true) [1.0]\n" +
                                                 "true -> 'x3 / m(x1,x2)'(true, true, true) [1.0]\n" +
                                                 "false! -> 'z / x1'(false) [1.0]\n" +
-                                                "false! -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n" +
-                                                "true -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n" +
+                                                "false! -> '__X__{XXX}'(false) [1.0]\n" +
+                                                "true -> '__X__{XXX}'(false) [1.0]\n" +
                                                 "false! -> 'm(x1,x2) / x2'(false, false) [1.0]\n" +
                                                 "false! -> 'm(x1,x2) / x3'(false, false, false) [1.0]\n" +
                                                 "false! -> 't(x1,x2,x3,x4) / l(x2,x4,x5)'(false, false, false, false, false) [1.0]\n" +
@@ -174,7 +175,7 @@ public class RestrictionManagerTest {
             "LEFT_TRUE -> 'x1 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE) [1.0]\n"+
             "LEFT_TRUE -> 'x3 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE, BOTH_TRUE) [1.0]\n"+
             "BOTH_FALSE! -> 'x3 / m(x1,x2)'(LEFT_TRUE, LEFT_TRUE, RIGHT_TRUE) [1.0]\n"+
-            "BOTH_FALSE! -> 'XXX(x1) / XXX(x1)'(BOTH_FALSE) [1.0]\n"+
+            "BOTH_FALSE! -> '__X__{XXX}'(BOTH_FALSE) [1.0]\n"+
             "BOTH_FALSE! -> 'x1 / m(x1,x2)'(BOTH_FALSE, LEFT_TRUE) [1.0]\n"+
             "BOTH_FALSE! -> 'x1 / g'(RIGHT_TRUE) [1.0]\n"+
             "BOTH_FALSE! -> 'm(x1,x2) / x2'(RIGHT_TRUE, BOTH_FALSE) [1.0]\n"+
@@ -199,8 +200,8 @@ public class RestrictionManagerTest {
             "true -> 'x1 / m(x1,x2)'(true, false) [1.0]\n"+
             "false! -> 'x1 / m(x1,x2)'(true, false) [1.0]\n"+
             "false! -> 'z / x1'(false) [1.0]\n"+
-            "false! -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n"+
-            "true -> 'XXX(x1) / XXX(x1)'(false) [1.0]\n"+
+            "false! -> '__X__{XXX}'(false) [1.0]\n"+
+            "true -> '__X__{XXX}'(false) [1.0]\n"+
             "false! -> 'x1 / g'(false) [1.0]\n"+
             "false! -> 'm(x1,x2) / x2'(false, true) [1.0]\n"+
             "true -> 'm(x1,x2) / x2'(false, true) [1.0]\n"+
@@ -238,10 +239,10 @@ public class RestrictionManagerTest {
         String s = "'x1 / m(x1,x2)'('z / x1'('x1 / g'('k / g')),'x1 / g'('k / g'))";
         assertFalse(cta.accepts(pt(s)));
         
-        s = "'x1 / m(x1,x2)'('XXX(x1) / XXX(x1)'('z / x1'('x1 / g'('k / g'))),'x1 / g'('k / g'))";
+        s = "'x1 / m(x1,x2)'('__X__{XXX}'('z / x1'('x1 / g'('k / g'))),'x1 / g'('k / g'))";
         assertTrue(cta.accepts(pt(s)));
         
-        s = "'x1 / m(x1,x2)'('XXX(x1) / XXX(x1)'('z / x1'('x1 / g'('k / g'))),'z / x1'('x1 / g'('k / g')))";
+        s = "'x1 / m(x1,x2)'('__X__{XXX}'('z / x1'('x1 / g'('k / g'))),'z / x1'('x1 / g'('k / g')))";
         assertFalse(cta.accepts(pt(s)));
         
         TreeAutomaton t = rm.getVariableSequenceing().intersect(rm.getOrdering())

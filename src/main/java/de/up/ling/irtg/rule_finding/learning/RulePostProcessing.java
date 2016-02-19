@@ -117,7 +117,7 @@ public class RulePostProcessing<Type1,Type2> {
      * @param children 
      */
     private void addChildren(Tree<String> get, List<String> children) {
-        if(Variables.IS_VARIABLE.test(get.getLabel())){
+        if(Variables.isVariable(get.getLabel())){
             children.add(get.getLabel());
         }else{
             for(int i=0;i<get.getChildren().size();++i){
@@ -135,8 +135,8 @@ public class RulePostProcessing<Type1,Type2> {
      * @return 
      */
     private Tree<String> number(Tree<String> get, AtomicInteger num) {
-        if(Variables.IS_VARIABLE.test(get.getLabel())){
-            return Tree.create(Variables.makeVariable(Integer.toString(num.getAndIncrement())));
+        if(Variables.isVariable(get.getLabel())){
+            return Tree.create(Variables.createVariable(Integer.toString(num.getAndIncrement())));
         }else{
             String label = get.getLabel();
             List<Tree<String>> children = new ArrayList<>();
@@ -153,7 +153,7 @@ public class RulePostProcessing<Type1,Type2> {
      * 
      */
     private Tree<String> makeImage(Tree<String> numbered, Homomorphism imager) {
-        if(Variables.IS_VARIABLE.test(numbered.getLabel())){
+        if(Variables.isVariable(numbered.getLabel())){
             String s = Variables.getInformation(numbered.getLabel());
             
             return Tree.create("?"+s);

@@ -106,7 +106,7 @@ public class MostFrequentVariables implements TreeExtractor {
                 
                 rules.forEach((Rule rule) -> {
                     String label = ta.getSignature().resolveSymbolId(rule.getLabel());
-                    if(Variables.IS_VARIABLE.test(label)){
+                    if(Variables.isVariable(label)){
                         result.addTo(label, 1);
                     }
                     
@@ -178,7 +178,7 @@ public class MostFrequentVariables implements TreeExtractor {
                 value += score.get(child);
             }
 
-            if (Variables.IS_VARIABLE.test(label)) {
+            if (Variables.isVariable(label)) {
                 value += counts.get(label);
             }
 

@@ -39,7 +39,7 @@ public class Lexicalized extends ConcreteTreeAutomaton<Boolean> {
             int label = iit.nextInt();
             int arity = sig.getArity(label);
 
-            if (Variables.IS_VARIABLE.test(sig.resolveSymbolId(label))) {
+            if (Variables.isVariable(sig.resolveSymbolId(label))) {
                 int[] children = new int[arity];
                 Arrays.fill(children, bc);
 

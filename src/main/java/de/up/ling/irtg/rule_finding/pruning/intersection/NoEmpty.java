@@ -33,7 +33,7 @@ public class NoEmpty extends ConcreteTreeAutomaton<Boolean> {
         IntIterator iit = allLabels.iterator();
         while(iit.hasNext()){
             int label = iit.nextInt();
-            if(Variables.IS_VARIABLE.test(sig.resolveSymbolId(label))){
+            if(Variables.isVariable(sig.resolveSymbolId(label))){
                 int[] children = new int[sig.getArity(label)];
                 Arrays.fill(children, tRUE);
                 

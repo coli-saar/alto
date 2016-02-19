@@ -133,7 +133,7 @@ public class VariableWeightedRandomPick implements TreeExtractor {
         for(Rule r : (Iterable<Rule>) from.getAllRulesTopDown()) {
             String label = from.getSignature().resolveSymbolId(r.getLabel());
             
-            if(Variables.IS_VARIABLE.test(label)) {
+            if(Variables.isVariable(label)) {
                 r.setWeight(variableWeight);
             }else {
                 r.setWeight(1.0);

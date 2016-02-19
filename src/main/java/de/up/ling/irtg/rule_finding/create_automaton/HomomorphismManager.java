@@ -613,12 +613,9 @@ public class HomomorphismManager {
     /**
      *
      * @param done
-     * @param hom1
-     * @param hom2
      * @return
      */
-    public TreeAutomaton reduceToOriginalVariablePairs(TreeAutomaton done,
-            Homomorphism hom1, Homomorphism hom2) {
+    public TreeAutomaton reduceToOriginalVariablePairs(TreeAutomaton done) {
         ConcreteTreeAutomaton<String> goal = new ConcreteTreeAutomaton<>(done.getSignature());
 
         IntSet seen = new IntOpenHashSet(done.getFinalStates());

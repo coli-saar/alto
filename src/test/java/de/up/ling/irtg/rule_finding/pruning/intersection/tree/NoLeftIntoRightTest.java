@@ -5,12 +5,13 @@
  */
 package de.up.ling.irtg.rule_finding.pruning.intersection.tree;
 
+import de.up.ling.irtg.rule_finding.pruning.intersection.NoLeftIntoRight;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
-import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionPruner;
+import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
 import static de.up.ling.irtg.util.TestingTools.pt;
 import java.util.ArrayList;
 import java.util.List;

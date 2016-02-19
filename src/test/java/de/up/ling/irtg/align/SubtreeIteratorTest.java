@@ -38,7 +38,6 @@ public class SubtreeIteratorTest {
     
     @Before
     public void setUp() {
-        /*
         Signature sig1 = new Signature();
         Signature sig2 = new Signature();
         
@@ -72,7 +71,6 @@ public class SubtreeIteratorTest {
         Tree<Rule> t10 = Tree.create(un, t9);
         
         si2 = new SubtreeIterator(t10, hm);
-        */
     }
 
     /**
@@ -80,7 +78,6 @@ public class SubtreeIteratorTest {
      */
     @Test
     public void testHasNext() {
-        /*
         int count = 0;
         Object2LongOpenHashMap<IntList> map = new Object2LongOpenHashMap<>();
         
@@ -133,6 +130,5 @@ public class SubtreeIteratorTest {
         assertEquals(map.getLong(last),2);
         
         assertFalse(si1.hasNext());
-                */
     }
 }
