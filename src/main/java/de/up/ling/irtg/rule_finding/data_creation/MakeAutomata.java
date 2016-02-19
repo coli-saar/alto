@@ -26,8 +26,7 @@ import java.util.function.Supplier;
  *
  * @author christoph_teichmann
  */
-public class MakeAutomata {
-    
+public class MakeAutomata {    
     /**
      * 
      * @param data
@@ -38,9 +37,10 @@ public class MakeAutomata {
      * @throws IllegalAccessException
      * @throws ParserException 
      */
-    public void create(InputStream data, Supplier<OutputStream> target) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
+    public static void create(InputStream data, Supplier<OutputStream> target) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
         try(BufferedReader input = new BufferedReader(new InputStreamReader(data))) {
             String className = input.readLine();
+            System.out.println(className);
             Class cl = Class.forName(className);
             Algebra algeb = (Algebra) cl.newInstance();
             
@@ -70,7 +70,7 @@ public class MakeAutomata {
      * @throws IllegalAccessException
      * @throws ParserException 
      */
-    public Iterable<String> create(InputStream data) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
+    public static Iterable<String> create(InputStream data) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
         List<String> result = new ArrayList<>();
         
         try(BufferedReader input = new BufferedReader(new InputStreamReader(data))) {
@@ -99,7 +99,7 @@ public class MakeAutomata {
      * @param in
      * @return 
      */
-    public Iterable<TreeAutomaton> reconstruct(Iterable<InputStream> in) {
+    public static Iterable<TreeAutomaton> reconstruct(Iterable<InputStream> in) {
         TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
         
         return new FunctionIterable<>(in,(InputStream ip) -> {

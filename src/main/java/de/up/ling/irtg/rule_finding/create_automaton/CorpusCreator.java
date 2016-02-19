@@ -5,12 +5,12 @@
  */
 package de.up.ling.irtg.rule_finding.create_automaton;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.RuleFindingIntersectionAutomaton;
 import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.pruning.RemoveDead;
-import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BiFunctionIterable;
 import de.up.ling.irtg.util.BiFunctionParallelIterable;
 
@@ -58,9 +58,29 @@ public class CorpusCreator {
         return secondPruner;
     }
     
+    /**
+     * 
+     * @param automata
+     * @param alignments
+     * @return 
+     */
+    public Iterable<TreeAutomaton<String>> pushAlignments(Iterable<TreeAutomaton> automata, Iterable<StateAlignmentMarking> alignments) {
+        Propagator prop = new Propagator();
+        
+        return new BiFunctionIterable<>(automata,alignments,(TreeAutomaton ta, StateAlignmentMarking marks) -> {
+            
+            return prop.convert(ta, marks);
+        });
+    }
     
-    public Iterable<TreeAutomaton> getSharedAutomata(Iterable<TreeAutomaton> leftInput, Iterable<TreeAutomaton> rightInput) {
-        BiFunctionParallelIterable<TreeAutomaton,TreeAutomaton,TreeAutomaton> results =
+    /**
+     * 
+     * @param leftInput
+     * @param rightInput
+     * @return 
+     */
+    public Iterable<Pair<TreeAutomaton,HomomorphismManager>> getSharedAutomata(Iterable<TreeAutomaton> leftInput, Iterable<TreeAutomaton> rightInput) {
+        BiFunctionParallelIterable<TreeAutomaton,TreeAutomaton,Pair<TreeAutomaton,HomomorphismManager>> results =
                 new BiFunctionParallelIterable<>(leftInput, rightInput, maxThreads, 
                 (TreeAutomaton left, TreeAutomaton right) -> {
                     left = this.firstPruner.apply(left);
@@ -76,7 +96,7 @@ public class CorpusCreator {
                     finished = hom.reduceToOriginalVariablePairs(finished);
                     
                     
-                    return finished;
+                    return new Pair<>(finished,hom);
                 });
         
         return results;
