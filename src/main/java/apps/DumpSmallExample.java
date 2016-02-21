@@ -13,12 +13,10 @@ import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.RightBranchingNormalForm;
-import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -38,6 +36,7 @@ public class DumpSmallExample {
      * @throws IOException 
      */
     public static void main(String... args) throws ParserException, IOException{
+        /*
                 CorpusCreator.Factory fact = new CorpusCreator.Factory();
         fact.setFirstPruner(new IntersectionPruner<>((TreeAutomaton ta) -> new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels())))
                 .setSecondPruner(new IntersectionPruner<>((TreeAutomaton ta) -> new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels())))
@@ -78,5 +77,6 @@ public class DumpSmallExample {
         try (BufferedWriter bw = new BufferedWriter(new FileWriter("finished.irtg"))) {
             bw.write(ita.toString());
         }   
+                */
     }    
 }

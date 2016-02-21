@@ -17,10 +17,10 @@ public interface Pruner {
      * @param ta
      * @return 
      */
-    public TreeAutomaton apply(TreeAutomaton<String> ta);
+    public TreeAutomaton apply(TreeAutomaton ta);
     
     /**
      * 
      */
-    public Pruner DEFAULT_PRUNER = (TreeAutomaton<String> ta) -> ta;
+    public Pruner DEFAULT_PRUNER = (TreeAutomaton ta) -> ta;
 }

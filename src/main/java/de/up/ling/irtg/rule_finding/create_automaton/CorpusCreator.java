@@ -75,21 +75,23 @@ public class CorpusCreator {
     
     /**
      * 
+     * @param <State1>
+     * @param <State2>
      * @param leftInput
      * @param rightInput
      * @return 
      */
-    public Iterable<Pair<TreeAutomaton,HomomorphismManager>> getSharedAutomata(Iterable<TreeAutomaton> leftInput, Iterable<TreeAutomaton> rightInput) {
-        BiFunctionParallelIterable<TreeAutomaton,TreeAutomaton,Pair<TreeAutomaton,HomomorphismManager>> results =
+    public <State1,State2> Iterable<Pair<TreeAutomaton,HomomorphismManager>> getSharedAutomata(Iterable<TreeAutomaton<State1>> leftInput, Iterable<TreeAutomaton<State2>> rightInput) {
+        BiFunctionParallelIterable<TreeAutomaton<State1>,TreeAutomaton<State2>,Pair<TreeAutomaton,HomomorphismManager>> results =
                 new BiFunctionParallelIterable<>(leftInput, rightInput, maxThreads, 
-                (TreeAutomaton left, TreeAutomaton right) -> {
-                    left = this.firstPruner.apply(left);
-                    right = this.secondPruner.apply(right);
+                (TreeAutomaton<State1> left, TreeAutomaton<State2> right) -> {
+                    TreeAutomaton<String> l = this.firstPruner.apply(left);
+                    TreeAutomaton<String> r = this.secondPruner.apply(right);
                     
-                    HomomorphismManager hom = new HomomorphismManager(left.getSignature(),right.getSignature());
-                    hom.update(left.getAllLabels(), right.getAllLabels());
+                    HomomorphismManager hom = new HomomorphismManager(l.getSignature(),r.getSignature());
+                    hom.update(l.getAllLabels(), r.getAllLabels());
                     
-                    RuleFindingIntersectionAutomaton rfi = new RuleFindingIntersectionAutomaton(left, right, hom.getHomomorphism1(), hom.getHomomorphism2());
+                    RuleFindingIntersectionAutomaton rfi = new RuleFindingIntersectionAutomaton(l, r, hom.getHomomorphism1(), hom.getHomomorphism2());
                     TopDownIntersectionAutomaton tdi = new TopDownIntersectionAutomaton(rfi, hom.getRestriction());
                     
                     TreeAutomaton finished = RemoveDead.reduce(tdi);
