@@ -38,8 +38,13 @@ public class CorpusCreator {
      */
     private final int maxThreads;
 
-    
-    protected CorpusCreator(Pruner firstPruner, Pruner secondPruner, int maxThreads) {
+    /**
+     * 
+     * @param firstPruner
+     * @param secondPruner
+     * @param maxThreads 
+     */
+    public CorpusCreator(Pruner firstPruner, Pruner secondPruner, int maxThreads) {
         this.firstPruner = firstPruner;
         this.secondPruner = secondPruner;
         this.maxThreads = maxThreads;

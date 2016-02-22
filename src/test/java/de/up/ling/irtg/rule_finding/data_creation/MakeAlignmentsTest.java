@@ -83,8 +83,6 @@ public class MakeAlignmentsTest {
     public void testMakePreorderTreeFromStandard() throws Exception {
         MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
         
-        System.out.println(mta.decompose(mta.parseString("a(c,d,e(a))")));
-        
         List<ByteArrayOutputStream> results = new ArrayList<>();
         
         Supplier<OutputStream> supp = () -> {
@@ -97,7 +95,7 @@ public class MakeAlignmentsTest {
         ByteArrayInputStream trees = new ByteArrayInputStream(TEST_TREES.getBytes());
         ByteArrayInputStream aligns = new ByteArrayInputStream(TEST_TREE_ALIGN.getBytes());
         
-        MakeAlignments.makePreorderTreeFromStandard(aligns, trees, supp, false);
+        MakeAlignments.makePreorderTreeFromStandard(aligns, trees, supp, false,0);
         
         assertEquals(results.size(),2);
         assertTrue(results.get(1).toString().trim().isEmpty());
@@ -107,12 +105,7 @@ public class MakeAlignmentsTest {
         trees = new ByteArrayInputStream(TEST_TREES.getBytes());
         aligns = new ByteArrayInputStream(TEST_TREE_ALIGN.getBytes());
         
-        MakeAlignments.makePreorderTreeFromStandard(aligns, trees, supp, true);
-        
-        for(ByteArrayOutputStream out : results) {
-            System.out.println("--------------------");
-            System.out.println(out.toString());
-        }
+        MakeAlignments.makePreorderTreeFromStandard(aligns, trees, supp, true,0);
         
         assertEquals(results.size(),2);
         assertTrue(results.get(1).toString().trim().isEmpty());

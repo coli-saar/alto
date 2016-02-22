@@ -33,8 +33,8 @@ public class IntersectionPruner implements Pruner {
      * 
      * @param options 
      */
-    public IntersectionPruner(IntersectionOptions[] options) {
-        this.mapToIntersect = (TreeAutomaton input) -> {
+    public IntersectionPruner(IntersectionOptions... options) {
+        this((TreeAutomaton input) -> {
             TreeAutomaton inter = input;
             
             for(int i=0;i<options.length;++i) {
@@ -42,7 +42,7 @@ public class IntersectionPruner implements Pruner {
             }
             
             return inter;
-        };
+        });
     }
 
     @Override

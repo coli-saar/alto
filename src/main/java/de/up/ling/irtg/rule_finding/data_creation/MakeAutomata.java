@@ -40,7 +40,7 @@ public class MakeAutomata {
     public static void create(InputStream data, Supplier<OutputStream> target) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
         try(BufferedReader input = new BufferedReader(new InputStreamReader(data))) {
             String className = input.readLine();
-            System.out.println(className);
+            
             Class cl = Class.forName(className);
             Algebra algeb = (Algebra) cl.newInstance();
             

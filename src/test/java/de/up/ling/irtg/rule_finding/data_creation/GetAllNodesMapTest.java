@@ -45,14 +45,11 @@ public class GetAllNodesMapTest {
 
     /**
      * Test of getCoreDescriptions method, of class GetAllNodesMap.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetCoreDescriptions() throws Exception {
         Map<String, Set<String>>[] result = GetAllNodesMap.getCoreDescriptions(trees);
-        
-        for(Map<String,Set<String>> map : result) {
-            System.out.println(map);
-        }
         
         assertEquals(result.length,3);
         assertEquals(result[0].size(),result[1].size());

@@ -32,9 +32,20 @@ public enum IntersectionOptions {
         public TreeAutomaton getAutomaton(TreeAutomaton input) {
             return new RightBranchingNormalForm(input.getSignature(), input.getAllLabels());
         }
-    }
-    ;
+    },
+    NO_LEFT_INTO_RIGHT {
+
+        @Override
+        public TreeAutomaton getAutomaton(TreeAutomaton input) {
+            return new NoLeftIntoRight(input.getSignature(), input.getAllLabels());
+        }
+        
+    };
     
-    
+    /**
+     * 
+     * @param input
+     * @return 
+     */
     public abstract TreeAutomaton getAutomaton(TreeAutomaton input);
 }
