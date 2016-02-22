@@ -19,7 +19,6 @@ import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.rule_finding.create_automaton.SpecifiedAligner;
 import de.up.ling.irtg.rule_finding.create_automaton.StateAlignmentMarking;
 import de.up.ling.irtg.util.BiFunctionIterable;
-import de.up.ling.irtg.util.FunctionIterable;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -73,18 +72,12 @@ public class ExtractJointTrees {
             Iterable<InputStream> secondAlign, Supplier<OutputStream> outs) 
                                                 throws IOException, ParserException {
         
-        Iterable<TreeAutomaton> auIt = makeTreeAutomata(firstAuts);
-        Iterable<StateAlignmentMarking> staic = makeAlignments(auIt, firstAlign);
+        Iterable<Pair<TreeAutomaton,StateAlignmentMarking>> pairs1 = makeTreeAutomata(firstAuts,firstAlign);
+        Iterable<Pair<TreeAutomaton,StateAlignmentMarking>> pairs2 = makeTreeAutomata(secondAuts,secondAlign);
+             
+        Iterable<Pair<TreeAutomaton<String>,TreeAutomaton<String>>> p = this.cc.pushAlignments(pairs1,pairs2);
         
-        
-        Iterable<TreeAutomaton<String>> t1it = this.cc.pushAlignments(auIt, staic);
-        
-        auIt = makeTreeAutomata(secondAuts);
-        staic = makeAlignments(auIt, secondAlign);
-        
-        Iterable<TreeAutomaton<String>> t2it = this.cc.pushAlignments(auIt, staic);
-        
-        Iterable<Pair<TreeAutomaton,HomomorphismManager>> results = this.cc.getSharedAutomata(t1it, t2it);
+        Iterable<Pair<TreeAutomaton,HomomorphismManager>> results = this.cc.getSharedAutomata(p);
 
         double sumOfSizes = 0;
         double length = 0;
@@ -132,33 +125,19 @@ public class ExtractJointTrees {
      * @param firstAuts
      * @return 
      */
-    private Iterable<TreeAutomaton> makeTreeAutomata(Iterable<InputStream> firstAuts) {
+    private Iterable<Pair<TreeAutomaton, StateAlignmentMarking>> makeTreeAutomata(Iterable<InputStream> firstAuts, Iterable<InputStream> align) {
         TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
-        Iterable<TreeAutomaton> auIt = new FunctionIterable<>(firstAuts, (InputStream in) -> {
+        Iterable<Pair<TreeAutomaton,StateAlignmentMarking>> auIt = new BiFunctionIterable<>(firstAuts, align, (InputStream au, InputStream al) -> {
             try {
-                return taic.read(in);
+                TreeAutomaton ta = taic.read(au);
+                StateAlignmentMarking sam = new SpecifiedAligner(ta, al);
+                
+                return new Pair<>(ta,sam);
             } catch (CodecParseException | IOException ex) {
                 throw new RuntimeException("Could not parse automaton.");
             }
         });
+        
         return auIt;
-    }
-
-    /**
-     * 
-     * @param auIt
-     * @param firstAlign
-     * @return 
-     */
-    private Iterable<StateAlignmentMarking> makeAlignments(Iterable<TreeAutomaton> auIt, Iterable<InputStream> firstAlign) {
-        Iterable<StateAlignmentMarking> staic = new BiFunctionIterable<>(auIt,firstAlign,
-                (TreeAutomaton ta,InputStream in) -> {
-                    try {
-                        return new SpecifiedAligner(ta, in);
-                    } catch (IOException ex) {
-                        throw new RuntimeException("Could not parse alignments.");
-                    }
-                });
-        return staic;
     }
 }

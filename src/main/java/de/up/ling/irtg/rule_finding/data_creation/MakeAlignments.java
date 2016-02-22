@@ -99,19 +99,26 @@ public class MakeAlignments {
     }
 
     /**
-     *
+     * 
      * @param alignments
      * @param trees
      * @param supp
      * @param useRight
+     * @param skipLinesInTreeFile
      * @throws IOException
-     * @throws ParseException
+     * @throws ParseException 
      */
-    public static void makePreorderTreeFromStandard(InputStream alignments, InputStream trees, Supplier<OutputStream> supp, boolean useRight)
+    public static void makePreorderTreeFromStandard(InputStream alignments,
+            InputStream trees, Supplier<OutputStream> supp, boolean useRight,
+            int skipLinesInTreeFile)
             throws IOException, ParseException {
         try (BufferedReader treeInput = new BufferedReader(new InputStreamReader(trees));
                 BufferedReader alignmentInput = new BufferedReader(new InputStreamReader(alignments))) {
             String tLine;
+            for(int i=0;i<skipLinesInTreeFile;++i) {
+               treeInput.readLine();
+            }
+            
             while ((tLine = treeInput.readLine()) != null) {
                 tLine = tLine.trim();
                 if (tLine.isEmpty()) {

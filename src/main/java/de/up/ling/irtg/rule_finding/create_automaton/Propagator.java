@@ -12,9 +12,12 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.semiring.Semiring;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  *
@@ -40,17 +43,34 @@ public class Propagator {
     
     /**
      * 
+     * @param markingSets
+     * @return 
+     */
+    public static Set<String> turnToMarkers(Collection<IntSortedSet> markingSets) {
+        Set<String> set = new HashSet<>();
+        
+        for(IntSortedSet iss : markingSets) {
+            set.add(makeAlignmentString(iss));
+        }
+        
+        return set;
+    }
+    
+    
+    /**
+     * 
      * @param <State>
      * @param aut
-     * @param marks
+     * @param markings
+     * @param counterParts
      * @return 
      */
     public <State> TreeAutomaton<String> convert(TreeAutomaton<State> aut,
-                                                StateAlignmentMarking<State> marks){
-        Int2ObjectMap<IntSortedSet> markings = this.propagate(aut, marks);
+                                                Int2ObjectMap<IntSortedSet> markings,
+                                                Set<String> counterParts){
         ConcreteTreeAutomaton<String> output = new ConcreteTreeAutomaton<>(aut.getSignature());
         
-        Visitor visit = new Visitor(markings, output, aut);
+        Visitor visit = new Visitor(markings, output, aut, counterParts);
         
         aut.foreachStateInBottomUpOrder(visit);
         
@@ -98,10 +118,23 @@ public class Propagator {
      * @param state
      * @return 
      */
-    public static String createVariableWithContent(IntSet alignments, String state) {
-        StringBuilder sb = new StringBuilder();
-        IntIterator iit = alignments.iterator();
+    public static String createVariableWithContent(String alignments, String state) {
+        StringBuilder sc = new StringBuilder(alignments);
+        sc.append(" _@_ ");
+        sc.append(state);
         
+        return Variables.createVariable(sc.toString());
+    }
+
+    /**
+     * 
+     * @param iit
+     * @return 
+     */
+    private static String makeAlignmentString(IntIterable markers) {
+        IntIterator iit = markers.iterator();
+        
+        StringBuilder sb = new StringBuilder();
         boolean first=true;
         while(iit.hasNext()) {
             if(first) {
@@ -113,10 +146,7 @@ public class Propagator {
             sb.append(iit.nextInt());
         }
         
-        sb.append(" _@_ ");
-        sb.append(state);
-        
-        return Variables.createVariable(sb.toString());
+        return sb.toString();
     }
     
     
@@ -193,6 +223,11 @@ public class Propagator {
          * the original with which we started.
          */
         private final TreeAutomaton original;
+        
+        /**
+         * 
+         */
+        private final Set<String> counterParts;
 
         /**
          * 
@@ -202,10 +237,13 @@ public class Propagator {
          * @param local
          * @param mark 
          */
-        public Visitor(Int2ObjectMap<IntSortedSet> vars, ConcreteTreeAutomaton goal, TreeAutomaton original) {
+        public Visitor(Int2ObjectMap<IntSortedSet> vars, ConcreteTreeAutomaton goal, TreeAutomaton original,
+                Set<String> counterPart) {
             this.vars = vars;
             this.goal = goal;
             this.original = original;
+            
+            this.counterParts = counterPart;
         }
 
         @Override
@@ -214,9 +252,12 @@ public class Propagator {
             int code = this.goal.addState(stateName);
             
             // here we add a loop for the alignments
-            IntSet propagatedAligments = this.vars.get(state);
-            String varLabel = createVariableWithContent(propagatedAligments, stateName);
-            this.goal.addRule(this.goal.createRule(stateName, varLabel, new String[] {stateName}));
+            IntSortedSet propagatedAligments = this.vars.get(state);
+            String lining = makeAlignmentString(propagatedAligments);
+            if(this.counterParts.contains(lining)) {
+                String varLabel = createVariableWithContent(lining, stateName);
+                this.goal.addRule(this.goal.createRule(stateName, varLabel, new String[] {stateName}));
+            }            
             
             if(original.getFinalStates().contains(state))
             {
