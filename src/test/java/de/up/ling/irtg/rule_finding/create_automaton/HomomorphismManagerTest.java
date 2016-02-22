@@ -14,6 +14,8 @@ import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashSet;
@@ -102,8 +104,14 @@ public class HomomorphismManagerTest {
         
         Propagator prop = new Propagator();
         
-        this.leftAut = prop.convert(leftAut, samL);
-        this.rightAut = prop.convert(rightAut, samR);
+        Int2ObjectMap<IntSortedSet> m1 = prop.propagate(leftAut, samL);
+        Int2ObjectMap<IntSortedSet> m2 = prop.propagate(rightAut, samR);
+        
+        Set<String> counter1 = Propagator.turnToMarkers(m1.values());
+        Set<String> counter2 = Propagator.turnToMarkers(m2.values());
+        
+        this.leftAut = prop.convert(leftAut, m1, counter2);
+        this.rightAut = prop.convert(rightAut, m2, counter1);
         
         this.sharedSig = new Signature();
         this.hom = new HomomorphismManager(this.leftAut.getSignature(), this.rightAut.getSignature(), sharedSig);
@@ -261,7 +269,5 @@ public class HomomorphismManagerTest {
         proposals.remove(target);
         
         assertTrue(proposals.isEmpty());
-        
-        //TODO
     }
 }

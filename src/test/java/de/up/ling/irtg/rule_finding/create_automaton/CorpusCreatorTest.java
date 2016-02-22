@@ -6,23 +6,20 @@
 package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.hom.Homomorphism;
-import de.up.ling.irtg.rule_finding.Variables;
+import de.up.ling.irtg.rule_finding.data_creation.MakeAlignments;
+import de.up.ling.irtg.rule_finding.data_creation.MakeAutomata;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
-import de.up.ling.irtg.rule_finding.pruning.intersection.RightBranchingNormalForm;
-import de.up.ling.irtg.rule_finding.pruning.intersection.NoLeftIntoRight;
-import static de.up.ling.irtg.util.TestingTools.pt;
-import de.up.ling.tree.Tree;
+import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,196 +34,179 @@ public class CorpusCreatorTest {
     /**
      *
      */
-    private CorpusCreator<List<String>, Tree<String>> cc;
+    private CorpusCreator cc;
 
     /**
      *
      */
-    private Supplier<Algebra<List<String>>> sal;
+    private final String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+            + "a b c\n"
+            + "d c c c";
 
     /**
      *
      */
-    private Supplier<Algebra<Tree<String>>> mta;
+    private final String rightTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+            + "e f g\n"
+            + "g z z z";
 
     /**
      *
      */
-    private ArrayList<String> firstInputs;
+    private final String alignments = "0-0 0-1\n"
+            + "0-0 1-3 2-1\n";
 
     /**
-     *
+     * 
      */
-    private ArrayList<String> secondInputs;
-
+    private Iterable<Pair<TreeAutomaton,StateAlignmentMarking>> pairs1;
+    
     /**
-     *
+     * 
      */
-    private ArrayList<String> firstAlign;
-
-    /**
-     *
-     */
-    private ArrayList<String> secondAlign;
-
+    private Iterable<Pair<TreeAutomaton,StateAlignmentMarking>> pairs2;
+    
     @Before
-    public void setUp() {
-        CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new IntersectionPruner<>((TreeAutomaton t) -> {
-            return new RightBranchingNormalForm(t.getSignature(),t.getAllLabels());
-        }))
-                .setSecondPruner(new IntersectionPruner<>((TreeAutomaton t) -> {
-            return new NoLeftIntoRight(t.getSignature(),t.getAllLabels());
-        }))
-                .setFirstVariableSource(new LeftRightXFromFinite())
-                .setMaxThreads(4)
-                .setSecondVariableSource(new JustXEveryWhere());
+    public void setUp() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
+        IntersectionPruner ip1 = new IntersectionPruner(IntersectionOptions.NO_EMPTY, IntersectionOptions.LEXICALIZED);
+        IntersectionPruner ip2 = new IntersectionPruner(IntersectionOptions.NO_EMPTY, IntersectionOptions.LEXICALIZED);
 
-        sal = () -> new StringAlgebra();
-        mta = () -> new MinimalTreeAlgebra();
+        this.cc = new CorpusCreator(ip1, ip2, 1);
 
-        
-        cc = fact.getInstance(sal, mta, new SpanAligner.Factory(), new AddressAligner.Factory());
+        List<ByteArrayOutputStream> treeOutputs = new ArrayList<>();
+        Supplier<OutputStream> supp = () -> {
+            ByteArrayOutputStream result = new ByteArrayOutputStream();
 
-        this.firstInputs = new ArrayList<>();
-        firstInputs.add("John went home");
-        firstInputs.add("Frank went home");
+            treeOutputs.add(result);
 
-        this.firstAlign = new ArrayList<>();
-        firstAlign.add("0:1:1 1:2:2 2:3:3");
-        firstAlign.add("0:1:1 1:2:2 2:3:3");
+            return result;
+        };
 
-        this.secondInputs = new ArrayList<>();
-        this.secondInputs.add("S(NP(John),VP(went,NP(home)))");
-        this.secondInputs.add("S(NP(Frank),VP(went,NP(home)))");
+        InputStream inTrees = new ByteArrayInputStream(leftTrees.getBytes());
 
-        this.secondAlign = new ArrayList<>();
-        this.secondAlign.add("0-0-0-0-0:1 0-0-0-1-0:2 0-0-0-1-1-0:3");
-        this.secondAlign.add("0-0-0-0-0:1 0-0-0-1-0:2 0-0-0-1-1-0:3");
-    }
-
-    @Test
-    public void testMakeFirstPruning() throws ParserException, Exception {
-        Iterable<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(firstInputs, firstAlign, sal, this.cc.getFirtAlignmentFactory());
-        Iterable<AlignedTrees> pruned = CorpusCreator.makeFirstPruning(list1, cc.getFirstPruner(), cc.getFirstVI());
-
-        Iterator<AlignedTrees> it = pruned.iterator();
-        AlignedTrees at1 = it.next();
-        AlignedTrees at2 = it.next();
-        
-        
-        assertTrue(at1.getAlignments() instanceof SpecifiedAligner);
-        assertFalse(it.hasNext());
-
-        assertTrue(at1.getTrees().accepts(pt("*(John,*(went,home))")));
-        assertTrue(at1.getTrees().accepts(pt("*(John,Xwent_home(*(went,home)))")));
-        assertFalse(at1.getTrees().accepts(pt("*(John,XJohn_home(*(went,home)))")));
-
-        assertTrue(at2.getTrees().accepts(pt("*(Frank,Xwent_home(*(went,home)))")));
-
-        TreeAutomaton t = at1.getTrees();
-        int label = t.getSignature().getIdForSymbol("John");
-        Rule r = (Rule) t.getRulesBottomUp(label, new int[0]).iterator().next();
-        Object o = t.getStateForId(r.getParent());
-
-        assertEquals(at1.getAlignments().getAlignmentMarkers(o).size(), 1);
-        assertTrue(at1.getAlignments().getAlignmentMarkers(o).contains(1));
-    }
-
-    @Test
-    public void testMakeInitialAlignedTrees() throws ParserException, Exception {
-        Iterable<AlignedTrees> list1 = CorpusCreator.makeInitialAlignedTrees(firstInputs, firstAlign, sal, this.cc.getFirtAlignmentFactory());
-        
-        Iterator<AlignedTrees> it = list1.iterator();
-        AlignedTrees at1 = it.next();
-        AlignedTrees at2 = it.next();
-        
-        Set<Tree<String>> lang1 = at1.getTrees().language();
-        Set<Tree<String>> lang2 = at2.getTrees().language();
-
-        assertFalse(it.hasNext());
-        
-        assertEquals(lang1.size(), 2);
-        assertEquals(lang2.size(), 2);
-        assertTrue(lang1.contains(pt("*(John,*(went,home))")));
-        assertTrue(lang1.contains(pt("*(*(John,went),home)")));
-        assertTrue(lang2.contains(pt("*(*(Frank,went),home)")));
-        assertTrue(lang2.contains(pt("*(Frank,*(went,home))")));
-
-        assertEquals(at1.getAlignments().toString(), "SpanAligner{alignments={1-2=>{2}, 0-1=>{1}, 2-3=>{3}}}");
-        assertEquals(at2.getAlignments().toString(), "SpanAligner{alignments={1-2=>{2}, 0-1=>{1}, 2-3=>{3}}}");
-
-        Iterable<AlignedTrees> list2 = CorpusCreator.makeInitialAlignedTrees(secondInputs, secondAlign, mta, this.cc.getSecondAlignmentFactory());
-        assertEquals(list2.iterator().next().getTrees().language().size(), 64);
-        assertEquals(list2.iterator().next().getAlignments().toString(), "AddressAligner{map={0-0-0-1-1-0=>{3}, 0-0-0-1-0=>{2}, 0-0-0-0-0=>{1}}}");
-    }
-
-    /**
-     * Test of getAlgebra2 method, of class CreateCorpus.
-     */
-    @Test
-    public void testGetAlgebra() {
-        assertEquals(cc.getSecondAlgebra(), this.mta);
-        assertEquals(cc.getFirstAlgebra(), this.sal);
-    }
-
-    @Test
-    public void testFinalResult() throws ParserException, Exception {
-        Iterable<Pair<TreeAutomaton,HomomorphismManager>> result =
-                this.cc.makeRuleTrees(firstInputs, secondInputs, firstAlign, secondAlign);
-
-        Iterator<Pair<TreeAutomaton,HomomorphismManager>> it = result.iterator();
-        Pair<TreeAutomaton,HomomorphismManager> p1 = it.next();
-        Pair<TreeAutomaton,HomomorphismManager> p2 = it.next();
-        
-        assertFalse(it.hasNext());
-
-        TreeAutomaton first = p1.getLeft();
-        TreeAutomaton second = p2.getLeft();
-
-        assertEquals(first.language().size(), second.language().size());
-
-        for (Rule r : (Iterable<Rule>) first.getAllRulesTopDown()) {
-            r.setWeight(0.2);
+        MakeAutomata.create(inTrees, supp);
+        List<InputStream> treeInputs = new ArrayList<>();
+        for (ByteArrayOutputStream baos : treeOutputs) {
+            treeInputs.add(new ByteArrayInputStream(baos.toByteArray()));
         }
 
-        Tree<String> ts = first.viterbi();
+        Iterable<TreeAutomaton> iter1 = MakeAutomata.reconstruct(treeInputs);
 
-        Homomorphism hm1 = p1.getRight().getHomomorphism1();
-        Homomorphism hm2 = p1.getRight().getHomomorphism2();
-        
-        assertEquals(hm1.apply(ts), pt("*(XJohn_John(John),*(Xwent_went(went),Xhome_home(home)))"));
-        Tree<String> q = shorten(hm2.apply(ts));
-        assertEquals(this.mta.get().evaluate(q), pt("S(NP(John),VP(went,NP(home)))"));
+        treeOutputs.clear();
 
-        Tree<String> l = hm1.apply(ts);
-        Tree<String> r = hm2.apply(ts);
+        inTrees = new ByteArrayInputStream(rightTrees.getBytes());
 
-        int firstVariables = 0;
-        firstVariables = l.getAllNodes().stream().filter((node) -> (Variables.IS_VARIABLE.test(node.getLabel()))).map((_item) -> 1).reduce(firstVariables, Integer::sum);
-
-        int secondVariables = 0;
-        secondVariables = r.getAllNodes().stream().filter((node) -> (Variables.IS_VARIABLE.test(node.getLabel()))).map((_item) -> 1).reduce(secondVariables, Integer::sum);
-
-        assertEquals(firstVariables, 3);
-        assertEquals(secondVariables, firstVariables);
-    }
-
-    /**
-     *
-     * @param tr
-     * @return
-     */
-    private Tree<String> shorten(Tree<String> tr) {
-        if (Variables.IS_VARIABLE.test(tr.getLabel())) {
-            return shorten(tr.getChildren().get(0));
+        MakeAutomata.create(inTrees, supp);
+        treeInputs = new ArrayList<>();
+        for (ByteArrayOutputStream baos : treeOutputs) {
+            treeInputs.add(new ByteArrayInputStream(baos.toByteArray()));
         }
 
-        List<Tree<String>> children = new ArrayList<>();
-        tr.getChildren().forEach((child) -> {
-            children.add(shorten(child));
-        });
+        Iterable<TreeAutomaton> iter2 = MakeAutomata.reconstruct(treeInputs);
 
-        return Tree.create(tr.getLabel(), children);
+        treeOutputs.clear();
+        InputStream align = new ByteArrayInputStream(alignments.getBytes());
+
+        MakeAlignments.makeStringFromStandardAlign(align, supp, false);
+
+        List<InputStream> align1 = new ArrayList<>();
+        for (ByteArrayOutputStream baos : treeOutputs) {
+            align1.add(new ByteArrayInputStream(baos.toByteArray()));
+        }
+
+        treeOutputs.clear();
+        align = new ByteArrayInputStream(alignments.getBytes());
+
+        MakeAlignments.makeStringFromStandardAlign(align, supp, true);
+
+        List<InputStream> align2 = new ArrayList<>();
+        for (ByteArrayOutputStream baos : treeOutputs) {
+            align2.add(new ByteArrayInputStream(baos.toByteArray()));
+        }
+
+        pairs1 = () -> {
+            return new Iterator<Pair<TreeAutomaton, StateAlignmentMarking>>() {
+                /**
+                 *
+                 */
+                private final Iterator<TreeAutomaton> it = iter1.iterator();
+
+                /**
+                 *
+                 */
+                private final Iterator<InputStream> aligns = align1.iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return it.hasNext() && aligns.hasNext();
+                }
+
+                @Override
+                public Pair<TreeAutomaton, StateAlignmentMarking> next() {
+                    TreeAutomaton t = it.next();
+
+                    SpecifiedAligner spec = null;
+                    try {
+                        spec = new SpecifiedAligner(t, aligns.next());
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    return new Pair<>(t, spec);
+                }
+            };
+        };
+
+        pairs2 = () -> {
+            return new Iterator<Pair<TreeAutomaton, StateAlignmentMarking>>() {
+                /**
+                 *
+                 */
+                private final Iterator<TreeAutomaton> it = iter2.iterator();
+
+                /**
+                 *
+                 */
+                private final Iterator<InputStream> aligns = align2.iterator();
+
+                @Override
+                public boolean hasNext() {
+                    return it.hasNext() && aligns.hasNext();
+                }
+
+                @Override
+                public Pair<TreeAutomaton, StateAlignmentMarking> next() {
+                    TreeAutomaton t = it.next();
+
+                    SpecifiedAligner spec = null;
+                    try {
+                        spec = new SpecifiedAligner(t, aligns.next());
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                    return new Pair<>(t, spec);
+                }
+            };
+        };
+    }
+
+    @Test
+    public void test() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
+        Iterable<Pair<TreeAutomaton<String>,TreeAutomaton<String>>> pairs = this.cc.pushAlignments(pairs1, pairs2);
+        
+        Iterable<Pair<TreeAutomaton,HomomorphismManager>> result = this.cc.getSharedAutomata(pairs);
+        
+        Iterator<Pair<TreeAutomaton,HomomorphismManager>> resIter = result.iterator();
+        
+        Pair<TreeAutomaton,HomomorphismManager> p1 = resIter.next();
+        Pair<TreeAutomaton,HomomorphismManager> p2 = resIter.next();
+        assertFalse(resIter.hasNext());
+        
+        System.out.println(p1.getLeft().isCyclic());
+        System.out.println(p2.getLeft().isCyclic());
+        
+        
+        //TODO
     }
 }

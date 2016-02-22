@@ -9,11 +9,12 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import de.up.ling.irtg.rule_finding.Variables;
-import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntSortedSet;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -84,7 +85,16 @@ public class PropagatorTest {
      */
     @Test
     public void testConvert() throws Exception {
-        TreeAutomaton<String> solution = this.prop.convert(this.ta, spac);
+        Int2ObjectMap<IntSortedSet> groups = this.prop.propagate(ta, spac);
+        Set<String> markings = Propagator.turnToMarkers(groups.values());
+        
+        assertEquals(markings.size(),4);
+        assertTrue(markings.contains(""));
+        assertTrue(markings.contains("0,1,3,4"));
+        assertTrue(markings.contains("0,1"));
+        assertTrue(markings.contains("3,4"));
+        
+        TreeAutomaton<String> solution = this.prop.convert(this.ta, groups, markings);
 
         TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
         TreeAutomaton<String> goal = taic.read(GOAL_AUTOMATON);
@@ -105,12 +115,7 @@ public class PropagatorTest {
 
     @Test
     public void getOriginalInformation() {
-        IntSortedSet iss = new IntAVLTreeSet();
-        iss.add(4);
-        iss.add(2);
-        iss.add(19);
-        
-        String q  = Propagator.createVariableWithContent(iss, "a65");
+        String q  = Propagator.createVariableWithContent("2,4,19", "a65");
         assertEquals(q,"__X__{2,4,19 _@_ a65}");
         assertEquals(Propagator.getAlignments(q),"2,4,19");
         assertEquals(Propagator.getAlignments("__X__{ _@_ a65}"),"");

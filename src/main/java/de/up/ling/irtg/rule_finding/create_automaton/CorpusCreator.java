@@ -157,8 +157,9 @@ public class CorpusCreator {
                     TopDownIntersectionAutomaton tdi = new TopDownIntersectionAutomaton(rfi, hom.getRestriction());
                     
                     TreeAutomaton finished = RemoveDead.reduce(tdi);
+                    System.out.println("-------------");
+                    System.out.println(finished.countTrees());
                     finished = hom.reduceToOriginalVariablePairs(finished);
-                    
                     
                     return new Pair<>(finished,hom);
                 });
