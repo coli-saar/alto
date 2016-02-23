@@ -105,7 +105,7 @@ public class Propagator {
     public static String getStateDescription(String variable) {
         String[] q = makeParts(variable);
         if(q.length < 2) {
-            return q[0].trim();
+            return null;
         }
         String all = q[1].trim();
         

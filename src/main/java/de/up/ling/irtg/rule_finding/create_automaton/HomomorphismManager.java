@@ -336,7 +336,19 @@ public class HomomorphismManager {
             String left = this.source1.resolveSymbolId(symbols.getInt(0));
             String right = this.source2.resolveSymbolId(symbols.getInt(1));
 
-            String combo = Variables.createVariable(Propagator.getStateDescription(left) + " ||| " + Propagator.getStateDescription(right));
+            String leftInfo = Propagator.getStateDescription(left);
+            String rightInfo = Propagator.getStateDescription(right);
+            
+            String combo;
+            if(leftInfo != null && rightInfo != null) {
+                combo = Variables.createVariable(leftInfo + " ||| " + rightInfo);
+            } else {
+                leftInfo = Variables.getInformation(left).trim();
+                rightInfo = Variables.getInformation(right).trim();
+                
+                combo = Variables.createVariable(leftInfo + " +++ " + rightInfo);
+            }
+            
             symbol.append(combo);
         }
 
@@ -616,6 +628,8 @@ public class HomomorphismManager {
      * @return
      */
     public TreeAutomaton reduceToOriginalVariablePairs(TreeAutomaton done) {
+        System.out.println("almost done");
+        
         ConcreteTreeAutomaton<String> goal = new ConcreteTreeAutomaton<>(done.getSignature());
 
         IntSet seen = new IntOpenHashSet(done.getFinalStates());
@@ -629,7 +643,7 @@ public class HomomorphismManager {
         String startLabel = Variables.createVariable(UNIVERSAL_START);
         
         int startL;
-        if (!goal.getSignature().contains(startLabel)) {
+        if (!done.getSignature().contains(startLabel)) {
             startL = goal.getSignature().addSymbol(startLabel, 1);
 
             List<Tree<String>> l = new ArrayList<>();
@@ -724,6 +738,8 @@ public class HomomorphismManager {
                 this.handleVariablePair(osym, sym);
             }
         }
+        
+        System.out.println("done");
     }
 
     /**
@@ -735,7 +751,7 @@ public class HomomorphismManager {
         if (!this.isVariable(label)) {
             return this.sharedSig.resolveSymbolId(label);
         }
-
+        
         String varName = this.sharedSig.resolveSymbolId(label);
         String left = this.hom1.get(varName).getLabel();
         String right = this.hom2.get(varName).getLabel();

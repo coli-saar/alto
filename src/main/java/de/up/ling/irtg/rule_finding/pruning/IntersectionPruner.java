@@ -7,6 +7,7 @@ package de.up.ling.irtg.rule_finding.pruning;
 
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
+import de.up.ling.irtg.automata.TopDownIntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import java.util.function.Function;
 
@@ -38,7 +39,7 @@ public class IntersectionPruner implements Pruner {
             TreeAutomaton inter = input;
             
             for(int i=0;i<options.length;++i) {
-                inter = new IntersectionAutomaton(inter, options[i].getAutomaton(input));
+                inter = new TopDownIntersectionAutomaton(inter, options[i].getAutomaton(input));
             }
             
             return inter;
@@ -47,6 +48,6 @@ public class IntersectionPruner implements Pruner {
 
     @Override
     public TreeAutomaton apply(TreeAutomaton ta) {
-        return new IntersectionAutomaton(ta, this.mapToIntersect.apply(ta));
+        return new TopDownIntersectionAutomaton(ta, this.mapToIntersect.apply(ta));
     }    
 }

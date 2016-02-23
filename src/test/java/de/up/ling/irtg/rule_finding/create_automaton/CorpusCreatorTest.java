@@ -12,14 +12,17 @@ import de.up.ling.irtg.rule_finding.data_creation.MakeAlignments;
 import de.up.ling.irtg.rule_finding.data_creation.MakeAutomata;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
+import de.up.ling.tree.Tree;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,20 +44,20 @@ public class CorpusCreatorTest {
      */
     private final String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
             + "a b c\n"
-            + "d c c c";
+            + "d c c";
 
     /**
      *
      */
     private final String rightTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
             + "e f g\n"
-            + "g z z z";
+            + "g z z ";
 
     /**
      *
      */
-    private final String alignments = "0-0 0-1\n"
-            + "0-0 1-3 2-1\n";
+    private final String alignments = "0-0 0-1 1-2\n"
+            + "0-0 1-1 2-2\n";
 
     /**
      * 
@@ -68,8 +71,8 @@ public class CorpusCreatorTest {
     
     @Before
     public void setUp() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
-        IntersectionPruner ip1 = new IntersectionPruner(IntersectionOptions.NO_EMPTY, IntersectionOptions.LEXICALIZED);
-        IntersectionPruner ip2 = new IntersectionPruner(IntersectionOptions.NO_EMPTY, IntersectionOptions.LEXICALIZED);
+        IntersectionPruner ip1 = new IntersectionPruner(IntersectionOptions.NO_EMPTY, IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
+        IntersectionPruner ip2 = new IntersectionPruner(IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM, IntersectionOptions.LEXICALIZED);
 
         this.cc = new CorpusCreator(ip1, ip2, 1);
 
@@ -203,8 +206,30 @@ public class CorpusCreatorTest {
         Pair<TreeAutomaton,HomomorphismManager> p2 = resIter.next();
         assertFalse(resIter.hasNext());
         
-        System.out.println(p1.getLeft().isCyclic());
-        System.out.println(p2.getLeft().isCyclic());
+        assertFalse(p1.getLeft().isCyclic());
+        assertFalse(p2.getLeft().isCyclic());
+        
+        assertFalse(p1.getLeft().isEmpty());
+        assertFalse(p2.getLeft().isEmpty());
+        
+        TreeAutomaton ta1 = p1.getLeft();
+        HomomorphismManager hm = p1.getRight();
+        
+        assertEquals(ta1.countTrees(),12);
+        
+        Set<Pair<String,String>> solutions = new HashSet<>();
+        
+        for(Tree<String> ts : (Iterable<Tree<String>>) ta1.languageIterable()) {
+            Pair<String,String> solution = new Pair<>(hm.getHomomorphism1().apply(ts).toString(),
+                                                       hm.getHomomorphism2().apply(ts).toString());
+            assertFalse(solutions.contains(solution));
+            solutions.add(solution);
+            System.out.println("+++++++++++++++++");
+            System.out.println(ts);
+            System.out.println(solution);
+        }
+        
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*(a,*(b,c)))","'__X__{__UAS__}'(*(e,*(f,g)))")));
         
         
         //TODO
