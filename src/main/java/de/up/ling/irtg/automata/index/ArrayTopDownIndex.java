@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -134,6 +135,7 @@ class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+
     private class RuleUntilIterable implements Iterable<Rule> {
 
         private final int start;
@@ -187,6 +189,26 @@ class ArrayTopDownIndex implements TopDownRuleIndex, Serializable {
 //            System.err.println("\n\n** getRules(" + parentState + "), start at " + start);
             assert rules.get(start).getParent() == parentState : "rule(" + parentState + ") has wrong parent, is " + rules.get(start);
             return new RuleUntilIterable(start, rule -> rule.getParent() != parentState);
+        }
+    }
+    
+    
+    @Override
+    public void foreachRule(int parentState, Consumer<Rule> fn) {
+        processNewTopDownRules();
+        
+        int start = parentStartIndex.get(parentState);
+        
+        if( start >= 0 ) {
+            for( int pos = start; pos < rules.size(); pos++ ) {
+                Rule rule = rules.get(pos);
+                
+                if( rule.getParent() != parentState ) {
+                    return;
+                } else {
+                    fn.accept(rule);
+                }
+            }
         }
     }
 

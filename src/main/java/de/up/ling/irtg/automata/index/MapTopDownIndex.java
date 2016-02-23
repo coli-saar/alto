@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -33,10 +34,12 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
 
     private TreeAutomaton auto;
     private Int2ObjectMap<Int2ObjectMap<Set<Rule>>> explicitRulesTopDown;              // parent -> label -> set(rules)
+    private Int2ObjectMap<List<Rule>> explicitRulesTopDownByParent;                    // parent -> list(rule), for all labels, list contains no duplicates
     private List<Rule> unprocessedUpdatesForTopDown;
 
     public MapTopDownIndex(TreeAutomaton auto) {
         explicitRulesTopDown = new ArrayMap<Int2ObjectMap<Set<Rule>>>();
+        explicitRulesTopDownByParent = new ArrayMap<>();
         unprocessedUpdatesForTopDown = new ArrayList<Rule>();
         this.auto = auto;
     }
@@ -61,7 +64,17 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
                     topdownHere.put(rule.getLabel(), rulesHere);
                 }
 
-                rulesHere.add(rule);
+                if( rulesHere.add(rule) ) {
+                    // added a rule we didn't know before => update by-parent index
+                    List<Rule> byParentRulesHere = explicitRulesTopDownByParent.get(rule.getParent());
+                    
+                    if( byParentRulesHere == null ) {
+                        byParentRulesHere = new ArrayList<>();
+                        explicitRulesTopDownByParent.put(rule.getParent(), byParentRulesHere);
+                    }
+                    
+                    byParentRulesHere.add(rule);
+                }
             });
 
             unprocessedUpdatesForTopDown.clear();
@@ -76,13 +89,27 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
     @Override
     public Iterable<Rule> getRules(int parentState) {
         processNewTopDownRules();
-        Int2ObjectMap<Set<Rule>> topdown = explicitRulesTopDown.get(parentState);
+//        Int2ObjectMap<Set<Rule>> topdown = explicitRulesTopDown.get(parentState);
+        List<Rule> topdown = explicitRulesTopDownByParent.get(parentState);
 
         if (topdown == null) {
             return Collections.emptyList();
         } else {
-            return Iterables.concat(topdown.values());
+//            return Iterables.concat(topdown.values());
+            return topdown;
         }
+    }
+
+    @Override
+    public void foreachRule(int parentState, Consumer<Rule> fn) {
+        processNewTopDownRules();
+        
+        List<Rule> rules = explicitRulesTopDownByParent.get(parentState);
+        
+        if( rules != null ) {
+            rules.forEach(fn);
+        }
+
     }
 
     @Override
@@ -101,8 +128,6 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
     public Iterable<Rule> getRules(int labelId, int parentState) {
         processNewTopDownRules();
 
-//        System.err.println("grtde " + getStateForId(parentState) + "/" + signature.resolveSymbolId(labelId));
-//        System.err.println("  -> cached: " + useCachedRuleTopDown(labelId, parentState));
         if (useCachedRule(labelId, parentState)) {
             Int2ObjectMap<Set<Rule>> topdownHere = explicitRulesTopDown.get(parentState);
 
@@ -115,22 +140,9 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
             }
 
             return Collections.emptyList();
-
-//            
-//            
-//            SetMultimap<Integer, Rule> rulesHere = explicitRulesTopDown.get(labelId);
-//
-//            if (rulesHere != null) {
-//                Set<Rule> ret = rulesHere.get(parentState);
-//                if (ret != null) {
-//                    return ret;
-//                }
-//            }
         } else {
             return Collections.emptyList();
         }
-
-//        return new HashSet<Rule>();
     }
 
     @Override
@@ -171,7 +183,7 @@ public class MapTopDownIndex implements TopDownRuleIndex, Serializable {
 
         return buf.toString();
     }
-    
+
     private Iterable<Rule> concatInnerIterables(Int2ObjectMap<Set<Rule>> map) {
         return Iterables.concat(map.values());
     }

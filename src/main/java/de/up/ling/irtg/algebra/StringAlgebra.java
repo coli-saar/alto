@@ -8,7 +8,6 @@ import com.google.common.collect.Lists;
 import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.ConcreteCondensedTreeAutomaton;
@@ -23,7 +22,6 @@ import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -34,7 +32,6 @@ import java.io.FileInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -203,7 +200,7 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
                         code = specialStarId;
                         break;
                     default:
-                        code = StringAlgebra.this.getSignature().getIdForSymbol(words.get(i));
+                        code = StringAlgebra.this.getSignature().addSymbol(words.get(i), 0);  // if word was not in the algebra's signature yet, add it now
                         break;
                 }
 
