@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 
 /**
@@ -36,5 +37,13 @@ public class WeightedTree implements Comparable<WeightedTree> {
     @Override
     public String toString() {
         return tree.toString() + ":" + weight;
+    }
+    
+    public static String formatWeightedTree(WeightedTree wt, Signature sig) {
+        if (wt == null) {
+            return "<null wt>";
+        } else {
+            return sig.resolve(wt.getTree()) + ":" + wt.getWeight();
+        }
     }
 }
