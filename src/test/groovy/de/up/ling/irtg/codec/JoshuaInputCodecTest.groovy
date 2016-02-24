@@ -46,10 +46,10 @@ class JoshuaInputCodecTest {
     public void testJoshua() {
         JoshuaInputCodec ic = new JoshuaInputCodec();
         InterpretedTreeAutomaton irtg = ic.read(GRAMMAR);
-        System.err.println(irtg)
+//        System.err.println(irtg)
         
         TreeAutomaton chart = irtg.parse(["left": "wiederaufnahme der sitzungsperiode", "right":"resumption of the session"])
-        System.err.println("vit " + chart.viterbi())
+//        System.err.println("vit " + chart.viterbi())
         assert chart.viterbi() != null
     }
     

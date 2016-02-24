@@ -4,14 +4,21 @@
  */
 package de.up.ling.irtg.automata.language_iteration;
 
+import com.beust.jcommander.internal.Maps;
 import de.saar.basic.StringTools;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;
 import de.up.ling.tree.Tree;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -39,6 +46,42 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     private Stream<WeightedTree> globalStream;
     private int progress;
     private ProgressListener progressListener;
+    
+    public static void main(String[] args) throws Exception {
+        /*
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("wsj00.bin.pos.top.ctf0.irtg"));
+        String sentence = "NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .";
+        TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", sentence));
+        ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream("chart.bin"));
+        os.writeObject(chart);
+        os.flush();
+        os.close();
+        */
+        
+        ObjectInputStream is = new ObjectInputStream(new FileInputStream("chart.bin"));        
+        TreeAutomaton chart = (TreeAutomaton) is.readObject();        
+        
+        for( int i = 0; i < 5; i++ ) {
+            SortedLanguageIterator it = new SortedLanguageIterator(chart);
+            measureEnumerate(it, 10000);
+        }
+        
+    }
+    
+    private static void measureEnumerate(SortedLanguageIterator it, int trees) {
+        CpuTimeStopwatch w = new CpuTimeStopwatch();
+        
+        w.record();
+        it.next();
+        
+        w.record();
+        for( int i = 0; i < trees; i++ ) {
+            it.next();
+        }
+        
+        w.record();
+        w.printMilliseconds("first", "enumerate");
+    }
 
     public SortedLanguageIterator(TreeAutomaton<State> auto) {
         this.auto = auto;
