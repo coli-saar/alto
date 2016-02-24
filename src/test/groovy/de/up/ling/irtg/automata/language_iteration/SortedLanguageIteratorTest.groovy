@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.automata
+package de.up.ling.irtg.automata.language_iteration
 
 
 import org.junit.*
@@ -12,6 +12,7 @@ import java.io.*
 import de.saar.basic.*
 import de.saar.chorus.term.parser.*
 import de.up.ling.tree.*
+import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.signature.*
 import com.google.common.collect.Iterators;

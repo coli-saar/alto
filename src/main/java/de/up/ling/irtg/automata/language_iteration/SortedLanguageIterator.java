@@ -2,9 +2,12 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.automata;
+package de.up.ling.irtg.automata.language_iteration;
 
 import de.saar.basic.StringTools;
+import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.WeightedTree;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;

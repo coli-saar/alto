@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
