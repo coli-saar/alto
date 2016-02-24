@@ -113,8 +113,7 @@ public class ExtractGrammar<Type1, Type2> {
             return ita.getAutomaton();
         });
 
-        MostFrequentVariables mfv = new MostFrequentVariables();
-        Iterable<Tree<String>> solutions = mfv.getChoices(automata);
+        Iterable<Tree<String>> solutions = this.trex.getChoices(automata);
 
         RulePostProcessing<Type1, Type2> rpp = new RulePostProcessing<>(algebra1, algebra2);
 

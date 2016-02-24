@@ -28,14 +28,17 @@ public class RemoveDeadTest {
         cta.getFinalStates().add(cta.addState("START"));
         
         cta.addRule(cta.createRule("START","1",new String[] {"A","B"}));
-        cta.addRule(cta.createRule("A", "2", new String[] {}));
-        cta.addRule(cta.createRule("B", "3", new String[] {}));
+        cta.addRule(cta.createRule("START","9",new String[] {"A","D"}));
+        cta.addRule(cta.createRule("A", "2", new String[] {"B","B","G"}));
+        cta.addRule(cta.createRule("G", "3", new String[] {"B","B"}));
         
-        cta.addRule(cta.createRule("A","4",new String[] {"C","C"}));
-        cta.addRule(cta.createRule("C","5",new String[] {"B","D"}));
-        cta.addRule(cta.createRule("C","6",new String[] {"D"}));
+        cta.addRule(cta.createRule("B", "4", new String[] {}));
         
-        cta.addRule(cta.createRule("D","7",new String[] {"E"}));
+        cta.addRule(cta.createRule("A","5",new String[] {"C","C"}));
+        cta.addRule(cta.createRule("C","6",new String[] {"B","D"}));
+        cta.addRule(cta.createRule("C","7",new String[] {"D"}));
+        
+        cta.addRule(cta.createRule("D","8",new String[] {"E"}));
         
         ta = cta;
     }

@@ -31,7 +31,6 @@ import java.util.function.Supplier;
  * @author christoph_teichmann
  */
 public class ExtractJointTrees {
-       
     /**
      * 
      */
@@ -93,6 +92,7 @@ public class ExtractJointTrees {
             InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(ta);
 
             double size = (ta.countTrees());
+            
             sumOfSizes += size;
             min = Math.min(min, size);
             max = Math.max(size, max);

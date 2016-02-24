@@ -156,9 +156,7 @@ public class CorpusCreator {
                     RuleFindingIntersectionAutomaton rfi = new RuleFindingIntersectionAutomaton(l, r, hom.getHomomorphism1(), hom.getHomomorphism2());
                     TopDownIntersectionAutomaton tdi = new TopDownIntersectionAutomaton(rfi, hom.getRestriction());
                     
-                    System.out.println("before dead removal");
                     TreeAutomaton finished = RemoveDead.reduce(tdi);
-                    System.out.println("after dead removal");
                     
                     finished = hom.reduceToOriginalVariablePairs(finished);
                     

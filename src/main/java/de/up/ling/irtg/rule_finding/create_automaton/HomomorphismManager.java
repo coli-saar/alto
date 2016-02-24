@@ -628,8 +628,6 @@ public class HomomorphismManager {
      * @return
      */
     public TreeAutomaton reduceToOriginalVariablePairs(TreeAutomaton done) {
-        System.out.println("almost done");
-        
         ConcreteTreeAutomaton<String> goal = new ConcreteTreeAutomaton<>(done.getSignature());
 
         IntSet seen = new IntOpenHashSet(done.getFinalStates());
@@ -738,8 +736,6 @@ public class HomomorphismManager {
                 this.handleVariablePair(osym, sym);
             }
         }
-        
-        System.out.println("done");
     }
 
     /**

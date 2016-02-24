@@ -779,7 +779,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
-    public Map<Integer, Double> inside() {
+    public Int2ObjectMap<Double> inside() {
         return evaluateInSemiring(new DoubleArithmeticSemiring(), new RuleEvaluator<Double>() {
             public Double evaluateRule(Rule rule) {
                 return rule.getWeight();
@@ -1323,6 +1323,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ret.stateInterner = stateInterner;
 
         makeAllRulesExplicit();
+        
+        System.err.println("after make explicit");
 
         for (Rule rule : getRuleSet()) {
             ret.addRule(rule);
@@ -2332,9 +2334,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public List<Integer> getStatesInBottomUpOrder() {
-        List<Integer> ret = new ArrayList<Integer>();
+        IntList ret = new IntArrayList();
 //        SetMultimap<Integer, Integer> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
-        Set<Integer> visited = new HashSet<Integer>();
+        IntSet visited = new IntOpenHashSet();
 
         // traverse all rules to compute graph
 //        Map<Integer, Map<int[], Set<Rule>>> rules = getAllRules();
@@ -2358,7 +2360,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
-    private void dfsForStatesInBottomUpOrder(int q, SetMultimap<Integer, Integer> children, Set<Integer> visited, List<Integer> ret) {
+    private void dfsForStatesInBottomUpOrder(int q, SetMultimap<Integer, Integer> children, IntSet visited, IntList ret) {
         if (!visited.contains(q)) {
             visited.add(q);
 

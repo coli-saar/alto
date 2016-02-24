@@ -117,10 +117,8 @@ public class BiFunctionParallelIterable<InputType1,InputType2,OutputType> implem
             try {
                 return this.expected.poll().get();
             } catch (InterruptedException | ExecutionException ex) {
-                Logger.getLogger(BiFunctionParallelIterable.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
             }
-            
-            return null;
         }
 
         /**

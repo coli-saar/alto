@@ -12,7 +12,9 @@ import de.up.ling.irtg.rule_finding.data_creation.MakeAlignments;
 import de.up.ling.irtg.rule_finding.data_creation.MakeAutomata;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeParser;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -44,20 +46,20 @@ public class CorpusCreatorTest {
      */
     private final String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
             + "a b c\n"
-            + "d c c";
+            + "1 2 3 4 5";
 
     /**
      *
      */
     private final String rightTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
             + "e f g\n"
-            + "g z z ";
+            + "1 2 3 4 5";
 
     /**
      *
      */
     private final String alignments = "0-0 0-1 1-2\n"
-            + "0-0 1-1 2-2\n";
+            + "0-0 1-1 2-2 3-3 4-4\n";
 
     /**
      * 
@@ -72,7 +74,7 @@ public class CorpusCreatorTest {
     @Before
     public void setUp() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
         IntersectionPruner ip1 = new IntersectionPruner(IntersectionOptions.NO_EMPTY, IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
-        IntersectionPruner ip2 = new IntersectionPruner(IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM, IntersectionOptions.LEXICALIZED);
+        IntersectionPruner ip2 = new IntersectionPruner(IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
 
         this.cc = new CorpusCreator(ip1, ip2, 1);
 
@@ -195,7 +197,7 @@ public class CorpusCreatorTest {
     }
 
     @Test
-    public void test() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
+    public void test() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException, ParseException {
         Iterable<Pair<TreeAutomaton<String>,TreeAutomaton<String>>> pairs = this.cc.pushAlignments(pairs1, pairs2);
         
         Iterable<Pair<TreeAutomaton,HomomorphismManager>> result = this.cc.getSharedAutomata(pairs);
@@ -206,8 +208,6 @@ public class CorpusCreatorTest {
         Pair<TreeAutomaton,HomomorphismManager> p2 = resIter.next();
         assertFalse(resIter.hasNext());
         
-        assertFalse(p1.getLeft().isCyclic());
-        assertFalse(p2.getLeft().isCyclic());
         
         assertFalse(p1.getLeft().isEmpty());
         assertFalse(p2.getLeft().isEmpty());
@@ -224,14 +224,23 @@ public class CorpusCreatorTest {
                                                        hm.getHomomorphism2().apply(ts).toString());
             assertFalse(solutions.contains(solution));
             solutions.add(solution);
-            System.out.println("+++++++++++++++++");
-            System.out.println(ts);
-            System.out.println(solution);
         }
         
         assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*(a,*(b,c)))","'__X__{__UAS__}'(*(e,*(f,g)))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*(a,*('__X__{1-2}'(b),c)))","'__X__{__UAS__}'(*(e,*(f,'__X__{2-3}'(g))))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*(a,'__X__{1-3}'(*(b,c))))","'__X__{__UAS__}'(*(e,*(f,'__X__{2-3}'(g))))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*(a,'__X__{1-3}'(*('__X__{1-2}'(b),c))))","'__X__{__UAS__}'(*(e,*(f,'__X__{2-3}'('__X__{2-3}'(g)))))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*('__X__{0-2}'(*(a,b)),c))","'__X__{__UAS__}'('__X__{0-3}'(*(e,*(f,g))))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*('__X__{0-2}'(*(a,'__X__{1-2}'(b))),c))","'__X__{__UAS__}'('__X__{0-3}'(*(e,*(f,'__X__{2-3}'(g)))))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*('__X__{0-2}'(*('__X__{0-1}'(a),b)),c))","'__X__{__UAS__}'('__X__{0-3}'(*('__X__{0-2}'(*(e,f)),g)))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*('__X__{0-2}'(*('__X__{0-1}'(a),'__X__{1-2}'(b))),c))","'__X__{__UAS__}'('__X__{0-3}'(*('__X__{0-2}'(*(e,f)),'__X__{2-3}'(g))))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*('__X__{0-1}'(a),*(b,c)))","'__X__{__UAS__}'(*('__X__{0-2}'(*(e,f)),g))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*('__X__{0-1}'(a),*('__X__{1-2}'(b),c)))","'__X__{__UAS__}'(*('__X__{0-2}'(*(e,f)),'__X__{2-3}'(g)))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*('__X__{0-1}'(a),'__X__{1-3}'(*(b,c))))","'__X__{__UAS__}'(*('__X__{0-2}'(*(e,f)),'__X__{2-3}'(g)))")));
+        assertTrue(solutions.contains(new Pair<>("'__X__{__UAS__}'(*('__X__{0-1}'(a),'__X__{1-3}'(*('__X__{1-2}'(b),c))))","'__X__{__UAS__}'(*('__X__{0-2}'(*(e,f)),'__X__{2-3}'('__X__{2-3}'(g))))")));
         
         
-        //TODO
+        TreeAutomaton ta2 = p2.getLeft();
+        ta2.accepts(TreeParser.parse("'__X__{__UAS__}'('*(x1, x2) / *(x1, x2) | 2'('__X__{0-3 +++ 0-3}'('*(x1, x2) / *(x1, x2) | 2'('__X__{0-2 +++ 0-2}'('*(x1, x2) / *(x1, x2) | 2'('__X__{0-1 +++ 0-1}'('1() / x1 | 1'('x1 / 1() | 1'('___END___() / ___END___() | 0'))),'__X__{1-2 +++ 1-2}'('2() / x1 | 1'('x1 / 2() | 1'('___END___() / ___END___() | 0'))))),'__X__{2-3 +++ 2-3}'('3() / x1 | 1'('x1 / 3() | 1'('___END___() / ___END___() | 0'))))),'*(x1, x2) / *(x1, x2) | 2'('__X__{3-4 +++ 3-4}'('4() / x1 | 1'('x1 / 4() | 1'('___END___() / ___END___() | 0'))),'__X__{4-5 +++ 4-5}'('5() / x1 | 1'('x1 / 5() | 1'('___END___() / ___END___() | 0'))))))"));
     }
 }
