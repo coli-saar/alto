@@ -6,8 +6,9 @@
 
 package de.up.ling.irtg.automata.language_iteration;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import de.up.ling.irtg.automata.Rule;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -15,9 +16,9 @@ import it.unimi.dsi.fastutil.ints.IntList;
  */
 public class IdentityRuleRefiner implements RuleRefiner {
     @Override
-    public IntList refine(int label) {
-        IntList ret = new IntArrayList();
-        ret.add(label);
+    public List<Rule> refine(Rule rule) {
+        List<Rule> ret = new ArrayList<>();
+        ret.add(rule);
         return ret;
     }
     

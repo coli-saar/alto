@@ -6,12 +6,13 @@
 
 package de.up.ling.irtg.automata.language_iteration;
 
-import it.unimi.dsi.fastutil.ints.IntList;
+import de.up.ling.irtg.automata.Rule;
+import java.util.List;
 
 /**
  *
  * @author koller
  */
 public interface RuleRefiner {
-    public IntList refine(int label);
+    public List<Rule> refine(Rule rule);
 }

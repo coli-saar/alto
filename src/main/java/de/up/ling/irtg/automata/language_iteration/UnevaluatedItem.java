@@ -15,17 +15,25 @@ import java.util.List;
  * build a tree for the given rule by combining the i1-best tree for the
  * first child state, the i2-best tree for the second child state, etc.
  */
-class UnevaluatedItem {
-    public List<Integer> positionsInChildLists;
+public class UnevaluatedItem {
+    public List<Integer> tuple;
 
     public UnevaluatedItem(List<Integer> positionsInChildLists) {
-        this.positionsInChildLists = positionsInChildLists;
+        this.tuple = positionsInChildLists;
+    }
+    
+    public int getRefinedRulePosition() {
+        return tuple.get(0);
+    }
+    
+    public int getPositionInChildList(int i) {
+        return tuple.get(i+1);
     }
 
     public List<UnevaluatedItem> makeVariations() {
         List<UnevaluatedItem> ret = new ArrayList<UnevaluatedItem>();
-        for (int pos = 0; pos < positionsInChildLists.size(); pos++) {
-            List<Integer> newPositions = new ArrayList<Integer>(positionsInChildLists);
+        for (int pos = 0; pos < tuple.size(); pos++) {
+            List<Integer> newPositions = new ArrayList<Integer>(tuple);
             newPositions.set(pos, newPositions.get(pos) + 1);
             ret.add(new UnevaluatedItem(newPositions));
         }
@@ -35,7 +43,7 @@ class UnevaluatedItem {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 43 * hash + (this.positionsInChildLists != null ? this.positionsInChildLists.hashCode() : 0);
+        hash = 43 * hash + (this.tuple != null ? this.tuple.hashCode() : 0);
         return hash;
     }
 
@@ -48,7 +56,7 @@ class UnevaluatedItem {
             return false;
         }
         final UnevaluatedItem other = (UnevaluatedItem) obj;
-        if (this.positionsInChildLists != other.positionsInChildLists && (this.positionsInChildLists == null || !this.positionsInChildLists.equals(other.positionsInChildLists))) {
+        if (this.tuple != other.tuple && (this.tuple == null || !this.tuple.equals(other.tuple))) {
             return false;
         }
         return true;
@@ -56,7 +64,7 @@ class UnevaluatedItem {
 
     @Override
     public String toString() {
-        return "<" + StringTools.join(positionsInChildLists, ",") + ">";
+        return "<" + StringTools.join(tuple, ",") + ">";
     }
     
 }

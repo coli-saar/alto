@@ -6,13 +6,13 @@
 
 package de.up.ling.irtg.automata.language_iteration;
 
-import de.up.ling.tree.Tree;
+import de.up.ling.irtg.automata.Rule;
 import java.util.List;
 
 /**
  *
  * @author koller
  */
-public interface ItemEvaluator {
-    public EvaluatedItem evaluate(int label, List<Tree<Integer>> children, double weight); // TODO - get this right
+public interface ItemEvaluator<Q> {
+    public EvaluatedItem<Q> evaluate(Rule refinedRule, List<EvaluatedItem<Q>> children, UnevaluatedItem unevaluatedItem);
 }

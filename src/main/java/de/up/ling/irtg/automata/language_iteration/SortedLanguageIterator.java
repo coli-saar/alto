@@ -4,23 +4,13 @@
  */
 package de.up.ling.irtg.automata.language_iteration;
 
-import com.beust.jcommander.internal.Maps;
-import de.saar.basic.StringTools;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
-import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;
-import de.up.ling.tree.Tree;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -44,31 +34,31 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     private Set<Integer> visitedStates;
     private static final boolean DEBUG = false;
     private TreeAutomaton<State> auto;
-    private Stream<WeightedTree> globalStream;
+    private Stream<EvaluatedItem> globalStream;
     private int progress;
     private ProgressListener progressListener;
     private RuleRefiner ruleRefiner;
     private ItemEvaluator itemEvaluator;
-    
+
     public SortedLanguageIterator(TreeAutomaton<State> auto) {
-        this(auto, new IdentityRuleRefiner(), null); // TODO - fix this
+        this(auto, new IdentityRuleRefiner(), new TreeCombiningItemEvaluator());
     }
-    
+
     public SortedLanguageIterator(TreeAutomaton<State> auto, RuleRefiner ruleRefiner, ItemEvaluator itemEvaluator) {
         this.auto = auto;
         this.ruleRefiner = ruleRefiner;
         this.itemEvaluator = itemEvaluator;
-        
+
         streamForState = new HashMap<Integer, StreamForState>();
 
         this.progress = 0;
 
         // combine streams for the different start symbols
         visitedStates = new HashSet<Integer>();
-        globalStream = new SortedMergedStream<WeightedTree>(WeightedTreeComparator.INSTANCE);
+        globalStream = new SortedMergedStream<EvaluatedItem>(EvaluatedItemComparator.INSTANCE);
         for (int q : auto.getFinalStates()) {
             StreamForState sq = getStreamForState(q);
-            ((SortedMergedStream<WeightedTree>) globalStream).addStream(sq);
+            ((SortedMergedStream<EvaluatedItem>) globalStream).addStream(sq);
         }
     }
 
@@ -130,7 +120,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
             printEntireTable();
         }
 
-        return globalStream.pop();
+        return globalStream.pop().getWeightedTree();
     }
 
     /**
@@ -140,20 +130,20 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
      * the streams for the rules with which the state can be expanded top-down.
      *
      */
-    private class StreamForState implements Stream<WeightedTree> {
+    private class StreamForState implements Stream<EvaluatedItem> {
 
-        private List<WeightedTree> known;            // the trees that have been computed so far; guaranteed to be the k-best for this state
-        private List<StreamForRule> ruleStreams;     // streams for the individual rules
+        private List<EvaluatedItem> known;         // the e-items that have been computed so far; guaranteed to be the k-best for this state
+        private List<StreamForRule> ruleStreams;   // streams for the individual rules
         private int state;                         // the state which this stream represents
-        private int nextTreeInStream;
-        private SortedMergedStream<WeightedTree> mergedRuleStream;
+        private int nextItemInStream;
+        private SortedMergedStream<EvaluatedItem> mergedRuleStream;
 
         public StreamForState(int state) {
-            known = new ArrayList<WeightedTree>();
+            known = new ArrayList<EvaluatedItem>();
             ruleStreams = new ArrayList<StreamForRule>();
             this.state = state;
-            nextTreeInStream = 0;
-            mergedRuleStream = new SortedMergedStream<WeightedTree>(WeightedTreeComparator.INSTANCE);
+            nextItemInStream = 0;
+            mergedRuleStream = new SortedMergedStream<EvaluatedItem>(EvaluatedItemComparator.INSTANCE);
         }
 
         public void addEntryForRule(Rule rule) {
@@ -163,21 +153,21 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }
 
         /**
-         * Returns the k-best tree for this state.
+         * Returns the k-best item for this state.
          *
          * @param k
-         * @return null if the state has less than k trees or the k-th best tree
+         * @return null if the state has less than k items or the k-th best item
          * cannot be generated at this point
          */
-        public WeightedTree getTree(int k) {
+        EvaluatedItem getEvaluatedItem(int k) {
             if (DEBUG) {
-                System.err.println("getTree(" + k + ") for state " + st(state));
+                System.err.println("getEvaluatedItem(" + k + ") for state " + st(state));
             }
             if (k < known.size()) {
                 // If the k-best tree has already been computed,
                 // simply return it.
                 if (DEBUG) {
-                    System.err.println("   -> " + k + "-best tree is known: " + WeightedTree.formatWeightedTree(known.get(k), auto.getSignature()));
+                    System.err.println("   -> " + k + "-best item is known: " + WeightedTree.formatWeightedTree(known.get(k).getWeightedTree(), auto.getSignature()));
                 }
                 return known.get(k);
             } else if (!visitedStates.contains(state)) {
@@ -194,17 +184,17 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                 assert k == known.size();
 
                 visitedStates.add(state);
-                WeightedTree bestTree = mergedRuleStream.pop();
+                EvaluatedItem bestItem = mergedRuleStream.pop();
                 visitedStates.remove(state);
 
-                if (bestTree != null) {
-                    known.add(bestTree);
+                if (bestItem != null) {
+                    known.add(bestItem);
                 }
 
                 if (DEBUG) {
-                    System.err.println("   -> " + k + "-best tree for " + st(state) + " computed: " + WeightedTree.formatWeightedTree(bestTree, auto.getSignature()));
+                    System.err.println("   -> " + k + "-best item for " + st(state) + " computed: " + WeightedTree.formatWeightedTree(bestItem.getWeightedTree(), auto.getSignature()));
                 }
-                return bestTree;
+                return bestItem;
             } else {
                 return null;
             }
@@ -212,8 +202,8 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
 
         private List<String> formatKnownTrees() {
             List<String> ret = new ArrayList<String>();
-            for (WeightedTree wt : known) {
-                ret.add(WeightedTree.formatWeightedTree(wt, auto.getSignature()));
+            for (EvaluatedItem wt : known) {
+                ret.add(WeightedTree.formatWeightedTree(wt.getWeightedTree(), auto.getSignature()));
             }
             return ret;
         }
@@ -237,13 +227,13 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }
 
         @Override
-        public WeightedTree peek() {
-            return getTree(nextTreeInStream);
+        public EvaluatedItem peek() {
+            return getEvaluatedItem(nextItemInStream);
         }
 
         @Override
-        public WeightedTree pop() {
-            return getTree(nextTreeInStream++);
+        public EvaluatedItem pop() {
+            return getEvaluatedItem(nextItemInStream++);
         }
     }
 
@@ -255,24 +245,31 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
      * combination of the "known" list in SFS, plus the StreamForRules for all
      * the state's top-down rules, is always the stream of trees for the state.
      */
-    private class StreamForRule implements Stream<WeightedTree> {
-
-        // the rule whose tree stream we represent
-
+    private class StreamForRule implements Stream<EvaluatedItem> {
+        // The rule whose tree stream we represent
         public Rule rule;
+
+        // The rules into which "rule" is refined. This is ordinarily a 
+        // singleton consisting only of "rule", but may contain more elements
+        // if we're using this class for cube pruning.
+        private List<Rule> refinedRules;
+
         // A priority queue of trees generated by this rule, sorted
         // by weight. Each entry in the queue represents a tree that is
         // actually in the language, together with its weight.
         private PriorityQueue<EvaluatedItem> evaluatedItems;
+
         // A bag of further items, each of which may or may not be
         // expandable into an actual tree. 
         private List<UnevaluatedItem> unevaluatedItems;
+
         // Unevaluated items that were already added to the unevaluatedItems
         // list at some earlier time, and need not be re-added.
         private Set<UnevaluatedItem> previouslyDiscoveredItem;
 
         public StreamForRule(Rule rule) {
             this.rule = rule;
+            this.refinedRules = ruleRefiner.refine(rule);
 
             evaluatedItems = new PriorityQueue<EvaluatedItem>();
             unevaluatedItems = new ArrayList<UnevaluatedItem>();
@@ -282,7 +279,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
             // <0, ..., 0>, indicating that the 1-best tree for this rule
             // can be built from the 1-best trees of the child states
             List<Integer> listOfZeroes = new ArrayList<Integer>();
-            for (int i = 0; i < rule.getArity(); i++) {
+            for (int i = 0; i < rule.getArity() + 1; i++) {
                 listOfZeroes.add(0);
             }
 
@@ -298,7 +295,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
          * @return null if no further trees are available at this time
          */
         @Override
-        public WeightedTree peek() {
+        public EvaluatedItem peek() {
             evaluateUnevaluatedItems();
 
             EvaluatedItem item = evaluatedItems.peek();
@@ -306,7 +303,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
             if (item == null) {
                 return null;
             } else {
-                return item.getWeightedTree();
+                return item;
             }
         }
 
@@ -317,7 +314,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
          * @return null if no further trees are available at this time
          */
         @Override
-        public WeightedTree pop() {
+        public EvaluatedItem pop() {
             evaluateUnevaluatedItems();
 
             EvaluatedItem ret = evaluatedItems.poll();
@@ -336,8 +333,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                     }
                 }
 
-//                evaluateUnevaluatedItems();
-                return ret.getWeightedTree();
+                return ret;
             }
         }
 
@@ -349,17 +345,17 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
          * needs to be done each time we want to access the best remaining tree.
          */
         private void evaluateUnevaluatedItems() {
-            List<UnevaluatedItem> itemsToRemove = new ArrayList<UnevaluatedItem>();
+            List<UnevaluatedItem> leftoverUnevalItems = new ArrayList<>();
 
             if (DEBUG) {
                 System.err.println("computing next tree for " + rule.toString(auto));
             }
 
             for (UnevaluatedItem item : unevaluatedItems) {
-                double weight = 1;
                 boolean available = true;
                 boolean keepItemAround = true;
-                List<Tree<Integer>> children = new ArrayList<Tree<Integer>>();
+                List<EvaluatedItem> children = new ArrayList<>();
+                Rule refinedRule = null;
 
                 if (progressListener != null) {
                     if (progress % PROGRESS_GRANULARITY == 0) {
@@ -369,52 +365,59 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                     progress++;
                 }
 
-                // for each child, attempt to obtain the k-best tree, where k
-                // is the index specified for this child in the unevaluated item
-                for (int i = 0; i < rule.getArity(); i++) {
-                    StreamForState stateStream = getStreamForState(rule.getChildren()[i]);
-                    WeightedTree weightedTree = stateStream.getTree(item.positionsInChildLists.get(i));
+                // The first entry in the tuple represents the label ID of the rule we are
+                // generating. If it is unavailable, skip this item.
+                if (item.getRefinedRulePosition() >= refinedRules.size()) {
+                    keepItemAround = false;
+                    available = false;
+                } else {
+                    // Otherwise, get the label ID
+                    refinedRule = refinedRules.get(item.getRefinedRulePosition());
 
-                    if (weightedTree == null) {
-                        // If no k-best tree is available for the child at this time, we can't
-                        // evaluate the item. If furthermore the stream for the child state is
-                        // finished, we can drop the unevaluated item altogether. If it is not
-                        // finished, we need to keep the item around, because the necessary
-                        // index might become available at some point in the future.
-                        available = false;
+                    // for each child, attempt to obtain the k-best tree, where k
+                    // is the index specified for this child in the unevaluated item
+                    for (int i = 0; i < rule.getArity(); i++) {
+                        StreamForState stateStream = getStreamForState(rule.getChildren()[i]);
+                        EvaluatedItem evaluatedItemForChild = stateStream.getEvaluatedItem(item.getPositionInChildList(i));
 
-                        if (stateStream.isFinished()) {
-                            keepItemAround = false;
+                        if (evaluatedItemForChild == null) {
+                            // If no k-best tree is available for the child at this time, we can't
+                            // evaluate the item. If furthermore the stream for the child state is
+                            // finished, we can drop the unevaluated item altogether. If it is not
+                            // finished, we need to keep the item around, because the necessary
+                            // index might become available at some point in the future.
+                            available = false;
+
+                            if (stateStream.isFinished()) {
+                                keepItemAround = false;
+                            }
+                        } else {
+                            // Otherwise, record the k-best tree
+                            children.add(evaluatedItemForChild);
                         }
-                    } else {
-                        // Otherwise, update the weight and record the k-best tree
-                        weight *= weightedTree.getWeight();
-                        children.add(weightedTree.getTree());
                     }
                 }
 
                 if (available) {
-                    // If the specified tree was available for each child,
-                    // create the new tree and add it to the evaluated items.
-                    WeightedTree wtree = new WeightedTree(Tree.create(rule.getLabel(), children), weight * rule.getWeight());
-                    evaluatedItems.add(new EvaluatedItem(item, wtree));
-                    itemsToRemove.add(item);
+                    // If the specified item was available for each child,
+                    // create the new item and add it to the evaluated items.
+                    evaluatedItems.add(itemEvaluator.evaluate(refinedRule, children, item));
+//                    itemsToRemove.add(item);
+                } else // Otherwise, deal with non-expandable items as explained above.
+                if (keepItemAround) {
+                    if (DEBUG) {
+                        System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded, keeping it for later");
+                    }
+                    leftoverUnevalItems.add(item);
                 } else {
-                    // Otherwise, deal with non-expandable items as explained above.
-                    if (keepItemAround) {
-                        if (DEBUG) {
-                            System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded, keeping it for later");
-                        }
-                    } else {
-                        itemsToRemove.add(item);
-                        if (DEBUG) {
-                            System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded and stream is finished, deleting it");
-                        }
+//                    itemsToRemove.add(item);
+                    if (DEBUG) {
+                        System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded and stream is finished, deleting it");
                     }
                 }
             }
 
-            unevaluatedItems.removeAll(itemsToRemove);
+            unevaluatedItems = leftoverUnevalItems;
 
             if (DEBUG) {
                 System.err.println("- after evaluation -");
@@ -460,62 +463,62 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     public void remove() {
         throw new UnsupportedOperationException("Cannot remove items from this iterator.");
     }
+    
+    
 
-    private static class WeightedTreeComparator implements Comparator<WeightedTree> {
-
-        public static WeightedTreeComparator INSTANCE = new WeightedTreeComparator();
-
-        @Override
-        public int compare(WeightedTree w1, WeightedTree w2) {
-            // streams that can't deliver values right now are dispreferred (= get minimum weight)
-            double weight1 = (w1 == null) ? Double.NEGATIVE_INFINITY : w1.getWeight();
-            double weight2 = (w2 == null) ? Double.NEGATIVE_INFINITY : w2.getWeight();
-
-            // sort descending, i.e. streams with high weights go at the beginning of the list
-            return Double.compare(weight2, weight1);
-        }
-    }
+//    private static class WeightedTreeComparator implements Comparator<WeightedTree> {
+//
+//        public static WeightedTreeComparator INSTANCE = new WeightedTreeComparator();
+//
+//        @Override
+//        public int compare(WeightedTree w1, WeightedTree w2) {
+//            // streams that can't deliver values right now are dispreferred (= get minimum weight)
+//            double weight1 = (w1 == null) ? Double.NEGATIVE_INFINITY : w1.getWeight();
+//            double weight2 = (w2 == null) ? Double.NEGATIVE_INFINITY : w2.getWeight();
+//
+//            // sort descending, i.e. streams with high weights go at the beginning of the list
+//            return Double.compare(weight2, weight1);
+//        }
+//    }
 
     String eviToString(EvaluatedItem evi) {
         return "[" + WeightedTree.formatWeightedTree(evi.getWeightedTree(), auto.getSignature()) + " (from " + evi.getItem().toString() + ")]";
     }
-    
-    
-    
-    
-    public static void main(String[] args) throws Exception {
-        /*
-         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("wsj00.bin.pos.top.ctf0.irtg"));
-         String sentence = "NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .";
-         TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", sentence));
-         ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream("chart.bin"));
-         os.writeObject(chart);
-         os.flush();
-         os.close();
-         */
 
-        ObjectInputStream is = new ObjectInputStream(new FileInputStream("chart.bin"));
-        TreeAutomaton chart = (TreeAutomaton) is.readObject();
-
-        for (int i = 0; i < 5; i++) {
-            SortedLanguageIterator it = new SortedLanguageIterator(chart);
-            measureEnumerate(it, 10000);
-        }
-
-    }
-
-    private static void measureEnumerate(SortedLanguageIterator it, int trees) {
-        CpuTimeStopwatch w = new CpuTimeStopwatch();
-
-        w.record();
-        it.next();
-
-        w.record();
-        for (int i = 0; i < trees; i++) {
-            it.next();
-        }
-
-        w.record();
-        w.printMilliseconds("first", "enumerate");
-    }
+//    
+//    public static void main(String[] args) throws Exception {
+//        /*
+//         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("wsj00.bin.pos.top.ctf0.irtg"));
+//         String sentence = "NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .";
+//         TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", sentence));
+//         ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream("chart.bin"));
+//         os.writeObject(chart);
+//         os.flush();
+//         os.close();
+//         */
+//
+//        ObjectInputStream is = new ObjectInputStream(new FileInputStream("chart.bin"));
+//        TreeAutomaton chart = (TreeAutomaton) is.readObject();
+//
+//        for (int i = 0; i < 5; i++) {
+//            SortedLanguageIterator it = new SortedLanguageIterator(chart);
+//            measureEnumerate(it, 10000);
+//        }
+//
+//    }
+//
+//    private static void measureEnumerate(SortedLanguageIterator it, int trees) {
+//        CpuTimeStopwatch w = new CpuTimeStopwatch();
+//
+//        w.record();
+//        it.next();
+//
+//        w.record();
+//        for (int i = 0; i < trees; i++) {
+//            it.next();
+//        }
+//
+//        w.record();
+//        w.printMilliseconds("first", "enumerate");
+//    }
 }
