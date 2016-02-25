@@ -5,18 +5,21 @@
  */
 package de.up.ling.irtg.rule_finding.learning;
 
-import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.automata.IntersectionAutomaton;
+import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.rule_finding.create_automaton.SpecifiedAligner;
-import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
-import de.up.ling.irtg.rule_finding.pruning.intersection.NoEmpty;
-import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
+import de.up.ling.irtg.codec.CodecParseException;
+import de.up.ling.irtg.codec.IrtgInputCodec;
+import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
+import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
+import de.up.ling.irtg.rule_finding.pruning.Pruner;
+import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
+import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
-import java.util.ArrayList;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Iterator;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -26,6 +29,31 @@ import static org.junit.Assert.*;
  * @author christoph_teichmann
  */
 public class MostFrequentVariablesTest {
+    /**
+    *
+    */
+    private final String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+            + "an example\n"
+            + "this is another\n"
+            + "yet another example\n"
+            + "and a final one";
+
+    /**
+     *
+     */
+    private final String rightTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+            + "ein beispiel\n"
+            + "dies ist ein weiteres\n"
+            + "noch ein example\n"
+            + "und ein letztes";
+
+    /**
+     *
+     */
+    private final String alignments = "0-0 1-1\n"
+            + "0-0 1-1 2-2 2-3\n"
+            + "0-0 1-0 1-1 2-2\n"
+            + "0-0 1-1 2-2 3-2";
     
     /**
      * 
@@ -36,109 +64,40 @@ public class MostFrequentVariablesTest {
      * 
      */
     private MostFrequentVariables mfv;
+
     
     @Before
-    public void setUp() {
-        StringAlgebra sta = new StringAlgebra();
-        
-        List<TreeAutomaton> list = new ArrayList<>();
-        data = list;
-        
-        LeftRightXFromFinite<StringAlgebra.Span> variables = new LeftRightXFromFinite<>();
-        
-        TreeAutomaton ta = sta.decompose(sta.parseString("Hans geht heim"));
-        AlignedTrees at = new AlignedTrees(ta, new SpecifiedAligner(ta));
-        ta = variables.apply(at).getTrees();
-        TreeAutomaton constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
-        ta = new IntersectionAutomaton(ta, constrain);
-        list.add(ta);
-        
-        ta = sta.decompose(sta.parseString("Mary geht morgen heim"));
-        at = new AlignedTrees(ta, new SpecifiedAligner(ta));
-        ta = variables.apply(at).getTrees();
-        constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
-        ta = new IntersectionAutomaton(ta, constrain);
-        list.add(ta);
-        
-        ta = sta.decompose(sta.parseString("Der Jüngste geht heute heim"));
-        at = new AlignedTrees(ta, new SpecifiedAligner(ta));
-        ta = variables.apply(at).getTrees();
-        constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
-        ta = new IntersectionAutomaton(ta, constrain);
-        list.add(ta);
-        
-        ta = sta.decompose(sta.parseString("dann heute heim"));
-        at = new AlignedTrees(ta, new SpecifiedAligner(ta));
-        ta = variables.apply(at).getTrees();
-        constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
-        ta = new IntersectionAutomaton(ta, constrain);
-        list.add(ta);
-        
-        ta = sta.decompose(sta.parseString("Der Jüngste kommt"));
-        at = new AlignedTrees(ta, new SpecifiedAligner(ta));
-        ta = variables.apply(at).getTrees();
-        constrain = new NoEmpty(ta.getSignature(), ta.getAllLabels());
-        ta = new IntersectionAutomaton(ta, constrain);
-        list.add(ta);
-        
+    public void setUp() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {        
         mfv = new MostFrequentVariables();
+        
+        Pruner one = new IntersectionPruner(IntersectionOptions.LEXICALIZED,IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
+        Pruner two = new IntersectionPruner(IntersectionOptions.NO_EMPTY,IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
+        
+        Iterable<String> results = ExtractionHelper.makeIRTGs(leftTrees, rightTrees, alignments, one, two);
+        
+        IrtgInputCodec iic = new IrtgInputCodec();
+        data = new FunctionIterable<>(results,(String s) -> {
+            try {
+                return iic.read(new ByteArrayInputStream(s.getBytes())).getAutomaton();
+            } catch (IOException | CodecParseException ex) {
+                throw new RuntimeException();
+            }
+        });
     }
 
     /**
      * Test of getOptimalChoices method, of class MostFrequentVariables.
      */
     @Test
-    public void testGetOptimalChoices() {
+    public void testGetChoices() {
         Iterable<Tree<String>> it = mfv.getChoices(data);
         Object2DoubleMap<String> counts = mfv.countVariablesTopDown(data);
         Iterator<Tree<String>> iter = it.iterator();
         
-        data.iterator().forEachRemaining((TreeAutomaton ta) ->{
-            Tree<String> best = this.getBest(ta.languageIterable(), counts);
-            
-            assertEquals(best,iter.next());
-        });
+        AtomicInteger ai = new AtomicInteger();
+        iter.forEachRemaining((Tree<String> t) -> ai.incrementAndGet());
         
-        assertFalse(iter.hasNext());
-    }
-
-    /**
-     * Test of getBestAnalysis method, of class MostFrequentVariables.
-     */
-    @Test
-    public void testGetBestAnalysis() {
-        Object2DoubleMap<String> counts = mfv.countVariablesTopDown(data);
-        
-        data.iterator().forEachRemaining((TreeAutomaton ta) ->{
-            Tree<String> t = mfv.getBestAnalysis(ta, counts);
-            Tree<String> best = this.getBest(ta.languageIterable(), counts);
-            
-            assertEquals(best,t);
-        });
-    }
-
-    /**
-     * 
-     * @param lang
-     * @param counts
-     * @return 
-     */
-    private Tree<String> getBest(Iterable<Tree<String>> lang, Object2DoubleMap<String> counts) {
-        Tree<String> best = null;
-        double bestScore = Double.NEGATIVE_INFINITY;
-        for(Tree<String> ts : lang){
-            double sum = 0.0;
-            
-            for(Tree<String> node : ts.getAllNodes()){
-                sum += counts.getDouble(node.getLabel());
-            }
-            
-            if(sum > bestScore){
-                best = ts;
-                bestScore = sum;
-            }
-        }
-        return best;
+        assertEquals(ai.get(),4);
     }
 
     /**
@@ -148,9 +107,8 @@ public class MostFrequentVariablesTest {
     public void testCountVariablesTopDown() {
         Object2DoubleMap<String> counts = mfv.countVariablesTopDown(data);
         
-        assertEquals(counts.getDouble("Xgeht_heim"),3.0,0.000001);
-        assertEquals(counts.getDouble("XMary_Mary"),1.0,0.000001);
-        assertEquals(counts.getDouble("Xheim_Mary"),0.0,0.000001);
+        assertEquals(counts.get("__X__{1-2 +++ 1-2}"),4.0,0.00000001);
+        assertEquals(counts.get("__X__{2-3 +++ 2-4}"),1.0,0.00000001);
     }
     
 }
