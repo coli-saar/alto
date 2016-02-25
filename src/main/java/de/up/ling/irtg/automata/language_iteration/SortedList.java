@@ -64,4 +64,11 @@ public class SortedList<E extends Comparable> implements Iterable<E> {
     boolean isSortingRequired() {
         return sortingRequired;
     }
+
+    @Override
+    public String toString() {
+        return (sortingRequired?"s":"-") + values.toString();
+    }
+    
+    
 }

@@ -15,6 +15,7 @@ import de.up.ling.tree.*
 import de.up.ling.irtg.automata.*
 import de.up.ling.irtg.hom.*
 import de.up.ling.irtg.signature.*
+import de.up.ling.irtg.util.TestingTools.MultiplyMapItemEvaluator
 import com.google.common.collect.Iterators;
 import static org.junit.Assert.*
 import static de.up.ling.irtg.util.TestingTools.*;
@@ -26,7 +27,7 @@ import static de.up.ling.irtg.util.TestingTools.*;
  */
 public class SortedLanguageIteratorTest {
     private _assertTreeEquals(WeightedTree result, String gold, TreeAutomaton a) {
-        assert result.getTree().equals(pti(gold, a.getSignature()));
+        assertEquals(pt(gold), a.getSignature().resolve(result.getTree()))
     }
     
     @Test
@@ -62,7 +63,6 @@ public class SortedLanguageIteratorTest {
     
     @Test
     public void testOneRuleNonRecursiveAutomaton() {
-//        System.err.println("\n\n*** testOneRuleNonRecursiveAutomaton ***");
         TreeAutomaton a = pa("qb -> b [0.5]\n qa! -> f(qb) [0.7]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
@@ -75,8 +75,6 @@ public class SortedLanguageIteratorTest {
     
     @Test
     public void testMultiRulesNonRecursiveAutomaton() {
-//        System.err.println("\n\n*** testMultiRulesNonRecursiveAutomaton ***");
-        
         TreeAutomaton a = pa("qb -> b [0.5]\n qa! -> f(qb) [0.7]\n qa! -> g(qb) [0.3]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
@@ -92,8 +90,66 @@ public class SortedLanguageIteratorTest {
     }
     
     @Test
+    public void testReorderingEvaluator() {
+        TreeAutomaton a = pa("qb -> b [0.3]\n qb -> a [0.7]\n qc -> a [1]\n qa! -> f(qc,qb) [1]");
+        MultiplyMapItemEvaluator eval = new MultiplyMapItemEvaluator(["a a":1.0d, "b b":1.0d, "a b": 100.0d, "b a":1.0d], a.getSignature()) // multiplies item weights by "language model"
+        SortedLanguageIterator it = new SortedLanguageIterator(a, new IdentityRuleRefiner(), eval);
+        
+        EvaluatedItem w = it.nextItem();
+        _assertTreeEquals(w.getWeightedTree(), "f(a,a)", a);
+        assert w.getWeightedTree().getWeight() == 0.7
+        assert w.getItemWeight() == 0.7
+
+        w = it.nextItem();
+        _assertTreeEquals(w.getWeightedTree(), "f(a,b)", a);
+        assert w.getWeightedTree().getWeight() == 0.3
+        assert w.getItemWeight() == 30 // i.e. items were enumerated in the wrong order
+        
+        assert ! it.hasNext()
+    }
+    
+    @Test
+    public void testReorderingEvaluatorEnsureBeam() {
+        TreeAutomaton a = pa("qb -> b [0.3]\n qb -> a [0.7]\n qc -> a [1]\n qa! -> f(qc,qb) [1]");
+        MultiplyMapItemEvaluator eval = new MultiplyMapItemEvaluator(["a a":1.0d, "b b":1.0d, "a b": 100.0d, "b a":1.0d], a.getSignature()) // multiplies item weights by "language model"
+        SortedLanguageIterator it = new SortedLanguageIterator(a, new IdentityRuleRefiner(), eval);
+        
+        // enumerate up to 10 items per state
+        it.ensureBeam(10, 0)
+        
+        EvaluatedItem w = null
+        
+        w = it.nextItem();
+        _assertTreeEquals(w.getWeightedTree(), "f(a,b)", a);
+        assert w.getWeightedTree().getWeight() == 0.3
+        assert w.getItemWeight() == 30
+
+        w = it.nextItem();
+        _assertTreeEquals(w.getWeightedTree(), "f(a,a)", a);
+        assert w.getWeightedTree().getWeight() == 0.7
+        assert w.getItemWeight() == 0.7
+
+        assert ! it.hasNext()
+    }
+    
+    @Test
+    public void testRecursiveEnsureBeam() {
+        TreeAutomaton a = pa("qb -> b [0.5]\n qb! -> f(qb) [0.5]");
+        SortedLanguageIterator it = new SortedLanguageIterator(a);
+        
+        it.ensureBeam(10,0)
+        
+        _assertTreeEquals(it.next(), "b", a);
+        _assertTreeEquals(it.next(), "f(b)", a);
+        _assertTreeEquals(it.next(), "f(f(b))", a);
+        assert it.hasNext()
+    }
+    
+    
+    
+    @Test
     public void testRecursive() {
-//        System.err.println("\n\n*** testRecursive ***");
+        //        System.err.println("\n\n*** testRecursive ***");
         TreeAutomaton a = pa("qb -> b [0.5]\n qb! -> f(qb) [0.5]");
         Iterator<WeightedTree> it = a.sortedLanguageIterator();
         
@@ -199,7 +255,7 @@ public class SortedLanguageIteratorTest {
         TreeAutomaton auto = pa(PTB_DECODED);
         Set lang = new HashSet(collectTrees(auto)*.toString());
         assert lang.size() == 1;
-//        System.err.println(lang);
+        //        System.err.println(lang);
     }
 
     

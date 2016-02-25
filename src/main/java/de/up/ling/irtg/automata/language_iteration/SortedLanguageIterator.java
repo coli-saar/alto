@@ -13,11 +13,9 @@ import de.up.ling.stream.Stream;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -41,8 +39,8 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     private ProgressListener progressListener;
     private RuleRefiner ruleRefiner;
     private ItemEvaluator itemEvaluator;
-    private int beamSizePerState = 0;
-    private double beamWidthPerState = 1;
+    private int beamSizePerState = 0;       // require no beam size
+    private double beamWidthPerState = 0;   // allow all beam widths (1 = prune everything; 0 = prune nothing)
 
     public SortedLanguageIterator(TreeAutomaton<State> auto) {
         this(auto, new IdentityRuleRefiner(), new TreeCombiningItemEvaluator());
@@ -93,6 +91,26 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }
     }
 
+    /**
+     * Sets the beam size and width per state, and ensures that all beams are
+     * filled as far as needed. When the stream for a state is initialized, we
+     * start enumerating items until either the beamSize is reached, or the
+     * weight ratio to the best item exceeds the beamWidth. Default is beamSize
+     * = 0 (only items that are explicitly requested from the outside are
+     * computed).
+     *
+     * @param beamSizePerState
+     * @param beamWidthPerState
+     */
+    public void ensureBeam(int beamSizePerState, double beamWidthPerState) {
+        this.beamSizePerState = beamSizePerState;
+        this.beamWidthPerState = beamWidthPerState;
+
+        for (int q : auto.getFinalStates()) {
+            getStreamForState(q).ensureBeam();
+        }
+    }
+
     @Override
     public boolean hasNext() {
         if (DEBUG) {
@@ -135,6 +153,11 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         }
     }
 
+    // for testing
+    EvaluatedItem nextItem() {
+        return globalStream.pop();
+    }
+
     /**
      * The stream of trees for a given state. This stream consists of a list
      * which represents the prefix of the stream of those trees that were
@@ -164,7 +187,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
             ruleStreams.add(s);
             mergedRuleStream.addStream(s);
         }
-        
+
         /**
          * Returns the k-best item for this state.
          *
@@ -194,7 +217,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
 
                 // the algorithm should only ever try to expand the list
                 // of known best trees one further
-                assert k == known.size();
+                assert k == known.size() : "requested item " + k + " for state " + auto.getStateForId(state) + ", known=" + known;
 
                 visitedStates.add(state);
                 EvaluatedItem bestItem = mergedRuleStream.pop();
@@ -255,24 +278,32 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
          * @see SortedLanguageIterator#setBeamSizePerState(int)
          */
         private void ensureBeam() {
-            if (beamSizePerState > 0) {
-                EvaluatedItem firstItem = pop();
+            if (beamSizePerState > known.size()) {
+//                System.err.println("beam for " + auto.getStateForId(state));
+                EvaluatedItem firstItem = getEvaluatedItem(0);
+//                System.err.println("beam for " + auto.getStateForId(state) + " popfirst -> " + firstItem.toString(auto));
 
                 if (firstItem != null) {
                     for (int i = 1; i < beamSizePerState; i++) {
-                        EvaluatedItem item = pop();
+                        EvaluatedItem item = getEvaluatedItem(i);
 
-                        if( item == null ) {
+//                        System.err.println("beam for " + auto.getStateForId(state) + " pop");
+
+                        if (item == null) {
                             // ran out of items
                             break;
                         }
-                        
-                        if (item.getItemWeight() / firstItem.getItemWeight() < beamWidthPerState) {
+
+                        if (item.getItemWeight() < firstItem.getItemWeight() * beamWidthPerState) {
                             // items became too unlikely
                             break;
                         }
+
+//                        System.err.println("beam for " + auto.getStateForId(state) + " popped " + item.toString(auto));
                     }
                 }
+
+//                System.err.println("beam for " + auto.getStateForId(state) + " -> " + known);
             }
         }
     }
@@ -443,8 +474,8 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                     // create the new item and add it to the evaluated items.
                     evaluatedItems.add(itemEvaluator.evaluate(refinedRule, children, item));
 //                    itemsToRemove.add(item);
-                } else {
-                    // Otherwise, deal with non-expandable items as explained above.
+                } else // Otherwise, deal with non-expandable items as explained above.
+                {
                     if (keepItemAround) {
                         if (DEBUG) {
                             System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded, keeping it for later");
@@ -509,48 +540,4 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     String eviToString(EvaluatedItem evi) {
         return "[" + WeightedTree.formatWeightedTree(evi.getWeightedTree(), auto.getSignature()) + " (from " + evi.getItem().toString() + ")]";
     }
-
-    /**
-     * Gets the beam size per state.
-     *
-     * @see #setBeamSizePerState(int)
-     * @return
-     */
-    public int getBeamSizePerState() {
-        return beamSizePerState;
-    }
-
-    /**
-     * Sets the beam size per state. When the stream for a state is initialized,
-     * we start enumerating items until either the beamSize is reached, or the
-     * weight ratio to the best item exceeds the beamWidth. Default is beamSize
-     * = 0 (only items that are explicitly requested from the outside are
-     * computed).
-     *
-     * @param beamSizePerState
-     */
-    public void setBeamSizePerState(int beamSizePerState) {
-        this.beamSizePerState = beamSizePerState;
-    }
-
-    /**
-     * Gets the beam width per state.
-     *
-     * @see #setBeamSizePerState(int)
-     * @return
-     */
-    public double getBeamWidthPerState() {
-        return beamWidthPerState;
-    }
-
-    /**
-     * Sets the beam width per state.
-     *
-     * @see #setBeamSizePerState(int)
-     * @param beamWidthPerState
-     */
-    public void setBeamWidthPerState(double beamWidthPerState) {
-        this.beamWidthPerState = beamWidthPerState;
-    }
-
 }

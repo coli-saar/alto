@@ -8,8 +8,8 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 
 /**
- * A tree with a weight. 
- * 
+ * A tree with a weight.
+ *
  * @author koller
  */
 public class WeightedTree implements Comparable<WeightedTree> {
@@ -38,7 +38,11 @@ public class WeightedTree implements Comparable<WeightedTree> {
     public String toString() {
         return tree.toString() + ":" + weight;
     }
-    
+
+    public String toString(Signature sig) {
+        return sig.resolve(getTree()) + ":" + getWeight();
+    }
+
     public static String formatWeightedTree(WeightedTree wt, Signature sig) {
         if (wt == null) {
             return "<null wt>";

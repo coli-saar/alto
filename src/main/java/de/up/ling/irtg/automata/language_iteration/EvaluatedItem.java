@@ -6,6 +6,7 @@
 
 package de.up.ling.irtg.automata.language_iteration;
 
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
 
 /**
@@ -48,10 +49,21 @@ public class EvaluatedItem<Q> implements Comparable<EvaluatedItem<Q>> {
         // evalItem1 < evalItem2 if the tree in evalItem1 has a HIGHER weight than the tree in evalItem2
         return Double.compare(o.itemWeight, itemWeight);
     }
+    
+    private String representAnnotation() {
+        if( annotation == null ) {
+            return "a<null>";
+        } else {
+            return annotation.toString();
+        }
+    }
 
     @Override
     public String toString() {
-        return "[" + weightedTree + " (from " + item.toString() + ")]";
+        return "[" + weightedTree + ", anno=" + representAnnotation() +  ", iw=" + itemWeight + " (from " + item.toString() + ")]";
     }
-    
+ 
+    public String toString(TreeAutomaton auto) {
+        return "[" +  weightedTree.toString(auto.getSignature()) + ", anno=" + representAnnotation() +  ", iw=" + itemWeight + " (from " + item.toString() + ")]";
+    }
 }
