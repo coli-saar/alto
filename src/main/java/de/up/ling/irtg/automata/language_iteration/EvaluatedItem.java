@@ -46,7 +46,6 @@ public class EvaluatedItem<Q> implements Comparable<EvaluatedItem<Q>> {
     @Override
     public int compareTo(EvaluatedItem o) {
         // evalItem1 < evalItem2 if the tree in evalItem1 has a HIGHER weight than the tree in evalItem2
-//        return Double.compare(o.weightedTree.getWeight(), weightedTree.getWeight());
         return Double.compare(o.itemWeight, itemWeight);
     }
 

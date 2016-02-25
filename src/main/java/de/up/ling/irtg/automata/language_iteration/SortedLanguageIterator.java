@@ -10,6 +10,8 @@ import de.up.ling.irtg.automata.WeightedTree;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.stream.SortedMergedStream;
 import de.up.ling.stream.Stream;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -30,7 +32,7 @@ import java.util.Set;
  */
 public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
 
-    private Map<Integer, StreamForState> streamForState;
+    private Int2ObjectMap<StreamForState> streamForState;
     private Set<Integer> visitedStates;
     private static final boolean DEBUG = false;
     private TreeAutomaton<State> auto;
@@ -39,6 +41,8 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     private ProgressListener progressListener;
     private RuleRefiner ruleRefiner;
     private ItemEvaluator itemEvaluator;
+    private int beamSizePerState = 0;
+    private double beamWidthPerState = 1;
 
     public SortedLanguageIterator(TreeAutomaton<State> auto) {
         this(auto, new IdentityRuleRefiner(), new TreeCombiningItemEvaluator());
@@ -49,7 +53,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         this.ruleRefiner = ruleRefiner;
         this.itemEvaluator = itemEvaluator;
 
-        streamForState = new HashMap<Integer, StreamForState>();
+        streamForState = new Int2ObjectOpenHashMap<StreamForState>();
 
         this.progress = 0;
 
@@ -76,6 +80,8 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                     count++;
                 }
             }
+
+            ret.ensureBeam();
 
             if (DEBUG) {
                 System.err.println("created stream for state " + st(q));
@@ -120,7 +126,13 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
             printEntireTable();
         }
 
-        return globalStream.pop().getWeightedTree();
+        EvaluatedItem ei = globalStream.pop();
+
+        if (ei == null) {
+            return null;
+        } else {
+            return ei.getWeightedTree();
+        }
     }
 
     /**
@@ -132,14 +144,15 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
      */
     private class StreamForState implements Stream<EvaluatedItem> {
 
-        private List<EvaluatedItem> known;         // the e-items that have been computed so far; guaranteed to be the k-best for this state
+        private SortedList<EvaluatedItem> known;   // the e-items that have been computed so far; hoped to be the k-best for this state
         private List<StreamForRule> ruleStreams;   // streams for the individual rules
         private int state;                         // the state which this stream represents
         private int nextItemInStream;
         private SortedMergedStream<EvaluatedItem> mergedRuleStream;
+        private boolean sortingRequired = false;
 
         public StreamForState(int state) {
-            known = new ArrayList<EvaluatedItem>();
+            known = new SortedList<>();
             ruleStreams = new ArrayList<StreamForRule>();
             this.state = state;
             nextItemInStream = 0;
@@ -151,7 +164,7 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
             ruleStreams.add(s);
             mergedRuleStream.addStream(s);
         }
-
+        
         /**
          * Returns the k-best item for this state.
          *
@@ -234,6 +247,33 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
         @Override
         public EvaluatedItem pop() {
             return getEvaluatedItem(nextItemInStream++);
+        }
+
+        /**
+         * Initializes the stream to the desired beam size and width.
+         *
+         * @see SortedLanguageIterator#setBeamSizePerState(int)
+         */
+        private void ensureBeam() {
+            if (beamSizePerState > 0) {
+                EvaluatedItem firstItem = pop();
+
+                if (firstItem != null) {
+                    for (int i = 1; i < beamSizePerState; i++) {
+                        EvaluatedItem item = pop();
+
+                        if( item == null ) {
+                            // ran out of items
+                            break;
+                        }
+                        
+                        if (item.getItemWeight() / firstItem.getItemWeight() < beamWidthPerState) {
+                            // items became too unlikely
+                            break;
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -403,16 +443,18 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
                     // create the new item and add it to the evaluated items.
                     evaluatedItems.add(itemEvaluator.evaluate(refinedRule, children, item));
 //                    itemsToRemove.add(item);
-                } else // Otherwise, deal with non-expandable items as explained above.
-                if (keepItemAround) {
-                    if (DEBUG) {
-                        System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded, keeping it for later");
-                    }
-                    leftoverUnevalItems.add(item);
                 } else {
-//                    itemsToRemove.add(item);
-                    if (DEBUG) {
-                        System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded and stream is finished, deleting it");
+                    // Otherwise, deal with non-expandable items as explained above.
+                    if (keepItemAround) {
+                        if (DEBUG) {
+                            System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded, keeping it for later");
+                        }
+                        leftoverUnevalItems.add(item);
+                    } else //                    itemsToRemove.add(item);
+                    {
+                        if (DEBUG) {
+                            System.err.println(" * evaluate " + rule.toString(auto) + ": " + item + " cannot be expanded and stream is finished, deleting it");
+                        }
                     }
                 }
             }
@@ -463,62 +505,52 @@ public class SortedLanguageIterator<State> implements Iterator<WeightedTree> {
     public void remove() {
         throw new UnsupportedOperationException("Cannot remove items from this iterator.");
     }
-    
-    
-
-//    private static class WeightedTreeComparator implements Comparator<WeightedTree> {
-//
-//        public static WeightedTreeComparator INSTANCE = new WeightedTreeComparator();
-//
-//        @Override
-//        public int compare(WeightedTree w1, WeightedTree w2) {
-//            // streams that can't deliver values right now are dispreferred (= get minimum weight)
-//            double weight1 = (w1 == null) ? Double.NEGATIVE_INFINITY : w1.getWeight();
-//            double weight2 = (w2 == null) ? Double.NEGATIVE_INFINITY : w2.getWeight();
-//
-//            // sort descending, i.e. streams with high weights go at the beginning of the list
-//            return Double.compare(weight2, weight1);
-//        }
-//    }
 
     String eviToString(EvaluatedItem evi) {
         return "[" + WeightedTree.formatWeightedTree(evi.getWeightedTree(), auto.getSignature()) + " (from " + evi.getItem().toString() + ")]";
     }
 
-//    
-//    public static void main(String[] args) throws Exception {
-//        /*
-//         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("wsj00.bin.pos.top.ctf0.irtg"));
-//         String sentence = "NNP NNP , CD NNS JJ , MD VB DT NN IN DT JJ NN NNP CD .";
-//         TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", sentence));
-//         ObjectOutputStream os = new ObjectOutputStream(new FileOutputStream("chart.bin"));
-//         os.writeObject(chart);
-//         os.flush();
-//         os.close();
-//         */
-//
-//        ObjectInputStream is = new ObjectInputStream(new FileInputStream("chart.bin"));
-//        TreeAutomaton chart = (TreeAutomaton) is.readObject();
-//
-//        for (int i = 0; i < 5; i++) {
-//            SortedLanguageIterator it = new SortedLanguageIterator(chart);
-//            measureEnumerate(it, 10000);
-//        }
-//
-//    }
-//
-//    private static void measureEnumerate(SortedLanguageIterator it, int trees) {
-//        CpuTimeStopwatch w = new CpuTimeStopwatch();
-//
-//        w.record();
-//        it.next();
-//
-//        w.record();
-//        for (int i = 0; i < trees; i++) {
-//            it.next();
-//        }
-//
-//        w.record();
-//        w.printMilliseconds("first", "enumerate");
-//    }
+    /**
+     * Gets the beam size per state.
+     *
+     * @see #setBeamSizePerState(int)
+     * @return
+     */
+    public int getBeamSizePerState() {
+        return beamSizePerState;
+    }
+
+    /**
+     * Sets the beam size per state. When the stream for a state is initialized,
+     * we start enumerating items until either the beamSize is reached, or the
+     * weight ratio to the best item exceeds the beamWidth. Default is beamSize
+     * = 0 (only items that are explicitly requested from the outside are
+     * computed).
+     *
+     * @param beamSizePerState
+     */
+    public void setBeamSizePerState(int beamSizePerState) {
+        this.beamSizePerState = beamSizePerState;
+    }
+
+    /**
+     * Gets the beam width per state.
+     *
+     * @see #setBeamSizePerState(int)
+     * @return
+     */
+    public double getBeamWidthPerState() {
+        return beamWidthPerState;
+    }
+
+    /**
+     * Sets the beam width per state.
+     *
+     * @see #setBeamSizePerState(int)
+     * @param beamWidthPerState
+     */
+    public void setBeamWidthPerState(double beamWidthPerState) {
+        this.beamWidthPerState = beamWidthPerState;
+    }
+
 }
