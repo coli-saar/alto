@@ -21,11 +21,10 @@ public class StringSubtreeIterator {
      * Iterator MUST always return root first.
      * 
      * @param sub
-     * @param vm
      * @return 
      */
-    public static Iterator<Tree<String>> getSubtrees(Tree<String> sub, VariableMapping vm){
-        return new Core(sub, vm);
+    public static Iterator<Tree<String>> getSubtrees(Tree<String> sub){
+        return new Core(sub);
     }
     
     /**
@@ -40,17 +39,7 @@ public class StringSubtreeIterator {
         /**
          * 
          */
-        private final ArrayList<String> labels = new ArrayList<>();
-        
-        /**
-         * 
-         */
         private int position;
-
-        /**
-         * 
-         */
-        private final VariableMapping vm;
         
         /**
          * 
@@ -62,17 +51,12 @@ public class StringSubtreeIterator {
          * @param whole
          * @param vm 
          */
-        public Core(Tree<String> whole, VariableMapping vm) {
+        public Core(Tree<String> whole) {
             position = 0;
-            this.vm = vm;
             
-            while(Variables.isVariable(whole.getLabel())){
-                whole = whole.getChildren().get(0);
-            }
             this.whole = whole;
             
             this.toDo.add(whole);
-            this.labels.add(vm.getRoot(whole));
         }
         
         @Override
@@ -83,10 +67,11 @@ public class StringSubtreeIterator {
         @Override
         public Tree<String> next() {
             Tree<String> t = toDo.get(position);
-            String label = this.labels.get(position);
             ++position;
             
-            return Tree.create(label, buildTree(t,vm));
+            String label = t.getLabel();
+            
+            return Tree.create(label, buildTree(t.getChildren().get(0)));
         }
 
         /**
@@ -96,11 +81,10 @@ public class StringSubtreeIterator {
          * @param vm
          * @return 
          */
-        private Tree<String> buildTree(Tree<String> t, VariableMapping vm) {
+        private Tree<String> buildTree(Tree<String> t) {
             if(Variables.isVariable(t.getLabel())){
-                String label = this.vm.get(t, whole);
-                this.toDo.add(t.getChildren().get(0));
-                this.labels.add(label);
+                String label = t.getLabel();
+                this.toDo.add(t);
                 
                 return Tree.create(label);
             }else{
@@ -110,31 +94,11 @@ public class StringSubtreeIterator {
                 for(int i=0;i<t.getChildren().size();++i){
                     Tree<String> child = t.getChildren().get(i);
                     
-                    children.add(this.buildTree(child, vm));
+                    children.add(this.buildTree(child));
                 }
                 
                 return Tree.create(label, children);
             }
         }       
-    }
-    
-    /**
-     * 
-     */
-    public static interface VariableMapping{
-        /**
-         * 
-         * @param whole
-         * @return 
-         */
-        public String getRoot(Tree<String> whole);
-        
-        /**
-         * 
-         * @param child
-         * @param whole
-         * @return 
-         */
-        public String get(Tree<String> child, Tree<String> whole);
     }
 }

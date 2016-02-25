@@ -6,14 +6,17 @@
 package de.up.ling.irtg.rule_finding.create_automaton;
 
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.data_creation.MakeAlignments;
 import de.up.ling.irtg.rule_finding.data_creation.MakeAutomata;
+import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -97,14 +100,30 @@ public class ExtractionHelper {
     }
     
     public static Iterable<String> makeIRTGs(String data1, String data2,
-                                    String alignment) throws IOException,
+                                    String alignment, Pruner p1, Pruner p2) throws IOException,
             ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
         Iterable<InputStream>[] data = getInputData(data1, data2, alignment);
         
+        CorpusCreator corCre = new CorpusCreator(p2, p2, 2);
         
+        ExtractJointTrees ejt = new ExtractJointTrees(corCre);
+        ArrayList<ByteArrayOutputStream> results = new ArrayList<>();
         
+        Supplier<OutputStream> outs = () -> {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            results.add(baos);
+            
+            return baos;
+        };
         
-        //TODO
-        return null;
+        double[] sizes = ejt.getAutomataAndMakeStatistics(data[0], data[1], data[2], data[3], outs);
+        
+        List<String> solutions = new ArrayList<>();
+        for(ByteArrayOutputStream outStr : results) {
+            solutions.add(outStr.toString());
+        }
+        
+        System.out.println(Arrays.toString(sizes));
+        return solutions;
     }
 }

@@ -157,11 +157,11 @@ public class ExtractGrammar<Type1, Type2> {
     }
 
     /**
-     *
+     * 
      * @param inputs
      * @param trees
-     * @param irtg
-     * @throws IOException
+     * @param grammar
+     * @throws IOException 
      */
     public void extractBySampling(Iterable<InputStream> inputs, OutputStream trees, OutputStream grammar)
             throws IOException {

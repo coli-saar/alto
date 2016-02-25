@@ -24,58 +24,42 @@ public class StringSubtreeIteratorTest {
      */
     private Tree<String> basis;
     
-    /**
-     * 
-     */
-    private StringSubtreeIterator.VariableMapping map;
-    
     @Before
     public void setUp() throws Exception {
         Tree<String> a = pt("a");
         Tree<String> b = pt("b");
         
         Tree<String> f = Tree.create("f", a,a,a);
-        f = Tree.create("k", f, Tree.create(Variables.makeVariable("abcd"), f));
+        f = Tree.create("k", f, Tree.create(Variables.createVariable("abcd"), f));
         
         Tree<String> g = Tree.create("o", b,b);
-        g = Tree.create(Variables.makeVariable("hhhh"), g);
+        g = Tree.create(Variables.createVariable("hhhh"), g);
         f = Tree.create("i", f,g);
-        f = Tree.create(Variables.makeVariable("12222"), f);
-        f = Tree.create(Variables.makeVariable("9898"), f);
+        f = Tree.create(Variables.createVariable("12222"), f);
+        f = Tree.create(Variables.createVariable("9898"), f);
         f = Tree.create("z", f);
-        this.basis = Tree.create(Variables.makeVariable("iiiii"), f);
-        
-        map = new StringSubtreeIterator.VariableMapping() {
-
-            @Override
-            public String getRoot(Tree<String> whole) {
-                return Variables.makeVariable("START");
-            }
-
-            @Override
-            public String get(Tree<String> child, Tree<String> whole) {
-                return child.getLabel().substring(0, 3);
-            }
-        };
+        this.basis = Tree.create(Variables.createVariable("iiiii"), f);
     }
 
     /**
      * Test of getSubtrees method, of class StringSubtreeIterator.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetSubtrees() throws Exception {
-        Iterator<Tree<String>> it = StringSubtreeIterator.getSubtrees(basis, map);
+        Iterator<Tree<String>> it = StringSubtreeIterator.getSubtrees(basis);
         Tree[] arr = new Tree[] {
-            pt("XSTART(z(X98))"),
-            pt("X98(X12)"),
-            pt("X12(i(k(f(a,a,a),Xab),Xhh))"),
-            pt("Xab(f(a,a,a))"),
-            pt("Xhh(o(b,b))")
+            pt("'__X__{iiiii}'(z('__X__{9898}'))"),
+            pt("'__X__{9898}'('__X__{12222}')"),
+            pt("'__X__{12222}'(i(k(f(a,a,a),'__X__{abcd}'),'__X__{hhhh}'))"),
+            pt("'__X__{abcd}'(f(a,a,a))"),
+            pt("'__X__{hhhh}'(o(b,b))")
         };
         
         int pos = 0;
-        while(it.hasNext()){
+        while(it.hasNext()){            
             Tree<String> t = it.next();
+            
             assertEquals(t,arr[pos++]);
         }
     }
