@@ -80,7 +80,7 @@ public class ExtractJointTreesTest {
         corpCreate = new CorpusCreator(ip1, ip2, 2);
         
         Iterable<InputStream>[] iters =
-                ExtractionHelper.getInputData(leftTrees, rightTrees, alignments);
+                ExtractionHelper.getStringStringInputData(leftTrees, rightTrees, alignments);
         this.automata1 = iters[0];
         this.automata2 = iters[1];
         this.alignmentInformation1 = iters[2];
@@ -106,7 +106,7 @@ public class ExtractJointTreesTest {
         
         assertEquals(ita.getAutomaton().countTrees(),dar[2],0.00000000000000001);
         assertEquals(dar[1],4.0,0.00000001);
-        assertEquals(dar[1],24.0,0.00000001);
+        assertEquals(dar[0],24.0,0.00000001);
     }
     
 }

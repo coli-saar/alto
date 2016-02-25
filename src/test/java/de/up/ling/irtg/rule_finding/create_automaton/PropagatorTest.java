@@ -123,6 +123,6 @@ public class PropagatorTest {
         assertEquals(Propagator.getStateDescription(q),"a65");
         
         String s = Variables.createVariable("uuu");
-        assertEquals(Propagator.getStateDescription(s),"uuu");
+        assertEquals(Propagator.getStateDescription(s),null);
     }
 }

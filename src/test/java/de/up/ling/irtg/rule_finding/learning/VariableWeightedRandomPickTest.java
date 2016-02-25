@@ -7,7 +7,6 @@ package de.up.ling.irtg.rule_finding.learning;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
@@ -30,7 +29,7 @@ public class VariableWeightedRandomPickTest {
     /**
     *
     */
-    private final String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+    private final static String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
             + "an example\n"
             + "this is another\n"
             + "yet another example\n"
@@ -39,7 +38,7 @@ public class VariableWeightedRandomPickTest {
     /**
      *
      */
-    private final String rightTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+    private final static String rightTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
             + "ein beispiel\n"
             + "dies ist ein weiteres\n"
             + "noch ein example\n"
@@ -48,7 +47,7 @@ public class VariableWeightedRandomPickTest {
     /**
      *
      */
-    private final String alignments = "0-0 1-1\n"
+    private final static String alignments = "0-0 1-1\n"
             + "0-0 1-1 2-2 2-3\n"
             + "0-0 1-0 1-1 2-2\n"
             + "0-0 1-1 2-2 3-2";
@@ -61,13 +60,7 @@ public class VariableWeightedRandomPickTest {
     /**
      * 
      */
-    private Iterable<TreeAutomaton> basis;
-    
-    /**
-     * 
-     */
     private VariableWeightedRandomPick vwr;
-    
     
     @Before
     public void setUp() throws IOException, ClassNotFoundException,
@@ -75,7 +68,7 @@ public class VariableWeightedRandomPickTest {
         Pruner one = new IntersectionPruner(IntersectionOptions.LEXICALIZED,IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
         Pruner two = new IntersectionPruner(IntersectionOptions.NO_EMPTY,IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
         
-        Iterable<String> results = ExtractionHelper.makeIRTGs(leftTrees, rightTrees, alignments, one, two);
+        Iterable<String> results = ExtractionHelper.getStringIRTGs(leftTrees, rightTrees, alignments, one, two);
         
         IrtgInputCodec iic = new IrtgInputCodec();
         data = new FunctionIterable<>(results,(String s) -> {
@@ -86,8 +79,6 @@ public class VariableWeightedRandomPickTest {
             }
         });
         
-        basis = new FunctionIterable<>(data,(InterpretedTreeAutomaton ita) -> ita.getAutomaton());
-        
         vwr = new VariableWeightedRandomPick(1.5, 5, 10, 0.5);
     }
 
@@ -97,10 +88,10 @@ public class VariableWeightedRandomPickTest {
     @Test
     public void testGetChoices() {
         int count  = 0;
-        for(Tree<String> t : vwr.getChoices(basis)) {
+        for(Tree<String> t : vwr.getChoices(data)) {
             ++count;
         }
         
-        assertEquals(count,35);
+        assertEquals(count,22);
     }
 }

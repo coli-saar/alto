@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.learning;
 
-import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.tree.Tree;
 
 /**
@@ -13,11 +13,10 @@ import de.up.ling.tree.Tree;
  * @author christoph_teichmann
  */
 public interface TreeExtractor {
-
     /**
      *
      * @param it
      * @return
      */
-    Iterable<Tree<String>> getChoices(final Iterable<TreeAutomaton> it);
+    Iterable<Tree<String>> getChoices(final Iterable<InterpretedTreeAutomaton> it);
 }

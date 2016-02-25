@@ -256,15 +256,15 @@ public class HomomorphismManagerTest {
         assertTrue(proposals.contains(target));
         proposals.remove(target);
         
-        target = new Pair<>("'__X__{__UAS__}'(a(b,'__X__{1 _@_ q_1}'(b)))","'__X__{__UAS__}'(o('__X__{1 _@_ q_0}'(u),u))");
+        target = new Pair<>("'__X__{__UAS__}'(a('__X__{q_0}'(b),b))","'__X__{__UAS__}'(o(u,'__X__{q_1}'(u)))");
         assertTrue(proposals.contains(target));
         proposals.remove(target);
         
-        target = new Pair<>("'__X__{__UAS__}'(a('__X__{2 _@_ q_0}'(b),b))","'__X__{__UAS__}'(o(u,'__X__{2 _@_ q_1}'(u)))");
+        target = new Pair<>("'__X__{__UAS__}'(a(b,'__X__{q_1}'(b)))","'__X__{__UAS__}'(o('__X__{q_0}'(u),u))");
         assertTrue(proposals.contains(target));
-        proposals.remove(target);
+        proposals.remove(target);        
         
-        target = new Pair<>("'__X__{__UAS__}'(a('__X__{2 _@_ q_0}'(b),'__X__{1 _@_ q_1}'(b)))","'__X__{__UAS__}'(o('__X__{1 _@_ q_0}'(u),'__X__{2 _@_ q_1}'(u)))");
+        target = new Pair<>("'__X__{__UAS__}'(a('__X__{q_0}'(b),'__X__{q_1}'(b)))","'__X__{__UAS__}'(o('__X__{q_0}'(u),'__X__{q_1}'(u)))");
         assertTrue(proposals.contains(target));
         proposals.remove(target);
         

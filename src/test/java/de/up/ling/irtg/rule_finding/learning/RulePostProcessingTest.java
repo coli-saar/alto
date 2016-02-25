@@ -44,11 +44,6 @@ public class RulePostProcessingTest {
     /**
      * 
      */
-    private StringSubtreeIterator.VariableMapping vm;
-    
-    /**
-     * 
-     */
     private TreeAlgebra alg1;
     
     /**
@@ -71,9 +66,9 @@ public class RulePostProcessingTest {
         im1.add(conCon, pt("con(u(?2),v(?1))"));
         im2.add(conCon, pt("cat(?1,?2,?2)"));
         
-        String x1 = "X943";
+        String x1 = "__X__{943}";
         source.addSymbol(x1, 1);
-        String x2 = "Xjjkk";
+        String x2 = "__X__{jjkk}";
         source.addSymbol(x2, 1);
         
         String ab = "a / b";
@@ -92,21 +87,8 @@ public class RulePostProcessingTest {
         Tree<String> var2loopTerm = Tree.create(x2,loopTerm);
         Tree<String> con1 = Tree.create(conCon, var2loopTerm,var1Term);
         Tree<String> varCon = Tree.create(x1, con1);
-        input1 = Tree.create(conCon, varCon,var1Term);
-        
-        
-        vm = new StringSubtreeIterator.VariableMapping() {
-
-            @Override
-            public String getRoot(Tree<String> whole) {
-                return "START";
-            }
-
-            @Override
-            public String get(Tree<String> child, Tree<String> whole) {
-                return Variables.makeVariable(child.getLabel().substring(1,3));
-            }
-        };
+        Tree<String> fin = Tree.create(Variables.createVariable("START"), Tree.create(conCon, varCon,var1Term));
+        input1 = fin;
     }
 
     /**
@@ -115,7 +97,7 @@ public class RulePostProcessingTest {
      */
     @Test
     public void testAddRule() throws Exception {
-        Iterator<Tree<String>> it = StringSubtreeIterator.getSubtrees(input1, vm);
+        Iterator<Tree<String>> it = StringSubtreeIterator.getSubtrees(input1);
         RulePostProcessing rpp = new RulePostProcessing(alg1, alg2);
         
         boolean first = true;
@@ -126,13 +108,15 @@ public class RulePostProcessingTest {
         }
         
         TreeAutomaton ta = rpp.getAutomaton();
+        
         ta.normalizeRuleWeights();
         Tree<String> best = ta.viterbi();
-        assertEquals(best,pt("'START_1_[X94, X94]'('X94_2_[]','X94_2_[]')"));
+        
+        assertEquals(best,pt("'START_1_[943, 943]'('943_2_[]','943_2_[]')"));
         assertEquals(rpp.getFirstImage().apply(best),pt("con(u(a),v(a))"));
         assertEquals(rpp.getSecondImage().apply(best),pt("cat(b,b,b)"));
         
-        int parent = ta.getIdForState("X94");
+        int parent = ta.getIdForState("943");
         Iterable<Rule> rules = ta.getRulesTopDown(parent);
         
         boolean twoThirds = false;

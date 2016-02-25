@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.learning;
 
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.Variables;
@@ -61,8 +62,8 @@ public class VariableWeightedRandomPick implements TreeExtractor {
     }
     
     @Override
-    public Iterable<Tree<String>> getChoices(final Iterable<TreeAutomaton> it) {
-        Iterator<TreeAutomaton> main = it.iterator();
+    public Iterable<Tree<String>> getChoices(final Iterable<InterpretedTreeAutomaton> it) {
+        Iterator<InterpretedTreeAutomaton> main = it.iterator();
         Iterator<Tree<String>> inner = null;
         while(inner == null && main.hasNext()) {
             Iterator<Tree<String>> curr = this.getTrees(main.next()).iterator();
@@ -96,7 +97,7 @@ public class VariableWeightedRandomPick implements TreeExtractor {
             /**
              *
              */
-            private final Iterator<TreeAutomaton> driver = main;
+            private final Iterator<InterpretedTreeAutomaton> driver = main;
             
             @Override
             public boolean hasNext() {
@@ -128,10 +129,12 @@ public class VariableWeightedRandomPick implements TreeExtractor {
      * @param from
      * @return 
      */
-    public Iterable<Tree<String>> getTrees(TreeAutomaton from) {
+    public Iterable<Tree<String>> getTrees(InterpretedTreeAutomaton from) {
         ArrayList<Tree<String>> result = new ArrayList<>();
-        for(Rule r : (Iterable<Rule>) from.getAllRulesTopDown()) {
-            String label = from.getSignature().resolveSymbolId(r.getLabel());
+        TreeAutomaton ta = from.getAutomaton();
+        
+        for(Rule r : (Iterable<Rule>) ta.getAllRulesTopDown()) {
+            String label = ta.getSignature().resolveSymbolId(r.getLabel());
             
             if(Variables.isVariable(label)) {
                 r.setWeight(variableWeight);
@@ -140,11 +143,11 @@ public class VariableWeightedRandomPick implements TreeExtractor {
             }
         }
         
-        long amount = from.countTrees();
+        long amount = ta.countTrees();
         amount = (long) Math.min(max, Math.max(min, drawFactor*amount));
         
         for(int i=0;i<amount;++i) {
-            result.add(from.getRandomTreeFromInside());
+            result.add(ta.getRandomTreeFromInside());
         }
         
         return result;

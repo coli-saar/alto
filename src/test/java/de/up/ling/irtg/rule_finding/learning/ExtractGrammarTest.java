@@ -14,32 +14,24 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
-import de.up.ling.irtg.rule_finding.alignments.AddressAligner;
-import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
-import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
+import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
-import de.up.ling.irtg.rule_finding.pruning.intersection.RightBranchingNormalForm;
-import de.up.ling.irtg.rule_finding.pruning.intersection.NoLeftIntoRight;
-import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
-import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
+import de.up.ling.irtg.rule_finding.pruning.Pruner;
+import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
 import de.up.ling.irtg.util.FunctionIterable;
 import static de.up.ling.irtg.util.TestingTools.pt;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -49,93 +41,51 @@ import static org.junit.Assert.*;
  * @author christoph_teichmann
  */
 public class ExtractGrammarTest {
-    
-    
+        /**
+    *
+    */
+    private final static String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+            + "what river flows through kansas\n"
+            + "what river flows through texas";
+
     /**
-     * 
+     *
      */
-    private final static String TEST_INPUT = "What river flows through Kansas ?\n" +
-                                             "answer(river(traverse_2(stateid('kansas'))))\n" +
-                                             "0:1:1 1:2:2 2:3:3 3:4:4 4:5:5 4:5:6 5:6:7\n" +
-                                             "0-0-0:1 0-0-0-0:2 0-0-0-0-0:3 0-0-0-0-0:4 0-0-0-0-0-0:5 0-0-0-0-0-0-0:6 0-0-0-0-0-0:7\n" +
-                                             "\n" +
-                                             "What river flows through Texas ?\n" +
-                                             "answer(river(traverse_2(stateid('texas'))))\n" +
-                                             "0:1:1 1:2:2 2:3:3 3:4:4 4:5:5 4:5:6 5:6:7\n" +
-                                             "0-0-0:1 0-0-0-0:2 0-0-0-0-0:3 0-0-0-0-0:4 0-0-0-0-0-0:5 0-0-0-0-0-0-0:6 0-0-0-0-0-0:7"
-                                            + "\n\n\n";
-    
+    private final static String rightTrees = "de.up.ling.irtg.algebra.MinimalTreeAlgebra\n"
+            + "answer(river(traverse_2(stateid('kansas'))))\n"
+            + "answer(river(traverse_2(stateid('texas'))))";
+
     /**
-     * 
+     *
      */
-    private ArrayList<String> inputs;
+    private final static String alignments = "0-0 1-1 2-2 3-2 3-3 4-3 4-4\n"
+            + "0-0 1-1 2-2 3-2 3-3 4-3 4-4";
     
     /**
      * 
      */
     private ExtractGrammar<List<String>,Tree<String>> extract;
     
+    /**
+     * 
+     */
+    private Iterable<InputStream> inputs;
+    
     @Before
-    public void setUp() throws IOException, ParserException {
-        CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
-            return new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels());
-        }));
-        fact.setSecondPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
-            return new NoLeftIntoRight(ta.getSignature(), ta.getAllLabels());
-        }));
-        fact.setFirstVariableSource(new LeftRightXFromFinite());
-        fact.setSecondVariableSource(new JustXEveryWhere());
-        
-        SpanAligner.Factory ffact = new SpanAligner.Factory();
-        AddressAligner.Factory sfact = new AddressAligner.Factory();
-        
-        Supplier<Algebra<List<String>>> supp1 = () -> new StringAlgebra();
-        Supplier<Algebra<Tree<String>>> supp2 = () -> new MinimalTreeAlgebra();
-        
-        CorpusCreator cc = fact.getInstance(supp1, supp2, ffact, sfact);
-        ExtractJointTrees gram = new ExtractJointTrees(cc);
-        
-        InputStream in = new ByteArrayInputStream(TEST_INPUT.getBytes());
-        final ArrayList<ByteArrayOutputStream> results = new ArrayList<>();
-        Supplier<OutputStream> supp = () -> {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            
-            results.add(out);
-            
-            return out;
-        };
-        
-        gram.getAutomataAndMakeStatistics(in, supp);
-        inputs = new ArrayList<>();
-        
-        results.forEach((ByteArrayOutputStream os) -> {
-            try {
-                os.close();
-                
-                inputs.add(os.toString());
-            } catch (IOException ex) {
-                assertTrue(false);
-                Logger.getLogger(ExtractGrammarTest.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
-        
-        StringSubtreeIterator.VariableMapping ssi = new StringSubtreeIterator.VariableMapping() {
-
-            @Override
-            public String getRoot(Tree<String> whole) {
-                return "START";
-            }
-
-            @Override
-            public String get(Tree<String> child, Tree<String> whole) {
-                return child.getLabel();
-            }
-        };
-        
-        extract = new ExtractGrammar<>(new StringAlgebra(),new MinimalTreeAlgebra(), ssi,
+    public void setUp() throws IOException, ParserException, ClassNotFoundException,
+            InstantiationException, IllegalAccessException, ParseException {
+        extract = new ExtractGrammar<>(new StringAlgebra(),new MinimalTreeAlgebra(),
                         ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID,
                         new MostFrequentVariables());
+        
+        Pruner one = new IntersectionPruner(IntersectionOptions.NO_EMPTY,IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
+        Pruner two = new IntersectionPruner(IntersectionOptions.NO_EMPTY,IntersectionOptions.NO_LEFT_INTO_RIGHT);
+        
+        Iterable<String> sols = ExtractionHelper.getTreeIRTGs(leftTrees, rightTrees, alignments, one, two);
+        
+        inputs = new FunctionIterable<>(sols,(String input) -> {
+            return new ByteArrayInputStream(input.getBytes());
+        });
     }
 
     /**
@@ -147,12 +97,7 @@ public class ExtractGrammarTest {
         ByteArrayOutputStream trees = new ByteArrayOutputStream();
         ByteArrayOutputStream grammar = new ByteArrayOutputStream();
         
-        FunctionIterable<InputStream,String> fi = new FunctionIterable<>(inputs, (String s) ->
-        {
-            return new ByteArrayInputStream(s.getBytes());
-        });
-        
-        extract.extract(fi, trees, grammar);
+        extract.extract(inputs, trees, grammar);
         
         String one = new String(trees.toByteArray());
         String two = new String(grammar.toByteArray());
@@ -164,12 +109,10 @@ public class ExtractGrammarTest {
         InterpretedTreeAutomaton ita = iic.read(new ByteArrayInputStream(two.getBytes()));
         
         TreeAutomaton ta = ita.getAutomaton();
-        ta.normalizeRuleWeights();
-        
-        assertEquals(ta.countTrees(),2);
+        assertTrue(ta.countTrees() >= 2);
         
         Map<String,String> input = new HashMap<>();
-        input.put("FirstInput", "What river flows through Kansas ?");
+        input.put("FirstInput", "What river flows through Kansas".toLowerCase());
         
         TreeAutomaton parse = ita.parse(input);
         
@@ -190,59 +133,9 @@ public class ExtractGrammarTest {
         assertEquals(pairs.size(),1);
         for(Pair<List<String>,Tree<String>> p : pairs){
             assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(\"'kansas'\"))))")); 
-            assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas ?"));
-        }
-    }
-    
-    @Test
-    public void testExtractBySampling() throws Exception {
-        ByteArrayOutputStream trees = new ByteArrayOutputStream();
-        ByteArrayOutputStream grammar = new ByteArrayOutputStream();
-        
-        FunctionIterable<InputStream,String> fi = new FunctionIterable<>(inputs, (String s) ->
-        {
-            return new ByteArrayInputStream(s.getBytes());
-        });
-        
-        extract.extractBySampling(fi, trees, grammar);
-        
-        String one = new String(trees.toByteArray());
-        String two = new String(grammar.toByteArray());
-        
-        String[] arr = one.split("\n");
-        assertEquals(arr.length,799);
-        
-        IrtgInputCodec iic = new IrtgInputCodec();
-        InterpretedTreeAutomaton ita = iic.read(new ByteArrayInputStream(two.getBytes()));
-        
-        TreeAutomaton ta = ita.getAutomaton();
-        ta.normalizeRuleWeights();
-        
-        assertTrue(ta.countTrees() >= 2);
-        
-        Map<String,String> input = new HashMap<>();
-        input.put("FirstInput", "What river flows through Kansas ?");
-        
-        TreeAutomaton parse = ita.parse(input);
-        
-        Iterator<Tree<String>> it = parse.languageIterator();
-        assertTrue(parse.countTrees() >= 1);
-        
-        Set<Pair<List<String>,Tree<String>>> pairs = new HashSet<>();
-        for(int i=0;i<1;++i){
-            Tree<String> t = it.next();
-            
-            Map<String,Object> inter = ita.interpret(t);
-            Pair<List<String>,Tree<String>> p = 
-                    new Pair<>((List<String>) inter.get("FirstInput"), (Tree<String>) inter.get("SecondInput"));
-            pairs.add(p);
+            assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas".toLowerCase()));
         }
         
-        StringAlgebra sal = new StringAlgebra();
-        assertEquals(pairs.size(),1);
-        for(Pair<List<String>,Tree<String>> p : pairs){
-            assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(\"'kansas'\"))))")); 
-            assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas ?"));
-        }
+        System.out.println(ita);
     }
 }

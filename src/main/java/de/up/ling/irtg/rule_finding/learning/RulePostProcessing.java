@@ -80,14 +80,17 @@ public class RulePostProcessing<Type1,Type2> {
     }
     
     /**
+     * Takes a subtree and adds the corresponding rule to the automaton under construction.
+     * 
      * 
      * @param input
      * @param firstImage
      * @param secondImage
      * @param isStart 
      */
-    public void addRule(Tree<String> input, Homomorphism firstImage, Homomorphism secondImage, boolean isStart){
-        String parent = input.getLabel();
+    public void addRule(Tree<String> input, Homomorphism firstImage,
+                                    Homomorphism secondImage, boolean isStart){
+        String parent = Variables.getInformation(input.getLabel());
         
         List<String> children = new ArrayList<>();
         addChildren(input.getChildren().get(0),children);
@@ -118,7 +121,7 @@ public class RulePostProcessing<Type1,Type2> {
      */
     private void addChildren(Tree<String> get, List<String> children) {
         if(Variables.isVariable(get.getLabel())){
-            children.add(get.getLabel());
+            children.add(Variables.getInformation(get.getLabel()));
         }else{
             for(int i=0;i<get.getChildren().size();++i){
                 Tree<String> child = get.getChildren().get(i);
