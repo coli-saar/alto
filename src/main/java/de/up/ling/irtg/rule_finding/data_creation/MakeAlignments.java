@@ -133,6 +133,7 @@ public class MakeAlignments {
                 addAddresses(t, "0-0-0", posToAddress, ai);
 
                 String alignLine = alignmentInput.readLine().trim();
+                
                 if (!alignLine.isEmpty()) {
                     String[] parts = alignLine.trim().split("\\s+");
 
