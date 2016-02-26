@@ -1,6 +1,6 @@
 # The Alto parser
 
-[HERE IS A SHORT OVERVIEW ON HOW TO DO GRAMMAR INDUCTION](grammar-induction-tutorial)
+[HERE IS A SHORT OVERVIEW ON HOW TO DO GRAMMAR INDUCTION](https://bitbucket.org/tclup/alto-align/wiki/Home)
 
 Welcome to Alto, the Algebraic Language Toolkit.
 
