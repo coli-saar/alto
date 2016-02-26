@@ -7,7 +7,6 @@ package de.up.ling.irtg.rule_finding.learning;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
@@ -41,7 +40,7 @@ import static org.junit.Assert.*;
  * @author christoph_teichmann
  */
 public class ExtractGrammarTest {
-        /**
+    /**
     *
     */
     private final static String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
@@ -135,7 +134,5 @@ public class ExtractGrammarTest {
             assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(\"'kansas'\"))))")); 
             assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas".toLowerCase()));
         }
-        
-        System.out.println(ita);
     }
 }

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.rule_finding.handle_unknown;
+package de.up.ling.irtg.rule_finding.data_creation;
 
 import de.up.ling.irtg.rule_finding.preprocessing.geoquery.Check;
 import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon;

@@ -97,18 +97,19 @@ public class ExtractGrammar<Type1, Type2> {
             return ita;
         });
 
-        Iterable<Tree<String>> solutions = this.trex.getChoices(analyses);
+        Iterable<Iterable<Tree<String>>> solutions = this.trex.getChoices(analyses);
 
         RulePostProcessing<Type1, Type2> rpp = new RulePostProcessing<>(algebra1, algebra2);
 
-        Iterator<Tree<String>> itSol = solutions.iterator();
+        Iterator<Iterable<Tree<String>>> itSol = solutions.iterator();
         Iterator<InterpretedTreeAutomaton> itAnalysis = analyses.iterator();
 
         try (BufferedWriter solutionWriter = new BufferedWriter(new OutputStreamWriter(trees))) {
             while (itSol.hasNext() && itAnalysis.hasNext()) {
-                Tree<String> solution = itSol.next();
+                Iterable<Tree<String>> subPackage = itSol.next();
                 InterpretedTreeAutomaton ita = itAnalysis.next();
 
+                for(Tree<String> solution : subPackage) {
                 solutionWriter.write(solution.toString());
                 solutionWriter.newLine();
                 Map<String, Object> m = ita.interpret(solution);
@@ -130,6 +131,7 @@ public class ExtractGrammar<Type1, Type2> {
                 subtrees.forEachRemaining((Tree<String> t) -> {
                     rpp.addRule(t, hom1, hom2, false);
                 });
+                }
             }
         }
 

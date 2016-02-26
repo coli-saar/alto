@@ -68,7 +68,7 @@ public class SubtreeIteratorTest {
         children.add(evenLonger);
         children.add(higher);
         
-        ti = Tree.create(5, children);
+        ti = Tree.create(30, Tree.create(5, children));
         
         com.google.common.base.Function<Integer, Integer> f = (Integer i) -> i+1;
         mapping = (Tree<Integer> k) -> {
@@ -116,7 +116,7 @@ public class SubtreeIteratorTest {
             
             switch(number) {
                 case 0:
-                    assertEquals(current.toString(),"[6, 9, 8, 21, 10, 2, 2, 2, 13]");
+                    assertEquals(current.toString(),"[31, 6, 9, 8, 21, 10, 2, 2, 2, 13]");
                     break;
                 case 1:
                     assertEquals(current.toString(),"[21, 10, 2, 2, 2]");

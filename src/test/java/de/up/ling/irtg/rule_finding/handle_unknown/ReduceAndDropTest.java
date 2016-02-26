@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.handle_unknown;
 
+import de.up.ling.irtg.rule_finding.data_creation.ReduceAndDrop;
 import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon;
 import de.up.ling.irtg.util.FunctionIterable;
 import java.util.Arrays;

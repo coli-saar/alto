@@ -13,10 +13,10 @@ import de.up.ling.irtg.rule_finding.sampling.RuleCountBenign;
 import de.up.ling.irtg.rule_finding.sampling.SampleBenign;
 import de.up.ling.irtg.rule_finding.sampling.SampleBenign.Configuration;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.BiFunctionParallelIterable;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import org.apache.commons.math3.random.Well44497b;
@@ -25,7 +25,7 @@ import org.apache.commons.math3.random.Well44497b;
  *
  * @author christoph
  */
-public class SampleOnlineEM {
+public class SampleOnlineEM implements TreeExtractor {
     
     /**
      * 
@@ -60,7 +60,7 @@ public class SampleOnlineEM {
     /**
      * 
      */
-    private int threads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+    private int threads;
     
     /**
      * 
@@ -69,12 +69,27 @@ public class SampleOnlineEM {
     
     /**
      * 
+     */
+    private Model model;
+    
+    /**
+     * 
+     * @param m
+     */
+    public SampleOnlineEM(Model m) {
+        this.model = m;
+        this.threads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+    }
+    
+    /**
+     * 
      * @param data
      * @param mod
      * @param seed
      * @return 
      */
-    public Iterable<Iterable<Tree<String>>> getChoices(Iterable<InterpretedTreeAutomaton> data, Model mod, long seed) {
+    public Iterable<Iterable<Tree<String>>> getChoices(
+            Iterable<InterpretedTreeAutomaton> data, Model mod, long seed) {
         Well44497b seeder = new Well44497b(seed);
         
         Iterable<Object> allNull = () -> new Iterator<Object>() {
@@ -94,6 +109,7 @@ public class SampleOnlineEM {
         config.setSampleSize((int num) -> num == 0 ? this.learnSampleSize : sampleSize);
         
         List<SampleBenign> sampler = new ArrayList<>();
+        
         for(InterpretedTreeAutomaton ita : data) {
             SampleBenign sb = new RuleCountBenign(samplerSmooth, seed, ita);
             sampler.add(sb);
@@ -103,7 +119,7 @@ public class SampleOnlineEM {
         }
         System.out.println("Initialized.");
         
-        FunctionIterable<List<Tree<Rule>>, SampleBenign> bfpi =
+        FunctionIterable<List<Tree<Rule>> ,SampleBenign> bfpi =
                 new FunctionIterable<>(sampler, 
                         (SampleBenign sb) -> {
                             return sb.getSample(config);
@@ -209,5 +225,26 @@ public class SampleOnlineEM {
      */
     public void setResetEveryRound(boolean resetEveryRound) {
         this.resetEveryRound = resetEveryRound;
+    }
+    
+    /**
+     * 
+     * @return 
+     */
+    public Model getModel() {
+        return model;
+    }
+
+    /**
+     * 
+     * @param model 
+     */
+    public void setModel(Model model) {
+        this.model = model;
+    }
+
+    @Override
+    public Iterable<Iterable<Tree<String>>> getChoices(Iterable<InterpretedTreeAutomaton> it) {
+        return this.getChoices(it, model, new Date().getTime());
     }
 }

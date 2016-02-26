@@ -17,6 +17,8 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -29,11 +31,14 @@ public class MostFrequentVariables implements TreeExtractor {
      * @return 
      */
     @Override
-    public Iterable<Tree<String>> getChoices(final Iterable<InterpretedTreeAutomaton> it){
+    public Iterable<Iterable<Tree<String>>> getChoices(final Iterable<InterpretedTreeAutomaton> it){
         Object2DoubleMap<String> counts = this.countVariablesTopDown(it);
         
         return new FunctionIterable<>(it,(InterpretedTreeAutomaton ta) -> {
-            return getBestAnalysis(ta, counts);
+            List<Tree<String>> l = new ArrayList<>();
+            l.add(getBestAnalysis(ta, counts));
+            
+            return l;
         });
     }
     

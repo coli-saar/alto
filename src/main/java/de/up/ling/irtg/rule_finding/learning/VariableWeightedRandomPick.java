@@ -12,7 +12,6 @@ import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 
 /**
  * 
@@ -62,37 +61,10 @@ public class VariableWeightedRandomPick implements TreeExtractor {
     }
     
     @Override
-    public Iterable<Tree<String>> getChoices(final Iterable<InterpretedTreeAutomaton> it) {
+    public Iterable<Iterable<Tree<String>>> getChoices(final Iterable<InterpretedTreeAutomaton> it) {
         Iterator<InterpretedTreeAutomaton> main = it.iterator();
-        Iterator<Tree<String>> inner = null;
-        while(inner == null && main.hasNext()) {
-            Iterator<Tree<String>> curr = this.getTrees(main.next()).iterator();
-            
-            if(curr.hasNext()) {
-                inner = curr;
-            }
-        }
         
-        if(inner == null) {
-            return () -> new Iterator<Tree<String>>() {
-                @Override
-                public boolean hasNext() {
-                    return false;
-                }
-                
-                @Override
-                public Tree<String> next() {
-                    throw new NoSuchElementException();
-                }
-            };
-        }
-        final Iterator<Tree<String>> in = inner;
-        
-        return () -> new Iterator<Tree<String>>() {
-            /**
-             *
-             */
-            private Iterator<Tree<String>> current = in;
+        return () -> new Iterator<Iterable<Tree<String>>>() {
             
             /**
              *
@@ -101,25 +73,12 @@ public class VariableWeightedRandomPick implements TreeExtractor {
             
             @Override
             public boolean hasNext() {
-                return (current != null && current.hasNext()) || main.hasNext();
+                return main.hasNext();
             }
             
             @Override
-            public Tree<String> next() {
-                Tree<String> t = current.next();
-                
-                if(!current.hasNext()) {
-                    current = null;
-                    
-                    while(current == null && driver.hasNext()) {
-                        Iterator<Tree<String>> candidate = getTrees(driver.next()).iterator();
-                        if(candidate.hasNext()) {
-                            current = candidate;
-                        }
-                    }
-                }
-                
-                return t;
+            public Iterable<Tree<String>> next() {
+                return getTrees(this.driver.next());
             }
         };
     }

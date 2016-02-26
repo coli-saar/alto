@@ -55,18 +55,12 @@ public class IndependentTrees implements Model {
     private final Interner<String> mainInterner;
     
     /**
-     *
-     */
-    private final int startSymbol;
-    
-    /**
      * 
      * @param smooth 
-     * @param itSig 
-     * @param startSymbol 
+     * @param itSig
      */
-    public IndependentTrees(double smooth, Iterable<Signature> itSig, String startSymbol) {
-        this(smooth, -50, 15, itSig, startSymbol);
+    public IndependentTrees(double smooth, Iterable<Signature> itSig) {
+        this(smooth, -50, 15, itSig);
     }
 
     /**
@@ -74,11 +68,10 @@ public class IndependentTrees implements Model {
      * @param smooth
      * @param logInformantWrongness
      * @param desiredAverageSizeBound 
-     * @param signatures 
-     * @param startSymbol 
+     * @param signatures
      */
     public IndependentTrees(double smooth, double logInformantWrongness, int desiredAverageSizeBound,
-                                    Iterable<Signature> signatures, String startSymbol) {
+                                    Iterable<Signature> signatures) {
         this.smooth = smooth;
         this.logInformantWrongness = logInformantWrongness;
         this.desiredAverageSizeBound = desiredAverageSizeBound;
@@ -88,7 +81,6 @@ public class IndependentTrees implements Model {
         this.lexiconSize = computeLexicon(signatures).size();
         
         this.mainInterner = new Interner();
-        this.startSymbol = this.mainInterner.addObject(startSymbol);
     }
     
     /**
@@ -121,11 +113,6 @@ public class IndependentTrees implements Model {
             
             for(int i=0;i<il.size();++i) {
                 il.set(i, iuo.applyAsInt(il.get(i)));
-            }
-            
-            if(first) {
-                first = false;
-                il.add(0, this.startSymbol);
             }
             
             double seen = this.counter.get(il);
@@ -168,7 +155,6 @@ public class IndependentTrees implements Model {
             
             if(first) {
                 first = false;
-                il.add(0, this.startSymbol);
             }
             
             this.counter.add(il, amount);

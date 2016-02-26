@@ -90,12 +90,12 @@ public class MostFrequentVariablesTest {
      */
     @Test
     public void testGetChoices() {
-        Iterable<Tree<String>> it = mfv.getChoices(data);
+        Iterable<Tree<String>> it = mfv.getChoices(data).iterator().next();
         Object2DoubleMap<String> counts = mfv.countVariablesTopDown(data);
-        Iterator<Tree<String>> iter = it.iterator();
+        Iterator<Iterable<Tree<String>>> iter = mfv.getChoices(data).iterator();
         
         AtomicInteger ai = new AtomicInteger();
-        iter.forEachRemaining((Tree<String> t) -> ai.incrementAndGet());
+        iter.forEachRemaining((Iterable<Tree<String>> t) -> ai.incrementAndGet());
         
         assertEquals(ai.get(),4);
     }

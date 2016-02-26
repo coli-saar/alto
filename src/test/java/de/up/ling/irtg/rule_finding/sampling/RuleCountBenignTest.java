@@ -94,7 +94,7 @@ public class RuleCountBenignTest {
                     }
                     
                     if(length == TARGET_DISTANCE){
-                        md.add(0.0);
+                        md.add(2.0);
                     }else{
                         md.add(-5.0);
                     }
@@ -107,7 +107,7 @@ public class RuleCountBenignTest {
         IntIntFunction sampleSize = (int value) -> 15;
         
         config = new Configuration(score);
-        config.setRounds(12);
+        config.setRounds(10);
         config.setSampleSize(sampleSize);
         
         this.rcb = new RuleCountBenign(1.0, 87764L, null);
@@ -123,8 +123,6 @@ public class RuleCountBenignTest {
         for(Tree<Rule> t : result){
             sum += this.countLefties(t);
         }
-        
-        System.out.println(this.base);
         
         assertTrue(sum / result.size() >= 1.9);
         

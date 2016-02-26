@@ -6,7 +6,7 @@
 package de.up.ling.irtg.rule_finding.preprocessing.geoquery;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.rule_finding.handle_unknown.ReduceAndDrop;
+import de.up.ling.irtg.rule_finding.data_creation.ReduceAndDrop;
 import de.up.ling.irtg.rule_finding.preprocessing.geoquery.CreateLexicon.SimpleCheck;
 import de.up.ling.irtg.util.FunctionIterable;
 import java.io.IOException;

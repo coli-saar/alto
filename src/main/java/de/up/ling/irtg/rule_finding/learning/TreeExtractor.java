@@ -18,5 +18,5 @@ public interface TreeExtractor {
      * @param it
      * @return
      */
-    Iterable<Tree<String>> getChoices(final Iterable<InterpretedTreeAutomaton> it);
+    Iterable<Iterable<Tree<String>>> getChoices(final Iterable<InterpretedTreeAutomaton> it);
 }

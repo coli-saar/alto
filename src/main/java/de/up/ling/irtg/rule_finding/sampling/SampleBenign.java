@@ -42,20 +42,17 @@ public abstract class SampleBenign {
      * 
      */
     private boolean resetEverySample = true;
-
-    /**
-     * 
-     * @return 
-     */
-    public boolean isResetEverySample() {
-        return resetEverySample;
-    }
     
     /**
      * The initial smoothing for the rules that can be used for expanding a
      * state.
      */
     private final double smooth;
+    
+    /**
+     * 
+     */
+    private boolean printESS;
     
     /**
      * The automaton being sampled.
@@ -167,6 +164,14 @@ public abstract class SampleBenign {
     }
     
     /**
+     * 
+     * @param printESS 
+     */
+    public void setPrintESS(boolean printESS) {
+        this.printESS = printESS;
+    }
+    
+    /**
      * If set to true the adaption will be flushed for every new sampling
      * generation process.
      * 
@@ -178,6 +183,13 @@ public abstract class SampleBenign {
         this.resetEverySample = resetEverySample;
     }
     
+    /**
+     * 
+     * @return 
+     */
+    public boolean isResetEverySample() {
+        return resetEverySample;
+    }
     
     /**
      * Abstract method that returns a weight for a rule.
@@ -297,6 +309,10 @@ public abstract class SampleBenign {
             for(int i=0;i<weights.size();++i){
                 this.adapt(sample.get(i),
                         effectiveSampleSize*(weights.get(i) - (i > 0 ? weights.get(i-1) : 0.0)));
+                
+                if(printESS) {
+                    System.err.println(effectiveSampleSize);
+                }
             }
         }
         

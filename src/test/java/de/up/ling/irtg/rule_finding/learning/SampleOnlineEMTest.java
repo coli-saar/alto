@@ -7,25 +7,30 @@ package de.up.ling.irtg.rule_finding.learning;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.CodecParseException;
+import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
-import de.up.ling.irtg.rule_finding.alignments.SpanAligner;
-import de.up.ling.irtg.rule_finding.create_automaton.AlignedTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
+import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
 import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
+import de.up.ling.irtg.rule_finding.pruning.Pruner;
+import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
 import de.up.ling.irtg.rule_finding.pruning.intersection.Lexicalized;
 import de.up.ling.irtg.rule_finding.pruning.intersection.RightBranchingNormalForm;
 import de.up.ling.irtg.rule_finding.sampling.Model;
 import de.up.ling.irtg.rule_finding.sampling.models.IndependentTrees;
-import de.up.ling.irtg.rule_finding.variable_introduction.JustXEveryWhere;
-import de.up.ling.irtg.rule_finding.variable_introduction.LeftRightXFromFinite;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,11 +50,6 @@ public class SampleOnlineEMTest {
     /**
      *
      */
-    private List<InterpretedTreeAutomaton> options;
-
-    /**
-     *
-     */
     private SampleOnlineEM soe;
 
     /**
@@ -57,82 +57,62 @@ public class SampleOnlineEMTest {
      */
     private List<Homomorphism> left;
 
+    
+    /**
+    *
+    */
+    private final static String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+            + "an example\n"
+            + "yet another example\n"
+            + "and a final one";
+
+    /**
+     *
+     */
+    private final static String rightTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
+            + "ein beispiel\n"
+            + "noch ein beispiel\n"
+            + "und ein letztes";
+
+    /**
+     *
+     */
+    private final static String alignments = "0-0 1-1\n"
+            + "0-0 1-0 1-1 2-2\n"
+            + "0-0 1-1 2-2 3-2";
+    
+    
+    /**
+     * 
+     */
+    private Iterable<InterpretedTreeAutomaton> data;
+    
+    
     @Before
-    public void setUp() {
-        CorpusCreator.Factory fact = new CorpusCreator.Factory();
-        fact.setFirstPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
-            TreeAutomaton a = new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels());
-
-            Lexicalized lexicalized = new Lexicalized(a.getSignature(), a.getAllLabels());
-
-            return new IntersectionAutomaton(a, lexicalized);
-        }));
-        fact.setSecondPruner(new IntersectionPruner<>((TreeAutomaton ta) -> {
-            TreeAutomaton a = new RightBranchingNormalForm(ta.getSignature(), ta.getAllLabels());
-
-            Lexicalized lexicalized = new Lexicalized(a.getSignature(), a.getAllLabels());
-
-            return new IntersectionAutomaton(a, lexicalized);
-        }));
-
-        fact.setFirstVariableSource(new JustXEveryWhere());
-        fact.setSecondVariableSource(new LeftRightXFromFinite());
-
-        CorpusCreator<String, String> corp = fact.getInstance(null, null, null, null);
-
-        List<AlignedTrees> stringList1 = new ArrayList<>();
-        List<AlignedTrees> stringList2 = new ArrayList<>();
-
-        StringAlgebra string1 = new StringAlgebra();
-        StringAlgebra string2 = new StringAlgebra();
-
-        TreeAutomaton stringAut1
-                = string1.decompose(string1.parseString("a very bad example"));
-        SpanAligner span1 = new SpanAligner("0:1:1 1:2:2 2:3:3 3:4:4", stringAut1);
-
-        TreeAutomaton stringAut2
-                = string2.decompose(string2.parseString("ein sehr schlechtes Beispiel"));
-        SpanAligner span2 = new SpanAligner("0:1:1 1:2:2 2:3:3 3:4:4", stringAut2);
-
-        AlignedTrees sat1 = new AlignedTrees(stringAut1, span1);
-        AlignedTrees sat2 = new AlignedTrees(stringAut2, span2);
-
-        stringList1.add(sat1);
-        stringList2.add(sat2);
-
-        stringAut1
-                = string1.decompose(string1.parseString("another very bad example"));
-        span1 = new SpanAligner("0:1:1 1:2:2 2:3:3 3:4:4", stringAut1);
-
-        stringAut2
-                = string2.decompose(string2.parseString("zusätliches sehr schlechtes Beispiel"));
-        span2 = new SpanAligner("0:1:1 1:2:2 2:3:3 3:4:4", stringAut2);
-
-        sat1 = new AlignedTrees(stringAut1, span1);
-        sat2 = new AlignedTrees(stringAut2, span2);
-
-        stringList1.add(sat1);
-        stringList2.add(sat2);
-
-        Iterable<Pair<TreeAutomaton, HomomorphismManager>> solutions
-                = corp.makeRuleTrees(stringList1, stringList2);
-
-        FunctionIterable<Signature, Pair<TreeAutomaton, HomomorphismManager>> fi
-                = new FunctionIterable<>(solutions, (Pair<TreeAutomaton, HomomorphismManager> p) -> {
-                    return p.getLeft().getSignature();
-                });
-        mod = new IndependentTrees(1, fi, "S");
-
-        options = new ArrayList<>();
-        left = new ArrayList<>();
-
-        for (Pair<TreeAutomaton, HomomorphismManager> p : solutions) {
-            options.add(new InterpretedTreeAutomaton(p.getLeft()));
-
-            left.add(p.getRight().getHomomorphism1());
-        }
-
-        this.soe = new SampleOnlineEM();
+    public void setUp() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
+        Pruner one = new IntersectionPruner(IntersectionOptions.LEXICALIZED,IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
+        Pruner two = new IntersectionPruner(IntersectionOptions.NO_EMPTY,IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
+        
+        Iterable<String> results = ExtractionHelper.getStringIRTGs(leftTrees, rightTrees, alignments, one, two);
+        
+        IrtgInputCodec iic = new IrtgInputCodec();
+        data = new FunctionIterable<>(results,(String s) -> {
+            try {
+                return iic.read(new ByteArrayInputStream(s.getBytes()));
+            } catch (IOException | CodecParseException ex) {
+                throw new RuntimeException();
+            }
+        });
+        List<InterpretedTreeAutomaton> l = new ArrayList<>();
+        data.forEach(l::add);
+        data = l;
+        
+        
+        Iterable<Signature> fi =
+                new FunctionIterable<>(data,(InterpretedTreeAutomaton ita) -> ita.getAutomaton().getSignature());
+        mod = new IndependentTrees(1, fi);
+        this.soe = new SampleOnlineEM(mod);
+        
         soe.setLearnSampleSize(200);
         soe.setTrainIterations(20);
     }
@@ -142,12 +122,24 @@ public class SampleOnlineEMTest {
      */
     @Test
     public void testGetChoices() {
-        Iterable<Iterable<Tree<String>>> it = soe.getChoices(options, mod, 9782598725987L);
+        Iterable<Iterable<Tree<String>>> it = soe.getChoices(this.data, mod, 9782598725987L);
         List<Tree<String>> results = new ArrayList<>();
+        Iterator<InterpretedTreeAutomaton> auts = this.data.iterator();
         
-        it.forEach((Iterable<Tree<String>> inner) -> inner.forEach(results::add));
         
-        assertEquals(results.size(),400);
+        it.forEach((Iterable<Tree<String>> inner) -> {
+            System.out.println("------------------");
+            InterpretedTreeAutomaton ita = auts.next();
+            
+            inner.forEach((Tree<String> t) -> {
+                System.out.println("+++++++++++");
+                System.out.println(ita.interpret(t));
+                
+                results.add(t);
+            });
+        });
+        
+        assertEquals(results.size(),600);
     }
 
 }
