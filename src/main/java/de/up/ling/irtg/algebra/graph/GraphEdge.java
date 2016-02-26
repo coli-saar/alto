@@ -45,6 +45,22 @@ public class GraphEdge{
         return target;
     }
     
+    /**
+     * Returns source if node is target, target if node is source, and null otherwise.
+     * In particular, if this edge is a loop on node, it returns node.
+     * @param node
+     * @return 
+     */
+    public GraphNode getOtherNode(GraphNode node) {
+        if (source.equals(node)) {
+            return source;
+        } else if (target.equals(node)) {
+            return target;
+        } else {
+            return null;
+        }
+    }
+    
     String repr() {
         return source.getName() + " -" + (label == null ? "-" : label) + "-> " + (target.getName());
     }
