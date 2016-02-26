@@ -1,5 +1,7 @@
 # The Alto parser
 
+[HERE IS A SHORT OVERVIEW ON HOW TO DO GRAMMAR INDUCTION](grammar-induction-tutorial)
+
 Welcome to Alto, the Algebraic Language Toolkit.
 
 Alto is a parser and decoder for Interpreted Regular Tree Grammars (IRTGs). It is being developed at the [University of Potsdam](http://www.ling.uni-potsdam.de/en/) in the Theoretical Computational Linguistics group, led by [Alexander Koller](http://www.ling.uni-potsdam.de/~koller/). Its main features are:
