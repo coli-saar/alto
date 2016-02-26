@@ -28,7 +28,6 @@ import java.util.Properties;
  * @author christoph_teichmann
  */
 public class CreateAutomata {
-    
     /**
      * 
      */
@@ -60,8 +59,6 @@ public class CreateAutomata {
         String firstAutomatonFolder = props.getProperty("firstAutomataFolder");
         String secondAutomatonFolder = props.getProperty("secondAutomataFolder");
         
-        System.out.println(props);
-        
         Algebra a1 = (Algebra) Class.forName(algebraOne).newInstance();
         Algebra a2 = (Algebra) Class.forName(algebraTwo).newInstance();
         
@@ -87,7 +84,7 @@ public class CreateAutomata {
             
             TreeAutomaton ta = ita.getInterpretation(FIRST_INTERPRETATION_STRING).getAlgebra().decompose(o);
             
-            String fileName = f1.getAbsolutePath()+File.separator+"automaton_"+num+".auto";
+            String fileName = makeStandardName(f1, num);
             try(BufferedWriter out = new BufferedWriter(new FileWriter(fileName))) {
                 out.write(ta.toString());
             }
@@ -96,11 +93,21 @@ public class CreateAutomata {
             
             ta = ita.getInterpretation(SECOND_INTERPRETATION_STRING).getAlgebra().decompose(o);
             
-            fileName = f2.getAbsolutePath()+File.separator+"automaton_"+num+".auto";
+            fileName = makeStandardName(f2, num);
             
             try(BufferedWriter out = new BufferedWriter(new FileWriter(fileName))) {
                 out.write(ta.toString());
             }
         }
+    }
+
+    /**
+     * 
+     * @param folder
+     * @param num
+     * @return 
+     */
+    public static String makeStandardName(File folder, int num) {
+        return folder.getAbsolutePath()+File.separator+"automaton_"+num+".auto";
     }
 }
