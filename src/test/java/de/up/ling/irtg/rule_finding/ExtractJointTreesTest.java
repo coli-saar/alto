@@ -106,7 +106,7 @@ public class ExtractJointTreesTest {
         
         assertEquals(ita.getAutomaton().countTrees(),dar[2],0.00000000000000001);
         assertEquals(dar[1],4.0,0.00000001);
-        assertEquals(dar[0],24.0,0.00000001);
+        assertEquals(dar[0],14.0,0.00000001);
     }
     
 }

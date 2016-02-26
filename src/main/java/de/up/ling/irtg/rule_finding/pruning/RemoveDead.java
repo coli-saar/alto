@@ -12,13 +12,8 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.semiring.AndOrSemiring;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntIterator;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.IntConsumer;
 import java.util.function.IntPredicate;
 
 /**

@@ -5,23 +5,15 @@
  */
 package de.up.ling.irtg.rule_finding.learning;
 
-import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.automata.IntersectionAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
-import de.up.ling.irtg.rule_finding.create_automaton.CorpusCreator;
 import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
-import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
-import de.up.ling.irtg.rule_finding.pruning.intersection.Lexicalized;
-import de.up.ling.irtg.rule_finding.pruning.intersection.RightBranchingNormalForm;
 import de.up.ling.irtg.rule_finding.sampling.Model;
 import de.up.ling.irtg.rule_finding.sampling.models.IndependentTrees;
 import de.up.ling.irtg.signature.Signature;
@@ -114,7 +106,7 @@ public class SampleOnlineEMTest {
         this.soe = new SampleOnlineEM(mod);
         
         soe.setLearnSampleSize(200);
-        soe.setTrainIterations(20);
+        soe.setTrainIterations(5);
     }
 
     /**
@@ -127,17 +119,7 @@ public class SampleOnlineEMTest {
         Iterator<InterpretedTreeAutomaton> auts = this.data.iterator();
         
         
-        it.forEach((Iterable<Tree<String>> inner) -> {
-            System.out.println("------------------");
-            InterpretedTreeAutomaton ita = auts.next();
-            
-            inner.forEach((Tree<String> t) -> {
-                System.out.println("+++++++++++");
-                System.out.println(ita.interpret(t));
-                
-                results.add(t);
-            });
-        });
+        it.forEach((Iterable<Tree<String>> inner) -> inner.forEach(results::add));
         
         assertEquals(results.size(),600);
     }

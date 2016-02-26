@@ -37,7 +37,7 @@ public class ExtractStringToGraphGrammar {
      * @throws IOException 
      */
     public static void main(String... args) throws IOException{
-        File folder = new File(args[0]);
+        /*File folder = new File(args[0]);
         File[] grammars = folder.listFiles();
         List<File> grams = new ArrayList<>();
         for(File f : grammars){
@@ -80,6 +80,6 @@ public class ExtractStringToGraphGrammar {
         trees.flush();
         grammar.flush();
         trees.close();
-        grammar.close();
+        grammar.close();*/
     }    
 }

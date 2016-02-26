@@ -1324,8 +1324,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         makeAllRulesExplicit();
         
-        System.err.println("after make explicit");
-
         for (Rule rule : getRuleSet()) {
             ret.addRule(rule);
         }
