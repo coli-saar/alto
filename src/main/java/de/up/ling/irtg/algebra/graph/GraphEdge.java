@@ -53,9 +53,9 @@ public class GraphEdge{
      */
     public GraphNode getOtherNode(GraphNode node) {
         if (source.equals(node)) {
-            return source;
-        } else if (target.equals(node)) {
             return target;
+        } else if (target.equals(node)) {
+            return source;
         } else {
             return null;
         }

@@ -51,11 +51,22 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         return helperAuto;
     }
     
+    public SGraphBRDecompositionAutomatonBottomUp getDecompAutomaton() {
+        return decompAuto;
+    }
+    
     private GraphInfo getGraphInfo() {
         return decompAuto.completeGraphInfo;
     }
     
-    public GraphGrammarInductionAlgebra(SGraph graph, int maxSources, Object2IntMap<String> nodeName2Alignment, Signature signature) {
+    
+    
+    public Iterable<Rule> getDecompRulesForHelperRule(Rule helperRule) {
+        return helperAutoRule2DecompRules.get(helperRule);
+    }
+            
+    
+    public GraphGrammarInductionAlgebra(SGraph graph, int maxSources, Map<String, String> nodeName2ConstLabel, Signature signature) {
         this.signature = signature;
         this.edgeLabel2OtherNodeID2Constant = new Int2ObjectOpenHashMap<>();
         this.helperAutoRule2DecompRules = new HashMap<>();
@@ -67,9 +78,8 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         
         constantID2Constant = new Int2ObjectOpenHashMap<>();
         for (Pair<SGraph, GraphNode> constant : getConstantGraphs(getGraphInfo().getSGraph())) {
-            int constantID = nodeName2Alignment.getInt(constant.right.getName());
-            constantID2Constant
-                    .put(constantID, new BrAndEdges(constant.left, constant.right));
+            constantID2Constant.put(signature.getIdForSymbol(nodeName2ConstLabel.get(constant.right.getName())),
+                    new BrAndEdges(constant.left, constant.right));
         }
         
         this.helperAuto = new BottomUpAutomaton(signature);
@@ -110,7 +120,9 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 if (!(e.getSource().equals(markedNode) || e.getTarget().equals(markedNode))) {
                     System.err.println("bad graph given to BrAndEdges constructor! Bad edge ignored");
                 } else {
-                    edges.add(e);
+                    GraphEdge eToAdd = new GraphEdge(new GraphNode(e.getSource().getName(), null), new GraphNode(e.getTarget().getName(), null));//removing labels from nodes
+                    eToAdd.setLabel(e.getLabel());
+                    edges.add(eToAdd);
                 }
             }
         }
@@ -139,6 +151,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                     return null;
                 }
             }
+            retBr = forgetIfAllowed(retBr, 0,usedRules);
             return new BrAndEdges(new ArrayList<>(), markedNode, retBr);
         }
         
@@ -177,7 +190,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         }
         
         private GraphNode addNodeWithSourceToGraph(GraphNode node, SGraph graph, IntList usedSources) {
-            GraphNode ret = graph.addNode(node.getName(), node.getLabel());
+            GraphNode ret = graph.addNode(node.getName(), null);
             if (node.equals(markedNode)) {
                 graph.addSource(getGraphInfo().getSourceForInt(0), node.getName());
             } else {
@@ -212,8 +225,10 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             return -1;
         }
         
+        
+        
         public BrAndEdges combine(BrAndEdges right, List<Rule> usedRules) {
-            if (!right.edges.isEmpty()) {
+            if (!right.edges.isEmpty() || !hasOverlapWithNodeLabel(right.br)) {
                 return null;
             }
             
@@ -236,33 +251,61 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                     
                     //merge all edges to core br
                     BrAndEdges temp = explicit(usedRules);
-                    //merge right to result
-                    BoundaryRepresentation ret = merge(temp.br, right.br, usedRules);
-                    if (ret == null) {
-                        return null;
+                    if (temp != null) {
+                        BoundaryRepresentation brWithForget = forgetIfAllowed(temp.br, 0, usedRules);
+                        
+                        BoundaryRepresentation renamedRightBr = right.br;
+                        //rename right sources accordingly
+                        for (int sourceID : right.br.getAllSourceIDs()) {
+                            swapRightSideSource(temp.br, renamedRightBr, sourceID, usedRules);
+                        }
+                        
+                        if (renamedRightBr != null) {
+                            //merge right to result
+                            BoundaryRepresentation ret = merge(brWithForget, renamedRightBr, usedRules);
+                            if (ret == null) {
+                                return null;
+                            } else {
+                                return new BrAndEdges(edges, markedNode, ret);
+                            }
+                        } else {
+                            usedRules.clear();//abort and do other choice
+                        }
+                        
+                        
                     } else {
-                        return new BrAndEdges(edges, markedNode, ret);
+                        usedRules.clear();//abort and do other choice
                     }
+                    
                 }
             }
             
             //otherwise merge to right first
+            //System.err.println("Trying to combine "+this+" with "+right.br);
+            //System.err.println("edges "+edges);
             //sort edges in order in which we want to merge
             Collections.sort(edges, (e1, e2) -> sc.compare(e1.getLabel(), e2.getLabel()));//TODO: if same, we might not want arbitrary ordering, but rather name of target edge
             
+            //System.err.println("reordered "+edges);
             //first rename all sources on the right that are used here
             IntList usedSources = br.getAllSourceIDs();
             usedSources.addAll(right.br.getAllSourceIDs());
             BoundaryRepresentation renamedRightBr = right.br;
+            
+            //System.err.println("swapping "+renamedRightBr);
             //first swaps
-            for (int sourceID : right.br.getAllSourceIDs()) {
-                renamedRightBr = swapRightSideSource(renamedRightBr, sourceID, usedSources, usedRules);
+            IntList rhsSourceIDs = right.br.getAllSourceIDs();
+            for (int sourceID : rhsSourceIDs) {
+                renamedRightBr = swapRightSideSource(br, renamedRightBr, sourceID, usedRules);
                 if (renamedRightBr == null) {
                     return null;
                 }
             }
+            
+            //System.err.println("renaming "+renamedRightBr);
             //then renames
-            for (int sourceID : right.br.getAllSourceIDs()) {
+            rhsSourceIDs = renamedRightBr.getAllSourceIDs();// above we actually not only swapped, but also renamed, so need new list here.
+            for (int sourceID : rhsSourceIDs) {
                 renamedRightBr = renameRightSideSource(renamedRightBr, sourceID, usedSources, usedRules);
                 if (renamedRightBr == null) {
                     return null;
@@ -270,10 +313,13 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             }
             
             
+            //System.err.println("merging edges"+renamedRightBr);
             List<GraphEdge> remainingEdges = new ArrayList<>();
             
             //merge edges to right in order
             for (GraphEdge e : edges) {
+                //System.err.println(e.getSource().getName());
+                //System.err.println(e.getTarget().getName());
                 int otherNodeID = getGraphInfo().getIntForNode(e.getOtherNode(markedNode).getName());
                 
                 if (renamedRightBr.contains(otherNodeID)) {
@@ -281,17 +327,22 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                     SGraph edgeGraph = makeEdgeGraph(e, otherSource);
                     String constLabel = edgeGraph.toIsiAmrString();
                     BoundaryRepresentation edgeBr = new BoundaryRepresentation(edgeGraph, getGraphInfo());
+                    //System.err.println(edgeBr);
                     usedRules.add(decompAuto.createRule(edgeBr, constLabel, new BoundaryRepresentation[0]));
                     renamedRightBr = merge(edgeBr, renamedRightBr, usedRules);
                     if (renamedRightBr == null) {
                         System.err.println("could not merge edge to right Side!");
                         return null;
+                    } else {
+                        renamedRightBr = forgetIfAllowed(renamedRightBr, otherSource, usedRules);
                     }
                 } else {
                     remainingEdges.add(e);
                 }
             }
             
+            
+            //System.err.println("final merge: "+br+" with "+renamedRightBr);
             //finally merge results
             renamedRightBr = merge(br, renamedRightBr, usedRules);
             
@@ -299,10 +350,23 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 return null;
             }
             
+            //System.err.println("success");
             return new BrAndEdges(remainingEdges, markedNode, renamedRightBr);
         }
         
-        private BoundaryRepresentation swapRightSideSource(BoundaryRepresentation renamedRightBr, int sourceID, IntList usedSources, List<Rule> usedRules) {
+        private boolean hasOverlapWithNodeLabel(BoundaryRepresentation other) {
+            for (int srcID : other.getAllSourceIDs()) {
+                int nodeID = other.getSourceNode(srcID);
+                int loopID = getGraphInfo().getEdge(nodeID, nodeID);
+                if (other.getInBoundaryEdges().contains(loopID) || br.getInBoundaryEdges().contains(loopID)) {
+                    //the latter is also false if br does not contain the node in the first place
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        private BoundaryRepresentation swapRightSideSource(BoundaryRepresentation left, BoundaryRepresentation renamedRightBr, int sourceID, List<Rule> usedRules) {
             if (renamedRightBr == null) {
                 return null;
             }
@@ -335,7 +399,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                                     return null;
                                 }
                                 usedRules.add(decompAuto.createRule(temp, label, new BoundaryRepresentation[]{renamedRightBr}));
-                                return swapRightSideSource(temp, sourceID, usedSources, usedRules);//need to call recursively, since the sourceID at its new place might not be happy
+                                return swapRightSideSource(left, temp, sourceID, usedRules);//need to call recursively, since the sourceID at its new place might not be happy
                             }
                             
                         } else {
@@ -388,8 +452,18 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             }
         }
         
+        private BoundaryRepresentation forgetIfAllowed(BoundaryRepresentation brHere, int sourceID, List<Rule> usedRules) {
+            if (brHere.isForgetAllowed(0, getGraphInfo().getSGraph(), getGraphInfo())) {
+                BoundaryRepresentation ret = brHere.applyForgetRename(GraphAlgebra.OP_FORGET+sourceID, decompAuto.getSignature().getIdForSymbol(GraphAlgebra.OP_FORGET+"0"), false);
+                usedRules.add(decompAuto.createRule(ret, GraphAlgebra.OP_FORGET+sourceID, new BoundaryRepresentation[]{brHere}));
+                return ret;
+            } else {
+                return brHere;
+            }
+        }
+        
         private boolean hasForgetAfterExplicit(GraphNode node, GraphEdge extraEdge) {
-            for (int incidentE : getGraphInfo().getIncidentEdges(getGraphInfo().getIntForNode(markedNode.getLabel()))) {
+            for (int incidentE : getGraphInfo().getIncidentEdges(getGraphInfo().getIntForNode(node.getName()))) {
                 if (!br.getInBoundaryEdges().contains(incidentE) && !edges.contains(getGraphInfo().getEdge(incidentE))
                         && !getGraphInfo().getEdge(incidentE).equals(extraEdge)) {
                     //last check includes check whether extraEdge is null, so this is safe
@@ -399,6 +473,13 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             }
             return true;
         }
+
+        @Override
+        public String toString() {
+            return "$$_"+br.toString()+"|"+edges.toString();
+        }
+        
+        
         
     }
     
@@ -466,7 +547,11 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             if (ret == null) {
                 return new ArrayList<>();
             } else {
+                System.err.println(signature.resolveSymbolId(labelId)+": "+ret);
                 Rule retRule = createRule(addState(ret), labelId, childStates, 1.0);
+                if (ret.br.isCompleteGraph()) {
+                    addFinalState(retRule.getParent());
+                }
                 helperAutoRule2DecompRules.put(retRule, usedRules);
                 return Collections.singletonList(retRule);
             }

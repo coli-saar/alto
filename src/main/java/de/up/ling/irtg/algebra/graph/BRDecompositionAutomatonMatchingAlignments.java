@@ -14,6 +14,7 @@ import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
+import de.up.ling.irtg.script.DecompsForAlignedGraphStringGrammarInduction;
 import de.up.ling.irtg.util.TupleIterator;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
@@ -318,7 +319,7 @@ public class BRDecompositionAutomatonMatchingAlignments extends SGraphBRDecompos
             Instance instance = it.next();
             if (i>= startIndex && (i < stopIndex || stopIndex < 0)) {
                 SGraph graph = (SGraph)instance.getInputObjects().get("graph");
-                Pair<Map<String, Set<Integer>>, Int2IntMap> alignmentMaps = parseAlignments(alignmentReader.readLine(), nodeNameListReader.readLine());
+                Pair<Map<String, Set<Integer>>, Int2IntMap> alignmentMaps = DecompsForAlignedGraphStringGrammarInduction.parseAlignments(alignmentReader.readLine(), nodeNameListReader.readLine());
                 if (graph.getAllNodeNames().size()<=maxNodes) {
                     instancesTried++;
                     System.err.println(i);
@@ -552,6 +553,7 @@ public class BRDecompositionAutomatonMatchingAlignments extends SGraphBRDecompos
      * 7. targetFolderPath: The folder into which the automata are written.
      * 8. the file with alignments in form 4-5 6-7 8-7 etc (-> fast align)
      * 9. the file which indicates which nodename corresponds to which integer in the alignments
+     * 10. the threshold at which to cut rules.
      * @param args
      * @throws Exception 
      */
@@ -592,33 +594,6 @@ public class BRDecompositionAutomatonMatchingAlignments extends SGraphBRDecompos
     
     
     
-    private static Pair<Map<String, Set<Integer>>, Int2IntMap> parseAlignments(String alignmentString, String nodeNameString) {
-        //setup
-        Map<String, Set<Integer>> nodeName2Alignments = new HashMap<>();
-        Int2IntMap alignment2StringPos = new Int2IntOpenHashMap();
-        String[] nodeNames = nodeNameString.split(" +");
-        String[] alignments = alignmentString.split(" +");
-        
-        //check for duplicate names, and add empty Sets
-        for (int i = 0; i < nodeNames.length; i++) {
-            for (int j = i+1; j<nodeNames.length; j++) {
-                if (nodeNames[i].equals(nodeNames[j])) {
-                    System.err.println("WARNING: Node name '"+nodeNames[i]+"' appears twice in '"+nodeNameString+"'!");
-                }
-            }
-            nodeName2Alignments.put(nodeNames[i], new HashSet<>());
-        }
-        
-        
-        //parse actual alignments
-        for (int i = 0; i < alignments.length; i++) {
-            String[] stringAndGraph = alignments[i].split("-");
-            String nodeName = nodeNames[Integer.parseInt(stringAndGraph[1])];
-            nodeName2Alignments.get(nodeName).add(i);
-            alignment2StringPos.put(i, Integer.parseInt(stringAndGraph[0]));
-        }
-        
-        return new Pair(nodeName2Alignments, alignment2StringPos);
-    }
+    
     
 }
