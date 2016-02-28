@@ -33,18 +33,59 @@ public class IntersectionPruner implements Pruner {
      * 
      * @param options 
      */
-    public IntersectionPruner(IntersectionOptions... options) {
+    public IntersectionPruner(Function<TreeAutomaton,TreeAutomaton>[] options) {
         this((TreeAutomaton input) -> {
             TreeAutomaton inter = input;
             
             for(int i=0;i<options.length;++i) {
-                inter = new IntersectionAutomaton(inter, options[i].getAutomaton(input));
+                inter = new IntersectionAutomaton(inter, options[i].apply(input));
             }
             
             return inter;
         });
     }
+    
+    /**
+     * 
+     * @param configurationFreeOptions 
+     */
+    public IntersectionPruner(IntersectionOptions... configurationFreeOptions) {
+        this(makeFunctions(configurationFreeOptions, new String[configurationFreeOptions.length]));
+    }
 
+    /**
+     * 
+     * @param options
+     * @param configurations 
+     */
+    public IntersectionPruner(IntersectionOptions[] options, String[] configurations) {
+        this(makeFunctions(options, configurations));
+    }
+    
+    
+    public IntersectionPruner(String[] choices, String[] configurations) {
+        this(IntersectionOptions.lookUp(choices),configurations);
+    }
+    
+    /**
+     * 
+     * @param ios
+     * @param configs
+     * @return 
+     */
+    private static Function<TreeAutomaton,TreeAutomaton>[] makeFunctions(IntersectionOptions[] ios, String[] configs) {
+        int size = Math.min(ios.length, configs.length);
+        
+        
+        
+        Function<TreeAutomaton,TreeAutomaton>[] result = new Function[size];
+        for(int i=0;i<size;++i) {
+            result[i] = ios[i].getRestrictionFactory(configs[i]);
+        }
+        
+        return result;
+    }
+    
     @Override
     public TreeAutomaton apply(TreeAutomaton ta) {
         return new IntersectionAutomaton(ta, this.mapToIntersect.apply(ta));
