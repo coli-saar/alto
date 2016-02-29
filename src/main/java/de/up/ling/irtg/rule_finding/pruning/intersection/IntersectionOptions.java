@@ -40,10 +40,10 @@ public enum IntersectionOptions {
             return (TreeAutomaton t) -> new NoLeftIntoRight(t.getSignature(), t.getAllLabels());
         }
     },
-    TreeAritiesEnsured {
+    ENSURE_ARITIES {
         @Override
         public Function<TreeAutomaton, TreeAutomaton> getRestrictionFactory(String configuration) {
-            return TreeAritiesEnsured.getRestrictionFactory(configuration);
+            return TreeArityEnsure.getRestrictionFactory(configuration);
         }
         
     };
