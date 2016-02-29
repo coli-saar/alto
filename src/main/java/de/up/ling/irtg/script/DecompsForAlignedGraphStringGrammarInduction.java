@@ -31,6 +31,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
@@ -50,17 +51,19 @@ import java.util.stream.Collectors;
  */
 public class DecompsForAlignedGraphStringGrammarInduction {
     
-    private static String combineLabel = "comb";
-    private static String reverseCombineLabel = "rcomb";
+    private final static String combineLabel = "comb";
+    private final static String reverseCombineLabel = "rcomb";
+    private final static String unalignedLabelPrefix = "unaligned";
+    private final static String reverseUnalignedLabelPrefix = "rUnaligned";
     
     public static void main(String[] args) throws FileNotFoundException, IOException, CorpusReadingException, ParserException {
         
-        System.err.println("reading input...");
+        //System.err.println("reading input...");
         
         //setup input
-        if (args.length<10) {
+        if (args.length<5) {
             System.out.println("Need 5 arguments (not all found), these are: sourceCount corpusPath targetFolderPath alignmentFilePath nodeNameListFilePath");
-            String defaultArgs = "3 examples/AMRAllCorpus.txt output/ examples/amrHere/AMRAllTrain.align examples/amrHere/AMRAllTrain.names";
+            String defaultArgs = "3 examples/AMRAllCorpusExplicit.txt output/ examples/amrHere/AMRAllTrain.align examples/amrHere/AMRAllTrain.names";
             System.out.println("using default arguments instead: "+defaultArgs);
             args = defaultArgs.split(" ");
         }
@@ -77,11 +80,12 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         irtg4Corpus.addInterpretation("string", new Interpretation(new StringAlgebra(), null));
         Corpus corpus = Corpus.readCorpus(corpusReader, irtg4Corpus);
         
-        int max = 3;
+        //int max = 3;
         
         int j = 0;
         for (Instance instance : corpus) {
-            System.err.println("starting instance "+j+"...");
+            //System.err.println("starting instance "+j+"...");
+            SGraph graph = (SGraph)instance.getInputObjects().get("graph");
             
             StringAlgebra stringAlg = new StringAlgebra();
             
@@ -94,15 +98,21 @@ public class DecompsForAlignedGraphStringGrammarInduction {
             List<Integer> orderedAlignments = new ArrayList<>();
             boolean alignmentsWorkOut = true;
             for (Entry<String, Set<Integer>> entry : node2AlignAndAlign2StrPos.left.entrySet()) {
-                if (entry.getValue().size() != 1) {
-                    System.err.println("node " + entry.getKey() + " has not exactly one alignment, aborting!");
+                if (entry.getValue().size() > 1) {
                     alignmentsWorkOut = false;
-                } else {
+                } else if (entry.getValue().size() == 1) {
                     orderedAlignments.add(entry.getValue().iterator().next());
                     nodeName2Alignment.put(entry.getKey(), entry.getValue().iterator().next());
                 }
             }
+            /*for (String nodeName : graph.getAllNodeNames()) {
+                if (!nodeName2Alignment.containsKey(nodeName)) {
+                    alignmentsWorkOut = false;
+                }
+            }*/
             if (!alignmentsWorkOut) {
+                System.err.println("graph "+j+" ("+graph.getAllNodeNames().size()+" nodes): incompatible alignments");
+                j++;
                 continue;
             }
             Collections.sort(orderedAlignments, (s1, s2) -> align2StrPos.get(s1)-align2StrPos.get(s2));
@@ -119,7 +129,6 @@ public class DecompsForAlignedGraphStringGrammarInduction {
             
             
             //graph signature, wrapper signature, and maps
-            SGraph graph = (SGraph)instance.getInputObjects().get("graph");
             Map<String, String> constLabel2StringConstLabel = new HashMap<>();
             Map<String, String> constLabel2GraphConstLabel = new HashMap<>();
             Map<String, String> nodename2GraphConstLabel = new HashMap<>();
@@ -127,12 +136,19 @@ public class DecompsForAlignedGraphStringGrammarInduction {
             for (String nodeName : graph.getAllNodeNames()) {
                 String constLabel = "const"+i;
                 String graphLabel = "G"+i;
-                irtgSignature.addSymbol(constLabel, 0);
                 graphSignature.addSymbol(graphLabel, 0);
-                constLabel2GraphConstLabel.put(constLabel, graphLabel);
                 nodename2GraphConstLabel.put(nodeName, graphLabel);
-                int alignment = nodeName2Alignment.get(nodeName);
-                constLabel2StringConstLabel.put(constLabel, String.valueOf(alignment));
+                if (nodeName2Alignment.containsKey(nodeName)) {
+                    irtgSignature.addSymbol(constLabel, 0);
+                    constLabel2GraphConstLabel.put(constLabel, graphLabel);
+                    int alignment = nodeName2Alignment.get(nodeName);
+                    constLabel2StringConstLabel.put(constLabel, String.valueOf(alignment));
+                } else {
+                    irtgSignature.addSymbol(unalignedLabelPrefix+constLabel, 1);
+                    irtgSignature.addSymbol(reverseUnalignedLabelPrefix+constLabel, 1);
+                    constLabel2GraphConstLabel.put(unalignedLabelPrefix+constLabel, graphLabel);
+                    constLabel2GraphConstLabel.put(reverseUnalignedLabelPrefix+constLabel, graphLabel);
+                }
                 i++;
             }
             
@@ -147,15 +163,15 @@ public class DecompsForAlignedGraphStringGrammarInduction {
             GraphGrammarInductionAlgebra graphInductionAlg = new GraphGrammarInductionAlgebra(graph, maxSources, nodename2GraphConstLabel, graphSignature);
             TreeAutomaton<GraphGrammarInductionAlgebra.BrAndEdges> graphAuto = graphInductionAlg.getAutomaton();
             
-            System.err.println(stringInput);
+            //System.err.println(stringInput);
             TreeAutomaton<StringAlgebra.Span> stringAuto = stringAlg.decompose(stringInput);
             
-            System.err.println("automaton setup...");
+            //System.err.println("automaton setup...");
             //synchr parsing
             CustomSynchParsingAutomaton synchAuto = new CustomSynchParsingAutomaton(irtgSignature, stringAuto, graphAuto, constLabel2StringConstLabel, constLabel2GraphConstLabel);
-            System.err.println("parsing...");
+            //System.err.println("parsing...");
             TreeAutomaton<Pair<StringAlgebra.Span, GraphGrammarInductionAlgebra.BrAndEdges>> concAuto = synchAuto.asConcreteTreeAutomatonBottomUp();
-            System.err.println("collecting rules...");
+            //System.err.println("collecting rules...");
             Set<Rule> rhsRules = new HashSet<>();
             concAuto.processAllRulesTopDown(rule -> {
                 for (Rule helperRule : synchAuto.rule2RhsRules.get(rule)) {
@@ -165,14 +181,19 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                 }
             });
             
-            for (Rule rhsRule : rhsRules) {
-                System.err.println(rhsRule.toString(graphInductionAlg.getDecompAutomaton()));
+            System.err.println("graph "+j+" ("+graph.getAllNodeNames().size()+" nodes): "+rhsRules.size()+" rules");
+            
+            if (!rhsRules.isEmpty()) {
+                FileWriter writer = new FileWriter(targetPath+j+"_"+graph.getAllNodeNames().size()+".rtg");
+                for (Rule rhsRule : rhsRules) {
+                    writer.write(rhsRule.toString(graphInductionAlg.getDecompAutomaton())+"\n");
+                }
             }
             
             j++;
-            if (j>= max) {
+            /*if (j>= max) {
                 break;//for the moment, limit the amount of instances
-            }
+            }*/
         }
     }
     
@@ -249,6 +270,44 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                         }
                     }
                 }
+            } else if (label.startsWith(unalignedLabelPrefix) || label.startsWith(reverseUnalignedLabelPrefix)) {
+                
+                //get constant for unaligned node
+                int rhsChild = state2RhsState.get(childStates[0]);
+                Rule rhsConstRule = rhs.getRulesBottomUp(rhs.getSignature().getIdForSymbol(constLabel2GraphConstLabel.get(label)),
+                        new int[0]).iterator().next();
+                allRhsRules.add(rhsConstRule);
+                
+                //setup child array
+                int[] rhsChildren = new int[2];
+                if (label.startsWith(unalignedLabelPrefix)) {
+                    rhsChildren[0] = rhsChild;
+                    rhsChildren[1] = rhsConstRule.getParent();
+                } else {
+                    rhsChildren[1] = rhsChild;
+                    rhsChildren[0] = rhsConstRule.getParent();
+                }
+                
+                //make right side explicit
+                Iterable<Rule> explicitRules = rhs.getRulesBottomUp(explicitID, new int[]{rhsChildren[1]});
+                //the next iteration is over max one rule since rhs is deterministic for explicit, so no loss of efficiency here
+                //basically a shortcut for checking if this is empty
+                for (Rule explicitRule : explicitRules) {
+                    rhsChildren[1] = explicitRule.getParent();
+                    allRhsRules.add(explicitRule);
+                    
+                    //combine
+                    Iterable<Rule> combineRules = rhs.getRulesBottomUp(combineID, rhsChildren);
+                    //the next iteration is over max one rule since rhs is deterministic for combine, so no loss of efficiency here
+                    //basically a shortcut for checking if this is empty
+                    for (Rule combineRule : combineRules) {
+                        allRhsRules.add(combineRule);
+                        ret.add(createRule(addState(new Pair(lhs.getStateForId(state2LhsState.get(childStates[0])), rhs.getStateForId(combineRule.getParent()))),
+                                labelId, childStates, 1.0));
+                    }
+                }
+                
+                
             } else {
                 //then we have a constant
                 
@@ -264,7 +323,7 @@ public class DecompsForAlignedGraphStringGrammarInduction {
             }
             
             if (ret.size() == 1) {
-                System.err.println(ret.get(0).toString(this));
+                //System.err.println(ret.get(0).toString(this));
                 rule2RhsRules.put(ret.get(0), allRhsRules);
             } else if (ret.size() > 1) {
                 System.err.println("Unexpectedly found multiple rules bottom up!");
@@ -282,7 +341,7 @@ public class DecompsForAlignedGraphStringGrammarInduction {
             state2LhsState.put(ret, leftID);
             state2RhsState.put(ret, rightID);
             if (lhs.getFinalStates().contains(leftID) && rhs.getFinalStates().contains(rightID)) {
-                System.err.println("final state found: "+state.toString());
+                //System.err.println("final state found: "+state.toString());
                 addFinalState(ret);
             }
             return ret;

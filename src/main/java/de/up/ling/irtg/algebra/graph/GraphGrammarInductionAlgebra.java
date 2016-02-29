@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -144,12 +145,15 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 usedRules.add(decompAuto.createRule(edgeBr, constLabel, new BoundaryRepresentation[0]));
                 
                 //merge and update for next iteration
-                retBr = merge(retBr, edgeBr, usedRules);
-                if (retBr == null) {
-                    //this should not happen though
-                    System.err.println("Merge failed in BrAndEdges#explicit !");
+                BoundaryRepresentation tempBr = merge(retBr, edgeBr, usedRules);
+                if (tempBr == null) {
+                    //this should not happen though --EDIT: happens in practice due to double edges / custom loops (errors in annotation?). Removing system output for now.
+                    //System.err.println(markedNode.getName());
+                    //System.err.println("Merge failed in BrAndEdges#explicit !");
+                    //System.err.println(retBr+" || "+edgeBr);
                     return null;
                 }
+                retBr = tempBr;
             }
             retBr = forgetIfAllowed(retBr, 0,usedRules);
             return new BrAndEdges(new ArrayList<>(), markedNode, retBr);
@@ -228,11 +232,17 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         
         
         public BrAndEdges combine(BrAndEdges right, List<Rule> usedRules) {
-            if (!right.edges.isEmpty() || !hasOverlapWithNodeLabel(right.br)) {
+            if (!right.edges.isEmpty() || !hasOverlapWithNodeLabel(right.br) || right.br.isInternalNode(getGraphInfo().getIntForNode(markedNode.getName()))) {
                 return null;
             }
             
+            for (GraphEdge edge : edges) {
+                if (right.br.isInBoundary(edge)) {
+                    return null;
+                }
+            }
             
+            /*
             //check if it is smarter to first add edges here and then to right
             boolean allEdgesGoToRight = true;
             for (GraphEdge e : edges) {
@@ -278,7 +288,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                     }
                     
                 }
-            }
+            }*/
             
             //otherwise merge to right first
             //System.err.println("Trying to combine "+this+" with "+right.br);
@@ -329,12 +339,13 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                     BoundaryRepresentation edgeBr = new BoundaryRepresentation(edgeGraph, getGraphInfo());
                     //System.err.println(edgeBr);
                     usedRules.add(decompAuto.createRule(edgeBr, constLabel, new BoundaryRepresentation[0]));
-                    renamedRightBr = merge(edgeBr, renamedRightBr, usedRules);
-                    if (renamedRightBr == null) {
+                    BoundaryRepresentation temp = merge(edgeBr, renamedRightBr, usedRules);
+                    if (temp == null) {
                         System.err.println("could not merge edge to right Side!");
+                        System.err.println(edgeBr +" || " + renamedRightBr);
                         return null;
                     } else {
-                        renamedRightBr = forgetIfAllowed(renamedRightBr, otherSource, usedRules);
+                        renamedRightBr = forgetIfAllowed(temp, otherSource, usedRules);
                     }
                 } else {
                     remainingEdges.add(e);
@@ -478,6 +489,32 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         public String toString() {
             return "$$_"+br.toString()+"|"+edges.toString();
         }
+
+        @Override
+        public int hashCode() {
+            int hash = 7;
+            hash = 43 * hash + Objects.hashCode(this.markedNode);
+            hash = 43 * hash + Objects.hashCode(this.br);
+            return hash;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            final BrAndEdges other = (BrAndEdges) obj;
+            if (!Objects.equals(this.markedNode, other.markedNode)) {
+                return false;
+            }
+            if (!Objects.equals(this.br, other.br)) {
+                return false;
+            }
+            return true;
+        }
         
         
         
@@ -547,7 +584,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             if (ret == null) {
                 return new ArrayList<>();
             } else {
-                System.err.println(signature.resolveSymbolId(labelId)+": "+ret);
+                //System.err.println(signature.resolveSymbolId(labelId)+": "+ret);
                 Rule retRule = createRule(addState(ret), labelId, childStates, 1.0);
                 if (ret.br.isCompleteGraph()) {
                     addFinalState(retRule.getParent());
