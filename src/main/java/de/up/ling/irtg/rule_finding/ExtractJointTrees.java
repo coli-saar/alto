@@ -106,8 +106,8 @@ public class ExtractJointTrees {
             Interpretation inpre1 = new Interpretation(algebra1, hm1);
             Interpretation inpre2 = new Interpretation(algebra2, hm2);
 
-            ita.addInterpretation("FirstInput", inpre1);
-            ita.addInterpretation("SecondInput", inpre2);
+            ita.addInterpretation(FIRST_ALGEBRA_ID, inpre1);
+            ita.addInterpretation(SECOND_ALGEBRA_ID, inpre2);
 
             try (BufferedWriter out = new BufferedWriter(new OutputStreamWriter(outs.get()))) {
                 out.write(ita.toString());
