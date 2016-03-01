@@ -31,7 +31,8 @@ public class ShowNodes {
     public static void main(String... args) throws IOException, ParserException {
         String inputFileName = args[0];
         String outputFileName = args[1];
-        String importantLine = args[2];
+        String arityListFile = args[2];
+        String importantLine = args[3];
         
         int pos = 0;
         int desired = Integer.parseInt(importantLine);
@@ -54,7 +55,8 @@ public class ShowNodes {
         }
         
         Map<String,Set<String>>[] info = GetAllNodesMap.getCoreDescriptions(lines);
-        try(BufferedWriter output = new BufferedWriter(new FileWriter(outputFileName))) {
+        try(BufferedWriter output = new BufferedWriter(new FileWriter(outputFileName));
+                BufferedWriter alout = new BufferedWriter(new FileWriter(arityListFile))) {
             for(String name : info[0].keySet()) {
                 output.write(name);
                 output.newLine();
@@ -65,6 +67,19 @@ public class ShowNodes {
                 output.write(info[0].get(name).toString());
                 output.newLine();
                 output.newLine();
+                
+                if(!name.startsWith("'")) {
+                    for(String arity : info[2].get(name)) {
+                        if(arity.trim().equals("0")) {
+                            continue;
+                        }
+                        
+                        alout.write(" ");
+                        alout.write(name);
+                        alout.write(":");
+                        alout.write(arity);
+                    }
+                }
             }
         }
     }
