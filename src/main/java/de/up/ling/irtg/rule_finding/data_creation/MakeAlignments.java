@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.rule_finding.data_creation;
 
+import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
+import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
@@ -111,7 +113,7 @@ public class MakeAlignments {
     public static void makePreorderTreeFromStandard(InputStream alignments,
             InputStream trees, Supplier<OutputStream> supp, boolean useRight,
             int skipLinesInTreeFile)
-            throws IOException, ParseException {
+            throws IOException, ParseException, ParserException {
         try (BufferedReader treeInput = new BufferedReader(new InputStreamReader(trees));
                 BufferedReader alignmentInput = new BufferedReader(new InputStreamReader(alignments))) {
             String tLine;
@@ -119,13 +121,14 @@ public class MakeAlignments {
                treeInput.readLine();
             }
             
+            MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
             while ((tLine = treeInput.readLine()) != null) {
                 tLine = tLine.trim();
                 if (tLine.isEmpty()) {
                     continue;
                 }
 
-                Tree<String> t = TreeParser.parse(tLine);
+                Tree<String> t = mta.parseString(tLine);
                 Map<String, Set<String>> outmap = new HashMap();
 
                 AtomicInteger ai = new AtomicInteger(0);

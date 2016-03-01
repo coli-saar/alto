@@ -172,7 +172,7 @@ public class ExtractionHelper {
      * @throws ParseException 
      */
     private static void makeStringToTreeAlignments(String alignment, String trees,
-            ArrayList<Iterable<InputStream>> result) throws IOException, ParseException {
+            ArrayList<Iterable<InputStream>> result) throws IOException, ParseException, ParserException {
         List<ByteArrayOutputStream> intermediateAlignments = new ArrayList<>();
         
         intermediateAlignments.clear();

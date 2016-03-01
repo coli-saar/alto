@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.script.grammar_learning;
 
+import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.rule_finding.data_creation.MakeAlignments;
 import de.up.ling.tree.ParseException;
 import java.io.BufferedReader;
@@ -36,7 +37,7 @@ public class CreateTreeAlignments {
      * @throws IOException 
      * @throws de.up.ling.tree.ParseException 
      */
-    public static void main(String... args) throws IOException, ParseException {
+    public static void main(String... args) throws IOException, ParseException, ParserException {
         InputStream in = new FileInputStream(args[0]);
         Properties props = new Properties();
         props.load(in);
