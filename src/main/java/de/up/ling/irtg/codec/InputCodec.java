@@ -103,11 +103,12 @@ public abstract class InputCodec<E> {
      * a new input codec by adding its fully qualified class name
      * to the file <code>META-INF/services/de.up.ling.irtg.codec.InputCodec</code>.
      * You can find this file under <code>src/main/resources</code>
-     * in the IRTG source code repository.
+     * in the IRTG source code repository. Note: It is usually a better idea
+     * to call {@link #getInputCodecs(java.lang.Class) } to ensure type-safety.
      * 
      * @return 
      */
-    private static Iterable<InputCodec> getAllInputCodecs() {
+    public static Iterable<InputCodec> getAllInputCodecs() {
         return ServiceLoader.load(InputCodec.class);
     }
 

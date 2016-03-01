@@ -19,7 +19,7 @@ import java.io.PrintWriter;
  * 
  * @author koller
  */
-@CodecMetadata(name = "treeAsSentence", description = "Converts a tree to its yield string", type = Tree.class)
+@CodecMetadata(name = "tree-yield", description = "Converts a tree to its yield string", type = Tree.class)
 public class TreeYieldOutputCodec extends OutputCodec<Tree> {
     @Override
     public void write(Tree tree, OutputStream ostream) throws IOException, UnsupportedOperationException {

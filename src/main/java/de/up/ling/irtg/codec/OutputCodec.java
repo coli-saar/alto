@@ -7,6 +7,7 @@
 package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.algebra.graph.SGraph;
+import static de.up.ling.irtg.codec.InputCodec.getAllInputCodecs;
 import de.up.ling.tree.Tree;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,6 +54,7 @@ import java.util.logging.Logger;
  */
 public abstract class OutputCodec<E> {
     private Map<String,String> options = new HashMap<>();
+    private static Map<String, OutputCodec> codecByName = null;
     
     /**
      * Writes a string representation of a given object to an output stream.
@@ -99,7 +101,17 @@ public abstract class OutputCodec<E> {
         }
     }
     
-    private static Iterable<OutputCodec> getAllOutputCodecs() {
+    /**
+     * Returns all registered output codecs. You can register
+     * a new output codec by adding its fully qualified class name
+     * to the file <code>META-INF/services/de.up.ling.irtg.codec.OutputCodec</code>.
+     * You can find this file under <code>src/main/resources</code>
+     * in the IRTG source code repository. Note: It is usually a better idea
+     * to call {@link #getOutputCodecs(java.lang.Class) } to ensure type-safety.
+     * 
+     * @return 
+     */
+    public static Iterable<OutputCodec> getAllOutputCodecs() {
         return ServiceLoader.load(OutputCodec.class);
     }
 
@@ -122,6 +134,25 @@ public abstract class OutputCodec<E> {
         }
 
         return ret;
+    }
+    
+    /**
+     * Returns the registered input codec with the given name (as per
+     * the codec metadata's <code>name</code> field). If
+     * no codec with this name can be found, returns null.
+     * 
+     * @param name
+     * @return 
+     */
+    public static OutputCodec getOutputCodecByName(String name) {
+        if (codecByName == null) {
+            codecByName = new HashMap<>();
+            for (OutputCodec ic : getAllOutputCodecs()) {
+                codecByName.put(ic.getMetadata().name(), ic);
+            }
+        }
+
+        return codecByName.get(name);
     }
     
     /**
