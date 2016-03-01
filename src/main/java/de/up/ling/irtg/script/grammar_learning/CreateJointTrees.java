@@ -164,6 +164,7 @@ public class CreateJointTrees {
         }
         int size = prunName.size();
         Pruner first = new IntersectionPruner(prunName.toArray(new String[size]), prunOption.toArray(new String[size]));
+        
         prunName = new ArrayList<>();
         prunOption = new ArrayList<>();
         try (BufferedReader pReader = new BufferedReader(new FileReader(secondPrunerSpecification))) {
@@ -174,6 +175,7 @@ public class CreateJointTrees {
                 prunOption.add(pReader.readLine().trim());
             }
         }
+        size = prunName.size();
         Pruner second = new IntersectionPruner(prunName.toArray(new String[size]), prunOption.toArray(new String[size]));
         CorpusCreator corpCreat = new CorpusCreator(first, second, Integer.parseInt(threads.trim()));
         return corpCreat;

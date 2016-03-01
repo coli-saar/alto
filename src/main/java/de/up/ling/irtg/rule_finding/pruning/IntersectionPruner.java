@@ -8,6 +8,7 @@ package de.up.ling.irtg.rule_finding.pruning;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
 import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import java.util.Arrays;
 import java.util.function.Function;
 
 /**
@@ -63,7 +64,7 @@ public class IntersectionPruner implements Pruner {
     }
     
     
-    public IntersectionPruner(String[] choices, String[] configurations) {
+    public IntersectionPruner(String[] choices, String[] configurations) {       
         this(IntersectionOptions.lookUp(choices),configurations);
     }
     
