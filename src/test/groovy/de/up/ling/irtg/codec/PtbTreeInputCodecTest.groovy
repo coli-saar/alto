@@ -26,9 +26,7 @@ import static de.up.ling.irtg.util.TestingTools.*;
  * @author koller
  */
 class PtbTreeInputCodecTest {
-    @Test
-    public void testPierreVinkenTree() {
-        String pierre = """
+    String pierre = """
         (S
     (NP-SBJ
       (NP (NNP Pierre) (NNP Vinken) )
@@ -44,16 +42,17 @@ class PtbTreeInputCodecTest {
           (NP (DT a) (JJ nonexecutive) (NN director) ))
         (NP-TMP (NNP Nov.) (CD 29) )))
     (. .) )""";
-        
-        Tree gold = pt("""
+    
+    Tree goldPierre = pt("""
 S(NP-SBJ(NP(NNP(Pierre), NNP(Vinken)), ','(','), ADJP(NP(CD('61'), NNS(years)), JJ(old)), ','(',')),
   VP(MD(will), VP(VB(join), NP(DT(the), NN(board)), PP-CLR(IN(as), NP(DT(a), JJ(nonexecutive), NN(director))),
                   NP-TMP(NNP('Nov.'), CD('29')))),
   '.'('.'))""")
-        
-        Tree result = new PtbTreeInputCodec().read(pierre)
-        
-        assertEquals(gold, result)
+    
+    @Test
+    public void testPierreVinkenTree() {
+        Tree result = new PtbTreeInputCodec().read(pierre)        
+        assertEquals(goldPierre, result)
     }
     
     @Test
@@ -63,6 +62,15 @@ S(NP-SBJ(NP(NNP(Pierre), NNP(Vinken)), ','(','), ADJP(NP(CD('61'), NNS(years)), 
         List trees = c.readCorpus(is);
         
         assert trees.size() == 2;
+    }
+    
+    @Test
+    public void testReadExtraBrackets() {
+        InputCodec c = new PtbTreeInputCodec();
+        c.setOptExtraBrackets(true)
+        Tree result = c.read("( " + pierre + ")" )
+        
+        assertEquals(goldPierre, result)
     }
     
     private static final String TWO_TREES = """

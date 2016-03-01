@@ -7,8 +7,11 @@ package de.up.ling.irtg.script;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
+import de.up.ling.irtg.util.Util;
+import de.up.ling.tree.Tree;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -65,8 +68,14 @@ public class CodecConverter {
             }
         }
         
+        System.err.println("Converting from " + ic.getMetadata().name() + " to " + String.join(", ", Util.mapToList(ocs, oc -> oc.getMetadata().name())) + ".");
+        
+        int i = 1;
         for( String infile : param.inputFiles ) {
             String outfile = infile + ".conv";
+            
+            System.err.println(String.format("[%02d] %s -> %s", i++, infile, outfile));
+            
             OutputStream os = new FileOutputStream(outfile);
             PrintWriter pw = new PrintWriter(new OutputStreamWriter(os));
             BufferedReader r = new BufferedReader(new FileReader(infile));
@@ -88,6 +97,8 @@ public class CodecConverter {
             os.flush();
             os.close();
         }
+        
+        System.err.println("Done.");
 
         if (param.inputFiles.isEmpty()) {
             usage("No input files specified.");
@@ -143,7 +154,8 @@ public class CodecConverter {
             }
         }
     }
-    
+
+    @CodecMetadata(name = "blank", description = "Prints a blank line", type = Object.class)
     private static class BlankLineOutputCodec extends OutputCodec<Object> {
         @Override
         public void write(Object object, OutputStream ostream) throws IOException, UnsupportedOperationException {
