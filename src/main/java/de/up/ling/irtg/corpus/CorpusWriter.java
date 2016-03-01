@@ -89,8 +89,8 @@ public class CorpusWriter extends AbstractCorpusWriter {
             }
         }
 
-        withDerivationTree(inst, irtg.getAutomaton().getSignature(), repr -> writer.write(repr + "\n"));
         forEachInterpretation(inst, (key, repr) -> writer.write(repr + "\n"));
+        withDerivationTree(inst, irtg.getAutomaton().getSignature(), repr -> writer.write(repr + "\n"));
 
         if (printSeparatorLines) {
             writer.write("\n");
