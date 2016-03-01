@@ -346,7 +346,7 @@ public class HomomorphismManager {
                 leftInfo = Variables.getInformation(left).trim();
                 rightInfo = Variables.getInformation(right).trim();
                 
-                combo = Variables.createVariable(leftInfo + " +++ " + rightInfo);
+                combo = Variables.createVariable(leftInfo + FINAL_VARIABLE_STATE_DELIMITER + rightInfo);
             }
             
             symbol.append(combo);
@@ -386,6 +386,12 @@ public class HomomorphismManager {
 
         return sym;
     }
+    
+    
+    /**
+     * 
+     */
+    public static final String FINAL_VARIABLE_STATE_DELIMITER = " +++ ";
 
     /**
      *
@@ -620,7 +626,7 @@ public class HomomorphismManager {
     /**
      *
      */
-    private final String UNIVERSAL_START = "__UAS__";
+    public static final String UNIVERSAL_START = "__UAS__";
 
     /**
      *

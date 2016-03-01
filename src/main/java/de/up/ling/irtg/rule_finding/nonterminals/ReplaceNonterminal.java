@@ -10,7 +10,11 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.Variables;
+import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
+import de.up.ling.tree.ParseException;
+import de.up.ling.tree.TreeParser;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,24 +39,33 @@ public class ReplaceNonterminal {
     
     /**
      * 
+     */
+    private final String rootNonterminal;
+    
+    /**
+     * 
      * @param repLeft
      * @param repRight
+     * @param root
      * @throws IOException 
      */
-    public ReplaceNonterminal(InputStream repLeft, InputStream repRight) throws IOException {
+    public ReplaceNonterminal(InputStream repLeft, InputStream repRight, String root) throws IOException {
         replacementsLeft = new HashMap<>();
         replacementsRight = new HashMap<>();
         
         addEntries(repLeft,replacementsLeft);
         addEntries(repRight, replacementsRight);
+        
+        this.rootNonterminal = root;
     }
     
     /**
      * 
      * @param ita
      * @return 
+     * @throws de.up.ling.tree.ParseException 
      */
-    public InterpretedTreeAutomaton introduceNonterminals(InterpretedTreeAutomaton ita) {
+    public InterpretedTreeAutomaton introduceNonterminals(InterpretedTreeAutomaton ita) throws ParseException {
        TreeAutomaton basis = ita.getAutomaton();
         
        ConcreteTreeAutomaton ta = new ConcreteTreeAutomaton(basis.getSignature());
@@ -62,6 +75,9 @@ public class ReplaceNonterminal {
        
        for(Rule rule : rules) {
            Object parent = basis.getStateForId(rule.getParent());
+           if(basis.getFinalStates().contains(rule.getParent())) {
+               ta.addFinalState(ta.addState(parent));
+           }
            
            String label = basis.getSignature().resolveSymbolId(rule.getLabel());
            
@@ -71,13 +87,32 @@ public class ReplaceNonterminal {
            }
            
            if(Variables.isVariable(label)) {
+               String content = Variables.getInformation(label);
+               if(content.equals(HomomorphismManager.UNIVERSAL_START)){
+                   label = Variables.createVariable(this.rootNonterminal);
+               } else {
+                   int pos = label.indexOf(HomomorphismManager.FINAL_VARIABLE_STATE_DELIMITER);
+                   
+                   String l = label.substring(0,pos);
+                   String r = label.substring(pos+HomomorphismManager.FINAL_VARIABLE_STATE_DELIMITER.length());
+                   
+                   String nl = this.replacementsLeft.get(l);
+                   String nr = this.replacementsRight.get(r);
+                   
+                   label = Variables.createVariable(nl+"*"+nr);
+               }
                
+               
+               for(Interpretation inter : ints.values()) {
+                   Homomorphism hom = inter.getHomomorphism();
+                   
+                   hom.add(label, TreeParser.parse(label+"(?1)"));
+               }
            }
            
-           
+           ta.addRule(ta.createRule(parent, label, children, rule.getWeight()));
        }
-        //TODO: same final states
-       //TODO
+      
        InterpretedTreeAutomaton result = new InterpretedTreeAutomaton(ta);
        result.addAllInterpretations(ints);
        return result;
@@ -113,6 +148,4 @@ public class ReplaceNonterminal {
             }
         }
     }
-    
-    
 }
