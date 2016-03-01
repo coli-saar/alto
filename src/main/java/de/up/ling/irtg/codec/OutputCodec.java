@@ -7,7 +7,6 @@
 package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.algebra.graph.SGraph;
-import static de.up.ling.irtg.codec.InputCodec.getAllInputCodecs;
 import de.up.ling.tree.Tree;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -165,7 +164,7 @@ public abstract class OutputCodec<E> {
     }
     
     public void addOptions(String options) {
-        String[] parts = options.split("\\s*[,=]\\s*");
+        String[] parts = options.split("\\s*[,=:]\\s*");
         for( int i = 0; i < parts.length; i += 2 ) {
             this.options.put(parts[i], parts[i+1]);
         }

@@ -28,8 +28,6 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 @CodecMetadata(name = "ptb-tree", description = "Tree in PTB format", type = Tree.class)
 public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
     
-    private boolean optExtraBrackets = false;
-    
     /*
      candidates for codec options:
      - strip grammatical functions
@@ -57,7 +55,7 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
         try {
             PtbTreeParser.TreeContext result = null;
             
-            if( optExtraBrackets ) {
+            if( optionExtraBrackets() ) {
                 result = p.corpus().tree().get(0);
             } else {
                 result = p.tree();
@@ -69,14 +67,9 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
         } 
     }
 
-    public boolean hasOptExtraBrackets() {
-        return optExtraBrackets;
+    public boolean optionExtraBrackets() {
+        return hasTrueOption("extraBrackets");
     }
-
-    public void setOptExtraBrackets(boolean optExtraBrackets) {
-        this.optExtraBrackets = optExtraBrackets;
-    }
-    
     
     
     /**

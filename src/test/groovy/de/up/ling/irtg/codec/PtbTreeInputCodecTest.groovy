@@ -67,7 +67,7 @@ S(NP-SBJ(NP(NNP(Pierre), NNP(Vinken)), ','(','), ADJP(NP(CD('61'), NNS(years)), 
     @Test
     public void testReadExtraBrackets() {
         InputCodec c = new PtbTreeInputCodec();
-        c.setOptExtraBrackets(true)
+        c.setOption("extraBrackets", "true");
         Tree result = c.read("( " + pierre + ")" )
         
         assertEquals(goldPierre, result)

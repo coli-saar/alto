@@ -50,6 +50,7 @@ import java.util.logging.Logger;
 public abstract class InputCodec<E> {
     private static Map<String, InputCodec> codecByName = null;
     private static Map<String, InputCodec> codecByExtension = null;
+    private Map<String,String> options = new HashMap<>();
     
     protected ProgressListener progressListener;
 
@@ -193,6 +194,31 @@ public abstract class InputCodec<E> {
     protected void notifyProgressListener(int currentValue, int maxValue, String string) {
         if( progressListener != null ) {
             progressListener.accept(currentValue, maxValue, string);
+        }
+    }
+    
+    public void addOptions(String options) {
+        String[] parts = options.split("\\s*[,=:]\\s*");
+        for( int i = 0; i < parts.length; i += 2 ) {
+            this.options.put(parts[i], parts[i+1]);
+        }
+    }
+    
+    public void setOption(String option, String value) {
+        options.put(option, value);
+    }
+    
+    public String getOption(String key) {
+        return options.get(key);
+    }
+    
+    public boolean hasTrueOption(String key) {
+        String val = getOption(key);
+        
+        if( val != null && val.toLowerCase().equals("true")) {
+            return true;
+        } else {
+            return false;
         }
     }
 
