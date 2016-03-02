@@ -94,8 +94,6 @@ public class CreateJointTrees {
                     
                     File source = new File(prefix + File.separator + name);
                     
-                    System.out.println("Obtaining File: "+source);
-                    
                     try {
                         return new FileInputStream(source);
                     } catch (FileNotFoundException ex) {
@@ -103,6 +101,7 @@ public class CreateJointTrees {
                         
                         System.out.println("-------");
                         System.out.println(ex);
+                        System.out.println("filename: "+name);
                         System.out.println("-------");
                         
                         throw new RuntimeException(ex);

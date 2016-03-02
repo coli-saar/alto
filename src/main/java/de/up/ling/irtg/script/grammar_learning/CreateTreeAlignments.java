@@ -36,6 +36,7 @@ public class CreateTreeAlignments {
      * @param args
      * @throws IOException 
      * @throws de.up.ling.tree.ParseException 
+     * @throws de.up.ling.irtg.algebra.ParserException 
      */
     public static void main(String... args) throws IOException, ParseException, ParserException {
         InputStream in = new FileInputStream(args[0]);
@@ -100,7 +101,7 @@ public class CreateTreeAlignments {
             }
         };
         
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for(String s : trees) {
             sb.append(s);
             sb.append("\n");
@@ -108,5 +109,4 @@ public class CreateTreeAlignments {
         
         MakeAlignments.makePreorderTreeFromStandard(align, new ByteArrayInputStream(sb.toString().getBytes()), supp, useR, 0);
     }
-    
 }
