@@ -571,7 +571,7 @@ public class BoundaryRepresentation {
      * Checks this via the internally stored GraphInfo, by testing whether all edges incident to source nodes are in the subgraph.
      * @return
      */
-    boolean isCompleteGraph() {
+    public boolean isCompleteGraph() {
         for (int source = 0; source < sourceToNode.length; source++) {
             if (sourceToNode[source] != -1) {
                 for (int edge : completeGraphInfo.getIncidentEdges(sourceToNode[source])) {
