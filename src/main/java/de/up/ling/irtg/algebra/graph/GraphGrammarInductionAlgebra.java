@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.SgraphAmrWithSourcesOutputCodec;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.StringComparator;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -103,6 +104,10 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         private final GraphNode markedNode;
         private final BoundaryRepresentation br;
         
+        public BoundaryRepresentation getBr() {
+            return br;
+        }
+        
         private BrAndEdges(List<GraphEdge> edges, GraphNode markedNode, BoundaryRepresentation br) {
             this.edges = edges;
             this.markedNode = markedNode;
@@ -140,7 +145,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 if (edgeGraph == null) {
                     return null;
                 }
-                String constLabel = edgeGraph.toIsiAmrString();
+                String constLabel = new SgraphAmrWithSourcesOutputCodec().asString(edgeGraph);
                 BoundaryRepresentation edgeBr = new BoundaryRepresentation(edgeGraph, getGraphInfo());
                 usedRules.add(decompAuto.createRule(edgeBr, constLabel, new BoundaryRepresentation[0]));
                 
@@ -335,7 +340,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 if (renamedRightBr.contains(otherNodeID)) {
                     int otherSource = renamedRightBr.getAssignedSources(otherNodeID).get(0);//this has always exactly one entry by how this algorithm works
                     SGraph edgeGraph = makeEdgeGraph(e, otherSource);
-                    String constLabel = edgeGraph.toIsiAmrString();
+                    String constLabel = new SgraphAmrWithSourcesOutputCodec().asString(edgeGraph);
                     BoundaryRepresentation edgeBr = new BoundaryRepresentation(edgeGraph, getGraphInfo());
                     //System.err.println(edgeBr);
                     usedRules.add(decompAuto.createRule(edgeBr, constLabel, new BoundaryRepresentation[0]));
@@ -580,6 +585,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 ret = getStateForId(childStates[0]).explicit(usedRules);
             } else {
                 ret = constantID2Constant.get(labelId);
+                usedRules.add(decompAuto.createRule(ret.br, new SgraphAmrWithSourcesOutputCodec().asString(ret.br.getGraph()), new BoundaryRepresentation[0]));
             }
             if (ret == null) {
                 return new ArrayList<>();
