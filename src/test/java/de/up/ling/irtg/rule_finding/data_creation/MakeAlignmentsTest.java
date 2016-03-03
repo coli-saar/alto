@@ -6,14 +6,14 @@
 package de.up.ling.irtg.rule_finding.data_creation;
 
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
+import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeParser;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -112,4 +112,34 @@ public class MakeAlignmentsTest {
         assertEquals(results.get(0).toString().trim(),"0-0-0-1 ||| 1\n0-0-0-2 ||| 2\n0-0-0-2-0 ||| 3");
     }
     
+    @Test
+    public void makePreorderTreeFromStandard() throws Exception {
+        List<Tree<String>> ts = new ArrayList<>();
+        
+        ts.add(TreeParser.parse("S(VP(VBG(Establishing),NP(NNS(Models)),PP(IN(in),NP(NNP(Industrial),NNP(Innovation)))))"));
+        ts.add(TreeParser.parse("S(ADVP(RB(Here)),NP(PRP(it)),VP(VBZ(is),NP(NP(DT(a),NN(country)),PP(IN(with),NP(NP(DT(the),NN(freedom)),PP(IN(of),NP(NN(speech))))))),'.'('.'))"));
+        
+        String alignments = "1-0 0-1 2-3 3-4 4-2\n3-4 5-6";
+        ByteArrayInputStream bois = new ByteArrayInputStream(alignments.getBytes());
+        
+        List<ByteArrayOutputStream> baos = new ArrayList<>();
+        Supplier<OutputStream> supp = () -> {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            
+            baos.add(out);
+            
+            return out;
+        };
+        
+        MakeAlignments.makeTreeLeafFromStandard(bois, ts, supp, true);
+        
+        assertEquals(baos.get(1).toString().trim(),"0-0-0-2-1-0-1-0 ||| 1\n0-0-0-2-1-1-1-0-0-0 ||| 2");
+        
+        baos.clear();
+        bois = new ByteArrayInputStream(alignments.getBytes());
+        
+        MakeAlignments.makeTreeLeafFromStandard(bois, ts, supp, false);
+        
+        assertEquals(baos.get(0).toString().trim(),"0-0-0-0-2-1-1-0 ||| 5\n0-0-0-0-2-1-0-0 ||| 4\n0-0-0-0-0-0 ||| 2\n0-0-0-0-2-0-0 ||| 3\n0-0-0-0-1-0-0 ||| 1");
+    }
 }
