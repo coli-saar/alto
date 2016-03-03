@@ -49,7 +49,8 @@ public class CreateGrammarByRandomDraws {
         String sampleFactor = props.getProperty("sampleRatio");
         String firstAlgebra = props.getProperty("firstAlgebra");
         String secondAlgebra = props.getProperty("secondAlgebra");
-        
+        String outInterpretation1 = props.getProperty("firstAlgebraName");
+        String outInterpretation2 = props.getProperty("secondAlgebraName");        
         
         int min = Integer.parseInt(minTrees);
         int max = Integer.parseInt(maxTrees);
@@ -61,7 +62,8 @@ public class CreateGrammarByRandomDraws {
         
         TreeExtractor trex = new VariableWeightedRandomPick(weight, min, max, ratio);
         
-        ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex);
+        ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex,
+        outInterpretation1,outInterpretation2);
         
         File[] inputs = new File(inputFolder).listFiles();
         Iterable<InputStream> instream = () -> {

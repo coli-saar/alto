@@ -51,24 +51,41 @@ public class ExtractGrammar<Type1, Type2> {
     private final String interpretation2ID;
 
     /**
+     * 
+     */
+    private final String outInterpretation1;
+    
+    /**
+     * 
+     */
+    private final String outInterpretation2;
+    
+    /**
      *
      */
     private final TreeExtractor trex;
 
     /**
-     *
+     * 
      * @param algebra1
      * @param algebra2
      * @param interpretation1ID
      * @param interpretation2ID
      * @param trex
+     * @param outInterpretation1
+     * @param outInterpretation2 
      */
     public ExtractGrammar(Algebra<Type1> algebra1, Algebra<Type2> algebra2,
-            String interpretation1ID, String interpretation2ID, TreeExtractor trex) {
+            String interpretation1ID, String interpretation2ID, TreeExtractor trex,
+            String outInterpretation1, String outInterpretation2) {
         this.algebra1 = algebra1;
         this.algebra2 = algebra2;
+        
         this.interpretation1ID = interpretation1ID;
         this.interpretation2ID = interpretation2ID;
+        this.outInterpretation1 = outInterpretation1;
+        this.outInterpretation2 = outInterpretation2;
+        
         this.trex = trex;
     }
 
@@ -135,7 +152,7 @@ public class ExtractGrammar<Type1, Type2> {
             }
         }
 
-        InterpretedTreeAutomaton ita = rpp.getIRTG(interpretation1ID, interpretation2ID);
+        InterpretedTreeAutomaton ita = rpp.getIRTG(outInterpretation1, outInterpretation2);
         ita.getAutomaton().normalizeRuleWeights();
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(irtg))) {
             bw.write(ita.toString());

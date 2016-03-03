@@ -58,6 +58,8 @@ public class CreateGrammarByOnlineMAPEM {
         String modelSmooth = props.getProperty("modelSmooth");
         String logInformatWrongess = props.getProperty("logInformantWrongness");
         String desiredAvergeSize = props.getProperty("desiredAverageSize");
+        String outInterpretation1 = props.getProperty("firstAlgebraName");
+        String outInterpretation2 = props.getProperty("secondAlgebraName");
         
         Algebra a1 = (Algebra) Class.forName(firstAlgebra).newInstance();
         Algebra a2 = (Algebra) Class.forName(secondAlgebra).newInstance();
@@ -113,7 +115,8 @@ public class CreateGrammarByOnlineMAPEM {
         trex.setThreads(1);
         trex.setTrainIterations(Integer.parseInt(trainIterations));
         
-        ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex);
+        ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex,
+        outInterpretation1,outInterpretation2);
         
         try(OutputStream trees = new FileOutputStream(treeOutput);
                 OutputStream grammar = new FileOutputStream(grammarOutput)) {

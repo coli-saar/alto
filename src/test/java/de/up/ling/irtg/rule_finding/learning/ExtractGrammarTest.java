@@ -75,7 +75,7 @@ public class ExtractGrammarTest {
             InstantiationException, IllegalAccessException, ParseException {
         extract = new ExtractGrammar<>(new StringAlgebra(),new MinimalTreeAlgebra(),
                         ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID,
-                        new MostFrequentVariables());
+                        new MostFrequentVariables(),"string","tree");
         
         Pruner one = new IntersectionPruner(IntersectionOptions.NO_EMPTY,IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
         Pruner two = new IntersectionPruner(IntersectionOptions.NO_EMPTY,IntersectionOptions.NO_LEFT_INTO_RIGHT);
@@ -111,7 +111,7 @@ public class ExtractGrammarTest {
         assertTrue(ta.countTrees() >= 2);
         
         Map<String,String> input = new HashMap<>();
-        input.put("FirstInput", "What river flows through Kansas".toLowerCase());
+        input.put("string", "What river flows through Kansas".toLowerCase());
         
         TreeAutomaton parse = ita.parse(input);
         
@@ -124,7 +124,7 @@ public class ExtractGrammarTest {
             
             Map<String,Object> inter = ita.interpret(t);
             Pair<List<String>,Tree<String>> p = 
-                    new Pair<>((List<String>) inter.get("FirstInput"), (Tree<String>) inter.get("SecondInput"));
+                    new Pair<>((List<String>) inter.get("string"), (Tree<String>) inter.get("tree"));
             pairs.add(p);
         }
         
@@ -135,4 +135,5 @@ public class ExtractGrammarTest {
             assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas".toLowerCase()));
         }
     }
+    
 }
