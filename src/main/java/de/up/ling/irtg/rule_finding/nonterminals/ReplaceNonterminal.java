@@ -71,11 +71,9 @@ public class ReplaceNonterminal {
      * @param ita
      * @param defAult
      * @return
-     * @throws ParseException 
      */
     public InterpretedTreeAutomaton introduceNonterminals(InterpretedTreeAutomaton ita,
-                                                                        String defAult)
-                                                                        throws ParseException {
+                                                                        String defAult) {
        TreeAutomaton basis = ita.getAutomaton();
         
        ConcreteTreeAutomaton ta = new ConcreteTreeAutomaton(basis.getSignature());
