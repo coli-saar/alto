@@ -10,6 +10,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 /**
@@ -18,67 +20,79 @@ import java.io.IOException;
  */
 public class WriteGraphAndStringAlignments {
     
-    final static int startLine = 6;
+    
         
-        final static int stringLine = 0;
-        final static int treeLine = 1;
-        final static int graphLine = 2;
         
-        final static String singlequoteReplacement = "AsinglequoteA";
+    private static final Pattern NODE_AND_NAME = Pattern.compile("(\\(([^\\s\\(\\)]+)\\s+/\\s+([^\\s\\(\\)]+))");
+        
          
     public static void main(String[] args) throws FileNotFoundException, IOException {
         
         String corpusPath = args[0];
-        String targetPath = args[1];
-        
+        String fastAlignTargetPath = args[1]+".fastAlign";
+        String nodeNameTargetPath = args[1]+".names";
+        final int stringLine = Integer.parseInt(args[2]);
+        final int graphLine = Integer.parseInt(args[3]);
+        final int startLine = Integer.parseInt(args[4]);
         
         BufferedReader corpusReader = new BufferedReader(new FileReader(corpusPath));
-        FileWriter writer = new FileWriter(targetPath);
+        FileWriter alignWriter = new FileWriter(fastAlignTargetPath);
+        FileWriter nameWriter = new FileWriter(nodeNameTargetPath);
         
         String line = null;
         int i = 0;
         int actualLineCounter = 0;
+        StringBuilder nodes = new StringBuilder();
+        StringBuilder names = new StringBuilder();
+        String string = null;
         while ((line = corpusReader.readLine()) != null) {
             if (i>= startLine) {
-                switch (actualLineCounter%3) {
-                    case stringLine:
-                        writer.write(line+"\n");
-                        break;
-                    case graphLine:
-                        writer.write(line.replaceAll("\'", singlequoteReplacement)+"\n");
-                        break;
-                    case treeLine:
-                        StringBuilder sb = new StringBuilder();
-                        boolean inDoubleQuotes = false;
-                        for (int j = 0; j<line.length(); j++) {
-                            char c = line.charAt(j);
-                            if (c == '"') {
-                                inDoubleQuotes = !inDoubleQuotes;
-                                //do not want to append this double quote since we won't need it
-                            } else if (c == '\'' && inDoubleQuotes) {
-                                sb.append(singlequoteReplacement);
-                            } else {
-                                sb.append(c);
-                            }
+                if (actualLineCounter%3 == stringLine) {
+                    string = line;
+                } else if (actualLineCounter%3 == graphLine) {
+
+                    boolean first = true;
+
+                    Matcher mat = NODE_AND_NAME.matcher(line);
+
+
+                    while(mat.find()) {
+                        if(first) {
+                            first = false;
+                        } else {
+                            nodes.append(" ");
+                            names.append(" ");
                         }
-                        writer.write(sb.toString()+"\n");
-                        break;
-                    default:
-                        writer.write(line+"\n");
-                        break;
+
+                        String one = mat.group(2);
+                        String two = mat.group(3);
+
+                        nodes.append(one);
+                        names.append(two);
+                    }
                 }
+                
                 if (!line.equals("")) {
                     actualLineCounter++;
+                    //write and reset
+                    if (actualLineCounter%3 == 0) {
+                        alignWriter.write(string+" ||| " + names.toString()+"\n");
+                        nameWriter.write(nodes.toString()+"\n");
+                        nodes = new StringBuilder();
+                        names = new StringBuilder();
+                    }
                 }
-            } else {
-                writer.write(line+"\n");
+                
+                
+                
             }
             
             i++;
         }
         
         
-        writer.close();
+        alignWriter.close();
+        nameWriter.close();
     }
     
 }

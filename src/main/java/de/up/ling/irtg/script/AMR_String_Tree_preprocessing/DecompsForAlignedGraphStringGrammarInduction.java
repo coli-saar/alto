@@ -8,6 +8,7 @@ package de.up.ling.irtg.script.AMR_String_Tree_preprocessing;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
@@ -67,9 +68,9 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         //System.err.println("reading input...");
         
         //setup input
-        if (args.length<8) {
+        if (args.length<6) {
             System.out.println("Need 8 arguments (not all found), these are: sourceCount corpusPath targetFolderPath alignmentTargetFolderPath alignmentFilePath nodeNameListFilePath maxAlignmentDistInGraph");
-            String defaultArgs = "3 examples/AMRAllCorpusExplicit.txt output/test/ output/test/alignments/ output/test/cuts/ examples/amrHere/AMRExplicit.align examples/amrHere/AMRExplicit.names 3";
+            String defaultArgs = "3 examples/AMRAllCorpusExplicit.txt output/test/ examples/amrHere/AMRExplicit.align examples/amrHere/AMRExplicit.names 3";
             System.out.println("using default arguments instead: "+defaultArgs);
             args = defaultArgs.split(" ");
         }
@@ -89,7 +90,8 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         InterpretedTreeAutomaton irtg4Corpus = new InterpretedTreeAutomaton(null);
         irtg4Corpus.addInterpretation("graph", new Interpretation(new GraphAlgebra(), null));
         irtg4Corpus.addInterpretation("string", new Interpretation(new StringAlgebra(), null));
-        Corpus corpus = Corpus.readCorpus(corpusReader, irtg4Corpus);
+        irtg4Corpus.addInterpretation("tree", new Interpretation(new MinimalTreeAlgebra(), null));
+        Corpus corpus = Corpus.readCorpusLenient(corpusReader, irtg4Corpus);
         
         //int max = 3;
         
