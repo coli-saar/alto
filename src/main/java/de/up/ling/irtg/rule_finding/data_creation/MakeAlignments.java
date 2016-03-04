@@ -9,7 +9,6 @@ import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
-import de.up.ling.tree.TreeParser;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.io.BufferedReader;
@@ -21,6 +20,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -108,7 +108,8 @@ public class MakeAlignments {
      * @param useRight
      * @param skipLinesInTreeFile
      * @throws IOException
-     * @throws ParseException 
+     * @throws ParseException
+     * @throws ParserException 
      */
     public static void makePreorderTreeFromStandard(InputStream alignments,
             InputStream trees, Supplier<OutputStream> supp, boolean useRight,
@@ -117,10 +118,10 @@ public class MakeAlignments {
         try (BufferedReader treeInput = new BufferedReader(new InputStreamReader(trees));
                 BufferedReader alignmentInput = new BufferedReader(new InputStreamReader(alignments))) {
             String tLine;
-            for(int i=0;i<skipLinesInTreeFile;++i) {
-               treeInput.readLine();
+            for (int i = 0; i < skipLinesInTreeFile; ++i) {
+                treeInput.readLine();
             }
-            
+
             MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
             while ((tLine = treeInput.readLine()) != null) {
                 tLine = tLine.trim();
@@ -136,7 +137,7 @@ public class MakeAlignments {
                 addAddresses(t, "0-0-0", posToAddress, ai);
 
                 String alignLine = alignmentInput.readLine().trim();
-                
+
                 if (!alignLine.isEmpty()) {
                     String[] parts = alignLine.trim().split("\\s+");
 
@@ -148,6 +149,74 @@ public class MakeAlignments {
                         int pos = Integer.parseInt(posStr);
 
                         String address = posToAddress.get(pos);
+                        if(address == null) {
+                            System.err.println("cannot use alignment: "+pos);
+                            System.err.println("from alignment sequence: "+alignLine);
+                            System.err.println("for tree: "+tLine);
+                            continue;
+                        }
+                        
+                        
+                        Set<String> set = outmap.get(address);
+                        if (set == null) {
+                            set = new HashSet<>();
+                            outmap.put(address, set);
+                        }
+
+                        set.add(marker);
+                    }
+                }
+
+                dumpResults(supp.get(), outmap);
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param alignments
+     * @param trees
+     * @param supp
+     * @param useRight
+     * @param skipLinesInTreeFile
+     * @throws IOException
+     * @throws ParseException
+     * @throws ParserException 
+     */
+    public static void makeTreeLeafFromStandard(InputStream alignments,
+            Iterable<Tree<String>> trees, Supplier<OutputStream> supp, boolean useRight)
+            throws IOException, ParseException, ParserException {
+        Iterator<Tree<String>> iter = trees.iterator();
+
+        try (BufferedReader alignmentInput = new BufferedReader(new InputStreamReader(alignments))) {
+
+            while (iter.hasNext()) {
+                Tree<String> t = iter.next();
+                Map<String, Set<String>> outmap = new HashMap();
+
+                AtomicInteger ai = new AtomicInteger(0);
+                Int2ObjectMap<String> posToAddress = new Int2ObjectOpenHashMap<>();
+                addLeafAddresses(t, "0-0-0", posToAddress, ai);
+
+                String alignLine = alignmentInput.readLine().trim();
+
+                if (!alignLine.isEmpty()) {
+                    String[] parts = alignLine.trim().split("\\s+");
+
+                    int code = 0;
+                    for (String part : parts) {
+                        String marker = Integer.toString(++code);
+
+                        String posStr = part.trim().split("-")[useRight ? 1 : 0].trim();
+                        int pos = Integer.parseInt(posStr);
+
+                        String address = posToAddress.get(pos);
+                        if(address == null) {
+                            System.err.println("cannot use alignment: "+pos);
+                            System.err.println("from alignment sequence: "+alignLine);
+                            System.err.println("for tree: "+t);
+                            continue;
+                        }
 
                         Set<String> set = outmap.get(address);
                         if (set == null) {
@@ -178,6 +247,26 @@ public class MakeAlignments {
 
         for (int i = 0; i < t.getChildren().size(); ++i) {
             addAddresses(t.getChildren().get(i), addressString + "-" + i, posToAddress, ai);
+        }
+    }
+
+    /**
+     *
+     * @param t
+     * @param string
+     * @param posToAddress
+     * @param ai
+     */
+    private static void addLeafAddresses(Tree<String> t, String addressString, Int2ObjectMap<String> posToAddress, AtomicInteger ai) {
+
+        if (t.getChildren().isEmpty()) {
+            int num = ai.getAndIncrement();
+            posToAddress.put(num, addressString);
+        } else {
+
+            for (int i = 0; i < t.getChildren().size(); ++i) {
+                addLeafAddresses(t.getChildren().get(i), addressString + "-" + i, posToAddress, ai);
+            }
         }
     }
 }

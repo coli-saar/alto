@@ -43,7 +43,7 @@ public class CreateJointTrees {
         InputStream in = new FileInputStream(args[0]);
         Properties props = new Properties();
         props.load(in);
-
+        
         String firstAutomatonFolder = props.getProperty("firstAutomatonFolder");
         String secondAutomatonFolder = props.getProperty("secondAutomatonFolder");
         String firstAlignmentFolder = props.getProperty("firstAlignmentFolder");
@@ -98,6 +98,12 @@ public class CreateJointTrees {
                         return new FileInputStream(source);
                     } catch (FileNotFoundException ex) {
                         Logger.getLogger(CreateJointTrees.class.getName()).log(Level.SEVERE, null, ex);
+                        
+                        System.out.println("-------");
+                        System.out.println(ex);
+                        System.out.println("filename: "+name);
+                        System.out.println("-------");
+                        
                         throw new RuntimeException(ex);
                     }
                 }

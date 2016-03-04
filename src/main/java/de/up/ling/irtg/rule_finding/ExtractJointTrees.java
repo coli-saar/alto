@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding;
 
+import de.saar.basic.Logger;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
@@ -25,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.function.Supplier;
+import java.util.logging.Level;
 
 /**
  *
@@ -128,13 +130,22 @@ public class ExtractJointTrees {
     private Iterable<Pair<TreeAutomaton, StateAlignmentMarking>> makeTreeAutomata(Iterable<InputStream> firstAuts, Iterable<InputStream> align) {
         TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
         Iterable<Pair<TreeAutomaton,StateAlignmentMarking>> auIt = new BiFunctionIterable<>(firstAuts, align, (InputStream au, InputStream al) -> {
-            try {
-                TreeAutomaton ta = taic.read(au);
-                StateAlignmentMarking sam = new SpecifiedAligner(ta, al);
+            {
+                TreeAutomaton ta;
+                try {
+                    ta = taic.read(au);
+                    StateAlignmentMarking sam = new SpecifiedAligner(ta, al);
+                    return new Pair<>(ta,sam);
+                } catch (CodecParseException | IOException ex) {
+                    java.util.logging.Logger.getLogger(ExtractJointTrees.class.getName()).log(Level.SEVERE, null, ex);
+                    
+                    System.out.println("-----");
+                    System.out.println(ex);
+                    System.out.println("-----");
+                    
+                    throw new RuntimeException(ex);
+                }
                 
-                return new Pair<>(ta,sam);
-            } catch (CodecParseException | IOException ex) {
-                throw new RuntimeException("Could not parse automaton.");
             }
         });
         

@@ -13,7 +13,9 @@ import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
 import de.up.ling.irtg.rule_finding.learning.SampleOnlineEM;
 import de.up.ling.irtg.rule_finding.sampling.models.IndependentTrees;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.BuildProperties;
 import de.up.ling.irtg.util.FunctionIterable;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -21,6 +23,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -58,6 +61,8 @@ public class CreateGrammarByOnlineMAPEM {
         String modelSmooth = props.getProperty("modelSmooth");
         String logInformatWrongess = props.getProperty("logInformantWrongness");
         String desiredAvergeSize = props.getProperty("desiredAverageSize");
+        String outInterpretation1 = props.getProperty("firstAlgebraName");
+        String outInterpretation2 = props.getProperty("secondAlgebraName");
         
         Algebra a1 = (Algebra) Class.forName(firstAlgebra).newInstance();
         Algebra a2 = (Algebra) Class.forName(secondAlgebra).newInstance();
@@ -113,10 +118,18 @@ public class CreateGrammarByOnlineMAPEM {
         trex.setThreads(1);
         trex.setTrainIterations(Integer.parseInt(trainIterations));
         
-        ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex);
+        ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex,
+        outInterpretation1,outInterpretation2);
         
         try(OutputStream trees = new FileOutputStream(treeOutput);
                 OutputStream grammar = new FileOutputStream(grammarOutput)) {
+            /*BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(grammar));
+            bw.write("# "+BuildProperties.getBuild());
+            bw.newLine();
+            bw.write("# "+BuildProperties.getVersion());
+            bw.newLine();
+            bw.flush();*/
+            
             eg.extract(instream, trees, grammar);
         }
     }

@@ -10,6 +10,8 @@ import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
 import de.up.ling.irtg.rule_finding.learning.TreeExtractor;
 import de.up.ling.irtg.rule_finding.learning.VariableWeightedRandomPick;
+import de.up.ling.irtg.util.BuildProperties;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -17,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -49,7 +52,8 @@ public class CreateGrammarByRandomDraws {
         String sampleFactor = props.getProperty("sampleRatio");
         String firstAlgebra = props.getProperty("firstAlgebra");
         String secondAlgebra = props.getProperty("secondAlgebra");
-        
+        String outInterpretation1 = props.getProperty("firstAlgebraName");
+        String outInterpretation2 = props.getProperty("secondAlgebraName");        
         
         int min = Integer.parseInt(minTrees);
         int max = Integer.parseInt(maxTrees);
@@ -61,7 +65,8 @@ public class CreateGrammarByRandomDraws {
         
         TreeExtractor trex = new VariableWeightedRandomPick(weight, min, max, ratio);
         
-        ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex);
+        ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex,
+        outInterpretation1,outInterpretation2);
         
         File[] inputs = new File(inputFolder).listFiles();
         Iterable<InputStream> instream = () -> {
@@ -87,9 +92,15 @@ public class CreateGrammarByRandomDraws {
             };
         };
         
-        
         try(OutputStream trees = new FileOutputStream(treeOutput);
                 OutputStream grammar = new FileOutputStream(grammarOutput)) {
+            /*BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(grammar));
+            bw.write("# "+BuildProperties.getBuild());
+            bw.newLine();
+            bw.write("# "+BuildProperties.getVersion());
+            bw.newLine();
+            bw.flush();*/
+            
             eg.extract(instream, trees, grammar);
         }
     }

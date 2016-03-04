@@ -30,16 +30,6 @@ import java.util.Properties;
 public class CreateAutomata {
     /**
      * 
-     */
-    private final static String FIRST_INTERPRETATION_STRING = "first";
-    
-    /**
-     * 
-     */
-    private final static String SECOND_INTERPRETATION_STRING = "second";
-    
-    /**
-     * 
      * @param args
      * @throws IOException
      * @throws ClassNotFoundException
@@ -55,16 +45,24 @@ public class CreateAutomata {
         
         String algebraOne = props.getProperty("algebra1");
         String algebraTwo = props.getProperty("algebra2");
+        String algebraThree = props.getProperty("algebra3");
+        String algOneName = props.getProperty("algebra1Name");
+        String algTwoName = props.getProperty("algebra2Name");
+        String algThreeName = props.getProperty("algebra3Name");
+        
         String corpusFile = props.getProperty("corpusFile");
         String firstAutomatonFolder = props.getProperty("firstAutomataFolder");
         String secondAutomatonFolder = props.getProperty("secondAutomataFolder");
         
         Algebra a1 = (Algebra) Class.forName(algebraOne).newInstance();
         Algebra a2 = (Algebra) Class.forName(algebraTwo).newInstance();
+        Algebra a3 = (Algebra) Class.forName(algebraThree).newInstance();
         
         Map<String,Algebra> map = new HashMap<>();
-        map.put(FIRST_INTERPRETATION_STRING, a1);
-        map.put(SECOND_INTERPRETATION_STRING, a2);
+        map.put(algOneName, a1);
+        map.put(algTwoName, a2);
+        map.put(algThreeName, a2);
+        
         InterpretedTreeAutomaton ita = InterpretedTreeAutomaton.forAlgebras(map);
         
         Reader corpus = new FileReader(corpusFile);
@@ -80,18 +78,18 @@ public class CreateAutomata {
         for(Instance instance : corp) {
             int num = ++i;
             
-            Object o = instance.getInputObjects().get(FIRST_INTERPRETATION_STRING);
+            Object o = instance.getInputObjects().get(algOneName);
             
-            TreeAutomaton ta = ita.getInterpretation(FIRST_INTERPRETATION_STRING).getAlgebra().decompose(o);
+            TreeAutomaton ta = ita.getInterpretation(algOneName).getAlgebra().decompose(o);
             
             String fileName = makeStandardName(f1, num);
             try(BufferedWriter out = new BufferedWriter(new FileWriter(fileName))) {
                 out.write(ta.toString());
             }
             
-            o = instance.getInputObjects().get(SECOND_INTERPRETATION_STRING);
+            o = instance.getInputObjects().get(algTwoName);
             
-            ta = ita.getInterpretation(SECOND_INTERPRETATION_STRING).getAlgebra().decompose(o);
+            ta = ita.getInterpretation(algTwoName).getAlgebra().decompose(o);
             
             fileName = makeStandardName(f2, num);
             

@@ -14,7 +14,7 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
 import de.up.ling.tree.ParseException;
-import de.up.ling.tree.TreeParser;
+import de.up.ling.tree.Tree;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +27,13 @@ import java.util.Map;
  * @author christoph_teichmann
  */
 public class ReplaceNonterminal {
+    
+    /**
+     * 
+     */
+    public static final String DIVIDER_REGEX = " \\|\\|\\| ";
+    public static final String DIVIDER = " ||| ";
+    
     /**
      * 
      */
@@ -62,16 +69,17 @@ public class ReplaceNonterminal {
     /**
      * 
      * @param ita
-     * @return 
-     * @throws de.up.ling.tree.ParseException 
+     * @param defAult
+     * @return
      */
-    public InterpretedTreeAutomaton introduceNonterminals(InterpretedTreeAutomaton ita) throws ParseException {
+    public InterpretedTreeAutomaton introduceNonterminals(InterpretedTreeAutomaton ita,
+                                                                        String defAult) {
        TreeAutomaton basis = ita.getAutomaton();
         
        ConcreteTreeAutomaton ta = new ConcreteTreeAutomaton(basis.getSignature());
        Map<String,Interpretation> ints = ita.getInterpretations();
         
-       Iterable<Rule> rules = ta.getAllRulesTopDown();
+       Iterable<Rule> rules = basis.getAllRulesTopDown();
        
        for(Rule rule : rules) {
            Object parent = basis.getStateForId(rule.getParent());
@@ -91,22 +99,34 @@ public class ReplaceNonterminal {
                if(content.equals(HomomorphismManager.UNIVERSAL_START)){
                    label = Variables.createVariable(this.rootNonterminal);
                } else {
-                   int pos = label.indexOf(HomomorphismManager.FINAL_VARIABLE_STATE_DELIMITER);
+                   int pos = content.indexOf(HomomorphismManager.FINAL_VARIABLE_STATE_DELIMITER);
                    
-                   String l = label.substring(0,pos);
-                   String r = label.substring(pos+HomomorphismManager.FINAL_VARIABLE_STATE_DELIMITER.length());
+                   String l = content.substring(0,pos);
+                   String r = content.substring(pos+HomomorphismManager.FINAL_VARIABLE_STATE_DELIMITER.length());
                    
                    String nl = this.replacementsLeft.get(l);
                    String nr = this.replacementsRight.get(r);
                    
+                   if(nl == null) {
+                       nl = defAult;
+                   }
+                   
+                   if(nr == null) {
+                       nr = defAult;
+                   }
+                   
                    label = Variables.createVariable(nl+"*"+nr);
-               }
-               
+                }
                
                for(Interpretation inter : ints.values()) {
-                   Homomorphism hom = inter.getHomomorphism();
+                   Homomorphism hom = inter.getHomomorphism();                  
                    
-                   hom.add(label, TreeParser.parse(label+"(?1)"));
+                   Tree<String> t = Tree.create("?1");
+                   t = Tree.create(label, t);
+                   
+                   hom.getSourceSignature().addSymbol(label, 1);
+                   
+                   hom.add(label, t);
                }
            }
            
@@ -134,7 +154,7 @@ public class ReplaceNonterminal {
                     continue;
                 }
                 
-                String[] parts = line.split(" \\|\\|\\| ");
+                String[] parts = line.split(DIVIDER_REGEX);
                 String name = parts[0];
                 
                 if(name.startsWith("'")) {

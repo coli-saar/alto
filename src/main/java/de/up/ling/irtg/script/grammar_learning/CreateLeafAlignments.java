@@ -5,11 +5,16 @@
  */
 package de.up.ling.irtg.script.grammar_learning;
 
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.CorpusReadingException;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.rule_finding.data_creation.MakeAlignments;
+import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.ParseException;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
+import de.up.ling.tree.Tree;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -18,8 +23,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.Reader;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 import java.util.function.Supplier;
 import java.util.logging.Level;
@@ -29,56 +35,61 @@ import java.util.logging.Logger;
  *
  * @author christoph_teichmann
  */
-public class CreateTreeAlignments {
+public class CreateLeafAlignments {
     
     /**
      * 
      * @param args
-     * @throws IOException 
-     * @throws de.up.ling.tree.ParseException 
-     * @throws de.up.ling.irtg.algebra.ParserException 
+     * @throws IOException
+     * @throws ParseException
+     * @throws ParserException
+     * @throws ClassNotFoundException
+     * @throws InstantiationException
+     * @throws IllegalAccessException
+     * @throws CorpusReadingException 
      */
-    public static void main(String... args) throws IOException, ParseException, ParserException {
+    public static void main(String... args) throws IOException, ParseException, ParserException, ClassNotFoundException, InstantiationException, IllegalAccessException, CorpusReadingException {
         InputStream in = new FileInputStream(args[0]);
         Properties props = new Properties();
         props.load(in);
         
         String treesFile = props.getProperty("treesFile");
         String alignmentFile = props.getProperty("alignmentFile");
-        String comment = props.getProperty("commentMarker");
         String useRight = props.getProperty("useRight");
         String outputFolder = props.getProperty("outputFolder");
-        String position = props.getProperty("treePosition");
+        
+        String algebraOne = props.getProperty("algebra1");
+        String algebraTwo = props.getProperty("algebra2");
+        String algebraThree = props.getProperty("algebra3");
+        String algOneName = props.getProperty("algebra1Name");
+        String algTwoName = props.getProperty("algebra2Name");
+        String algThreeName = props.getProperty("algebra3Name");
+        
+        Algebra a1 = (Algebra) Class.forName(algebraOne).newInstance();
+        Algebra a2 = (Algebra) Class.forName(algebraTwo).newInstance();
+        Algebra a3 = (Algebra) Class.forName(algebraThree).newInstance();
+        
+        Map<String,Algebra> map = new HashMap<>();
+        map.put(algOneName, a1);
+        map.put(algTwoName, a2);
+        map.put(algThreeName, a2);
+        
+        InterpretedTreeAutomaton ita = InterpretedTreeAutomaton.forAlgebras(map);
+        Reader corpus = new FileReader(treesFile);
+        
+        Corpus corp = Corpus.readCorpus(corpus, ita);
         
         InputStream align = new FileInputStream(alignmentFile);
         boolean useR = Boolean.parseBoolean(useRight);
         File outputFile = new File(outputFolder);
         outputFile.mkdirs();
-        int target = Integer.parseInt(position);
         
-        
-        List<String> trees = new ArrayList<>();
-        try(BufferedReader br = new BufferedReader(new FileReader(treesFile))) {
-            int pos = 0;
-            String line;
+        Iterable<Tree<String>> iter = new FunctionIterable<>(corp,(Instance instance) -> {
+            Tree<String> t = (Tree<String>) instance.getInputObjects().get(algOneName);
             
-            while((line = br.readLine()) != null) {
-                if(line.startsWith(comment)) {
-                    continue;
-                }
-                
-                line = line.trim();
-                if(line.isEmpty()) {
-                    pos = 0;
-                    continue;
-                }
-                
-                if(pos == target) {
-                    trees.add(line);
-                }
-                ++pos;
-            }
-        }
+            return t;
+        });
+        
         
         Supplier<OutputStream> supp = new Supplier<OutputStream>() {
             /**
@@ -101,12 +112,6 @@ public class CreateTreeAlignments {
             }
         };
         
-        StringBuilder sb = new StringBuilder();
-        for(String s : trees) {
-            sb.append(s);
-            sb.append("\n");
-        }
-        
-        MakeAlignments.makePreorderTreeFromStandard(align, new ByteArrayInputStream(sb.toString().getBytes()), supp, useR, 0);
+        MakeAlignments.makeTreeLeafFromStandard(align, iter, supp, useR);
     }
 }
