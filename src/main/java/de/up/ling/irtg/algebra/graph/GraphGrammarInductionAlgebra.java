@@ -108,6 +108,10 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             return br;
         }
         
+        public boolean hasNoUnassignedEdges() {
+            return edges.isEmpty();
+        }
+        
         private BrAndEdges(List<GraphEdge> edges, GraphNode markedNode, BoundaryRepresentation br) {
             this.edges = edges;
             this.markedNode = markedNode;
@@ -623,7 +627,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         
     }
     
-    private static Set<String> getAttachToSourceLabels() {
+    public static Set<String> getAttachToSourceLabels() {
         Set<String> attachToSource = new HashSet<>();
         for (int i = 0; i<10; i++) {
             attachToSource.add("ARG"+i);

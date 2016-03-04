@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.script;
+package de.up.ling.irtg.script.AMR_String_Tree_preprocessing;
 
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
@@ -575,7 +575,7 @@ public class SGraphParsingEvaluation {
      * @param alg
      * @return 
      */
-    private static int getD(SGraph graph, GraphAlgebra alg) {
+    static int getD(SGraph graph, GraphAlgebra alg) {
         Map<SComponent, SComponent> storedComponents = new HashMap<>();
         GraphInfo completeGraphInfo = new GraphInfo(graph, alg);
         Set<SComponentRepresentation> completeGraphStates = new HashSet<>();

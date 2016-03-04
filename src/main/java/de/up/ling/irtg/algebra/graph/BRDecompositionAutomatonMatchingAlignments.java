@@ -14,7 +14,7 @@ import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
-import de.up.ling.irtg.script.DecompsForAlignedGraphStringGrammarInduction;
+import de.up.ling.irtg.script.AMR_String_Tree_preprocessing.DecompsForAlignedGraphStringGrammarInduction;
 import de.up.ling.irtg.util.TupleIterator;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;

@@ -3,19 +3,19 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.script;
+package de.up.ling.irtg.script.AMR_String_Tree_preprocessing;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.algebra.graph.BoundaryRepresentation;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphGrammarInductionAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.SGraph;
 import de.up.ling.irtg.automata.BinaryPartnerFinder;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
@@ -29,8 +29,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.BufferedReader;
@@ -50,8 +48,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -71,21 +67,22 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         //System.err.println("reading input...");
         
         //setup input
-        if (args.length<7) {
-            System.out.println("Need 7 arguments (not all found), these are: sourceCount corpusPath targetFolderPath alignmentTargetFolderPath alignmentFilePath nodeNameListFilePath maxAlignmentDistInGraph");
-            String defaultArgs = "3 examples/AMRAllCorpusExplicit.txt output/test/ output/test/alignments/ examples/amrHere/AMRExplicit.align examples/amrHere/AMRExplicit.names 3";
+        if (args.length<8) {
+            System.out.println("Need 8 arguments (not all found), these are: sourceCount corpusPath targetFolderPath alignmentTargetFolderPath alignmentFilePath nodeNameListFilePath maxAlignmentDistInGraph");
+            String defaultArgs = "3 examples/AMRAllCorpusExplicit.txt output/test/ output/test/alignments/ output/test/cuts/ examples/amrHere/AMRExplicit.align examples/amrHere/AMRExplicit.names 3";
             System.out.println("using default arguments instead: "+defaultArgs);
             args = defaultArgs.split(" ");
         }
         int maxSources = Integer.valueOf(args[0]);
         String corpusPath = args[1];
-        String targetPath = args[2];
-        String alignmentsTargetPath = args[3];
-        BufferedReader alignmentReader = new BufferedReader(new FileReader(args[4]));
-        BufferedReader nodeNameListReader = new BufferedReader(new FileReader(args[5]));
-        int maxAlignmentDistInGraph = Integer.valueOf(args[6]);
-        FileWriter filteredAlignmentWriter = new FileWriter(targetPath+"filtered.align");
-        
+        String targetFolderPath = args[2];
+        String alignmentsTargetPath = targetFolderPath+"alignments/";
+        String allowedCutsTargetPath = targetFolderPath+"cuts/";
+        BufferedReader alignmentReader = new BufferedReader(new FileReader(args[3]));
+        BufferedReader nodeNameListReader = new BufferedReader(new FileReader(args[4]));
+        int maxAlignmentDistInGraph = Integer.valueOf(args[5]);
+        FileWriter filteredAlignmentWriter = new FileWriter(targetFolderPath+"filtered.align");
+        FileWriter ntWriter = new FileWriter(targetFolderPath+"nonterminals.txt");
         
         //setup corpus form input
         Reader corpusReader = new FileReader(corpusPath);
@@ -95,6 +92,8 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         Corpus corpus = Corpus.readCorpus(corpusReader, irtg4Corpus);
         
         //int max = 3;
+        
+        Map<String, String> allSeenBRsToNT = new HashMap<>();
         
         int j = 0;
         for (Instance instance : corpus) {
@@ -205,10 +204,13 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                 //System.err.println("automaton setup...");
                 //synchr parsing
                 FileWriter alignmentWriter = new FileWriter(alignmentsTargetPath+j+"_"+graph.getAllNodeNames().size()+".rtg");
+                FileWriter cutsWriter = new FileWriter(allowedCutsTargetPath+j+"_"+graph.getAllNodeNames().size()+".rtg");
                 CustomSynchParsingAutomaton synchAuto = new CustomSynchParsingAutomaton(irtgSignature, stringAuto, graphAuto, constLabel2StringConstLabel, constLabel2GraphConstLabel, alignmentWriter);
                 //System.err.println("parsing...");
                 TreeAutomaton<Pair<StringAlgebra.Span, GraphGrammarInductionAlgebra.BrAndEdges>> concAuto = synchAuto.asConcreteTreeAutomatonBottomUp();
+                synchAuto.writeAllowedCuts(cutsWriter);
                 alignmentWriter.close();
+                cutsWriter.close();
                 //System.err.println("collecting rules...");
                 Set<Rule> rhsRules = new HashSet<>();
                 concAuto.processAllRulesTopDown(rule -> {
@@ -223,8 +225,10 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                 System.err.println("graph "+j+" ("+graph.getAllNodeNames().size()+" nodes): "+rhsRules.size()+" rules ------ "+alignmentsRemoved+"/"+initialAlignmentCount+" alignments removed");
 
                 if (!rhsRules.isEmpty()) {
-                    FileWriter writer = new FileWriter(targetPath+j+"_"+graph.getAllNodeNames().size()+".rtg");
+                    FileWriter writer = new FileWriter(targetFolderPath+"decomps/"+j+"_"+graph.getAllNodeNames().size()+".rtg");
                     for (Rule rhsRule : rhsRules) {
+                        BoundaryRepresentation parentBR = graphInductionAlg.getDecompAutomaton().getStateForId(rhsRule.getParent());
+                        allSeenBRsToNT.put(parentBR.toString(), parentBR.allSourcesToString());
                         writer.write(rhsRule.toString(graphInductionAlg.getDecompAutomaton(), graphInductionAlg.getDecompAutomaton().getStateForId(rhsRule.getParent()).isCompleteGraph())+"\n");
                     }
                     writer.close();
@@ -234,6 +238,10 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                 break;//for the moment, limit the amount of instances
             }*/
         }
+        for (Entry<String, String> entry : allSeenBRsToNT.entrySet()) {
+            ntWriter.write(entry.getKey()+" ||| " + entry.getValue()+"\n");
+        }
+        ntWriter.close();
         filteredAlignmentWriter.close();
     }
     
@@ -332,6 +340,7 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         private final Map<String, String> constLabel2StringConstLabel;
         private final Map<String, String> constLabel2GraphConstLabel;
         private final Writer alignmentWriter;
+        private final Set<String> allowedCuts;
         
         public CustomSynchParsingAutomaton(Signature signature, TreeAutomaton<StringAlgebra.Span> lhs,
                 TreeAutomaton<GraphGrammarInductionAlgebra.BrAndEdges> rhs, 
@@ -348,6 +357,7 @@ public class DecompsForAlignedGraphStringGrammarInduction {
             this.constLabel2StringConstLabel = constLabel2StringConstLabel;
             this.constLabel2GraphConstLabel = constLabel2GraphConstLabel;
             this.alignmentWriter = alignmentWriter;
+            allowedCuts = new HashSet<>();
         }
 
         @Override
@@ -454,6 +464,14 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                 
             }
             
+            //writing allowed cuts
+            for (Rule finalRhsRule : allRhsRules) {
+                GraphGrammarInductionAlgebra.BrAndEdges brAndEdges = rhs.getStateForId(finalRhsRule.getParent());
+                if (brAndEdges.hasNoUnassignedEdges()) {
+                    allowedCuts.add(brAndEdges.getBr().toString());
+                }
+            }
+            
             if (ret.size() == 1) {
                 //System.err.println(ret.get(0).toString(this));
                 rule2RhsRules.put(ret.get(0), allRhsRules);
@@ -462,6 +480,16 @@ public class DecompsForAlignedGraphStringGrammarInduction {
             }
             return ret;
             
+        }
+        
+        public void writeAllowedCuts(Writer cutsWriter) {
+            try {
+                for (String allowedCut : allowedCuts) {
+                    cutsWriter.write(allowedCut+"\n");
+                }
+            } catch (IOException ex) {
+                System.err.println("error writing allowed cuts: "+ex.toString());
+            }
         }
 
         @Override

@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.script.SGraphParsingEvaluation;
+import de.up.ling.irtg.script.AMR_String_Tree_preprocessing.SGraphParsingEvaluation;
 import de.up.ling.irtg.util.AverageLogger;
 import org.jgrapht.DirectedGraph;
 import java.util.Set;
