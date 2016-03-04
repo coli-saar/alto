@@ -13,7 +13,6 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
-import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import java.io.BufferedReader;
 import java.io.IOException;
