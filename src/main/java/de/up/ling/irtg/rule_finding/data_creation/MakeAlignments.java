@@ -149,7 +149,14 @@ public class MakeAlignments {
                         int pos = Integer.parseInt(posStr);
 
                         String address = posToAddress.get(pos);
-
+                        if(address == null) {
+                            System.err.println("cannot use alignment: "+pos);
+                            System.err.println("from alignment sequence: "+alignLine);
+                            System.err.println("for tree: "+tLine);
+                            continue;
+                        }
+                        
+                        
                         Set<String> set = outmap.get(address);
                         if (set == null) {
                             set = new HashSet<>();
@@ -204,6 +211,12 @@ public class MakeAlignments {
                         int pos = Integer.parseInt(posStr);
 
                         String address = posToAddress.get(pos);
+                        if(address == null) {
+                            System.err.println("cannot use alignment: "+pos);
+                            System.err.println("from alignment sequence: "+alignLine);
+                            System.err.println("for tree: "+t);
+                            continue;
+                        }
 
                         Set<String> set = outmap.get(address);
                         if (set == null) {
