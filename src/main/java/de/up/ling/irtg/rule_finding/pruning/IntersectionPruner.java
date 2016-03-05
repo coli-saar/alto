@@ -89,6 +89,6 @@ public class IntersectionPruner implements Pruner {
     
     @Override
     public TreeAutomaton apply(TreeAutomaton ta) {
-        return new IntersectionAutomaton(ta, this.mapToIntersect.apply(ta));
-    }    
+        return this.mapToIntersect.apply(ta);
+    }
 }

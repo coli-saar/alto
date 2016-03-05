@@ -24,6 +24,7 @@ public class NoPreConstantCut extends ConcreteTreeAutomaton<Boolean> {
      * @param allLabels 
      */
     public NoPreConstantCut(Signature sig, IntSet allLabels) {
+        super(sig);
         int justCut = this.addState(true);
         int cutDistant = this.addState(false);
 
