@@ -83,7 +83,6 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         BufferedReader nodeNameListReader = new BufferedReader(new FileReader(args[4]));
         int maxAlignmentDistInGraph = Integer.valueOf(args[5]);
         FileWriter filteredAlignmentWriter = new FileWriter(targetFolderPath+"filtered.align");
-        FileWriter ntWriter = new FileWriter(targetFolderPath+"nonterminals.txt");
         
         //setup corpus form input
         Reader corpusReader = new FileReader(corpusPath);
@@ -95,7 +94,6 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         
         //int max = 3;
         
-        Map<String, String> allSeenBRsToNT = new HashMap<>();
         
         int j = 0;
         for (Instance instance : corpus) {
@@ -205,11 +203,15 @@ public class DecompsForAlignedGraphStringGrammarInduction {
 
                 //System.err.println("automaton setup...");
                 //synchr parsing
+                
                 FileWriter alignmentWriter = new FileWriter(alignmentsTargetPath+j+"_"+graph.getAllNodeNames().size()+".rtg");
                 FileWriter cutsWriter = new FileWriter(allowedCutsTargetPath+j+"_"+graph.getAllNodeNames().size()+".rtg");
                 CustomSynchParsingAutomaton synchAuto = new CustomSynchParsingAutomaton(irtgSignature, stringAuto, graphAuto, constLabel2StringConstLabel, constLabel2GraphConstLabel, alignmentWriter);
                 //System.err.println("parsing...");
                 TreeAutomaton<Pair<StringAlgebra.Span, GraphGrammarInductionAlgebra.BrAndEdges>> concAuto = synchAuto.asConcreteTreeAutomatonBottomUp();
+                
+                
+                
                 synchAuto.writeAllowedCuts(cutsWriter);
                 alignmentWriter.close();
                 cutsWriter.close();
@@ -226,24 +228,28 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                 int alignmentsRemoved = initialAlignmentCount-alignmentsLeft.size();
                 System.err.println("graph "+j+" ("+graph.getAllNodeNames().size()+" nodes): "+rhsRules.size()+" rules ------ "+alignmentsRemoved+"/"+initialAlignmentCount+" alignments removed");
 
+                
                 if (!rhsRules.isEmpty()) {
+                    Map<String, String> allSeenBRsToNT = new HashMap<>();
                     FileWriter writer = new FileWriter(targetFolderPath+"decomps/"+j+"_"+graph.getAllNodeNames().size()+".rtg");
+                    FileWriter ntWriter = new FileWriter(targetFolderPath+"graphNTMapping/"+j+"_"+graph.getAllNodeNames().size()+".rtg");
                     for (Rule rhsRule : rhsRules) {
                         BoundaryRepresentation parentBR = graphInductionAlg.getDecompAutomaton().getStateForId(rhsRule.getParent());
                         allSeenBRsToNT.put(parentBR.toString(), parentBR.allSourcesToString());
                         writer.write(rhsRule.toString(graphInductionAlg.getDecompAutomaton(), graphInductionAlg.getDecompAutomaton().getStateForId(rhsRule.getParent()).isCompleteGraph())+"\n");
                     }
                     writer.close();
+                    
+                    for (Entry<String, String> entry : allSeenBRsToNT.entrySet()) {
+                        ntWriter.write(entry.getKey()+" ||| " + entry.getValue()+"\n");
+                    }
+                    ntWriter.close();
                 }
             j++;
             /*if (j>= max) {
                 break;//for the moment, limit the amount of instances
             }*/
         }
-        for (Entry<String, String> entry : allSeenBRsToNT.entrySet()) {
-            ntWriter.write(entry.getKey()+" ||| " + entry.getValue()+"\n");
-        }
-        ntWriter.close();
         filteredAlignmentWriter.close();
     }
     
