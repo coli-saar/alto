@@ -223,7 +223,6 @@ public class ReplaceNonterminalTest {
     public void testIntroduceNonterminals() throws Exception {
         InterpretedTreeAutomaton pita = rnt.introduceNonterminals(ita,"X");
         
-        System.out.println(pita);
         assertEquals(pita.getAutomaton().countTrees(),ita.getAutomaton().countTrees());
     }
 

@@ -126,8 +126,6 @@ public class AntiUnknownTest {
         
         assertEquals(seen.size(),7);
         
-        System.out.println(seen);
-        
         assertTrue(seen.contains("how many citi does the country_____1 have ?,answer(count(city(loc_2(countryid('country_____1')))))"));
         assertTrue(seen.contains("how many citi __unknown__ city_____1 __unknown__ __unknown__ in the country_____1 ?,answer(count(intersection(city(cityid('city_____1', _)), loc_2(countryid('country_____1')))))"));
         assertTrue(seen.contains("how many citize does the __unknown__ __unknown__ have in the usa ?,answer(population_1(largest(city(all))))"));
