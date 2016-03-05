@@ -46,6 +46,12 @@ public enum IntersectionOptions {
             return TreeArityEnsure.getRestrictionFactory(configuration);
         }
         
+    },
+    NO_PRE_CONSTANT_CUT {
+        @Override
+        public Function<TreeAutomaton, TreeAutomaton> getRestrictionFactory(String configuration) {
+            return (TreeAutomaton t) -> new NoPreConstantCut(t.getSignature(), t.getAllLabels());
+        }
     };
     
     /**

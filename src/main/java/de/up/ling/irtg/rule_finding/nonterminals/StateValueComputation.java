@@ -66,13 +66,26 @@ public abstract class StateValueComputation {
      * @param defAult
      * @return 
      */
-    public Map<String,String> mapToNonterminal(TreeAutomaton ta, Map<String,String> internal, String defAult) {
-        Map<String,String> result = new HashMap<>();
+    protected Map<String,String> mapToNonterminal(TreeAutomaton ta, Map<String,String> internal, String defAult) {
         Map<String,String> states = this.getStatesToTypes(ta);
+                
+        Map<String,String> result = createConvertedMapping(states, defAult, internal);
         
-        for(Map.Entry<String,String> ent : states.entrySet()) {
+        return result;
+    }
+
+    /**
+     * 
+     * @param stateToType
+     * @param defAult
+     * @param internal
+     * @return 
+     */
+    protected Map<String, String> createConvertedMapping(Map<String, String> stateToType, String defAult, Map<String, String> internal) {
+        Map<String,String> result = new HashMap<>();
+        for(Map.Entry<String,String> ent : stateToType.entrySet()) {
             String name = ent.getKey();
-            String val = states.get(name);
+            String val = ent.getValue();
             if(val == null) {
                 result.put(name, defAult);
             } else {
@@ -83,7 +96,6 @@ public abstract class StateValueComputation {
                 result.put(name, val);
             }
         }
-        
         return result;
     }
     
