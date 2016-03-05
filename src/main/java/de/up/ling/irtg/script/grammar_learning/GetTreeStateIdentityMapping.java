@@ -6,7 +6,6 @@
 package de.up.ling.irtg.script.grammar_learning;
 
 import de.up.ling.irtg.rule_finding.nonterminals.IdentityNonterminals;
-import de.up.ling.irtg.rule_finding.nonterminals.LookUpMTA;
 import de.up.ling.irtg.util.FunctionIterableWithSkip;
 import java.io.File;
 import java.io.FileInputStream;
