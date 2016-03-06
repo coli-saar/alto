@@ -16,6 +16,7 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -31,7 +32,8 @@ public class MakeStringOrTreeAutomataWithGraphNames {
     public static void main(String[] args) throws IOException, CorpusReadingException {
         
         String graphCorpusPath = args[0];
-        String targetPath = args[1];
+        File targetFolder = new File(args[1]);
+        targetFolder.mkdirs();
         String graphInterpName = args[2];
         String targetInterpName = args[3];
         
@@ -55,7 +57,7 @@ public class MakeStringOrTreeAutomataWithGraphNames {
             
             ret.makeAllRulesExplicit();
             
-            FileWriter writer = new FileWriter(targetPath+j+"_"+graph.getAllNodeNames().size()+".rtg");
+            FileWriter writer = new FileWriter(targetFolder.getAbsolutePath()+"/"+j+"_"+graph.getAllNodeNames().size()+".rtg");
             
             writer.write(ret.toString());
             
