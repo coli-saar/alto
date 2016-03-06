@@ -104,9 +104,10 @@ public class VariableWeightedRandomPick implements TreeExtractor {
         
         long amount = ta.countTrees();
         amount = (long) Math.min(max, Math.max(min, drawFactor*amount));
+        Iterator<Tree<String>> its = ta.languageIterator();
         
-        for(int i=0;i<amount;++i) {
-            result.add(ta.getRandomTreeFromInside());
+        for(int i=0;i<amount && its.hasNext();++i) {
+            result.add(its.next());
         }
         
         return result;

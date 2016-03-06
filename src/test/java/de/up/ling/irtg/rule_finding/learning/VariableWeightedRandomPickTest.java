@@ -94,6 +94,6 @@ public class VariableWeightedRandomPickTest {
             }
         }
         
-        assertEquals(count,22);
+        assertEquals(count,18);
     }
 }

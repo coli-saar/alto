@@ -81,6 +81,7 @@ public class CreateGrammarByRandomDraws {
                 @Override
                 public InputStream next() {
                     File f = inputs[pos++];
+                    System.out.println("working on file: "+f);
                     
                     try {
                         return new FileInputStream(f);
