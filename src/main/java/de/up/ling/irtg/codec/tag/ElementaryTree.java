@@ -29,6 +29,26 @@ public class ElementaryTree {
     public ElementaryTreeType getType() {
         return type;
     }
+    
+    public ElementaryTree lexicalize(String headWord, String headPos, String secondary) {
+        Tree<Pair<String,NodeType>> lex = tree.substitute(subtree -> {
+            if( subtree.getLabel().getRight() == NodeType.HEAD ) {
+                Pair topNode = new Pair(subtree.getLabel().getLeft(), NodeType.DEFAULT);
+                Pair posNode = new Pair(headPos, NodeType.DEFAULT);
+                Pair headNode = new Pair(headWord, NodeType.HEAD);
+                
+                return Tree.create(topNode, Tree.create(posNode, Tree.create(headNode)));
+            } else if( subtree.getLabel().getRight() == NodeType.SECONDARY_LEX ) {
+                Pair topNode = new Pair(subtree.getLabel().getLeft(), NodeType.DEFAULT);
+                Pair leafNode = new Pair(secondary, NodeType.SECONDARY_LEX);
+                return Tree.create(topNode, Tree.create(leafNode));
+            } else {
+                return null;
+            }
+        });
+        
+        return new ElementaryTree(lex, type);
+    }
 
     @Override
     public String toString() {
