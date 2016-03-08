@@ -8,6 +8,7 @@ import com.google.common.collect.Iterators;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.binarization.RegularSeed;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -162,8 +163,11 @@ public class RegularSeedChooser extends javax.swing.JDialog {
                 
                 selectedAlgebras.put(interp, a);
                 selectedSeeds.put(interp, rs);
+            } catch(InvocationTargetException e) {
+                // special case: exception thrown in constructor of binarizing algebra
+                throw new RuntimeException("Exception in constructing binarizer for interpretation " + interp, e.getCause());
             } catch (Exception e) {
-                GuiMain.log("Exception in constructing binarizer for interpretation " + interp + ": " + e.toString());
+                throw new RuntimeException("Exception in constructing binarizer for interpretation " + interp, e);
             }
         }
         
