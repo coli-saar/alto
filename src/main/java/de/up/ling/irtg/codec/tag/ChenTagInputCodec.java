@@ -21,6 +21,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  *
@@ -52,6 +53,14 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return tagg.toIrtg();
     }
 
+    private static String findSecondary(Map<String,String> features) {
+        if( features.containsKey("sgp1")) {
+            return features.get("sgp1");
+        } else {
+            return features.get("prt1"); // could be null
+        }
+    }
+    
     public void lexicalizeFromCorpus(TagGrammar tagg, Reader r) throws IOException {
         BufferedReader br = new BufferedReader(r);
         String line = null;
@@ -69,6 +78,8 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                     String[] split = parts[i].split("=");
                     lex.addFeature(split[0], split[1]);
                 }
+                
+                lex.setSecondaryLex(findSecondary(lex.getFeatures()));
                 
                 tagg.addLexiconEntry(word, lex);
             }

@@ -18,11 +18,16 @@ public class LexiconEntry {
     private String word;
     private String elementaryTreeName;
     private Map<String,String> features;
+    private String secondaryLex;
 
     public LexiconEntry(String word, String elementaryTreeName) {
         this.word = word;
         this.elementaryTreeName = elementaryTreeName;
         features = new HashMap<>();
+    }
+
+    public String getWord() {
+        return word;
     }
 
     public String getElementaryTreeName() {
@@ -41,6 +46,16 @@ public class LexiconEntry {
         features.put(key, value);
     }
 
+    public String getSecondaryLex() {
+        return secondaryLex;
+    }
+
+    public void setSecondaryLex(String secondaryLex) {
+        this.secondaryLex = secondaryLex;
+    }
+    
+    
+
     @Override
     public String toString() {
         return word + ":" + elementaryTreeName + features.toString();
@@ -51,7 +66,7 @@ public class LexiconEntry {
         int hash = 5;
         hash = 47 * hash + Objects.hashCode(this.word);
         hash = 47 * hash + Objects.hashCode(this.elementaryTreeName);
-        hash = 47 * hash + Objects.hashCode(TagGrammar.findSecondary(features));
+        hash = 47 * hash + Objects.hashCode(getSecondaryLex());
         return hash;
     }
 
@@ -71,7 +86,7 @@ public class LexiconEntry {
             return false;
         }
         
-        if( ! Objects.equals(TagGrammar.findSecondary(features), TagGrammar.findSecondary(other.features)) ) {
+        if( ! Objects.equals(getSecondaryLex(), other.getSecondaryLex()) ) {
             return false;
         }
         

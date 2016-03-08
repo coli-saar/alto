@@ -30,6 +30,10 @@ public class ElementaryTree {
         return type;
     }
     
+    public String getRootLabel() {
+        return tree.getLabel().getLeft();
+    }
+    
     public ElementaryTree lexicalize(String headWord, String headPos, String secondary) {
         Tree<Pair<String,NodeType>> lex = tree.substitute(subtree -> {
             if( subtree.getLabel().getRight() == NodeType.HEAD ) {

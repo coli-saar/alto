@@ -44,13 +44,28 @@ public class HomomorphismSymbol implements Serializable {
         return new HomomorphismSymbol(getVariableIndex(varname), Type.VARIABLE);
     }
 
-    // TODO - avoid using this
+    /**
+     * Creates a constant HomomorphismSymbol for the given symbol.
+     * The symbol is added to the given signature with the given
+     * arity if needed.
+     * 
+     * @param name
+     * @param signature
+     * @param arity
+     * @return 
+     */
     public static HomomorphismSymbol createConstant(String name, Signature signature, int arity) {
         return new HomomorphismSymbol(signature.addSymbol(name, arity), Type.CONSTANT);
     }
 
-    public static HomomorphismSymbol createConstant(int name, Signature signature) {
-        return new HomomorphismSymbol(name, Type.CONSTANT);
+    /**
+     * Creates a constant HomomorphismSymbol for the given symbol ID.
+     * 
+     * @param symbolId
+     * @return 
+     */
+    public static HomomorphismSymbol createConstant(int symbolId) {
+        return new HomomorphismSymbol(symbolId, Type.CONSTANT);
     }
 
     public static boolean isVariableSymbol(String sym) {

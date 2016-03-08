@@ -456,4 +456,16 @@ public class Homomorphism implements Serializable {
 
         return signatureMapper;
     }
+    
+    public HomomorphismSymbol c(String constant) {
+        return c(constant,0);
+    }
+    
+    public HomomorphismSymbol c(String constant, int arity) {
+        return HomomorphismSymbol.createConstant(constant, tgtSignature, arity);
+    }
+    
+    public HomomorphismSymbol v(String variable) {
+        return HomomorphismSymbol.createVariable(variable);
+    }
 }
