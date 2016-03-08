@@ -43,12 +43,18 @@ public class GetAllRules {
         IntSet done = new IntOpenHashSet();
         done.addAll(toDo);
         
+        String term = null;
+        for(int i=1;i<=possibleDerivations.getSignature().getMaxSymbolId();++i) {
+            if(possibleDerivations.getSignature().getArity(i) == 0) {
+                term = possibleDerivations.getSignature().resolveSymbolId(i);
+            }
+        }
+        
         ConcreteTreeAutomaton<String> cta = new ConcreteTreeAutomaton<>(possibleDerivations.getSignature());
         
         cta.addFinalState(cta.addState(ALL_RULES_START));
         
-        cta.addRule(cta.createRule(ALL_RULE_PRETERMINAL, HomomorphismManager.TERMINATOR, new String[0]));
-        
+        cta.addRule(cta.createRule(ALL_RULE_PRETERMINAL, term, new String[0]));
         
         for(int i=0;i<toDo.size();++i) {
             int state = toDo.get(i);
@@ -65,7 +71,7 @@ public class GetAllRules {
                 
                 String[] children = new String[rule.getArity()];
                 for(int k=0;k<rule.getArity();++k) {
-                    int child = rule.getChildren()[i];
+                    int child = rule.getChildren()[k];
                     if(!done.contains(child)) {
                         done.add(child);
                         toDo.add(child);
