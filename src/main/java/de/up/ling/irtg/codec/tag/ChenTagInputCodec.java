@@ -18,6 +18,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,15 +35,27 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         ChenTagInputCodec ic = new ChenTagInputCodec();
         TagGrammar tagg = ic.readUnlexicalizedGrammar(new FileReader(args[0]));
         ic.lexicalizeFromCorpus(tagg, new FileReader(args[1]));
-        System.out.println(tagg);
         
-        System.out.println("\n\n");
+        PrintWriter pw = new PrintWriter("tagg.txt");
+        pw.println(tagg);
+        pw.flush();
+        pw.close();
+        
+        pw = new PrintWriter("lexicalized-tagg.txt");
+        pw.println("\n\n");
         for(String word : tagg.getWords()) {
-            System.out.println("\nword: " + word + "\n==================\n");
+            pw.println("\nword: " + word + "\n==================\n");
             for( ElementaryTree et : tagg.lexicalizeElementaryTrees(word)) {
-                System.out.println("   " + et);
+                pw.println("   " + et);
             }
         }
+        pw.flush();
+        pw.close();
+        
+        pw = new PrintWriter("tagg-as-irtg.txt");
+        pw.println(tagg.toIrtg());
+        pw.flush();
+        pw.close();
     }
 
     @Override
