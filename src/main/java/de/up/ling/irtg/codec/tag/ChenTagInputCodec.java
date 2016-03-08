@@ -7,9 +7,14 @@ package de.up.ling.irtg.codec.tag;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.tree.Tree;
 import java.io.BufferedReader;
@@ -31,7 +36,7 @@ import java.util.Map;
 @CodecMetadata(name = "chen-tag", description = "Tree-adjoining grammar (Chen format)", type = InterpretedTreeAutomaton.class)
 public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, ParserException {
         ChenTagInputCodec ic = new ChenTagInputCodec();
         TagGrammar tagg = ic.readUnlexicalizedGrammar(new FileReader(args[0]));
         ic.lexicalizeFromCorpus(tagg, new FileReader(args[1]));
@@ -52,10 +57,24 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         pw.flush();
         pw.close();
         
-        pw = new PrintWriter("tagg-as-irtg.txt");
-        pw.println(tagg.toIrtg());
+        pw = new PrintWriter("tagg.irtg");
+        InterpretedTreeAutomaton irtg = tagg.toIrtg();
+        pw.println(irtg);
         pw.flush();
         pw.close();
+        
+        Algebra a = irtg.getInterpretation("string").getAlgebra();
+        TreeAutomaton decomp = a.decompose(a.parseString("There asbestos")); //.asConcreteTreeAutomaton();
+//        System.err.println(decomp);
+        
+        System.err.println("------");
+        Homomorphism h = irtg.getInterpretation("string").getHomomorphism();
+        CondensedTreeAutomaton invhomC = decomp.inverseCondensedHomomorphism(h);
+//        TreeAutomaton invhom = invhomC.asConcreteTreeAutomaton();
+//        System.err.println(invhom);
+        
+        System.err.println("------");
+        System.err.println(irtg.getAutomaton().intersectCondensed(invhomC).reduceTopDown());
     }
 
     @Override

@@ -143,26 +143,12 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         FastutilUtils.forEach(labelSetsWithVariables, labelSetID -> {
             Tree<HomomorphismSymbol> rhs = hom.getByLabelSetID(labelSetID);
             Tree<HomomorphismSymbol> rightmostLeaf = getRightmostLeaf(rhs);
-            int[] leafStates = new int[getRhsArity(rhs)];
-            
-//            System.err.println("\nrule for " + getStateForId(parentState) + " @ " + HomomorphismSymbol.toStringTree(rhs, rhsAutomaton.getSignature()));
-//            System.err.println("\n\nrhs = " + rhs + "; rightmost: " + rightmostLeaf);
-
-            // Find child states
-            
-//            grtdDfs(rhs, rightmostLeaf, parentState, leafStates, ls -> {
-//                CondensedRule cr = new CondensedRule(parentState, labelSetID, ls.clone(), 1);
-//                System.err.println("add: " + cr.toString(this));
-//                ret.add(cr);
-//            });
-            
             
             for (List<Integer> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs))) {
                 if (isCompleteSubstitutionTuple(substitutionTuple)) {
                     // TODO: weights
                     CondensedRule cr = new CondensedRule(parentState, labelSetID, intListToArray(substitutionTuple), 1);
                     ret.add(cr);
-//                    System.err.println("Creating arity>0 rule: " + cr.toString(this));
                 }
             }
         });
@@ -243,7 +229,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
         }
     }
     
-
+/*
     private boolean grtdDfs(Tree<HomomorphismSymbol> rhs, Tree<HomomorphismSymbol> rightmostLeaf, int state, int[] leafStates, Consumer<int[]> fn) {
         System.err.println("dfs on " + HomomorphismSymbol.toStringTree(rhs, rhsAutomaton.getSignature()) + " in state " + rhsAutomaton.getStateForId(state));
         
@@ -287,6 +273,7 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
 
         return true;
     }
+    */
     
     public static void main(String[] args) throws Exception {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/cfg.irtg"));

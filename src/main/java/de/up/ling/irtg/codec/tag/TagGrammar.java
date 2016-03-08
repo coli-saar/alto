@@ -9,7 +9,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
-import de.saar.basic.StringOrVariable;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.TagStringAlgebra;
@@ -39,6 +38,7 @@ public class TagGrammar {
     private static final String NO_ADJUNCTION = "*NOP*";
     private static final char SUBST_VARTYPE = 'S';
     private static final char ADJ_VARTYPE = 'A';
+    private static final String SUBST_SUFFIX = "_" + SUBST_VARTYPE;
 
     private Map<String, ElementaryTree> trees;   // tree-name -> elementary-tree
     private SetMultimap<String, LexiconEntry> lexicon; // word -> set(tree-name)
@@ -90,7 +90,7 @@ public class TagGrammar {
         TagTreeAlgebra tta = new TagTreeAlgebra();
         Homomorphism th = new Homomorphism(auto.getSignature(), tta.getSignature());
         irtg.addInterpretation("tree", new Interpretation(tta, th));
-        
+
         auto.addFinalState(auto.addState(makeS("S")));
 
         // convert elementary trees
@@ -186,7 +186,7 @@ public class TagGrammar {
             String parentState = (etree.getType() == ElementaryTreeType.INITIAL) ? makeS(etree.getRootLabel()) : makeA(etree.getRootLabel());
             auto.addRule(auto.createRule(parentState, terminalSym, childStates));
             th.add(terminalSymId, treeHomTerm);
-            sh.add(terminalSymId, makeStringHom(treeHomTerm, th, sh, tsa));
+            sh.add(terminalSymId, makeStringHom(treeHomTerm, th, sh, tsa, childStates));
         }
     }
 
@@ -207,14 +207,22 @@ public class TagGrammar {
         return new SortedTree(Tree.create(labelHS, childTrees), tsa.getSort(labelHS.getValue()));
     }
 
-    private static Tree<HomomorphismSymbol> makeStringHom(Tree<HomomorphismSymbol> treeForTreeHom, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa) {
+    private static boolean isSubstitutionVariable(String nonterminal) {
+        return nonterminal.endsWith(SUBST_SUFFIX);
+    }
+
+    private static Tree<HomomorphismSymbol> makeStringHom(Tree<HomomorphismSymbol> treeForTreeHom, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa, List<String> childStates) {
         SortedTree t = treeForTreeHom.dfs((node, children) -> {
             if (node.getLabel().isVariable()) {
                 assert children.isEmpty();
-                return new SortedTree(Tree.create(node.getLabel()), 2);
+
+                if (isSubstitutionVariable(childStates.get(node.getLabel().getValue()))) {
+                    return new SortedTree(Tree.create(node.getLabel()), 1);
+                } else {
+                    return new SortedTree(Tree.create(node.getLabel()), 2);
+                }
             } else {
                 String label = th.getTargetSignature().resolveSymbolId(node.getLabel().getValue());
-
                 assert label != null;
 
                 if (TagTreeAlgebra.C.equals(label)) {
@@ -228,7 +236,6 @@ public class TagGrammar {
                 } else {
                     switch (children.size()) {
                         case 0:
-                            assert label.length() < 2 || label.charAt(0) != '?' || label.charAt(1) != ADJ_VARTYPE : "illegal var label: " + label + " while processing " + HomomorphismSymbol.toStringTree(treeForTreeHom, th.getTargetSignature());
                             return new SortedTree(Tree.create(sh.c(label)), 1);
 
                         case 1:
@@ -255,7 +262,14 @@ public class TagGrammar {
         }
 
         List<SortedTree> processedChildren = Lists.newArrayList(left, right);
-        return cs(TagStringAlgebra.CONCAT(left.sort, right.sort), processedChildren, sh, tsa);
+
+        SortedTree ret = cs(TagStringAlgebra.CONCAT(left.sort, right.sort), processedChildren, sh, tsa);
+
+        int symid = ret.tree.getLabel().getValue();
+        assert symid != 0;
+        assert sh.getTargetSignature().resolveSymbolId(symid) != null : "could not resolve symid " + symid + " in signature " + sh.getTargetSignature();
+
+        return ret;
     }
 
     @Override
