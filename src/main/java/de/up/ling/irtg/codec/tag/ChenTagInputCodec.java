@@ -6,7 +6,6 @@
 package de.up.ling.irtg.codec.tag;
 
 import com.beust.jcommander.internal.Maps;
-import com.google.common.collect.MapMaker;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;

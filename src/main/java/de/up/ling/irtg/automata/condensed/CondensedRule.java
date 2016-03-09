@@ -233,7 +233,14 @@ public class CondensedRule {
     }
 
     public boolean isLoop() {
-        return getArity() == 1 && children[0] == parent;
+        for( int i = 0; i < children.length; i++ ) {
+            if( children[i] == parent ) {
+                return true;
+            }
+        }
+        
+        return false;
+//        return getArity() == 1 && children[0] == parent;
     }
 
 }

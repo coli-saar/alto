@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
+import com.google.common.collect.Lists;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
@@ -16,6 +17,7 @@ import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.GuiUtils;
+import de.up.ling.irtg.util.IntAgenda;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
@@ -73,8 +75,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     abstract protected void collectOutputRule(Rule outputRule);
 
     abstract protected void addAllOutputRules();
-
-    
 
     @FunctionalInterface
     public static interface IntersectionCall {
@@ -153,10 +153,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             D(depth, () -> "-> processing " + right.getStateForId(q));
 
             final IntList foundPartners = new IntArrayList();
-            final ArrayList<CondensedRule> selfLoops = new ArrayList<>();
-            final IntList selfToDo = new IntArrayList();
-            final IntSet selfSeen = new IntOpenHashSet();
+            List<CondensedRule> loopRules = new ArrayList<>();
 
+//            final ArrayList<CondensedRule> selfLoops = new ArrayList<>();
+//            final IntList selfToDo = new IntArrayList();
+//            final IntSet selfSeen = new IntOpenHashSet();
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
                 D(depth, () -> "Right rule: " + rightRule.toString(right, s -> s.contains("asbestos") || s.contains("There")));
 
@@ -164,7 +165,17 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 // the normal DFS doesn't work. We give it special treatment by
                 // postponing its combination with the right rules until below.
                 if (rightRule.isLoop()) {
-                    selfLoops.add(rightRule);
+                    loopRules.add(rightRule);
+
+                    // make sure that all non-loopy children have been explored
+                    for (int i = 0; i < rightRule.getArity(); i++) {
+                        int ch = rightRule.getChildren()[i];
+                        if (ch != rightRule.getParent()) {
+                            ckyDfsForStatesInBottomUpOrder(ch, visited, partners, depth + 1);
+                        }
+                    }
+
+//                    selfLoops.add(rightRule);
                     continue;
                 }
 
@@ -195,22 +206,23 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                     // create a new rule
                     Rule rule = combineRules(leftRule, rightRule);
 
-                    if (!selfSeen.contains(rule.getParent())) {
-                        selfToDo.add(leftRule.getParent());
-
-                        selfSeen.add(rule.getParent());
-                    }
-
+//                    if (!selfSeen.contains(rule.getParent())) {
+//                        selfToDo.add(leftRule.getParent());
+//
+//                        selfSeen.add(rule.getParent());
+//                    }
                     D(depth, () -> "Left rule: " + leftRule.toString(left));
                     D(depth, () -> "Combined rule: " + rule.toString(this));
                     D(depth, () -> "");
 
+//                    System.err.println(right.getStateForId(q) + " -> " + rule.toString(this));
                     // transfer rule to staging area for output rules
                     collectOutputRule(rule);
 
                     // schedule the two parent states for addition
                     // -- they cannot be added to the partners sets here
                     // because we are inside an iteration over these sets
+                    assert q == rightRule.getParent();
                     foundPartners.add(rightRule.getParent());
                     foundPartners.add(leftRule.getParent());
                 });
@@ -223,50 +235,103 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 if (GuiUtils.getGlobalListener() != null) {
                     GuiUtils.getGlobalListener().accept((progressListenerCount++) % 2000, 2000, "");
                 }
-
             }
 
             // Now that we have seen all children of q through rules that
             // are not self-loops, go through the self-loops and process them.
-            int[] children = new int[1];
-            for (int i = 0; i < selfToDo.size(); ++i) {
-                int leftState = selfToDo.get(i);
+            if (partners.get(q) != null) {
+                // If q has no partners, that means we have found no non-loopy
+                // rules for expanding it. Thus any loopy expansions will be
+                // unproductive, so we can skip them.
+                
+                for (CondensedRule rightRule : loopRules) {
+                    int rightParent = rightRule.getParent();
+                    int[] rightChildren = rightRule.getChildren();
+                    IntSet rightLabelSet = rightRule.getLabels(right);
+                    List<IntSet> leftChildStateSets = new ArrayList<>(rightChildren.length);
 
-                children[0] = leftState;
+//                    if (partners.get(q) == null) {
+//                        System.err.println("** loopy rule " + rightRule.toString(right));
+//                        System.err.println("** but parent q=" + right.getStateForId(q) + " has null partners");
+//                    }
 
-                for (int k = 0; k < selfLoops.size(); ++k) {
-                    CondensedRule rightRule = selfLoops.get(k);
+                    IntAgenda agenda = new IntAgenda(partners.get(q));
+                    while (!agenda.isEmpty()) {
+                        int leftState = agenda.pop();
 
-                    rightRule.getLabels(right).forEach(labelId -> {
-                        Iterable<Rule> rules = left.getRulesBottomUp(leftToRightSignatureMapper.remapForward(labelId), children);
-
-                        rules.forEach(leftRule -> {
-                            // create a new rule
-                            Rule rule = combineRules(leftRule, rightRule);
-
-                            if (!selfSeen.contains(rule.getParent())) {
-//                                selfToDo.add(rule.getParent());
-                                selfToDo.add(leftRule.getParent());
-
-                                selfSeen.add(rule.getParent());
+                        for (int i = 0; i < rightRule.getArity(); i++) {
+                        // left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
+                            // List<IntSet> childStateSets
+                            if (rightChildren[i] == rightParent) {
+                                // i is a loop position
+                                makeLeftChildStateSets(leftChildStateSets, rightChildren, i, leftState, partners);
+                                left.foreachRuleBottomUpForSets(rightLabelSet, leftChildStateSets, leftToRightSignatureMapper, leftRule -> {
+                                    Rule rule = combineRules(leftRule, rightRule);
+                                    collectOutputRule(rule);
+                                    addPartner(rightRule.getParent(), leftRule.getParent(), partners);
+                                    agenda.enqueue(leftRule.getParent());
+                                });
                             }
-
-                            D(depth, () -> "Left rule: " + leftRule.toString(left));
-                            D(depth, () -> "Combined rule (post-hoc): " + rule.toString(this));
-                            D(depth, () -> "");
-
-                            // transfer rule to staging area for output rules
-                            collectOutputRule(rule);
-
-                            addPartner(rightRule.getParent(), leftRule.getParent(), partners);
-
-                        });
-                    });
+                        }
+                    }
                 }
+            }
+
+            /*
+             int[] children = new int[1];
+             for (int i = 0; i < selfToDo.size(); ++i) {
+             int leftState = selfToDo.get(i);
+
+             children[0] = leftState;
+
+             for (int k = 0; k < selfLoops.size(); ++k) {
+             CondensedRule rightRule = selfLoops.get(k);
+
+             rightRule.getLabels(right).forEach(labelId -> {
+             Iterable<Rule> rules = left.getRulesBottomUp(leftToRightSignatureMapper.remapForward(labelId), children);
+
+             rules.forEach(leftRule -> {
+             // create a new rule
+             Rule rule = combineRules(leftRule, rightRule);
+
+             if (!selfSeen.contains(rule.getParent())) {
+             //                                selfToDo.add(rule.getParent());
+             selfToDo.add(leftRule.getParent());
+
+             selfSeen.add(rule.getParent());
+             }
+
+             D(depth, () -> "Left rule: " + leftRule.toString(left));
+             D(depth, () -> "Combined rule (post-hoc): " + rule.toString(this));
+             D(depth, () -> "");
+
+             // transfer rule to staging area for output rules
+             collectOutputRule(rule);
+
+             addPartner(rightRule.getParent(), leftRule.getParent(), partners);
+
+             });
+             });
+             }
+             }
+             */
+        }
+    }
+
+    private void makeLeftChildStateSets(List<IntSet> leftChildStateSets, int[] rightChildren, int childPos, int leftStateAtPos, Int2ObjectMap<IntSet> partners) {
+        leftChildStateSets.clear();
+
+        for (int i = 0; i < rightChildren.length; i++) {
+            if (i == childPos) {
+                IntSet s = new IntOpenHashSet();
+                s.add(leftStateAtPos);
+                leftChildStateSets.add(s);
+            } else {
+                leftChildStateSets.add(partners.get(rightChildren[i]));
             }
         }
     }
-    
+
     private void addPartner(int rightState, int leftState, Int2ObjectMap<IntSet> partners) {
 
         // remember the newly found partneres if needed
