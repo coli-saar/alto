@@ -271,6 +271,21 @@ Y -> r8(X,X)
         assertEquals(pt("r28_br18139(r1280_br9876(r1278_br288,r1280_br9875(r48_br252,r1279_br6324)),r28_br18138(r969_br14525(r1281_br8789),r27_br2559))"), chart.viterbi())
     }
     
+    @Test
+    public void testIntersectionBinaryLoop() {
+        TreeAutomaton left = pa("S! -> f(A,B)\n A -> a\n B -> b")
+        
+        CondensedTreeAutomaton right = pac("q1 -> {a}\n q1! -> {f}(q1,q2)\n q2 -> {b}")
+        SignatureMapper smap = left.getSignature().getMapperTo(right.getSignature())
+        TreeAutomaton intersect = left.intersectCondensed(right, smap)
+        assert intersect.accepts(pt("f(a,b)"))
+        
+        right = pac("q1! -> {f}(q1,q2)\n q1 -> {a}\n q2 -> {b}") // same automaton, rules may be in different order
+        smap = left.getSignature().getMapperTo(right.getSignature())
+        intersect = left.intersectCondensed(right, smap)
+        assert intersect.accepts(pt("f(a,b)"))
+    }
+    
     // Helping functions
     private static Pair p(Object a, Object b) {
         return new Pair(a,b);
