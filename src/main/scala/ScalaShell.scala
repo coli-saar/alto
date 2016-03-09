@@ -19,6 +19,8 @@ object ScalaShell {
     w.close
   }
 
+ def dumpTo(obj:Any, filename:String) = { val pw = new PrintWriter(filename); pw.println(obj); pw.flush(); pw.close() }
+
  def time[T](code: => T) = {
     val t0 = System.nanoTime: Double
     val res = code

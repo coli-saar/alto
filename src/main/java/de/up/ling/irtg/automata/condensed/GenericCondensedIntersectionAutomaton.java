@@ -62,7 +62,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
     private final TreeAutomaton<LeftState> left;
     private final CondensedTreeAutomaton<RightState> right;
-    public static boolean DEBUG = false;
+    public static boolean DEBUG = true;
     private final SignatureMapper leftToRightSignatureMapper;
 
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state

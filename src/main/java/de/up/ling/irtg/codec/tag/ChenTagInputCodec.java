@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.codec.tag;
 
+import com.beust.jcommander.internal.Maps;
+import com.google.common.collect.MapMaker;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
@@ -18,6 +20,7 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.tree.Tree;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -37,6 +40,12 @@ import java.util.Map;
 public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ParserException {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("tagg-bin.irtg"));
+        TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", "There asbestos"));
+        System.err.println("\n\n\nchart:\n\n" + chart);
+    }
+    
+    public static void mmain(String[] args) throws FileNotFoundException, IOException, ParserException {
         ChenTagInputCodec ic = new ChenTagInputCodec();
         TagGrammar tagg = ic.readUnlexicalizedGrammar(new FileReader(args[0]));
         ic.lexicalizeFromCorpus(tagg, new FileReader(args[1]));
