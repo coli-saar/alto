@@ -62,7 +62,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
     private final TreeAutomaton<LeftState> left;
     private final CondensedTreeAutomaton<RightState> right;
-    public static boolean DEBUG = true;
+    public static boolean DEBUG = false;
     private final SignatureMapper leftToRightSignatureMapper;
 
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
@@ -158,7 +158,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             final IntSet selfSeen = new IntOpenHashSet();
 
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
-                D(depth, () -> "Right rule: " + rightRule.toString(right));
+                D(depth, () -> "Right rule: " + rightRule.toString(right, s -> s.contains("asbestos") || s.contains("There")));
 
                 // If the right rule is a "self-loop", i.e. of the form q -> f(q),
                 // the normal DFS doesn't work. We give it special treatment by
@@ -245,7 +245,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                             Rule rule = combineRules(leftRule, rightRule);
 
                             if (!selfSeen.contains(rule.getParent())) {
-                                selfToDo.add(rule.getParent());
+//                                selfToDo.add(rule.getParent());
                                 selfToDo.add(leftRule.getParent());
 
                                 selfSeen.add(rule.getParent());
