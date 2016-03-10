@@ -14,6 +14,7 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.InputEvent;
+import java.io.PrintStream;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -41,6 +42,33 @@ public class GuiUtils {
         clipboard.setContents(selection, selection);
     }
 
+    /**
+     * Execute some expensive work and track its progress with a
+     * progress bar on the console. Unlike {@link #withProgressBar(java.awt.Frame, java.lang.String, java.lang.String, de.up.ling.irtg.util.ProgressBarWorker, de.up.ling.irtg.util.ValueAndTimeConsumer) },
+     * the work is performed on the same thread from which the
+     * method is called, because this is the typical usecase in a
+     * console setting.
+     * 
+     * @param <E>
+     * @param width
+     * @param strm
+     * @param worker
+     * @return
+     * @throws Exception 
+     */
+    public static <E> E withConsoleProgressBar(int width, PrintStream strm, ProgressBarWorker<E> worker) throws Exception {
+        ConsoleProgressBar pb = new ConsoleProgressBar(60, System.out);
+
+        try {
+            E result = worker.compute(pb.createListener());
+            pb.finish();
+            return result;
+        } catch (Exception e) {
+            pb.finish();
+            throw e;
+        }
+    }
+    
     /**
      * Execute this on the EDT.
      *

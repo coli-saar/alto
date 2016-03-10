@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  *
@@ -145,16 +146,16 @@ public class TagGrammar {
                         childStates.add(makeA(label));
                         adjunctionNonterminals.add(makeA(label));
                         ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                Tree.create(th.c(labelWithArity, 1), Tree.create(th.c(lex.getWord()))));
+                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                          Tree.create(th.c(labelWithArity, 1), Tree.create(th.c(lex.getWord()))));
                         break;
 
                     case SECONDARY_LEX:
                         childStates.add(makeA(label));
                         adjunctionNonterminals.add(makeA(label));
                         ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                Tree.create(th.c(labelWithArity, 1), Tree.create(th.c(lex.getSecondaryLex()))));
+                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                          Tree.create(th.c(labelWithArity, 1), Tree.create(th.c(lex.getSecondaryLex()))));
                         break;
                     // TODO - maybe XTAG allows multiple secondary lexes, one per POS-tag
 
@@ -168,11 +169,16 @@ public class TagGrammar {
                         break;
 
                     case DEFAULT:
-                        childStates.add(makeA(label));
-                        adjunctionNonterminals.add(makeA(label));
-                        ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                Tree.create(th.c(labelWithArity, 1), children));
+                        if (traceP != null && traceP.test(label)) {
+                            // do not allow adjunction around traces
+                            ret = Tree.create(th.c(labelWithArity, 0));
+                        } else {
+                            childStates.add(makeA(label));
+                            adjunctionNonterminals.add(makeA(label));
+                            ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
+                                              Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                              Tree.create(th.c(labelWithArity, 1), children));
+                        }
                         break;
 
                     default:
@@ -211,7 +217,20 @@ public class TagGrammar {
         return nonterminal.endsWith(SUBST_SUFFIX);
     }
 
-    private static Tree<HomomorphismSymbol> makeStringHom(Tree<HomomorphismSymbol> treeForTreeHom, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa, List<String> childStates) {
+    private Predicate<String> traceP = null;
+
+    /**
+     * Set a predicate which checks whether a leaf is a trace. Leaves whose
+     * labels match this condition are replaced by *E* when constructing the
+     * string homomorphism in {@link #toIrtg() }.
+     *
+     * @param traceP
+     */
+    public void setTracePredicate(Predicate<String> traceP) {
+        this.traceP = traceP;
+    }
+
+    private Tree<HomomorphismSymbol> makeStringHom(Tree<HomomorphismSymbol> treeForTreeHom, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa, List<String> childStates) {
         SortedTree t = treeForTreeHom.dfs((node, children) -> {
             if (node.getLabel().isVariable()) {
                 assert children.isEmpty();
@@ -231,7 +250,7 @@ public class TagGrammar {
                 } else if (TagTreeAlgebra.P1.equals(label)) {
                     assert children.isEmpty();
                     return cs(TagStringAlgebra.EE(), children, sh, tsa);
-                } else if (label.contains("*TRACE*")) {
+                } else if (traceP != null && traceP.test(label)) {
                     return cs(TagStringAlgebra.E(), children, sh, tsa);
                 } else {
                     switch (children.size()) {
