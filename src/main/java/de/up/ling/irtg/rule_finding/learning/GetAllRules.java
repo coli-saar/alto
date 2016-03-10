@@ -5,11 +5,14 @@
  */
 package de.up.ling.irtg.rule_finding.learning;
 
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.Variables;
-import de.up.ling.irtg.rule_finding.create_automaton.HomomorphismManager;
+import de.up.ling.irtg.util.FunctionIterable;
+import de.up.ling.irtg.util.FunctionIterableWithSkip;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -20,7 +23,7 @@ import java.util.Arrays;
  *
  * @author christoph_teichmann
  */
-public class GetAllRules {
+public class GetAllRules implements SubtreeExtractor {
     
     /**
      * 
@@ -93,5 +96,12 @@ public class GetAllRules {
         }
         
         return cta;
+    }
+
+    @Override
+    public Iterable<Iterable<Tree<String>>> getRuleTrees(Iterable<InterpretedTreeAutomaton> analyses) {
+        return new FunctionIterable<>(analyses,(InterpretedTreeAutomaton ita) -> {
+           return getAllRules(ita.getAutomaton()).languageIterable();
+        });
     }
 }

@@ -61,7 +61,7 @@ public class VariableWeightedRandomPick implements TreeExtractor {
     }
     
     @Override
-    public Iterable<Iterable<Tree<String>>> getChoices(final Iterable<InterpretedTreeAutomaton> it) {
+    public Iterable<Iterable<Tree<String>>> getAnalyses(final Iterable<InterpretedTreeAutomaton> it) {
         Iterator<InterpretedTreeAutomaton> main = it.iterator();
         
         return () -> new Iterator<Iterable<Tree<String>>>() {

@@ -244,7 +244,7 @@ public class SampleOnlineEM implements TreeExtractor {
     }
 
     @Override
-    public Iterable<Iterable<Tree<String>>> getChoices(Iterable<InterpretedTreeAutomaton> it) {
+    public Iterable<Iterable<Tree<String>>> getAnalyses(Iterable<InterpretedTreeAutomaton> it) {
         return this.getChoices(it, model, new Date().getTime());
     }
 }

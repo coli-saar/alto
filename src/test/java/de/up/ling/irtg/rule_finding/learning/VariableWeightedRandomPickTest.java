@@ -88,7 +88,7 @@ public class VariableWeightedRandomPickTest {
     @Test
     public void testGetChoices() {
         int count  = 0;
-        for(Iterable<Tree<String>> t : vwr.getChoices(data)) {
+        for(Iterable<Tree<String>> t : vwr.getAnalyses(data)) {
             for(Tree<String> q : t) {
                 ++count;
             }

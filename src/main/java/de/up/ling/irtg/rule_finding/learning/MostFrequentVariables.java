@@ -31,7 +31,7 @@ public class MostFrequentVariables implements TreeExtractor {
      * @return 
      */
     @Override
-    public Iterable<Iterable<Tree<String>>> getChoices(final Iterable<InterpretedTreeAutomaton> it){
+    public Iterable<Iterable<Tree<String>>> getAnalyses(final Iterable<InterpretedTreeAutomaton> it){
         Object2DoubleMap<String> counts = this.countVariablesTopDown(it);
         
         return new FunctionIterable<>(it,(InterpretedTreeAutomaton ta) -> {

@@ -51,41 +51,41 @@ public class ExtractGrammar<Type1, Type2> {
     private final String interpretation2ID;
 
     /**
-     * 
+     *
      */
     private final String outInterpretation1;
-    
+
     /**
-     * 
+     *
      */
     private final String outInterpretation2;
-    
+
     /**
      *
      */
     private final TreeExtractor trex;
-
+    
     /**
-     * 
+     *
      * @param algebra1
      * @param algebra2
      * @param interpretation1ID
      * @param interpretation2ID
      * @param trex
      * @param outInterpretation1
-     * @param outInterpretation2 
+     * @param outInterpretation2
      */
     public ExtractGrammar(Algebra<Type1> algebra1, Algebra<Type2> algebra2,
             String interpretation1ID, String interpretation2ID, TreeExtractor trex,
             String outInterpretation1, String outInterpretation2) {
         this.algebra1 = algebra1;
         this.algebra2 = algebra2;
-        
+
         this.interpretation1ID = interpretation1ID;
         this.interpretation2ID = interpretation2ID;
         this.outInterpretation1 = outInterpretation1;
         this.outInterpretation2 = outInterpretation2;
-        
+
         this.trex = trex;
     }
 
@@ -104,7 +104,7 @@ public class ExtractGrammar<Type1, Type2> {
             InterpretedTreeAutomaton ita;
             try {
                 ita = iic.read(in);
-                
+
                 in.close();
             } catch (IOException | CodecParseException ex) {
                 Logger.getLogger(ExtractGrammar.class.getName()).log(Level.SEVERE, null, ex);
@@ -114,40 +114,41 @@ public class ExtractGrammar<Type1, Type2> {
             return ita;
         });
 
-        Iterable<Iterable<Tree<String>>> solutions = this.trex.getChoices(analyses);
+        Iterable<Iterable<Tree<String>>> solutions = this.trex.getAnalyses(analyses);
 
         RulePostProcessing<Type1, Type2> rpp = new RulePostProcessing<>(algebra1, algebra2);
 
         Iterator<Iterable<Tree<String>>> itSol = solutions.iterator();
         Iterator<InterpretedTreeAutomaton> itAnalysis = analyses.iterator();
-
+        
         try (BufferedWriter solutionWriter = new BufferedWriter(new OutputStreamWriter(trees))) {
             while (itSol.hasNext() && itAnalysis.hasNext()) {
                 Iterable<Tree<String>> subPackage = itSol.next();
                 InterpretedTreeAutomaton ita = itAnalysis.next();
+                
+                    final Homomorphism hom1 = ita.getInterpretation(interpretation1ID).getHomomorphism();
+                    final Homomorphism hom2 = ita.getInterpretation(interpretation2ID).getHomomorphism();
 
-                for(Tree<String> solution : subPackage) {
-                solutionWriter.write(solution.toString());
-                solutionWriter.newLine();
-                Map<String, Object> m = ita.interpret(solution);
-                for (Map.Entry<String, Object> ent : m.entrySet()) {
-                    solutionWriter.write(ent.getKey());
-                    solutionWriter.write('\t');
-                    solutionWriter.write(ent.getValue().toString());
+                for (Tree<String> solution : subPackage) {
+                    solutionWriter.write(solution.toString());
                     solutionWriter.newLine();
-                }
-                solutionWriter.newLine();
+                    Map<String, Object> m = ita.interpret(solution);
+                    for (Map.Entry<String, Object> ent : m.entrySet()) {
+                        solutionWriter.write(ent.getKey());
+                        solutionWriter.write('\t');
+                        solutionWriter.write(ent.getValue().toString());
+                        solutionWriter.newLine();
+                    }
+                    solutionWriter.newLine();
 
-                final Homomorphism hom1 = ita.getInterpretation(interpretation1ID).getHomomorphism();
-                final Homomorphism hom2 = ita.getInterpretation(interpretation2ID).getHomomorphism();
-
-                Iterator<Tree<String>> subtrees = StringSubtreeIterator.getSubtrees(solution);
-                if (subtrees.hasNext()) {
-                    rpp.addRule(subtrees.next(), hom1, hom2, true);
-                }
-                subtrees.forEachRemaining((Tree<String> t) -> {
-                    rpp.addRule(t, hom1, hom2, false);
-                });
+                    Iterator<Tree<String>> subtrees = StringSubtreeIterator.getSubtrees(solution);    
+                    
+                    if (subtrees.hasNext()) {
+                        rpp.addRule(subtrees.next(), hom1, hom2, true);
+                    }
+                    subtrees.forEachRemaining((Tree<String> t) -> {
+                        rpp.addRule(t, hom1, hom2, false);
+                    });
                 }
             }
         }
@@ -156,6 +157,55 @@ public class ExtractGrammar<Type1, Type2> {
         ita.getAutomaton().normalizeRuleWeights();
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(irtg))) {
             bw.write(ita.toString());
+        }
+    }
+    
+    /**
+     * 
+     * @param inputs
+     * @param irtg
+     * @param ruler
+     * @param startNonterminal
+     * @throws IOException 
+     */
+    public void extract(Iterable<InputStream> inputs, OutputStream irtg, SubtreeExtractor ruler,
+            String startNonterminal)
+            throws IOException {
+        IrtgInputCodec iic = new IrtgInputCodec();
+        RulePostProcessing<Type1, Type2> rpp = new RulePostProcessing<>(algebra1, algebra2);
+        rpp.addFinalState(startNonterminal);
+
+        Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream in) -> {
+            InterpretedTreeAutomaton ita;
+            try {
+                ita = iic.read(in);
+
+                in.close();
+            } catch (IOException | CodecParseException ex) {
+                Logger.getLogger(ExtractGrammar.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
+            }
+
+            return ita;
+        });
+        
+        Iterable<Iterable<Tree<String>>> rules = ruler.getRuleTrees(analyses);
+        
+        Iterator<InterpretedTreeAutomaton> itAnalysis = analyses.iterator();
+        for(Iterable<Tree<String>> inner : rules) {
+            
+            InterpretedTreeAutomaton ita = itAnalysis.next();
+            final Homomorphism hom1 = ita.getInterpretation(interpretation1ID).getHomomorphism();
+            final Homomorphism hom2 = ita.getInterpretation(interpretation2ID).getHomomorphism();
+            
+            for(Tree<String> rule : inner) {
+                rpp.addRule(rule, hom1, hom2, false);
+            }
+        }
+        
+        InterpretedTreeAutomaton result = rpp.getIRTG(outInterpretation1, outInterpretation2);
+        try(BufferedWriter output = new BufferedWriter(new OutputStreamWriter(irtg))) {
+            output.write(result.toString());
         }
     }
 }

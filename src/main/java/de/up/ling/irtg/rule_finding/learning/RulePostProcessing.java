@@ -275,4 +275,12 @@ public class RulePostProcessing<Type1,Type2> {
         
         return ita;
     }
+
+    /**
+     * 
+     * @param name 
+     */
+    public void addFinalState(String name) {
+        this.underConstruction.addFinalState(this.underConstruction.addState(name));
+    }
 }

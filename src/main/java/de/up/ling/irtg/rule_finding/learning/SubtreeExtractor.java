@@ -12,11 +12,11 @@ import de.up.ling.tree.Tree;
  *
  * @author christoph_teichmann
  */
-public interface TreeExtractor {
+public interface SubtreeExtractor {
     /**
-     *
-     * @param it
-     * @return
+     * 
+     * @param analyses
+     * @return 
      */
-    Iterable<Iterable<Tree<String>>> getAnalyses(final Iterable<InterpretedTreeAutomaton> it);
+    public Iterable<Iterable<Tree<String>>> getRuleTrees(Iterable<InterpretedTreeAutomaton> analyses);
 }
