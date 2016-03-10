@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package de.up.ling.irtg.corpus;
 
 import de.saar.basic.Pair;
@@ -22,36 +21,41 @@ public abstract class AbstractCorpusWriter implements Consumer<Instance> {
     protected boolean annotated;
     protected InterpretationPrintingPolicy printingPolicy;
     public static final String NULL = "_null_";
-    
+
     public abstract void writeInstance(Instance inst) throws IOException;
+
     public abstract void close() throws IOException;
 
     public AbstractCorpusWriter(InterpretationPrintingPolicy printingPolicy, boolean annotated) {
         this.annotated = annotated;
         this.printingPolicy = printingPolicy;
     }
-    
+
     public static interface ExConsumer<E> {
         public void accept(E x) throws IOException;
     }
-    
-    public static interface ExBiConsumer<E,F> {
+
+    public static interface ExBiConsumer<E, F> {
         public void accept(E x, F y) throws IOException;
     }
-    
+
     protected void withDerivationTree(Instance inst, Signature derivationTreeSignature, ExConsumer<String> fn) throws IOException {
         boolean isn = inst.isNull();
-        
+
         if (annotated && printingPolicy.getAlgebraForDerivationTree() != null) {
-            Tree<String> t = derivationTreeSignature.resolve(inst.getDerivationTree());
-            fn.accept(isn ? NULL : printingPolicy.getAlgebraForDerivationTree().representAsString(t));
+            if (isn) {
+                fn.accept(NULL);
+            } else {
+                Tree<String> t = derivationTreeSignature.resolve(inst.getDerivationTree());
+                fn.accept(printingPolicy.getAlgebraForDerivationTree().representAsString(t));
+            }
         }
     }
-    
-    protected void forEachInterpretation(Instance inst, ExBiConsumer<String,String> fn) throws IOException {
+
+    protected void forEachInterpretation(Instance inst, ExBiConsumer<String, String> fn) throws IOException {
         boolean isn = inst.isNull();
-        
-        for( Pair<String,OutputCodec> interp : printingPolicy.get() ) {
+
+        for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
             fn.accept(interp.getLeft(), isn ? NULL : interp.getRight().asString(inst.getInputObjects().get(interp.getLeft())));
         }
     }
@@ -72,5 +76,5 @@ public abstract class AbstractCorpusWriter implements Consumer<Instance> {
             throw new RuntimeException(ex);
         }
     }
-    
+
 }

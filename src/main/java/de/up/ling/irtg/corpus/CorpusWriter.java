@@ -69,8 +69,6 @@ public class CorpusWriter extends AbstractCorpusWriter {
 
     @Override
     public void writeInstance(Instance inst) throws IOException {
-        boolean isn = inst.isNull();
-
         if (!isHeaderWritten) {
             writer.write(makeHeader(comment));
             

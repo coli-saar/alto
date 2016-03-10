@@ -858,7 +858,7 @@ public class JTreeAutomaton extends javax.swing.JFrame {
                         GuiUtils.showError(ex);
                     }
 
-                    System.err.println(dpc.get(1));
+//                    System.err.println(dpc.get(1));
                 });
 
 //        GuiMain.withLoadedUnannotatedCorpus(irtg, JTreeAutomaton.this, inputCorpus -> {
