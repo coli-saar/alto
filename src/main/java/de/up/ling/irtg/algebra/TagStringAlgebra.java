@@ -106,7 +106,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
             @Override
             protected Pair<Span, Span> makeBottomUpRule(Pair<Span, Span> first, Pair<Span, Span> second, TreeAutomaton<Pair<Span, Span>> auto) {
-                if (first.left.end == second.left.start) {
+                if (first.right == null && second.right != null && first.left.end == second.left.start) {
                     return new Pair(new Span(first.left.start, second.left.end), second.right);
                 } else {
                     return null;
@@ -137,8 +137,9 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
             @Override
             protected Pair<Span, Span> makeBottomUpRule(Pair<Span, Span> first, Pair<Span, Span> second, TreeAutomaton<Pair<Span, Span>> auto) {
-                if (first.left.end == second.left.start) {
-                    return new Pair(new Span(first.left.start, second.left.end), second.right);
+                if (first.right != null && second.right == null && first.right.end == second.left.start) {
+                    Pair<Span,Span> ret = new Pair(first.left, new Span(first.right.start, second.left.end));
+                    return ret;
                 } else {
                     return null;
                 }
@@ -552,7 +553,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                 return namesToOperations.get(labelId).makeBottomUpRules(childStates, words.length, this);
             } else {
                 Set<Rule> ret = new HashSet<Rule>();
-
                 for (int i = 0; i < words.length; i++) {
                     if (words[i] == labelId) {
                         Pair parent = new Pair(new Span(i, i + 1), null);

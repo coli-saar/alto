@@ -27,7 +27,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * Converts a corpus from one codec to another. The input file is assumed to
+ * represent a list of instances, one per line, using some input codec; blank lines are allowed.
+ * This tool will iterate over these instances and convert each into a string, using
+ * given output codecs, which it writes into an output file. Each instance may
+ * be converted by multiple output codecs or just a single one.
+ * 
  * @author koller
  */
 public class CodecConverter {
@@ -115,7 +120,8 @@ public class CodecConverter {
                                 if (oc.getClass() == BlankLineOutputCodec.class) {
                                     pw.println();
                                 } else {
-                                    pw.println(param.errorLine + " - input line " + lineNo);
+                                    pw.println(param.errorLine + " - input line " + lineNo
+                                    );
                                 }
                             }
                             pw.flush();

@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
-import com.google.common.collect.Lists;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
@@ -108,6 +107,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<>();
 
             long t1 = System.nanoTime();
+            
+//            System.err.println("left: " + left);
+//            System.err.println("\n\nright: " + right + "\n\n");
 
             // Perform a DFS in the right automaton to find all partner states
             IntSet visited = new IntOpenHashSet();
@@ -159,7 +161,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 //            final IntList selfToDo = new IntArrayList();
 //            final IntSet selfSeen = new IntOpenHashSet();
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
-                D(depth, () -> "Right rule: " + rightRule.toString(right, s -> s.contains("asbestos") || s.contains("There")));
+                D(depth, () -> "Right rule: " + rightRule.toString(right, s -> s.contains("asbestos") || s.contains("There") || s.contains("now")));
 
                 // If the right rule is a "self-loop", i.e. of the form q -> f(q),
                 // the normal DFS doesn't work. We give it special treatment by

@@ -40,7 +40,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, ParserException {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("tagg-bin.irtg"));
-        TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", "There asbestos"));
+        TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", "There asbestos now"));
         System.err.println("\n\n\nchart:\n\n" + chart);
     }
     
