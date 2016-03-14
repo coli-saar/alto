@@ -11,7 +11,6 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.util.FunctionIterable;
-import de.up.ling.irtg.util.FunctionIterableWithSkip;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;

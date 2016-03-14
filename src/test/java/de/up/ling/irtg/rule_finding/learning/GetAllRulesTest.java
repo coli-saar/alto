@@ -22,8 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -78,6 +76,7 @@ public class GetAllRulesTest {
 
     /**
      * Test of getAllRules method, of class GetAllRules.
+     * @throws de.up.ling.tree.ParseException
      */
     @Test
     public void testGetAllRules() throws ParseException {

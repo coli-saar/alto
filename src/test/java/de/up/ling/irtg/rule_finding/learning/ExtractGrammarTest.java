@@ -136,4 +136,40 @@ public class ExtractGrammarTest {
         }
     }
     
+    @Test
+    public void testExtractFromSubtrees() throws Exception {
+        ByteArrayOutputStream grammar = new ByteArrayOutputStream();
+        SubtreeExtractor suex = new GetAllRules();
+        
+        extract.extract(inputs, grammar, suex, "__UAS__");
+        
+        String two = new String(grammar.toByteArray());
+        
+        IrtgInputCodec iic = new IrtgInputCodec();
+        InterpretedTreeAutomaton ita = iic.read(new ByteArrayInputStream(two.getBytes()));
+        
+        Map<String,String> input = new HashMap<>();
+        input.put("string", "What river flows through Kansas".toLowerCase());
+        
+        TreeAutomaton parse = ita.parse(input);
+        
+        Iterator<Tree<String>> it = parse.languageIterator();
+        
+        Set<Pair<List<String>,Tree<String>>> pairs = new HashSet<>();
+        for(int i=0;i<1;++i){
+            Tree<String> t = it.next();
+            
+            Map<String,Object> inter = ita.interpret(t);
+            Pair<List<String>,Tree<String>> p = 
+                    new Pair<>((List<String>) inter.get("string"), (Tree<String>) inter.get("tree"));
+            pairs.add(p);
+        }
+        
+        StringAlgebra sal = new StringAlgebra();
+        assertEquals(pairs.size(),1);
+        for(Pair<List<String>,Tree<String>> p : pairs){
+            assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(\"'kansas'\"))))")); 
+            assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas".toLowerCase()));
+        }
+    }
 }
