@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -104,8 +105,9 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     public Tree<String> parseString(String representation) throws ParserException {
         try {
             representation = preProcess(representation);
-            
             Tree<String> t = TreeParser.parse(representation);
+            t = postProcess(t);
+            
             addSymbols(t);
             return t;
         } catch (Exception ex) {
@@ -147,6 +149,26 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     @Override
     public JComponent visualize(Tree<String> object) {
         return new TreePanel(object);
+    }
+
+    /**
+     * 
+     * @param t
+     * @return 
+     */
+    private Tree<String> postProcess(Tree<String> t) {
+        String label = t.getLabel();
+        label = label.replaceAll(QUOTE, "'");
+        
+        List<Tree<String>>  children = new ArrayList<>();
+        for(int i=0;i<t.getChildren().size();++i) {
+            Tree<String> q = t.getChildren().get(i);
+            
+            q = postProcess(q);
+            children.add(q);
+        }
+        
+        return Tree.create(label, children);
     }
     
     /**

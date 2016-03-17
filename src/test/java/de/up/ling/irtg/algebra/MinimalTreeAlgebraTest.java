@@ -89,7 +89,7 @@ public class MinimalTreeAlgebraTest {
         input = "00zz( 77 8 8 88( 7 ( 7 8 ( 12j(5  , 6l (4, 3v)),  12k  3) )),'hhhh')";
         t = this.mta.parseString(input);
         
-        assertEquals(t.toString(),"'00zz'('77 8 8 88'('7'('7 8'('12j'('5','6l'('4','3v')),'12k  3'))),__QUOTE__hhhh__QUOTE__)");
+        assertEquals(t.toString(),"'00zz'('77 8 8 88'('7'('7 8'('12j'('5','6l'('4','3v')),'12k  3'))),\"'hhhh'\")");
             
         input = "answer(highest(place(loc_2(state(loc_1(place(elevation_2(0))))))))";
         t = this.mta.parseString(input);
@@ -99,7 +99,7 @@ public class MinimalTreeAlgebraTest {
         input = "answer(size(city(cityid('new york', _))))";
         t = this.mta.parseString(input);
         
-        assertEquals(t.toString(),"answer(size(city(cityid('__QUOTE__new york__QUOTE__',_))))");
+        assertEquals(t.toString(),"answer(size(city(cityid(\"'new york'\",_))))");
         
         TreeAutomaton ta = this.mta.decompose(t);
         
