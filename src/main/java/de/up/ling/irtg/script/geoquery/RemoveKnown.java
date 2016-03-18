@@ -62,7 +62,7 @@ public class RemoveKnown {
         }
         
         try(FileReader readIn = new FileReader(inputFile)) {
-            input = Corpus.readCorpus(readIn, ita);
+            input = Corpus.readCorpusLenient(readIn, ita);
         }
         
         try(FileOutputStream done = new FileOutputStream(out)) {

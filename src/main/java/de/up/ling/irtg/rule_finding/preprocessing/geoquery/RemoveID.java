@@ -15,14 +15,24 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  *
  * @author christoph_teichmann
  */
 public class RemoveID {
-    
-    
+    /**
+     * 
+     * @param corp
+     * @param out
+     * @param stringInterName
+     * @param treeInterName
+     * @param stringInterType
+     * @param treeInterType
+     * @throws IOException 
+     */
     public static void removedID(Corpus corp, OutputStream out,
             String stringInterName, String treeInterName, String stringInterType,
             String treeInterType) throws IOException {
@@ -92,7 +102,8 @@ public class RemoveID {
         }
         
         if(label.matches("[^\\s]+id")) {
-            if(t.getChildren().size() == 1) {
+            if(t.getChildren().size() == 1 || (t.getChildren().size() == 2 &&
+                    t.getChildren().get(1).getLabel().equals("_"))) {
                 Tree<String> child = t.getChildren().get(0);
                 if(child.getChildren().isEmpty()) {
                     String inner = child.getLabel();
@@ -102,7 +113,11 @@ public class RemoveID {
                         String portion = inner.substring(1,inner.length()-1);
                         portion = portion.replaceAll("\\s+", " ");
                         
-                        s = s.replaceAll(portion, label);
+                        Pattern pat = Pattern.compile("(?i)"+Pattern.quote(portion));
+                        
+                        
+                        Matcher mat = pat.matcher(s);
+                        s = mat.replaceAll(label);
                         
                         return new Pair<>(s,Tree.create(label, Tree.create("KNOWN")));
                     }
