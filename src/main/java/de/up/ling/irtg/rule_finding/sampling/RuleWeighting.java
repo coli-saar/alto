@@ -40,7 +40,7 @@ public interface RuleWeighting {
      * 
      * @param automaton 
      */
-    public void prepareStateStateProbability(TreeAutomaton automaton);
+    public void prepareStateStartProbability(TreeAutomaton automaton);
     
     /**
      * 

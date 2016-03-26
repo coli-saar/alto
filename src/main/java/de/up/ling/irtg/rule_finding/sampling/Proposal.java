@@ -5,9 +5,11 @@
  */
 package de.up.ling.irtg.rule_finding.sampling;
 
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.function.BiFunction;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -23,7 +25,10 @@ public class Proposal {
      */
     private final RandomGenerator rg;
     
-    
+    /**
+     * 
+     * @param rg 
+     */
     public Proposal(RandomGenerator rg) {
         this.rg = rg;
     }
@@ -52,10 +57,11 @@ public class Proposal {
      * 
      * @param carrier
      * @param guide
+     * @param sampleSize
      * @return 
      */
-    public TreeSample<Integer> getRawTreeSample(TreeAutomaton carrier, RuleWeighting guide) {
-       return this.getTreeSample(RAW_MAPPING, carrier, guide);
+    public TreeSample<Integer> getRawTreeSample(TreeAutomaton carrier, RuleWeighting guide, int sampleSize) {
+       return this.getTreeSample(RAW_MAPPING, carrier, guide, sampleSize);
     }
     
     /**
@@ -67,10 +73,11 @@ public class Proposal {
      * 
      * @param carrier
      * @param guide
+     * @param sampleSize
      * @return 
      */
-    public TreeSample<Rule> getRuleTreeSample(TreeAutomaton carrier, RuleWeighting guide) {
-        return this.getTreeSample(RULE_MAPPING, carrier, guide);
+    public TreeSample<Rule> getRuleTreeSample(TreeAutomaton carrier, RuleWeighting guide, int sampleSize) {
+        return this.getTreeSample(RULE_MAPPING, carrier, guide, sampleSize);
     }
     
     /**
@@ -83,10 +90,11 @@ public class Proposal {
      * 
      * @param carrier
      * @param guide
+     * @param sampleSize
      * @return 
      */
-    public TreeSample<String> getStringTreeSample(TreeAutomaton carrier, RuleWeighting guide) {
-        return this.getTreeSample(STRING_MAPPING, carrier, guide);
+    public TreeSample<String> getStringTreeSample(TreeAutomaton carrier, RuleWeighting guide, int sampleSize) {
+        return this.getTreeSample(STRING_MAPPING, carrier, guide, sampleSize);
     }
     
     /**
@@ -95,12 +103,27 @@ public class Proposal {
      * @param mapping
      * @param carrier
      * @param guide
+     * @param numberOfSamples
      * @return 
      */
-    public <Type> TreeSample<Type> getTreeSample(BiFunction<Rule,TreeAutomaton,Type> mapping,
-                                                    TreeAutomaton carrier, RuleWeighting guide) {
+    public <Type> TreeSample<Type> getTreeSample(BiFunction<Rule,TreeAutomaton,Type> mapping, TreeAutomaton carrier,
+                                                    RuleWeighting guide, int numberOfSamples) {
+        guide.prepareStateStartProbability(carrier);
+        
+        DoubleArrayList dl = new DoubleArrayList();
+        for(int i=0;i<dl.size();++i) {
+            dl.add(this.rg.nextDouble());
+        }
+        
+        Arrays.sort(dl.elements(), 0, dl.size());
+        
+        int i=0;
+        
+        while(i < numberOfSamples) {
+            
+        }
+        
         //TODO
         return null;
     }
-    
 }
