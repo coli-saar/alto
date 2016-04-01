@@ -1,0 +1,19 @@
+/* Example for the alto-demonstration paper*/
+interpretation english: de.up.ling.irtg.algebra.StringAlgebra
+interpretation semantic: de.up.ling.irtg.algebra.graph.GraphAlgebra
+
+NE -> r2 [0.6]
+[english] John
+[semantic] '(u<root> / John)'
+
+S! -> r1(NE,NE,NP) [1.0]
+[english] *(?1,*(tells,*(?2,?3)))
+[semantic]  merge(merge(merge('(u<root> / tell :ARG0 (s<subj>) :ARG1 (o1<obj1>) :ARG2 (o2<obj2>))',?3),r_root_obj1(?2)),r_root_subj(?1))
+
+NE -> r3 [0.4]
+[english] Mary
+[semantic] '(u<root> / Mary)'
+
+NP -> r4 [1.0]
+[english] *(the,news)
+[semantic] '(u<obj2> / news)'
