@@ -16,34 +16,49 @@ public interface RuleWeighting {
     /**
      * 
      * @param candidate
-     * @param automaton
      * @return 
      */
-    public double getProbability(Rule candidate, TreeAutomaton automaton);
+    public double getProbability(Rule candidate);
     
     /**
      * 
      * @param state
-     * @param automaton
      */
-    public void prepareProbability(int state, TreeAutomaton automaton);
+    public void prepareProbability(int state);
     
     /**
      * 
      * @param state
-     * @param automaton
      * @return 
      */
-    public double getStateStartProbability(int state, TreeAutomaton automaton);
+    public double getStateStartProbability(int state);
     
     /**
      * 
-     * @param automaton 
      */
-    public void prepareStateStartProbability(TreeAutomaton automaton);
+    public void prepareStateStartProbability();
     
     /**
      * 
      */
     public void reset();
+    
+    /**
+     * 
+     * @param treSamp 
+     */
+    public void adapt(TreeSample treSamp);
+    
+    /**
+     * 
+     * @return 
+     */
+    public TreeAutomaton getAutomaton();
+
+    /**
+     * 
+     * @param d
+     * @return 
+     */
+    public int getStartState(double d);
 }

@@ -38,6 +38,11 @@ public class TreeSample<Type> {
         this.sampleWeights.add(weight);
     }
     
+    /**
+     * 
+     * @param enty
+     * @param amount 
+     */
     public void addWeight(int enty, double amount) {
         this.sampleWeights.add(enty, amount);
     }
@@ -51,16 +56,27 @@ public class TreeSample<Type> {
         this.sampleWeights.set(entry, this.sampleWeights.get(entry)*amount);
     }
     
-    
+    /**
+     * 
+     * @param entry
+     * @return 
+     */
     public double getWeight(int entry) {
         return this.sampleWeights.get(entry);
     }
     
-    
+    /**
+     * 
+     * @param entry
+     * @return 
+     */
     public Tree<Type> getSample(int entry) {
         return this.samplesDrawn.get(entry);
     }
     
+    /**
+     * 
+     */
     public void expoNormalize(){
         double sum = 0.0;
         
