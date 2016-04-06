@@ -18,7 +18,7 @@ public interface RuleWeighting {
      * @param candidate
      * @return 
      */
-    public double getProbability(Rule candidate);
+    public double getLogProbability(Rule candidate);
     
     /**
      * 
@@ -29,9 +29,17 @@ public interface RuleWeighting {
     /**
      * 
      * @param state
+     * @param choicePoint
      * @return 
      */
-    public double getStateStartProbability(int state);
+    public Rule getRule(int state, double choicePoint);
+    
+    /**
+     * 
+     * @param state
+     * @return 
+     */
+    public double getStateStartLogProbability(int state);
     
     /**
      * 
@@ -57,8 +65,8 @@ public interface RuleWeighting {
 
     /**
      * 
-     * @param d
+     * @param choicePoint
      * @return 
      */
-    public int getStartState(double d);
+    public int getStartState(double choicePoint);
 }

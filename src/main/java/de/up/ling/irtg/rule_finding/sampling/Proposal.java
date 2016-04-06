@@ -9,8 +9,6 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.MutableDouble;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.function.BiFunction;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -56,7 +54,6 @@ public class Proposal {
     
     /**
      * 
-     * @param carrier
      * @param guide
      * @param sampleSize
      * @return 
@@ -72,7 +69,6 @@ public class Proposal {
     
     /**
      * 
-     * @param carrier
      * @param guide
      * @param sampleSize
      * @return 
@@ -89,7 +85,6 @@ public class Proposal {
     
     /**
      * 
-     * @param carrier
      * @param guide
      * @param sampleSize
      * @return 
@@ -102,7 +97,6 @@ public class Proposal {
      * 
      * @param <Type>
      * @param mapping
-     * @param carrier
      * @param guide
      * @param numberOfSamples
      * @return 
@@ -119,7 +113,7 @@ public class Proposal {
             double d = this.rg.nextDouble();
             int start = guide.getStartState(d);
             
-            logPropProb.add(guide.getStateStartProbability(start));
+            logPropProb.add(-guide.getStateStartLogProbability(start));
             Tree<Type> done = this.sampleTree(start, guide, mapping, logPropProb);
             
             result.addSample(done, logPropProb.getValue());
@@ -133,15 +127,26 @@ public class Proposal {
     /**
      * 
      * @param <Type>
-     * @param start
+     * @param state
      * @param guide
      * @param mapping
      * @param logPropProb
      * @return 
      */
-    private <Type> Tree<Type> sampleTree(int start, RuleWeighting guide, BiFunction<Rule, TreeAutomaton, Type> mapping, MutableDouble logPropProb) {
+    private <Type> Tree<Type> sampleTree(int state, RuleWeighting guide, BiFunction<Rule, TreeAutomaton, Type> mapping, MutableDouble logPropProb) {
+        guide.prepareProbability(state);
         
+        double val = this.rg.nextDouble();
+        Rule r  = guide.getRule(state, val);
         
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Type label = mapping.apply(r, guide.getAutomaton());
+        Tree<Type>[] choices = new Tree[r.getArity()];
+        logPropProb.add(-guide.getLogProbability(r));
+        
+        for(int i=0;i<r.getArity();++i) {
+            choices[i] = this.sampleTree(r.getChildren()[i], guide, mapping, logPropProb);
+        }
+        
+        return Tree.create(label, choices);
     }
 }
