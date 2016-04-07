@@ -88,4 +88,12 @@ public class TreeSample<Type> {
             this.sampleWeights.set(i, FastMath.exp(this.sampleWeights.get(i)-sum));
         }
     }
+
+    /**
+     * 
+     * @return 
+     */
+    public int populationSize() {
+        return this.sampleWeights.size();
+    }
 }

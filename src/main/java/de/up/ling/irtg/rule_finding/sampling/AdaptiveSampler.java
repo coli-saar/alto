@@ -5,22 +5,15 @@
  */
 package de.up.ling.irtg.rule_finding.sampling;
 
+import de.up.ling.irtg.automata.Rule;
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author teichmann
  */
 public class AdaptiveSampler {
-
-    /**
-     *
-     */
-    private int populationSize = 1000;
-
-    /**
-     *
-     */
-    private boolean adaptNormalized = true;
-
     /**
      * 
      */
@@ -53,38 +46,6 @@ public class AdaptiveSampler {
     public AdaptiveSampler() {
         this.prop = new Proposal();
     }
-    
-    /**
-     * 
-     * @return 
-     */
-    public int getPopulationSize() {
-        return populationSize;
-    }
-    
-    /**
-     * 
-     * @param populationSize 
-     */
-    public void setPopulationSize(int populationSize) {
-        this.populationSize = populationSize;
-    }
-    
-    /**
-     * 
-     * @return 
-     */
-    public boolean isAdaptNormalized() {
-        return adaptNormalized;
-    }
-    
-    /**
-     * 
-     * @param adaptNormalized 
-     */
-    public void setAdaptNormalized(boolean adaptNormalized) {
-        this.adaptNormalized = adaptNormalized;
-    }
 
     /**
      * 
@@ -102,8 +63,48 @@ public class AdaptiveSampler {
         this.keptStats = keptStats;
     }
     
-    
-    
-    
+    /**
+     * 
+     * @param rounds
+     * @param populationSize
+     * @param rw
+     * @return 
+     */
+    public List<TreeSample<Rule>> adaSample(int rounds, int populationSize, RuleWeighting rw) {
+        List<TreeSample<Rule>> result = new ArrayList<>();
+        rw.reset();
+        
+        for(int i=0;i<rounds;++i) {
+            TreeSample<Rule> sample = this.prop.getRuleTreeSample(rw, populationSize);
+            
+            for(int j=0;j<populationSize;++j) {
+                sample.addWeight(j, rw.getLogTargetProbability(sample.getSample(j)));
+            }
+            
+            if(this.keptStats != null) {
+                this.keptStats.addUnNormalizedRound(i,sample);
+            }
+            
+            if(!rw.adaptsNormalized()) {
+                rw.adaptNormalized(sample);
+            }
+            
+            sample.expoNormalize();
+            
+            //TODO include Re-Sampling here
+            
+            if(rw.adaptsNormalized()) {
+                rw.adaptUnNormalized(sample);
+            }
+            
+            if(this.keptStats != null) {
+                this.keptStats.addNormalizedRound(rounds, sample);
+            }
+            
+            result.add(sample);
+        }
+        
+        return result;
+    }
     
 }

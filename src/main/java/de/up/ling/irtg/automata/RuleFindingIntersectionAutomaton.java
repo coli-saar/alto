@@ -9,7 +9,7 @@ import com.google.common.collect.ImmutableSet;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.util.ImmutableIntSet;
-import de.up.ling.irtg.util.NumberWrapping;
+import de.up.ling.irtg.util.NumbersCombine;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
@@ -122,7 +122,7 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
      * @return 
      */
     private int makeState(int state1, int state2) {
-        long pair = NumberWrapping.combine(state1, state2);
+        long pair = NumbersCombine.combine(state1, state2);
         
         int state = this.seen.get(pair);
         
@@ -158,8 +158,8 @@ public class RuleFindingIntersectionAutomaton extends TreeAutomaton<Long> {
         
         long pair = this.getStateForId(parentState);
         
-        int left = NumberWrapping.getFirst(pair);
-        int right = NumberWrapping.getSecond(pair);
+        int left = NumbersCombine.getFirst(pair);
+        int right = NumbersCombine.getSecond(pair);
         
         int arity = this.getSignature().getArity(labelId);
         

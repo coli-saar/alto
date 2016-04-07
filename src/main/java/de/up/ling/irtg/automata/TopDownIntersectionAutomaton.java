@@ -6,7 +6,7 @@
 package de.up.ling.irtg.automata;
 
 import de.up.ling.irtg.util.ImmutableIntSet;
-import de.up.ling.irtg.util.NumberWrapping;
+import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -84,7 +84,7 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
      * @return 
      */
     private int makeState(int l, int r) {
-        long code = NumberWrapping.combine(l, r);
+        long code = NumbersCombine.combine(l, r);
         
         int state = this.seen.get(code);
         
@@ -121,8 +121,8 @@ public class TopDownIntersectionAutomaton extends TreeAutomaton<Long> {
         
         long parent = this.getStateForId(parentState);
         
-        int leftParent = NumberWrapping.getFirst(parent);
-        int rightParent = NumberWrapping.getSecond(parent);
+        int leftParent = NumbersCombine.getFirst(parent);
+        int rightParent = NumbersCombine.getSecond(parent);
         
         Iterable<Rule> itL = this.left.getRulesTopDown(labelId, leftParent);
         Iterable<Rule> itR = this.right.getRulesTopDown(labelId, rightParent);

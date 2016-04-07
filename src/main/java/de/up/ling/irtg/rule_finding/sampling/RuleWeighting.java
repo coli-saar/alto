@@ -7,6 +7,7 @@ package de.up.ling.irtg.rule_finding.sampling;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.tree.Tree;
 
 /**
  *
@@ -55,7 +56,13 @@ public interface RuleWeighting {
      * 
      * @param treSamp 
      */
-    public void adapt(TreeSample treSamp);
+    public void adaptNormalized(TreeSample<Rule> treSamp);
+    
+    /**
+     * 
+     * @param treSamp 
+     */
+    public void adaptUnNormalized(TreeSample<Rule> treSamp);
     
     /**
      * 
@@ -69,4 +76,17 @@ public interface RuleWeighting {
      * @return 
      */
     public int getStartState(double choicePoint);
+    
+    /**
+     * 
+     * @param sample
+     * @return 
+     */
+    public double getLogTargetProbability(Tree<Rule> sample);
+    
+    /**
+     * 
+     * @return 
+     */
+    public boolean adaptsNormalized();
 }
