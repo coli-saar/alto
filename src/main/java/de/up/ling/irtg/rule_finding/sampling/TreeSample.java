@@ -5,14 +5,12 @@
  */
 package de.up.ling.irtg.rule_finding.sampling;
 
-import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.util.FastMath;
 
 /**
  *
@@ -81,13 +79,19 @@ public class TreeSample<Type> {
      */
     public void expoNormalize(){
         double sum = 0.0;
-        
-        for(int i=0;i<this.sampleWeights.size();++i) {
-            sum = LogSpaceOperations.addAlmostZero(sum, this.sampleWeights.getDouble(i));
+        double max = Double.NEGATIVE_INFINITY;
+        for(int i=0;i<this.populationSize();++i) {
+            max = Math.max(max, this.getWeight(i));
         }
         
         for(int i=0;i<this.sampleWeights.size();++i) {
-            this.sampleWeights.set(i, FastMath.exp(this.sampleWeights.get(i)-sum));
+            double amount = Math.exp(this.getWeight(i)-max);
+            sum += amount;
+            this.sampleWeights.set(i, amount);
+        }
+        
+        for(int i=0;i<this.sampleWeights.size();++i) {
+            this.sampleWeights.set(i, this.getWeight(i)/sum);
         }
     }
 
