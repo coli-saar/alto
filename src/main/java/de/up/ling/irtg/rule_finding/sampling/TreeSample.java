@@ -40,11 +40,11 @@ public class TreeSample<Type> {
     
     /**
      * 
-     * @param enty
+     * @param entry
      * @param amount 
      */
-    public void addWeight(int enty, double amount) {
-        this.sampleWeights.add(enty, amount);
+    public void addWeight(int entry, double amount) {
+        this.sampleWeights.set(entry, this.sampleWeights.get(entry)+amount);
     }
     
     /**
@@ -105,27 +105,28 @@ public class TreeSample<Type> {
     
     /**
      * 
-     * @param rg 
+     * @param rg
+     * @param size 
      */
-    public void resampleWithNormalize(RandomGenerator rg) {
+    public void resampleWithNormalize(RandomGenerator rg, int size) {
         this.expoNormalize();
-        this.resample(rg);
+        this.resample(rg, size);
     }
     
     /**
      * 
-     * @param rg 
+     * @param rg
+     * @param size 
      */
-    public void resample(RandomGenerator rg) {
-        int size = this.populationSize();
+    public void resample(RandomGenerator rg, int size) {
         double dsize = (double) size;
         
         List<Tree<Type>> newPop = new ArrayList<>();
         DoubleList newWeights = new DoubleArrayList();
         
         double sum = 0.0;
-        for(int i=0;i<size;++i) {
-            double amount = roundDown(size*this.getWeight(i)) / dsize;
+        for(int i=0;i<this.populationSize();++i) {
+            double amount = Math.floor(dsize*this.getWeight(i)) / dsize;
             
             if(amount > 0.0) {
                 newPop.add(this.getSample(i));
@@ -140,7 +141,7 @@ public class TreeSample<Type> {
             double d = rg.nextDouble();
             boolean done = false;
             
-            for(int i=0;(i<size && (!done));++i) {
+            for(int i=0;(i<this.populationSize() && (!done));++i) {
                 d -= this.getWeight(i);
                 
                 if(d <= 0.0) {
@@ -148,6 +149,8 @@ public class TreeSample<Type> {
                     
                     newPop.add(this.getSample(i));
                     newWeights.add(frac);
+                    
+                    sum += frac;
                 }
             }
         }
@@ -159,16 +162,11 @@ public class TreeSample<Type> {
         this.sampleWeights.addAll(newWeights);
     }
 
-    /**
-     * 
-     * @param weight
-     * @return 
-     */
-    private double roundDown(double weight) {
-        if(weight >= 0.0) {
-            return Math.floor(weight);
-        } else {
-            return Math.ceil(weight);
-        }
+    @Override
+    public String toString() {
+        String s = System.lineSeparator();
+        return "TreeSample"+ s + "samplesDrawn = " + samplesDrawn + s + "sampleWeights = " + sampleWeights;
     }
+    
+    
 }

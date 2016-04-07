@@ -25,4 +25,11 @@ public interface SamplingStatistics {
      * @param sample 
      */
     public void addNormalizedRound(int rounds, TreeSample<Rule> sample);
+
+    /**
+     * 
+     * @param rounds
+     * @param sample 
+     */
+    public void addResampledRound(int rounds, TreeSample<Rule> sample);
 }

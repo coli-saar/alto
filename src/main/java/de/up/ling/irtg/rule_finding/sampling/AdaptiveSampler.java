@@ -69,10 +69,12 @@ public class AdaptiveSampler {
      * 
      * @param rounds
      * @param populationSize
+     * @param resampleSize
      * @param rw
      * @return 
      */
-    public List<TreeSample<Rule>> adaSample(int rounds, int populationSize, RuleWeighting rw) {
+    public List<TreeSample<Rule>> adaSample(int rounds, int populationSize,
+                                           int resampleSize, RuleWeighting rw) {
         List<TreeSample<Rule>> result = new ArrayList<>();
         rw.reset();
         
@@ -91,14 +93,20 @@ public class AdaptiveSampler {
                 rw.adaptNormalized(sample);
             }
             
-            sample.resampleWithNormalize(this.rg);
+            sample.expoNormalize();
+            
+            if(this.keptStats != null) {
+                this.keptStats.addNormalizedRound(rounds, sample);
+            }
+            
+            sample.resample(this.rg,populationSize);
             
             if(rw.adaptsNormalized()) {
                 rw.adaptUnNormalized(sample);
             }
             
             if(this.keptStats != null) {
-                this.keptStats.addNormalizedRound(rounds, sample);
+                this.keptStats.addResampledRound(rounds, sample);
             }
             
             result.add(sample);
