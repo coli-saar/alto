@@ -221,6 +221,8 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         for(double[] paras : this.ruleParameters.values()) {
             Arrays.fill(paras, 0.0);
         }
+        
+        this.rate.reset();
     }
 
     @Override

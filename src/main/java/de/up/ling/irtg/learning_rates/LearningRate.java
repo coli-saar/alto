@@ -18,4 +18,6 @@ public interface LearningRate {
      * @return 
      */
     public double getLearningRate(int group, int parameter, double gradient);
+
+    public void reset();
 }

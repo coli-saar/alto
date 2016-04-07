@@ -35,4 +35,9 @@ public class AdaGrad implements LearningRate {
         
         return 1.0/Math.sqrt(sum);
     }
+
+    @Override
+    public void reset() {
+        sums.clear();
+    }
 }
