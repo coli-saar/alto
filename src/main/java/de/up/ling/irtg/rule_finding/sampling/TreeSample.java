@@ -11,11 +11,13 @@ import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.FastMath;
 
 /**
  *
  * @author christoph
+ * @param <Type>
  */
 public class TreeSample<Type> {
     /**
@@ -26,7 +28,7 @@ public class TreeSample<Type> {
     /**
      * 
      */
-    private final DoubleList sampleWeights = new DoubleArrayList();
+    private final DoubleArrayList sampleWeights = new DoubleArrayList();
     
     /**
      * 
@@ -95,5 +97,74 @@ public class TreeSample<Type> {
      */
     public int populationSize() {
         return this.sampleWeights.size();
+    }
+    
+    /**
+     * 
+     * @param rg 
+     */
+    public void resampleWithNormalize(RandomGenerator rg) {
+        this.expoNormalize();
+        this.resample(rg);
+    }
+    
+    /**
+     * 
+     * @param rg 
+     */
+    public void resample(RandomGenerator rg) {
+        int size = this.populationSize();
+        double dsize = (double) size;
+        
+        List<Tree<Type>> newPop = new ArrayList<>();
+        DoubleList newWeights = new DoubleArrayList();
+        
+        double sum = 0.0;
+        for(int i=0;i<size;++i) {
+            double amount = roundDown(size*this.getWeight(i)) / dsize;
+            
+            if(amount > 0.0) {
+                newPop.add(this.getSample(i));
+                newWeights.add(amount);
+                
+                sum += amount;
+            }
+        }
+        
+        double frac = 1.0 / dsize;
+        while(sum < 1.0) {
+            double d = rg.nextDouble();
+            boolean done = false;
+            
+            for(int i=0;(i<size && (!done));++i) {
+                d -= this.getWeight(i);
+                
+                if(d <= 0.0) {
+                    done = true;
+                    
+                    newPop.add(this.getSample(i));
+                    newWeights.add(frac);
+                }
+            }
+        }
+        
+        this.samplesDrawn.clear();
+        this.samplesDrawn.addAll(newPop);
+        
+        this.sampleWeights.clear();
+        this.sampleWeights.addAll(newWeights);
+    }
+
+    /**
+     * 
+     * @param weight
+     * @return 
+     */
+    private double roundDown(double weight) {
+        if(weight >= 0.0) {
+            return Math.floor(weight);
+        } else {
+            return Math.ceil(weight);
+        }
     }
 }

@@ -7,7 +7,10 @@ package de.up.ling.irtg.rule_finding.sampling;
 
 import de.up.ling.irtg.automata.Rule;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well44497b;
 
 /**
  *
@@ -25,26 +28,25 @@ public class AdaptiveSampler {
     private final Proposal prop;
 
     /**
+     * 
+     */
+    private final RandomGenerator rg;
+    
+    /**
      *
      * @param seed
      */
     public AdaptiveSampler(long seed) {
-        this.prop = new Proposal(seed);
-    }
-
-    /**
-     *
-     * @param prop
-     */
-    public AdaptiveSampler(Proposal prop) {
-        this.prop = prop;
+        this.rg = new Well44497b(seed);
+        
+        this.prop = new Proposal(this.rg.nextLong());
     }
 
     /**
      *
      */
     public AdaptiveSampler() {
-        this.prop = new Proposal();
+        this(new Date().getTime());
     }
 
     /**
@@ -89,9 +91,7 @@ public class AdaptiveSampler {
                 rw.adaptNormalized(sample);
             }
             
-            sample.expoNormalize();
-            
-            //TODO include Re-Sampling here
+            sample.resampleWithNormalize(this.rg);
             
             if(rw.adaptsNormalized()) {
                 rw.adaptUnNormalized(sample);
