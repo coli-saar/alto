@@ -184,7 +184,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         for(int i=0;i<probs.length;++i) {
             choicePoint -= probs[i];
             
-            if(choicePoint <= 0.0) {
+            if(choicePoint <= 1E-15) {
                 return this.listRules.get(state)[i];
             }
         }
@@ -406,6 +406,6 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         
         double lr = this.rate.getLearningRate(-1, position, gradient);
         
-        parameters[position] += lr;
+        parameters[position] += lr*gradient;
     }
 }
