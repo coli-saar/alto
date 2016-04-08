@@ -21,12 +21,25 @@ public class AdaGrad implements LearningRate {
     /**
      * 
      */
-    public AdaGrad() {
+    private final double baseRate;
+    
+    /**
+     * 
+     * @param baseRate
+     */
+    public AdaGrad(double baseRate) {
         this.sums = new Long2DoubleOpenHashMap();
         this.sums.defaultReturnValue(0.0);
+        
+        this.baseRate = baseRate;
     }    
     
-    //TODO include learning rate here.
+    /**
+     * 
+     */
+    public AdaGrad() {
+        this(0.5);
+    }
     
     @Override
     public double getLearningRate(int group, int parameter, double gradient) {
@@ -35,7 +48,9 @@ public class AdaGrad implements LearningRate {
         double sum = sums.addTo(code, gradient*gradient);
         sum += gradient*gradient;
         
-        return sum == 0.0 ? 1.0 : 1.0/Math.sqrt(sum);
+        double amount = (sum == 0.0 ? 1.0 : 1.0/Math.sqrt(sum));
+        
+        return amount*baseRate;
     }
 
     @Override
