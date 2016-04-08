@@ -123,7 +123,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         this.lastUpdated.defaultReturnValue(0);
         
         this.normalizationExponent = normalizationExponent-1;
-        this.normalizationDivisor = normalizationDivisor;
+        this.normalizationDivisor = 1.0 / normalizationDivisor;
         this.rate = rate;
         
         currentProbs.defaultReturnValue(false);
@@ -152,9 +152,9 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         double[] probs = this.ruleProbs.get(state);
         double[] paras = this.ruleParameters.get(state);
         
-        if(num <= this.updateNumber) {
+        if(num < this.updateNumber) {
         
-            while(num <= this.updateNumber) {
+            while(num < this.updateNumber) {
                     for(int i=0;i<rules.length;++i) {
                         this.adapt(i, rules[i], paras, null, null, -1.0);
                     }
@@ -173,17 +173,18 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         for(int i=0;i<probs.length;++i) {
             probs[i] /= sum;
         }
+        
+        this.currentProbs.put(state, true);
     }
 
     @Override
     public Rule getRule(int state, double choicePoint) {
         double[] probs = this.ruleProbs.get(state);
         
-        double remaining = 1.0;
         for(int i=0;i<probs.length;++i) {
-            remaining -= probs[i];
+            choicePoint -= probs[i];
             
-            if(remaining <= 0.0) {
+            if(choicePoint <= 0.0) {
                 return this.listRules.get(state)[i];
             }
         }
@@ -233,7 +234,8 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         Object2DoubleOpenHashMap ruleCounts = new Object2DoubleOpenHashMap();
         ruleCounts.defaultReturnValue(0.0);
         
-        makeAmounts(treSamp, stateCounts, ruleCounts);
+        double[] startCount = new double[this.startStates.length];
+        double wholeCount = makeAmounts(treSamp, stateCounts, ruleCounts, startCount);
         
         IntIterator states = stateCounts.keySet().iterator();
         
@@ -247,13 +249,17 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             double[] parameters = this.ruleParameters.get(state);
             
             for(int i=0;i<arr.length;++i) {
-                this.adapt(state, arr[i], parameters, ruleCounts, stateCounts, props[i]);
+                this.adapt(i, arr[i], parameters, ruleCounts, stateCounts, props[i]);
             }
             
             this.lastUpdated.put(state, updatePlusOne);
-            if(arr.length > 0){
-                this.currentProbs.put(arr[0].getParent(), false);
-            }
+            
+            this.currentProbs.put(state, false);
+        }
+        
+        this.prepareStateStartProbability();
+        for(int i=0;i<this.startStates.length;++i) {
+            updateStart(startParameters,i,startCount,wholeCount,this.startProbabilities[i]);
         }
         
         ++this.updateNumber;
@@ -294,13 +300,22 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
      * @param stateCounts
      * @param ruleCounts 
      */
-    private void makeAmounts(TreeSample<Rule> treSamp, Int2DoubleOpenHashMap stateCounts, Object2DoubleOpenHashMap ruleCounts) {
+    private double makeAmounts(TreeSample<Rule> treSamp, Int2DoubleOpenHashMap stateCounts,
+                            Object2DoubleOpenHashMap ruleCounts, double[] startCount) {
+        double wholeCount = 0.0;
+        
         for(int i=0;i<treSamp.populationSize();++i) {
             Tree<Rule> instance = treSamp.getSample(i);
             double contribution = treSamp.getWeight(i);
             
+            wholeCount += contribution;
+            int index = Arrays.binarySearch(startStates, instance.getLabel().getParent());
+            startCount[index] += contribution;
+            
             addAmounts(instance,stateCounts,ruleCounts, contribution);
         }
+        
+        return wholeCount;
     }
 
     @Override
@@ -316,11 +331,10 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
 
     @Override
     public int getStartState(double choicePoint) {
-        double remaining = 1.0;
         for(int i=0;i<this.startStates.length;++i) {
-            remaining -= this.startProbabilities[i];
+            choicePoint -= this.startProbabilities[i];
             
-            if(remaining <= 0.0) {
+            if(choicePoint <= 0.0) {
                 return this.startStates[i];
             }
         }
@@ -363,12 +377,35 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.normalizationExponent))*normalizationDivisor;
         
         if(ruleCounts != null && stateCounts != null) {
-            gradient -= probability*stateCounts.get(rr.getParent());
-            gradient += ruleCounts.getDouble(rr);
+            gradient += probability*stateCounts.get(rr.getParent());
+            gradient -= ruleCounts.getDouble(rr);
         }
         
         double lr = this.rate.getLearningRate(rr.getParent(), position, gradient);
         
-        parameters[position] -= lr;
+        parameters[position] -= lr*gradient;
+    }
+
+    /**
+     * 
+     * @param parameters
+     * @param position
+     * @param startCount
+     * @param wholeCount
+     * @param startProbability 
+     */
+    private void updateStart(double[] parameters, int position, double[] startCount, double wholeCount, double startProbability) {
+        double val = parameters[position];
+        
+        double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.normalizationExponent))*normalizationDivisor;
+        
+        if(startCount != null) {
+            gradient += startProbability*wholeCount;
+            gradient -= startCount[position];
+        }
+        
+        double lr = this.rate.getLearningRate(-1, position, gradient);
+        
+        parameters[position] += lr;
     }
 }

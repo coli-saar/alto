@@ -26,6 +26,8 @@ public class AdaGrad implements LearningRate {
         this.sums.defaultReturnValue(0.0);
     }    
     
+    //TODO include learning rate here.
+    
     @Override
     public double getLearningRate(int group, int parameter, double gradient) {
         long code = NumbersCombine.combine(group, parameter);
@@ -33,7 +35,7 @@ public class AdaGrad implements LearningRate {
         double sum = sums.addTo(code, gradient*gradient);
         sum += gradient*gradient;
         
-        return 1.0/Math.sqrt(sum);
+        return sum == 0.0 ? 1.0 : 1.0/Math.sqrt(sum);
     }
 
     @Override
