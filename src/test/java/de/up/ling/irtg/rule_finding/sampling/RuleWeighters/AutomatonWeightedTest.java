@@ -21,7 +21,6 @@ import static org.junit.Assert.*;
  * @author teichmann
  */
 public class AutomatonWeightedTest {
-
     /**
      *
      */
@@ -63,6 +62,7 @@ public class AutomatonWeightedTest {
 
     /**
      * Test of getLogTargetProbability method, of class AutomatonWeighted.
+     * @throws java.lang.Exception
      */
     @Test
     public void testGetLogProbability() throws Exception {

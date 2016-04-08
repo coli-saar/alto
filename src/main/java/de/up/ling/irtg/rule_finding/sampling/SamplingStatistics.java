@@ -15,21 +15,27 @@ public interface SamplingStatistics {
     /**
      * 
      * @param round
-     * @param sample 
+     * @param sample
+     * @param adaptor 
      */
-    public void addUnNormalizedRound(int round, TreeSample<Rule> sample);
+    public void addUnNormalizedRound(int round,
+                               TreeSample<Rule> sample, RuleWeighting adaptor);
     
     /**
      * 
-     * @param rounds
-     * @param sample 
+     * @param round
+     * @param sample
+     * @param adaptor 
      */
-    public void addNormalizedRound(int rounds, TreeSample<Rule> sample);
+    public void addNormalizedRound(int round,
+                               TreeSample<Rule> sample, RuleWeighting adaptor);
 
     /**
      * 
-     * @param rounds
-     * @param sample 
+     * @param round
+     * @param sample
+     * @param adaptor 
      */
-    public void addResampledRound(int rounds, TreeSample<Rule> sample);
+    public void addResampledRound(int round,
+                               TreeSample<Rule> sample, RuleWeighting adaptor);
 }

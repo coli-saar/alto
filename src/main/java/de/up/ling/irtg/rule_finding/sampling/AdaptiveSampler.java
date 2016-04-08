@@ -86,27 +86,27 @@ public class AdaptiveSampler {
             }
             
             if(this.keptStats != null) {
-                this.keptStats.addUnNormalizedRound(i,sample);
+                this.keptStats.addUnNormalizedRound(i,sample,rw);
             }
             
             if(!rw.adaptsNormalized()) {
-                rw.adaptNormalized(sample);
+                rw.adaptUnNormalized(sample);
             }
             
             sample.expoNormalize();
             
             if(this.keptStats != null) {
-                this.keptStats.addNormalizedRound(rounds, sample);
+                this.keptStats.addNormalizedRound(rounds, sample, rw);
             }
             
             sample.resample(this.rg,populationSize);
             
             if(rw.adaptsNormalized()) {
-                rw.adaptUnNormalized(sample);
+                rw.adaptNormalized(sample);
             }
             
             if(this.keptStats != null) {
-                this.keptStats.addResampledRound(rounds, sample);
+                this.keptStats.addResampledRound(rounds, sample, rw);
             }
             
             result.add(sample);
@@ -114,5 +114,4 @@ public class AdaptiveSampler {
         
         return result;
     }
-    
 }
