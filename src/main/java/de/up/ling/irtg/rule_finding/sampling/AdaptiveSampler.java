@@ -99,7 +99,7 @@ public class AdaptiveSampler {
                 this.keptStats.addNormalizedRound(rounds, sample, rw);
             }
             
-            sample.resample(this.rg,populationSize);
+            sample.resample(this.rg,resampleSize);
             
             if(rw.adaptsNormalized()) {
                 rw.adaptNormalized(sample);

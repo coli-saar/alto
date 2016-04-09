@@ -12,7 +12,10 @@ import de.up.ling.irtg.learning_rates.AdaGrad;
 import de.up.ling.irtg.rule_finding.sampling.RuleWeighters.AutomatonWeighted;
 import de.up.ling.irtg.rule_finding.sampling.statistic_tracking.RuleConvergence;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -58,7 +61,7 @@ public class AdaptiveSamplerTest {
         tau = sal.decompose(sal.parseString("a a b b a a"));
 
         AdaGrad ada = new AdaGrad();
-        auw = new AutomatonWeighted(tau, 2, 4.0, ada);      
+        auw = new AutomatonWeighted(tau, 2, 100.0, ada);      
         adaSamp = new AdaptiveSampler(9883498483484L);
         
         startState = tau.getFinalStates().iterator().nextInt();
@@ -83,13 +86,32 @@ public class AdaptiveSamplerTest {
      */
     @Test
     public void testAdaSample() {
-        //TODO
         adaSamp.setKeptStats(ruC);
-        List<TreeSample<Rule>> ts = adaSamp.adaSample(10, 5000, 50, auw);
+        List<TreeSample<Rule>> ts = adaSamp.adaSample(30, 5000, 50, auw);
         
-        for(TreeSample<Rule> t : ts) {
-            System.out.println(t);
+        assertEquals(ts.size(),30);
+        for(int i=0;i<ts.size();++i) {
+            assertTrue(ts.get(i).populationSize() <= 50);
         }
         
-    }    
+        for(Rule r : (Iterable<Rule>) this.tau.getRulesTopDown(startState)) {
+            if(r.toString(tau).equals("'0-6'! -> *('0-1', '1-6') [1.0]")) {
+                assertTrue(Math.exp(auw.getLogProbability(r)) > 0.3);
+            } else if(r.toString(tau).equals("'0-6'! -> *('0-3', '3-6') [1.0]")) {
+                assertTrue(Math.exp(auw.getLogProbability(r)) < 0.1);
+            }
+        }
+        
+        ArrayList<Object2DoubleMap<Rule>> data = ruC.getData()[0];
+        
+        assertEquals(data.size(),30);
+        
+        for(Map.Entry<Rule,Double> ent : data.get(29).entrySet()) {
+            if(ent.getKey().toString(tau).equals("'0-6'! -> *('0-1', '1-6') [1.0]")) {
+                assertTrue(Math.exp(ent.getValue()) > 0.3);
+            } else if(ent.getKey().toString(tau).equals("'0-6'! -> *('0-3', '3-6') [1.0]")) {
+                assertTrue(Math.exp(ent.getValue()) < 0.1);
+            }
+        }
+    }
 }

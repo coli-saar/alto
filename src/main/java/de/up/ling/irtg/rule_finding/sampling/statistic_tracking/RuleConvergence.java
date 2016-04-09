@@ -73,4 +73,8 @@ public class RuleConvergence implements SamplingStatistics {
             tracker[i].add(weights);
         }
     }
+    
+    public ArrayList<Object2DoubleMap<Rule>>[] getData() {
+        return this.tracker;
+    }
 }
