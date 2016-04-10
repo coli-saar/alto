@@ -89,4 +89,6 @@ public interface RuleWeighting {
      * @return 
      */
     public boolean adaptsNormalized();
+
+    public int getNumberOfStartStates();
 }

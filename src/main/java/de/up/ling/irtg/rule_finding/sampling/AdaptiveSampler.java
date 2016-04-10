@@ -79,10 +79,10 @@ public class AdaptiveSampler {
         rw.reset();
         
         for(int i=0;i<rounds;++i) {
-            TreeSample<Rule> sample = this.prop.getRuleTreeSample(rw, populationSize);
+            TreeSample<Rule> sample = this.prop.getTreeSample(rw, populationSize);
             
             for(int j=0;j<populationSize;++j) {
-                sample.addWeight(j, rw.getLogTargetProbability(sample.getSample(j)));
+                sample.addGoalWeight(j, rw.getLogTargetProbability(sample.getSample(j)));
             }
             
             if(this.keptStats != null) {

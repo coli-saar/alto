@@ -73,7 +73,7 @@ public class Proposal {
      * @param sampleSize
      * @return 
      */
-    public TreeSample<Rule> getRuleTreeSample(RuleWeighting guide, int sampleSize) {
+    public TreeSample<Rule> getTreeSample(RuleWeighting guide, int sampleSize) {
         return this.getTreeSample(RULE_MAPPING, guide, sampleSize);
     }
     
@@ -105,6 +105,7 @@ public class Proposal {
                                                     RuleWeighting guide, int numberOfSamples) {
         guide.prepareStateStartProbability();
         TreeSample result = new TreeSample();
+        //TODO compute proposal sum
         
         int i=0;
         while(i < numberOfSamples) {
@@ -116,7 +117,8 @@ public class Proposal {
             logPropProb.add(-guide.getStateStartLogProbability(start));
             Tree<Type> done = this.sampleTree(start, guide, mapping, logPropProb);
             
-            result.addSample(done, logPropProb.getValue());
+            result.addSample(done);
+            result.addProposal(start, d);
             
             ++i;
         }

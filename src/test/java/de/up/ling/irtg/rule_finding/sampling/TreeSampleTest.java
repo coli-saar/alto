@@ -63,16 +63,16 @@ public class TreeSampleTest {
         assertEquals(sample.getSample(2),t3);
         assertEquals(sample.getSample(3),t2);
         
-        assertEquals(sample.getWeight(0),2.3,0.000001);
-        assertEquals(sample.getWeight(1),0.7,0.000001);
-        assertEquals(sample.getWeight(2),2,0.000001);
-        assertEquals(sample.getWeight(3),-1.2,0.000001);
+        assertEquals(sample.getNormalized(0),2.3,0.000001);
+        assertEquals(sample.getNormalized(1),0.7,0.000001);
+        assertEquals(sample.getNormalized(2),2,0.000001);
+        assertEquals(sample.getNormalized(3),-1.2,0.000001);
         
         sample.addWeight(1, -4.0);
-        assertEquals(sample.getWeight(1),-3.3,0.000001);
+        assertEquals(sample.getNormalized(1),-3.3,0.000001);
         
         sample.multiplyWeight(0, 2);
-        assertEquals(sample.getWeight(0),4.6,0.0000001);
+        assertEquals(sample.getNormalized(0),4.6,0.0000001);
         
         sample.multiplyWeight(2, 2);
         
@@ -85,9 +85,9 @@ public class TreeSampleTest {
         assertEquals(sample.getSample(1),t3);
         assertEquals(sample.getSample(2),t1);
         
-        assertEquals(sample.getWeight(0),0.6,0.00000001);
-        assertEquals(sample.getWeight(1),0.35,0.00000001);
-        assertEquals(sample.getWeight(2),0.05,0.00000001);
+        assertEquals(sample.getNormalized(0),0.6,0.00000001);
+        assertEquals(sample.getNormalized(1),0.35,0.00000001);
+        assertEquals(sample.getNormalized(2),0.05,0.00000001);
         
         assertEquals(sample.populationSize(),3);
     }

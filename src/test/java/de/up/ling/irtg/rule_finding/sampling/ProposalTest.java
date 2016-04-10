@@ -65,9 +65,9 @@ public class ProposalTest {
      */
     @Test
     public void testGetRuleTreeSample() {
-        TreeSample<Rule> ts = this.prop.getRuleTreeSample(auw, 10);
+        TreeSample<Rule> ts = this.prop.getTreeSample(auw, 10);
         
-        assertEquals(Math.log(5*4*3*2),ts.getWeight(7),0.000000000001);
+        assertEquals(Math.log(5*4*3*2),ts.getNormalized(7),0.000000000001);
         Function<Rule,String> funct = (Rule r) -> tau.getSignature().resolveSymbolId(r.getLabel());
         Tree<String> t = ts.getSample(7).map(funct);
         assertEquals(t.toString().trim(),"*(a,*(a,*(b,*(*(b,a),a))))");
@@ -81,6 +81,6 @@ public class ProposalTest {
         TreeSample<String> ts = this.prop.getStringTreeSample(auw, 10);
         
         assertEquals(ts.getSample(7).toString().trim(),"*(a,*(a,*(b,*(*(b,a),a))))");
-        assertEquals(Math.log(5*4*3*2),ts.getWeight(7),0.000000000001);
+        assertEquals(Math.log(5*4*3*2),ts.getNormalized(7),0.000000000001);
     }
 }
