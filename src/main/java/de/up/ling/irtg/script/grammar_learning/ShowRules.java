@@ -6,6 +6,7 @@
 package de.up.ling.irtg.script.grammar_learning;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.rule_finding.learning.GetAllRules;
@@ -38,7 +39,7 @@ public class ShowRules {
         String outTreeFolder = props.getProperty("outputFolder");
     
         File jF = new File(jointFolder);
-        File[] toDo = jF.listFiles();
+        File[] toDo = jF.listFiles((File dir,String name) -> name.endsWith(".irtg"));
         
         File outs = new File(outTreeFolder);
         outs.mkdirs();
@@ -52,6 +53,8 @@ public class ShowRules {
             InterpretedTreeAutomaton ita = iic.read(jT);
             
             TreeAutomaton<String> t = GetAllRules.getAllRules(ita.getAutomaton());
+            t.getAllRulesTopDown().forEach((Object r) -> {((Rule) r).setWeight(0.99);});
+            
             
             InterpretedTreeAutomaton qita = new InterpretedTreeAutomaton(t);
             qita.addAllInterpretations(ita.getInterpretations());
