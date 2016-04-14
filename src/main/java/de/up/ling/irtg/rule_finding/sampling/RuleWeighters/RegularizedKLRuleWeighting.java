@@ -408,4 +408,11 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         
         parameters[position] += lr*gradient;
     }
+
+    @Override
+    public int getNumberOfStartStates() {
+        return this.startStates.length;
+    }
+    
+    
 }

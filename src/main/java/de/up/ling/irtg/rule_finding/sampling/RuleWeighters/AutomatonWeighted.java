@@ -38,5 +38,4 @@ public class AutomatonWeighted extends RegularizedKLRuleWeighting {
         
         return total;
     }
-    
 }
