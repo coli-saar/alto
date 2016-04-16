@@ -39,7 +39,7 @@ public class NoPreConstantCutTest {
     @Before
     public void setUp() throws ParserException {
         MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
-        TreeAutomaton ta = mta.decompose(mta.parseString("aa(f,b 9 b(c))"));
+        TreeAutomaton ta = mta.decompose(mta.parseString("aa(f,'b 9 b'(c))"));
 
         ip1 = new IntersectionPruner(new IntersectionOptions[]{IntersectionOptions.NO_PRE_CONSTANT_CUT});
         

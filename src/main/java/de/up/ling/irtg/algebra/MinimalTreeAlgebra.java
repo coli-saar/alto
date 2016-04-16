@@ -9,6 +9,7 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import de.up.ling.tree.TreeParser;
@@ -104,28 +105,11 @@ public class MinimalTreeAlgebra extends Algebra<Tree<String>> {
     @Override
     public Tree<String> parseString(String representation) throws ParserException {
         try {
-            representation = preProcess(representation);
-            Tree<String> t = TreeParser.parse(representation);
-            t = postProcess(t);
-            
-            addSymbols(t);
-            return t;
-        } catch (Exception ex) {
+            return TreeParser.parse(representation);
+        } catch (ParseException ex) {
             Logger.getLogger(MinimalTreeAlgebra.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
+            throw new ParserException(representation);
         }
-    }
-
-    /**
-     * 
-     * @param representation
-     * @return 
-     */
-    public static String preProcess(String representation) {
-        representation = representation.replaceAll("'", QUOTE);
-        representation = ALL_QUOTE.matcher(representation).replaceAll("'$0'");
-        representation = NO_DOUBLE_QUOTE.matcher(representation).replaceAll("'");
-        return representation;
     }
 
     @Override

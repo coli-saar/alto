@@ -42,7 +42,7 @@ public class TreeArityEnsureTest {
     @Before
     public void setUp() throws ParserException {
         MinimalTreeAlgebra mta = new MinimalTreeAlgebra();
-        TreeAutomaton ta = mta.decompose(mta.parseString("aa(f,b 9 b(c))"));
+        TreeAutomaton ta = mta.decompose(mta.parseString("aa(f,'b 9 b'(c))"));
 
         ip1 = new IntersectionPruner(new IntersectionOptions[]{IntersectionOptions.NO_EMPTY, IntersectionOptions.ENSURE_ARITIES},
                 new String[]{"","slghkds aa:2 'b 9 b':1"});

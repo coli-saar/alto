@@ -32,11 +32,16 @@ public class MinimalTreeAlgebraTest {
 
     /**
      * Test of parseString method, of class MinimalTreeAlgebra.
+     * @throws java.lang.Exception
      */
     @Test
     public void testParseString() throws Exception {
         String t = "zz(j(m,l(b,v)),k)";
         assertEquals(mta.parseString(t),TreeParser.parse(t));
+        
+        String s = "S(PP(IN(During),NP(NP(DT(a),NN(time)),PP(IN(of),NP(NN(prosperity),CC(and),NN(happiness))))),','(','),NP(JJ(such),DT(a),JJ(big),NN(earthquake)),ADVP(RB(suddenly)),VP(VBD(struck)),'.'('.'))";
+        
+        assertEquals(mta.parseString(s),TreeParser.parse(s));
     }
 
     /**
@@ -86,26 +91,9 @@ public class MinimalTreeAlgebraTest {
         
         assertEquals(t.toString(),"zz(j(m,l(b,v)),k)");
         
-        input = "00zz( 77 8 8 88( 7 ( 7 8 ( 12j(5  , 6l (4, 3v)),  12k  3) )),'hhhh')";
-        t = this.mta.parseString(input);
-        
-        assertEquals(t.toString(),"'00zz'('77 8 8 88'('7'('7 8'('12j'('5','6l'('4','3v')),'12k  3'))),\"'hhhh'\")");
-            
-        input = "answer(highest(place(loc_2(state(loc_1(place(elevation_2(0))))))))";
+        input = "answer(highest(place(loc_2(state(loc_1(place(elevation_2('0'))))))))";
         t = this.mta.parseString(input);
         
         assertEquals(t.toString(),"answer(highest(place(loc_2(state(loc_1(place(elevation_2('0'))))))))");
-        
-        input = "answer(size(city(cityid('new york', _))))";
-        t = this.mta.parseString(input);
-        
-        assertEquals(t.toString(),"answer(size(city(cityid(\"'new york'\",_))))");
-        
-        TreeAutomaton ta = this.mta.decompose(t);
-        
-        Tree<String> gen = ta.getRandomTree();
-        t = this.mta.evaluate(gen);
-        
-        assertEquals(t.toString(),"answer(size(city(cityid(\"'new york'\",_))))");
     }
 }

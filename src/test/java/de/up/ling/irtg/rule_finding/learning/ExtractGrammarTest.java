@@ -131,7 +131,7 @@ public class ExtractGrammarTest {
         StringAlgebra sal = new StringAlgebra();
         assertEquals(pairs.size(),1);
         for(Pair<List<String>,Tree<String>> p : pairs){
-            assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(\"'kansas'\"))))")); 
+            assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(kansas))))")); 
             assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas".toLowerCase()));
         }
     }
@@ -168,7 +168,7 @@ public class ExtractGrammarTest {
         StringAlgebra sal = new StringAlgebra();
         assertEquals(pairs.size(),1);
         for(Pair<List<String>,Tree<String>> p : pairs){
-            assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(\"'kansas'\"))))")); 
+            assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(kansas))))")); 
             assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas".toLowerCase()));
         }
     }
