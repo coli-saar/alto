@@ -108,9 +108,10 @@ public class RemoveID {
                 if(child.getChildren().isEmpty()) {
                     String inner = child.getLabel();
                     
-                    if(inner.startsWith("'") && inner.endsWith("'")) {
+                    if(inner.startsWith(ExtractGeoqueryFunql.QUOTE) && inner.endsWith(ExtractGeoqueryFunql.QUOTE)) {
+                        int length = ExtractGeoqueryFunql.QUOTE.length();
                         
-                        String portion = inner.substring(1,inner.length()-1);
+                        String portion = inner.substring(length,inner.length()-length);
                         portion = portion.replaceAll("\\s+", " ");
                         
                         Pattern pat = Pattern.compile("(?i)"+Pattern.quote(portion));

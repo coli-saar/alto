@@ -15,7 +15,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.Before;
@@ -37,11 +36,11 @@ public class RemoveIDTest {
             + "# interpretation funql: de.up.ling.irtg.algebra.MinimalTreeAlgebra\n"
             + "\n"
             + "Give me the cities in Virginia .\n"
-            + "answer(city(loc_2(stateid(\"'virginia'\"))))\n\n"
+            + "'answer'('city'('loc_2'('stateid'('__QUOTE__virginia__QUOTE__'))))\n\n"
             + "Give me the cities in USA .\n"
-            + "answer(city(loc_2(countryid(\"'usa'\"))))\n\n"
+            + "'answer'('city'('loc_2'('countryid'('__QUOTE__usa__QUOTE__'))))\n\n"
             + "How big is the city of New York ?\n"
-            + "answer(size(city(cityid(\"'new york'\", _))))";
+            + "'answer'('size'('city'('cityid'('__QUOTE__new york__QUOTE__', '_'))))";
 
     /**
      *
@@ -88,7 +87,6 @@ public class RemoveIDTest {
         RemoveID.removedID(corp, baos, "string", "funql",
                 "de.up.ling.irtg.algebra.StringAlgebra", "de.up.ling.irtg.algebra.MinimalTreeAlgebra");
 
-        System.out.println(baos.toString().trim());
         assertEquals(baos.toString().trim(),GOAL);
     }
 }
