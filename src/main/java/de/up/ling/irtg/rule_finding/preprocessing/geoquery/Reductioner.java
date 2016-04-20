@@ -74,6 +74,11 @@ public class Reductioner {
                 continue;
             }
             
+            int num = this.counts.get(s);
+            if(num < this.minCounts) {
+                continue;
+            }
+            
             mapped.add(s);
         }
         
