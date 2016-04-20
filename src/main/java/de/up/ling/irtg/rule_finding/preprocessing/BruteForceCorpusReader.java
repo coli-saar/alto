@@ -23,29 +23,41 @@ import java.util.Map;
  * @author teichmann
  */
 public class BruteForceCorpusReader {
+
     /**
-     * 
+     *
      * @param in
      * @param interpretationName
      * @param algebras
      * @return
      * @throws IOException
-     * @throws CorpusReadingException 
+     * @throws CorpusReadingException
      */
     public static Corpus read(Reader in, String[] interpretationName, Algebra[] algebras) throws IOException, CorpusReadingException {
+        InterpretedTreeAutomaton ita = CreateIRTGFromStrings(interpretationName, algebras);
+
+        return Corpus.readCorpusLenient(in, ita);
+    }
+
+    /**
+     *
+     * @param interpretationName
+     * @param algebras
+     * @return
+     */
+    public static InterpretedTreeAutomaton CreateIRTGFromStrings(String[] interpretationName, Algebra[] algebras) {
         TreeAutomaton empt = new ConcreteTreeAutomaton();
         InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(empt);
-        Map<String,Interpretation> inters = new HashMap<>();
-        
-        for(int i=0;i<interpretationName.length && i<algebras.length;++i) {
+        Map<String, Interpretation> inters = new HashMap<>();
+        for (int i = 0; i < interpretationName.length && i < algebras.length; ++i) {
             Algebra ag = algebras[i];
-            
+
             Homomorphism hom = new Homomorphism(empt.getSignature(), ag.getSignature());
             Interpretation inter = new Interpretation(ag, hom);
-            
+
             inters.put(interpretationName[i], inter);
         }
-        
-        return Corpus.readCorpusLenient(in, ita);
+        ita.addAllInterpretations(inters);
+        return ita;
     }
 }

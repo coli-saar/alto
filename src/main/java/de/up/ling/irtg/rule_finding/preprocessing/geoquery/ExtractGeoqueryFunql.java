@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.preprocessing.geoquery;
 
+import de.up.ling.irtg.algebra.BinarizingTreeAlgebra;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;

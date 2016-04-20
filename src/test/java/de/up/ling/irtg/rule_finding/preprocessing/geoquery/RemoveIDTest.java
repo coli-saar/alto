@@ -40,12 +40,15 @@ public class RemoveIDTest {
             + "Give me the cities in USA .\n"
             + "'answer'('city'('loc_2'('countryid'('__QUOTE__usa__QUOTE__'))))\n\n"
             + "How big is the city of New York ?\n"
-            + "'answer'('size'('city'('cityid'('__QUOTE__new york__QUOTE__', '_'))))";
+            + "'answer'('size'('city'('cityid'('__QUOTE__new york__QUOTE__', '_'))))\n\n"
+            + "How many people live in Austin Texas ?\n"
+            + "answer(population_1(cityid(__QUOTE__austin__QUOTE__,__QUOTE__tx__QUOTE__)))";
 
     /**
      *
      */
     public final static String GOAL = "# IRTG unannotated corpus file, v1.0\n"
+            + "#\n"
             + "# interpretation string : de.up.ling.irtg.algebra.StringAlgebra\n"
             + "# interpretation funql : de.up.ling.irtg.algebra.MinimalTreeAlgebra\n"
             + "\n"
@@ -56,7 +59,10 @@ public class RemoveIDTest {
             + "answer(city(loc_2(countryid(KNOWN))))\n"
             + "\n"
             + "How big is the city of cityid ?\n"
-            + "answer(size(city(cityid(KNOWN))))";
+            + "answer(size(city(cityid(KNOWN))))\n"
+            + "\n"
+            + "How many people live in cityid Texas ?\n"
+            + "answer(population_1(cityid(KNOWN)))";
 
     /**
      *
@@ -87,6 +93,6 @@ public class RemoveIDTest {
         RemoveID.removedID(corp, baos, "string", "funql",
                 "de.up.ling.irtg.algebra.StringAlgebra", "de.up.ling.irtg.algebra.MinimalTreeAlgebra");
 
-        assertEquals(baos.toString().trim(),GOAL);
+        assertEquals(baos.toString().trim(), GOAL);
     }
 }

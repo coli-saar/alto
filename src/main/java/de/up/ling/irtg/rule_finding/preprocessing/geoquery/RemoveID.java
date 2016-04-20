@@ -39,6 +39,8 @@ public class RemoveID {
         try(BufferedWriter output = new BufferedWriter(new OutputStreamWriter(out))) {
             output.write("# IRTG unannotated corpus file, v1.0");
             output.newLine();
+            output.write("#");
+            output.newLine();
             output.write("# interpretation ");
             output.write(stringInterName);
             output.write(" : ");
@@ -102,8 +104,7 @@ public class RemoveID {
         }
         
         if(label.matches("[^\\s]+id")) {
-            if(t.getChildren().size() == 1 || (t.getChildren().size() == 2 &&
-                    t.getChildren().get(1).getLabel().equals("_"))) {
+            if(t.getChildren().size() == 1 || t.getChildren().size() == 2) {
                 Tree<String> child = t.getChildren().get(0);
                 if(child.getChildren().isEmpty()) {
                     String inner = child.getLabel();

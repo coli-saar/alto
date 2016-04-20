@@ -5,12 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.preprocessing.geoquery;
 
-import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
-import de.up.ling.irtg.algebra.StringAlgebra;
-import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.rule_finding.preprocessing.BruteForceCorpusReader;
@@ -29,7 +24,10 @@ public class RemoveKnown {
      * 
      * @param args
      * @throws IOException
-     * @throws CorpusReadingException 
+     * @throws CorpusReadingException
+     * @throws ClassNotFoundException
+     * @throws InstantiationException
+     * @throws IllegalAccessException 
      */
     public static void main(String... args) throws IOException, CorpusReadingException, ClassNotFoundException, InstantiationException, IllegalAccessException {
         String inCorpusName = args[0];
