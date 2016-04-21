@@ -23,6 +23,21 @@ import java.util.regex.Pattern;
  * @author christoph_teichmann
  */
 public class RemoveID {
+    
+    /**
+     * 
+     */
+    public static String SPECIAL_PATTERN = "__.+__";
+    
+    /**
+     * 
+     * @param s
+     * @return 
+     */
+    public static String makeSpecial(String s) {
+        return "__"+s+"__";
+    }
+    
     /**
      * 
      * @param corp
@@ -119,7 +134,7 @@ public class RemoveID {
                         
                         
                         Matcher mat = pat.matcher(s);
-                        s = mat.replaceAll(label);
+                        s = mat.replaceAll(makeSpecial(label));
                         
                         return new Pair<>(s,Tree.create(label, Tree.create("KNOWN")));
                     }

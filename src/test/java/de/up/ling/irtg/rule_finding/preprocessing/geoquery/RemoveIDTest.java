@@ -52,16 +52,16 @@ public class RemoveIDTest {
             + "# interpretation string : de.up.ling.irtg.algebra.StringAlgebra\n"
             + "# interpretation funql : de.up.ling.irtg.algebra.MinimalTreeAlgebra\n"
             + "\n"
-            + "Give me the cities in stateid .\n"
+            + "Give me the cities in __stateid__ .\n"
             + "answer(city(loc_2(stateid(KNOWN))))\n"
             + "\n"
-            + "Give me the cities in countryid .\n"
+            + "Give me the cities in __countryid__ .\n"
             + "answer(city(loc_2(countryid(KNOWN))))\n"
             + "\n"
-            + "How big is the city of cityid ?\n"
+            + "How big is the city of __cityid__ ?\n"
             + "answer(size(city(cityid(KNOWN))))\n"
             + "\n"
-            + "How many people live in cityid Texas ?\n"
+            + "How many people live in __cityid__ Texas ?\n"
             + "answer(population_1(cityid(KNOWN)))";
 
     /**

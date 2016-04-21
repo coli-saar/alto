@@ -12,9 +12,12 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
+import de.up.ling.irtg.corpus.CorpusWriter;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -59,5 +62,22 @@ public class BruteForceCorpusReader {
         }
         ita.addAllInterpretations(inters);
         return ita;
+    }
+    
+    /**
+     * 
+     * @param ita
+     * @param it
+     * @param w
+     * @throws IOException 
+     */
+    public static void writeCorpus(InterpretedTreeAutomaton ita, Iterable<Instance> it, Writer w) throws IOException {
+        CorpusWriter cw = new CorpusWriter(ita, "", w);
+        
+        for(Instance i : it) {
+            cw.writeInstance(i);
+        }
+        
+        w.flush();
     }
 }
