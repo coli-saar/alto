@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.sampling;
 
+import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
@@ -31,7 +32,7 @@ public class TreeSample<Type> {
     /**
      * 
      */
-    private final DoubleArrayList goalWeights = new DoubleArrayList();
+    private final DoubleArrayList targetWeights = new DoubleArrayList();
     
     /**
      * 
@@ -41,7 +42,7 @@ public class TreeSample<Type> {
     /**
      * 
      */
-    private final DoubleArrayList normalized = new DoubleArrayList();
+    private final DoubleArrayList selfNormalizedWeight = new DoubleArrayList();
     
     /**
      * 
@@ -50,9 +51,9 @@ public class TreeSample<Type> {
     public void addSample(Tree<Type> sample) {
         this.samplesDrawn.add(sample);
         this.proposalWeight.add(0.0);
-        this.goalWeights.add(0.0);
+        this.targetWeights.add(0.0);
         this.sumProposalWeight.add(0.0);
-        this.normalized.add(0.0);
+        this.selfNormalizedWeight.add(0.0);
     }
     
     /**
@@ -60,8 +61,8 @@ public class TreeSample<Type> {
      * @param entry
      * @param amount 
      */
-    public void addSumProposal(int entry, double amount) {
-        this.proposalWeight.set(entry, this.sumProposalWeight.get(entry)+amount);
+    public void setLogSumWeight(int entry, double amount) {
+        this.proposalWeight.set(entry, amount);
     }
     
     /**
@@ -69,17 +70,17 @@ public class TreeSample<Type> {
      * @param entry
      * @param amount 
      */
-    public void addProposal(int entry, double amount) {
-        this.proposalWeight.set(entry, this.proposalWeight.get(entry)+amount);
+    public void setLogPropWeight(int entry, double amount) {
+        this.proposalWeight.set(entry, amount);
     }
     
     /**
      * 
      * @param entry
-     * @param amount 
+     * @param amount
      */
-    public void addGoalWeight(int entry, double amount) {
-        this.goalWeights.set(entry, this.goalWeights.get(entry)+amount);
+    public void setLogTargetWeight(int entry, double amount) {
+        this.targetWeights.set(entry, amount);
     }
     
     /**
@@ -87,7 +88,7 @@ public class TreeSample<Type> {
      * @param entry
      * @return 
      */
-    public double getProposalWeight(int entry) {
+    public double getLogPropWeight(int entry) {
         return this.proposalWeight.get(entry);
     }
     
@@ -96,7 +97,7 @@ public class TreeSample<Type> {
      * @param entry
      * @return 
      */
-    public double getSumProposalWeight(int entry) {
+    public double getLogSumWeight(int entry) {
         return this.sumProposalWeight.get(entry);
     }
     
@@ -105,8 +106,8 @@ public class TreeSample<Type> {
      * @param entry
      * @return 
      */
-    public double getGoalWeight(int entry) {
-        return this.goalWeights.get(entry);
+    public double getLogTargetWeight(int entry) {
+        return this.targetWeights.get(entry);
     }
     
     /**
@@ -114,8 +115,8 @@ public class TreeSample<Type> {
      * @param entry
      * @return 
      */
-    public double getNormalized(int entry) {
-        return this.normalized.get(entry);
+    public double getSelfNormalizedWeight(int entry) {
+        return this.selfNormalizedWeight.get(entry);
     }
     
     /**
@@ -129,27 +130,28 @@ public class TreeSample<Type> {
     
     /**
      * 
+     * @param treeLevel 
      */
-    public void expoNormalize(){
+    public void expoNormalize(boolean treeLevel){
         double sum = 0.0;
         double max = Double.NEGATIVE_INFINITY;
         for(int i=0;i<this.populationSize();++i) {
-            double amount = this.goalWeights.get(i);
-            amount -= this.getSumProposalWeight(i);
+            double amount = this.targetWeights.get(i);
+            amount -= treeLevel ? this.getLogSumWeight(i) : this.getLogPropWeight(i);
             
-            this.normalized.set(i, amount);
+            this.selfNormalizedWeight.set(i, amount);
             max = Math.max(max, amount);
         }
         
         for(int i=0;i<this.populationSize();++i) {
-            double amount = Math.exp(this.getNormalized(i)-max);
+            double amount = Math.exp(this.selfNormalizedWeight.get(i)-max);
             sum += amount;
             
-            this.normalized.set(i, amount);
+            this.selfNormalizedWeight.set(i, amount);
         }
         
         for(int i=0;i<this.populationSize();++i) {
-            this.normalized.set(i, this.getNormalized(i)/sum);
+            this.selfNormalizedWeight.set(i, this.selfNormalizedWeight.get(i)/sum);
         }
     }
 
@@ -164,10 +166,11 @@ public class TreeSample<Type> {
     /**
      * 
      * @param rg
-     * @param size 
+     * @param size
+     * @param treeLevel 
      */
-    public void resampleWithNormalize(RandomGenerator rg, int size) {
-        this.expoNormalize();
+    public void resampleWithNormalize(RandomGenerator rg, int size, boolean treeLevel) {
+        this.expoNormalize(treeLevel);
         this.resample(rg, size);
     }
     
@@ -184,7 +187,7 @@ public class TreeSample<Type> {
         
         double sum = 0.0;
         for(int i=0;i<this.populationSize();++i) {
-            double amount = Math.floor(dsize*this.getNormalized(i)) / dsize;
+            double amount = Math.floor(dsize*this.getSelfNormalizedWeight(i)) / dsize;
             
             if(amount > 0.0) {
                 newPop.add(this.getSample(i));
@@ -200,7 +203,7 @@ public class TreeSample<Type> {
             boolean done = false;
             
             for(int i=0;(i<this.populationSize() && (!done));++i) {
-                d -= this.getNormalized(i);
+                d -= this.getSelfNormalizedWeight(i);
                 
                 if(d <= 0.0) {
                     done = true;
@@ -216,8 +219,8 @@ public class TreeSample<Type> {
         this.samplesDrawn.clear();
         this.samplesDrawn.addAll(newPop);
         
-        this.normalized.clear();
-        this.normalized.addAll(newWeights);
+        this.selfNormalizedWeight.clear();
+        this.selfNormalizedWeight.addAll(newWeights);
     }
 
     @Override

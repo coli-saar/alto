@@ -91,4 +91,8 @@ public interface RuleWeighting {
     public boolean adaptsNormalized();
 
     public int getNumberOfStartStates();
+
+    public int getStartStateByNumber(int i);
+
+    public double getStateStartLogProbabilityByPosition(int i);
 }

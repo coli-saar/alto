@@ -23,7 +23,7 @@ public class LogSpaceOperations {
      * @param second
      * @return 
      */
-    public static double addAlmostZero(double first, double second){
+    public static double add(double first, double second){
         double max = Math.max(first, second);
         double min = Math.min(first, second);
         
