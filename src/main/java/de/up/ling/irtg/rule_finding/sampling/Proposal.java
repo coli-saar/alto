@@ -105,20 +105,19 @@ public class Proposal {
                                                     RuleWeighting guide, int numberOfSamples) {
         guide.prepareStateStartProbability();
         TreeSample result = new TreeSample();
-        //TODO compute proposal sum
         
         int i=0;
         while(i < numberOfSamples) {
             MutableDouble logPropProb = new MutableDouble(0.0);
             
             double d = this.rg.nextDouble();
-            int start = guide.getStartState(d);
+            int pos = guide.getStartStateNumber(d);
             
-            logPropProb.add(-guide.getStateStartLogProbability(start));
-            Tree<Type> done = this.sampleTree(start, guide, mapping, logPropProb);
+            logPropProb.add(guide.getStateStartLogProbability(pos));
+            Tree<Type> done = this.sampleTree(guide.getStartStateByNumber(pos), guide, mapping, logPropProb);
             
             result.addSample(done);
-            result.addProposal(start, d);
+            result.setLogPropWeight(i, logPropProb.getValue());
             
             ++i;
         }
@@ -139,11 +138,12 @@ public class Proposal {
         guide.prepareProbability(state);
         
         double val = this.rg.nextDouble();
-        Rule r  = guide.getRule(state, val);
+        int pos = guide.getRuleNumber(state, val);
+        Rule r  = guide.getRuleByNumber(state, pos);
         
         Type label = mapping.apply(r, guide.getAutomaton());
         Tree<Type>[] choices = new Tree[r.getArity()];
-        logPropProb.add(-guide.getLogProbability(r));
+        logPropProb.add(guide.getLogProbability(state, pos));
         
         for(int i=0;i<r.getArity();++i) {
             choices[i] = this.sampleTree(r.getChildren()[i], guide, mapping, logPropProb);

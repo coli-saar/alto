@@ -14,10 +14,10 @@ public interface LearningRate {
      * 
      * @param group
      * @param parameter
-     * @param gradient
+     * @param logGradient
      * @return 
      */
-    public double getLearningRate(int group, int parameter, double gradient);
+    public double getLogLearningRate(int group, int parameter, double logGradient);
     
     /**
      * 

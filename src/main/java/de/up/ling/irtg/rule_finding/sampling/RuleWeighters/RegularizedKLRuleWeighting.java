@@ -32,6 +32,11 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     /**
      * 
      */
+    public static double ALMOST_ZERO = 1E-15;
+    
+    /**
+     * 
+     */
     private final TreeAutomaton basis;
     
     /**
@@ -130,14 +135,10 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
     
     @Override
-    public double getLogProbability(Rule candidate) {
-        Rule[] rules = this.listRules.get(candidate.getParent());
+    public double getLogProbability(int state, int ruleNumber) {
+        double[] probs= this.ruleProbs.get(state);
         
-        int index = Arrays.binarySearch(rules, candidate);
-        
-        double[] probs= this.ruleProbs.get(candidate.getParent());
-        
-        return Math.log(probs[index]);
+        return Math.log(probs[ruleNumber]);
     }
 
     @Override
@@ -153,13 +154,12 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         double[] paras = this.ruleParameters.get(state);
         
         if(num < this.updateNumber) {
-        
             while(num < this.updateNumber) {
-                    for(int i=0;i<rules.length;++i) {
-                        this.adapt(i, rules[i], paras, null, null, -1.0);
-                    }
+                for(int i=0;i<rules.length;++i) {
+                    this.adapt(i, rules[i], paras, null, null, -1.0, 0.0);
+                }
             
-                    ++num;
+                ++num;
             }
         
             this.lastUpdated.put(state, updateNumber);
@@ -178,33 +178,21 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
 
     @Override
-    public Rule getRule(int state, double choicePoint) {
-        double[] probs = this.ruleProbs.get(state);
-        
-        for(int i=0;i<probs.length;++i) {
-            choicePoint -= probs[i];
-            
-            if(choicePoint <= 1E-15) {
-                return this.listRules.get(state)[i];
-            }
-        }
-        
-        throw new IllegalStateException("Probabilities did not sum to one.");
-    }
-
-    @Override
-    public double getStateStartLogProbability(int state) {
-        int index = Arrays.binarySearch(startStates, state);
-        
-        return Math.log(this.startProbabilities[index]);
+    public double getStateStartLogProbability(int position) {
+        return Math.log(this.startProbabilities[position]);
     }
 
     @Override
     public void prepareStateStartProbability() {
         double sum = 0.0;
+        double max = Double.NEGATIVE_INFINITY;
         
         for(int i=0;i<this.startParameters.length;++i) {
-            sum += (this.startProbabilities[i] = Math.exp(this.startParameters[i]));
+            max = Math.max(max, this.startParameters[i]);
+        }
+        
+        for(int i=0;i<this.startParameters.length;++i) {
+            sum += (this.startProbabilities[i] = Math.exp(this.startParameters[i]-max));
         }
         
         for(int i=0;i<this.startProbabilities.length;++i) {
@@ -227,7 +215,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
 
     @Override
-    public void adaptNormalized(TreeSample<Rule> treSamp) {
+    public void adapt(TreeSample<Rule> treSamp, boolean deterministic) {
         Int2DoubleOpenHashMap stateCounts = new Int2DoubleOpenHashMap();
         stateCounts.defaultReturnValue(0.0);
         
@@ -235,11 +223,15 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         ruleCounts.defaultReturnValue(0.0);
         
         double[] startCount = new double[this.startStates.length];
-        double wholeCount = makeAmounts(treSamp, stateCounts, ruleCounts, startCount);
+        double logMax = treSamp.makeMaxBase(deterministic);
+        
+        
+        double wholeCount = makeAmounts(treSamp, stateCounts, ruleCounts, startCount, deterministic);
         
         IntIterator states = stateCounts.keySet().iterator();
         
         int updatePlusOne = this.updateNumber+1;
+        
         while(states.hasNext()) {
             int state = states.nextInt();
             Rule[] arr = ensureRules(state);
@@ -249,7 +241,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             double[] parameters = this.ruleParameters.get(state);
             
             for(int i=0;i<arr.length;++i) {
-                this.adapt(i, arr[i], parameters, ruleCounts, stateCounts, props[i]);
+                this.adapt(i, arr[i], parameters, ruleCounts, stateCounts, props[i], logMax);
             }
             
             this.lastUpdated.put(state, updatePlusOne);
@@ -259,7 +251,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         
         this.prepareStateStartProbability();
         for(int i=0;i<this.startStates.length;++i) {
-            updateStart(startParameters,i,startCount,wholeCount,this.startProbabilities[i]);
+            updateStart(startParameters,i,startCount,wholeCount,this.startProbabilities[i],logMax);
         }
         
         ++this.updateNumber;
@@ -301,50 +293,26 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
      * @param ruleCounts 
      */
     private double makeAmounts(TreeSample<Rule> treSamp, Int2DoubleOpenHashMap stateCounts,
-                            Object2DoubleOpenHashMap ruleCounts, double[] startCount) {
+                            Object2DoubleOpenHashMap ruleCounts, double[] startCount, boolean deterministic) {
         double wholeCount = 0.0;
         
         for(int i=0;i<treSamp.populationSize();++i) {
+            double amount = treSamp.getSelfNormalizedWeight(i);
             Tree<Rule> instance = treSamp.getSample(i);
-            double contribution = treSamp.getNormalized(i);
             
-            wholeCount += contribution;
+            wholeCount += amount;
             int index = Arrays.binarySearch(startStates, instance.getLabel().getParent());
-            startCount[index] += contribution;
+            startCount[index] += amount;
             
-            addAmounts(instance,stateCounts,ruleCounts, contribution);
+            addAmounts(instance,stateCounts,ruleCounts, amount);
         }
         
         return wholeCount;
     }
 
     @Override
-    public void adaptUnNormalized(TreeSample<Rule> treSamp) {
-        // This is actually supposed to not be implemented.
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
     public TreeAutomaton getAutomaton() {
         return this.basis;
-    }
-
-    @Override
-    public int getStartState(double choicePoint) {
-        for(int i=0;i<this.startStates.length;++i) {
-            choicePoint -= this.startProbabilities[i];
-            
-            if(choicePoint <= 0.0) {
-                return this.startStates[i];
-            }
-        }
-        
-        throw new IllegalStateException("Probabilities did not sum to one.");
-    }
-
-    @Override
-    public boolean adaptsNormalized() {
-        return true;
     }
 
     /**
@@ -371,7 +339,9 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
      * @param ruleCounts
      * @param stateCounts 
      */
-    private void adapt(int position, Rule rr, double[] parameters, Object2DoubleOpenHashMap ruleCounts, Int2DoubleOpenHashMap stateCounts, double probability) {
+    private void adapt(int position, Rule rr, double[] parameters,
+            Object2DoubleOpenHashMap ruleCounts, Int2DoubleOpenHashMap stateCounts,
+            double probability, double logMax) {
         double val = parameters[position];
         
         double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.normalizationExponent))*normalizationDivisor;
@@ -381,9 +351,11 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             gradient -= ruleCounts.getDouble(rr);
         }
         
-        double lr = this.rate.getLearningRate(rr.getParent(), position, gradient);
+        gradient = Math.log(gradient)+logMax;
         
-        parameters[position] -= lr*gradient;
+        double lr = this.rate.getLogLearningRate(rr.getParent(), position, gradient);
+        
+        parameters[position] -= Math.exp(lr+gradient);
     }
 
     /**
@@ -394,7 +366,8 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
      * @param wholeCount
      * @param startProbability 
      */
-    private void updateStart(double[] parameters, int position, double[] startCount, double wholeCount, double startProbability) {
+    private void updateStart(double[] parameters, int position, double[] startCount, double wholeCount,
+            double startProbability, double logMax) {
         double val = parameters[position];
         
         double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.normalizationExponent))*normalizationDivisor;
@@ -404,15 +377,60 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             gradient -= startCount[position];
         }
         
-        double lr = this.rate.getLearningRate(-1, position, gradient);
+        gradient = Math.log(gradient)+logMax;
         
-        parameters[position] += lr*gradient;
+        double lr = this.rate.getLogLearningRate(-1, position, gradient);
+        
+        parameters[position] += Math.exp(lr+gradient);
     }
 
     @Override
     public int getNumberOfStartStates() {
         return this.startStates.length;
     }
-    
-    
+
+    @Override
+    public int getStartStateByNumber(int number) {
+        return this.startStates[number];
+    }
+
+    @Override
+    public int getRuleNumber(int state, double choicePoint) {
+        double[] probs = this.ruleProbs.get(state);
+        
+        for(int i=0;i<probs.length;++i) {
+            choicePoint -= probs[i];
+            
+            if(choicePoint <= ALMOST_ZERO) {
+                return i;
+            }
+        }
+        
+        throw new IllegalStateException("Probabilities did not sum to one.");
+    }
+
+    @Override
+    public Rule getRuleByNumber(int state, int number) {
+        return this.listRules.get(state)[number];
+    }
+
+    @Override
+    public int getStartStateNumber(double choicePoint) {
+        for(int i=0;i<this.startStates.length;++i) {
+            choicePoint -= this.startProbabilities[i];
+            
+            if(choicePoint <= ALMOST_ZERO) {
+                return this.startStates[i];
+            }
+        }
+        
+        throw new IllegalStateException("Probabilities did not sum to one.");
+    }
+
+    @Override
+    public double getLogProbability(Rule r) {
+        int index = Arrays.binarySearch(this.listRules.get(r.getParent()), r);
+        
+        return Math.log(this.ruleProbs.get(r.getParent())[index]);
+    }
 }

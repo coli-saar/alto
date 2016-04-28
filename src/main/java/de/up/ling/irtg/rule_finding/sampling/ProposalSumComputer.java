@@ -54,7 +54,7 @@ public class ProposalSumComputer {
             if(containsCombination(startState,input)) {
                 weight = this.getCombination(startState,input);
             } else {
-                weight = weights.getStateStartLogProbabilityByPosition(i);
+                weight = weights.getStateStartLogProbability(i);
                 weight += this.computeInside(input,startState,weights);
             }
             

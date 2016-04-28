@@ -29,16 +29,16 @@ public class AdaGradTest {
      */
     @Test
     public void testGetLearningRate() {
-        assertEquals(rate.getLearningRate(0, 2, 0.0),0.5,0.000001);
-        assertEquals(rate.getLearningRate(0, 2, 5.0),0.1,0.000001);
-        assertEquals(rate.getLearningRate(1, 2, 2.0),0.25,0.000001);
-        assertEquals(rate.getLearningRate(0, 2, 10.0),(1/Math.sqrt(125.0))*0.5,0.000001);
-        assertEquals(rate.getLearningRate(1, 2, 2.0),0.17677669529663687,0.000001);
+        assertEquals(rate.getLogLearningRate(0, 2, 0.0),0.5,0.000001);
+        assertEquals(rate.getLogLearningRate(0, 2, 5.0),0.1,0.000001);
+        assertEquals(rate.getLogLearningRate(1, 2, 2.0),0.25,0.000001);
+        assertEquals(rate.getLogLearningRate(0, 2, 10.0),(1/Math.sqrt(125.0))*0.5,0.000001);
+        assertEquals(rate.getLogLearningRate(1, 2, 2.0),0.17677669529663687,0.000001);
         
         rate.reset();
         
-        assertEquals(rate.getLearningRate(0, 2, 10.0),0.05,0.000001);
-        assertEquals(rate.getLearningRate(0, 2, 20.0),0.0223,0.001);
+        assertEquals(rate.getLogLearningRate(0, 2, 10.0),0.05,0.000001);
+        assertEquals(rate.getLogLearningRate(0, 2, 20.0),0.0223,0.001);
     }
     
 }

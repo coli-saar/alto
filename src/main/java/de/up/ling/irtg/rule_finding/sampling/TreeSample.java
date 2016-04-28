@@ -130,14 +130,14 @@ public class TreeSample<Type> {
     
     /**
      * 
-     * @param treeLevel 
+     * @param deterministic 
      */
-    public void expoNormalize(boolean treeLevel){
+    public void expoNormalize(boolean deterministic){
         double sum = 0.0;
         double max = Double.NEGATIVE_INFINITY;
         for(int i=0;i<this.populationSize();++i) {
             double amount = this.targetWeights.get(i);
-            amount -= treeLevel ? this.getLogSumWeight(i) : this.getLogPropWeight(i);
+            amount -= !deterministic ? this.getLogSumWeight(i) : this.getLogPropWeight(i);
             
             this.selfNormalizedWeight.set(i, amount);
             max = Math.max(max, amount);
@@ -228,4 +228,27 @@ public class TreeSample<Type> {
         String s = System.lineSeparator();
         return "TreeSample"+ s + "samplesDrawn = " + samplesDrawn + s + "sampleWeights = " + proposalWeight;
     }    
+
+    /**
+     * 
+     * @param deterministic
+     * @return 
+     */
+    public double makeMaxBase(boolean deterministic) {
+        double max = Double.NEGATIVE_INFINITY;
+        
+        for(int i=0;i<this.populationSize();++i){
+            double amount = this.getLogTargetWeight(i);
+            amount -= deterministic ? this.getLogPropWeight(i) : this.getLogSumWeight(i);
+            
+            max = Math.max(max, amount);
+            this.selfNormalizedWeight.set(i, amount);
+        }
+        
+        for(int i=0;i<this.populationSize();++i) {
+            this.selfNormalizedWeight.set(i, Math.exp(this.selfNormalizedWeight.get(i)-max));
+        }
+        
+        return max;
+    }
 }

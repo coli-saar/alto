@@ -71,39 +71,44 @@ public class AdaptiveSampler {
      * @param populationSize
      * @param resampleSize
      * @param rw
+     * @param deterministic
      * @return 
      */
     public List<TreeSample<Rule>> adaSample(int rounds, int populationSize,
-                                           int resampleSize, RuleWeighting rw) {
+                                           int resampleSize, RuleWeighting rw,
+                                           boolean deterministic) {
         List<TreeSample<Rule>> result = new ArrayList<>();
         rw.reset();
+        ProposalSumComputer psc = new ProposalSumComputer();
         
         for(int i=0;i<rounds;++i) {
             TreeSample<Rule> sample = this.prop.getTreeSample(rw, populationSize);
             
             for(int j=0;j<populationSize;++j) {
-                sample.addGoalWeight(j, rw.getLogTargetProbability(sample.getSample(j)));
+                sample.setLogTargetWeight(j, rw.getLogTargetProbability(sample.getSample(j)));
+            }
+            
+            if(!deterministic) {
+                psc.reset();
+                
+                for(int j=0;j<populationSize;++j) {
+                    sample.setLogSumWeight(j, psc.computeInside(sample.getSample(j), rw));
+                }
             }
             
             if(this.keptStats != null) {
                 this.keptStats.addUnNormalizedRound(i,sample,rw);
             }
             
-            if(!rw.adaptsNormalized()) {
-                rw.adaptUnNormalized(sample);
-            }
+            rw.adapt(sample,deterministic);
             
-            sample.expoNormalize();
+            sample.expoNormalize(deterministic);
             
             if(this.keptStats != null) {
                 this.keptStats.addNormalizedRound(rounds, sample, rw);
             }
             
             sample.resample(this.rg,resampleSize);
-            
-            if(rw.adaptsNormalized()) {
-                rw.adaptNormalized(sample);
-            }
             
             if(this.keptStats != null) {
                 this.keptStats.addResampledRound(rounds, sample, rw);

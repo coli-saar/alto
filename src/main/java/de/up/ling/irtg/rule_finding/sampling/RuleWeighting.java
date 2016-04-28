@@ -16,10 +16,11 @@ import de.up.ling.tree.Tree;
 public interface RuleWeighting {
     /**
      * 
-     * @param candidate
+     * @param state
+     * @param number
      * @return 
      */
-    public double getLogProbability(Rule candidate);
+    public double getLogProbability(int state, int number);
     
     /**
      * 
@@ -33,19 +34,48 @@ public interface RuleWeighting {
      * @param choicePoint
      * @return 
      */
-    public Rule getRule(int state, double choicePoint);
+    public int getRuleNumber(int state, double choicePoint);
     
     /**
      * 
      * @param state
+     * @param number
      * @return 
      */
-    public double getStateStartLogProbability(int state);
+    public Rule getRuleByNumber(int state, int number);
+    
+    
+    /**
+     * 
+     * @param position
+     * @return 
+     */
+    public double getStateStartLogProbability(int position);
+
+    /**
+     * 
+     * @param numbr
+     * @return 
+     */
+    public int getStartStateByNumber(int number);
+    
+    /**
+     * 
+     * @param choicePoint
+     * @return 
+     */
+    public int getStartStateNumber(double choicePoint);
     
     /**
      * 
      */
     public void prepareStateStartProbability();
+
+    /**
+     * 
+     * @return 
+     */
+    public int getNumberOfStartStates();
     
     /**
      * 
@@ -54,28 +84,16 @@ public interface RuleWeighting {
     
     /**
      * 
-     * @param treSamp 
+     * @param treSamp
+     * @param deterministic 
      */
-    public void adaptNormalized(TreeSample<Rule> treSamp);
-    
-    /**
-     * 
-     * @param treSamp 
-     */
-    public void adaptUnNormalized(TreeSample<Rule> treSamp);
+    public void adapt(TreeSample<Rule> treSamp, boolean deterministic);
     
     /**
      * 
      * @return 
      */
     public TreeAutomaton getAutomaton();
-
-    /**
-     * 
-     * @param choicePoint
-     * @return 
-     */
-    public int getStartState(double choicePoint);
     
     /**
      * 
@@ -83,16 +101,6 @@ public interface RuleWeighting {
      * @return 
      */
     public double getLogTargetProbability(Tree<Rule> sample);
-    
-    /**
-     * 
-     * @return 
-     */
-    public boolean adaptsNormalized();
 
-    public int getNumberOfStartStates();
-
-    public int getStartStateByNumber(int i);
-
-    public double getStateStartLogProbabilityByPosition(int i);
+    public double getLogProbability(Rule r);
 }
