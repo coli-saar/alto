@@ -29,18 +29,37 @@ public class AdaGradTest {
      */
     @Test
     public void testGetLearningRate() {
-        /*
-        assertEquals(rate.getLogLearningRate(0, 2, 0.0),0.5,0.000001);
-        assertEquals(rate.getLogLearningRate(0, 2, 5.0),0.1,0.000001);
-        assertEquals(rate.getLogLearningRate(1, 2, 2.0),0.25,0.000001);
-        assertEquals(rate.getLogLearningRate(0, 2, 10.0),(1/Math.sqrt(125.0))*0.5,0.000001);
-        assertEquals(rate.getLogLearningRate(1, 2, 2.0),0.17677669529663687,0.000001);
+        double rate = this.rate.getLearningRate(0, 1, 3.0);
+        assertEquals(rate,0.5 / 3.0, 0.000000001);
         
-        rate.reset();
+        rate = this.rate.getLearningRate(0, 1, 1.0);
+        assertEquals(rate,0.5 / Math.sqrt(10.0),0.0000001);
         
-        assertEquals(rate.getLogLearningRate(0, 2, 10.0),0.05,0.000001);
-        assertEquals(rate.getLogLearningRate(0, 2, 20.0),0.0223,0.001);
-                */
+        rate = this.rate.getLearningRate(1, 4, -3.0);
+        assertEquals(rate,0.5 / 3.0, 0.000000001);
+        
+        rate = this.rate.getLearningRate(1, 4, -1.0);
+        assertEquals(rate,0.5 / Math.sqrt(10.0),0.0000001);
+        
+        rate = this.rate.getLearningRate(1, 4, 4.0);
+        assertEquals(rate,0.5 / Math.sqrt(26.0),0.0000001);
+        
+        this.rate.reset();
+        
+        rate = this.rate.getLearningRate(0, 1, 3.0);
+        assertEquals(rate,0.5 / 3.0, 0.000000001);
+        
+        rate = this.rate.getLearningRate(0, 1, 1.0);
+        assertEquals(rate,0.5 / Math.sqrt(10.0),0.0000001);
+        
+        rate = this.rate.getLearningRate(1, 4, -3.0);
+        assertEquals(rate,0.5 / 3.0, 0.000000001);
+        
+        rate = this.rate.getLearningRate(1, 4, -1.0);
+        assertEquals(rate,0.5 / Math.sqrt(10.0),0.0000001);
+        
+        rate = this.rate.getLearningRate(1, 4, 4.0);
+        assertEquals(rate,0.5 / Math.sqrt(26.0),0.0000001);
     }
     
 }

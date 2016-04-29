@@ -98,6 +98,11 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
      * 
      */
     private final Int2ObjectMap<double[]> ruleParameters = new Int2ObjectOpenHashMap<>();
+
+    /**
+     * 
+     */
+    private double underFlowPreventer = Double.NEGATIVE_INFINITY;
     
     /**
      * 
@@ -156,7 +161,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         if(num < this.updateNumber) {
             while(num < this.updateNumber) {
                 for(int i=0;i<rules.length;++i) {
-                    this.adapt(i, rules[i], paras, null, null, -1.0, 0.0);
+                    this.adapt(i, rules[i], paras, null, null, -1.0);
                 }
             
                 ++num;
@@ -212,6 +217,8 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         }
         
         this.rate.reset();
+        
+        this.underFlowPreventer = Double.NEGATIVE_INFINITY;
     }
 
     @Override
@@ -223,8 +230,11 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         ruleCounts.defaultReturnValue(0.0);
         
         double[] startCount = new double[this.startStates.length];
-        double logMax = treSamp.makeMaxBase(deterministic);
-        
+        double logMax = treSamp.makeMaxBase(deterministic,this.underFlowPreventer);
+        if(logMax != this.underFlowPreventer) {
+            this.rate.reset();
+            this.underFlowPreventer = logMax;
+        }
         
         double wholeCount = makeAmounts(treSamp, stateCounts, ruleCounts, startCount, deterministic);
         
@@ -241,7 +251,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             double[] parameters = this.ruleParameters.get(state);
             
             for(int i=0;i<arr.length;++i) {
-                this.adapt(i, arr[i], parameters, ruleCounts, stateCounts, props[i], logMax);
+                this.adapt(i, arr[i], parameters, ruleCounts, stateCounts, props[i]);
             }
             
             this.lastUpdated.put(state, updatePlusOne);
@@ -251,7 +261,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         
         this.prepareStateStartProbability();
         for(int i=0;i<this.startStates.length;++i) {
-            updateStart(startParameters,i,startCount,wholeCount,this.startProbabilities[i],logMax);
+            updateStart(startParameters,i,startCount,wholeCount,this.startProbabilities[i]);
         }
         
         ++this.updateNumber;
@@ -321,7 +331,8 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
      * @param stateCounts
      * @param ruleCounts 
      */
-    private void addAmounts(Tree<Rule> instance, Int2DoubleOpenHashMap stateCounts, Object2DoubleOpenHashMap ruleCounts, double contribution) {
+    private void addAmounts(Tree<Rule> instance, Int2DoubleOpenHashMap stateCounts,
+            Object2DoubleOpenHashMap ruleCounts, double contribution) {
         Rule r = instance.getLabel();
         
         stateCounts.addTo(r.getParent(), contribution);
@@ -341,7 +352,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
      */
     private void adapt(int position, Rule rr, double[] parameters,
             Object2DoubleOpenHashMap ruleCounts, Int2DoubleOpenHashMap stateCounts,
-            double probability, double logMax) {
+            double probability) {
         double val = parameters[position];
         
         double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.normalizationExponent))*normalizationDivisor;
@@ -351,11 +362,9 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             gradient -= ruleCounts.getDouble(rr);
         }
         
-        gradient = Math.log(gradient)+logMax;
+        double lr = this.rate.getLearningRate(rr.getParent(), position, gradient);
         
-        double lr = this.rate.getLogLearningRate(rr.getParent(), position, gradient);
-        
-        parameters[position] -= Math.exp(lr+gradient);
+        parameters[position] -= lr+gradient;
     }
 
     /**
@@ -367,7 +376,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
      * @param startProbability 
      */
     private void updateStart(double[] parameters, int position, double[] startCount, double wholeCount,
-            double startProbability, double logMax) {
+            double startProbability) {
         double val = parameters[position];
         
         double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.normalizationExponent))*normalizationDivisor;
@@ -377,11 +386,9 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             gradient -= startCount[position];
         }
         
-        gradient = Math.log(gradient)+logMax;
+        double lr = this.rate.getLearningRate(-1, position, gradient);
         
-        double lr = this.rate.getLogLearningRate(-1, position, gradient);
-        
-        parameters[position] += Math.exp(lr+gradient);
+        parameters[position] += lr+gradient;
     }
 
     @Override

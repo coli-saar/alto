@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.rule_finding.sampling;
 
-import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
@@ -19,6 +18,11 @@ import org.apache.commons.math3.random.RandomGenerator;
  * @param <Type>
  */
 public class TreeSample<Type> {
+    /**
+     * 
+     */
+    public static double TOLERANCE = 3.0;
+    
     /**
      * 
      */
@@ -62,7 +66,7 @@ public class TreeSample<Type> {
      * @param amount 
      */
     public void setLogSumWeight(int entry, double amount) {
-        this.proposalWeight.set(entry, amount);
+        this.sumProposalWeight.set(entry, amount);
     }
     
     /**
@@ -160,7 +164,7 @@ public class TreeSample<Type> {
      * @return 
      */
     public int populationSize() {
-        return this.proposalWeight.size();
+        return this.samplesDrawn.size();
     }
     
     /**
@@ -232,9 +236,10 @@ public class TreeSample<Type> {
     /**
      * 
      * @param deterministic
+     * @param originalBase
      * @return 
      */
-    public double makeMaxBase(boolean deterministic) {
+    public double makeMaxBase(boolean deterministic, double originalBase) {
         double max = Double.NEGATIVE_INFINITY;
         
         for(int i=0;i<this.populationSize();++i){
@@ -243,6 +248,10 @@ public class TreeSample<Type> {
             
             max = Math.max(max, amount);
             this.selfNormalizedWeight.set(i, amount);
+        }
+        
+        if(originalBase+3 >= max) {
+            max = originalBase;
         }
         
         for(int i=0;i<this.populationSize();++i) {

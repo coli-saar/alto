@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.learning_rates;
 
-import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 
@@ -30,9 +29,9 @@ public class AdaGrad implements LearningRate {
      */
     public AdaGrad(double baseRate) {
         this.sums = new Long2DoubleOpenHashMap();
-        this.sums.defaultReturnValue(Double.NEGATIVE_INFINITY);
+        this.sums.defaultReturnValue(0.0);
         
-        this.baseRate = Math.log(baseRate);
+        this.baseRate = baseRate;
     }
     
     /**
@@ -43,15 +42,15 @@ public class AdaGrad implements LearningRate {
     }
     
     @Override
-    public double getLogLearningRate(int group, int parameter, double logGradient) {
+    public double getLearningRate(int group, int parameter, double gradient) {
         long code = NumbersCombine.combine(group, parameter);
-        double amount = sums.get(code);
-        amount = LogSpaceOperations.add(amount, logGradient*2);
         
-        sums.put(code, amount);
+        double sum = sums.addTo(code, gradient*gradient);
+        sum += gradient*gradient;
         
-        amount = -(amount / 2);
-        return baseRate+amount;
+        double amount = (sum == 0.0 ? 1.0 : 1.0/Math.sqrt(sum));
+        
+        return amount*baseRate;
     }
 
     @Override
