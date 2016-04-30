@@ -69,7 +69,7 @@ public interface RuleWeighting {
     /**
      * 
      */
-    public void prepareStateStartProbability();
+    public void prepareStartProbability();
 
     /**
      * 

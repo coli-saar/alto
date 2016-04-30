@@ -45,7 +45,7 @@ public class ProposalSumComputer {
     public double computeInside(Tree<Rule> input, RuleWeighting weights) {
         double logSum = Double.NEGATIVE_INFINITY;
         
-        weights.prepareStateStartProbability();
+        weights.prepareStartProbability();
         
         for(int i=0;i<weights.getNumberOfStartStates();++i) {
             int startState = weights.getStartStateByNumber(i);

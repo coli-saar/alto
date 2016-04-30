@@ -103,7 +103,7 @@ public class Proposal {
      */
     public <Type> TreeSample<Type> getTreeSample(BiFunction<Rule,TreeAutomaton,Type> mapping,
                                                     RuleWeighting guide, int numberOfSamples) {
-        guide.prepareStateStartProbability();
+        guide.prepareStartProbability();
         TreeSample result = new TreeSample();
         
         int i=0;

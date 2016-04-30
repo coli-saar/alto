@@ -188,7 +188,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
 
     @Override
-    public void prepareStateStartProbability() {
+    public void prepareStartProbability() {
         double sum = 0.0;
         double max = Double.NEGATIVE_INFINITY;
         
@@ -259,7 +259,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             this.currentProbs.put(state, false);
         }
         
-        this.prepareStateStartProbability();
+        this.prepareStartProbability();
         for(int i=0;i<this.startStates.length;++i) {
             updateStart(startParameters,i,startCount,wholeCount,this.startProbabilities[i]);
         }
@@ -364,7 +364,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         
         double lr = this.rate.getLearningRate(rr.getParent(), position, gradient);
         
-        parameters[position] -= lr+gradient;
+        parameters[position] -= lr*gradient;
     }
 
     /**
@@ -388,7 +388,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         
         double lr = this.rate.getLearningRate(-1, position, gradient);
         
-        parameters[position] += lr+gradient;
+        parameters[position] -= lr*gradient;
     }
 
     @Override
@@ -427,7 +427,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             choicePoint -= this.startProbabilities[i];
             
             if(choicePoint <= ALMOST_ZERO) {
-                return this.startStates[i];
+                return i;
             }
         }
         

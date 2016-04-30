@@ -11,6 +11,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.learning_rates.AdaGrad;
 import de.up.ling.irtg.rule_finding.sampling.TreeSample;
 import de.up.ling.tree.Tree;
+import java.util.Arrays;
 import java.util.Iterator;
 import org.junit.Before;
 import org.junit.Test;
@@ -66,16 +67,7 @@ public class AutomatonWeightedTest {
      */
     @Test
     public void testGetLogProbability() throws Exception {
-        /*
-        auw.prepareStateStartProbability();
-        int startState = tr.getLabel().getParent();
-        
-        assertEquals(auw.getStartState(0.1), startState);
-        assertEquals(auw.getStartState(0.4), startState);
-        assertEquals(auw.getStartState(0.7), startState);
-        assertEquals(auw.getStartState(1.0), startState);
-        
-        assertEquals(0.0, auw.getStateStartLogProbability(startState), 0.0000001);
+        auw.prepareStartProbability();
         
         Rule r = tr.getLabel();
         auw.prepareProbability(r.getParent());
@@ -83,73 +75,60 @@ public class AutomatonWeightedTest {
         
         assertEquals(auw.getLogProbability(r), -Math.log(5.0), 0.0000001);
 
+        int[] ruleNums = new int[5];
+        ruleNums[0] = auw.getRuleNumber(r.getParent(), 0.01);
+        ruleNums[1] = auw.getRuleNumber(r.getParent(), 0.21);
+        ruleNums[2] = auw.getRuleNumber(r.getParent(), 0.41);
+        ruleNums[3] = auw.getRuleNumber(r.getParent(), 0.61);
+        ruleNums[4] = auw.getRuleNumber(r.getParent(), 0.81);
+        
         Rule[] rs = new Rule[5];
 
-        rs[0] = (auw.getRule(r.getParent(), 0.01));
-        rs[1] = (auw.getRule(r.getParent(), 0.21));
-        rs[2] = (auw.getRule(r.getParent(), 0.41));
-        rs[3] = (auw.getRule(r.getParent(), 0.61));
-        rs[4] = (auw.getRule(r.getParent(), 0.81));
+        rs[0] = auw.getRuleByNumber(r.getParent(), ruleNums[0]);
+        rs[1] = auw.getRuleByNumber(r.getParent(), ruleNums[1]);
+        rs[2] = auw.getRuleByNumber(r.getParent(), ruleNums[2]);
+        rs[3] = auw.getRuleByNumber(r.getParent(), ruleNums[3]);
+        rs[4] = auw.getRuleByNumber(r.getParent(), ruleNums[4]);
 
+        assertArrayEquals(ruleNums, new int[] {0,1,2,3,4});
+        
         for (int i = 1; i < rs.length; ++i) {
             assertEquals(rs[i - 1].compareTo(rs[i]), -1);
         }
         
+        assertEquals(auw.getLogProbability(rs[0]),Math.log(1.0 / 5.0),0.000001);
+        assertEquals(auw.getLogProbability(r.getParent(), 0),auw.getLogProbability(rs[0]),0.000001);
+        
         TreeSample<Rule> ts = new TreeSample();
-        ts.addSample(tr, 0.6);
-        ts.addSample(tr, 0.1);
+        ts.addSample(tr);
+        ts.addSample(tr);
+        
+        ts.setLogPropWeight(0, -10.0);
+        ts.setLogPropWeight(1, -2.0);
+        
+        ts.setLogSumWeight(0, -5.0);
+        ts.setLogSumWeight(1, -1.0);
+        
+        ts.setLogTargetWeight(0, 4.0);
+        ts.setLogTargetWeight(1, 2.0);
         
         double prob1 = computeProb(auw,tr);
-        auw.adaptNormalized(ts);
+        auw.adapt(ts,true);
         double prob2 = computeProb(auw,tr);
         assertTrue(prob2 > prob1);
-        auw.adaptNormalized(ts);
+        auw.adapt(ts,false);
         double prob3 = computeProb(auw,tr);
-        
-        assertTrue(prob3 > prob2);
-        assertEquals(prob3,-1.2771627272667416,0.000001);
-        
-        Iterator<Tree<Integer>> derivs = tau.languageIteratorRaw();
-        derivs.next();
-        derivs.next();
-        derivs.next();
-        derivs.next();
-        derivs.next();
-        
-        Tree<Integer> pick = derivs.next();
-        Tree<Rule> trule = tau.getRuleTree(pick);
-        ts.addSample(trule, 0.8);
-        
-        auw.adaptNormalized(ts);
+        assertTrue(prob3 < prob2);
+        auw.adapt(ts, true);
         double prob4 = computeProb(auw,tr);
-        assertEquals(prob4,-1.2962363502918266,0.00001);
+        assertTrue(prob4 > prob2);
         
-        double prob5 = computeProb(auw,trule);
-        assertEquals(prob5,-2.040289887194336,0.00001);
-                
-        auw.reset();
-        double prob6 = computeProb(auw,tr);
-        assertEquals(prob6,prob1,0.0000000001);
+        auw.prepareStartProbability();
+        double d = auw.getLogTargetProbability(tr);
         
-        auw.adaptNormalized(ts);
-        auw.adaptNormalized(ts);
-        auw.adaptNormalized(ts);
-        auw.adaptNormalized(ts);
+        Tree tstring =  tr.map((Rule rule) -> auw.getAutomaton().getSignature().resolveSymbolId(rule.getLabel()));
         
-        Rule r1 = auw.getRule(startState, 0.1);
-        Rule r2 = auw.getRule(startState, 0.3);
-        Rule r3 = auw.getRule(startState, 0.5);
-        Rule r4 = auw.getRule(startState, 0.7);
-        Rule r5 = auw.getRule(startState, 0.9);
-        Rule r6 = auw.getRule(startState, 1.0);
-        
-        assertEquals(r1,r2);
-        assertEquals(r3,r4);
-        assertFalse(r1.equals(r3));
-        assertTrue(r5.compareTo(r4) > 0);
-        assertTrue(r4.compareTo(r2) > 0);
-        assertTrue(r6.compareTo(r5) > 0);
-        */
+        assertEquals(d,Math.log(auw.getAutomaton().getWeight(tstring)),0.000001);
     }
 
     /**
@@ -158,14 +137,17 @@ public class AutomatonWeightedTest {
     @Test
     public void testGetAutomaton() {
         assertEquals(this.tau, this.auw.getAutomaton());
-    }
-
-    /**
-     * Test of getLogTargetProbability method, of class AutomatonWeighted.
-     */
-    @Test
-    public void testAdaptsNormalized() {
-        //assertTrue(this.auw.adaptsNormalized());
+        
+        this.auw.prepareStartProbability();
+        assertEquals(this.auw.getNumberOfStartStates(),1);
+        
+        int number = this.auw.getStartStateNumber(0.9);
+        assertEquals(number,0);
+        
+        int startState = this.tau.getFinalStates().iterator().nextInt();
+        assertEquals(startState,this.auw.getStartStateByNumber(number));
+        
+        assertEquals(this.auw.getStateStartLogProbability(number),0.0,0.0000001);
     }
     
     /**
