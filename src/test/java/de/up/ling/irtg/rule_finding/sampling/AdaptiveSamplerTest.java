@@ -88,9 +88,12 @@ public class AdaptiveSamplerTest {
     @Test
     public void testAdaSample() {
         adaSamp.setKeptStats(ruC);
-        List<TreeSample<Rule>> ts = adaSamp.adaSample(30, 5000, 50, auw, true);
+        int rounds = 20;
+        int resample = 50;
         
-        assertEquals(ts.size(),30);
+        List<TreeSample<Rule>> ts = adaSamp.adaSample(rounds, 1500, resample, auw, true);
+        
+        assertEquals(ts.size(),rounds);
         for(int i=0;i<ts.size();++i) {
             assertTrue(ts.get(i).populationSize() <= 50);
         }
@@ -103,7 +106,8 @@ public class AdaptiveSamplerTest {
                 double d = inside.get(r.getChildren()[0]);
                 d += inside.get(r.getChildren()[1]);
                 
-                assertEquals(d / inside.get(r.getParent()),Math.exp(auw.getLogProbability(r)),0.04);
+                System.out.println(Math.exp(auw.getLogProbability(r)));
+                assertEquals(d / inside.get(r.getParent()),Math.exp(auw.getLogProbability(r)),0.05);
             } else if(r.toString(tau).equals("'0-6'! -> *('0-3', '3-6') [1.0]")) {
                 assertTrue(Math.exp(auw.getLogProbability(r)) < 0.1);
             }
@@ -111,9 +115,9 @@ public class AdaptiveSamplerTest {
         
         ArrayList<Object2DoubleMap<Rule>> data = ruC.getData()[0];
         
-        assertEquals(data.size(),30);
+        assertEquals(data.size(),rounds);
         
-        for(Map.Entry<Rule,Double> ent : data.get(29).entrySet()) {
+        for(Map.Entry<Rule,Double> ent : data.get(19).entrySet()) {
             if(ent.getKey().toString(tau).equals("'0-6'! -> *('0-1', '1-6') [1.0]")) {
                 assertTrue(Math.exp(ent.getValue()) > 0.3);
             } else if(ent.getKey().toString(tau).equals("'0-6'! -> *('0-3', '3-6') [1.0]")) {
