@@ -58,10 +58,11 @@ public class RandomTreeAutomaton {
     /**
      * 
      * @param stateNum
+     * @param maxArity
      * @param annealingFactor
      * @return 
      */
-    public TreeAutomaton getRandomAutomaton(int stateNum, int maxArity, double annealingFactor) {
+    public TreeAutomaton<Integer> getRandomAutomaton(int stateNum, int maxArity, double annealingFactor) {
         stateNum = Math.max(1, stateNum);
 
         ArrayList<int[]> choices = new ArrayList<>();

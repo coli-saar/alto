@@ -55,12 +55,7 @@ public class RuleConvergence implements SamplingStatistics {
     }
     
     @Override
-    public void addNormalizedRound(int round, TreeSample<Rule> sample, RuleWeighting adaptor) {
-        return;
-    }
-    
-    @Override
-    public void addResampledRound(int round, TreeSample<Rule> sample, RuleWeighting adaptor) {
+    public void trackAfterAdaption(int round, TreeSample<Rule> sample, RuleWeighting adaptor) {
         for(int i=0;i<tracked.length;++i) {
             int state = tracked[i];
             
@@ -72,6 +67,11 @@ public class RuleConvergence implements SamplingStatistics {
                
             tracker[i].add(weights);
         }
+    }
+    
+    @Override
+    public void addResampledRound(int round, TreeSample<Rule> sample, RuleWeighting adaptor) {
+        return;
     }
     
     public ArrayList<Object2DoubleMap<Rule>>[] getData() {

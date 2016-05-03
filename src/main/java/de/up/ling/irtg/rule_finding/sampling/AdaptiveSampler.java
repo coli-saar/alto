@@ -6,9 +6,16 @@
 package de.up.ling.irtg.rule_finding.sampling;
 
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.learning_rates.AdaGrad;
+import de.up.ling.irtg.learning_rates.LearningRate;
+import de.up.ling.irtg.rule_finding.sampling.RuleWeighters.AutomatonWeighted;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.LongSupplier;
+import java.util.function.Supplier;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
@@ -69,13 +76,11 @@ public class AdaptiveSampler {
      * 
      * @param rounds
      * @param populationSize
-     * @param resampleSize
      * @param rw
      * @param deterministic
      * @return 
      */
-    public List<TreeSample<Rule>> adaSample(int rounds, int populationSize,
-                                           int resampleSize, RuleWeighting rw,
+    public List<TreeSample<Rule>> adaSample(int rounds, int populationSize, RuleWeighting rw,
                                            boolean deterministic) {
         List<TreeSample<Rule>> result = new ArrayList<>();
         rw.reset();
@@ -102,21 +107,96 @@ public class AdaptiveSampler {
             
             rw.adapt(sample,deterministic);
             
+            if(this.keptStats != null) {
+                this.keptStats.trackAfterAdaption(rounds, sample, rw);
+            }
+            
             sample.expoNormalize(deterministic);
-            
-            if(this.keptStats != null) {
-                this.keptStats.addNormalizedRound(rounds, sample, rw);
-            }
-            
-            sample.resample(this.rg,resampleSize);
-            
-            if(this.keptStats != null) {
-                this.keptStats.addResampledRound(rounds, sample, rw);
-            }
-            
             result.add(sample);
         }
         
         return result;
+    }
+    
+    /**
+     * 
+     */
+    public static class Configuration {
+        /**
+         * 
+         */
+        private boolean deterministic = true;
+        
+        /**
+         * 
+         */
+        private int rounds = 50;
+        
+        /**
+         * 
+         */
+        private int populationSize = 2000;
+        
+        /**
+         * 
+         */
+        private final Function<TreeAutomaton,RuleWeighting> rwSource;
+        
+        /**
+         * 
+         */
+        private LongSupplier seeds = () -> new Date().getTime();
+
+        /**
+         * 
+         * @param rwSource 
+         */
+        public Configuration(Function<TreeAutomaton, RuleWeighting> rwSource) {
+            this.rwSource = rwSource;
+        }
+        
+        /**
+         * 
+         * @param deterministic 
+         */
+        public void setDeterministic(boolean deterministic) {
+            this.deterministic = deterministic;
+        }
+
+        /**
+         * 
+         * @param rounds 
+         */
+        public void setRounds(int rounds) {
+            this.rounds = rounds;
+        }
+
+        /**
+         * 
+         * @param populationSize 
+         */
+        public void setPopulationSize(int populationSize) {
+            this.populationSize = populationSize;
+        }
+
+        /**
+         * 
+         * @param seeds 
+         */
+        public void setSeeds(LongSupplier seeds) {
+            this.seeds = seeds;
+        }
+        
+        /**
+         * 
+         * @param ta
+         * @return 
+         */
+        public List<TreeSample<Rule>> run(TreeAutomaton ta) {
+            RuleWeighting rw = this.rwSource.apply(ta);
+            AdaptiveSampler adas = new AdaptiveSampler(this.seeds.getAsLong());
+            
+            return adas.adaSample(rounds, populationSize, rw, deterministic);
+        }
     }
 }

@@ -91,11 +91,11 @@ public class AdaptiveSamplerTest {
         int rounds = 20;
         int resample = 50;
         
-        List<TreeSample<Rule>> ts = adaSamp.adaSample(rounds, 1500, resample, auw, true);
+        List<TreeSample<Rule>> ts = adaSamp.adaSample(rounds, 1500, auw, true);
         
         assertEquals(ts.size(),rounds);
         for(int i=0;i<ts.size();++i) {
-            assertTrue(ts.get(i).populationSize() <= 50);
+            assertTrue(ts.get(i).populationSize() <= 1500);
         }
         for(Rule r : (Iterable<Rule>) this.tau.getRulesTopDown(startState)) {
             if(r.toString(tau).equals("'0-6'! -> *('0-1', '1-6') [1.0]")) {
@@ -106,7 +106,6 @@ public class AdaptiveSamplerTest {
                 double d = inside.get(r.getChildren()[0]);
                 d += inside.get(r.getChildren()[1]);
                 
-                System.out.println(Math.exp(auw.getLogProbability(r)));
                 assertEquals(d / inside.get(r.getParent()),Math.exp(auw.getLogProbability(r)),0.05);
             } else if(r.toString(tau).equals("'0-6'! -> *('0-3', '3-6') [1.0]")) {
                 assertTrue(Math.exp(auw.getLogProbability(r)) < 0.1);

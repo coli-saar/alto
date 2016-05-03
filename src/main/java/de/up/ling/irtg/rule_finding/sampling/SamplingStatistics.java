@@ -27,7 +27,7 @@ public interface SamplingStatistics {
      * @param sample
      * @param adaptor 
      */
-    public void addNormalizedRound(int round,
+    public void trackAfterAdaption(int round,
                                TreeSample<Rule> sample, RuleWeighting adaptor);
 
     /**
