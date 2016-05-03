@@ -8,11 +8,9 @@ package de.up.ling.irtg.rule_finding.pruning.intersection;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import it.unimi.dsi.fastutil.ints.IntAVLTreeSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.Arrays;
@@ -101,8 +99,8 @@ public class TreeArityEnsure implements Function<TreeAutomaton, TreeAutomaton> {
                     cta.addRule(cta.createRule(0, label, children));
                 }
             } else {
-
                 IntList ars = this.arities.get(label);
+                
                 if (ars == null) {
                     ars = def;
                 }

@@ -53,6 +53,8 @@ public class CreateNonterminalsFromInputFiles {
         IrtgInputCodec iic = new IrtgInputCodec();
         for(int i=0;i<toDo.length;++i) {
             File current = toDo[i];
+            System.out.println("introducing nonterminals for file:");
+            System.out.println(current);
             
             InputStream jT = new FileInputStream(current);
             
