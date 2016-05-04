@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.script.evaluation;
 
-import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
@@ -28,6 +27,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class EvaluateSamplingFromRules {
     /**
      * 
+     */
+    public static double SMOOTH = 0.0001;
+    
+    /**
+     * 
      * @param <Type>
      * @param auts
      * @param repetitions
@@ -38,7 +42,7 @@ public class EvaluateSamplingFromRules {
      * @throws Exception 
      */
     public static <Type>  Measurements<Type> makeSmoothedKL(Iterable<TreeAutomaton<Type>> auts, int repetitions, StatePicker<Type> rp,
-            AdaptiveSampler.Configuration config, double smooth) throws Exception {
+            AdaptiveSampler.Configuration config) throws Exception {
         int dataset = 0;
         Measurements<Type> result = new Measurements<>();
         
@@ -52,8 +56,11 @@ public class EvaluateSamplingFromRules {
             Object2DoubleMap<Rule> om = makeTarget(tat, states);
             
             for(int repetition=0;repetition<repetitions;++repetition) {
+                
                 List<TreeSample<Rule>> lt = config.run(tat);
-                Object2DoubleMap<Rule>[] estimate = computeEstimate(states,lt);
+                
+                System.out.println("finished sampling");
+                Object2DoubleMap<Rule>[] estimate = computeEstimate(lt);
                 
                 for(int round=0;round<lt.size();++round) {
                     for(int measuredPosition=0;measuredPosition<states.size();++measuredPosition) {
@@ -67,20 +74,20 @@ public class EvaluateSamplingFromRules {
                         double add = 1.0 / div;
                         
                         for(Rule r : ir) {
-                            double frac = 0.0;
-                            for(int m=0;m<round;++m){
-                                frac = (0.5*frac) + (0.5*estimate[m].get(r));
-                            }
+                            double frac = SMOOTH*add+(1.0-SMOOTH)*estimate[round].getDouble(r);
                             
-                            frac = ((1.0-smooth)*frac) + (smooth*add);
                             double real = om.get(r);
                             
                             kl += real * (Math.log(real)-Math.log(frac));
                         }
                         
                         result.addMeasurement(measuredPosition, dataset, repetition, round, kl);
-                    }   
+                    }
+                    
+                    System.out.println("finished analysing one round");
                 }
+                
+                System.out.println("finished one repetition");
             }
             
             ++dataset;
@@ -126,7 +133,7 @@ public class EvaluateSamplingFromRules {
      * @param lt
      * @return 
      */
-    private static <Type> Object2DoubleMap<Rule>[] computeEstimate(List<Type> states, List<TreeSample<Rule>> lt) {
+    private static <Type> Object2DoubleMap<Rule>[] computeEstimate(List<TreeSample<Rule>> lt) {
         Object2DoubleMap<Rule>[] result = new Object2DoubleMap[lt.size()];
         
         for(int round=0;round<lt.size();++round) {
@@ -274,7 +281,7 @@ public class EvaluateSamplingFromRules {
                 dl.add(new DoubleArrayList());
             }
             
-            DoubleList innerMost = dl.get(dataSetNumber);
+            DoubleList innerMost = dl.get(repetitionNumber);
             while(innerMost.size() <= roundNumber) {
                 innerMost.add(Double.POSITIVE_INFINITY);
             }
@@ -348,26 +355,26 @@ public class EvaluateSamplingFromRules {
                 inner.add(null);
             }
             
-            inner.add(measure);
+            inner.set(dataSetNumber, measure);
         }
         
         /**
          * 
-         * @param dataset
+         * @parammeasurementTypeNumberdataset
          * @return 
          */
-        public int getNumberOfType(int dataset) {
-            return this.measureType.get(dataset).size();
+        public int getNumberOfDataSetsForTypeEntry(int measurementTypeNumber) {
+            return this.measureType.get(measurementTypeNumber).size();
         }
         
         /**
          * 
-         * @param dataset
-         * @param entry
+         * @param measurementTypeNumber
+         * @param dataSetNumber
          * @return 
          */
-        public Type getMeasured(int dataset, int entry) {
-            return this.measureType.get(dataset).get(entry);
+        public Type getMeasured(int measurementTypeNumber, int dataSetNumber) {
+            return this.measureType.get(measurementTypeNumber).get(dataSetNumber);
         }
     }
 }
