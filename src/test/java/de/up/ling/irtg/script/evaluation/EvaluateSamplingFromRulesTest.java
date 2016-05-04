@@ -38,7 +38,7 @@ public class EvaluateSamplingFromRulesTest {
         lta = new ArrayList<>();
         RandomTreeAutomaton rta = new RandomTreeAutomaton(new Well44497a(9327499298347L), new String[] {"a","b","c"}, 2.0);
         for(int i=0;i<2;++i) {
-            lta.add(rta.getRandomAutomaton(1000, 3, 3.0));
+            lta.add(rta.getRandomAutomaton(50, 3, 3.0));
         }
         
         
@@ -55,8 +55,8 @@ public class EvaluateSamplingFromRulesTest {
 
             @Override
             public RuleWeighting apply(TreeAutomaton t) {
-                AdaGrad ada = new AdaGrad(0.2);
-                AutomatonWeighted aw = new AutomatonWeighted(t, 2, 0.5, ada);
+                AdaGrad ada = new AdaGrad(10.0);
+                AutomatonWeighted aw = new AutomatonWeighted(t, 2, 100, ada);
                 
                 return aw;
             }
@@ -64,34 +64,22 @@ public class EvaluateSamplingFromRulesTest {
         
         Configuration conf = new AdaptiveSampler.Configuration(make);
         conf.setDeterministic(true);
-        conf.setPopulationSize(200);
-        conf.setRounds(10);
+        conf.setPopulationSize(50);
+        conf.setRounds(200);
         
         EvaluateSamplingFromRules.Measurements<Integer> meas = EvaluateSamplingFromRules.makeSmoothedKL(lta, 3, new EvaluateSamplingFromRules.StatePicker<>(5), conf);
-        for(int i=0;i<20;++i) {
+        for(int i=0;i<meas.getNumberOfRounds(1, 0, 0);++i) {
             System.out.println("---------");
             
             double d = 0.0;
-            for(int k=0;k<meas.getNumberOfRounds(1, 0, 0);++k) {
-                d += meas.getValue(1, 0, 0, i);
+            for(int k=0;k<meas.getNumberOfRepetitions(1, 0);++k) {
+                d += meas.getValue(1, 0, k, i);
             }
             
             System.out.println(d / meas.getNumberOfRepetitions(1, 0));
             
             
             System.out.println("---------");
-            
-            System.out.println("+++++++++");
-            
-            d = 0.0;
-            for(int k=0;k<meas.getNumberOfRounds(1, 1, 0);++k) {
-                d += meas.getValue(1, 1, 0, i);
-            }
-            
-            System.out.println(d / meas.getNumberOfRepetitions(1, 1));
-            
-            
-            System.out.println("+++++++++");
         }
         
         

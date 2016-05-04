@@ -7,6 +7,7 @@ package de.up.ling.irtg.script.evaluation;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.WeightedTree;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
 import de.up.ling.irtg.rule_finding.sampling.TreeSample;
 import de.up.ling.tree.Tree;
@@ -35,31 +36,28 @@ public class EvaluateSamplingFromRules {
      * @param <Type>
      * @param auts
      * @param repetitions
-     * @param rp
      * @param config
-     * @param smooth
      * @return
      * @throws Exception 
      */
-    public static <Type>  Measurements<Type> makeSmoothedKL(Iterable<TreeAutomaton<Type>> auts, int repetitions, StatePicker<Type> rp,
+    public static <Type>  Measurements<Type> makeSmoothedKL(Iterable<TreeAutomaton<Type>> auts, int repetitions,
             AdaptiveSampler.Configuration config) throws Exception {
         int dataset = 0;
         Measurements<Type> result = new Measurements<>();
         
         for(TreeAutomaton<Type> tat : auts) {
-            List<Type> states = rp.pick(tat);
+            WeightedTree wt = tat.viterbiRaw();
+            Int2ObjectMap<Double> map = tat.inside();
+            double val = map.get(tat.getFinalStates().iterator().nextInt());
             
-            for(int j=0;j<states.size();++j) {
-                result.addMeasured(j, dataset, states.get(j));
-            }
-            
-            Object2DoubleMap<Rule> om = makeTarget(tat, states);
+            double expected = wt.getWeight() / val;
             
             for(int repetition=0;repetition<repetitions;++repetition) {
                 
                 List<TreeSample<Rule>> lt = config.run(tat);
                 
-                System.out.println("finished sampling");
+                DoubleList actuals = new DoubleArrayList();
+                
                 Object2DoubleMap<Rule>[] estimate = computeEstimate(lt);
                 
                 for(int round=0;round<lt.size();++round) {
@@ -83,8 +81,6 @@ public class EvaluateSamplingFromRules {
                         
                         result.addMeasurement(measuredPosition, dataset, repetition, round, kl);
                     }
-                    
-                    System.out.println("finished analysing one round");
                 }
                 
                 System.out.println("finished one repetition");

@@ -88,7 +88,6 @@ public class AdaptiveSampler {
         
         for(int i=0;i<rounds;++i) {
             TreeSample<Rule> sample = this.prop.getTreeSample(rw, populationSize);
-            System.out.println("drew one generation");
             
             
             for(int j=0;j<populationSize;++j) {
@@ -115,8 +114,6 @@ public class AdaptiveSampler {
             
             sample.expoNormalize(deterministic);
             result.add(sample);
-            
-            System.out.println("fully processed one generation");
         }
         
         return result;
