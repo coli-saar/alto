@@ -24,7 +24,7 @@ public class RandomTreeAutomatonTest {
 
     @Before
     public void setUp() {
-        rta = new RandomTreeAutomaton(new MersenneTwister(), new String[]{"a", "b", "c", "d", "e", "f"}, 2.0);
+        rta = new RandomTreeAutomaton(9248973479L, 0.5);
     }
 
     /**
@@ -34,14 +34,14 @@ public class RandomTreeAutomatonTest {
     public void testGetRandomAutomaton() {
         int targetNumberOfStates = 5;
 
-        for (int i = 0; i < 50; ++i) {
-            TreeAutomaton ta = rta.getRandomAutomaton(targetNumberOfStates, 10, 4);
+        for (int i = 0; i < 5; ++i) {
+            TreeAutomaton ta = rta.getRandomAutomaton(50);
 
             assertTrue(ta.getReachableStates().containsAll(ta.getAllStates()));
             assertTrue(ta.isBottomUpDeterministic());
-            assertTrue(ta.getAllStates().size() > targetNumberOfStates);
+            assertTrue(ta.getAllStates().size() > 1000);
 
-            assertTrue(ta.countTrees() > 0);
+            assertTrue(ta.languageIterator().hasNext());
         }
     }
 }

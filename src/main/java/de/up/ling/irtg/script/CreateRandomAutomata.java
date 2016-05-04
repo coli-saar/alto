@@ -32,27 +32,22 @@ public class CreateRandomAutomata {
         
         String folder = props.getProperty("folder");
         String fileNamePrefix = props.getProperty("fileNamePrefix");
-        String maxArity = props.getProperty("maxArity");
-        String labelList = props.getProperty("labelList");
-        String minStates = props.getProperty("minStates");
+        String size = props.getProperty("size");
         String amount = props.getProperty("toGenerate");
         String seed = props.getProperty("seed");
-        String maxWeight = props.getProperty("weightBase");
-        String anneal = props.getProperty("annealFactor");
+        String alpha = props.getProperty("alpha");
         
         File f = new File(folder);
         f.mkdirs();
         
         int number = Integer.parseInt(amount);
-        String[] labels = labelList.split("\\|");
-        int arity = Integer.parseInt(maxArity);
-        int mstates = Integer.parseInt(minStates);
+        int n = Integer.parseInt(size);
         
-        RandomTreeAutomaton rta = new RandomTreeAutomaton(new Well44497b(Long.parseLong(seed)), labels, Double.parseDouble(maxWeight));
+        RandomTreeAutomaton rta = new RandomTreeAutomaton(Long.parseLong(seed), Double.parseDouble(alpha));
         
         for(int i=0;i<number;++i) {
             try(BufferedWriter bw = new BufferedWriter(new FileWriter(f.getAbsolutePath()+File.separator+fileNamePrefix+"_"+i+".auto"))) {
-                bw.write(rta.getRandomAutomaton(mstates, arity, Double.parseDouble(anneal)).toString());
+                bw.write(rta.getRandomAutomaton(n).toString());
             }
         }
     }
