@@ -6,7 +6,6 @@
 package de.up.ling.irtg.script.evaluation;
 
 import de.saar.basic.Pair;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.learning_rates.AdaGrad;
 import de.up.ling.irtg.random_rtg.RandomTreeAutomaton;
@@ -14,13 +13,11 @@ import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler.Configuration;
 import de.up.ling.irtg.rule_finding.sampling.RuleWeighters.AutomatonWeighted;
 import de.up.ling.irtg.rule_finding.sampling.RuleWeighting;
-import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
-import org.apache.commons.math3.random.Well44497a;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -47,18 +44,15 @@ public class EvaluateSamplingFromRulesTest {
 
     /**
      * Test of makeSmoothedKL method, of class EvaluateSamplingFromRules.
+     * @throws java.lang.Exception
      */
     @Test
     public void testMakeInside() throws Exception {
-        Function<TreeAutomaton,RuleWeighting> make = new Function<TreeAutomaton, RuleWeighting>() {
-
-            @Override
-            public RuleWeighting apply(TreeAutomaton t) {
-                AdaGrad ada = new AdaGrad(1.0);
-                AutomatonWeighted aw = new AutomatonWeighted(t, 2, 1000, ada);
-                
-                return aw;
-            }
+        Function<TreeAutomaton,RuleWeighting> make = (TreeAutomaton t) -> {
+            AdaGrad ada = new AdaGrad(1.0);
+            AutomatonWeighted aw = new AutomatonWeighted(t, 2, 1000, ada);
+            
+            return aw;
         };
         
         Configuration conf = new AdaptiveSampler.Configuration(make);

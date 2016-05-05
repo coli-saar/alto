@@ -8,12 +8,26 @@ package de.up.ling.irtg.script.evaluation;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
+import de.up.ling.irtg.learning_rates.AdaGrad;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
+import de.up.ling.irtg.rule_finding.sampling.RuleWeighters.AutomatonWeighted;
+import de.up.ling.irtg.rule_finding.sampling.RuleWeighting;
 import de.up.ling.irtg.rule_finding.sampling.TreeSample;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
+import java.util.function.Function;
+import java.util.function.LongSupplier;
+import org.apache.commons.math3.random.Well44497b;
 
 /**
  *
@@ -21,9 +35,87 @@ import java.util.List;
  */
 public class EvaluateSamplingFromRules {
    
-   
-    public static void main(String... args) {
+   /**
+    * 
+    * @param args
+    * @throws IOException 
+    */
+    public static void main(String... args) throws IOException {
+        InputStream in = new FileInputStream(args[0]);
+        Properties props = new Properties();
+        props.load(in);
+
+        String automataFolder = props.getProperty("automataFolder");
+        String baseRate = props.getProperty("baseLearningRate");
+        String resultFolder = props.getProperty("resultFolder");
+        String resultPrefix = props.getProperty("resultPrefix");
+        String normExp = props.getProperty("normalizationExponent");
+        String normDiv = props.getProperty("normalizationDivisor");
+        String populationSize = props.getProperty("populationSize");
+        String rounds = props.getProperty("rounds");
+        String seed = props.getProperty("seed");
+        String repetitions = props.getProperty("repetitions");
         
+        Well44497b seeds = new Well44497b(Long.parseLong(seed));
+        LongSupplier seeder = () -> {
+            return seeds.nextLong();
+        };
+        
+        File baseFold = new File(resultFolder);
+        baseFold.mkdirs();
+        
+        File sources = new File(automataFolder);
+        File[] auts = sources.listFiles();
+        
+        TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
+        for(int automaton=0;automaton<auts.length;++automaton) {
+            File aut = auts[automaton];
+            if(!aut.getName().matches(".*\\.auto")) {
+                continue;
+            }
+            
+            TreeAutomaton<String> ta;
+            try(FileInputStream fis = new FileInputStream(aut)) {
+                ta = taic.read(fis);
+            }
+            
+            Function<TreeAutomaton,RuleWeighting> f = (TreeAutomaton q) -> {
+                AdaGrad ada = new AdaGrad(Double.parseDouble(baseRate));
+                return new AutomatonWeighted(q, Integer.parseInt(normExp), Double.parseDouble(normDiv), ada);
+            };
+            
+            AdaptiveSampler.Configuration config = new AdaptiveSampler.Configuration(f);
+            config.setDeterministic(true);
+            config.setPopulationSize(Integer.parseInt(populationSize));
+            config.setRounds(Integer.parseInt(rounds));
+            config.setSeeds(seeder);
+            
+            Pair<DoubleList,List<DoubleList>> results = makeInside(ta, config, Integer.parseInt(repetitions));
+            
+            String fileName = baseFold.getAbsolutePath()+File.separator+resultPrefix+"_"+aut.getName()+".stats";
+            try(BufferedWriter out = new BufferedWriter(new FileWriter(fileName))) {
+                DoubleList average = results.getLeft();
+                List<DoubleList> single = results.getRight();
+                
+                out.write("Round");
+                out.write(";");
+                out.write("average");
+                for(int repetition=0;repetition<single.size();++repetition) {
+                    out.write(";");
+                    out.write("repetition"+repetition);
+                }
+                
+                for(int round=0;round<average.size();++round) {
+                    out.write(""+round);
+                    out.write(";");
+                    out.write(""+average.get(round));
+                    for(int repetition=0;repetition<single.size();++repetition) {
+                        out.write(";");
+                        out.write(""+single.get(round).get(repetition));
+                    }
+                }
+            }
+        }
     }
     
     

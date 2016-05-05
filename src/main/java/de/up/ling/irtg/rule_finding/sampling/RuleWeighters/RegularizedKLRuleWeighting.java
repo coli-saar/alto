@@ -308,6 +308,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         
         for(int i=0;i<treSamp.populationSize();++i) {
             double amount = treSamp.getSelfNormalizedWeight(i);
+            
             Tree<Rule> instance = treSamp.getSample(i);
             
             wholeCount += amount;

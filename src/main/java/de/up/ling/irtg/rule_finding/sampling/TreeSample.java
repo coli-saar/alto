@@ -149,6 +149,10 @@ public class TreeSample<Type> {
         
         for(int i=0;i<this.populationSize();++i) {
             double amount = Math.exp(this.selfNormalizedWeight.get(i)-max);
+            if(!Double.isFinite(amount)) {
+                amount = 0.0;
+            }
+            
             sum += amount;
             
             this.selfNormalizedWeight.set(i, amount);
@@ -255,7 +259,11 @@ public class TreeSample<Type> {
         }
         
         for(int i=0;i<this.populationSize();++i) {
-            this.selfNormalizedWeight.set(i, Math.exp(this.selfNormalizedWeight.get(i)-max));
+            double d = Math.exp(this.selfNormalizedWeight.get(i)-max);
+            if(!Double.isFinite(d)) {
+                d = 0.0;
+            }            
+            this.selfNormalizedWeight.set(i, d);
         }
         
         return max;
