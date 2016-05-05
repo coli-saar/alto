@@ -97,21 +97,21 @@ public class EvaluateSamplingFromRules {
                 DoubleList average = results.getLeft();
                 List<DoubleList> single = results.getRight();
                 
-                out.write("Round");
-                out.write(";");
-                out.write("average");
-                for(int repetition=0;repetition<single.size();++repetition) {
-                    out.write(";");
-                    out.write("repetition"+repetition);
+                for(int round=0;round<average.size();++round) {
+                    if(round != 0) {
+                        out.write(";");
+                    }
+                    out.write("round"+round);
                 }
                 
-                for(int round=0;round<average.size();++round) {
-                    out.write(""+round);
-                    out.write(";");
-                    out.write(""+average.get(round));
-                    for(int repetition=0;repetition<single.size();++repetition) {
-                        out.write(";");
-                        out.write(""+single.get(round).get(repetition));
+                
+                for(int rep=0;rep<average.size();++rep) {
+                    out.newLine();
+                    for(int round=0;round<average.size();++round) {
+                        if(round != 0) {
+                            out.write(";");
+                        }
+                        out.write(""+single.get(rep).get(round));
                     }
                 }
             }
