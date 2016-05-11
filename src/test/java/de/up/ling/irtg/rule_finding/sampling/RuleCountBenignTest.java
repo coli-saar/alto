@@ -102,6 +102,10 @@ public class RuleCountBenignTest {
                     return sum;
                 }
             }
+
+            @Override
+            public void clear() {
+            }
         };
         
         IntIntFunction sampleSize = (int value) -> 15;

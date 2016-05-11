@@ -9,7 +9,6 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
-import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
@@ -22,7 +21,6 @@ import de.up.ling.tree.Tree;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -32,7 +30,7 @@ import static org.junit.Assert.*;
  *
  * @author christoph_teichmann
  */
-public class SampleOnlineEMTest {
+public class SampleEMTest {
 
     /**
      *
@@ -42,13 +40,7 @@ public class SampleOnlineEMTest {
     /**
      *
      */
-    private SampleOnlineEM soe;
-
-    /**
-     *
-     */
-    private List<Homomorphism> left;
-
+    private SampleEM soe;
     
     /**
     *
@@ -72,7 +64,6 @@ public class SampleOnlineEMTest {
     private final static String alignments = "0-0 1-1\n"
             + "0-0 1-0 1-1 2-2\n"
             + "0-0 1-1 2-2 3-2";
-    
     
     /**
      * 
@@ -99,11 +90,10 @@ public class SampleOnlineEMTest {
         data.forEach(l::add);
         data = l;
         
-        
         Iterable<Signature> fi =
                 new FunctionIterable<>(data,(InterpretedTreeAutomaton ita) -> ita.getAutomaton().getSignature());
         mod = new IndependentTrees(1, fi);
-        this.soe = new SampleOnlineEM(mod);
+        this.soe = new SampleEM(mod);
         
         soe.setLearnSampleSize(200);
         soe.setTrainIterations(5);
@@ -116,8 +106,6 @@ public class SampleOnlineEMTest {
     public void testGetChoices() {
         Iterable<Iterable<Tree<String>>> it = soe.getChoices(this.data, mod, 9782598725987L);
         List<Tree<String>> results = new ArrayList<>();
-        Iterator<InterpretedTreeAutomaton> auts = this.data.iterator();
-        
         
         it.forEach((Iterable<Tree<String>> inner) -> inner.forEach(results::add));
         

@@ -77,6 +77,11 @@ public class SampleBenignTest {
             @Override
             public void add(Tree<Rule> t, InterpretedTreeAutomaton ita, double amount) {
             }
+
+            @Override
+            public void clear() {
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            }
         });
 
         this.sampler.getSample(config);

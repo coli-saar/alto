@@ -10,7 +10,7 @@ import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
-import de.up.ling.irtg.rule_finding.learning.SampleOnlineEM;
+import de.up.ling.irtg.rule_finding.learning.SampleEM;
 import de.up.ling.irtg.rule_finding.sampling.models.IndependentTrees;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.BuildProperties;
@@ -109,7 +109,7 @@ public class CreateGrammarByOnlineMAPEM {
         
         IndependentTrees indT = new IndependentTrees(mSmooth, logWrong, desiredSize, sigs);
         
-        SampleOnlineEM trex = new SampleOnlineEM(indT);
+        SampleEM trex = new SampleEM(indT);
         trex.setAdaptionRounds(Integer.parseInt(adaptionRounds));
         trex.setLearnSampleSize(Integer.parseInt(learnSampleSize));
         trex.setLearnSize(Double.parseDouble(learnSize));

@@ -40,4 +40,6 @@ public interface Model {
      * @param amount
      */
     public void add(Tree<Rule> t, InterpretedTreeAutomaton context , double amount);
+
+    public void clear();
 }

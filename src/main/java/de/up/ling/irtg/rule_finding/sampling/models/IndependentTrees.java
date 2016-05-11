@@ -188,4 +188,9 @@ public class IndependentTrees implements Model {
         
         return iuo;
     }
+
+    @Override
+    public void clear() {
+        this.counter.clear();
+    }
 }
