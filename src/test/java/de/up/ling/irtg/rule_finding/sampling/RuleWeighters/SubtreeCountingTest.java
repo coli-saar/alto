@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -119,7 +118,7 @@ public class SubtreeCountingTest {
         assertEquals(d1,-65.16193076042964,0.00000001);
         assertEquals(d1,c1,0.00000001);
         
-        this.cc.add(imp1, ita, 1);
+        this.cc.add(imp1, ita.getAutomaton().getSignature(), 1);
         double d2 = this.cc.getLogProbability(imp1, ita);
         
         double e2 = this.cc.getLogProbability(imp2, ita);
@@ -127,7 +126,7 @@ public class SubtreeCountingTest {
         assertTrue(e2 != e1);
         assertEquals(d2,-1.621775089996125,0.0000000001);
         
-        this.cc.add(imp1, ita, -1);
+        this.cc.add(imp1, ita.getAutomaton().getSignature(), -1);
         double d3 = this.cc.getLogProbability(imp1, ita);
         double e3 = this.cc.getLogProbability(imp2, ita);
         

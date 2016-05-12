@@ -78,6 +78,11 @@ public class SampleEMTest {
         
         Iterable<String> results = ExtractionHelper.getStringIRTGs(leftTrees, rightTrees, alignments, one, two);
         
+        for(String s : results) {
+            System.out.println(s);
+            //TODO
+        }
+        
         IrtgInputCodec iic = new IrtgInputCodec();
         data = new FunctionIterable<>(results,(String s) -> {
             try {
@@ -92,11 +97,13 @@ public class SampleEMTest {
         
         Iterable<Signature> fi =
                 new FunctionIterable<>(data,(InterpretedTreeAutomaton ita) -> ita.getAutomaton().getSignature());
-        mod = new IndependentTrees(1, fi);
-        this.soe = new SampleEM(mod);
         
-        soe.setLearnSampleSize(200);
-        soe.setTrainIterations(5);
+        
+        //TODO
+        
+        this.soe = new SampleEM();
+        
+        //TODO
     }
 
     /**
@@ -104,7 +111,7 @@ public class SampleEMTest {
      */
     @Test
     public void testGetChoices() {
-        Iterable<Iterable<Tree<String>>> it = soe.getChoices(this.data, mod, 9782598725987L);
+        Iterable<Iterable<Tree<String>>> it = soe.getChoices(this.data);
         List<Tree<String>> results = new ArrayList<>();
         
         it.forEach((Iterable<Tree<String>> inner) -> inner.forEach(results::add));

@@ -175,10 +175,10 @@ public class TreeSample<Type> {
      * 
      * @param rg
      * @param size
-     * @param treeLevel 
+     * @param deterministic 
      */
-    public void resampleWithNormalize(RandomGenerator rg, int size, boolean treeLevel) {
-        this.expoNormalize(treeLevel);
+    public void resampleWithNormalize(RandomGenerator rg, int size, boolean deterministic) {
+        this.expoNormalize(deterministic);
         this.resample(rg, size);
     }
     

@@ -13,9 +13,7 @@ import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
 import de.up.ling.irtg.rule_finding.learning.SampleEM;
 import de.up.ling.irtg.rule_finding.sampling.models.IndependentTrees;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.BuildProperties;
 import de.up.ling.irtg.util.FunctionIterable;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -23,7 +21,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -109,14 +106,8 @@ public class CreateGrammarByOnlineMAPEM {
         
         IndependentTrees indT = new IndependentTrees(mSmooth, logWrong, desiredSize, sigs);
         
-        SampleEM trex = new SampleEM(indT);
-        trex.setAdaptionRounds(Integer.parseInt(adaptionRounds));
-        trex.setLearnSampleSize(Integer.parseInt(learnSampleSize));
-        trex.setLearnSize(Double.parseDouble(learnSize));
-        trex.setSampleSize(Integer.parseInt(sampleSize));
-        trex.setSamplerSmooth(Double.parseDouble(samplerSmooth));
-        trex.setThreads(1);
-        trex.setTrainIterations(Integer.parseInt(trainIterations));
+        SampleEM trex = new SampleEM();
+        //TODO TODO
         
         ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex,
         outInterpretation1,outInterpretation2);

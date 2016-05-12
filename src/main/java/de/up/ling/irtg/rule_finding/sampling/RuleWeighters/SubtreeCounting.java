@@ -55,6 +55,15 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
     public double getLogTargetProbability(Tree<Rule> sample) {
         return this.counter.getLogProbability(sample, ita);
     }
+    
+    /**
+     * 
+     * @param tree
+     * @param amount 
+     */
+    public void add(Tree<Rule> tree, double amount) {
+        this.counter.add(tree, this.ita.getAutomaton().getSignature(), amount);
+    }
 
     /**
      *
@@ -109,9 +118,10 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
          */
         public double getLogProbability(Tree<Rule> sample, InterpretedTreeAutomaton main) {
             double logFactor = 0.0;
-
-            SubtreeIterator lIt = new SubtreeIterator(sample, createPredicate(main));
-            IntUnaryOperator iuo = this.createMapping(main);
+            Signature sig = main.getAutomaton().getSignature();
+            
+            SubtreeIterator lIt = new SubtreeIterator(sample, createPredicate(sig));
+            IntUnaryOperator iuo = this.createMapping(sig);
 
             while (lIt.hasNext()) {
                 IntArrayList il = lIt.next();
@@ -139,8 +149,7 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
          * @param ita
          * @return
          */
-        private static IntPredicate createPredicate(InterpretedTreeAutomaton ita) {
-            final Signature sig = ita.getAutomaton().getSignature();
+        private static IntPredicate createPredicate(Signature sig) {
             IntPredicate choice = (int i) -> {
                 return Variables.isVariable(sig.resolveSymbolId(i));
             };
@@ -152,8 +161,7 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
          * @param ita
          * @return
          */
-        private IntUnaryOperator createMapping(InterpretedTreeAutomaton ita) {
-            final Signature sig = ita.getAutomaton().getSignature();
+        private IntUnaryOperator createMapping(Signature sig) {
             IntUnaryOperator iuo = (int i) -> {
                 return this.mainInterner.addObject(sig.resolveSymbolId(i));
             };
@@ -164,12 +172,12 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
         /**
          *
          * @param tr
-         * @param ita
+         * @param sig
          * @param amount
          */
-        public void add(Tree<Rule> tr, InterpretedTreeAutomaton ita, double amount) {
-            IntPredicate vars = createPredicate(ita);
-            IntUnaryOperator iuo = this.createMapping(ita);
+        public void add(Tree<Rule> tr, Signature sig, double amount) {
+            IntPredicate vars = createPredicate(sig);
+            IntUnaryOperator iuo = this.createMapping(sig);
 
             SubtreeIterator it = new SubtreeIterator(tr, vars);
 
