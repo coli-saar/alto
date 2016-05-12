@@ -107,7 +107,6 @@ public class IndependentTrees implements Model {
         SubtreeIterator lIt = new SubtreeIterator(t, createPredicate(ita));
         IntUnaryOperator iuo = this.createMapping(ita);
         
-        boolean first = true;
         while(lIt.hasNext()) {
             IntArrayList il = lIt.next();
             

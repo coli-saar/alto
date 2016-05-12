@@ -142,7 +142,7 @@ public class SampleEM implements TreeExtractor {
                 next.add(sampleDrawn);
                 
                 // allow the user to see the current progress
-                if((counter+1) % 100 == 0) {
+                if((counter+1) % 10 == 0) {
                     System.out.println("finished "+(counter+1)+" examples.");
                 }
                 ++counter;
@@ -165,7 +165,7 @@ public class SampleEM implements TreeExtractor {
             System.out.println("Finished training round: "+(i+1));
         }
         
-        // now generate a final grammar from the current estimate
+        // now generate a final sample from the current estimate
         Iterator<InterpretedTreeAutomaton> tas = data.iterator();
         List<Iterable<Tree<String>>> fin = new ArrayList<>();
         for(List<Tree<Rule>> sample : bfpi) {
