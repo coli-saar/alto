@@ -139,8 +139,12 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
                 double allSeen = st == null ? 0.0 : st.getNorm();
 
                 logFactor += Math.log(seen + smoo) - Math.log(allSeen + this.smooth);
+                
+                if(!Double.isFinite(logFactor)) {
+                    throw new IllegalStateException("Could not produce consistent probability");
+                }
             }
-
+            
             return logFactor;
         }
 

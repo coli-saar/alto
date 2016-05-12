@@ -177,6 +177,36 @@ public class TreeSample<Type> {
      * @param size
      * @param deterministic 
      */
+    public void flatten(RandomGenerator rg, int size, boolean deterministic) {
+        this.expoNormalize(deterministic);
+        this.resample(rg, size);
+        
+        ArrayList<Tree<Type>> newChoices = new ArrayList<>();
+        DoubleList newValues = new DoubleArrayList();
+        
+        double frac = 1.0 / size;
+        for(int i=0;i<this.populationSize();++i) {
+            int num = (int) (this.getSelfNormalizedWeight(i)*size);
+            
+            for(int k=0;k<num;++k) {
+                newChoices.add(this.getSample(i));
+                newValues.add(frac);
+            }
+        }
+        
+        this.samplesDrawn.clear();
+        this.samplesDrawn.addAll(newChoices)
+                
+        this.selfNormalizedWeight.clear();
+        this.selfNormalizedWeight.addAll(newValues)
+    }
+    
+    /**
+     * 
+     * @param rg
+     * @param size
+     * @param deterministic 
+     */
     public void resampleWithNormalize(RandomGenerator rg, int size, boolean deterministic) {
         this.expoNormalize(deterministic);
         this.resample(rg, size);

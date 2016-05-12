@@ -78,6 +78,16 @@ public class SampleEM implements TreeExtractor {
     private long seed = new Date().getTime();
     
     /**
+     * 
+     */
+    private int resultSize = 50;
+    
+    /**
+     * 
+     */
+    private int learningSize = 50;
+    
+    /**
      * Assumes determinism.
      * 
      * 
@@ -128,20 +138,22 @@ public class SampleEM implements TreeExtractor {
                 //TODO compute loglike
                 negLogLikelihood += computeNegativeLogLikelihood(fin);
                 
-                fin.resampleWithNormalize(seeder, this.sampleSize, true);
+                fin.resampleWithNormalize(seeder, this.learningSize, true);
                 
                 if(oldChoices.size() > trainingInstance) {
                     TreeSample<Rule> pick = oldChoices.get(trainingInstance);
                     
                     for(int entry=0;entry<pick.populationSize();++entry) {
-                        suc.add(pick.getSample(entry), -1);
+                        suc.add(pick.getSample(entry), -pick.getSelfNormalizedWeight(entry));
                     }
+                    
+                    oldChoices.set(trainingInstance, fin);
                 } else {
                     oldChoices.add(fin);
                 }
                 
                 for(int entry=0;entry<fin.populationSize();++entry) {
-                    suc.add(fin.getSample(entry), 1.0);
+                    suc.add(fin.getSample(entry), fin.getSelfNormalizedWeight(entry));
                 }
                 
                 // allow the user to see the current progress
@@ -151,7 +163,7 @@ public class SampleEM implements TreeExtractor {
             }
             
             if(this.iterationProgress != null) {
-                this.iterationProgress.accept(trainingRound, this.trainIterations, "Finished training round: "+(trainingRound+1));
+                this.iterationProgress.accept(trainingRound+1, this.trainIterations, "Finished training round: "+(trainingRound+1));
             }
             
             if(this.nLLTracking != null) {
@@ -171,7 +183,7 @@ public class SampleEM implements TreeExtractor {
             List<TreeSample<Rule>> lt = ads.adaSample(adaptionRounds, sampleSize, suc, true);
             TreeSample ts = lt.get(lt.size()-1);
             
-            ts.expoNormalize(true);
+            ts.flatten(seeder, resultSize, true);
             
             for(int i=0;i<ts.populationSize();++i) {
                 inner.add(ts.getSample(i).map(func));
@@ -242,9 +254,9 @@ public class SampleEM implements TreeExtractor {
         
         for(int i=0;i<fin.populationSize();++i) {
             val += Math.exp(fin.getLogTargetWeight(i)-fin.getLogPropWeight(i)-max);
-        }
+        }    
         
-        val = Math.log(val)+max;
+        val = -Math.log(val/fin.populationSize())-max;
         return val;
     }
 
@@ -342,5 +354,37 @@ public class SampleEM implements TreeExtractor {
      */
     public void setSeed(long seed) {
         this.seed = seed;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public int getResultSize() {
+        return resultSize;
+    }
+
+    /**
+     * 
+     * @param resultSize 
+     */
+    public void setResultSize(int resultSize) {
+        this.resultSize = resultSize;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    public int getLearningSize() {
+        return learningSize;
+    }
+
+    /**
+     * 
+     * @param learningSize 
+     */
+    public void setLearningSize(int learningSize) {
+        this.learningSize = learningSize;
     }
 }

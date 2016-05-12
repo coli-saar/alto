@@ -117,7 +117,7 @@ public class ExtractionHelper {
             solutions.add(outStr.toString());
         }
         
-        System.out.println(Arrays.toString(sizes));
+        //System.out.println(Arrays.toString(sizes));
         return solutions;
     }
     
@@ -292,7 +292,7 @@ public class ExtractionHelper {
             solutions.add(outStr.toString());
         }
         
-        System.out.println(Arrays.toString(sizes));
+        //System.out.println(Arrays.toString(sizes));
         return solutions;
     }
 }
