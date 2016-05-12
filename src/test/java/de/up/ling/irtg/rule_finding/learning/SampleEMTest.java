@@ -16,7 +16,6 @@ import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
-import de.up.ling.irtg.rule_finding.sampling.Model;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.irtg.util.ProgressListener;
