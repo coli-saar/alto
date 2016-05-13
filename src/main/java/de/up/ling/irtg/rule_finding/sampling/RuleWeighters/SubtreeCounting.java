@@ -131,6 +131,7 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
                 }
 
                 double seen = this.counter.get(il);
+                seen = seen < 0.0 && seen > -0.001 ? 0.0 : seen;
                 double smoo = (Math.pow(this.lexiconSize, -(il.size() - 1))) * smooth;
                 smoo = smoo <= 0.0 ? Double.MIN_VALUE : smoo;
 
@@ -141,6 +142,9 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
                 logFactor += Math.log(seen + smoo) - Math.log(allSeen + this.smooth);
                 
                 if(!Double.isFinite(logFactor)) {
+                    System.out.println(seen);
+                    System.out.println(allSeen);
+                    System.out.println(logFactor);
                     throw new IllegalStateException("Could not produce consistent probability");
                 }
             }

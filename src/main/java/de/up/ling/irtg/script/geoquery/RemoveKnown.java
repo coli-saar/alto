@@ -52,6 +52,8 @@ public class RemoveKnown {
         Algebra treeAlg = (Algebra) Class.forName(treeAlgebraType).newInstance();
         
         Map<String,Algebra> map = new HashMap<>();
+        map.put(stringAlgebraName, stringAlg);
+        map.put(treeAlgebraName, treeAlg);
         InterpretedTreeAutomaton ita = InterpretedTreeAutomaton.forAlgebras(map);
         
         Corpus input;

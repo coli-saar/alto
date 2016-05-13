@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -137,13 +138,26 @@ public class CreateGrammarByEM {
         trex.setTrainIterations(Integer.parseInt(trainIterations));
 
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(logLikelihoodFile))) {
-            Consumer<Double> cons = (Double d) -> {
-                System.out.println("NLL in this iteration: " + d);
-                try {
-                    bw.write(d.toString());
-                    bw.newLine();
-                } catch (IOException ioe) {
-                    System.out.println("problem writing out nll.");
+            Consumer<Double> cons = new Consumer<Double>() {
+                /**
+                 * 
+                 */
+                private final AtomicInteger ai = new AtomicInteger(0);
+                {
+                    bw.write ("Round;NegativeLogLikelihood");
+                }
+                
+                @Override
+                public void accept(Double d) {
+                    System.out.println("NLL in this iteration: " + d);
+                    try {
+                        bw.write(Integer.toString(ai.incrementAndGet()));
+                        bw.write(";");
+                        bw.write(d.toString());
+                        bw.newLine();
+                    } catch (IOException ioe) {
+                        System.out.println("problem writing out nll.");
+                    }
                 }
             };
             trex.setnLLTracking(cons);
