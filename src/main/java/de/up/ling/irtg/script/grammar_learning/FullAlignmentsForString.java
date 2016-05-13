@@ -1,12 +1,16 @@
-package de.up.ling.irtg.script;
-
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package de.up.ling.irtg.script.grammar_learning;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
-import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.Instance;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -14,20 +18,16 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 /**
  *
  * @author teichmann
  */
-public class AnnotatedToUnannotatedCorpus {
+public class FullAlignmentsForString {
+    
     /**
      * 
      * @param args
@@ -43,22 +43,15 @@ public class AnnotatedToUnannotatedCorpus {
         props.load(in);
         
         String inputFile = props.getProperty("inputCorpus");
-        String outputFile = props.getProperty("outputCorpus");
-        String firstAlgebraName = props.getProperty("firstAlgebraName");
-        String firstAlgebraType = props.getProperty("firstAlgebraType");
-        String secondgAlgebraName = props.getProperty("secondAlgebraName");
-        String secondAlgebraType = props.getProperty("secondAlgebraType");
-        
-        String firstAlternativeAlgebraType = props.getProperty("firstAlternateAlgebra");
-        String secondAlternativeAlgebraType = props.getProperty("secondAlternateAlgbra");
+        String outputFile = props.getProperty("outputFile");
+        String firstAlgebraName = props.getProperty("stringAlgebraName");
+        String firstAlgebraType = props.getProperty("stringAlgebraType");
         
         Algebra firstAlg = (Algebra) Class.forName(firstAlgebraType).newInstance();
-        Algebra secondAlg = (Algebra) Class.forName(secondAlgebraType).newInstance();
-        
         Map<String,Algebra> map = new HashMap<>();
         map.put(firstAlgebraName, firstAlg);
-        map.put(secondgAlgebraName,secondAlg);
         InterpretedTreeAutomaton ita = InterpretedTreeAutomaton.forAlgebras(map);
+        
         
         Corpus input;
         File out = new File(outputFile);
@@ -71,19 +64,26 @@ public class AnnotatedToUnannotatedCorpus {
             input = Corpus.readCorpusLenient(readIn, ita);
         }
         
-        firstAlg = (Algebra) Class.forName(firstAlternativeAlgebraType).newInstance();
-        secondAlg = (Algebra) Class.forName(secondAlternativeAlgebraType).newInstance();
         
-        map = new HashMap<>();
-        map.put(firstAlgebraName, firstAlg);
-        map.put(secondgAlgebraName,secondAlg);
-        ita = InterpretedTreeAutomaton.forAlgebras(map);
-        
-        try(FileWriter output = new FileWriter(out)){
-            CorpusWriter corw = new CorpusWriter(ita, "", output);
+        try(BufferedWriter output = new BufferedWriter(new FileWriter(outputFile))) {
+            boolean first = true;
             
-            for(Instance i : input) {
-                corw.writeInstance(i);
+            for(Instance inst : input) {
+                if(first) {
+                    first = false;
+                } else {
+                    output.newLine();
+                }
+                
+                List<String> line = (List<String>) inst.getInputObjects().get(firstAlgebraName);
+                for(int i=0;i<line.size();++i) {
+                    if(i!=0) {
+                        output.write(" ");
+                    }
+                    
+                    output.write(i+"-"+i);
+                }
+                
             }
         }
     }

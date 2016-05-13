@@ -151,10 +151,10 @@ public class CreateGrammarByEM {
                 public void accept(Double d) {
                     System.out.println("NLL in this iteration: " + d);
                     try {
+                        bw.newLine();
                         bw.write(Integer.toString(ai.incrementAndGet()));
                         bw.write(";");
                         bw.write(d.toString());
-                        bw.newLine();
                     } catch (IOException ioe) {
                         System.out.println("problem writing out nll.");
                     }
