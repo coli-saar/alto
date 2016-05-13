@@ -195,10 +195,10 @@ public class TreeSample<Type> {
         }
         
         this.samplesDrawn.clear();
-        this.samplesDrawn.addAll(newChoices)
+        this.samplesDrawn.addAll(newChoices);
                 
         this.selfNormalizedWeight.clear();
-        this.selfNormalizedWeight.addAll(newValues)
+        this.selfNormalizedWeight.addAll(newValues);
     }
     
     /**
