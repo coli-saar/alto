@@ -7,15 +7,11 @@ package de.up.ling.irtg.rule_finding.sampling;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.learning_rates.AdaGrad;
-import de.up.ling.irtg.learning_rates.LearningRate;
-import de.up.ling.irtg.rule_finding.sampling.RuleWeighters.AutomatonWeighted;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.LongSupplier;
-import java.util.function.Supplier;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 

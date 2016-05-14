@@ -48,6 +48,7 @@ public class AnnotatedToUnannotatedCorpus {
         String firstAlgebraType = props.getProperty("firstAlgebraType");
         String secondgAlgebraName = props.getProperty("secondAlgebraName");
         String secondAlgebraType = props.getProperty("secondAlgebraType");
+        String commentPrefix = props.getProperty("commentPrefix");
         
         String firstAlternativeAlgebraType = props.getProperty("firstAlternateAlgebra");
         String secondAlternativeAlgebraType = props.getProperty("secondAlternateAlgbra");
@@ -70,7 +71,7 @@ public class AnnotatedToUnannotatedCorpus {
         try(FileReader readIn = new FileReader(inputFile)) {
             input = Corpus.readCorpusLenient(readIn, ita);
         }
-        
+                
         firstAlg = (Algebra) Class.forName(firstAlternativeAlgebraType).newInstance();
         secondAlg = (Algebra) Class.forName(secondAlternativeAlgebraType).newInstance();
         
@@ -80,7 +81,9 @@ public class AnnotatedToUnannotatedCorpus {
         ita = InterpretedTreeAutomaton.forAlgebras(map);
         
         try(FileWriter output = new FileWriter(out)){
-            CorpusWriter corw = new CorpusWriter(ita, "", output);
+            CorpusWriter corw = new CorpusWriter(ita, "", commentPrefix, output);
+            
+            
             
             for(Instance i : input) {
                 corw.writeInstance(i);
