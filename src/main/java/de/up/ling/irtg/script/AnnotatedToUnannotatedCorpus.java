@@ -14,6 +14,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -44,14 +45,18 @@ public class AnnotatedToUnannotatedCorpus {
         
         String inputFile = props.getProperty("inputCorpus");
         String outputFile = props.getProperty("outputCorpus");
-        String firstAlgebraName = props.getProperty("firstAlgebraName");
-        String firstAlgebraType = props.getProperty("firstAlgebraType");
+        String firstAlgebraName = props.getProperty("stringAlgebraName");
+        String firstAlgebraType = props.getProperty("stringAlgebraType");
         String secondgAlgebraName = props.getProperty("secondAlgebraName");
         String secondAlgebraType = props.getProperty("secondAlgebraType");
         String commentPrefix = props.getProperty("commentPrefix");
-        
-        String firstAlternativeAlgebraType = props.getProperty("firstAlternateAlgebra");
+        String firstAlternativeAlgebraType = props.getProperty("stringAlternateAlgebra");
         String secondAlternativeAlgebraType = props.getProperty("secondAlternateAlgbra");
+        String maxLength = props.getProperty("maxLength");
+        
+        int mL = maxLength == null ? Integer.MAX_VALUE : Integer.parseInt(maxLength);
+        mL = mL < 1 ? Integer.MAX_VALUE : Integer.parseInt(maxLength);
+        
         
         Algebra firstAlg = (Algebra) Class.forName(firstAlgebraType).newInstance();
         Algebra secondAlg = (Algebra) Class.forName(secondAlgebraType).newInstance();
@@ -83,9 +88,13 @@ public class AnnotatedToUnannotatedCorpus {
         try(FileWriter output = new FileWriter(out)){
             CorpusWriter corw = new CorpusWriter(ita, "", commentPrefix, output);
             
-            
-            
             for(Instance i : input) {
+                List<String> s = (List<String>) i.getInputObjects().get(firstAlgebraName);
+                
+                if(s.size() > mL) {
+                    continue;
+                }
+                
                 corw.writeInstance(i);
             }
         }

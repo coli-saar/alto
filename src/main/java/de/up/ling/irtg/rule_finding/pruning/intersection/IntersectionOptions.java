@@ -52,6 +52,14 @@ public enum IntersectionOptions {
         public Function<TreeAutomaton, TreeAutomaton> getRestrictionFactory(String configuration) {
             return (TreeAutomaton t) -> new NoPreConstantCut(t.getSignature(), t.getAllLabels());
         }
+    },
+    MAX_SIZE {
+        @Override
+        public Function<TreeAutomaton, TreeAutomaton> getRestrictionFactory(String configuration) {
+            int maxSize = Integer.parseInt(configuration.trim());
+            
+            return (TreeAutomaton t) -> new MaxSize(t.getSignature(), maxSize);
+        }
     };
     
     /**
