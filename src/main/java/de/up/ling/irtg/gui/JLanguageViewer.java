@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
+import static de.up.ling.irtg.gui.GuiMain.log;
 
 /**
  *

@@ -16,6 +16,8 @@ import java.util.function.Consumer;
  * @param <State>
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
+    private long numRules = 0;
+    
     public ConcreteTreeAutomaton() {
         this(new Signature());
     }
@@ -60,4 +62,19 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
     public void foreachRuleBottomUpForSets(final IntSet labelIds, List<IntSet> childStateSets, final SignatureMapper signatureMapper, final Consumer<Rule> fn) {
         ruleStore.foreachRuleBottomUpForSets(labelIds, childStateSets, signatureMapper, fn);
     }
+
+    // TODO - this doesn't work, because numRules overcounts
+    // when the same rule is added twice. The clean solution
+    // would be to read the number of rules from an index.
+//    /**
+//     * Returns the number of rules in this automaton.
+//     * This method is fast for concrete automata, because
+//     * they count rules as they are added.
+//     * 
+//     * @return 
+//     */
+//    @Override
+//    public long getNumberOfRules() {
+//        return numRules;
+//    }
 }

@@ -143,13 +143,13 @@ public class CodecConverter {
         }
     }
 
-    private static void listInputCodecs() {
+    public static void listInputCodecs() {
         for (InputCodec ic : InputCodec.getAllInputCodecs()) {
             System.out.println(ic.getMetadata());
         }
     }
 
-    private static void listOutputCodecs() {
+    public static void listOutputCodecs() {
         for (OutputCodec oc : OutputCodec.getAllOutputCodecs()) {
             System.out.println(oc.getMetadata());
         }

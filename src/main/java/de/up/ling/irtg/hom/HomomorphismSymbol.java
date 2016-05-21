@@ -43,6 +43,10 @@ public class HomomorphismSymbol implements Serializable {
     public static HomomorphismSymbol createVariable(String varname) {
         return new HomomorphismSymbol(getVariableIndex(varname), Type.VARIABLE);
     }
+    
+    public static HomomorphismSymbol createVariable(int variableId) {
+        return new HomomorphismSymbol(variableId, Type.VARIABLE);
+    }
 
     /**
      * Creates a constant HomomorphismSymbol for the given symbol.

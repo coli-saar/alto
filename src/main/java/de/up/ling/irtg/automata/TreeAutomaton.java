@@ -2673,6 +2673,23 @@ public abstract class TreeAutomaton<State> implements Serializable {
             throw new UnsupportedOperationException("Not supported.");
         }
     }
+    
+    /**
+     * Returns the number of rules in this automaton.
+     * The default implementation iterates over all
+     * rules, and can thus be quite slow.
+     * 
+     * @return 
+     */
+    public long getNumberOfRules() {
+        long numRules = 0;
+        
+        for( Rule rule : getRuleSet() ) {
+            numRules++;
+        }
+        
+        return numRules;
+    }
 
     /**
      * Prints some statistics about this automaton.
