@@ -13,6 +13,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.codec.BinaryIrtgOutputCodec.TableOfContents;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.script.GrammarConverter;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
@@ -23,7 +24,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * An input codec for IRTGs in a binary file format.
+ * This codec will read files that were written using
+ * the {@link BinaryIrtgInputCodec}. It does this much
+ * faster than a text-based codec, such as {@link IrtgInputCodec},
+ * could, because no parsing is necessary.
+ * <p>
+ * To convert between binary and human-readable representations,
+ * see {@link GrammarConverter}.
+ * 
  * @author koller
  */
 @CodecMetadata(name = "irtg-bin", description = "IRTG grammar (binary format)", extension = "irtb", type = InterpretedTreeAutomaton.class)
@@ -111,7 +120,6 @@ public class BinaryIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         // read rules
         long numRules = ois.readLong();
-        System.err.println("numrules " + numRules);
         for (long i = 0; i < numRules; i++) {
             // read rule itself
             int parent = ois.readInt();

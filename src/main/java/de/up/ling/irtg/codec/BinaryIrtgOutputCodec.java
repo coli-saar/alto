@@ -27,9 +27,18 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
+ * An output codec for IRTGs in a binary file format.
+ * For large grammars, the binary format can be much
+ * more compact than a text-based format, and can be
+ * read by the {@link BinaryIrtgInputCodec} 
+ * much faster than a text-based codec could.
+ * <p>
+ * To convert between binary and human-readable representations,
+ * see {@link GrammarConverter}.
+ * 
  * @author koller
  */
+
 @CodecMetadata(name = "irtg-bin", description = "IRTG grammar (binary format)", extension = "irtb", type = InterpretedTreeAutomaton.class)
 public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton> {
 
@@ -63,7 +72,7 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
 
         // write TOC with actual values
         // TODO - this doesn't work yet
-        System.err.println("rewrite toc " + toc);
+//        System.err.println("rewrite toc " + toc);
         oos.reset();
         toc.write(oos);
     }
@@ -83,7 +92,6 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
         // iterate over rules
         oos.writeLong(irtg.getAutomaton().getNumberOfRules());
         bytes += 8;
-        System.err.println("numrules " + irtg.getAutomaton().getNumberOfRules());
 
         for (Rule r : irtg.getAutomaton().getRuleSet()) {
             // write automaton rule
@@ -187,21 +195,6 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
         obaos.writeUTF(s);
         obaos.close();
         return baos.toByteArray().length;
-    }
-
-    public static void main(String[] args) throws IOException {
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
-
-        System.err.println("Writing to " + args[1] + " ...");
-        OutputStream o = new FileOutputStream(args[1]);
-        new BinaryIrtgOutputCodec().write(irtg, o);
-        o.close();
-
-        System.err.println("Reading from " + args[1] + " ...");
-        InputStream i = new FileInputStream(args[1]);
-        InterpretedTreeAutomaton irtg2 = new BinaryIrtgInputCodec().read(i);
-
-        System.err.println(irtg2);
     }
 
     static enum Blocks {
