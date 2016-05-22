@@ -68,14 +68,17 @@ public class GrammarConverter {
         InputCodec ic = null;
         String inputFilename = null;
         
+        if( ! param.inputFiles.isEmpty() ) {
+            inputFilename = param.inputFiles.get(0);
+        }
+        
         if( param.inputCodecName != null ) {
             ic = InputCodec.getInputCodecByName(param.inputCodecName);
             
             if( ic == null ) {
                 usage("Unknown input codec: " + param.inputCodecName);
             }
-        } else if( ! param.inputFiles.isEmpty() ) {
-            inputFilename = param.inputFiles.get(0);
+        } else if( ! param.inputFiles.isEmpty() ) {            
             String ext = Util.getFilenameExtension(inputFilename);
             ic = InputCodec.getInputCodecByExtension(ext);
             
