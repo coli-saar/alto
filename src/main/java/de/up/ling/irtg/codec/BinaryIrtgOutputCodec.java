@@ -8,16 +8,18 @@ package de.up.ling.irtg.codec;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.io.FixedNumberCodec;
+import de.up.ling.irtg.io.NumberCodec;
+import de.up.ling.irtg.io.StringCodec;
+import de.up.ling.irtg.io.UtfStringCodec;
+import de.up.ling.irtg.io.VariableLengthNumberCodec;
+import de.up.ling.irtg.script.GrammarConverter;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
@@ -27,110 +29,109 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * An output codec for IRTGs in a binary file format.
- * For large grammars, the binary format can be much
- * more compact than a text-based format, and can be
- * read by the {@link BinaryIrtgInputCodec} 
- * much faster than a text-based codec could.
+ * An output codec for IRTGs in a binary file format. For large grammars, the
+ * binary format can be much more compact than a text-based format, and can be
+ * read by the {@link BinaryIrtgInputCodec} much faster than a text-based codec
+ * could.
  * <p>
- * To convert between binary and human-readable representations,
- * see {@link GrammarConverter}.
- * 
+ * To convert between binary and human-readable representations, see
+ * {@link GrammarConverter}.
+ *
  * @author koller
  */
-
 @CodecMetadata(name = "irtg-bin", description = "IRTG grammar (binary format)", extension = "irtb", type = InterpretedTreeAutomaton.class)
 public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton> {
-
-    private TableOfContents toc = null;
-
     @Override
     public void write(InterpretedTreeAutomaton irtg, OutputStream ostream) throws IOException, UnsupportedOperationException {
         ObjectOutputStream oos = new ObjectOutputStream(ostream);
+        NumberCodec nc = new VariableLengthNumberCodec(oos);
+        StringCodec sc = new UtfStringCodec(oos);
+        
         List<String> interpNamesInOrder = new ArrayList<String>(irtg.getInterpretations().keySet());
+        TableOfContents toc = new TableOfContents();
+
+        Header header = new Header();
+        long headerLength = header.write(oos);
+        toc.recordStartPosition(Blocks.TOC, headerLength);
 
         // write dummy TOC to reserve space
-        toc = new TableOfContents();
         long tocLength = toc.write(oos);
         toc.recordStartPosition(Blocks.INTERPRETATIONS, tocLength);
 
         // write interpretations
-        long interpLength = writeInterpretations(irtg, interpNamesInOrder, oos);
+        long interpLength = writeInterpretations(irtg, interpNamesInOrder, nc, sc);
         toc.recordNewBlock(Blocks.SIGNATURES, interpLength);
 
         // write signatures
         long sigLength = 0;
-        sigLength += writeInterner(irtg.getAutomaton().getStateInterner(), oos);
-        sigLength += writeSignature(irtg.getAutomaton().getSignature(), oos);
+        sigLength += writeInterner(irtg.getAutomaton().getStateInterner(), nc, sc);
+        sigLength += writeSignature(irtg.getAutomaton().getSignature(), nc, sc);
         for (String intrp : interpNamesInOrder) {
-            sigLength += writeSignature(irtg.getInterpretation(intrp).getAlgebra().getSignature(), oos);
+            sigLength += writeSignature(irtg.getInterpretation(intrp).getAlgebra().getSignature(), nc, sc);
         }
         toc.recordNewBlock(Blocks.RULES, sigLength);
 
         // write rules
-        long rulesLength = writeRules(irtg, interpNamesInOrder, oos);
-
-        // write TOC with actual values
+        long rulesLength = writeRules(irtg, interpNamesInOrder, nc);
+        
+        // rewrite TOC with actual values
         // TODO - this doesn't work yet
-//        System.err.println("rewrite toc " + toc);
         oos.reset();
         toc.write(oos);
+        
+        oos.flush();
     }
 
-    private long writeRules(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, ObjectOutputStream oos) throws IOException {
+    private long writeRules(InterpretedTreeAutomaton irtg, List<String> interpretationsInOrder, NumberCodec nw) throws IOException {
         long bytes = 0;
 
         // write final states
-        oos.writeInt(irtg.getAutomaton().getFinalStates().size());
-        bytes += 4;
+        bytes += nw.writeInt(irtg.getAutomaton().getFinalStates().size());
 
         for (int q : irtg.getAutomaton().getFinalStates()) {
-            oos.writeInt(q);
-            bytes += 4;
+            bytes += nw.writeInt(q);
         }
 
         // iterate over rules
-        oos.writeLong(irtg.getAutomaton().getNumberOfRules());
-        bytes += 8;
+        bytes += nw.writeLong(irtg.getAutomaton().getNumberOfRules());
 
         for (Rule r : irtg.getAutomaton().getRuleSet()) {
             // write automaton rule
-            oos.writeInt(r.getParent());
-            oos.writeInt(r.getLabel());
+            bytes += nw.writeInt(r.getParent());
+            bytes += nw.writeInt(r.getLabel());
 
             for (int i = 0; i < r.getChildren().length; i++) {
-                oos.writeInt(r.getChildren()[i]);
+                bytes += nw.writeInt(r.getChildren()[i]);
             }
 
-            oos.writeDouble(r.getWeight());
-
-            bytes += 4 * (2 + r.getChildren().length) + 8;
+            bytes += nw.writeDouble(r.getWeight());
 
             // write homomorphic images
             for (String interp : interpretationsInOrder) {
-                bytes += writeTree(irtg.getInterpretation(interp).getHomomorphism().get(r.getLabel()), oos);
+                bytes += writeTree(irtg.getInterpretation(interp).getHomomorphism().get(r.getLabel()), nw);
             }
         }
 
         return bytes;
     }
 
-    private long writeTree(Tree<HomomorphismSymbol> tree, ObjectOutputStream oos) {
+    private long writeTree(Tree<HomomorphismSymbol> tree, NumberCodec  nw) {
         MutableInteger bytes = new MutableInteger(0);
 
         tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Void>() {
             @Override
             public Void visit(Tree<HomomorphismSymbol> node, Void data) {
                 HomomorphismSymbol sym = node.getLabel();
+                int bytesHere = 0;
 
                 try {
                     if (sym.isVariable()) {
-                        oos.writeInt(-sym.getValue());
+                        bytesHere = (int) nw.writeSignedInt(-sym.getValue());
                     } else {
-                        oos.writeInt(sym.getValue());
+                        bytesHere = (int) nw.writeSignedInt(sym.getValue());
                     }
 
-                    bytes.setValue(bytes.getValue() + 4);
+                    bytes.setValue(bytes.getValue() + bytesHere);
                 } catch (IOException e) {
                     System.err.println("IO exception in writeTree: " + e.getMessage());
                 }
@@ -142,63 +143,47 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
         return bytes.getValue();
     }
 
-    private long writeInterner(Interner sig, ObjectOutputStream oos) throws IOException {
+    private long writeInterner(Interner sig, NumberCodec nc, StringCodec sc) throws IOException {
         long bytes = 0;
 
-        oos.writeInt(sig.getKnownIds().size());
-        bytes += 4;
+        bytes += nc.writeInt(sig.getKnownIds().size());
 
         for (int id : sig.getKnownIds()) {
-            oos.writeInt(id);
-            bytes += 4;
-            bytes += writeString(sig.resolveId(id).toString(), oos);
+            bytes += nc.writeInt(id);
+            bytes += sc.writeString(sig.resolveId(id).toString());
         }
 
         return bytes;
     }
 
-    private long writeSignature(Signature sig, ObjectOutputStream oos) throws IOException {
+    private long writeSignature(Signature sig, NumberCodec nc, StringCodec sc) throws IOException {
         long bytes = 0;
 
-        oos.writeInt(sig.getMaxSymbolId());
-        bytes += 4;
+        bytes += nc.writeInt(sig.getMaxSymbolId());
 
         for (int id = 1; id <= sig.getMaxSymbolId(); id++) {
-            oos.writeInt(sig.getArity(id));
-            bytes += 4;
-            bytes += writeString(sig.resolveSymbolId(id), oos);
+            bytes += nc.writeInt(sig.getArity(id));
+            bytes += sc.writeString(sig.resolveSymbolId(id));
         }
 
         return bytes;
     }
 
-    private long writeInterpretations(InterpretedTreeAutomaton irtg, List<String> interpNamesInOrder, ObjectOutputStream oos) throws IOException {
+    private long writeInterpretations(InterpretedTreeAutomaton irtg, List<String> interpNamesInOrder, NumberCodec nc, StringCodec sc) throws IOException {
         long bytes = 0;
-
-        oos.writeInt(irtg.getInterpretations().size());
-        bytes += 4;
+        
+        bytes += nc.writeInt(irtg.getInterpretations().size());
 
         for (String interpName : interpNamesInOrder) {
-            bytes += writeString(interpName, oos);
-            bytes += writeString(irtg.getInterpretation(interpName).getAlgebra().getClass().getName(), oos);
+            bytes += sc.writeString(interpName);
+            bytes += sc.writeString(irtg.getInterpretation(interpName).getAlgebra().getClass().getName());
         }
 
         return bytes;
     }
-
-    private long writeString(String s, ObjectOutputStream oos) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream obaos = new ObjectOutputStream(baos);
-
-        oos.writeUTF(s);
-
-        obaos.writeUTF(s);
-        obaos.close();
-        return baos.toByteArray().length;
-    }
-
+    
     static enum Blocks {
-        TOC, INTERPRETATIONS, SIGNATURES, RULES
+        HEADER, TOC, INTERPRETATIONS, SIGNATURES, RULES
     }
 
     static class TableOfContents {
@@ -256,5 +241,64 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
             return startPositions.toString();
         }
     }
+
+    static class Header {
+
+        private int version;
+        private int reserved1;
+        private int reserved2;
+        private boolean useVariableLengthEncoding;
+        private boolean reserved3;
+        private boolean reserved4;
+
+        public Header() {
+            version = 1;
+            useVariableLengthEncoding = true;
+        }
+
+        public int getVersion() {
+            return version;
+        }
+
+        public void setVersion(int version) {
+            this.version = version;
+        }
+
+        public boolean isUseVariableLengthEncoding() {
+            return useVariableLengthEncoding;
+        }
+
+        public void setUseVariableLengthEncoding(boolean useVariableLengthEncoding) {
+            this.useVariableLengthEncoding = useVariableLengthEncoding;
+        }
+        
+        
+
+        public long write(ObjectOutputStream os) throws IOException {
+            os.writeInt(version);
+            os.writeInt(reserved1);
+            os.writeInt(reserved2);
+            os.writeBoolean(useVariableLengthEncoding);
+            os.writeBoolean(reserved3);
+            os.writeBoolean(reserved4);
+            return 3 * 4 + 3 * 1;
+        }
+
+        public void read(ObjectInputStream is) throws IOException {
+            version = is.readInt();
+            reserved1 = is.readInt();
+            reserved2 = is.readInt();
+
+            useVariableLengthEncoding = is.readBoolean();
+            reserved3 = is.readBoolean();
+            reserved4 = is.readBoolean();
+        }
+    }
+
+
+
+    
+    
+    
 
 }
