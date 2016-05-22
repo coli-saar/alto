@@ -15,7 +15,8 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497b;
 
 /**
- *
+ * This class assumes that there is exactly one start state.
+ * 
  * @author christoph_teichmann
  */
 public class RuleMarkedMCMC {

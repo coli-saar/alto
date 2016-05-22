@@ -11,7 +11,7 @@ import de.up.ling.irtg.learning_rates.AdaGrad;
 import de.up.ling.irtg.random_rtg.RandomTreeAutomaton;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler.Configuration;
-import de.up.ling.irtg.rule_finding.sampling.RuleWeighters.AutomatonWeighted;
+import de.up.ling.irtg.rule_finding.sampling.rule_weighters.AutomatonWeighted;
 import de.up.ling.irtg.rule_finding.sampling.RuleWeighting;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import java.util.ArrayList;

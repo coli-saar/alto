@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.sampling.RuleWeighters;
 
+import de.up.ling.irtg.rule_finding.sampling.rule_weighters.SubtreeCounting;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;

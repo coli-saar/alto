@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.rule_finding.sampling.RuleWeighters;
 
+import de.up.ling.irtg.rule_finding.sampling.rule_weighters.AutomatonWeighted;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;

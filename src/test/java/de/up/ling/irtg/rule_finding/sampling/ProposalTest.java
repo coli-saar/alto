@@ -10,7 +10,7 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.learning_rates.AdaGrad;
-import de.up.ling.irtg.rule_finding.sampling.RuleWeighters.AutomatonWeighted;
+import de.up.ling.irtg.rule_finding.sampling.rule_weighters.AutomatonWeighted;
 import de.up.ling.tree.Tree;
 import org.junit.Before;
 import org.junit.Test;
