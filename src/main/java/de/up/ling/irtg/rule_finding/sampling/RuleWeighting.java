@@ -102,5 +102,10 @@ public interface RuleWeighting {
      */
     public double getLogTargetProbability(Tree<Rule> sample);
 
+    /**
+     * 
+     * @param r
+     * @return 
+     */
     public double getLogProbability(Rule r);
 }

@@ -298,4 +298,15 @@ public class TreeSample<Type> {
         
         return max;
     }
+
+    /**
+     * 
+     */
+    public void clear() {
+        this.proposalWeight.clear();
+        this.samplesDrawn.clear();
+        this.selfNormalizedWeight.clear();
+        this.sumProposalWeight.clear();
+        this.targetWeights.clear();
+    }
 }
