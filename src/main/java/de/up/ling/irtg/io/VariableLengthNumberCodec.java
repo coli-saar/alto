@@ -62,12 +62,6 @@ public class VariableLengthNumberCodec implements NumberCodec {
     
 
     @Override
-    public long writeDouble(double value) throws IOException {
-        oos.writeDouble(value);
-        return 8;
-    }
-
-    @Override
     public int readInt() throws IOException {
         // from https://techoverflow.net/blog/2013/01/25/efficiently-encoding-variable-length-integers-in-cc/
         int ret = 0;
@@ -102,11 +96,6 @@ public class VariableLengthNumberCodec implements NumberCodec {
         
         return ret;
     }
-
-    @Override
-    public double readDouble() throws IOException {
-        return ois.readDouble();
-    }    
 
     @Override
     public int readSignedInt() throws IOException {
@@ -151,6 +140,34 @@ public class VariableLengthNumberCodec implements NumberCodec {
         } else {
             oos.write(0);
             return writeLong(value) + 1;
+        }
+    }
+    
+    
+    
+    
+    
+
+    @Override
+    public long writeDouble(double value) throws IOException {
+        if( value == 1.0 ) {
+            oos.write(1);
+            return 1;
+        } else {
+            oos.write(0);
+            oos.writeDouble(value);
+            return 9;
+        }
+    }
+    
+    @Override
+    public double readDouble() throws IOException {
+        int type = ois.read();
+        
+        if( type == 1 ) {
+            return 1.0;
+        } else {
+            return ois.readDouble();
         }
     }
 }
