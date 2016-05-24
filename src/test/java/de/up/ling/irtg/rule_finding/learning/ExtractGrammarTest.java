@@ -14,6 +14,8 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
+import de.up.ling.irtg.rule_finding.create_automaton.MakeIdIRTGForSingleSide;
+import de.up.ling.irtg.rule_finding.create_automaton.MakeMonolingualAutomaton;
 import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
 import de.up.ling.irtg.rule_finding.pruning.Pruner;
 import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
@@ -25,12 +27,14 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -171,5 +175,53 @@ public class ExtractGrammarTest {
             assertEquals(p.getRight(),pt("answer(river(traverse_2(stateid(kansas))))")); 
             assertEquals(p.getLeft(),sal.parseString("What river flows through Kansas".toLowerCase()));
         }
+    }
+    
+    
+    @Test
+    public void testExtractForFirstAlgebra() throws Exception {
+        MakeMonolingualAutomaton mma = new MakeMonolingualAutomaton();
+        
+        StringAlgebra sal = new StringAlgebra();
+        
+        List<String> words = sal.parseString("a b c");
+        
+        TreeAutomaton<StringAlgebra.Span> aut = sal.decompose(words);
+        
+        BiFunction<TreeAutomaton<StringAlgebra.Span>,StringAlgebra.Span,String> mapping = (TreeAutomaton<StringAlgebra.Span> autom, StringAlgebra.Span span) -> {
+            return "X";
+        };
+        
+        TreeAutomaton t = mma.introduce(aut, mapping, "ROOT");
+        StringAlgebra salg = new StringAlgebra();
+        
+        InterpretedTreeAutomaton tia = MakeIdIRTGForSingleSide.makeIRTG(t, "string", salg);
+        
+        List<String> sources = new ArrayList<>();
+        
+        sources.add(tia.toString());
+        
+        Iterable<InputStream> ins = new FunctionIterable<>(sources,(String s) -> new ByteArrayInputStream(s.getBytes()));
+        
+        ByteArrayOutputStream trees = new ByteArrayOutputStream();
+        ByteArrayOutputStream grammar = new ByteArrayOutputStream();
+        
+        extract = new ExtractGrammar<>(new StringAlgebra(), null,
+                        "string", null, new MostFrequentVariables(),"string",null);
+        
+        extract.extractForFirstAlgebra(ins, trees, grammar);
+        
+        trees.close();
+        grammar.close();
+        
+        IrtgInputCodec iic = new IrtgInputCodec();
+        InterpretedTreeAutomaton ita = iic.read(new ByteArrayInputStream(grammar.toByteArray()));
+        
+        Map<String,String> input = new HashMap<>();
+        input.put("string", "a a a");
+        
+        TreeAutomaton ta = ita.parse(input);
+        
+        assertEquals(ta.countTrees(),2);
     }
 }

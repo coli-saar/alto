@@ -31,6 +31,11 @@ public class RulePostProcessing<Type1,Type2> {
     /**
      * 
      */
+    private final static Tree<String> EMPTY = Tree.create("");
+    
+    /**
+     * 
+     */
     private final AtomicInteger ai = new AtomicInteger(0);
     
     /**
@@ -77,6 +82,21 @@ public class RulePostProcessing<Type1,Type2> {
         
         this.alg1 = firstAlg;
         this.alg2 = secondAlg;
+    }
+    
+    /**
+     * 
+     * @param firstAlg 
+     */
+    public RulePostProcessing(Algebra<Type1> firstAlg) {
+        this.underConstruction = new ConcreteTreeAutomaton<>();
+        firstBuildImage = new Homomorphism(this.underConstruction.getSignature(), firstAlg.getSignature());
+        secondBuildImage = null;
+        
+        intern = new Interner<>();
+        
+        this.alg1 = firstAlg;
+        this.alg2 = null;
     }
     
     /**
@@ -228,7 +248,7 @@ public class RulePostProcessing<Type1,Type2> {
         
         Iterator<Rule> options = this.underConstruction.getRulesTopDown(lab, parent).iterator();
         int[] kids = toIntArray(children);
-            
+        
         while(options.hasNext()){
             Rule option = options.next();
             if(Arrays.equals(option.getChildren(), kids)){
@@ -282,5 +302,50 @@ public class RulePostProcessing<Type1,Type2> {
      */
     public void addFinalState(String name) {
         this.underConstruction.addFinalState(this.underConstruction.addState(name));
+    }
+
+    
+    /**
+     * 
+     * @param input
+     * @param firstImage
+     * @param isStart 
+     */
+    public void addRule(Tree<String> input, Homomorphism firstImage, boolean isStart) {
+        String parent = Variables.getInformation(input.getLabel());
+        
+        List<String> children = new ArrayList<>();
+        addChildren(input.getChildren().get(0),children);
+        
+        Tree<String> numbered = number(input.getChildren().get(0), new AtomicInteger(1));
+        
+        Tree<String> firstIm = makeImage(numbered, firstImage);
+        
+        int num = this.intern.addObject(new Pair<>(firstIm, EMPTY));
+        
+        String label = parent+"_"+num+"_"+children;
+        
+        int par = this.underConstruction.addState(parent);
+        if(isStart){
+            this.underConstruction.addFinalState(par);
+        }
+        
+        this.makeRule(par,label,children);
+        
+        this.firstBuildImage.add(label, firstIm);
+    }
+
+    /**
+     * 
+     * @param name1
+     * @return 
+     */
+    public InterpretedTreeAutomaton getIRTG(String name1) {
+        InterpretedTreeAutomaton ita = new InterpretedTreeAutomaton(underConstruction);
+        
+        Interpretation<Type1> inter1 = new Interpretation<>(alg1, this.firstBuildImage);
+        ita.addInterpretation(name1, inter1);
+        
+        return ita;
     }
 }

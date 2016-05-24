@@ -90,6 +90,52 @@ public class ExtractGrammar<Type1, Type2> {
     }
 
     /**
+     * 
+     * @param input
+     * @param trees
+     * @param irtg
+     * @throws IOException 
+     */
+    public void extractForFirstAlgebra(Iterable<InputStream> input, OutputStream trees, OutputStream irtg) throws IOException {
+        Iterable<InterpretedTreeAutomaton> analyses = makeIRTGIterable(input);
+        
+        Iterable<Iterable<Tree<String>>> solutions = this.trex.getAnalyses(analyses);
+        RulePostProcessing<Type1, Type2> rpp = new RulePostProcessing<>(algebra1);
+        
+        Iterator<Iterable<Tree<String>>> itSol = solutions.iterator();
+        Iterator<InterpretedTreeAutomaton> itAnalysis = analyses.iterator();
+        
+        try (BufferedWriter solutionWriter = new BufferedWriter(new OutputStreamWriter(trees))) {
+            while (itSol.hasNext() && itAnalysis.hasNext()) {
+                Iterable<Tree<String>> subPackage = itSol.next();
+                InterpretedTreeAutomaton ita = itAnalysis.next();
+                
+                final Homomorphism hom1 = ita.getInterpretation(interpretation1ID).getHomomorphism();
+
+                for (Tree<String> solution : subPackage) {
+                    solutionWriter.write(solution.toString());
+                    solutionWriter.newLine();
+
+                    Iterator<Tree<String>> subtrees = StringSubtreeIterator.getSubtrees(solution);    
+                    
+                    if (subtrees.hasNext()) {
+                        rpp.addRule(subtrees.next(), hom1, true);
+                    }
+                    subtrees.forEachRemaining((Tree<String> t) -> {
+                        rpp.addRule(t, hom1, false);
+                    });
+                }
+            }
+        }
+        
+        InterpretedTreeAutomaton ita = rpp.getIRTG(outInterpretation1);
+        ita.getAutomaton().normalizeRuleWeights();
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(irtg))) {
+            bw.write(ita.toString());
+        }
+    }
+    
+    /**
      *
      * @param inputs
      * @param trees
@@ -98,21 +144,7 @@ public class ExtractGrammar<Type1, Type2> {
      */
     public void extract(Iterable<InputStream> inputs, OutputStream trees, OutputStream irtg)
             throws IOException {
-        IrtgInputCodec iic = new IrtgInputCodec();
-
-        Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream in) -> {
-            InterpretedTreeAutomaton ita;
-            try {
-                ita = iic.read(in);
-
-                in.close();
-            } catch (IOException | CodecParseException ex) {
-                Logger.getLogger(ExtractGrammar.class.getName()).log(Level.SEVERE, null, ex);
-                throw new RuntimeException(ex);
-            }
-
-            return ita;
-        });
+        Iterable<InterpretedTreeAutomaton> analyses = makeIRTGIterable(inputs);
 
         Iterable<Iterable<Tree<String>>> solutions = this.trex.getAnalyses(analyses);
 
@@ -159,6 +191,29 @@ public class ExtractGrammar<Type1, Type2> {
             bw.write(ita.toString());
         }
     }
+
+    /**
+     * 
+     * @param inputs
+     * @return 
+     */
+    private Iterable<InterpretedTreeAutomaton> makeIRTGIterable(Iterable<InputStream> inputs) {
+        IrtgInputCodec iic = new IrtgInputCodec();
+        Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream in) -> {
+            InterpretedTreeAutomaton ita;
+            try {
+                ita = iic.read(in);
+                
+                in.close();
+            } catch (IOException | CodecParseException ex) {
+                Logger.getLogger(ExtractGrammar.class.getName()).log(Level.SEVERE, null, ex);
+                throw new RuntimeException(ex);
+            }
+            
+            return ita;
+        });
+        return analyses;
+    }
     
     /**
      * 
@@ -171,23 +226,10 @@ public class ExtractGrammar<Type1, Type2> {
     public void extract(Iterable<InputStream> inputs, OutputStream irtg, SubtreeExtractor ruler,
             String startNonterminal)
             throws IOException {
-        IrtgInputCodec iic = new IrtgInputCodec();
+        Iterable<InterpretedTreeAutomaton> analyses = this.makeIRTGIterable(inputs);
+        
         RulePostProcessing<Type1, Type2> rpp = new RulePostProcessing<>(algebra1, algebra2);
         rpp.addFinalState(startNonterminal);
-
-        Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream in) -> {
-            InterpretedTreeAutomaton ita;
-            try {
-                ita = iic.read(in);
-
-                in.close();
-            } catch (IOException | CodecParseException ex) {
-                Logger.getLogger(ExtractGrammar.class.getName()).log(Level.SEVERE, null, ex);
-                throw new RuntimeException(ex);
-            }
-
-            return ita;
-        });
         
         Iterable<Iterable<Tree<String>>> rules = ruler.getRuleTrees(analyses);
         
