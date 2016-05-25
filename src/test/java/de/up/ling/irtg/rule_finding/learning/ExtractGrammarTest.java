@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -188,7 +189,7 @@ public class ExtractGrammarTest {
         
         TreeAutomaton<StringAlgebra.Span> aut = sal.decompose(words);
         
-        BiFunction<TreeAutomaton<StringAlgebra.Span>,StringAlgebra.Span,String> mapping = (TreeAutomaton<StringAlgebra.Span> autom, StringAlgebra.Span span) -> {
+        Function<StringAlgebra.Span,String> mapping = (StringAlgebra.Span span) -> {
             return "X";
         };
         

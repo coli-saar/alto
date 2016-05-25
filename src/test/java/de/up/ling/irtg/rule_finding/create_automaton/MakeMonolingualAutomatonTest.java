@@ -13,7 +13,7 @@ import de.up.ling.tree.TreeParser;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -36,7 +36,7 @@ public class MakeMonolingualAutomatonTest {
     /**
      * 
      */
-    private BiFunction<TreeAutomaton<StringAlgebra.Span>,StringAlgebra.Span,String> mapping;
+    private Function<StringAlgebra.Span,String> mapping;
     
     @Before
     public void setUp() {
@@ -49,7 +49,7 @@ public class MakeMonolingualAutomatonTest {
         
         aut = sal.decompose(words);
         
-        mapping = (TreeAutomaton<StringAlgebra.Span> autom, StringAlgebra.Span span) -> {
+        mapping = (StringAlgebra.Span span) -> {
             int l  = span.start;
             int r = span.end-1;
             

@@ -10,13 +10,10 @@ import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.rule_finding.Variables;
-import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
-import de.up.ling.irtg.rule_finding.pruning.Pruner;
-import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  *
@@ -32,7 +29,7 @@ public class MakeMonolingualAutomaton {
      * @param root
      * @return 
      */
-    public <Type> TreeAutomaton introduce(TreeAutomaton<Type> ta, BiFunction<TreeAutomaton<Type>,Type,String> nonterminals, Object root) {
+    public <Type> TreeAutomaton introduce(TreeAutomaton<Type> ta, Function<Type,String> nonterminals, Object root) {
         ConcreteTreeAutomaton<Object> withIntroduction = new ConcreteTreeAutomaton<>();
         
         IntIterator states = ta.getAllStates().iterator();
@@ -43,12 +40,14 @@ public class MakeMonolingualAutomaton {
             Pair<Type,Boolean> notSeen = new Pair<>(parent,false);
             Pair<Type,Boolean> seen = new Pair<>(parent,true);
             
-            String label = nonterminals.apply(ta, parent);
+            String label = nonterminals.apply(parent);
             
             List<Object> children = new ArrayList<>();
             children.add(seen);
             
-            withIntroduction.addRule(withIntroduction.createRule(notSeen, Variables.createVariable(label), children));
+            if(label != null) {
+                withIntroduction.addRule(withIntroduction.createRule(notSeen, Variables.createVariable(label), children));
+            }
             
             Iterable<Rule> rules = ta.getRulesTopDown(state);
             for(Rule r : rules) {
@@ -70,7 +69,7 @@ public class MakeMonolingualAutomaton {
         
         while(fins.hasNext()) {
             Type t = ta.getStateForId(fins.nextInt());
-            String label = nonterminals.apply(ta, t);
+            String label = nonterminals.apply(t);
             label = Variables.createVariable(label);
             
             withIntroduction.addRule(withIntroduction.createRule(root, label, new Object[] {new Pair<>(t,true)}));
