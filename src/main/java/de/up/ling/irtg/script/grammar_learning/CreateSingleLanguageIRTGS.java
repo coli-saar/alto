@@ -8,10 +8,14 @@ package de.up.ling.irtg.script.grammar_learning;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
+import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
+import de.up.ling.irtg.rule_finding.create_automaton.MakeIdIRTGForSingleSide;
+import de.up.ling.irtg.rule_finding.create_automaton.MakeMonolingualAutomaton;
+import de.up.ling.irtg.rule_finding.create_automaton.single_input_nonterminals.FromTreeWithBar;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
@@ -51,6 +55,7 @@ public class CreateSingleLanguageIRTGS {
         
         String corpusFile = props.getProperty("corpusFile");
         String automataFolder = props.getProperty("automataFolder");
+        String rootState = props.getProperty("rootStateName");
         
         Algebra a1 = new MinimalTreeAlgebra();
         Algebra a2 = (Algebra) Class.forName(algebraTwo).newInstance();
@@ -76,17 +81,19 @@ public class CreateSingleLanguageIRTGS {
             
             Object o = instance.getInputObjects().get(targetAlgebraName);
             
-            TreeAutomaton ta = ita.getInterpretation(targetAlgebraName).getAlgebra().decompose(o);
+            TreeAutomaton ta = a1.decompose(o);
             
             String fileName = makeStandardName(f1, num);
-            try(BufferedWriter out = new BufferedWriter(new FileWriter(fileName))) {
-                out.write(ta.toString());
-            }
             
-            //TODO introduce proper non-terminals
+            FromTreeWithBar ftwb = new FromTreeWithBar(ta);
+            MakeMonolingualAutomaton mma = new MakeMonolingualAutomaton();
+            
+            ta = mma.introduce(ta, ftwb, rootState);
+            InterpretedTreeAutomaton result = MakeIdIRTGForSingleSide.makeIRTG(ta, targetAlgebraName, new TreeAlgebra());
+            try(BufferedWriter out = new BufferedWriter(new FileWriter(fileName))) {
+                out.write(result.toString());
+            }
         }
-        
-        //TODO
     }
     
     /**

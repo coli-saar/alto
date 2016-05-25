@@ -45,6 +45,7 @@ public class FromTreeWithBarTest {
         
         assertTrue(tq.accepts(TreeParser.parse("'__X__{a}'(__LR__('__X__{a}'(a),'__X__{a||}'(__RL__(a,'__X__{a}'(a)))))")));
         assertFalse(tq.accepts(TreeParser.parse("'__X__{a}'(__LR__('__X__{a}'(a),'__X__{a||}'(__RL__('__X__{a}'(a),'__X__{a}'(a)))))")));
+        assertFalse(tq.accepts(TreeParser.parse("'__X__{a}'(__LR__('__X__{a}'(a),'__X__{a}'(__RL__(a,'__X__{a}'(a)))))")));
         assertFalse(tq.accepts(TreeParser.parse("'__X__{a}'(__LR__('__X__{a}'(a),'__X__{a||}'(__RL__('__X__{a||}'(a),'__X__{a}'(a)))))")));
     }
 }

@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  *
  * @author christoph_teichmann
  */
-public class CreateGrammarByEM {
+public class CreateSingularGrammarByEM {
 
     /**
      *
@@ -56,7 +56,7 @@ public class CreateGrammarByEM {
         String grammarOutput = props.getProperty("grammar");
 
         String firstAlgebra = props.getProperty("firstAlgebra");
-        String secondAlgebra = props.getProperty("secondAlgebra");
+        String firstAlgebraName = props.getProperty("firstAlgebraName");
 
         String adaptionSampleSize = props.getProperty("adaptionSampleSize");
         String learnSampleSize = props.getProperty("learnSampleSize");
@@ -68,14 +68,9 @@ public class CreateGrammarByEM {
         String normalizationDivisor = props.getProperty("adaptionNormalizationDivisor");
 
         String smooth = props.getProperty("smooth");
-
-        String outInterpretation1 = props.getProperty("firstAlgebraName");
-        String outInterpretation2 = props.getProperty("secondAlgebraName");
-
         String seed = props.getProperty("seed");
 
         Algebra a1 = (Algebra) Class.forName(firstAlgebra).newInstance();
-        Algebra a2 = (Algebra) Class.forName(secondAlgebra).newInstance();
 
         File[] inputs = new File(inputFolder).listFiles();
         Iterable<InputStream> instream = () -> {
@@ -108,13 +103,13 @@ public class CreateGrammarByEM {
                     try {
                         return iic.read(ins).getAutomaton().getSignature();
                     } catch (IOException | CodecParseException ex) {
-                        Logger.getLogger(CreateGrammarByEM.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(CreateSingularGrammarByEM.class.getName()).log(Level.SEVERE, null, ex);
                         throw new RuntimeException(ex);
                     }
                 });
 
         SubtreeCounting.CentralCounter counter = new SubtreeCounting.CentralCounter(Double.parseDouble(smooth), sigs);
-
+        
         ProgressListener pog = (int done, int target, String line) -> {
             StringBuilder sb = new StringBuilder();
             sb.append(done);
@@ -162,13 +157,14 @@ public class CreateGrammarByEM {
                     }
                 }
             };
+            
             trex.setnLLTracking(cons);
-            ExtractGrammar eg = new ExtractGrammar(a1, a2, ExtractJointTrees.FIRST_ALGEBRA_ID, ExtractJointTrees.SECOND_ALGEBRA_ID, trex,
-                    outInterpretation1, outInterpretation2);
+            ExtractGrammar eg = new ExtractGrammar(a1, null, firstAlgebraName, null, trex,
+                    firstAlgebraName, null);
 
             try (OutputStream trees = new FileOutputStream(treeOutput);
                     OutputStream grammar = new FileOutputStream(grammarOutput)) {
-                eg.extract(instream, trees, grammar);
+                eg.extractForFirstAlgebra(instream, trees, grammar);
             }
         }
     }
