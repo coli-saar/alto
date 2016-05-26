@@ -36,7 +36,7 @@ public class MakeMonolingualAutomatonTest {
     /**
      * 
      */
-    private Function<StringAlgebra.Span,String> mapping;
+    private Function<Object,String> mapping;
     
     @Before
     public void setUp() {
@@ -49,7 +49,8 @@ public class MakeMonolingualAutomatonTest {
         
         aut = sal.decompose(words);
         
-        mapping = (StringAlgebra.Span span) -> {
+        mapping = (Object s) -> {
+            StringAlgebra.Span span = (StringAlgebra.Span) s;
             int l  = span.start;
             int r = span.end-1;
             

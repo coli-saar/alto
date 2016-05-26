@@ -33,8 +33,5 @@ public class BinarizingTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
     @Override
     public List<Evaluator> getEvaluationMethods() {
         return new TreeAlgebra().getEvaluationMethods(); //To change body of generated methods, choose Tools | Templates.
-    }
-    
-    
-    
+    }    
 }

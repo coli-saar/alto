@@ -34,7 +34,7 @@ public class MakeIdIRTGTest {
     /**
      * 
      */
-    private Function<StringAlgebra.Span,String> mapping;
+    private Function<Object,String> mapping;
     
     /**
      * 
@@ -57,7 +57,8 @@ public class MakeIdIRTGTest {
         
         aut = sal.decompose(words);
         
-        mapping = (StringAlgebra.Span span) -> {
+        mapping = (Object o) -> {
+            StringAlgebra.Span span = (StringAlgebra.Span) o;
             int l  = span.start;
             int r = span.end-1;
             

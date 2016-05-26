@@ -29,16 +29,16 @@ public class MakeMonolingualAutomaton {
      * @param root
      * @return 
      */
-    public <Type> TreeAutomaton introduce(TreeAutomaton<Type> ta, Function<Type,String> nonterminals, Object root) {
+    public TreeAutomaton introduce(TreeAutomaton ta, Function<Object,String> nonterminals, Object root) {
         ConcreteTreeAutomaton<Object> withIntroduction = new ConcreteTreeAutomaton<>();
         
         IntIterator states = ta.getAllStates().iterator();
         while(states.hasNext()) {
             int state = states.nextInt();
             
-            Type parent = ta.getStateForId(state);
-            Pair<Type,Boolean> notSeen = new Pair<>(parent,false);
-            Pair<Type,Boolean> seen = new Pair<>(parent,true);
+            Object parent = ta.getStateForId(state);
+            Pair<Object,Boolean> notSeen = new Pair<>(parent,false);
+            Pair<Object,Boolean> seen = new Pair<>(parent,true);
             
             String label = nonterminals.apply(parent);
             
@@ -68,7 +68,7 @@ public class MakeMonolingualAutomaton {
         IntIterator fins = ta.getFinalStates().iterator();
         
         while(fins.hasNext()) {
-            Type t = ta.getStateForId(fins.nextInt());
+            Object t = ta.getStateForId(fins.nextInt());
             String label = nonterminals.apply(t);
             label = Variables.createVariable(label);
             
