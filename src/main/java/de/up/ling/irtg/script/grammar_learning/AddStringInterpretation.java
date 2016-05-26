@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -35,6 +36,7 @@ public class AddStringInterpretation {
         String outputName = props.getProperty("outputGrammarFile");
         String sourceName = props.getProperty("sourceInterpretationName");
         String newName = props.getProperty("newInterpretationName");
+        String pattern = props.getProperty("reductionPattern");
         
         IrtgInputCodec iic = new IrtgInputCodec();
         InterpretedTreeAutomaton ita;
@@ -42,9 +44,9 @@ public class AddStringInterpretation {
             ita = iic.read(fis);
         }
         
-        Stringify.addStringInterpretation(ita, sourceName, newName);
+        Stringify.addStringInterpretation(ita, sourceName, newName, Pattern.compile(pattern));
         
-        File f = new File(newName);
+        File f = new File(outputName);
         if(f.getParent() != null) {
             f.getParentFile().mkdirs();
         }

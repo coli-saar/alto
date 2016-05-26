@@ -11,6 +11,7 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -23,7 +24,7 @@ public class Stringify {
      * @param deriveFrom
      * @param newName 
      */
-    public static void addStringInterpretation(InterpretedTreeAutomaton to, String deriveFrom, String newName) {
+    public static void addStringInterpretation(InterpretedTreeAutomaton to, String deriveFrom, String newName, Pattern patt) {
        StringAlgebra sal = new StringAlgebra();
         Homomorphism orig = to.getInterpretation(deriveFrom).getHomomorphism();
        
@@ -33,7 +34,7 @@ public class Stringify {
         for(int symbol=1;symbol <= source.getMaxSymbolId();++symbol) {
             String s = source.resolveSymbolId(symbol);
                         if(orig.get(symbol) != null) {
-                hom.add(s, treeRuleToStringRule(orig.get(s)));
+                hom.add(s, treeRuleToStringRule(orig.get(s),patt));
             }
         }
         
@@ -45,29 +46,32 @@ public class Stringify {
     /**
      * 
      * @param homomorphicImage
+     * @param patt
      * @return 
      */
-    public static Tree<String> treeRuleToStringRule(Tree<String> homomorphicImage) {
+    public static Tree<String> treeRuleToStringRule(Tree<String> homomorphicImage, Pattern patt) {
         String label = homomorphicImage.getLabel();
+        if(patt != null) {
+            label = patt.matcher(label).replaceAll("");
+        }
         
         if(homomorphicImage.getChildren().size() == 1) {
-            return treeRuleToStringRule(homomorphicImage.getChildren().get(0));
+            return treeRuleToStringRule(homomorphicImage.getChildren().get(0),patt);
         }
         
         if(homomorphicImage.getChildren().isEmpty()) {
             if(label.equals(StringAlgebra.CONCAT)) {
                 return Tree.create(StringAlgebra.SPECIAL_STAR);
             } else {
-                return homomorphicImage;
+                return Tree.create(label);
             }
         }
-        
         
         Tree<String>[] children = new Tree[2];
         
         int pos = 1;
         for(int i=homomorphicImage.getChildren().size()-1;i>=0;--i) {
-            children[pos--] = treeRuleToStringRule(homomorphicImage.getChildren().get(i));
+            children[pos--] = treeRuleToStringRule(homomorphicImage.getChildren().get(i),patt);
             
             if(pos < 0) {
                 children[1] = Tree.create(StringAlgebra.CONCAT, children);

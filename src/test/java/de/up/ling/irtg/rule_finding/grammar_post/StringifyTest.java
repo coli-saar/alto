@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -60,14 +61,13 @@ public class StringifyTest {
      */
     @Test
     public void testAddStringInterpretation() throws ParserException {
-        Stringify.addStringInterpretation(ita, "english", "engString");
+        Stringify.addStringInterpretation(ita, "english", "engString", Pattern.compile("o$"));
         
         Map<String,String> m = new HashMap<>();
-        m.put("engString", "he does not go");
+        m.put("engString", "he does not g");
         
         TreeAutomaton ta = ita.parse(m);
         
-        System.out.println(ita.interpret(ta.viterbi(), "french"));
         assertEquals(ita.interpret(ta.viterbi(), "french").toString(),"[il, ne, va, pas]");
     }
 }
