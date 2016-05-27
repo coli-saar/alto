@@ -57,7 +57,6 @@ public class BiFunctionParallelIterableTest {
         DoubleArrayList dal = new DoubleArrayList();
         
         iter.forEach((Double d) -> dal.add(d));
-        System.out.println(dal.size());
         assertEquals(dal.size(),second.size());
         for(int i=0;i<second.size();++i){           
             assertEquals(dal.getDouble(i),second.getDouble(i)-i,0.000000001);
