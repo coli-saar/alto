@@ -7,12 +7,8 @@ package de.up.ling.irtg.codec;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
 import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.util.Iterator;
-import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
