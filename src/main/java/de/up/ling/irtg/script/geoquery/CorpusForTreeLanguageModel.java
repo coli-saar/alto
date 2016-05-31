@@ -57,7 +57,6 @@ public class CorpusForTreeLanguageModel {
         for(Instance instance : corp) {
             Instance ne = new Instance();
             
-            //TODO GET THIS TO WORK
             Tree<String> t = (Tree<String>) instance.getInputObjects().get(algebraName);
             t = t.map((String s) -> {
                 if(s.trim().matches("\\d+")) {
@@ -70,7 +69,7 @@ public class CorpusForTreeLanguageModel {
             Map<String,Object> values = new HashMap<>();
             values.put(algebraName, t);
             ne.setInputObjects(values);
-            c.addInstance(instance);
+            c.addInstance(ne);
         }
        
         

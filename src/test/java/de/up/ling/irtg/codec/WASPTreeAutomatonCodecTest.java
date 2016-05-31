@@ -17,7 +17,9 @@ import static org.junit.Assert.*;
  * @author teichmann
  */
 public class WASPTreeAutomatonCodecTest {
-
+    /**
+     * 
+     */
     private final String GRAMMAR_SAMPLE = "*n:CityName -> ({ ' west valley ' })\n"
             + "*n:CityName -> ({ ' westland ' })\n"
             + "*n:Country -> ({ countryid ( *n:CountryName ) }) zero-fertility\n"
