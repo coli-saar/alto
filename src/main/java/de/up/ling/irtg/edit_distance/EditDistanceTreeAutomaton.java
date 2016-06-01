@@ -10,6 +10,8 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.tree.Tree;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.IntToDoubleFunction;
 
@@ -86,9 +88,10 @@ public class EditDistanceTreeAutomaton extends TreeAutomaton<EditDistanceTreeAut
                     Rule r = this.createRule(state, labelId, childStates, weight);
                     storeRuleBottomUp(r);
                     
-                    double deleteCost = this.makeDeleteCosts(eds);
-                    eds = new EditDistanceState(0, this.inputSentence.size());
-                    state = this.addState(eds);
+                    double deleteCost = this.computeExternalDelete(eds);
+                    
+                    EditDistanceState fin = new EditDistanceState(0, this.inputSentence.size());
+                    state = this.getIdForState(fin);
                     deleteCost += weight;
                     
                     r = this.createRule(state, labelId, childStates, deleteCost);
@@ -102,16 +105,15 @@ public class EditDistanceTreeAutomaton extends TreeAutomaton<EditDistanceTreeAut
                     r = this.createRule(state, labelId, childStates, weight);
                     storeRuleBottomUp(r);
                     
-                    deleteCost = this.makeDeleteCosts(eds);
-                    eds = new EditDistanceState(0, this.inputSentence.size());
-                    state = this.addState(eds);
+                    deleteCost = this.computeExternalDelete(eds);
+                    state = this.getIdForState(fin);
                     deleteCost += weight;
                     
                     r = this.createRule(state, labelId, childStates, deleteCost);
                     storeRuleBottomUp(r);
                 }
             } else {
-                // TODO
+                // check that this is possible in the string algebra
                 if(childStates.length != 2 || !this.getSignature().resolveSymbolId(labelId).equals(StringAlgebra.CONCAT)) {
                     return EMPTY;
                 }
@@ -119,13 +121,28 @@ public class EditDistanceTreeAutomaton extends TreeAutomaton<EditDistanceTreeAut
                 EditDistanceState left = this.getStateForId(childStates[0]);
                 EditDistanceState right = this.getStateForId(childStates[1]);
                 
+                // check that the states are properly ordered
                 if(left.readSpanEnd > right.readSpanStart) {
                     return EMPTY;
                 }
                 
+                // now compute how much we need to delete in order to combine the two spans
+                double internalDelete = this.computeInternalDelete(left.readSpanEnd,right.readSpanStart);
                 
+                EditDistanceState combined = new EditDistanceState(left.readSpanStart, right.readSpanEnd);
+                int state = this.addState(combined);
                 
-                //TODO
+                Rule r = this.createRule(state, labelId, childStates, internalDelete);
+                this.storeRuleBottomUp(r);
+                
+                // we could also finish here, if we pay the price for deleting everything outside
+                double externalDelete = this.computeExternalDelete(combined);
+                
+                EditDistanceState fin = new EditDistanceState(0, this.inputSentence.size());
+                state = this.getIdForState(fin);
+                
+                r = this.createRule(state, labelId, childStates, externalDelete+internalDelete);
+                this.storeRuleBottomUp(r);
             }
         }
 
@@ -138,6 +155,16 @@ public class EditDistanceTreeAutomaton extends TreeAutomaton<EditDistanceTreeAut
     }
 
     @Override
+    public boolean supportsBottomUpQueries() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsTopDownQueries() {
+        return false;
+    }
+    
+    @Override
     public boolean isBottomUpDeterministic() {
         return false;
     }
@@ -147,7 +174,7 @@ public class EditDistanceTreeAutomaton extends TreeAutomaton<EditDistanceTreeAut
      * @param eds
      * @return 
      */
-    private double makeDeleteCosts(EditDistanceState eds) {
+    private double computeExternalDelete(EditDistanceState eds) {
         double value = 0.0;
         for(int i=eds.readSpanEnd;i<this.inputSentence.size();++i) {
             value += this.delete.applyAsDouble(i);
@@ -160,6 +187,81 @@ public class EditDistanceTreeAutomaton extends TreeAutomaton<EditDistanceTreeAut
         return value;
     }
 
+    /**
+     * 
+     * @param leftEnd
+     * @param rightStart
+     * @return 
+     */
+    private double computeInternalDelete(int leftEnd, int rightStart) {
+        double value = 0.0;
+        for(int i=leftEnd;i<rightStart;++i) {
+            value += this.delete.applyAsDouble(i);
+        }
+        
+        return value;
+    }
+    
+    
+    /**
+     * 
+     * @param derivation
+     * @return 
+     */
+    public Status[] computeStatus(Tree<Rule> derivation) {
+        Status[] result = new Status[this.inputSentence.size()];
+        Arrays.fill(result, Status.DELETED);
+        
+        addEntries(derivation,result);
+        
+        return result;
+    }
+
+    /**
+     * 
+     * @param derivation
+     * @param result 
+     */
+    private void addEntries(Tree<Rule> derivation, Status[] result) {
+        if(derivation.getChildren().isEmpty()) {
+            EditDistanceState eds = this.getStateForId(derivation.getLabel().getParent());
+            
+            if(eds.distance() == 1) {
+                String label = this.getSignature().resolveSymbolId(derivation.getLabel().getLabel());
+                
+                int pos = eds.readSpanStart;
+                result[pos] = this.inputSentence.get(pos).equals(label) ? Status.KEPT : Status.DELETED;
+            }
+        } else {
+            List<Tree<Rule>> children = derivation.getChildren();
+            
+            for(int i=0;i<children.size();++i) {
+                this.addEntries(children.get(i), result);
+            }
+        }
+    }
+    
+    
+    /**
+     * 
+     */
+    public enum Status {
+        /**
+         * 
+         */
+        KEPT,
+        
+        /**
+         * 
+         */
+        DELETED,
+        
+        /**
+         * 
+         */
+        SUBSTITUTED;
+    }
+    
     /**
      * 
      */
@@ -182,6 +284,10 @@ public class EditDistanceTreeAutomaton extends TreeAutomaton<EditDistanceTreeAut
          * @param isFinished
          */
         private EditDistanceState(int readSpanStart, int readSpanEnd) {
+            if(readSpanStart > readSpanEnd) {
+                throw new IllegalStateException("Incorrectly ordered start and end point.");
+            }
+            
             this.readSpanStart = readSpanStart;
             this.readSpanEnd = readSpanEnd;
         }
@@ -211,6 +317,10 @@ public class EditDistanceTreeAutomaton extends TreeAutomaton<EditDistanceTreeAut
             }
             
             return this.readSpanEnd == other.readSpanEnd;
+        }
+
+        private int distance() {
+            return this.readSpanEnd-this.readSpanStart;
         }
     }
 }
