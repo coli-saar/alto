@@ -67,7 +67,9 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
         sigLength += writeInterner(irtg.getAutomaton().getStateInterner(), nc, sc);
         sigLength += writeSignature(irtg.getAutomaton().getSignature(), nc, sc);
         for (String intrp : interpNamesInOrder) {
-            sigLength += writeSignature(irtg.getInterpretation(intrp).getAlgebra().getSignature(), nc, sc);
+            long sigBytes = writeSignature(irtg.getInterpretation(intrp).getHomomorphism().getTargetSignature(), nc, sc);
+	    sigLength += sigBytes;
+//            sigLength += writeSignature(irtg.getInterpretation(intrp).getAlgebra().getSignature(), nc, sc);
         }
         toc.recordNewBlock(Blocks.RULES, sigLength);
 
