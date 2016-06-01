@@ -27,6 +27,7 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
+import de.up.ling.irtg.semiring.TropicalMaxWithBackPointersSemiring;
 import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
@@ -905,7 +906,84 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return new WeightedTree(t, weightBestFinalState);
         }
     }
+    
+    /**
+     * 
+     */
+    private static final TropicalMaxWithBackPointersSemiring TROPICANA = new TropicalMaxWithBackPointersSemiring();
+    
+    /**
+     * 
+     * @return 
+     */
+    public Tree<Rule> maxTropicalRules() {
+        // run Viterbi algorithm bottom-up, saving rules as backpointers
 
+        Int2ObjectMap<Pair<Double, Rule>> map
+                = evaluateInSemiring2(TROPICANA, rule -> new Pair(rule.getWeight(), rule));
+
+        // find final state with highest weight
+        int bestFinalState = -1;
+        double weightBestFinalState = Double.NEGATIVE_INFINITY;
+
+        for (int s : getFinalStates()) {
+            Pair<Double, Rule> result = map.get(s);
+
+            // ignore final states that (for some crazy reason) can't
+            // be expanded
+            if (result.right != null) {
+                if (map.get(s).left > weightBestFinalState) {
+                    bestFinalState = s;
+                    weightBestFinalState = map.get(s).left;
+
+                    if (D.isEnabled()) {
+                        System.err.println("update best final state to " + getStateForId(s) + ": " + weightBestFinalState);
+                    }
+                }
+            }
+        }
+
+        assert bestFinalState > -1 : "Tropical maximization failed: no useful final state found";
+
+        // extract best tree from backpointers
+        Tree<Rule> t = extractRuleTreeFromBackPointers(bestFinalState, map, 0);
+
+        if (t == null) {
+            return null;
+        } else {
+            return t;
+        }
+    }
+    
+    /**
+     * 
+     * @param state
+     * @param map
+     * @param depth
+     * @return 
+     */
+    private Tree<Rule> extractRuleTreeFromBackPointers(int state, Int2ObjectMap<Pair<Double, Rule>> map, int depth) {
+         if (map.containsKey(state)) {
+            Rule backpointer = map.get(state).right;
+            List<Tree<Rule>> childTrees = new ArrayList<>();
+
+            for (int child : backpointer.getChildren()) {
+                Tree<Rule> childTree = extractRuleTreeFromBackPointers(child, map, depth + 1);
+
+                childTrees.add(childTree);
+            }
+
+            Tree<Rule> ret = Tree.create(backpointer, childTrees);
+            return ret;
+        } else {
+            D.D(depth, () -> "(no entries for " + getStateForId(state) + ")");
+        }
+
+//        System.err.println(getStateForId(state) + " -> null");
+        return null; // if language is empty, return null
+    }
+    
+    
     private Tree<Integer> extractTreeFromViterbi(int state, Int2ObjectMap<Pair<Double, Rule>> map, int depth) {
         D.D(depth, () -> "etfv " + getStateForId(state));
 
@@ -1164,7 +1242,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             Rule found = null;
 
             for (Rule rr : tmp) {
-                if (stateRemap.remapForward(r.getParent()) == rr.getParent() && labelRemap.remapForward(r.getLabel()) == rr.getLabel()) {
+                if (stateRemap.remapForward(r.getParent()) == rr.getParent() && labelRemap.remapForward(r.getLabel()) == rr.getLabel() && r.getWeight() == rr.getWeight()) {
                     // children are necessarily the same because both rule sets were found
                     // using getRulesBottomUp with remapped child states
                     found = rr;
