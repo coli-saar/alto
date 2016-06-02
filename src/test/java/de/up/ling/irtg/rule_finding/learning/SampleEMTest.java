@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import org.junit.Before;
 import org.junit.Test;
@@ -152,7 +153,7 @@ public class SampleEMTest {
      * Test of getChoices method, of class SampleOnlineEM.
      */
     @Test
-    public void testGetChoices() {
+    public void testGetChoices() throws InterruptedException, ExecutionException {
         assertEquals(soe.getNormalizationDivisor(), 100, 0.000001);
         assertEquals(soe.getNormalizationExponent(), 2);
 
