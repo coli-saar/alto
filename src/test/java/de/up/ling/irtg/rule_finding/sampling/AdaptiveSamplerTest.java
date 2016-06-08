@@ -91,36 +91,25 @@ public class AdaptiveSamplerTest {
         int rounds = 20;
         int resample = 50;
         
-        List<TreeSample<Rule>> ts = adaSamp.adaSample(rounds, 1500, auw, true);
+        List<TreeSample<Rule>> ts = adaSamp.adaSample(rounds, 1500, auw, true, true);
         
         assertEquals(ts.size(),rounds);
         for(int i=0;i<ts.size();++i) {
             assertTrue(ts.get(i).populationSize() <= 1500);
         }
+        
         for(Rule r : (Iterable<Rule>) this.tau.getRulesTopDown(startState)) {
-            if(r.toString(tau).equals("'0-6'! -> *('0-1', '1-6') [1.0]")) {
-                assertTrue(Math.exp(auw.getLogProbability(r)) > 0.3);
-                
-                Int2ObjectMap<Double> inside = auw.getAutomaton().inside();
-                
-                double d = inside.get(r.getChildren()[0]);
-                d += inside.get(r.getChildren()[1]);
-                
-                assertEquals(d / inside.get(r.getParent()),Math.exp(auw.getLogProbability(r)),0.05);
-            } else if(r.toString(tau).equals("'0-6'! -> *('0-3', '3-6') [1.0]")) {
-                assertTrue(Math.exp(auw.getLogProbability(r)) < 0.1);
-            }
-        }
-        
-        ArrayList<Object2DoubleMap<Rule>> data = ruC.getData()[0];
-        
-        assertEquals(data.size(),rounds);
-        
-        for(Map.Entry<Rule,Double> ent : data.get(19).entrySet()) {
-            if(ent.getKey().toString(tau).equals("'0-6'! -> *('0-1', '1-6') [1.0]")) {
-                assertTrue(Math.exp(ent.getValue()) > 0.3);
-            } else if(ent.getKey().toString(tau).equals("'0-6'! -> *('0-3', '3-6') [1.0]")) {
-                assertTrue(Math.exp(ent.getValue()) < 0.1);
+            switch (r.toString(tau)) {
+                case "'0-6'! -> *('0-1', '1-6') [1.0]":
+                    assertTrue(Math.exp(auw.getLogProbability(r)) > 0.3);
+                    Int2ObjectMap<Double> inside = auw.getAutomaton().inside();
+                    double d = inside.get(r.getChildren()[0]);
+                    d += inside.get(r.getChildren()[1]);
+                    assertEquals(d / inside.get(r.getParent()),Math.exp(auw.getLogProbability(r)),0.05);
+                    break;
+                case "'0-6'! -> *('0-3', '3-6') [1.0]":
+                    assertTrue(Math.exp(auw.getLogProbability(r)) < 0.1);
+                    break;
             }
         }
     }
