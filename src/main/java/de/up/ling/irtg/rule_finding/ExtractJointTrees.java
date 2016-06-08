@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.rule_finding;
 
-import de.saar.basic.Logger;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
@@ -116,7 +115,7 @@ public class ExtractJointTrees {
                 out.flush();
             }
             
-            System.out.println("handeled input pair: "+(++i));
+            //System.out.println("handeled input pair: "+(++i));
         }
         
         return new double[] {sumOfSizes / length, min, max};

@@ -10,7 +10,6 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.Tree;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +49,6 @@ public class MakeIdIRTGTest {
     public void setUp() {
         mma = new MakeMonolingualAutomaton();
         
-       
         StringAlgebra sal = new StringAlgebra();
         
         List<String> words = sal.parseString("a b c");

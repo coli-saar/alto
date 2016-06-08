@@ -39,6 +39,7 @@ public class MakeAutomataTest {
 
     /**
      * Test of create method, of class MakeAutomata.
+     * @throws java.lang.Exception
      */
     @Test
     public void testCreate_InputStream_Supplier() throws Exception {

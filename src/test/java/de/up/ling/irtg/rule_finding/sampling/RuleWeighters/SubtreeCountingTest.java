@@ -82,8 +82,12 @@ public class SubtreeCountingTest {
         Iterable<String> grammars = ExtractionHelper.getStringIRTGs(leftTrees, rightTrees, alignments, p1, p2);
         
         IrtgInputCodec iic = new IrtgInputCodec();
-        this.ita = iic.read(new ByteArrayInputStream(grammars.iterator().next().getBytes()));
+        
+        Signature sig = new Signature();
+        this.ita = iic.read(new ByteArrayInputStream(grammars.iterator().next().getBytes()),sig);
 
+        assertTrue(ita.getAutomaton().getSignature() == sig);
+        
         TreeAutomaton solution = ita.getAutomaton();
         
         Iterable<Rule> rules = solution.getAllRulesTopDown();
@@ -98,10 +102,7 @@ public class SubtreeCountingTest {
         imp1 = solution.getRuleTree(t1);
         imp2 = solution.getRuleTree(t2);
         
-        List<Signature> list = new ArrayList<>();
-        list.add(ita.getAutomaton().getSignature());
-        
-        this.cc = new SubtreeCounting.CentralCounter(0.5,list);
+        this.cc = new SubtreeCounting.CentralCounter(3.0, 1.0, sig);
         
         this.sc = new SubtreeCounting(ita, 3, 100, new AdaGrad(0.5), cc);
     }
@@ -116,7 +117,7 @@ public class SubtreeCountingTest {
         
         double e1 = this.cc.getLogProbability(imp2, ita);
         
-        assertEquals(d1,-65.16193076042964,0.00000001);
+        assertEquals(d1,-67.60573108918678,0.00000001);
         assertEquals(d1,c1,0.00000001);
         
         this.cc.add(imp1, ita.getAutomaton().getSignature(), 1);
@@ -125,7 +126,7 @@ public class SubtreeCountingTest {
         double e2 = this.cc.getLogProbability(imp2, ita);
         
         assertTrue(e2 != e1);
-        assertEquals(d2,-1.621775089996125,0.0000000001);
+        assertEquals(d2,-5.544811255891985,0.0000000001);
         
         this.cc.add(imp1, ita.getAutomaton().getSignature(), -1);
         double d3 = this.cc.getLogProbability(imp1, ita);

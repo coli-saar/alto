@@ -10,13 +10,14 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.learning_rates.LearningRate;
 import de.up.ling.irtg.rule_finding.Variables;
 import de.up.ling.irtg.rule_finding.sampling.models.SubtreeIterator;
-import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.IntTrieCounter;
+import de.up.ling.irtg.util.LogSpaceOperations;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.function.IntPredicate;
 import java.util.function.IntUnaryOperator;
 
@@ -29,7 +30,7 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
     /**
      *
      */
-    private final CentralCounter counter;
+    private CentralCounter counter;
 
     /**
      *
@@ -55,14 +56,30 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
     public double getLogTargetProbability(Tree<Rule> sample) {
         return this.counter.getLogProbability(sample, ita);
     }
-    
+
     /**
-     * 
+     *
      * @param tree
-     * @param amount 
+     * @param amount
      */
     public void add(Tree<Rule> tree, double amount) {
         this.counter.add(tree, this.ita.getAutomaton().getSignature(), amount);
+    }
+
+    /**
+     *
+     * @param counter
+     */
+    public void setCounter(CentralCounter counter) {
+        this.counter = counter;
+    }
+
+    /**
+     *
+     * @return
+     */
+    public InterpretedTreeAutomaton getBasis() {
+        return this.ita;
     }
 
     /**
@@ -88,93 +105,142 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
         /**
          *
          */
-        private final Interner<String> mainInterner;
+        private final double variablesSize;
+
+        /**
+         *
+         */
+        private final Object synchronizer;
+        
+        /**
+         * 
+         */
+        private final double addition;
+        
+        /**
+         * 
+         */
+        private final IntPredicate isVariable;
+        
+        /**
+         * 
+         */
+        private final double logSmooth;
+        
+        /**
+         * 
+         */
+        private final IntUnaryOperator arities;
 
         /**
          * 
          * @param smooth
-         * @param signatures 
+         * @param addition
+         * @param signature 
          */
-        public CentralCounter(double smooth, Iterable<Signature> signatures) {
+        public CentralCounter(double smooth, double addition, Signature signature) {
+            this.synchronizer = new Object();
             this.counter = new IntTrieCounter();
             this.smooth = smooth;
-            this.mainInterner = new Interner<>();
-
-            double count = 0.0;
-
-            Set<String> set = new HashSet();
-            for (Signature sig : signatures) {
-                set.addAll(sig.getSymbols());
+            this.logSmooth = Math.log(smooth);
+            this.addition = addition;
+            this.arities = signature::getArity;
+            
+            double countLexicon = 0;
+            
+            IntSet variables = new IntOpenHashSet();
+            
+            for(int symbol=1;symbol<=signature.getMaxSymbolId();++symbol) {
+                String label = signature.resolveSymbolId(symbol);
+                
+                if(Variables.isVariable(label)) {
+                    variables.add(symbol);
+                } else {
+                    countLexicon += 1;
+                }
             }
-
-            this.lexiconSize = set.size();
+            
+            isVariable = variables::contains;
+            this.lexiconSize = -Math.log(countLexicon);
+            this.variablesSize = -Math.log(variables.size());
         }
 
         /**
-         * 
+         *
          * @param sample
          * @param main
-         * @return 
+         * @return
          */
         public double getLogProbability(Tree<Rule> sample, InterpretedTreeAutomaton main) {
             double logFactor = 0.0;
-            Signature sig = main.getAutomaton().getSignature();
+            SubtreeIterator lIt = new SubtreeIterator(sample, isVariable);
             
-            SubtreeIterator lIt = new SubtreeIterator(sample, createPredicate(sig));
-            IntUnaryOperator iuo = this.createMapping(sig);
+            IntList open = new IntArrayList();
 
-            while (lIt.hasNext()) {
+            while (lIt.hasNext()) {                
+                double baseProbability = 0.0;
                 IntArrayList il = lIt.next();
-                
-                for (int i = 0; i < il.size(); ++i) {
-                    il.set(i, iuo.applyAsInt(il.get(i)));
+
+                open.clear();
+                open.add(1);
+                for (int i = 1; i < il.size(); ++i) {
+                    int value = il.get(i);
+
+                    int arity;
+                    if (isVariable.test(value)) {
+                        baseProbability += Math.log(1.0 - (1.0 / (open.size()*this.addition)));
+                        baseProbability += this.variablesSize;
+                        
+                        arity = 0;
+                    } else {
+                        baseProbability -= open.size() == 1 ? 0.0 : Math.log(open.size())+Math.log(this.addition);
+                        baseProbability += this.lexiconSize;
+                        
+                        arity = arities.applyAsInt(value);
+                    }
+                    
+                    if(arity < 1) {
+                        while(arity < 1 && !open.isEmpty()) {
+                           int pos = open.size()-1;
+                           int lastVal = open.get(pos)-1;
+                            
+                           if(lastVal < 1) {
+                               open.size(pos);
+                           } else {
+                               open.set(pos, lastVal);
+                           }
+                           
+                           arity = lastVal;
+                        }
+                    } else {
+                        open.add(arity);
+                    }
                 }
 
-                double seen = this.counter.get(il);
+                double seen;
+                synchronized (this.counter) {
+                    seen = this.counter.get(il);
+                }
                 seen = seen < 0.0 && seen > -0.001 ? 0.0 : seen;
-                double smoo = (Math.pow(this.lexiconSize, -(il.size() - 1))) * smooth;
-                smoo = smoo <= 0.0 ? Double.MIN_VALUE : smoo;
 
-                IntTrieCounter st = this.counter.getSubtrie(il.get(0));
+                double norm;
+                synchronized (this.counter) {
+                    IntTrieCounter st = this.counter.getSubtrie(il.get(0));
+                    norm = st == null ? 0.0 : st.getNorm();
+                }
 
-                double allSeen = st == null ? 0.0 : st.getNorm();
+                double above = LogSpaceOperations.add(Math.log(seen), baseProbability+this.logSmooth);
+                logFactor += above - Math.log(norm + this.smooth);
 
-                logFactor += Math.log(seen + smoo) - Math.log(allSeen + this.smooth);
-                
-                if(!Double.isFinite(logFactor)) {
+                if (!Double.isFinite(logFactor)) {
                     System.out.println(seen);
-                    System.out.println(allSeen);
+                    System.out.println(norm);
                     System.out.println(logFactor);
                     throw new IllegalStateException("Could not produce consistent probability");
                 }
             }
-            
+
             return logFactor;
-        }
-
-        /**
-         *
-         * @param ita
-         * @return
-         */
-        private static IntPredicate createPredicate(Signature sig) {
-            IntPredicate choice = (int i) -> {
-                return Variables.isVariable(sig.resolveSymbolId(i));
-            };
-            return choice;
-        }
-
-        /**
-         *
-         * @param ita
-         * @return
-         */
-        private IntUnaryOperator createMapping(Signature sig) {
-            IntUnaryOperator iuo = (int i) -> {
-                return this.mainInterner.addObject(sig.resolveSymbolId(i));
-            };
-
-            return iuo;
         }
 
         /**
@@ -184,19 +250,14 @@ public class SubtreeCounting extends RegularizedKLRuleWeighting {
          * @param amount
          */
         public void add(Tree<Rule> tr, Signature sig, double amount) {
-            IntPredicate vars = createPredicate(sig);
-            IntUnaryOperator iuo = this.createMapping(sig);
-
-            SubtreeIterator it = new SubtreeIterator(tr, vars);
+            SubtreeIterator it = new SubtreeIterator(tr, this.isVariable);
 
             while (it.hasNext()) {
                 IntArrayList il = it.next();
 
-                for (int i = 0; i < il.size(); ++i) {
-                    il.set(i, iuo.applyAsInt(il.get(i)));
+                synchronized (this.counter) {
+                    this.counter.add(il, amount);
                 }
-
-                this.counter.add(il, amount);
             }
         }
     }
