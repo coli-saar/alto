@@ -8,10 +8,8 @@ package de.up.ling.irtg.script.grammar_learning;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
-import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
 import de.up.ling.irtg.rule_finding.learning.SampleEM;
-import de.up.ling.irtg.rule_finding.sampling.rule_weighters.SubtreeCounting;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.irtg.util.ProgressListener;
@@ -142,9 +140,6 @@ public class CreateSingularGrammarByEM {
         
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(logLikelihoodFile))) {
             Consumer<Double> cons = new Consumer<Double>() {
-                /**
-                 * 
-                 */
                 private final AtomicInteger ai = new AtomicInteger(0);
                 {
                     bw.write ("Round;NegativeLogLikelihood");
@@ -169,8 +164,10 @@ public class CreateSingularGrammarByEM {
                     firstAlgebraName, null);
 
             try (OutputStream trees = new FileOutputStream(treeOutput);
-                    OutputStream grammar = new FileOutputStream(grammarOutput)) {
+                OutputStream grammar = new FileOutputStream(grammarOutput)) {
                 eg.extractForFirstAlgebra(instream, trees, grammar);
+                
+                grammar.flush();
             }
         }
     }

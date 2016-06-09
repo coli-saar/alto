@@ -227,7 +227,11 @@ public class SampleEM implements TreeExtractor {
         List<Iterable<Tree<String>>> fin = new ArrayList<>();
         List<Future<Pair<TreeSample<Rule>,Double>>> result = runner.invokeAll(tasks);
         
-        int pos = 0;
+        if(this.iterationProgress != null) {
+            this.iterationProgress.accept(0, fin.size(), "Extracting final trees.");
+        }
+        
+        int option = 0;
         for(Future<Pair<TreeSample<Rule>,Double>> f : result) {
             Function<Rule, String> func = (Rule rul) -> mainSig.resolveSymbolId(rul.getLabel());
             List<Tree<String>> inner = new ArrayList<>();
@@ -241,9 +245,16 @@ public class SampleEM implements TreeExtractor {
 
             fin.add(inner);
             
-            ++pos;
+            if(this.iterationProgress != null) {
+              this.iterationProgress.accept(++option, fin.size(), "Extracted Trees");
+            }
         }
 
+        if(this.iterationProgress != null) {
+            this.iterationProgress.accept(fin.size(), fin.size(), "Finished.");
+        }
+        
+        runner.shutdown();
         return fin;
     }
 
