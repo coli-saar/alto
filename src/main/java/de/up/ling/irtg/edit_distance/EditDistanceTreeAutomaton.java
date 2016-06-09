@@ -93,7 +93,7 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
             for(int leftEnd=leftStart;leftEnd<=this.inputSentence.size();++leftEnd) {
                 for(int rightStart=leftEnd;rightStart<=this.inputSentence.size();++rightStart) {
                     for(int rightEnd=rightStart;rightEnd<=this.inputSentence.size();++rightEnd) {
-                        this.addRules(lab, this.getIdForState(new EditDistanceState(leftStart, leftEnd)), this.getIdForState(new EditDistanceState(rightStart, rightEnd)));
+                        this.addRules(lab, this.addState(new EditDistanceState(leftStart, leftEnd)), this.addState(new EditDistanceState(rightStart, rightEnd)));
                     }
                 }
             }
