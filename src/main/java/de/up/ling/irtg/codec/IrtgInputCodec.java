@@ -10,11 +10,6 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.codec.CodecMetadata;
-import de.up.ling.irtg.codec.CodecParseException;
-import de.up.ling.irtg.codec.CodecUtilities;
-import de.up.ling.irtg.codec.ExceptionErrorStrategy;
-import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.irtg.IrtgLexer;
 import de.up.ling.irtg.codec.irtg.IrtgParser;
 import static de.up.ling.irtg.codec.CodecUtilities.findFeatureConstructor;
@@ -22,6 +17,7 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.maxent.FeatureFunction;
 import de.up.ling.irtg.maxent.MaximumEntropyIrtg;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
@@ -69,17 +65,23 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
     private Map<String, Interpretation> interpretations = new HashMap<String, Interpretation>();
     private Map<String, FeatureFunction> features = new HashMap<String, FeatureFunction>();
 
-    @Override
-    public InterpretedTreeAutomaton read(InputStream is) throws IOException, CodecParseException {
+    /**
+     * 
+     * @param is
+     * @param sig
+     * @return
+     * @throws IOException 
+     */
+    public InterpretedTreeAutomaton read(InputStream is, Signature sig) throws IOException {
         IrtgLexer l = new IrtgLexer(new ANTLRInputStream(is));
         IrtgParser p = new IrtgParser(new CommonTokenStream(l));
         p.setErrorHandler(new ExceptionErrorStrategy());
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
-        automaton = new ConcreteTreeAutomaton<String>();
-        homomorphisms = new HashMap<String, Homomorphism>();
-        interpretations = new HashMap<String, Interpretation>();
-        features = new HashMap<String, FeatureFunction>();
+        automaton = new ConcreteTreeAutomaton<>(sig);
+        homomorphisms = new HashMap<>();
+        interpretations = new HashMap<>();
+        features = new HashMap<>();
 
         try {
             IrtgParser.IrtgContext result = p.irtg();
@@ -90,6 +92,12 @@ public class IrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         } catch (RecognitionException e) {
             throw new CodecParseException(e.getMessage());
         }
+    }
+    
+    
+    @Override
+    public InterpretedTreeAutomaton read(InputStream is) throws IOException, CodecParseException {       
+        return read(is,new Signature());
     }
 
     private InterpretedTreeAutomaton build(IrtgParser.IrtgContext context) throws CodecParseException {
