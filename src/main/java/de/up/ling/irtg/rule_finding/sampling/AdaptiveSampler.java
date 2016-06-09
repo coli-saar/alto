@@ -75,7 +75,6 @@ public class AdaptiveSampler {
 
             rw.adapt(sample, deterministic);
 
-            sample.expoNormalize(deterministic);
             result.add(sample);
         }
 
@@ -108,8 +107,6 @@ public class AdaptiveSampler {
             }
 
             rw.adapt(sample, deterministic);
-
-            sample.expoNormalize(deterministic);
         }
 
         return sample;
