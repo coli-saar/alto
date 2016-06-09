@@ -49,11 +49,6 @@ public class AdaptiveSamplerTest {
     /**
      * 
      */
-    private RuleConvergence ruC;
-    
-    /**
-     * 
-     */
     private int startState;
     
     @Before
@@ -66,20 +61,6 @@ public class AdaptiveSamplerTest {
         adaSamp = new AdaptiveSampler(9883498483484L);
         
         startState = tau.getFinalStates().iterator().nextInt();
-        int[] tracked = new int[] {startState};
-        ruC = new RuleConvergence(tau, tracked);
-    }
-
-    /**
-     * Test of getKeptStats method, of class AdaptiveSampler.
-     */
-    @Test
-    public void testGetKeptStats() {
-        adaSamp.setKeptStats(ruC);
-        assertEquals(adaSamp.getKeptStats(),ruC);
-        
-        adaSamp.setKeptStats(null);
-        assertEquals(adaSamp.getKeptStats(),null);
     }
 
     /**
@@ -87,9 +68,7 @@ public class AdaptiveSamplerTest {
      */
     @Test
     public void testAdaSample() {
-        adaSamp.setKeptStats(ruC);
         int rounds = 20;
-        int resample = 50;
         
         List<TreeSample<Rule>> ts = adaSamp.adaSample(rounds, 1500, auw, true, true);
         
