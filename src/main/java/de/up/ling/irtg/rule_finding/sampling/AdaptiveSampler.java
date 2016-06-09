@@ -82,6 +82,40 @@ public class AdaptiveSampler {
         return result;
     }
 
+    
+    public TreeSample<Rule> adaSampleMinimal(int rounds, int populationSize, RuleWeighting rw,
+            boolean deterministic, boolean reset) {
+        ProposalSumComputer psc = new ProposalSumComputer();
+        
+        if(reset) {
+            rw.reset();
+        }
+
+        TreeSample<Rule> sample = null;
+        for (int i = 0; i < rounds; ++i) {
+            sample = prop.getTreeSample(rw, populationSize);
+
+            for (int j = 0; j < populationSize; ++j) {
+                sample.setLogTargetWeight(j, rw.getLogTargetProbability(sample.getSample(j)));
+            }
+
+            if (!deterministic) {
+                psc.reset();
+
+                for (int j = 0; j < populationSize; ++j) {
+                    sample.setLogSumWeight(j, psc.computeInside(sample.getSample(j), rw));
+                }
+            }
+
+            rw.adapt(sample, deterministic);
+
+            sample.expoNormalize(deterministic);
+        }
+
+        return sample;
+    }
+    
+    
     /**
      *
      */

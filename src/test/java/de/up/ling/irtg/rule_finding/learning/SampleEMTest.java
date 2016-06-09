@@ -85,8 +85,8 @@ public class SampleEMTest {
         this.sam.setAdaptionRounds(20);
         this.sam.setNormalizationDivisor(100);
         this.sam.setNormalizationExponent(2);
-        this.sam.setSampleSize(500);
-        this.sam.setTrainIterations(20);
+        this.sam.setSampleSize(100);
+        this.sam.setTrainIterations(10);
 
         dl = new DoubleArrayList();
         Consumer<Double> cd = (Double d) -> {
@@ -124,14 +124,12 @@ public class SampleEMTest {
      */
     @Test
     public void testGetChoices() throws InterruptedException, ExecutionException, ParseException {
-        assertEquals(sam.getNormalizationDivisor(), 100, 0.000001);
-        assertEquals(sam.getNormalizationExponent(), 2);
-
         Iterable<Iterable<Tree<String>>> it = sam.getChoices(this.data);
         List<Tree<String>> results = new ArrayList<>();
         it.forEach((Iterable<Tree<String>> inner) -> inner.forEach(results::add));
         
         assertTrue(results.size() < 34);
+        assertTrue(results.size() > 30);
         
         //CANNOT REALLY GUARANTEE THIS, because of paralellization
         //assertTrue(results.contains(TreeParser.parse("'__X__{X}'(*('__X__{X}'(long),example))")));
