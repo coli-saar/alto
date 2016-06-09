@@ -140,15 +140,15 @@ public class TreeSample<Type> {
         double sum = 0.0;
         double max = Double.NEGATIVE_INFINITY;
         for(int i=0;i<this.populationSize();++i) {
-            double amount = this.targetWeights.get(i);
-            amount -= !deterministic ? this.getLogSumWeight(i) : this.getLogPropWeight(i);
+            double amount = this.getLogTargetWeight(i);
+            amount -= deterministic ? this.getLogPropWeight(i) : this.getLogSumWeight(i);
             
             this.selfNormalizedWeight.set(i, amount);
             max = Math.max(max, amount);
         }
         
         for(int i=0;i<this.populationSize();++i) {
-            double amount = Math.exp(this.selfNormalizedWeight.get(i)-max);
+            double amount = Math.exp(this.getSelfNormalizedWeight(i)-max);
             if(!Double.isFinite(amount)) {
                 amount = 0.0;
             }
@@ -178,8 +178,7 @@ public class TreeSample<Type> {
      * @param deterministic 
      */
     public void flatten(RandomGenerator rg, int size, boolean deterministic) {
-        this.expoNormalize(deterministic);
-        this.resample(rg, size);
+        this.resampleWithNormalize(rg, size, deterministic);
         
         ArrayList<Tree<Type>> newChoices = new ArrayList<>();
         DoubleList newValues = new DoubleArrayList();
