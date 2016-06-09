@@ -6,6 +6,7 @@
 package de.up.ling.irtg.rule_finding.learning;
 
 import com.google.common.base.Function;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.learning_rates.LearningRate;
@@ -13,11 +14,11 @@ import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
 import de.up.ling.irtg.rule_finding.sampling.rule_weighters.SubtreeCounting;
 import de.up.ling.irtg.rule_finding.sampling.TreeSample;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -38,7 +39,7 @@ public class SampleEM implements TreeExtractor {
     /**
      *
      */
-    private int sampleSize = 1000;
+    private int sampleSize = 5000;
 
     /**
      *
@@ -93,13 +94,35 @@ public class SampleEM implements TreeExtractor {
     /**
      *
      */
-    private int learningSize = 50;
+    private int threads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+    
+    
+    /**
+     * 
+     */
+    private boolean reset = false;
 
     /**
-     *
+     * 
      */
-    private int threads = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
+    private double lexiconAdditionFactor = 1.0;
 
+    /**
+     * 
+     * @param lexiconAdditionFactor 
+     */
+    public void setLexiconAdditionFactor(double lexiconAdditionFactor) {
+        this.lexiconAdditionFactor = lexiconAdditionFactor;
+    }
+    
+    /**
+     * 
+     * @param reset 
+     */
+    public void setReset(boolean reset) {
+        this.reset = reset;
+    }
+    
     /**
      *
      * @param threads
@@ -109,20 +132,30 @@ public class SampleEM implements TreeExtractor {
     }
 
     /**
-     * Assumes determinism.
+     * Assumes determinism and a single signature.
      *
      *
      * @param data
      * @return
+     * @throws java.lang.InterruptedException
+     * @throws java.util.concurrent.ExecutionException
      */
     public Iterable<Iterable<Tree<String>>> getChoices(Iterable<InterpretedTreeAutomaton> data) throws InterruptedException, ExecutionException {
         Well44497b seeder = new Well44497b(seed);
 
         // and we create a list of samplers that will explore the automata
-        // and another list with the results so we can add them to the model
         List<SubtreeCounting> automataToSample = new ArrayList<>();
-        SubtreeCounting.CentralCounter counts = new SubtreeCounting.CentralCounter(this.smooth, new FunctionIterable<>(data, (InterpretedTreeAutomaton ita) -> ita.getAutomaton().getSignature()));
+        
+        
+        Iterator<InterpretedTreeAutomaton> dIt = data.iterator();
+        if(!dIt.hasNext()) {
+            //Nothing to learn here.
+            return new ArrayList<>();
+        }
+        Signature mainSig = dIt.next().getAutomaton().getSignature();
+        SubtreeCounting.CentralCounter counts = new SubtreeCounting.CentralCounter(this.smooth, this.lexiconAdditionFactor, mainSig);
 
+        List<SamplingJob> tasks = new ArrayList<>();
         for (InterpretedTreeAutomaton ita : data) {
             LearningRate lr = new LearningRate() {
                 @Override
@@ -135,68 +168,52 @@ public class SampleEM implements TreeExtractor {
                 }
             };
 
+            if(ita.getAutomaton().getSignature() != mainSig) {
+                throw new IllegalArgumentException("Automata do not share the same signature.");
+            }
+            
             SubtreeCounting suc = new SubtreeCounting(ita, this.normalizationExponent, this.normalizationDivisor, lr, counts);
 
             automataToSample.add(suc);
+            
+            AdaptiveSampler ads = new AdaptiveSampler(seeder.nextLong());
+            tasks.add(new SamplingJob(ads, suc));
         }
 
         if (this.iterationProgress != null) {
             this.iterationProgress.accept(0, this.trainIterations, "Initialized.");
         }
 
-        AdaptiveSampler ads = new AdaptiveSampler(seeder.nextLong());
-
-        List<TreeSample<Rule>> oldChoices = new ArrayList<>();
         // now we iterate over the training data for a number of iterations
         ExecutorService runner = Executors.newFixedThreadPool(threads);
         for (int trainingRound = 0; trainingRound < trainIterations; ++trainingRound) {
             double negLogLikelihood = 0.0;
-
-            int batchSize = 2 * threads;
-            List<Callable<TreeSample<Rule>>> tasks = new ArrayList<>();
-            for (int trainingInstance = 0; trainingInstance < automataToSample.size();) {
-                SubtreeCounting suc = automataToSample.get(trainingInstance);
-
-                tasks.clear();
-                for (int sub = 0; (sub + trainingInstance) < automataToSample.size() && sub < batchSize; ++sub) {
-                    tasks.add((Callable<TreeSample<Rule>>) () -> {
-                        List<TreeSample<Rule>> list = ads.adaSample(adaptionRounds, sampleSize, suc, true);
-                        return list.get(list.size() - 1);
-                    });
+            
+            List<Future<Pair<TreeSample<Rule>,Double>>> result = runner.invokeAll(tasks);
+            counts = new SubtreeCounting.CentralCounter(smooth, this.lexiconAdditionFactor, mainSig);
+            
+            int pos = 0;
+            for(Future<Pair<TreeSample<Rule>,Double>> fut : result) {
+                Pair<TreeSample<Rule>,Double> done = fut.get();
+                
+                negLogLikelihood += done.getRight();
+                TreeSample<Rule> fin = done.getLeft();
+                
+                SubtreeCounting sc = automataToSample.get(pos);
+                
+                Function<Rule,String> f  = (Rule r) -> r.getLabel(sc.getAutomaton());
+                for (int entry = 0; entry < fin.populationSize(); ++entry) {
+                    counts.add(fin.getSample(entry), sc.getAutomaton().getSignature(), fin.getSelfNormalizedWeight(entry));
                 }
-
-                List<Future<TreeSample<Rule>>> result = runner.invokeAll(tasks);
-                for (int i = 0; i < result.size(); ++i) {
-                    TreeSample<Rule> fin = result.get(i).get();
-                    negLogLikelihood += computeNegativeLogLikelihood(fin);
-
-                    fin.resampleWithNormalize(seeder, this.learningSize, true);
-
-                    if (oldChoices.size() > trainingInstance) {
-                        TreeSample<Rule> pick = oldChoices.get(trainingInstance);
-
-                        for (int entry = 0; entry < pick.populationSize(); ++entry) {
-                            suc.add(pick.getSample(entry), -pick.getSelfNormalizedWeight(entry));
-                        }
-
-                        oldChoices.set(trainingInstance, fin);
-                    } else {
-                        oldChoices.add(fin);
-                    }
-
-                    for (int entry = 0; entry < fin.populationSize(); ++entry) {
-                        suc.add(fin.getSample(entry), fin.getSelfNormalizedWeight(entry));
-                    }
-
-                    // allow the user to see the current progress
-                    if ((trainingInstance + 1) % 100 == 0 && this.iterationProgress != null) {
-                        this.iterationProgress.accept(trainingRound, this.trainIterations, "finished " + (trainingInstance + 1) + " examples.");
-                    }
-                    
-                    ++trainingInstance;
+                
+                sc.setCounter(counts);
+                if ((pos + 1) % 100 == 0 && this.iterationProgress != null) {
+                    this.iterationProgress.accept(trainingRound, this.trainIterations, "finished " + (pos + 1) + " examples.");
                 }
+                
+                ++pos;
             }
-
+            
             if (this.iterationProgress != null) {
                 this.iterationProgress.accept(trainingRound + 1, this.trainIterations, "Finished training round: " + (trainingRound + 1));
             }
@@ -208,23 +225,23 @@ public class SampleEM implements TreeExtractor {
 
         // now generate a final sample from the current estimate
         List<Iterable<Tree<String>>> fin = new ArrayList<>();
-        for (int trainingInstance = 0; trainingInstance < automataToSample.size(); ++trainingInstance) {
-            SubtreeCounting suc = automataToSample.get(trainingInstance);
-
-            Signature sig = suc.getAutomaton().getSignature();
-            Function<Rule, String> func = (Rule rul) -> sig.resolveSymbolId(rul.getLabel());
+        List<Future<Pair<TreeSample<Rule>,Double>>> result = runner.invokeAll(tasks);
+        
+        int pos = 0;
+        for(Future<Pair<TreeSample<Rule>,Double>> f : result) {
+            Function<Rule, String> func = (Rule rul) -> mainSig.resolveSymbolId(rul.getLabel());
             List<Tree<String>> inner = new ArrayList<>();
-
-            List<TreeSample<Rule>> lt = ads.adaSample(adaptionRounds, sampleSize, suc, true);
-            TreeSample ts = lt.get(lt.size() - 1);
-
+            
+            TreeSample ts = f.get().getLeft();
             ts.flatten(seeder, resultSize, true);
-
+            
             for (int i = 0; i < ts.populationSize(); ++i) {
                 inner.add(ts.getSample(i).map(func));
             }
 
             fin.add(inner);
+            
+            ++pos;
         }
 
         return fin;
@@ -256,14 +273,6 @@ public class SampleEM implements TreeExtractor {
 
     /**
      *
-     * @return
-     */
-    public double getSmooth() {
-        return smooth;
-    }
-
-    /**
-     *
      * @param smooth
      */
     public void setSmooth(double smooth) {
@@ -285,7 +294,7 @@ public class SampleEM implements TreeExtractor {
      * @param fin
      * @return
      */
-    private double computeNegativeLogLikelihood(TreeSample fin) {
+    public static double computeNegativeLogLikelihood(TreeSample fin) {
         double val = 0.0;
 
         double max = Double.NEGATIVE_INFINITY;
@@ -412,20 +421,48 @@ public class SampleEM implements TreeExtractor {
     public void setResultSize(int resultSize) {
         this.resultSize = resultSize;
     }
-
+    
     /**
-     *
-     * @return
+     * 
      */
-    public int getLearningSize() {
-        return learningSize;
-    }
+    public class SamplingJob implements Callable<Pair<TreeSample<Rule>,Double>> {
+        /**
+         * 
+         */
+        private final AdaptiveSampler ads;
+        
+        /**
+         * 
+         */
+        private final SubtreeCounting suc;
 
-    /**
-     *
-     * @param learningSize
-     */
-    public void setLearningSize(int learningSize) {
-        this.learningSize = learningSize;
+        /**
+         * 
+         * @param ads
+         * @param suc 
+         */
+        public SamplingJob(AdaptiveSampler ads, SubtreeCounting suc) {
+            this.ads = ads;
+            this.suc = suc;
+        }
+        
+        /**
+         * 
+         * @param cc 
+         */
+        public void setCentralCounter(SubtreeCounting.CentralCounter cc) {
+            this.suc.setCounter(cc);
+        }
+        
+        @Override
+        public Pair<TreeSample<Rule>,Double> call() throws Exception {
+            List<TreeSample<Rule>> list = ads.adaSample(adaptionRounds, sampleSize, suc, true, reset);
+            TreeSample<Rule> result = list.get(list.size()-1);
+            
+            double d = computeNegativeLogLikelihood(result);
+            
+            result.expoNormalize(true);
+            return new Pair<>(result,d);
+        }
     }
 }

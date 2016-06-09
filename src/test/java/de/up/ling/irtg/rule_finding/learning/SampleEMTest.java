@@ -7,28 +7,24 @@ package de.up.ling.irtg.rule_finding.learning;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.codec.CodecParseException;
-import de.up.ling.irtg.codec.IrtgInputCodec;
-import de.up.ling.irtg.hom.Homomorphism;
-import de.up.ling.irtg.rule_finding.ExtractJointTrees;
-import de.up.ling.irtg.rule_finding.Variables;
-import de.up.ling.irtg.rule_finding.create_automaton.ExtractionHelper;
-import de.up.ling.irtg.rule_finding.pruning.IntersectionPruner;
-import de.up.ling.irtg.rule_finding.pruning.Pruner;
-import de.up.ling.irtg.rule_finding.pruning.intersection.IntersectionOptions;
-import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.FunctionIterable;
+import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.rule_finding.create_automaton.MakeIdIRTGForSingleSide;
+import de.up.ling.irtg.rule_finding.create_automaton.MakeMonolingualAutomaton;
 import de.up.ling.irtg.util.ProgressListener;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -38,43 +34,18 @@ import static org.junit.Assert.*;
  * @author christoph_teichmann
  */
 public class SampleEMTest {
+    
+    /**
+     *
+     */
+    private SampleEM sam;
 
     /**
      *
      */
-    private final static String GOAL = "0/3Initialized.\n"
-            + "1/3Finished training round: 1\n"
-            + "2/3Finished training round: 2\n"
-            + "3/3Finished training round: 3\n"
-            + "";
-
-    /**
-     *
-     */
-    private SampleEM soe;
-
-    /**
-     *
-     */
-    private final static String leftTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
-            + "long example\n"
+    private final static String STRINGS = "long example\n"
             + "long long example\n"
-            + "long long long example";
-
-    /**
-     *
-     */
-    private final static String rightTrees = "de.up.ling.irtg.algebra.StringAlgebra\n"
-            + "langes beispiel\n"
-            + "langes langes beispiel\n"
-            + "langes langes langes beispiel";
-
-    /**
-     *
-     */
-    private final static String alignments = "0-0 1-1\n"
-            + "0-0 1-1 2-2\n"
-            + "0-0 1-1 2-2 3-3";
+            + "example";
 
     /**
      *
@@ -93,90 +64,77 @@ public class SampleEMTest {
 
     @Before
     public void setUp() throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserException {
-        Pruner one = new IntersectionPruner(IntersectionOptions.LEXICALIZED, IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
-        Pruner two = new IntersectionPruner(IntersectionOptions.NO_EMPTY, IntersectionOptions.RIGHT_BRANCHING_NORMAL_FORM);
-
-        Iterable<String> results = ExtractionHelper.getStringIRTGs(leftTrees, rightTrees, alignments, one, two);
-        results = new FunctionIterable<>(results, (String s) -> s.replaceAll("__X__\\{.+\\}", Variables.createVariable("")));
-
-        IrtgInputCodec iic = new IrtgInputCodec();
-        data = new FunctionIterable<>(results, (String s) -> {
-            try {
-                return iic.read(new ByteArrayInputStream(s.getBytes()));
-            } catch (IOException | CodecParseException ex) {
-                throw new RuntimeException();
-            }
-        });
-        List<InterpretedTreeAutomaton> l = new ArrayList<>();
-        data.forEach(l::add);
-        data = l;
-
-        Iterable<Signature> fi
-                = new FunctionIterable<>(data, (InterpretedTreeAutomaton ita) -> ita.getAutomaton().getSignature());
-
-        //TODO
-        this.soe = new SampleEM();
-        this.soe.setAdaptionRounds(10);
-        this.soe.setNormalizationDivisor(100);
-        this.soe.setNormalizationExponent(2);
-        this.soe.setSampleSize(50);
-        this.soe.setTrainIterations(3);
+        MakeMonolingualAutomaton mma = new MakeMonolingualAutomaton();
+        Function<Object,String> funct = (Object o) -> "X";
+        ArrayList<InterpretedTreeAutomaton> da = new ArrayList<>();
+        
+        BufferedReader br = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(STRINGS.getBytes())));
+        String line;
+        StringAlgebra sal = new StringAlgebra();
+        while((line = br.readLine()) != null) {
+            TreeAutomaton ta = sal.decompose(sal.parseString(line));
+            
+           ta = mma.introduce(ta, funct, "__ROOT__");
+           
+           da.add(MakeIdIRTGForSingleSide.makeIRTG(ta, "string", sal));
+        }
+        
+        data = da;
+        
+        this.sam = new SampleEM();
+        this.sam.setAdaptionRounds(20);
+        this.sam.setNormalizationDivisor(100);
+        this.sam.setNormalizationExponent(2);
+        this.sam.setSampleSize(500);
+        this.sam.setTrainIterations(20);
 
         dl = new DoubleArrayList();
         Consumer<Double> cd = (Double d) -> {
             dl.add(d);
         };
-        soe.setnLLTracking(cd);
+        sam.setnLLTracking(cd);
 
-        this.soe.setSamplerLearningRate(0.5);
-        this.soe.setSeed(98259275892659L);
-        this.soe.setSmooth(1.0);
+        this.sam.setSamplerLearningRate(0.5);
+        this.sam.setSeed(98259275892659L);
+        this.sam.setSmooth(1.0);
 
         allProgress = new StringBuffer();
         ProgressListener pl = (int done, int of, String message) -> {
             allProgress.append(done);
             allProgress.append("/");
             allProgress.append(of);
-            allProgress.append("");
+            allProgress.append(" ");
             allProgress.append(message);
             allProgress.append("\n");
         };
 
-        soe.setResultSize(10);
+        sam.setResultSize(10);
 
-        soe.setIterationProgress(pl);
-        
-        soe.setLearningSize(2);
+        sam.setIterationProgress(pl);
+        sam.setReset(false);
+        sam.setLexiconAdditionFactor(2.0);
     }
 
     /**
      * Test of getChoices method, of class SampleOnlineEM.
+     * 
+     * @throws java.lang.InterruptedException
+     * @throws java.util.concurrent.ExecutionException
+     * @throws de.up.ling.tree.ParseException
      */
     @Test
-    public void testGetChoices() throws InterruptedException, ExecutionException {
-        assertEquals(soe.getNormalizationDivisor(), 100, 0.000001);
-        assertEquals(soe.getNormalizationExponent(), 2);
+    public void testGetChoices() throws InterruptedException, ExecutionException, ParseException {
+        assertEquals(sam.getNormalizationDivisor(), 100, 0.000001);
+        assertEquals(sam.getNormalizationExponent(), 2);
 
-        Iterable<Iterable<Tree<String>>> it = soe.getChoices(this.data);
+        Iterable<Iterable<Tree<String>>> it = sam.getChoices(this.data);
         List<Tree<String>> results = new ArrayList<>();
-
         it.forEach((Iterable<Tree<String>> inner) -> inner.forEach(results::add));
-        assertTrue(results.size() > 27);
-
-        Iterator<InterpretedTreeAutomaton> base = data.iterator();
-        base.next();
-        base.next();
-        InterpretedTreeAutomaton aut = base.next();
-        Homomorphism left = aut.getInterpretation(ExtractJointTrees.FIRST_ALGEBRA_ID).getHomomorphism();
-        Homomorphism right = aut.getInterpretation(ExtractJointTrees.SECOND_ALGEBRA_ID).getHomomorphism();
-
-        assertEquals(left.apply(results.get(25)).toString(), "'__X__{}'(*(long,'__X__{}'(*('__X__{}'(*(long,'__X__{}'(long))),example))))");
-        assertEquals(right.apply(results.get(25)).toString(), "'__X__{}'(*(langes,'__X__{}'(*('__X__{}'(*(langes,'__X__{}'(langes))),beispiel))))");
-
-        assertTrue(dl.getDouble(0) > dl.getDouble(1));
-        assertEquals(dl.size(), 3);
-
-        assertEquals(allProgress.toString(),GOAL);
+        
+        assertTrue(results.size() < 34);
+        
+        //CANNOT REALLY GUARANTEE THIS, because of paralellization
+        //assertTrue(results.contains(TreeParser.parse("'__X__{X}'(*('__X__{X}'(long),example))")));
     }
 
 }
