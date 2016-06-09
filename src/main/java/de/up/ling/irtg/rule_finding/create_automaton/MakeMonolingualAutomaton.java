@@ -23,14 +23,13 @@ public class MakeMonolingualAutomaton {
     
     /**
      * 
-     * @param <Type>
      * @param ta
      * @param nonterminals
      * @param root
      * @return 
      */
     public TreeAutomaton introduce(TreeAutomaton ta, Function<Object,String> nonterminals, Object root) {
-        ConcreteTreeAutomaton<Object> withIntroduction = new ConcreteTreeAutomaton<>();
+        ConcreteTreeAutomaton<Object> withIntroduction = new ConcreteTreeAutomaton<>(ta.getSignature());
         
         IntIterator states = ta.getAllStates().iterator();
         while(states.hasNext()) {
