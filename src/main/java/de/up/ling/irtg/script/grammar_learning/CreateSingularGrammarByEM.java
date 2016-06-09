@@ -59,13 +59,15 @@ public class CreateSingularGrammarByEM {
         String firstAlgebraName = props.getProperty("firstAlgebraName");
 
         String adaptionSampleSize = props.getProperty("adaptionSampleSize");
-        String learnSampleSize = props.getProperty("learnSampleSize");
         String resultSampleSize = props.getProperty("resultSampleSize");
         String sgdStepSize = props.getProperty("sgdStepSize");
         String adaptionRounds = props.getProperty("adaptionRounds");
         String trainIterations = props.getProperty("trainIterations");
         String normalizationExponent = props.getProperty("adaptionNormalizationExponent");
         String normalizationDivisor = props.getProperty("adaptionNormalizationDivisor");
+        String lexiconAdditionFactor = props.getProperty("lexiconAdditionFactor");
+        String resetEveryRound = props.getProperty("resetSamplerAdaptionEveryRound");
+        String threads = props.getProperty("threads");
 
         String smooth = props.getProperty("smooth");
         String seed = props.getProperty("seed");
@@ -108,7 +110,7 @@ public class CreateSingularGrammarByEM {
                     }
                 });
 
-        SubtreeCounting.CentralCounter counter = new SubtreeCounting.CentralCounter(Double.parseDouble(smooth), sigs);
+        //SubtreeCounting.CentralCounter counter = new SubtreeCounting.CentralCounter(Double.parseDouble(smooth), sigs);
         
         ProgressListener pog = (int done, int target, String line) -> {
             StringBuilder sb = new StringBuilder();
@@ -124,7 +126,7 @@ public class CreateSingularGrammarByEM {
         SampleEM trex = new SampleEM();
         trex.setAdaptionRounds(Integer.parseInt(adaptionRounds));
         trex.setIterationProgress(pog);
-        trex.setLearningSize(Integer.parseInt(learnSampleSize));
+        //trex.setLearningSize(Integer.parseInt(learnSampleSize));
         trex.setNormalizationDivisor(Double.parseDouble(normalizationDivisor));
         trex.setNormalizationExponent(Integer.parseInt(normalizationExponent));
         trex.setResultSize(Integer.parseInt(resultSampleSize));
@@ -134,6 +136,10 @@ public class CreateSingularGrammarByEM {
         trex.setSmooth(Double.parseDouble(smooth));
         trex.setTrainIterations(Integer.parseInt(trainIterations));
 
+        trex.setLexiconAdditionFactor(Double.parseDouble(lexiconAdditionFactor));
+        trex.setReset(Boolean.parseBoolean(resetEveryRound));
+        trex.setThreads(Integer.parseInt(threads));
+        
         try (BufferedWriter bw = new BufferedWriter(new FileWriter(logLikelihoodFile))) {
             Consumer<Double> cons = new Consumer<Double>() {
                 /**

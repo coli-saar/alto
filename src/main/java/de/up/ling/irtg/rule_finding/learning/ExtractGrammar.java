@@ -10,6 +10,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.tree.Tree;
 import java.io.BufferedWriter;
@@ -199,10 +200,12 @@ public class ExtractGrammar<Type1, Type2> {
      */
     private Iterable<InterpretedTreeAutomaton> makeIRTGIterable(Iterable<InputStream> inputs) {
         IrtgInputCodec iic = new IrtgInputCodec();
+        Signature sig = new Signature();
+        
         Iterable<InterpretedTreeAutomaton> analyses = new FunctionIterable<>(inputs, (InputStream in) -> {
             InterpretedTreeAutomaton ita;
             try {
-                ita = iic.read(in);
+                ita = iic.read(in,sig);
                 
                 in.close();
             } catch (IOException | CodecParseException ex) {
