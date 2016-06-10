@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ArrayListMultimap;
@@ -314,9 +315,9 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * side. The method uses getRulesTopDown to collect all rules for this state
      * and any label that is returned by getLabelsTopDown. The method
      * necessarily enforces the computation of all top-down rules for the given
-     * parentState, but does no further copying of rules beyond this. Due to the way
-     * the top-down index data structures are implemented, this method
-     * is significantly faster if the tree automaton is explicit.
+     * parentState, but does no further copying of rules beyond this. Due to the
+     * way the top-down index data structures are implemented, this method is
+     * significantly faster if the tree automaton is explicit.
      *
      * @param parentState
      * @return
@@ -334,26 +335,25 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return Iterables.concat(ruleLists);
         }
     }
-    
+
     /**
-     * Iterates over all rules with the given parent. The consumer fn
-     * is applied to each rule. Because construction of iterables and
-     * iterators is avoided, this iteration can be a bit faster than
-     * iterating over {@link #getRulesTopDown(int) }. Due to the way
-     * the top-down index data structures are implemented, this method
-     * is significantly faster if the tree automaton is explicit.
-     * 
+     * Iterates over all rules with the given parent. The consumer fn is applied
+     * to each rule. Because construction of iterables and iterators is avoided,
+     * this iteration can be a bit faster than iterating over {@link #getRulesTopDown(int)
+     * }. Due to the way the top-down index data structures are implemented,
+     * this method is significantly faster if the tree automaton is explicit.
+     *
      * @param parentState
-     * @param fn 
+     * @param fn
      */
     public void foreachRuleTopDown(int parentState, Consumer<Rule> fn) {
-        if( ruleStore.isExplicit() ) {
+        if (ruleStore.isExplicit()) {
             ruleStore.foreachRuleTopDown(parentState, fn);
         } else {
             // this is a slow implementation for now
             for (int label : getLabelsTopDown(parentState)) {
                 Iterable<Rule> rules = getRulesTopDown(label, parentState);
-                if( rules != null ) {
+                if (rules != null) {
                     rules.forEach(fn);
                 }
             }
@@ -721,10 +721,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        }
 //    }
     public boolean isCyclic() {
-        boolean[] discovered = new boolean[stateInterner.getNextIndex()];
+        Int2ObjectMap<IntSet> children = new Int2ObjectOpenHashMap<>();
 
         for (int f : getFinalStates()) {
-            if (exploreForCyclicity(f, discovered)) {
+            if (exploreForCyclicity(f, children)) {
                 return true;
             }
         }
@@ -732,24 +732,33 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return false;
     }
 
-    private boolean exploreForCyclicity(int state, boolean[] discovered) {
-        if (discovered[state]) {
-            return true;
-        } else {
-            discovered[state] = true;
-            for (int label : getLabelsTopDown(state)) {
-                for (Rule rule : getRulesTopDown(label, state)) {
-                    for (int child : rule.getChildren()) {
-                        if (exploreForCyclicity(child, discovered)) {
+    /**
+     * 
+     * @param state
+     * @param children
+     * @return 
+     */
+    private boolean exploreForCyclicity(int state, Int2ObjectMap<IntSet> children) {
+        IntSet kids = new IntOpenHashSet();
+        children.put(state, kids);
+
+        for (int label : getLabelsTopDown(state)) {
+            for (Rule rule : getRulesTopDown(label, state)) {
+                for (int child : rule.getChildren()) {
+                    kids.add(child);
+
+                    if (!children.containsKey(child)) {
+                        if (this.exploreForCyclicity(child, children)) {
                             return true;
                         }
                     }
+
+                    kids.addAll(children.get(child));
                 }
             }
-            discovered[state] = false;
-
-            return false;
         }
+
+        return kids.contains(state);
     }
 
     /**
@@ -1376,7 +1385,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     }
                 }
             } else {
-                processAllRulesBottomUp(rule ->  {
+                processAllRulesBottomUp(rule -> {
                     //this does currently not work properly!!
                     //storeRuleBottomUp(rule);
                     //storeRuleTopDown(rule);
@@ -2741,6 +2750,23 @@ public abstract class TreeAutomaton<State> implements Serializable {
         public void remove() {
             throw new UnsupportedOperationException("Not supported.");
         }
+    }
+    
+    /**
+     * Returns the number of rules in this automaton.
+     * The default implementation iterates over all
+     * rules, and can thus be quite slow.
+     * 
+     * @return 
+     */
+    public long getNumberOfRules() {
+        long numRules = 0;
+        
+        for( Rule rule : getRuleSet() ) {
+            numRules++;
+        }
+        
+        return numRules;
     }
 
     /**

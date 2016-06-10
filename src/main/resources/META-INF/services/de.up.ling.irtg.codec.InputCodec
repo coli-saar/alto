@@ -7,3 +7,5 @@ de.up.ling.irtg.codec.TemplateIrtgInputCodec
 de.up.ling.irtg.codec.BolinasHrgInputCodec
 de.up.ling.irtg.codec.IsiAmrInputCodec
 de.up.ling.irtg.codec.PtbTreeInputCodec
+de.up.ling.irtg.codec.JoshuaInputCodec
+de.up.ling.irtg.codec.BinaryIrtgInputCodec

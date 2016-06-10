@@ -8,7 +8,7 @@ import com.bric.window.WindowMenu;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.automata.SortedLanguageIterator;
+import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.WeightedTree;
 import static de.up.ling.irtg.gui.GuiMain.log;
@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
+import static de.up.ling.irtg.gui.GuiMain.log;
 
 /**
  *

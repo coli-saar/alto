@@ -8,7 +8,6 @@ package de.up.ling.irtg.util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.objects.Object2IntFunction;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;

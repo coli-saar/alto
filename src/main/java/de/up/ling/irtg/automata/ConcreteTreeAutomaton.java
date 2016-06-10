@@ -16,6 +16,7 @@ import java.util.function.Consumer;
  * @param <State>
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
+    
     public ConcreteTreeAutomaton() {
         this(new Signature());
     }

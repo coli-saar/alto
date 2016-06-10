@@ -166,6 +166,9 @@ public abstract class RegularSeed {
             Iterator<Rule> it = rules.iterator();
 
             if (!it.hasNext()) {
+                System.err.println("varid=" + varid);
+                System.err.println("sig="+sig);
+                System.err.println("cache for " + label + ": " + binarizationCache.get(label));
                 throw new RuntimeException("Found no state in binarization automaton for variable " + varsym + " when binarizing symbol " + label + "/" + arity + ". Perhaps you are using " + label + " with two different arities?");
             }
             

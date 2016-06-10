@@ -41,5 +41,8 @@ public class MutableInteger {
         return Integer.toString(value);
     }
     
+    public String gensym(String prefix) {
+        return prefix + incValue();
+    }
     
 }

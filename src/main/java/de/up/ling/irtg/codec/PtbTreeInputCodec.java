@@ -5,10 +5,6 @@
  */
 package de.up.ling.irtg.codec;
 
-import de.up.ling.irtg.codec.CodecMetadata;
-import de.up.ling.irtg.codec.CodecParseException;
-import de.up.ling.irtg.codec.ExceptionErrorStrategy;
-import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.ptb_tree.PtbTreeLexer;
 import de.up.ling.irtg.codec.ptb_tree.PtbTreeParser;
 import de.up.ling.irtg.util.Util;
@@ -57,12 +53,24 @@ public class PtbTreeInputCodec extends InputCodec<Tree<String>> {
         p.getInterpreter().setPredictionMode(PredictionMode.SLL);
 
         try {
-            PtbTreeParser.TreeContext result = p.tree();
+            PtbTreeParser.TreeContext result = null;
+            
+            if( optionExtraBrackets() ) {
+                result = p.corpus().tree().get(0);
+            } else {
+                result = p.tree();
+            }
+            
             return decodeTree(result);
         } catch (RecognitionException e) {
             throw new CodecParseException(e.getMessage());
         } 
     }
+
+    public boolean optionExtraBrackets() {
+        return hasTrueOption("extraBrackets");
+    }
+    
     
     /**
      * Reads a whole corpus of PTB trees and returns the trees as a list.

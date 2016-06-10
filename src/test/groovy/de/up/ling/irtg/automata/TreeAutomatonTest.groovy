@@ -617,6 +617,8 @@ VP.1-7 -> r5(VP.1-4, PP.4-7) [1.0]""");
     @Test
     public void testGetBottomUpCyclic() {
         TreeAutomaton a = parse("q1! -> f(q2,q3)\n q2 -> g(q1)\n q1 -> a\n q3 -> b");
+        
+        assert a.isCyclic();
     }
     
     @Test

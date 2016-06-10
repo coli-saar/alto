@@ -50,6 +50,7 @@ import java.util.logging.Logger;
 public abstract class InputCodec<E> {
     private static Map<String, InputCodec> codecByName = null;
     private static Map<String, InputCodec> codecByExtension = null;
+    private Map<String,String> options = new HashMap<>();
     
     protected ProgressListener progressListener;
 
@@ -103,11 +104,12 @@ public abstract class InputCodec<E> {
      * a new input codec by adding its fully qualified class name
      * to the file <code>META-INF/services/de.up.ling.irtg.codec.InputCodec</code>.
      * You can find this file under <code>src/main/resources</code>
-     * in the IRTG source code repository.
+     * in the IRTG source code repository. Note: It is usually a better idea
+     * to call {@link #getInputCodecs(java.lang.Class) } to ensure type-safety.
      * 
      * @return 
      */
-    private static Iterable<InputCodec> getAllInputCodecs() {
+    public static Iterable<InputCodec> getAllInputCodecs() {
         return ServiceLoader.load(InputCodec.class);
     }
 
@@ -192,6 +194,31 @@ public abstract class InputCodec<E> {
     protected void notifyProgressListener(int currentValue, int maxValue, String string) {
         if( progressListener != null ) {
             progressListener.accept(currentValue, maxValue, string);
+        }
+    }
+    
+    public void addOptions(String options) {
+        String[] parts = options.split("\\s*[,=:]\\s*");
+        for( int i = 0; i < parts.length; i += 2 ) {
+            this.options.put(parts[i], parts[i+1]);
+        }
+    }
+    
+    public void setOption(String option, String value) {
+        options.put(option, value);
+    }
+    
+    public String getOption(String key) {
+        return options.get(key);
+    }
+    
+    public boolean hasTrueOption(String key) {
+        String val = getOption(key);
+        
+        if( val != null && val.toLowerCase().equals("true")) {
+            return true;
+        } else {
+            return false;
         }
     }
 
