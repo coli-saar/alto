@@ -216,7 +216,7 @@ public class SampleEM implements TreeExtractor {
                     }
                 
                     sc.setCounter(counts);
-                    if ((pos + 1) % 100 == 0 && this.iterationProgress != null) {
+                    if ((pos + 1) % 10 == 0 && this.iterationProgress != null) {
                         this.iterationProgress.accept(trainingRound, this.trainIterations, "finished " + (pos + 1) + " examples.");
                     }
                 } 
