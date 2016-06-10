@@ -193,7 +193,7 @@ public class SampleEM implements TreeExtractor {
             
             counts = new SubtreeCounting.CentralCounter(smooth, this.lexiconAdditionFactor, mainSig);
             
-            int pos = 0;
+            int batchNumber = 0;
             for(int i=0;i<tasks.size();) {
                 buffer.clear();
                 for(int j=0;j<this.threads*2 && i < tasks.size();++j) {
@@ -209,17 +209,20 @@ public class SampleEM implements TreeExtractor {
                     negLogLikelihood += done.getRight();
                     TreeSample<Rule> fin = done.getLeft();
                 
-                    SubtreeCounting sc = automataToSample.get(pos);
+                    SubtreeCounting sc = automataToSample.get(batchNumber);
                 
                     for (int entry = 0; entry < fin.populationSize(); ++entry) {
                         counts.add(fin.getSample(entry), sc.getAutomaton().getSignature(), fin.getSelfNormalizedWeight(entry));
                     }
                 
                     sc.setCounter(counts);
-                    if ((pos + 1) % 10 == 0 && this.iterationProgress != null) {
-                        this.iterationProgress.accept(trainingRound, this.trainIterations, "finished " + (pos + 1) + " examples.");
-                    }
                 } 
+                
+                if ((batchNumber + 1) % 10 == 0 && this.iterationProgress != null) {
+                    this.iterationProgress.accept(trainingRound, this.trainIterations, "finished " + (batchNumber + 1) + " examples.");
+                }
+                
+                ++batchNumber;
             }
             
             if (this.iterationProgress != null) {
