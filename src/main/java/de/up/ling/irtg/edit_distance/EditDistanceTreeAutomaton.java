@@ -5,7 +5,9 @@
  */
 package de.up.ling.irtg.edit_distance;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
@@ -255,10 +257,28 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
      * @return
      */
     public Status[] computeStatus(Tree<Rule> derivation) {
+        Function<Rule,Pair<EditDistanceState,String>> mapping = (Rule r ) -> {
+            
+            return new Pair<>(this.getStateForId(r.getParent()),this.getSignature().resolveSymbolId(r.getLabel()));
+        };
+        Tree<Pair<EditDistanceState,String>> mapped = derivation.map(mapping);
+        
+        
+        return computeStatusGeneral(mapped);
+    }
+
+    /**
+     * 
+     * @param mapped
+     * @return 
+     */
+    public Status[] computeStatusGeneral(Tree<Pair<EditDistanceState, String>> mapped) {
         Status[] result = new Status[this.inputSentence.size()];
         Arrays.fill(result, Status.DELETED);
-
-        addEntries(derivation, result);
+        
+        
+        
+        addEntries(mapped, result);
 
         return result;
     }
@@ -268,18 +288,18 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
      * @param derivation
      * @param result
      */
-    private void addEntries(Tree<Rule> derivation, Status[] result) {
+    private void addEntries(Tree<Pair<EditDistanceState,String>> derivation, Status[] result) {
         if (derivation.getChildren().isEmpty()) {
-            EditDistanceState eds = this.getStateForId(derivation.getLabel().getParent());
+            EditDistanceState eds = derivation.getLabel().getLeft();
 
             if (eds.distance() == 1) {
-                String label = this.getSignature().resolveSymbolId(derivation.getLabel().getLabel());
+                String label = derivation.getLabel().getRight();
 
                 int pos = eds.readSpanStart;
                 result[pos] = this.inputSentence.get(pos).equals(label) ? Status.KEPT : Status.SUBSTITUTED;
             }
         } else {
-            List<Tree<Rule>> children = derivation.getChildren();
+            List<Tree<Pair<EditDistanceState, String>>> children = derivation.getChildren();
 
             for (int i = 0; i < children.size(); ++i) {
                 this.addEntries(children.get(i), result);
