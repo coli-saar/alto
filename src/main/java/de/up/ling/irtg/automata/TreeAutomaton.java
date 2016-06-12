@@ -28,7 +28,6 @@ import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
-import de.up.ling.irtg.semiring.TropicalMaxWithBackPointersSemiring;
 import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
@@ -919,17 +918,17 @@ public abstract class TreeAutomaton<State> implements Serializable {
     /**
      * 
      */
-    private static final TropicalMaxWithBackPointersSemiring TROPICANA = new TropicalMaxWithBackPointersSemiring();
+    private static final ViterbiWithBackpointerSemiring vwbs = new ViterbiWithBackpointerSemiring();
     
     /**
      * 
      * @return 
      */
-    public Tree<Rule> maxTropicalRules() {
+    public Tree<Rule> maxRuleTree() {
         // run Viterbi algorithm bottom-up, saving rules as backpointers
 
         Int2ObjectMap<Pair<Double, Rule>> map
-                = evaluateInSemiring2(TROPICANA, rule -> new Pair(rule.getWeight(), rule));
+                = evaluateInSemiring2(vwbs, rule -> new Pair(rule.getWeight(), rule));
 
         // find final state with highest weight
         int bestFinalState = -1;
@@ -952,7 +951,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
         }
 
-        assert bestFinalState > -1 : "Tropical maximization failed: no useful final state found";
+        assert bestFinalState > -1 : "Maximization failed: no useful final state found";
 
         // extract best tree from backpointers
         Tree<Rule> t = extractRuleTreeFromBackPointers(bestFinalState, map, 0);

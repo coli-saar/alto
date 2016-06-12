@@ -24,22 +24,22 @@ import static org.junit.Assert.*;
  */
 public class EditDistanceTreeAutomatonTest {
 
-    private final static String EXPECTED_1 = "'<0,1>'! -> __*__ [1.0]\n"
-            + "'<1,1>' -> __*__ [1.0]\n"
-            + "'<0,0>' -> __*__ [1.0]\n"
-            + "'<0,1>'! -> b [1.0]\n"
-            + "'<1,1>' -> b [1.0]\n"
-            + "'<0,0>' -> b [1.0]\n"
-            + "'<0,0>' -> a [1.0]\n"
-            + "'<0,1>'! -> a [0.0]\n"
-            + "'<1,1>' -> a [1.0]\n"
-            + "'<0,0>' -> *('<0,0>', '<0,0>') [0.0]\n"
-            + "'<0,1>'! -> *('<0,0>', '<0,0>') [1.0]\n"
-            + "'<0,1>'! -> *('<0,0>', '<0,1>') [0.0]\n"
-            + "'<0,1>'! -> *('<0,0>', '<1,1>') [1.0]\n"
-            + "'<0,1>'! -> *('<0,1>', '<1,1>') [0.0]\n"
-            + "'<0,1>'! -> *('<1,1>', '<1,1>') [1.0]\n"
-            + "'<1,1>' -> *('<1,1>', '<1,1>') [0.0]";
+    private final static String EXPECTED_1 = "'<0,1>'! -> __*__ [0.36787944117144233]\n"
+            + "'<1,1>' -> __*__ [0.36787944117144233]\n"
+            + "'<0,0>' -> __*__ [0.36787944117144233]\n"
+            + "'<0,1>'! -> b [0.36787944117144233]\n"
+            + "'<1,1>' -> b [0.36787944117144233]\n"
+            + "'<0,0>' -> b [0.36787944117144233]\n"
+            + "'<0,0>' -> a [0.36787944117144233]\n"
+            + "'<0,1>'! -> a [1.0]\n"
+            + "'<1,1>' -> a [0.36787944117144233]\n"
+            + "'<0,0>' -> *('<0,0>', '<0,0>') [1.0]\n"
+            + "'<0,1>'! -> *('<0,0>', '<0,0>') [0.36787944117144233]\n"
+            + "'<0,1>'! -> *('<0,0>', '<0,1>') [1.0]\n"
+            + "'<0,1>'! -> *('<0,0>', '<1,1>') [0.36787944117144233]\n"
+            + "'<0,1>'! -> *('<0,1>', '<1,1>') [1.0]\n"
+            + "'<0,1>'! -> *('<1,1>', '<1,1>') [0.36787944117144233]\n"
+            + "'<1,1>' -> *('<1,1>', '<1,1>') [1.0]";
 
     /**
      *
@@ -80,10 +80,6 @@ public class EditDistanceTreeAutomatonTest {
         TreeAutomaton ta = edt1.asConcreteTreeAutomatonWithStringStates();
         TreeAutomaton comp = taic.read(EXPECTED_1);
 
-        for (Rule r : (Iterable<Rule>) comp.getAllRulesTopDown()) {
-            r.setWeight(-r.getWeight());
-        }
-
         assertEquals(ta, comp);
 
         ta = edt2.asConcreteTreeAutomatonWithStringStates();
@@ -91,124 +87,74 @@ public class EditDistanceTreeAutomatonTest {
 
         TreeAutomaton q = in.intersect(ta);
 
-        assertEquals(q.viterbiRaw().getWeight(), -1.0, 0.000001);
-
-        Semiring<Double> tropical = new Semiring<Double>() {
-            @Override
-            public Double add(Double x, Double y) {
-                return Math.max(x, y);
-            }
-
-            @Override
-            public Double multiply(Double x, Double y) {
-                return x + y;
-            }
-
-            @Override
-            public Double zero() {
-                return Double.NEGATIVE_INFINITY;
-            }
-        };
+        assertEquals(q.viterbiRaw().getWeight(), 0.36787944117144233, 0.0000001);
 
         in = sal.decompose(sal.parseString("a b"));
 
         q = in.intersect(ta);
 
-        Int2ObjectMap<Double> map = q.evaluateInSemiring(tropical, (Rule r) -> r.getWeight());
-        assertEquals(map.get(q.getFinalStates().iterator().nextInt()), -(1.0 / 3.0), 0.00000001);
+        assertEquals(q.viterbiRaw().getWeight(), Math.exp(-(1.0 / 3.0)), 0.00000001);
 
         in = sal.decompose(sal.parseString("a b a"));
 
         q = in.intersect(ta);
 
-        map = q.evaluateInSemiring(tropical, (Rule r) -> r.getWeight());
-        assertEquals(map.get(q.getFinalStates().iterator().nextInt()), -1.5, 0.00000001);
+        assertEquals(q.viterbiRaw().getWeight(), Math.exp(-1.5), 0.00000001);
 
         in = sal.decompose(sal.parseString("a a"));
 
         q = in.intersect(ta);
 
-        map = q.evaluateInSemiring(tropical, (Rule r) -> r.getWeight());
-        assertEquals(map.get(q.getFinalStates().iterator().nextInt()), 0.0, 0.00000001);
+        assertEquals(q.viterbiRaw().getWeight(), Math.exp(0.0), 0.00000001);
 
         in = sal.decompose(sal.parseString("b"));
 
         q = in.intersect(ta);
 
-        map = q.evaluateInSemiring(tropical, (Rule r) -> r.getWeight());
-        assertEquals(map.get(q.getFinalStates().iterator().nextInt()), -(1 + (1.0 / 3.0)), 0.00000001);
-    }
-
-    /**
-     * Test of supportsBottomUpQueries method, of class
-     * EditDistanceTreeAutomaton.
-     */
-    @Test
-    public void testSupportsBottomUpQueries() {
-        assertTrue(edt1.supportsBottomUpQueries());
-        assertTrue(edt2.supportsBottomUpQueries());
-    }
-
-    /**
-     * Test of supportsTopDownQueries method, of class
-     * EditDistanceTreeAutomaton.
-     */
-    @Test
-    public void testSupportsTopDownQueries() {
-        assertFalse(edt1.supportsTopDownQueries());
-        assertFalse(edt2.supportsTopDownQueries());
-    }
-
-    /**
-     * Test of isBottomUpDeterministic method, of class
-     * EditDistanceTreeAutomaton.
-     */
-    @Test
-    public void testIsBottomUpDeterministic() {
-        assertFalse(edt1.isBottomUpDeterministic());
-        assertFalse(edt2.isBottomUpDeterministic());
+        assertEquals(q.viterbiRaw().getWeight(), Math.exp(-(1 + (1.0 / 3.0))), 0.00000001);
     }
 
     /**
      * Test of computeStatus method, of class EditDistanceTreeAutomaton.
+     *
      * @throws java.lang.Exception
      */
     @Test
     public void testComputeStatus() throws Exception {
-        Tree<Rule> tr = edt2.maxTropicalRules();
-        
+        Tree<Rule> tr = edt2.maxRuleTree();
+
         Status[] keep = edt2.computeStatus(tr);
-        assertEquals(keep[0],KEPT);
-        assertEquals(keep[1],KEPT);
-        
+        assertEquals(keep[0], KEPT);
+        assertEquals(keep[1], KEPT);
+
         Rule r = null;
-        for(Rule rule : (Iterable<Rule>) edt2.getAllRulesTopDown()) {
-            if(rule.getArity() == 2) {
+        for (Rule rule : (Iterable<Rule>) edt2.getAllRulesTopDown()) {
+            if (rule.getArity() == 2) {
                 r = rule;
             }
         }
-        
+
         tr = Tree.create(r);
-        
+
         keep = edt2.computeStatus(tr);
-        assertEquals(keep[0],Status.DELETED);
-        assertEquals(keep[1],Status.DELETED);
-        
+        assertEquals(keep[0], Status.DELETED);
+        assertEquals(keep[1], Status.DELETED);
+
         r = null;
-        for(Rule rule : (Iterable<Rule>) edt2.getAllRulesTopDown()) {
-            if(rule.getArity() == 0 && edt2.getSignature().resolveSymbolId(rule.getLabel()).equals("b")) {
+        for (Rule rule : (Iterable<Rule>) edt2.getAllRulesTopDown()) {
+            if (rule.getArity() == 0 && edt2.getSignature().resolveSymbolId(rule.getLabel()).equals("b")) {
                 EditDistanceTreeAutomaton.EditDistanceState stat = edt2.getStateForId(rule.getParent());
-                
-                if(stat.getReadSpanStart() == 0 && stat.getReadSpanEnd() == 1) {
+
+                if (stat.getReadSpanStart() == 0 && stat.getReadSpanEnd() == 1) {
                     r = rule;
                 }
             }
         }
-        
+
         tr = Tree.create(r);
-        
+
         keep = edt2.computeStatus(tr);
-        assertEquals(keep[0],Status.SUBSTITUTED);
-        assertEquals(keep[1],Status.DELETED);
+        assertEquals(keep[0], Status.SUBSTITUTED);
+        assertEquals(keep[1], Status.DELETED);
     }
 }

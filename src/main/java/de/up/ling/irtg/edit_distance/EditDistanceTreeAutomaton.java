@@ -6,12 +6,10 @@
 package de.up.ling.irtg.edit_distance;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ImmutableList;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import java.util.Arrays;
@@ -24,12 +22,6 @@ import java.util.function.IntToDoubleFunction;
  * @author teichmann
  */
 public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanceTreeAutomaton.EditDistanceState> {
-
-    /**
-     *
-     */
-    private static final Iterable<Rule> EMPTY = ImmutableList.of();
-
     /**
      *
      */
@@ -68,8 +60,12 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
      * @param substitute
      */
     public EditDistanceTreeAutomaton(Signature signature, List<String> inputSentence,
-            IntToDoubleFunction delete, IntToDoubleFunction insert, IntToDoubleFunction substitute) {
+            final IntToDoubleFunction delete,
+            IntToDoubleFunction insert, IntToDoubleFunction substitute) {
         super(signature);
+        this.delete = (int i) -> Math.exp(delete.applyAsDouble(i));
+        this.insert = (int i) -> Math.exp(insert.applyAsDouble(i));
+        this.substitute = (int i) -> Math.exp(substitute.applyAsDouble(i));
 
         if (inputSentence.size() < 1) {
             throw new IllegalArgumentException("This class expects at least one word as input");
@@ -79,10 +75,6 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
 
         int state = this.addState(new EditDistanceState(0, this.inputSentence.size()));
         this.addFinalState(state);
-
-        this.delete = delete;
-        this.insert = insert;
-        this.substitute = substitute;
         
         for(int sym=1;sym<=signature.getMaxSymbolId();++sym) {
             if(signature.getArity(sym)== 0) {
@@ -117,7 +109,7 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
                 EditDistanceState eds = new EditDistanceState(i, i + 1);
                 int state = this.addState(eds);
 
-                double weight = s.equals(this.getSignature().resolveSymbolId(labelId)) ? 0 : this.substitute.applyAsDouble(i);
+                double weight = s.equals(this.getSignature().resolveSymbolId(labelId)) ? 1 : this.substitute.applyAsDouble(i);
 
                 Rule r = this.createRule(state, labelId, childStates, weight);
                 addRule(r);
@@ -126,7 +118,7 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
 
                 EditDistanceState fin = new EditDistanceState(0, this.inputSentence.size());
                 state = this.getIdForState(fin);
-                deleteCost += weight;
+                deleteCost *= weight;
 
                 r = this.createRule(state, labelId, childStates, deleteCost);
                 addRule(r);
@@ -141,7 +133,7 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
 
                 deleteCost = this.computeExternalDelete(eds);
                 state = this.getIdForState(fin);
-                deleteCost += weight;
+                deleteCost *= weight;
 
                 r = this.createRule(state, labelId, childStates, deleteCost);
                 addRule(r);
@@ -159,7 +151,7 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
             double deleteCost = this.computeExternalDelete(eds);
             EditDistanceState fin = new EditDistanceState(0, this.inputSentence.size());
             state = this.getIdForState(fin);
-            deleteCost += weight;
+            deleteCost *= weight;
 
             r = this.createRule(state, labelId, childStates, deleteCost);
             addRule(r);
@@ -193,29 +185,9 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
             EditDistanceState fin = new EditDistanceState(0, this.inputSentence.size());
             state = this.getIdForState(fin);
 
-            r = this.createRule(state, labelId, childStates, externalDelete + internalDelete);
+            r = this.createRule(state, labelId, childStates, externalDelete * internalDelete);
             this.addRule(r);
         }
-    }
-
-    @Override
-    public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    public boolean supportsBottomUpQueries() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsTopDownQueries() {
-        return false;
-    }
-
-    @Override
-    public boolean isBottomUpDeterministic() {
-        return false;
     }
 
     /**
@@ -224,13 +196,13 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
      * @return
      */
     private double computeExternalDelete(EditDistanceState eds) {
-        double value = 0.0;
+        double value = 1.0;
         for (int i = eds.readSpanEnd; i < this.inputSentence.size(); ++i) {
-            value += this.delete.applyAsDouble(i);
+            value *= this.delete.applyAsDouble(i);
         }
 
         for (int i = 0; i < eds.readSpanStart; ++i) {
-            value += this.delete.applyAsDouble(i);
+            value *= this.delete.applyAsDouble(i);
         }
 
         return value;
@@ -243,9 +215,9 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
      * @return
      */
     private double computeInternalDelete(int leftEnd, int rightStart) {
-        double value = 0.0;
+        double value = 1.0;
         for (int i = leftEnd; i < rightStart; ++i) {
-            value += this.delete.applyAsDouble(i);
+            value *= this.delete.applyAsDouble(i);
         }
 
         return value;
@@ -275,8 +247,6 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
     public Status[] computeStatusGeneral(Tree<Pair<EditDistanceState, String>> mapped) {
         Status[] result = new Status[this.inputSentence.size()];
         Arrays.fill(result, Status.DELETED);
-        
-        
         
         addEntries(mapped, result);
 
