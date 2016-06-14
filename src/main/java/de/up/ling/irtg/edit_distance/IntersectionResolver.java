@@ -30,9 +30,6 @@ public class IntersectionResolver implements Function<Rule,Pair<EditDistanceStat
         this.basis = basis;
     }
     
-    
-    
-    
     @Override
     public Pair<EditDistanceState, String> apply(Rule f) {
         EditDistanceState eds = basis.getStateForId(f.getParent()).getRight();
