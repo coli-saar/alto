@@ -3027,14 +3027,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     }
 
                     int parent = rule.getParent();
-                    if (!agenda.contains(parent)) {
+                    if (!seen.contains(parent)) {
                         agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
+                        seen.add(parent);
                     }
 
                 }
             }
         }
-        seen.addAll(Sets.newHashSet(agenda));
 
         //now iterate
         Int2ObjectMap<IntList> labelsToIterate = new Int2ObjectOpenHashMap<>(symbols);
@@ -3062,6 +3062,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
                             break;
                         case 2:
                             IntCollection partnerList = bpFinder.getPartners(label, a);
+                            foundRules.add(getRulesBottomUp(label, new int[]{a, a}));
+                                
                             for (int p : partnerList) {
                                 foundRules.add(getRulesBottomUp(label, new int[]{a, p}));
                                 foundRules.add(getRulesBottomUp(label, new int[]{p, a}));

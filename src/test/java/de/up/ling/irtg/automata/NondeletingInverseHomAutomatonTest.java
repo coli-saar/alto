@@ -78,10 +78,9 @@ public class NondeletingInverseHomAutomatonTest {
             + "'1-4' -> m('1-3') [0.5]\n"
             + "'0-3' -> i('0-1', '1-3') [0.5]\n"
             + "'0-4'! -> i('0-1', '1-4') [0.3333333333333333]";
-    
-    
+
     /**
-     * 
+     *
      */
     private final static String SAME_PATTERN_REPEATED = "q0 -> a [0.5]\n"
             + "q5 -> a [0.5]\n"
@@ -91,7 +90,21 @@ public class NondeletingInverseHomAutomatonTest {
             + "q3 -> *(q0,q0) [0.5]\n"
             + "q4! -> *(q1,q2) [1.0]\n"
             + "q4! -> *(q1,q3) [1.0]\n";
-    
+
+    /**
+     * 
+     */
+    private final static String REPEAT_PATTERN_SOLUTION = "q1 -> k [0.5]\n"
+            + "q5 -> j [0.5]\n"
+            + "q0 -> j [0.5]\n"
+            + "q4! -> h(q5, q1) [0.5]\n"
+            + "q2 -> i(q0, q5) [1.0]\n"
+            + "q3 -> i(q0, q0) [0.5]\n"
+            + "q2 -> i(q0, q0) [1.0]\n"
+            + "q4! -> h(q0, q1) [0.75]\n"
+            + "q4! -> i(q1, q2) [1.0]\n"
+            + "q4! -> i(q1, q3) [1.0]\n"
+            + "";
 
     @Before
     public void setUp() throws ParseException {
@@ -140,22 +153,32 @@ public class NondeletingInverseHomAutomatonTest {
         nia1.processAllRulesBottomUp(cr);
         TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
 
-        assertEquals(taic.read(sb1.toString()),taic.read(BOTTOM_UP_DETERMINISTIC_CORRECT));
-        
+        assertEquals(taic.read(sb1.toString()), taic.read(BOTTOM_UP_DETERMINISTIC_CORRECT));
+
         NondeletingInverseHomAutomaton nia2 = new NondeletingInverseHomAutomaton(nonDeterministic, hom);
-        
+
         StringBuilder sb2 = new StringBuilder();
         cr = (Rule t) -> {
-            sb2.append(t.toString(nia1));
+            sb2.append(t.toString(nia2));
             sb2.append("\n");
         };
-        
+
         nia2.processAllRulesBottomUp(cr);
+
+        assertEquals(taic.read(sb2.toString()), taic.read(TOPDOWN_CORRECT));
         
-        assertEquals(taic.read(sb2.toString()),taic.read(TOPDOWN_CORRECT));
+        TreeAutomaton ta = taic.read(SAME_PATTERN_REPEATED);
+        NondeletingInverseHomAutomaton nia3 = new NondeletingInverseHomAutomaton(ta, hom);
         
+        StringBuilder sb3 = new StringBuilder();
+        cr = (Rule t) -> {
+            sb3.append(t.toString(nia3));
+            sb3.append("\n");
+        };
+
+        nia3.processAllRulesBottomUp(cr);
         
-        //TODO
+        assertEquals(taic.read(sb3.toString()), taic.read(REPEAT_PATTERN_SOLUTION));
     }
 
     /**
@@ -164,8 +187,7 @@ public class NondeletingInverseHomAutomatonTest {
     @Test
     public void testGetRulesTopDown() {
         TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
-        
-        /*
+
         NondeletingInverseHomAutomaton nia = new NondeletingInverseHomAutomaton(nonDeterministic, hom);
 
         nia.makeAllRulesExplicit();
@@ -174,15 +196,10 @@ public class NondeletingInverseHomAutomatonTest {
         TreeAutomaton goal = taic.read(TOPDOWN_CORRECT);
 
         assertEquals(fin, goal);
-        
-        */
-        System.out.println("Here it gets interesting");
+
         TreeAutomaton ta = taic.read(SAME_PATTERN_REPEATED);
         NondeletingInverseHomAutomaton nia3 = new NondeletingInverseHomAutomaton(ta, hom);
         
-        System.out.println(nia3);
-        System.out.println("---------");
-        System.out.println(nia3);
-        //TODO
+        assertEquals(nia3.asConcreteTreeAutomatonWithStringStates(),taic.read(REPEAT_PATTERN_SOLUTION));
     }
 }

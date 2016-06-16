@@ -212,7 +212,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
         
         else {
             Set<Rule> ret = new HashSet<>();
-
+            
             Int2DoubleMap weightedStates = runWeighted(hom.get(label), f -> {
                 if (f.isVariable()) {                      // variable ?i
                     int child = childStates[f.getValue()]; // -> i-th child state (= this state ID)
@@ -222,6 +222,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
                     return 0;
                 }
             });
+            System.out.println(weightedStates);
             
             IntIterator resultStates = weightedStates.keySet().iterator();
 
@@ -399,11 +400,8 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
                         double weight = rhsRule.getWeight();
                         
                         for(int i=0;i<tuples.size();++i) {
-                            weight *= childrenSubstitutions.get(i).getDouble(keys.get(i));
+                            weight *= childrenSubstitutions.get(i).getDouble(tuples.get(i));
                         }
-                        System.out.println(rhs);
-                        System.out.println(childrenSubstitutions);
-                        System.out.println(weight);
                         
                         List<Integer> merged = mergeSubstitutions(tuples, rhsArity);
                         if (merged != null) {
