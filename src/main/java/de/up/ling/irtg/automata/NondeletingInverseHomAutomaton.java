@@ -18,8 +18,11 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,8 +35,6 @@ import java.util.function.ToIntFunction;
  * homomorphism is non-deleting.
  *
  * This automaton has the same states as the base automaton.
- *
- * TODO: check that the automaton never creates a rule twice!!
  * 
  * 
  * @author koller
@@ -226,7 +227,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
 
             while(resultStates.hasNext()) {
                 int resultState = resultStates.nextInt();
-                double weight = weightedStates.get(resultStates);
+                double weight = weightedStates.get(resultState);
                 
                 for (int newLabel : hom.getLabelSetForLabel(label)) {
                     Rule rule = createRule(resultState, newLabel, childStates, weight);
@@ -255,8 +256,8 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
             if (result == null) {
                 return EMPTY;
             } else {
-                Int2DoubleMap map = new Int2DoubleOpenHashMap();
-                map.put(result.getLeft(), result.getRight());
+                Int2DoubleOpenHashMap map = new Int2DoubleOpenHashMap();
+                map.addTo(result.getLeft(), result.getRight());
                 
                 return map;
             }
@@ -304,11 +305,12 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
             Tree<HomomorphismSymbol> rhs = hom.get(label);
             Set<Rule> ret = new HashSet<>();
 
-            for (Pair<List<Integer>,Double> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs))) {
-                if (isCompleteSubstitutionTuple(substitutionTuple)) {
-                    // TODO: weights
+            //TODO: merge duplicate rules
+            for (Object2DoubleMap.Entry<List<Integer>> substitutionTuple : grtdDfs(rhs, parentState, getRhsArity(rhs)).object2DoubleEntrySet()) {
+                if (isCompleteSubstitutionTuple(substitutionTuple.getKey())) {
                     for (int newLabel : hom.getLabelSetForLabel(label)) {
-                        Rule rule = createRule(parentState, newLabel, substitutionTuple.getLeft(), substitutionTuple.getRight());
+                        Rule rule = createRule(parentState, newLabel, substitutionTuple.getKey(), substitutionTuple.getDoubleValue());
+                        
                         storeRuleTopDown(rule);
                         ret.add(rule);
                     }
@@ -341,8 +343,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
      return super.createRule(parentState, label, childStates, weight);
      }
      */
-    private boolean isCompleteSubstitutionTuple(Pair<List<Integer>,Double> pair) {
-        List<Integer> tuple = pair.getLeft();
+    private boolean isCompleteSubstitutionTuple(List<Integer> tuple) {
         for (int pos=0;pos<tuple.size();++pos) {
             if (tuple.get(pos) == null) {
                 return false;
@@ -376,24 +377,38 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
      * @param rhsArity
      * @return 
      */
-    private Set<Pair<List<Integer>,Double>> grtdDfs(Tree<HomomorphismSymbol> rhs, int state, int rhsArity) {
-        Set<Pair<List<Integer>,Double>> ret = new HashSet<>();
+    private Object2DoubleOpenHashMap<List<Integer>> grtdDfs(Tree<HomomorphismSymbol> rhs, int state, int rhsArity) {
+        Object2DoubleOpenHashMap<List<Integer>> ret = new Object2DoubleOpenHashMap<>();
 
         switch (rhs.getLabel().getType()) {
             case CONSTANT:
                 for (Rule rhsRule : rhsAutomaton.getRulesTopDown(labelsRemap[rhs.getLabel().getValue()], state)) {
-                    List<Set<Pair<List<Integer>,Double>>> childrenSubstitutions = new ArrayList<>(); // len = #children
-
+                    List<Object2DoubleOpenHashMap<List<Integer>>> childrenSubstitutions = new ArrayList<>(); // len = #children
+                    List<Collection<List<Integer>>> keys = new ArrayList<>();
+                    
                     for (int i = 0; i < rhsRule.getArity(); i++) {
-                        childrenSubstitutions.add(grtdDfs(rhs.getChildren().get(i), rhsRule.getChildren()[i], rhsArity));
+                        Object2DoubleOpenHashMap<List<Integer>> set = grtdDfs(rhs.getChildren().get(i), rhsRule.getChildren()[i], rhsArity);
+                        
+                        childrenSubstitutions.add(set);
+                        keys.add(set.keySet());
                     }
 
-                    CartesianIterator<Pair<List<Integer>,Double>> it = new CartesianIterator<>(childrenSubstitutions);
+                    CartesianIterator<List<Integer>> it = new CartesianIterator<>(keys);
                     while (it.hasNext()) {
-                        List<Pair<List<Integer>,Double>> tuples = it.next();  // len = # children x # variables
-                        Pair<List<Integer>,Double> merged = mergeSubstitutions(tuples, rhsArity);
+                        List<List<Integer>> tuples = it.next();  // len = # children x # variables
+                        double weight = rhsRule.getWeight();
+                        
+                        for(int i=0;i<tuples.size();++i) {
+                            weight *= childrenSubstitutions.get(i).getDouble(keys.get(i));
+                        }
+                        System.out.println(rhs);
+                        System.out.println(childrenSubstitutions);
+                        System.out.println(weight);
+                        
+                        List<Integer> merged = mergeSubstitutions(tuples, rhsArity);
                         if (merged != null) {
-                            ret.add(merged);
+                            //TODO compute correct weight
+                            ret.addTo(merged,weight);
                         }
                     }
                 }
@@ -411,19 +426,18 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
                     }
                 }
 
-                ret.add(new Pair<>(rret,1.0));
+                ret.addTo(rret,1.0);
         }
 
 //        System.err.println(state + "/" + rhs + "  ==> " + ret);
         return ret;
     }
-
+    
     // tuples is an n-list of m-lists of output states, where
     // n is number of children, and m is number of variables in homomorphism
     // If n = 0, the method returns [null, ..., null]
-    private Pair<List<Integer>,Double> mergeSubstitutions(List<Pair<List<Integer>,Double>> tuples, int rhsArity) {
+    private List<Integer> mergeSubstitutions(List<List<Integer>> tuples, int rhsArity) {
         List<Integer> merged = new ArrayList<>();  // one entry per variable
-        double weight = 1.0;
         
 //        System.err.println("    merge: " + tuples);
         for (int i = 0; i < rhsArity; i++) {
@@ -431,9 +445,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
         }
 
         for (int i = 0; i < tuples.size(); i++) {
-            Pair<List<Integer>,Double> p = tuples.get(i);
-            List<Integer> inter = p.getLeft();
-            weight *= p.getRight();
+            List<Integer> inter = tuples.get(i);
             
             for (int j = 0; j < rhsArity; j++) {
                 Integer state = inter.get(j);
@@ -448,7 +460,7 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
         }
 
 //        System.err.println("    --> merged: " + merged);
-        return new Pair<>(merged,weight);
+        return merged;
     }
 
     @Override
