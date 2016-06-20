@@ -407,13 +407,11 @@ public class NondeletingInverseHomAutomaton<State> extends TreeAutomaton<State> 
                         
                         List<Integer> merged = mergeSubstitutions(tuples, rhsArity);
                         if (merged != null) {
-                            //TODO compute correct weight
                             ret.addTo(merged,weight);
                         }
                     }
                 }
                 break;
-
             case VARIABLE:
                 List<Integer> rret = new ArrayList<>(rhsArity);
                 int varnum = rhs.getLabel().getValue();
