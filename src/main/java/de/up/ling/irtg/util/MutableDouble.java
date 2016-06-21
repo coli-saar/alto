@@ -30,4 +30,8 @@ public class MutableDouble {
     public void multiplyBy(double value) {
         this.value *= value;
     }
+    
+    public void add(double value){
+        this.value += value;
+    }
 }
