@@ -12,19 +12,27 @@ import de.up.ling.tree.Tree;
 import java.util.List;
 
 /**
- *
+ * This class simply assigns each tree the weight of the multiplication of its
+ * rule weights.
+ * 
+ * The underlying automaton is not changed in any way during sampling.
+ * 
  * @author teichmann
  */
 public class AutomatonWeighted extends RegularizedKLRuleWeighting {
     /**
+     * Creates a new instance that weights trees according to the rule weights
+     * from the given automaton and uses the automaton as the basis for sampling.
+     * 
+     * The adaption is implemented by the parent class.
      * 
      * @param basis
-     * @param normalizationExponent
-     * @param normalizationDivisor
+     * @param regularizationExponent
+     * @param regularizationDivisor
      * @param rate 
      */
-    public AutomatonWeighted(TreeAutomaton basis, int normalizationExponent, double normalizationDivisor, LearningRate rate) {
-        super(basis, normalizationExponent, normalizationDivisor, rate);
+    public AutomatonWeighted(TreeAutomaton basis, int regularizationExponent, double regularizationDivisor, LearningRate rate) {
+        super(basis, regularizationExponent, regularizationDivisor, rate);
     }
 
     @Override

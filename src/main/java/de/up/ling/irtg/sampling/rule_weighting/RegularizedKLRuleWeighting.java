@@ -25,94 +25,114 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 /**
- *
+ * Implements adaption by minimizing the KL between the target distribution and the
+ * proposal distribution as described in our adaptive importance sampling paper.
+ * 
+ * 
+ * This class implements all functionality necessary for a rule weighting except the
+ * computation of the target weight.
+ * 
  * @author teichmann
  */
 public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     /**
+     * The threshold for when we consider a number close enough to 0.0 to
+     * pick a choice point.
+     * 
+     * This is to ensure that we never throw an error because of rounding error
+     * in computing probabilities.
      * 
      */
     public static double ALMOST_ZERO = 1E-15;
     
     /**
-     * 
+     * The tree automaton from which we get our rules.
      */
     private final TreeAutomaton basis;
     
     /**
+     * How often we have updated.
      * 
+     * This is useful in lazily updating rule weights.
      */
     private int updateNumber = 0;
     
     /**
-     * 
+     * Maps each state to the last update number in which its rule weights were
+     * changed.
      */
     private final Int2IntMap lastUpdated;
     
     /**
+     * Lists the start states.
      * 
+     * The sequential order is used as the necessary ordering.
      */
     private final int[] startStates;
     
     /**
-     * 
+     * Lists the weights for each start state.
      */
     private final double[] startParameters;
     
     /**
-     * 
+     * When computed, contains the proposal probabilities for the start states.
      */
     private final double[] startProbabilities;
     
     /**
-     * 
+     * Holds exponent for the regularization.
      */
-    private final int normalizationExponent;
+    private final int regularizationExponent;
     
     /**
-     * 
+     * Holds the divisor for regularization.
      */
-    private final double normalizationDivisor;
+    private final double regularizationDivisor;
     
     /**
-     * 
+     * Holds the learning rate rule that we use in adaption.
      */
     private final LearningRate rate;
     
     /**
-     * 
+     * Returns true if the probabilities for a state have been recomputed since
+     * the last rule weight update.
      */
     private final Int2BooleanMap currentProbs = new Int2BooleanOpenHashMap();
     
     /**
-     * 
+     * Holds the probabilities computed for the rules at this point.
      */
     private final Int2ObjectMap<double[]> ruleProbs = new Int2ObjectOpenHashMap<>();
     
     /**
-     * 
+     * Lists all the rules that exist for a given state and impose an order on them.
      */
     private final Int2ObjectMap<Rule[]> listRules = new Int2ObjectOpenHashMap<>();
     
     /**
-     * 
+     * Holds the adapted weights for each rule.
      */
     private final Int2ObjectMap<double[]> ruleParameters = new Int2ObjectOpenHashMap<>();
 
     /**
+     * Holds the maximum divisor we apply to samples before adapting based on them.
      * 
+     * May change as we find larger values.
      */
     private double underFlowPreventer = Double.NEGATIVE_INFINITY;
     
     /**
+     * Creates a new instance with the regularization given by the specified values.
      * 
      * @param basis
-     * @param normalizationExponent
-     * @param normalizationDivisor
+     * @param regularizationExponent
+     * @param regularizationDivisor
      * @param rate 
      */
-    public RegularizedKLRuleWeighting(TreeAutomaton basis, int normalizationExponent,
-                                        double normalizationDivisor, LearningRate rate) {
+    public RegularizedKLRuleWeighting(TreeAutomaton basis, int regularizationExponent,
+                                        double regularizationDivisor, LearningRate rate) {
         this.basis = basis;
         
         IntArrayList start = new IntArrayList();
@@ -132,8 +152,8 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
         this.lastUpdated = new Int2IntOpenHashMap();
         this.lastUpdated.defaultReturnValue(0);
         
-        this.normalizationExponent = normalizationExponent-1;
-        this.normalizationDivisor = 1.0 / normalizationDivisor;
+        this.regularizationExponent = regularizationExponent-1;
+        this.regularizationDivisor = 1.0 / regularizationDivisor;
         this.rate = rate;
         
         currentProbs.defaultReturnValue(false);
@@ -268,6 +288,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
 
     /**
+     * Ensures that we have looked up the rules for a state and returns them.
      * 
      * @param state
      * @return 
@@ -297,6 +318,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
 
     /**
+     * Adds the weighted counts for the start states and the rules for adaption.
      * 
      * @param treSamp
      * @param stateCounts
@@ -327,6 +349,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
 
     /**
+     * Adds the weighted counts of rules.
      * 
      * @param instance
      * @param stateCounts
@@ -346,6 +369,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
 
     /**
+     * Adapts the weights for a rule given the weighted counts.
      * 
      * @param rr
      * @param ruleCounts
@@ -356,7 +380,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             double probability) {
         double val = parameters[position];
         
-        double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.normalizationExponent))*normalizationDivisor;
+        double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.regularizationExponent))*regularizationDivisor;
         
         if(ruleCounts != null && stateCounts != null) {
             gradient += probability*stateCounts.get(rr.getParent());
@@ -369,6 +393,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
     }
 
     /**
+     * Adapts the weights for the start state proposals.
      * 
      * @param parameters
      * @param position
@@ -380,7 +405,7 @@ public abstract class RegularizedKLRuleWeighting implements RuleWeighting {
             double startProbability) {
         double val = parameters[position];
         
-        double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.normalizationExponent))*normalizationDivisor;
+        double gradient = Double.compare(val, 0.0)*(Math.pow(Math.abs(val), this.regularizationExponent))*regularizationDivisor;
         
         if(startCount != null) {
             gradient += startProbability*wholeCount;

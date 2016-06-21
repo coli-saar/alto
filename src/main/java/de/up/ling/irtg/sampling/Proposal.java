@@ -88,6 +88,7 @@ public class Proposal {
                                 (Rule rule, TreeAutomaton t) -> t.getSignature().resolveSymbolId(rule.getLabel());
     
     /**
+     * Returns a sample of string trees by transforming sampled rule trees.
      * 
      * @param guide
      * @param sampleSize
@@ -98,8 +99,13 @@ public class Proposal {
     }
     
     /**
+     * This method samples a number of rule trees and transforms them into the desired type of tree
+     * by applying the mapping to the tree and the automaton the guide returns.
      * 
-     * @param <Type>
+     * After calling this methods return.getLogPropWeight will return the log proposal probability for
+     * the rules from which the tree is derived.
+     * 
+     * @param <Type> The label type of the trees.
      * @param mapping
      * @param guide
      * @param numberOfSamples
@@ -130,6 +136,8 @@ public class Proposal {
     }
 
     /**
+     * This method recursively samples a tree given a parent state.
+     * 
      * 
      * @param <Type>
      * @param state
