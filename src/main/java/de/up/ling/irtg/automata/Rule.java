@@ -38,7 +38,7 @@ import java.util.List;
  *
  * @author koller
  */
-public class Rule implements Serializable {
+public class Rule implements Serializable, Comparable<Rule> {
     private int parent;
     private int label;
     private int[] children;
@@ -195,7 +195,36 @@ public class Rule implements Serializable {
         }
         return true;
     }
-    
+
+    @Override
+    public int compareTo(Rule o) {
+        int comp;
+        
+        comp = Integer.compare(this.getChildren().length, o.getChildren().length);
+        if (comp != 0) {
+            return comp;
+        }
+        
+        comp = Integer.compare(this.getLabel(), o.getLabel());
+        if (comp != 0) {
+            return comp;
+        }
+        
+        for(int i=0;i<this.getChildren().length;++i) {
+            comp = Integer.compare(this.getChildren()[i],o.getChildren()[i]);
+            
+            if(comp != 0) {
+                return comp;
+            }
+        }
+        
+        comp = Integer.compare(this.parent, o.parent);
+        if (comp != 0) {
+            return comp;
+        }
+        
+        return 0;
+    }
     
 
     public static Collection<Integer> extractParentStates(Collection<Rule> rules) {
