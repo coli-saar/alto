@@ -30,12 +30,18 @@ import java.util.function.LongSupplier;
 import org.apache.commons.math3.random.Well44497b;
 
 /**
- *
+ * This class can be used to evaluate adaptive importance sampling on a folder
+ * of tree automata.
+ * 
  * @author christoph
  */
 public class EvaluateSamplingFromRules {
    
    /**
+    * Load all configuration parameters from a configuration file and evaluates
+    * the quality of predicting the uniform weighting on the automata.
+    * 
+    * This is the class used for the evaluation in our paper.
     * 
     * @param args
     * @throws IOException 
@@ -90,7 +96,7 @@ public class EvaluateSamplingFromRules {
             config.setRounds(Integer.parseInt(rounds));
             config.setSeeds(seeder);
             
-            Pair<DoubleList,List<DoubleList>> results = makeInside(ta, config, Integer.parseInt(repetitions));
+            Pair<DoubleList,List<DoubleList>> results = makeInside(ta, config, Integer.parseInt(repetitions), true);
             
             String fileName = baseFold.getAbsolutePath()+File.separator+resultPrefix+"_"+aut.getName()+".stats";
             try(BufferedWriter out = new BufferedWriter(new FileWriter(fileName))) {
@@ -120,13 +126,14 @@ public class EvaluateSamplingFromRules {
     
     
     /**
+     * Computes the expected value for all the different evaluation rounds in a single repetition.
      * 
      * @param <Type>
      * @param ta
      * @param config
      * @return 
      */
-    public static <Type> DoubleList makeInside(TreeAutomaton<Type> ta, AdaptiveImportanceSampler.Configuration config) {
+    public static <Type> DoubleList computeTargetFunction(TreeAutomaton<Type> ta, AdaptiveImportanceSampler.Configuration config) {
         DoubleArrayList dal = new DoubleArrayList();
         
         List<TreeSample<Rule>> lt = config.run(ta);
@@ -145,19 +152,24 @@ public class EvaluateSamplingFromRules {
     }
     
     /**
+     * Computes the expected value average over all repetitions and then a list
+     * of expected values per round for each repetition.
      * 
      * @param <Type>
      * @param ta
      * @param config
      * @param repetitions
-     * @return 
+     * @param printTracking
+     * @return  first element are the average expected value estimates for each round
+     * second element is a list for each repetition, which contains the estiamte for
+     * each round.
      */
-    public static <Type> Pair<DoubleList,List<DoubleList>> makeInside(TreeAutomaton<Type> ta, AdaptiveImportanceSampler.Configuration config, int repetitions) {
+    public static <Type> Pair<DoubleList,List<DoubleList>> makeInside(TreeAutomaton<Type> ta, AdaptiveImportanceSampler.Configuration config, int repetitions, boolean printTracking) {
         List<DoubleList> r1 = new ArrayList<>();
         DoubleArrayList r2 = new DoubleArrayList();
         
         for(int rep=0;rep<repetitions;++rep) {
-            DoubleList dl = makeInside(ta, config);
+            DoubleList dl = computeTargetFunction(ta, config);
             
             r1.add(dl);
             for(int round=0;round<dl.size();++round) {
@@ -168,7 +180,9 @@ public class EvaluateSamplingFromRules {
                 }
             }
             
-            System.out.println("finished repetition: "+rep);
+            if(printTracking) {
+                System.out.println("finished repetition: "+rep);
+            }
         }
         
         for(int i=0;i<r2.size();++i) {
