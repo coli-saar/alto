@@ -11,7 +11,7 @@ import de.up.ling.irtg.learning_rates.AdaGrad;
 import de.up.ling.irtg.random_rtg.RandomTreeAutomaton;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler.Configuration;
-import de.up.ling.irtg.rule_finding.sampling.rule_weighters.AutomatonWeighted;
+import de.up.ling.irtg.rule_finding.sampling.rule_weighting.AutomatonWeighted;
 import de.up.ling.irtg.rule_finding.sampling.RuleWeighting;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import java.util.ArrayList;
@@ -43,7 +43,7 @@ public class EvaluateSamplingFromRulesTest {
     }
 
     /**
-     * Test of makeSmoothedKL method, of class EvaluateSamplingFromRules.
+     * 
      * @throws java.lang.Exception
      */
     @Test

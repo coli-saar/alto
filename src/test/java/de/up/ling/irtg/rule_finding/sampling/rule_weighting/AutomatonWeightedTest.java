@@ -3,9 +3,8 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.rule_finding.sampling.RuleWeighters;
+package de.up.ling.irtg.rule_finding.sampling.rule_weighting;
 
-import de.up.ling.irtg.rule_finding.sampling.rule_weighters.AutomatonWeighted;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;

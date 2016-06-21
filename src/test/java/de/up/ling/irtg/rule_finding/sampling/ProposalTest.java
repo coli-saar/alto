@@ -10,7 +10,7 @@ import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.learning_rates.AdaGrad;
-import de.up.ling.irtg.rule_finding.sampling.rule_weighters.AutomatonWeighted;
+import de.up.ling.irtg.rule_finding.sampling.rule_weighting.AutomatonWeighted;
 import de.up.ling.tree.Tree;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,13 +53,11 @@ public class ProposalTest {
      */
     @Test
     public void testGetRawTreeSample() {
-        /*
         TreeSample<Integer> ts = this.prop.getRawTreeSample(auw, 10);
         
         Function<Integer,String> funct = (Integer i) -> tau.getSignature().resolveSymbolId(i);
         Tree<String> t = ts.getSample(7).map(funct);
         assertEquals(t.toString().trim(),"*(a,*(a,*(b,*(*(b,a),a))))");
-        */
     }
 
     /**
@@ -67,14 +65,12 @@ public class ProposalTest {
      */
     @Test
     public void testGetRuleTreeSample() {
-        /*
         TreeSample<Rule> ts = this.prop.getTreeSample(auw, 10);
         
-        assertEquals(Math.log(5*4*3*2),ts.getNormalized(7),0.000000000001);
+        assertEquals(-Math.log(5*4*3*2),ts.getLogPropWeight(7),0.000000000001);
         Function<Rule,String> funct = (Rule r) -> tau.getSignature().resolveSymbolId(r.getLabel());
         Tree<String> t = ts.getSample(7).map(funct);
         assertEquals(t.toString().trim(),"*(a,*(a,*(b,*(*(b,a),a))))");
-        */
     }
 
     /**
@@ -82,11 +78,8 @@ public class ProposalTest {
      */
     @Test
     public void testGetStringTreeSample() {
-        /*
         TreeSample<String> ts = this.prop.getStringTreeSample(auw, 10);
         
         assertEquals(ts.getSample(7).toString().trim(),"*(a,*(a,*(b,*(*(b,a),a))))");
-        assertEquals(Math.log(5*4*3*2),ts.getNormalized(7),0.000000000001);
-        */
     }
 }

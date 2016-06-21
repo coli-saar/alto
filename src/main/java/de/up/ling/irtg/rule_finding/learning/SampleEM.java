@@ -11,7 +11,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.learning_rates.LearningRate;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
-import de.up.ling.irtg.rule_finding.sampling.rule_weighters.SubtreeCounting;
+import de.up.ling.irtg.rule_finding.sampling.rule_weighting.SubtreeCounting;
 import de.up.ling.irtg.rule_finding.sampling.TreeSample;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.FunctionIterable;

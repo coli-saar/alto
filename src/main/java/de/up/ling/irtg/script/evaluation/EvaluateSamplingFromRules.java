@@ -11,7 +11,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import de.up.ling.irtg.learning_rates.AdaGrad;
 import de.up.ling.irtg.rule_finding.sampling.AdaptiveSampler;
-import de.up.ling.irtg.rule_finding.sampling.rule_weighters.AutomatonWeighted;
+import de.up.ling.irtg.rule_finding.sampling.rule_weighting.AutomatonWeighted;
 import de.up.ling.irtg.rule_finding.sampling.RuleWeighting;
 import de.up.ling.irtg.rule_finding.sampling.TreeSample;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;

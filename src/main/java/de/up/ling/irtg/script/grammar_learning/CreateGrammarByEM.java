@@ -11,7 +11,7 @@ import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
 import de.up.ling.irtg.rule_finding.learning.SampleEM;
-import de.up.ling.irtg.rule_finding.sampling.rule_weighters.SubtreeCounting;
+import de.up.ling.irtg.rule_finding.sampling.rule_weighting.SubtreeCounting;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.irtg.util.ProgressListener;
