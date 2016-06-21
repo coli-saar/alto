@@ -20,11 +20,12 @@ import org.apache.commons.math3.random.Well44497a;
  */
 public class Proposal {
     /**
-     * 
+     * The basic random number sequence used for sampling.
      */
     private final RandomGenerator rg;
     
     /**
+     * Create a new instance with the given random number sequence.
      * 
      * @param rg 
      */
@@ -33,6 +34,7 @@ public class Proposal {
     }
     
     /**
+     * Create a new instance with a WELL RNG with the given seed.
      * 
      * @param seed 
      */
@@ -41,18 +43,19 @@ public class Proposal {
     }
     
     /**
-     * 
+     * Create a new instance with a WELL RNG with the current time as the seed.
      */
     public Proposal() {
         this(new Date().getTime());
     }
     
     /**
-     * 
+     * Used to turn rule trees into Integer trees.
      */
     private static final BiFunction<Rule,TreeAutomaton,Integer> RAW_MAPPING = (Rule r, TreeAutomaton t) -> r.getLabel();
     
     /**
+     * Get a sample of trees with label IDs for the rules sampled. 
      * 
      * @param guide
      * @param sampleSize
@@ -64,17 +67,12 @@ public class Proposal {
     
     /**
      * 
-     */
-    private static final BiFunction<Rule,TreeAutomaton,Rule> RULE_MAPPING = (Rule r, TreeAutomaton t) -> r;
-    
-    /**
-     * 
      * @param guide
      * @param sampleSize
      * @return 
      */
     public TreeSample<Rule> getTreeSample(RuleWeighting guide, int sampleSize) {
-        return this.getTreeSample(RULE_MAPPING, guide, sampleSize);
+        return this.getTreeSample(null, guide, sampleSize);
     }
     
     /**
@@ -141,7 +139,13 @@ public class Proposal {
         int pos = guide.getRuleNumber(state, val);
         Rule r  = guide.getRuleByNumber(state, pos);
         
-        Type label = mapping.apply(r, guide.getAutomaton());
+        Type label;
+        if(mapping != null) {
+            label = mapping.apply(r, guide.getAutomaton());
+        } else {
+            label = (Type) r;
+        }
+        
         Tree<Type>[] choices = new Tree[r.getArity()];
         logPropProb.add(guide.getLogProbability(state, pos));
         
