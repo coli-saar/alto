@@ -15,7 +15,6 @@ import java.util.Iterator;
  * @author christoph
  */
 public class IntTupleIterator implements Iterator<int[]> {
-
     /**
      *
      */

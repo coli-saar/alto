@@ -89,4 +89,12 @@ public class Tuple<Type> {
     public boolean containsAll(Collection<?> c) {
         return inputs.containsAll(c);
     }
+    
+    /**
+     * 
+     * @return 
+     */
+    public int length() {
+        return this.inputs.size();
+    }
 }

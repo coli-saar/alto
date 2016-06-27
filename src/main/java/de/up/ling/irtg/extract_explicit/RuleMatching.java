@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.extract_explicit;
 
-import it.unimi.dsi.fastutil.ints.IntIterator;
+import de.up.ling.irtg.automata.TreeAutomaton;
 
 /**
  *
@@ -17,12 +17,11 @@ public interface RuleMatching<Type> {
      * 
      * @return 
      */
-    public IntIterator finalStates();
+    public TreeAutomaton<Type> getAutomaton();
     
     /**
      * 
-     * @param state
      * @return 
      */
-    public Type getStateForID(int state);
+    public AlignmentInformation getAlignmentInformation();
 }

@@ -7,9 +7,16 @@ package de.up.ling.irtg.extract_explicit;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.util.IntTupleIterator;
 import de.up.ling.irtg.util.Tuple;
+import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
-import java.util.Iterator;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -17,7 +24,6 @@ import java.util.Iterator;
  * @param <Type>
  */
 public class ExplicitRuleExtractionAutomaton<Type> extends TreeAutomaton<Tuple<Type>> {
-
     /**
      * 
      */
@@ -32,6 +38,11 @@ public class ExplicitRuleExtractionAutomaton<Type> extends TreeAutomaton<Tuple<T
      * 
      */
     private final RuleMatching<Type>[] paired;
+    
+    /**
+     * 
+     */
+    private IntSet topDownDone = new IntOpenHashSet();
     
     /**
      * 
@@ -52,102 +63,112 @@ public class ExplicitRuleExtractionAutomaton<Type> extends TreeAutomaton<Tuple<T
             this.paired = translations;
         }
         
-        IntIterator driverFinal = baseRules.finalIterator();
-        //TODO
+        List<IntIterable> finals = new ArrayList<>();
+        finals.add(mainInput.getAutomaton().getFinalStates());
         
+        for(RuleMatching<Type> rm : translations) {
+            finals.add(rm.getAutomaton().getFinalStates());
+        }
         
+        List<Type> tup = new ArrayList<>();
+        List<AlignmentInformation> li = new ArrayList<>();
+        IntTupleIterator iti = new IntTupleIterator(finals);
+        while(iti.hasNext()) {
+            int[] states = iti.next();
+            
+            tup.clear();
+            li.clear();
+            tup.add(this.mainInput.getAutomaton().getStateForId(states[0]));
+            li.add(this.mainInput.getAlignmentInformation());
+            for(int i=1;i<states.length;++i) {
+                tup.add(this.paired[i-1].getAutomaton().getStateForId(states[i]));
+                li.add(this.paired[i-1].getAlignmentInformation());
+            }
+            
+            if(!checkMatching(li)) {
+                continue;
+            }
+            
+            Tuple<Type> t = new Tuple(finals);
+            int state = this.addState(t);
+            
+            this.addFinalState(state);
+        }
     }
-    
     
     @Override
     public Iterable<Rule> getRulesBottomUp(int labelId, int[] childStates) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        throw new UnsupportedOperationException("Not supported.");
     }
 
     @Override
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if(!topDownDone.contains(parentState)) {
+            this.getRulesTopDown(parentState);
+        }
+        
+        if(!this.useCachedRuleTopDown(labelId, parentState)) {
+            return new ArrayList<>();
+        } else {
+            return this.getRulesTopDownFromExplicit(labelId, parentState);
+        }
     }
 
     @Override
     public boolean isBottomUpDeterministic() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        boolean b  = true;
+        
+        b &= this.mainInput.getAutomaton().isBottomUpDeterministic();
+        for(RuleMatching<Type> rm : this.paired) {
+            b &= rm.getAutomaton().isBottomUpDeterministic();
+        }
+        
+        return b;
     }
-    
+
+    @Override
+    public boolean supportsBottomUpQueries() {
+        return false;
+    }
+
+    @Override
+    public boolean supportsTopDownQueries() {
+        return true;
+    }
+
+    @Override
+    public Iterable<Rule> getRulesTopDown(int parentState) {
+        this.topDownDone.add(parentState);
+        
+        //TODO
+        Tuple<Type> tuple = this.getStateForId(parentState);
+        
+        List<Iterable<Tree<HomomorphismSymbol>>> images = new ArrayList<>(); 
+        
+        
+        
+        
+        return super.getRulesTopDown(parentState); //To change body of generated methods, choose Tools | Templates.
+    }
+
     /**
      * 
+     * @param li
+     * @return 
      */
-    private class MathingFinalIterable implements Iterable<Type> {
-        /**
-         * 
-         */
-        private final RuleMatching<Type> rm;
-        
-        /**
-         * 
-         * @param rm 
-         */
-        public MathingFinalIterable(RuleMatching rm) {
-            this.rm = rm;
+    private boolean checkMatching(List<AlignmentInformation> alignmentInformation) {
+        for(int i=0;i<alignmentInformation.size();++i) {
+            AlignmentInformation alig = alignmentInformation.get(i);
+            
+            for(int j=0;j<alignmentInformation.size();++j) {
+                AlignmentInformation other = alignmentInformation.get(j);
+                
+                if(!alig.matches(other)) {
+                    return false;
+                }
+            }
         }
         
-        @Override
-        public Iterator<Type> iterator() {
-            return new Iterator<Type>() {
-                /**
-                 * 
-                 */
-                private final IntIterator mat = rm.finalStates();
-                
-                
-                
-                @Override
-                public boolean hasNext() {
-                    return mat.hasNext();
-                }
-
-                @Override
-                public Type next() {
-                    return rm.getStateForID(mat.nextInt());
-                }
-            };
-        }
-        
-    }
-    
-    /**
-     * 
-     */
-    private class DriverFinalIterable implements Iterable<Type> {
-        /**
-         * 
-         */
-        private final RuleDriver<Type> driv;
-        
-        /**
-         * 
-         * @param driv 
-         */
-        public DriverFinalIterable(RuleDriver<Type> driv) {
-            this.driv = driv;
-        }
-        
-        @Override
-        public Iterator<Type> iterator() {
-            return new Iterator<Type>() {
-                private final IntIterator di = driv.finalIterator();
-                
-                
-                @Override
-                public boolean hasNext() {
-                    return this.di.hasNext();
-                }
-
-                @Override
-                public Type next() {
-                    return driv.getStateForID(this.di.nextInt());
-                }
-            };
-        }
+        return true;
     }
 }
