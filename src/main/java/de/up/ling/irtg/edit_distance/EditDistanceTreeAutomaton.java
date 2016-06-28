@@ -15,6 +15,7 @@ import de.up.ling.tree.Tree;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.IntToDoubleFunction;
+import java.util.function.Predicate;
 
 /**
  * Works for the binary StringAlgebra.
@@ -43,35 +44,39 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
     private final IntToDoubleFunction delete;
 
     /**
+     * 
+     */
+    private final Tree<String> baseTree;
+    
+    /**
      *
      * @param signature
      * @param inputSentence
      */
-    public EditDistanceTreeAutomaton(Signature signature, List<String> inputSentence) {
+    public EditDistanceTreeAutomaton(Signature signature, Tree<String> inputSentence) {
         this(signature, inputSentence, (int pos) -> -1, (int pos) -> -1, (int pos) -> -1);
     }
 
     /**
      *
      * @param signature
-     * @param inputSentence
      * @param delete
      * @param insert
      * @param substitute
      */
-    public EditDistanceTreeAutomaton(Signature signature, List<String> inputSentence,
+    public EditDistanceTreeAutomaton(Signature signature, Tree<String> t,
             final IntToDoubleFunction delete,
             IntToDoubleFunction insert, IntToDoubleFunction substitute) {
         super(signature);
         this.delete = (int i) -> Math.exp(delete.applyAsDouble(i));
         this.insert = (int i) -> Math.exp(insert.applyAsDouble(i));
         this.substitute = (int i) -> Math.exp(substitute.applyAsDouble(i));
+        this.baseTree = t;
+        this.inputSentence = t.getLeafLabels();
 
         if (inputSentence.size() < 1) {
             throw new IllegalArgumentException("This class expects at least one word as input");
         }
-
-        this.inputSentence = inputSentence;
 
         int state = this.addState(new EditDistanceState(0, this.inputSentence.size()));
         this.addFinalState(state);
@@ -254,6 +259,75 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
     }
 
     /**
+     * 
+     */
+    private final Function<Pair<EditDistanceState, String>,String> stringify =
+                            (Pair<EditDistanceState, String> p) -> p.getRight();
+    
+    /**
+     * 
+     * @param mapped
+     * @param suitable
+     * @return 
+     */
+    public Tree<String> selectCoveringIncorrectTreeForFalse(
+               Tree<Pair<EditDistanceState, String>> mapped, Predicate<Tree<String>> suitable) {
+        return extract(mapped, suitable).getLeft();
+    }
+    
+    /**
+     * 
+     * @param errors
+     * @param suitable
+     * @return 
+     */
+    public Tree<String> selectCoveringIncorrectTreeForCorrect(
+               Status[] errors, Predicate<Tree<String>> suitable) {
+        return extract(errors, suitable, 0).getLeft();
+    }
+    
+    /**
+     * 
+     * @param mapped
+     * @param suitable
+     * @return 
+     */
+    private Pair<Tree<String>,Boolean> extract(Tree<Pair<EditDistanceState, String>> mapped, Predicate<Tree<String>> suitable) {
+        Pair<Tree<String>,Boolean> seen = null;
+        
+        if(mapped.getChildren().isEmpty()) {
+            if(this.isEdited(mapped)) {
+                Tree<String> t = mapped.map(stringify);
+                return new Pair<>(t,suitable.test(t));
+            } else {
+                return null;
+            }
+        } else {
+            for(Tree<Pair<EditDistanceState, String>> ts : mapped.getChildren()) {
+                Pair<Tree<String>,Boolean> other = this.extract(ts, suitable);
+                
+                if(other != null && seen != null) {
+                    Tree<String> t = mapped.map(stringify);
+                    return new Pair<>(t,suitable.test(t));
+                } else {
+                    seen = other;
+                }
+            }
+            
+            if(seen != null) {
+                if(seen.getRight()) {
+                    return seen;
+                } else {
+                    Tree<String> t = mapped.map(stringify);
+                    return new Pair<>(t,suitable.test(t));
+                }
+            } else {
+                return null;
+            }
+        }
+    }
+    
+    /**
      *
      * @param derivation
      * @param result
@@ -290,6 +364,35 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
         }
 
         super.addRule(rule);
+    }
+
+    /**
+     * 
+     * @param derivation
+     * @return 
+     */
+    private boolean isEdited(Tree<Pair<EditDistanceState,String>> derivation) {
+        if (derivation.getChildren().isEmpty()) {
+            EditDistanceState eds = derivation.getLabel().getLeft();
+
+            if (eds.distance() == 1) {
+                String label = derivation.getLabel().getRight();
+
+                int pos = eds.readSpanStart;
+                return this.inputSentence.get(pos).equals(label);
+            } else {
+                return true;
+            }
+        } else {
+            throw new IllegalArgumentException("This method only tests leafs");
+        }
+    }
+
+    private Pair<Tree<String>,Boolean> extract(Status[] errors, Predicate<Tree<String>> suitable, int i) {
+        
+        
+        
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     /**

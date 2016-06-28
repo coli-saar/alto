@@ -17,6 +17,7 @@ import static de.up.ling.irtg.util.TestingTools.pa;
 import static de.up.ling.irtg.util.TestingTools.automatonFromItsString;
 import java.io.IOException;
 import static org.junit.Assert.*;
+import static de.up.ling.irtg.util.TestingTools.pa;
 
 /**
  *
