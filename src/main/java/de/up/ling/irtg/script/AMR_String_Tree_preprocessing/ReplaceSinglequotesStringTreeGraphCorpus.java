@@ -12,7 +12,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- *
+ * Replaces all singlequotes in a parallel string tree graph corpus with the
+ * special sequence "AsinglequoteA".
  * @author groschwitz
  */
 public class ReplaceSinglequotesStringTreeGraphCorpus {

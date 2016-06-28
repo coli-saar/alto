@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * This script counts the occurrences of small graph fragments in a corpus.
  * @author groschwitz
  */
 public class GetSGraphConstants {

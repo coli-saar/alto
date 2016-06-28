@@ -15,7 +15,8 @@ import java.util.regex.Pattern;
 
 
 /**
- *
+ * Writes the pre-alignment files .fastAlign, .names, .string and .graph given a
+ * corpus.
  * @author groschwitz
  */
 public class WriteGraphAndStringAlignments {

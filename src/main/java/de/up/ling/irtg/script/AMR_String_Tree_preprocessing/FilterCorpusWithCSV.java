@@ -12,7 +12,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 /**
- *
+ * This script filters a corpus based on a csv file, where one "success column"
+ * determines whether the corresponding instance is kept (has a 1 in it then).
  * @author groschwitz
  */
 public class FilterCorpusWithCSV {

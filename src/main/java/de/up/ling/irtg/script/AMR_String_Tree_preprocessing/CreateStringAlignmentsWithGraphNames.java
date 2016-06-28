@@ -14,8 +14,6 @@ import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.rule_finding.data_creation.MakeAlignments;
-import de.up.ling.irtg.script.grammar_learning.CreateAutomata;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -27,11 +25,10 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.function.Supplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- *
+ * Creates a set of files that contain string alignments, but are named according
+ * to the current graph file naming schema (number_nrNodes.rtg).
  * @author groschwitz
  */
 public class CreateStringAlignmentsWithGraphNames {

@@ -6,19 +6,29 @@
 package de.up.ling.irtg.algebra.graph;
 
 import de.saar.basic.Pair;
+import de.up.ling.irtg.Interpretation;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.MinimalTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.SgraphAmrWithSourcesOutputCodec;
+import de.up.ling.irtg.corpus.Corpus;
+import de.up.ling.irtg.corpus.CorpusReadingException;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.StringComparator;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,12 +36,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
- *
+ * This algebra is a wrapper for the s-graph algebra, used in grammar induction.
  * @author groschwitz
  */
 public class GraphGrammarInductionAlgebra extends Algebra {
@@ -49,10 +57,18 @@ public class GraphGrammarInductionAlgebra extends Algebra {
     private final SGraphBRDecompositionAutomatonBottomUp decompAuto;
     private final Int2ObjectMap<BrAndEdges> constantID2Constant;
     
+    /**
+     * The wrapper decomposition automaton for the attached graph 
+     * @return 
+     */
     public TreeAutomaton<BrAndEdges> getAutomaton() {
         return helperAuto;
     }
     
+    /**
+     * The underlying s-graph decomposition automaton for the attached graph
+     * @return 
+     */
     public SGraphBRDecompositionAutomatonBottomUp getDecompAutomaton() {
         return decompAuto;
     }
@@ -62,12 +78,25 @@ public class GraphGrammarInductionAlgebra extends Algebra {
     }
     
     
-    
+    /**
+     * The s-graph rules used in executing the helper rule.
+     * @param helperRule
+     * @return 
+     */
     public Iterable<Rule> getDecompRulesForHelperRule(Rule helperRule) {
         return helperAutoRule2DecompRules.get(helperRule);
     }
             
-    
+    /**
+     * The algebra is specific to a graph, and to a signature containing constants
+     * specific to that graph. Each of the graphs nodes has one constant, and
+     * each edge is contained in exactly one of the constants (i.e. 'attached'
+     * to one of its adjacent nodes).
+     * @param graph
+     * @param maxSources
+     * @param nodeName2ConstLabel
+     * @param signature 
+     */
     public GraphGrammarInductionAlgebra(SGraph graph, int maxSources, Map<String, String> nodeName2ConstLabel, Signature signature) {
         this.signature = signature;
         this.edgeLabel2OtherNodeID2Constant = new Int2ObjectOpenHashMap<>();
@@ -87,17 +116,26 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         this.helperAuto = new BottomUpAutomaton(signature);
     }
     
+    /**
+     * unsupported
+     */
     @Override
     protected Object evaluate(String label, List childrenValues) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
+    /**
+     * unsupported
+     */
     @Override
     public Object parseString(String representation) throws ParserException {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    
+    /**
+     * the states of the wrapper automaton, consisting of a graph (stored as
+     * a boundary representation) and a set of adjacent edges.
+     */
     public class BrAndEdges {
         
         private final List<GraphEdge> edges;
@@ -108,6 +146,10 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             return br;
         }
         
+        /**
+         * i.e if it is 'explicit'
+         * @return 
+         */
         public boolean hasNoUnassignedEdges() {
             return edges.isEmpty();
         }
@@ -137,11 +179,16 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             }
         }
         
-        
+        /**
+         * Attaches all unassigned edges to the boundary representation.
+         * @param usedRules
+         * @return 
+         */
         public BrAndEdges explicit(List<Rule> usedRules) {
             Collections.sort(edges, (e1, e2) -> sc.compare(e1.getLabel(), e2.getLabel()));//TODO: if same, we might not want arbitrary ordering, but rather name of target edge
             BoundaryRepresentation retBr = br;
-            IntList usedSources = br.getAllSourceIDs();
+            IntList usedSources = new IntArrayList();
+            usedSources.addAll(br.getAllSourceIDs());
             for (GraphEdge e : edges) {
                 
                 //make edge constant
@@ -168,6 +215,13 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             return new BrAndEdges(new ArrayList<>(), markedNode, retBr);
         }
         
+        /**
+         * makes an s-graph containing just this edge. Uses sources not in usedSources,
+         * and adds them to the set.
+         * @param e
+         * @param usedSources
+         * @return 
+         */
         private SGraph makeEdgeGraph(GraphEdge e, IntList usedSources) {
             SGraph ret = new SGraph();
             GraphNode sourceNode = addNodeWithSourceToGraph(e.getSource(), ret, usedSources);
@@ -185,6 +239,13 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             return ret;
         }
         
+        /**
+         * makes an s-graph containing just this edge. Uses 0 on the node that is
+         * this BrAndEdges' marked node, and otherSource on the other node.
+         * @param e
+         * @param usedSources
+         * @return 
+         */
         private SGraph makeEdgeGraph(GraphEdge e, int otherSource) {
             SGraph ret = new SGraph();
             GraphNode sourceNode = addNodeWithSourceToGraph(e.getSource(), ret, otherSource);
@@ -239,7 +300,13 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         }
         
         
-        
+        /**
+         * Combines (aka merges) two BrAndEdges, if the right has no unassigned
+         * edges. Tries to use as few source names as possible.
+         * @param right
+         * @param usedRules
+         * @return 
+         */
         public BrAndEdges combine(BrAndEdges right, List<Rule> usedRules) {
             if (!right.edges.isEmpty() || !hasOverlapWithNodeLabel(right.br) || right.br.isInternalNode(getGraphInfo().getIntForNode(markedNode.getName()))) {
                 return null;
@@ -252,6 +319,8 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             }
             
             /*
+            //NOTE: this would be an optimization concerning source count,
+            //but I think a rare one, and I did not yet get it to work properly.
             //check if it is smarter to first add edges here and then to right
             boolean allEdgesGoToRight = true;
             for (GraphEdge e : edges) {
@@ -307,14 +376,14 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             
             //System.err.println("reordered "+edges);
             //first rename all sources on the right that are used here
-            IntList usedSources = br.getAllSourceIDs();
+            IntList usedSources = new IntArrayList();
+            usedSources.addAll(br.getAllSourceIDs());
             usedSources.addAll(right.br.getAllSourceIDs());
             BoundaryRepresentation renamedRightBr = right.br;
             
             //System.err.println("swapping "+renamedRightBr);
             //first swaps
-            IntList rhsSourceIDs = right.br.getAllSourceIDs();
-            for (int sourceID : rhsSourceIDs) {
+            for (int sourceID : right.br.getAllSourceIDs()) {
                 renamedRightBr = swapRightSideSource(br, renamedRightBr, sourceID, usedRules);
                 if (renamedRightBr == null) {
                     return null;
@@ -323,8 +392,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             
             //System.err.println("renaming "+renamedRightBr);
             //then renames
-            rhsSourceIDs = renamedRightBr.getAllSourceIDs();// above we actually not only swapped, but also renamed, so need new list here.
-            for (int sourceID : rhsSourceIDs) {
+            for (int sourceID : renamedRightBr.getAllSourceIDs()) {
                 renamedRightBr = renameRightSideSource(renamedRightBr, sourceID, usedSources, usedRules);
                 if (renamedRightBr == null) {
                     return null;
@@ -342,7 +410,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 int otherNodeID = getGraphInfo().getIntForNode(e.getOtherNode(markedNode).getName());
                 
                 if (renamedRightBr.contains(otherNodeID)) {
-                    int otherSource = renamedRightBr.getAssignedSources(otherNodeID).get(0);//this has always exactly one entry by how this algorithm works
+                    int otherSource = renamedRightBr.getAssignedSources(otherNodeID).get(0);//this has always exactly one entry by how this algorithm works --TODO: is usage of this method restricted to that algorithm? Should document this more visibly
                     SGraph edgeGraph = makeEdgeGraph(e, otherSource);
                     String constLabel = new SgraphAmrWithSourcesOutputCodec().asString(edgeGraph);
                     BoundaryRepresentation edgeBr = new BoundaryRepresentation(edgeGraph, getGraphInfo());
@@ -386,6 +454,15 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             return false;
         }
         
+        /**
+         * swaps a source on the right side in the combine operation, in
+         * preparation of the merge.
+         * @param left
+         * @param renamedRightBr
+         * @param sourceID
+         * @param usedRules
+         * @return 
+         */
         private BoundaryRepresentation swapRightSideSource(BoundaryRepresentation left, BoundaryRepresentation renamedRightBr, int sourceID, List<Rule> usedRules) {
             if (renamedRightBr == null) {
                 return null;
@@ -432,6 +509,15 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             }
         }
         
+        /**
+         * renames a source on the right side in the combine operation, in preparation
+         * of the merge.
+         * @param left
+         * @param renamedRightBr
+         * @param sourceID
+         * @param usedRules
+         * @return 
+         */
         private BoundaryRepresentation renameRightSideSource(BoundaryRepresentation renamedRightBr, int sourceID, IntList usedSources, List<Rule> usedRules) {
             if (renamedRightBr == null) {
                 return null;
@@ -472,9 +558,16 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             }
         }
         
+        /**
+         * check if a source can be forgotten, and do so if yes.
+         * @param brHere
+         * @param sourceID
+         * @param usedRules
+         * @return 
+         */
         private BoundaryRepresentation forgetIfAllowed(BoundaryRepresentation brHere, int sourceID, List<Rule> usedRules) {
-            if (brHere.isForgetAllowed(0, getGraphInfo().getSGraph(), getGraphInfo())) {
-                BoundaryRepresentation ret = brHere.applyForgetRename(GraphAlgebra.OP_FORGET+sourceID, decompAuto.getSignature().getIdForSymbol(GraphAlgebra.OP_FORGET+"0"), false);
+            if (brHere.isForgetAllowed(sourceID, getGraphInfo().getSGraph(), getGraphInfo())) {
+                BoundaryRepresentation ret = brHere.applyForgetRename(GraphAlgebra.OP_FORGET+sourceID, decompAuto.getSignature().getIdForSymbol(GraphAlgebra.OP_FORGET+sourceID), false);
                 usedRules.add(decompAuto.createRule(ret, GraphAlgebra.OP_FORGET+sourceID, new BoundaryRepresentation[]{brHere}));
                 return ret;
             } else {
@@ -482,6 +575,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             }
         }
         
+        /* //currently unused
         private boolean hasForgetAfterExplicit(GraphNode node, GraphEdge extraEdge) {
             for (int incidentE : getGraphInfo().getIncidentEdges(getGraphInfo().getIntForNode(node.getName()))) {
                 if (!br.getInBoundaryEdges().contains(incidentE) && !edges.contains(getGraphInfo().getEdge(incidentE))
@@ -492,7 +586,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 }
             }
             return true;
-        }
+        }*/
 
         @Override
         public String toString() {
@@ -502,7 +596,7 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         @Override
         public int hashCode() {
             int hash = 7;
-            hash = 43 * hash + Objects.hashCode(this.markedNode);
+            //hash = 43 * hash + Objects.hashCode(this.markedNode);
             hash = 43 * hash + Objects.hashCode(this.br);
             return hash;
         }
@@ -516,9 +610,9 @@ public class GraphGrammarInductionAlgebra extends Algebra {
                 return false;
             }
             final BrAndEdges other = (BrAndEdges) obj;
-            if (!Objects.equals(this.markedNode, other.markedNode)) {
+            /*if (!(Objects.equals(this.markedNode, other.markedNode) || (this.edges.isEmpty() && other.edges.isEmpty()))) {
                 return false;
-            }
+            }*/
             if (!Objects.equals(this.br, other.br)) {
                 return false;
             }
@@ -529,7 +623,12 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         
     }
     
-    
+    /**
+     * creates a matching s-graph algebra
+     * @param maxSources
+     * @param edgeLabels
+     * @return 
+     */
     private GraphAlgebra makeSuitableGraphAlgebra(int maxSources, Set<String> edgeLabels) {
         Signature sig = new Signature();
         
@@ -572,6 +671,9 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         return new GraphAlgebra(sig);
     }
     
+    /**
+     * straightforward bottom up implementation of the wrapper automaton
+     */
     private class BottomUpAutomaton extends TreeAutomaton<BrAndEdges> {
 
         public BottomUpAutomaton(Signature signature) {
@@ -627,6 +729,11 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         
     }
     
+    /**
+     * returns all edge labels that should be attached to its source node when
+     * forming blobs, all other edges are attached to target node.
+     * @return 
+     */
     public static Set<String> getAttachToSourceLabels() {
         Set<String> attachToSource = new HashSet<>();
         for (int i = 0; i<10; i++) {
@@ -637,6 +744,11 @@ public class GraphGrammarInductionAlgebra extends Algebra {
         return attachToSource;
     }
     
+    /**
+     * gets all 'blobs' in the graph, and their respective main node (in the blob).
+     * @param graph
+     * @return 
+     */
     private static Iterable<Pair<SGraph, GraphNode>> getConstantGraphs(SGraph graph) {
         
         Set<String> attachToSource = getAttachToSourceLabels();
@@ -667,6 +779,77 @@ public class GraphGrammarInductionAlgebra extends Algebra {
             ret.add(new Pair(newG, newGNode));
         }
         return ret;
+    }
+    
+    /**
+     * some testing
+     * @param args
+     * @throws IOException
+     * @throws CorpusReadingException 
+     */
+    public static void main(String[] args) throws IOException, CorpusReadingException {
+        if (args.length < 4) {
+            System.out.println("need 4 arguments: corpusFilePath, targetFilePath, nrSources, maxNodeSize");
+            String defaultArguments = ("examples/AMRAllCorpusExplicit.txt output/AMRAllCorpusExplicit_data_3_blobs.txt 3 20");
+            System.out.println("Using default arguments: "+defaultArguments);
+            args = defaultArguments.split(" ");
+        }
+        
+        InterpretedTreeAutomaton irtg4Corpus = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton());
+        irtg4Corpus.addInterpretation("graph", new Interpretation(new GraphAlgebra(), null));
+        irtg4Corpus.addInterpretation("string", new Interpretation(new StringAlgebra(), null));
+        irtg4Corpus.addInterpretation("tree", new Interpretation(new MinimalTreeAlgebra(), null));
+        Corpus corpus = Corpus.readCorpusLenient(new FileReader(args[0]), irtg4Corpus);
+        FileWriter writer = new FileWriter(args[1]);
+        writer.write("id,nodeCount,success\n");//,maxDeg,bigD
+        //int srcCount = Integer.parseInt(args[2]);
+        //int minNodeSize = Integer.parseInt(args[3]);
+        int maxNodeSize = Integer.parseInt(args[3]);
+        
+        int id = 0;
+        for (Instance instance : corpus) {
+            SGraph graph = (SGraph)instance.getInputObjects().get("graph");
+            //GraphAlgebra alg = GraphAlgebra.makeIncompleteDecompositionAlgebra(graph, srcCount);
+            int n = graph.getAllNodeNames().size();
+            //if (n>minNodeSize && n <=  maxNodeSize) {
+            if (n <=  maxNodeSize) {
+                //int bigD = SGraphParsingEvaluation.getD(graph, alg);
+                //int d = new GraphInfo(graph, alg).getMaxDegree();
+                
+                //graph signature and map
+                Signature graphSignature = new Signature();
+                graphSignature.addSymbol(GraphGrammarInductionAlgebra.OP_COMBINE, 2);
+                graphSignature.addSymbol(GraphGrammarInductionAlgebra.OP_EXPLICIT, 1);
+                Map<String, String> nodename2GraphConstLabel = new HashMap<>();
+                int i = 0;
+                for (String nodeName : graph.getAllNodeNames()) {
+                    String graphLabel = "G"+i;
+                    graphSignature.addSymbol(graphLabel, 0);
+                    nodename2GraphConstLabel.put(nodeName, graphLabel);
+                    i++;
+                }
+                
+                GraphGrammarInductionAlgebra alg = new GraphGrammarInductionAlgebra(graph, 3, nodename2GraphConstLabel, graphSignature);
+                
+                TreeAutomaton decomp = alg.getAutomaton();
+                decomp.makeAllRulesExplicit();
+                /*FileWriter w = new FileWriter("blobAuto_"+id+".txt");
+                w.write(decomp.toStringBottomUp());
+                w.close();*/
+                boolean success = !decomp.getFinalStates().isEmpty();
+                
+                writer.write(id+","+n+","/*+d+","+bigD+","*/+((success)? "1":"0")+"\n");
+            } else {
+                writer.write(id+","+n+",-1\n");//-1,-1,
+            }
+            
+            id++;
+            if (id%1 == 0) {
+                writer.flush();
+                System.err.println(id);
+            }
+        }
+        writer.close();
     }
     
 }

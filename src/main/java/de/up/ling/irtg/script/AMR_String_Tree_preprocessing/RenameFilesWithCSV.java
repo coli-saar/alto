@@ -12,7 +12,7 @@ import java.io.FileReader;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Renames files from the "automaton_NR.auto" schema to one specified in a csv.
  * @author groschwitz
  */
 public class RenameFilesWithCSV {

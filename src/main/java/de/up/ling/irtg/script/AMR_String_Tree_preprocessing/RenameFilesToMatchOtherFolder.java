@@ -11,7 +11,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- *
+ * Renames files to match the file names in another folder (working only for
+ * specific naming patterns).
  * @author groschwitz
  */
 public class RenameFilesToMatchOtherFolder {

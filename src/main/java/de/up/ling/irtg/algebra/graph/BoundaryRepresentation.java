@@ -860,19 +860,23 @@ public class BoundaryRepresentation {
         return ret;
     }
     
+    private IntList allSourceIDs;
     /**
-     * Returns all source names used in this subgraph. Returns a new list that is not chached,
-     * so it may be modified.
+     * Returns all source names used in this subgraph. Is chached,
+     * so it may not be modified!.
      * @return
      */
     IntList getAllSourceIDs() {
-        IntList ret = new IntArrayList();
-        for (int source = 0; source<sourceToNode.length; source++) {
-            if (sourceToNode[source]>=0) {
-                ret.add(source);
+        if (allSourceIDs == null) {
+            allSourceIDs = new IntArrayList();
+            for (int source = 0; source<sourceToNode.length; source++) {
+                if (sourceToNode[source]>=0) {
+                    allSourceIDs.add(source);
+                }
             }
         }
-        return ret;
+        
+        return allSourceIDs;
     }
     
     private IntList sortedBoundaryEdges;

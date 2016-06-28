@@ -55,7 +55,8 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Checks whether the graph string pairs in a corpus can be parsed respecting
+ * their alignments, given a fixed max source count.
  * @author groschwitz
  */
 public class TestAlignmentConnectivity {

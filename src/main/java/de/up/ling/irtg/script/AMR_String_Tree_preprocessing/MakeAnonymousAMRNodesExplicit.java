@@ -14,7 +14,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- *
+ * This script intends to give all graphs in an AMR corpus explicit node names.
+ * The regular expression might need to be updated for different corpora.
  * @author groschwitz
  */
 public class MakeAnonymousAMRNodesExplicit {
@@ -22,7 +23,7 @@ public class MakeAnonymousAMRNodesExplicit {
     private static int i = 0;
     
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        String regex = "([^:])(:[A-Za-z0-9-]+) (\"[^()]+\"|\\+|\\-|interrogative|expressive|imperative|__NE__|__UNKNOWN__|[0-9.,]+)";
+        String regex = "([^:])(:[A-Za-z0-9-]+) (\"[^\"]\"|\\+|\\-|interrogative|expressive|imperative|__NE__|__UNKNOWN__|[0-9.,]+)";
         BufferedReader corpus = new BufferedReader(new FileReader(args[0]));
         
         Pattern p = Pattern.compile(regex);

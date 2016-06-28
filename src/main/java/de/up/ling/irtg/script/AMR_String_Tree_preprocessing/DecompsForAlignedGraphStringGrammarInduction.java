@@ -54,7 +54,8 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Creates graph decomposition automata that have reduced size, by considering
+ * alignments to their string counterparts.
  * @author groschwitz
  */
 public class DecompsForAlignedGraphStringGrammarInduction {
@@ -78,20 +79,20 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         int maxSources = Integer.valueOf(args[0]);
         String corpusPath = args[1];
         String targetFolderPath = args[2];
-        File alignmentsTarget = new File(targetFolderPath+"graphAlign");
-        File allowedCutsTarget = new File(targetFolderPath+"graphCuts");
-        File decompsTarget = new File(targetFolderPath+"graphDecomps");
-        File ntTarget = new File(targetFolderPath+"graphNTMapping");
+        File alignmentsTarget = new File(targetFolderPath+"graphAlign");//folder for writing graph alignments
+        File allowedCutsTarget = new File(targetFolderPath+"graphCuts");//folder for writing allowed cuts (later for JTA) 
+        File decompsTarget = new File(targetFolderPath+"graphDecomps");//folder for writing graph decomposition automata
+        File ntTarget = new File(targetFolderPath+"graphNTMapping");//folder for writing mapping from graph states to nonterminals
         alignmentsTarget.mkdirs();
         allowedCutsTarget.mkdirs();
         decompsTarget.mkdirs();
         ntTarget.mkdirs();
-        BufferedReader alignmentReader = new BufferedReader(new FileReader(args[3]));
-        BufferedReader nodeNameListReader = new BufferedReader(new FileReader(args[4]));
-        int maxAlignmentDistInGraph = Integer.valueOf(args[5]);
-        FileWriter filteredAlignmentWriter = new FileWriter(targetFolderPath+"filtered.align");
+        BufferedReader alignmentReader = new BufferedReader(new FileReader(args[3]));//file with alignments
+        BufferedReader nodeNameListReader = new BufferedReader(new FileReader(args[4]));//file mapping alignments to nodenames
+        int maxAlignmentDistInGraph = Integer.valueOf(args[5]);//remove alignments that are neighbors in string, and have a distance larger than this in the graph. value 0 or negative to keep all alignments.
+        FileWriter filteredAlignmentWriter = new FileWriter(targetFolderPath+"filtered.align");//writes the alignments that remain after removal according to maxAlignmentDistInGraph
         
-        //setup corpus form input
+        //setup corpus from input
         Reader corpusReader = new FileReader(corpusPath);
         InterpretedTreeAutomaton irtg4Corpus = new InterpretedTreeAutomaton(null);
         irtg4Corpus.addInterpretation("graph", new Interpretation(new GraphAlgebra(), null));
@@ -160,73 +161,76 @@ public class DecompsForAlignedGraphStringGrammarInduction {
 
 
 
-
-
-
-                Signature irtgSignature = new Signature();
-                irtgSignature.addSymbol(combineLabel, 2);
-                irtgSignature.addSymbol(reverseCombineLabel, 2);
+                /**
+                 * We now build the signatures. There is a wrapper signature, which contains a combine operation, a unalignedLabel operation and
+                 * constant operations. Each maps to an operation on the string as well as the graph side (graph using the higher-level GraphGrammarInductionAlgebra):
+                 * 'combine' maps to concatenation for strings and combine on the graph side, where also the right child is made explicit (edges are attached).
+                 * 'unalignedLabel' just passes the string state, but adds and combines an unaligned blob on the graph side.
+                 * 'constant' is the alignments number on the string side, and the corresponding blob for graphs.
+                 * There is a reverseCombine and a reverseUnalignedLabel operation in the wrapper signature, to
+                 * allow for either child to be made explicit on the graph side.
+                 */
+                Signature wrapperSignature = new Signature();
+                wrapperSignature.addSymbol(combineLabel, 2);
+                wrapperSignature.addSymbol(reverseCombineLabel, 2);
 
                 Signature graphSignature = new Signature();
                 graphSignature.addSymbol(GraphGrammarInductionAlgebra.OP_COMBINE, 2);
                 graphSignature.addSymbol(GraphGrammarInductionAlgebra.OP_EXPLICIT, 1);
 
-
-                //graph signature, wrapper signature, and maps
+                //graph constants, wrapper constants, and maps
                 Map<String, String> constLabel2StringConstLabel = new HashMap<>();
                 Map<String, String> constLabel2GraphConstLabel = new HashMap<>();
                 Map<String, String> nodename2GraphConstLabel = new HashMap<>();
                 int i = 0;
                 for (String nodeName : graph.getAllNodeNames()) {
-                    String constLabel = "const"+i;
-                    String graphLabel = "G"+i;
+                    String constLabel = "const"+i;//this is the constant for the wrapper signature
+                    String graphLabel = "G"+i;//constant on graph side
                     graphSignature.addSymbol(graphLabel, 0);
                     nodename2GraphConstLabel.put(nodeName, graphLabel);
+                    
+                    //check if aligned or not
                     if (nodeName2Alignment.containsKey(nodeName)) {
-                        irtgSignature.addSymbol(constLabel, 0);
+                        //if aligned, we add aligned constant
+                        wrapperSignature.addSymbol(constLabel, 0);
                         constLabel2GraphConstLabel.put(constLabel, graphLabel);
                         int alignment = nodeName2Alignment.get(nodeName);
-                        constLabel2StringConstLabel.put(constLabel, String.valueOf(alignment));
+                        constLabel2StringConstLabel.put(constLabel, String.valueOf(alignment));//this is the matching string constant (String algebra adds it to signature on its own).
                     } else {
-                        irtgSignature.addSymbol(unalignedLabelPrefix+constLabel, 1);
-                        irtgSignature.addSymbol(reverseUnalignedLabelPrefix+constLabel, 1);
+                        //else we add unalignedLabelOperations
+                        wrapperSignature.addSymbol(unalignedLabelPrefix+constLabel, 1);
+                        wrapperSignature.addSymbol(reverseUnalignedLabelPrefix+constLabel, 1);
                         constLabel2GraphConstLabel.put(unalignedLabelPrefix+constLabel, graphLabel);
                         constLabel2GraphConstLabel.put(reverseUnalignedLabelPrefix+constLabel, graphLabel);
                     }
                     i++;
                 }
 
-                //homs --EDIT will do synch parsing with custom automaton, so don't need homs
-
-                //string signature? --EDIT just need to parse the string, doing this by also getting the input string out of it
-
-                //irtg rules --EDIT will do synch parsing with custom automaton, so don't need rules in irtg
-
                 GraphGrammarInductionAlgebra graphInductionAlg = new GraphGrammarInductionAlgebra(graph, maxSources, nodename2GraphConstLabel, graphSignature);
                 TreeAutomaton<GraphGrammarInductionAlgebra.BrAndEdges> graphAuto = graphInductionAlg.getAutomaton();
 
-                //System.err.println(stringInput);
                 TreeAutomaton<StringAlgebra.Span> stringAuto = stringAlg.decompose(stringInput);
 
-                //System.err.println("automaton setup...");
-                //synchr parsing
                 
                 String fileName = j+"_"+graph.getAllNodeNames().size()+".rtg";
                 
                 FileWriter alignmentWriter = new FileWriter(alignmentsTarget.getAbsolutePath()+"/"+fileName);
                 FileWriter cutsWriter = new FileWriter(allowedCutsTarget.getAbsolutePath()+"/"+fileName);
-                CustomSynchParsingAutomaton synchAuto = new CustomSynchParsingAutomaton(irtgSignature, stringAuto, graphAuto, constLabel2StringConstLabel, constLabel2GraphConstLabel, alignmentWriter);
-                //System.err.println("parsing...");
+                
+                //creating the synchronous parsing automaton
+                CustomSynchParsingAutomaton synchAuto = new CustomSynchParsingAutomaton(wrapperSignature, stringAuto, graphAuto, constLabel2StringConstLabel, constLabel2GraphConstLabel, alignmentWriter);
+                
+                //doing the synchronous parsing
                 TreeAutomaton<Pair<StringAlgebra.Span, GraphGrammarInductionAlgebra.BrAndEdges>> concAuto = synchAuto.asConcreteTreeAutomatonBottomUp();
                 
                 
-                
+                //now writing the output
                 synchAuto.writeAllowedCuts(cutsWriter);
                 alignmentWriter.close();
                 cutsWriter.close();
                 //System.err.println("collecting rules...");
                 Set<Rule> rhsRules = new HashSet<>();
-                concAuto.processAllRulesTopDown(rule -> {
+                concAuto.processAllRulesTopDown(rule -> {//collecting the rules top down
                     for (Rule helperRule : synchAuto.rule2RhsRules.get(rule)) {
                         for (Rule rhsRule : graphInductionAlg.getDecompRulesForHelperRule(helperRule)) {
                             rhsRules.add(rhsRule);
@@ -237,7 +241,7 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                 int alignmentsRemoved = initialAlignmentCount-alignmentsLeft.size();
                 System.err.println("graph "+j+" ("+graph.getAllNodeNames().size()+" nodes): "+rhsRules.size()+" rules ------ "+alignmentsRemoved+"/"+initialAlignmentCount+" alignments removed");
 
-                
+                //nonterminals
                 if (!rhsRules.isEmpty()) {
                     Map<String, String> allSeenBRsToNT = new HashMap<>();
                     FileWriter writer = new FileWriter(decompsTarget.getAbsolutePath()+"/"+fileName);
@@ -262,6 +266,7 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         filteredAlignmentWriter.close();
     }
     
+    //gets an alignment that should be removed due to distance in graph
     private static int alignmentToRemove(List<String> stringInput, SGraph graph, Int2ObjectMap<String> alignment2NodeName, int maxAllowed) {
         int spanWidth = 1;
         int lookRange = 1;
@@ -316,13 +321,25 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         }
     }
     
+    /**
+     * Extracts from an inconvenient format the maps between alignments and
+     * nodenames, plus a list of alignments in
+     * the order in the string. Returns false if there is no one-to-one map
+     * between alignments and nodenames.
+     * @param node2AlignAndAlign2StrPos
+     * @param nodeName2Alignment
+     * @param alignment2NodeName
+     * @param orderedAlignments
+     * @return 
+     */
     private static boolean doAlignments(Pair<Map<String, Set<Integer>>, Int2IntMap> node2AlignAndAlign2StrPos,
             Object2IntMap<String> nodeName2Alignment,
             Int2ObjectMap<String> alignment2NodeName,
             List<Integer> orderedAlignments) {
         
         
-        Int2IntMap align2StrPos = node2AlignAndAlign2StrPos.right;
+        Int2IntMap align2StrPos = node2AlignAndAlign2StrPos.right;//maps an alignment to the position of the corresponding word in the string
+        //left maps a nodename to an alignment
         
         boolean ret = true;
         
@@ -339,7 +356,7 @@ public class DecompsForAlignedGraphStringGrammarInduction {
                 alignment2NodeName.put(entry.getValue().iterator().next(), entry.getKey());
             }
         }
-        Collections.sort(orderedAlignments, (s1, s2) -> align2StrPos.get(s1)-align2StrPos.get(s2));
+        Collections.sort(orderedAlignments, (s1, s2) -> align2StrPos.get(s1)-align2StrPos.get(s2));//sort alignments by position in string
         return ret;
     }
     
@@ -576,6 +593,12 @@ public class DecompsForAlignedGraphStringGrammarInduction {
         
     }
     
+    /**
+     * Extracts Alginments from string input.
+     * @param alignmentString
+     * @param nodeNameString
+     * @return 
+     */
     public static Pair<Map<String, Set<Integer>>, Int2IntMap> parseAlignments(String alignmentString, String nodeNameString) {
         //setup
         Map<String, Set<Integer>> nodeName2Alignments = new HashMap<>();

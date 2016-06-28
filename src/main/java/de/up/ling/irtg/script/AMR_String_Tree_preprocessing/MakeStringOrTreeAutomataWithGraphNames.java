@@ -15,16 +15,14 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
-import java.util.List;
 
 /**
- *
+ * Creates string or tree decomposition automata where the resulting file names
+ * follow the current graph naming schema (number_nrNodes.rtg).
  * @author groschwitz
  */
 public class MakeStringOrTreeAutomataWithGraphNames {

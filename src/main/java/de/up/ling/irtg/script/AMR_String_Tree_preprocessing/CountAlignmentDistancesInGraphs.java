@@ -10,16 +10,12 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
-import de.up.ling.irtg.algebra.graph.GraphGrammarInductionAlgebra;
 import de.up.ling.irtg.algebra.graph.GraphInfo;
 import de.up.ling.irtg.algebra.graph.SGraph;
-import de.up.ling.irtg.automata.Rule;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import static de.up.ling.irtg.script.AMR_String_Tree_preprocessing.DecompsForAlignedGraphStringGrammarInduction.parseAlignments;
-import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -28,20 +24,18 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- *
+ * Counts how far apart nodes, that are aligned to neighboring
+ * words in a sentence, are in a graph. Runs on a corpus.
  * @author groschwitz
  */
 public class CountAlignmentDistancesInGraphs {
