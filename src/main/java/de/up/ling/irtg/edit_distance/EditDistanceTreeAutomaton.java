@@ -10,10 +10,13 @@ import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import static de.up.ling.irtg.edit_distance.EditDistanceTreeAutomaton.Status.KEPT;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.tree.Tree;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.IntToDoubleFunction;
 import java.util.function.Predicate;
 
@@ -270,9 +273,8 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
      * @param suitable
      * @return 
      */
-    public Tree<String> selectCoveringIncorrectTreeForFalse(
-               Tree<Pair<EditDistanceState, String>> mapped, Predicate<Tree<String>> suitable) {
-        return extract(mapped, suitable).getLeft();
+    public Set<Tree<String>> selectCoveringSetForFalse(Tree<Pair<EditDistanceState, String>> mapped) {
+        return extract(mapped);
     }
     
     /**
@@ -281,9 +283,8 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
      * @param suitable
      * @return 
      */
-    public Tree<String> selectCoveringIncorrectTreeForCorrect(
-               Status[] errors, Predicate<Tree<String>> suitable) {
-        return extract(errors, suitable, 0).getLeft();
+    public Set<Tree<String>> selectCoveringTreeForCorrect(Status[] errors) {
+        return extract(errors, 0, this.baseTree);
     }
     
     /**
@@ -292,35 +293,39 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
      * @param suitable
      * @return 
      */
-    private Pair<Tree<String>,Boolean> extract(Tree<Pair<EditDistanceState, String>> mapped, Predicate<Tree<String>> suitable) {
-        Pair<Tree<String>,Boolean> seen = null;
+    private Set<Tree<String>> extract(Tree<Pair<EditDistanceState, String>> mapped) {
+        Set<Tree<String>> seen = null;
         
         if(mapped.getChildren().isEmpty()) {
             if(this.isEdited(mapped)) {
+                Set<Tree<String>> ret = new HashSet<>();
                 Tree<String> t = mapped.map(stringify);
-                return new Pair<>(t,suitable.test(t));
+                ret.add(t);
+                
+                return ret;
             } else {
                 return null;
             }
         } else {
             for(Tree<Pair<EditDistanceState, String>> ts : mapped.getChildren()) {
-                Pair<Tree<String>,Boolean> other = this.extract(ts, suitable);
+                Set<Tree<String>> other = this.extract(ts);
                 
                 if(other != null && seen != null) {
+                    Set<Tree<String>> ret = new HashSet<>();
                     Tree<String> t = mapped.map(stringify);
-                    return new Pair<>(t,suitable.test(t));
-                } else {
+                    ret.add(t);
+                
+                    return ret;
+                } else  if(seen == null){
                     seen = other;
                 }
             }
             
             if(seen != null) {
-                if(seen.getRight()) {
-                    return seen;
-                } else {
-                    Tree<String> t = mapped.map(stringify);
-                    return new Pair<>(t,suitable.test(t));
-                }
+                Tree<String> t = mapped.map(stringify);
+                seen.add(t);
+                
+                return seen;
             } else {
                 return null;
             }
@@ -388,11 +393,62 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
         }
     }
 
-    private Pair<Tree<String>,Boolean> extract(Status[] errors, Predicate<Tree<String>> suitable, int i) {
+    /**
+     * 
+     * @param errors
+     * @param suitable
+     * @param i
+     * @param subtree
+     * @return 
+     */    
+    private Set<Tree<String>> extract(Status[] errors, final int i, Tree<String> subtree) {
+        Set<Tree<String>> seen = null;
         
-        
-        
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        if(subtree.getChildren().isEmpty()) {
+            if(this.isEdited(errors,i)) {
+                Set<Tree<String>> ret = new HashSet<>();
+                ret.add(subtree);
+                
+                return ret;
+            } else {
+                return null;
+            }
+        } else {
+            int index = i;
+            
+            for(Tree<String> ts : subtree.getChildren()) {
+                Set<Tree<String>> other = this.extract(errors, index, ts);
+                
+                index += ts.getLeafLabels().size();
+                
+                if(other != null && seen != null) {
+                    Set<Tree<String>> ret = new HashSet<>();
+                    ret.add(subtree);
+                
+                    return ret;
+                } else if(seen == null) {
+                    seen = other;
+                }
+            }
+            
+            if(seen != null) {
+                seen.add(subtree);
+                
+                return seen;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    /**
+     * 
+     * @param errors
+     * @param i
+     * @return 
+     */
+    private boolean isEdited(Status[] errors, int i) {
+        return errors[i] != KEPT;
     }
 
     /**

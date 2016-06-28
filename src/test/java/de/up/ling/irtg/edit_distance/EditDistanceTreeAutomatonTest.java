@@ -11,9 +11,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
 import de.up.ling.irtg.edit_distance.EditDistanceTreeAutomaton.Status;
 import static de.up.ling.irtg.edit_distance.EditDistanceTreeAutomaton.Status.KEPT;
-import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.tree.Tree;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -23,7 +21,9 @@ import static org.junit.Assert.*;
  * @author teichmann
  */
 public class EditDistanceTreeAutomatonTest {
-
+    /**
+     * 
+     */
     private final static String EXPECTED_1 = "'<0,1>'! -> __*__ [0.36787944117144233]\n"
             + "'<1,1>' -> __*__ [0.36787944117144233]\n"
             + "'<0,0>' -> __*__ [0.36787944117144233]\n"
@@ -63,11 +63,14 @@ public class EditDistanceTreeAutomatonTest {
         sal.getSignature().addSymbol("a", 0);
         sal.getSignature().addSymbol("b", 0);
         sal.getSignature().addSymbol("c", 2);
+        
+        Tree<String> one = sal.decompose(sal.parseString("a")).viterbi();
 
-        edt1 = new EditDistanceTreeAutomaton(sal.getSignature(), sal.parseString("a"));
+        edt1 = new EditDistanceTreeAutomaton(sal.getSignature(), one);
 
         // delete, insert, substitute
-        edt2 = new EditDistanceTreeAutomaton(sal.getSignature(), sal.parseString("a a"), (int pos) -> -(pos + 1), (int pos) -> -((pos + 1) * (pos + 1)), (int pos) -> -(1.0 / (pos + 2)));
+        Tree<String> two = sal.decompose(sal.parseString("a b b a")).viterbi();
+        edt2 = new EditDistanceTreeAutomaton(sal.getSignature(), two, (int pos) -> -(pos + 1), (int pos) -> -((pos + 1) * (pos + 1)), (int pos) -> -(1.0 / (pos + 2)));
     }
 
     /**
