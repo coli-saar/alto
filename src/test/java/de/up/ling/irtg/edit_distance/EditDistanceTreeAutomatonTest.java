@@ -5,13 +5,21 @@
  */
 package de.up.ling.irtg.edit_distance;
 
+import com.google.common.base.Function;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.TreeAutomatonInputCodec;
+import de.up.ling.irtg.edit_distance.EditDistanceTreeAutomaton.EditDistanceState;
 import de.up.ling.irtg.edit_distance.EditDistanceTreeAutomaton.Status;
 import static de.up.ling.irtg.edit_distance.EditDistanceTreeAutomaton.Status.KEPT;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
+import de.up.ling.tree.TreeParser;
+import it.unimi.dsi.fastutil.ints.IntIterator;
+import java.util.Arrays;
+import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -57,7 +65,7 @@ public class EditDistanceTreeAutomatonTest {
     private StringAlgebra sal;
 
     @Before
-    public void setUp() {
+    public void setUp() throws ParseException {
         sal = new StringAlgebra();
 
         sal.getSignature().addSymbol("a", 0);
@@ -69,7 +77,7 @@ public class EditDistanceTreeAutomatonTest {
         edt1 = new EditDistanceTreeAutomaton(sal.getSignature(), one);
 
         // delete, insert, substitute
-        Tree<String> two = sal.decompose(sal.parseString("a b b a")).viterbi();
+        Tree<String> two = TreeParser.parse("*(*(a,b),*(b,a))");
         edt2 = new EditDistanceTreeAutomaton(sal.getSignature(), two, (int pos) -> -(pos + 1), (int pos) -> -((pos + 1) * (pos + 1)), (int pos) -> -(1.0 / (pos + 2)));
     }
 
@@ -77,44 +85,89 @@ public class EditDistanceTreeAutomatonTest {
      * Test of getRulesBottomUp method, of class EditDistanceTreeAutomaton.
      */
     @Test
-    public void testGetRulesBottomUp() {
+    public void testGetRulesBottomUp() throws ParseException {
         TreeAutomatonInputCodec taic = new TreeAutomatonInputCodec();
 
-        TreeAutomaton ta = edt1.asConcreteTreeAutomatonWithStringStates();
+        TreeAutomaton tb = edt1.asConcreteTreeAutomatonWithStringStates();
         TreeAutomaton comp = taic.read(EXPECTED_1);
 
-        assertEquals(ta, comp);
+        assertEquals(tb, comp);
 
-        ta = edt2.asConcreteTreeAutomatonWithStringStates();
-        TreeAutomaton in = sal.decompose(sal.parseString("a"));
+        EditDistanceTreeAutomaton ta = edt2;
+        TreeAutomaton in = sal.decompose(sal.parseString("a a b b"));
 
-        TreeAutomaton q = in.intersect(ta);
+        TreeAutomaton<Pair<? extends Object, EditDistanceState>> q = in.intersect(ta);
+        
+        assertEquals(q.viterbiRaw().getWeight(), 0.5866462195100318, 0.0000001);
 
-        assertEquals(q.viterbiRaw().getWeight(), 0.36787944117144233, 0.0000001);
-
-        in = sal.decompose(sal.parseString("a b"));
+        in = sal.decompose(sal.parseString("a b b"));
 
         q = in.intersect(ta);
-
-        assertEquals(q.viterbiRaw().getWeight(), Math.exp(-(1.0 / 3.0)), 0.00000001);
+        
+        assertEquals(q.viterbiRaw().getWeight(), Math.exp(-1)*Math.exp(-1.0/3.0)*Math.exp(-1.0/5.0), 0.00000001);
 
         in = sal.decompose(sal.parseString("a b a"));
 
         q = in.intersect(ta);
 
-        assertEquals(q.viterbiRaw().getWeight(), Math.exp(-1.5), 0.00000001);
-
-        in = sal.decompose(sal.parseString("a a"));
-
+        assertEquals(q.viterbiRaw().getWeight(), Math.exp(-1)*Math.exp(-1.0/3.0), 0.00000001);
+        
+        
+        in = sal.decompose(sal.parseString("a a b b"));
+        for(Rule r : (Iterable<Rule>) in.getAllRulesTopDown()) {
+            if(r.getChildren().length > 1) {
+                StringAlgebra.Span span = (StringAlgebra.Span) in.getStateForId(r.getChildren()[0]);
+                if(span.end-span.start != 1) {
+                    r.setWeight(0.0);
+                }
+            }
+        }
+        
+        
         q = in.intersect(ta);
-
-        assertEquals(q.viterbiRaw().getWeight(), Math.exp(0.0), 0.00000001);
-
-        in = sal.decompose(sal.parseString("b"));
-
+                
+        Tree<Rule> choice = q.maxRuleTree();
+        
+        IntersectionResolver ir = new IntersectionResolver(q);
+        
+        Tree<Pair<EditDistanceState,String>> inter = choice.map(ir);
+        Set<Tree<String>> choices = ta.selectCoveringSetForFalse(inter);
+        
+        assertEquals(choices.size(),2);
+        assertTrue(choices.contains(TreeParser.parse("*(a,*(b,b))")));
+        assertTrue(choices.contains(TreeParser.parse("*(a,*(a,*(b,b)))")));
+        
+        in = sal.decompose(sal.parseString("a b b b"));
+        for(Rule r : (Iterable<Rule>) in.getAllRulesTopDown()) {
+            if(r.getChildren().length > 1) {
+                StringAlgebra.Span span = (StringAlgebra.Span) in.getStateForId(r.getChildren()[0]);
+                if(span.end-span.start != 1) {
+                    r.setWeight(0.0);
+                }
+            }
+        }
         q = in.intersect(ta);
-
-        assertEquals(q.viterbiRaw().getWeight(), Math.exp(-(1 + (1.0 / 3.0))), 0.00000001);
+        choice = q.maxRuleTree();
+        
+        ir = new IntersectionResolver(q);
+        
+        inter = choice.map(ir);
+        ta.selectCoveringSetForFalse(inter);
+        
+        choices = ta.selectCoveringSetForFalse(inter);
+        assertEquals(choices.size(),4);
+        assertTrue(choices.contains(TreeParser.parse("b")));
+        assertTrue(choices.contains(TreeParser.parse("*(b,*(b,b))")));
+        assertTrue(choices.contains(TreeParser.parse("*(b,b)")));
+        assertTrue(choices.contains(TreeParser.parse("*(a,*(b,*(b,b)))")));
+        
+        Status[] errs = ta.computeStatusGeneral(inter);
+        choices = ta.selectCoveringTreeForCorrect(errs);
+        
+        assertEquals(choices.size(),3);
+        assertTrue(choices.contains(TreeParser.parse("a")));
+        assertTrue(choices.contains(TreeParser.parse("*(*(a,b),*(b,a))")));
+        assertTrue(choices.contains(TreeParser.parse("*(b,a)")));
     }
 
     /**

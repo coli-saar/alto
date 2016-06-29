@@ -20,13 +20,13 @@ public class IntersectionResolver implements Function<Rule,Pair<EditDistanceStat
     /**
      * 
      */
-    private final TreeAutomaton<Pair<? extends Object, ? extends EditDistanceState>> basis; 
+    private final TreeAutomaton<Pair<? extends Object, EditDistanceState>> basis; 
 
     /**
      * 
      * @param basis 
      */
-    public IntersectionResolver(TreeAutomaton<Pair<? extends Object, ? extends EditDistanceState>> basis) {
+    public IntersectionResolver(TreeAutomaton<Pair<? extends Object, EditDistanceState>> basis) {
         this.basis = basis;
     }
     

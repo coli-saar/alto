@@ -63,6 +63,7 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
     /**
      *
      * @param signature
+     * @param t
      * @param delete
      * @param insert
      * @param substitute
@@ -270,7 +271,6 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
     /**
      * 
      * @param mapped
-     * @param suitable
      * @return 
      */
     public Set<Tree<String>> selectCoveringSetForFalse(Tree<Pair<EditDistanceState, String>> mapped) {
@@ -280,7 +280,6 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
     /**
      * 
      * @param errors
-     * @param suitable
      * @return 
      */
     public Set<Tree<String>> selectCoveringTreeForCorrect(Status[] errors) {
@@ -384,7 +383,7 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
                 String label = derivation.getLabel().getRight();
 
                 int pos = eds.readSpanStart;
-                return this.inputSentence.get(pos).equals(label);
+                return !this.inputSentence.get(pos).equals(label);
             } else {
                 return true;
             }
