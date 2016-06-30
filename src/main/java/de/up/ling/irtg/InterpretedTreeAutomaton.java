@@ -24,6 +24,8 @@ import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
+import de.up.ling.irtg.siblingfinder.SiblingFinderIntersection;
+import de.up.ling.irtg.siblingfinder.SiblingFinderInvhom;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.Logging;
@@ -221,6 +223,14 @@ public class InterpretedTreeAutomaton implements Serializable {
         Map<String, Object> inputs = new HashMap<>();
         inputs.put(interpretationName, input);
         return parseInputObjects(inputs);
+    }
+    
+    @OperationAnnotation(code = "parseSimpleWithSiblingFinder")
+    public TreeAutomaton parseWithSiblingFinder(String interpretationName, Object input) throws ParserException {
+        SiblingFinderInvhom invhom = new SiblingFinderInvhom(interpretations.get(interpretationName).getAlgebra().decompose(input), interpretations.get(interpretationName).getHomomorphism());
+        SiblingFinderIntersection inters = new SiblingFinderIntersection((ConcreteTreeAutomaton)automaton, invhom);
+        inters.makeAllRulesExplicit();
+        return inters.seenRulesAsAutomaton();
     }
 
     /**
