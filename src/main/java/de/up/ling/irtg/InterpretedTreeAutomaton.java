@@ -215,6 +215,13 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return parseInputObjects(inputs);
     }
+    
+    @OperationAnnotation(code = "parseSimple")
+    public TreeAutomaton parseSimple(String interpretationName, Object input) throws ParserException {
+        Map<String, Object> inputs = new HashMap<>();
+        inputs.put(interpretationName, input);
+        return parseInputObjects(inputs);
+    }
 
     /**
      * Parses a map of input objects to a parse chart. The process is as in
