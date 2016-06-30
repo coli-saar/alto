@@ -10,9 +10,14 @@ import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
+import de.up.ling.irtg.siblingfinder.SiblingFinder;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntIterator;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.*;
+import java.util.function.IntUnaryOperator;
 
 /**
  * A string algebra for TAG. The elements of this algebra are strings and string
@@ -603,6 +608,223 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
             // because *EE* can be inserted at any point
             return false;
         }
+        
+        @Override
+        public SiblingFinder makeNewPartnerFinder(int labelID) {
+            String label = signature.resolveSymbolId(labelID);
+            if (label.equals(CONCAT11())) {
+                return new SingleLookupBinaryPF(stateID -> getStateForId(stateID).left.end, stateID -> getStateForId(stateID).left.start);
+            } else if (label.equals(CONCAT12())) {
+                return new SingleLookupBinaryPF(stateID -> getStateForId(stateID).left.end, stateID -> getStateForId(stateID).left.start);
+            } else if (label.equals(CONCAT21())) {
+                return new SingleLookupBinaryPF(stateID -> getStateForId(stateID).right.end, stateID -> getStateForId(stateID).left.start);
+            } else if (label.equals(WRAP21())) {
+                return new DoubleLookupBinaryPF(stateID -> getStateForId(stateID).left.end, stateID -> getStateForId(stateID).right.start,
+                        stateID -> getStateForId(stateID).left.start, stateID -> getStateForId(stateID).left.end);
+            } else if (label.equals(WRAP22())) {
+                return new DoubleLookupBinaryPF(stateID -> getStateForId(stateID).left.end, stateID -> getStateForId(stateID).right.start,
+                        stateID -> getStateForId(stateID).left.start, stateID -> getStateForId(stateID).right.end);
+            } else {
+                return super.makeNewPartnerFinder(labelID);
+            }
+        }
+    }
+    
+    private static class SingleLookupBinaryPF extends SiblingFinder {
+
+        private final Int2ObjectMap<IntList> leftLookup;
+        private final Int2ObjectMap<IntList> rightLookup;
+        private final IntUnaryOperator leftState2Index;
+        private final IntUnaryOperator rightState2Index;
+        
+        public SingleLookupBinaryPF(IntUnaryOperator leftState2Index, IntUnaryOperator rightState2Index) {
+            super(2);
+            leftLookup = new Int2ObjectOpenHashMap();
+            rightLookup = new Int2ObjectOpenHashMap();
+            this.leftState2Index = leftState2Index;
+            this.rightState2Index = rightState2Index;
+        }
+
+        @Override
+        public Iterable<int[]> getPartners(int stateID, int pos) {
+            IntList relevantList = null;
+            //TODO this catch (Null Pointer) is bad style (too general)
+            try {
+                switch(pos) {
+                    case 0:
+                        relevantList = rightLookup.get(leftState2Index.applyAsInt(stateID));
+                        break;
+                    case 1:
+                        relevantList = leftLookup.get(rightState2Index.applyAsInt(stateID));
+                        break;
+                }
+            } catch (java.lang.NullPointerException ex) {
+                return new ArrayList<>();
+            }
+            //TODO: throw error if pos is neither 0 or 1?
+            if (relevantList == null) {
+                return new ArrayList<>();
+            }
+            IntIterator intIter = relevantList.iterator();
+            int[] resArray = new int[2];
+            resArray[pos] = stateID;
+            int otherPos = (pos+1) % 2;
+            return () -> new Iterator<int[]>() {
+                
+                @Override
+                public boolean hasNext() {
+                    return intIter.hasNext();
+                }
+                
+                @Override
+                public int[] next() {
+                    resArray[otherPos]= intIter.next();
+                    return resArray;
+                }
+            };
+        }
+
+        @Override
+        protected void performAddState(int stateID, int pos) {
+            IntList relevantList;
+            //TODO this try is bad style (too general)
+            try {
+                switch(pos) {
+                    case 0:
+                        int index = leftState2Index.applyAsInt(stateID);
+                        relevantList = leftLookup.get(index);
+                        if (relevantList == null) {
+                            relevantList = new IntArrayList();
+                            leftLookup.put(index, relevantList);
+                        }
+                        break;
+                    case 1:
+                        int indexR = rightState2Index.applyAsInt(stateID);
+                        relevantList = rightLookup.get(indexR);
+                        if (relevantList == null) {
+                            relevantList = new IntArrayList();
+                            rightLookup.put(indexR, relevantList);
+                        }
+                        break;
+                    default:
+                        return;//TODO: throw error?
+                }
+                relevantList.add(stateID);
+            } catch (java.lang.NullPointerException ex) {
+                //do nothing.
+            }
+        }
+            
+    }
+    
+    private static class DoubleLookupBinaryPF extends SiblingFinder {
+
+        private final Int2ObjectMap<Int2ObjectMap<IntList>> leftLookup;
+        private final Int2ObjectMap<Int2ObjectMap<IntList>> rightLookup;
+        private final IntUnaryOperator leftState2FirstIndex;
+        private final IntUnaryOperator leftState2SecondIndex;
+        private final IntUnaryOperator rightState2FirstIndex;
+        private final IntUnaryOperator rightState2SecondIndex;
+        
+        public DoubleLookupBinaryPF(IntUnaryOperator leftState2FirstIndex, IntUnaryOperator leftState2SecondIndex, IntUnaryOperator rightState2FirstIndex, IntUnaryOperator rightState2SecondIndex) {
+            super(2);
+            leftLookup = new Int2ObjectOpenHashMap();
+            rightLookup = new Int2ObjectOpenHashMap();
+            this.leftState2FirstIndex = leftState2FirstIndex;
+            this.leftState2SecondIndex = leftState2SecondIndex;
+            this.rightState2FirstIndex = rightState2FirstIndex;
+            this.rightState2SecondIndex = rightState2SecondIndex;
+        }
+
+        @Override
+        public Iterable<int[]> getPartners(int stateID, int pos) {
+            IntList relevantList = null;
+            //TODO this try is bad style (too general)
+            try {
+                switch(pos) {
+                    case 0:
+                        Int2ObjectMap<IntList> second2List = rightLookup.get(leftState2FirstIndex.applyAsInt(stateID));
+                        if (second2List == null) {
+                            return new ArrayList<>();
+                        }
+                        relevantList = second2List.get(leftState2SecondIndex.applyAsInt(stateID));
+                        break;
+                    case 1:
+                        Int2ObjectMap<IntList> second2ListR = leftLookup.get(rightState2FirstIndex.applyAsInt(stateID));
+                        if (second2ListR == null) {
+                            return new ArrayList<>();
+                        }
+                        relevantList = second2ListR.get(rightState2SecondIndex.applyAsInt(stateID));
+                        break;
+                }
+            } catch (java.lang.NullPointerException ex) {
+                return new ArrayList<>();
+            }
+            if (relevantList == null) {
+                return new ArrayList<>();
+            }
+            IntIterator intIter = relevantList.iterator();
+            int[] resArray = new int[2];
+            resArray[pos] = stateID;
+            int otherPos = (pos+1) % 2;
+            return () -> new Iterator<int[]>() {
+                
+                @Override
+                public boolean hasNext() {
+                    return intIter.hasNext();
+                }
+                
+                @Override
+                public int[] next() {
+                    resArray[otherPos]= intIter.next();
+                    return resArray;
+                }
+            };
+        }
+
+        @Override
+        protected void performAddState(int stateID, int pos) {
+            IntList relevantList;
+            //TODO this try is bad style (too general)
+            try {
+                switch(pos) {
+                    case 0:
+                        int index = leftState2FirstIndex.applyAsInt(stateID);
+                        Int2ObjectMap<IntList> second2List = leftLookup.get(index);
+                        if (second2List == null) {
+                            second2List = new Int2ObjectOpenHashMap<>();
+                            leftLookup.put(index, second2List);
+                        }
+                        index = leftState2SecondIndex.applyAsInt(stateID);
+                        relevantList = second2List.get(index);
+                        if (relevantList == null) {
+                            relevantList = new IntArrayList();
+                            second2List.put(index, relevantList);
+                        }
+                        break;
+                    case 1:
+                        int indexR = rightState2FirstIndex.applyAsInt(stateID);
+                        Int2ObjectMap<IntList> second2ListR = rightLookup.get(indexR);
+                        if (second2ListR == null) {
+                            second2ListR = new Int2ObjectOpenHashMap<>();
+                            rightLookup.put(indexR, second2ListR);
+                        }
+                        indexR = rightState2SecondIndex.applyAsInt(stateID);
+                        relevantList = second2ListR.get(indexR);
+                        if (relevantList == null) {
+                            relevantList = new IntArrayList();
+                            second2ListR.put(indexR, relevantList);
+                        }
+                        break;
+                    default:
+                        return;//TODO: throw error?
+                }
+                relevantList.add(stateID);
+            } catch (java.lang.NullPointerException ex) {
+                //do nothing
+            }
+        }
+            
     }
 
 //    public Signature getSignature() {

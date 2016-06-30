@@ -30,6 +30,7 @@ import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
+import de.up.ling.irtg.siblingfinder.SiblingFinder;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
@@ -2967,7 +2968,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
         Int2ObjectMap<IntList> labelsToIterate = new Int2ObjectOpenHashMap<>(symbols);
         labelsToIterate.remove(0);//already checked constants above
 
-        BinaryPartnerFinder bpFinder = makeNewBinaryPartnerFinder();
+        Int2ObjectMap<SiblingFinder> siblingFinders = new Int2ObjectOpenHashMap<>();
+        for (int labelID = 1; labelID < signature.getMaxSymbolId(); labelID++) {
+            if (signature.getArity(labelID) >= 2) {
+                siblingFinders.put(labelID, makeNewPartnerFinder(labelID));
+            }
+        }
 
         for (int i = 0; i < agenda.size(); i++) {
             if (Thread.interrupted()) {
@@ -2979,39 +2985,21 @@ public abstract class TreeAutomaton<State> implements Serializable {
             }
 
             for (int arity : labelsToIterate.keySet()) {
-
-                for (int label : symbols.get(arity)) {
-                    //find all rules
-                    List<Iterable<Rule>> foundRules = new ArrayList<>();
-                    switch (arity) {
-                        case 1:
-                            foundRules.add(getRulesBottomUp(label, new int[]{a}));
-                            break;
-                        case 2:
-                            IntCollection partnerList = bpFinder.getPartners(label, a);
-                            for (int p : partnerList) {
-                                foundRules.add(getRulesBottomUp(label, new int[]{a, p}));
-                                foundRules.add(getRulesBottomUp(label, new int[]{p, a}));
+                List<Iterable<Rule>> foundRules = new ArrayList<>();
+                if (arity == 1) {
+                    for (int label : symbols.get(arity)) {
+                        //find all rules
+                        foundRules.add(getRulesBottomUp(label, new int[]{a}));
+                    }
+                } else {
+                    for (int label : symbols.get(arity)) {
+                        SiblingFinder sf = siblingFinders.get(label);
+                        for (int k = 0; k<arity; k++) {
+                            sf.addState(a, k);
+                            for (int[] children : sf.getPartners(a, k)) {
+                                foundRules.add(getRulesBottomUp(label, children));
                             }
-                            break;
-                        default:
-                            Set[] partners = new Set[arity - 1];
-                            Arrays.fill(partners, seen);
-                            TupleIterator<Integer> partnerIterator = new TupleIterator<>(partners, new Integer[partners.length]);
-                            while (partnerIterator.hasNext()) {
-                                Integer[] partnerTuple = partnerIterator.next();
-                                for (int pos = 0; pos < arity; pos++) {
-                                    int[] children = new int[arity];
-                                    for (int k = 0; k < pos; k++) {
-                                        children[k] = partnerTuple[k];
-                                    }
-                                    children[pos] = a;
-                                    for (int k = pos; k < partnerTuple.length; k++) {
-                                        children[k + 1] = partnerTuple[k];
-                                    }
-                                    foundRules.add(getRulesBottomUp(label, children));
-                                }
-                            }
+                        }
                     }
 
                     //process found rules and add newfound states to agenda
@@ -3029,8 +3017,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     });
                 }
             }
-
-            bpFinder.addState(a);
         }
 
         return ret;
@@ -3044,13 +3030,15 @@ public abstract class TreeAutomaton<State> implements Serializable {
     
     /**
      * This returns an object that stores and finds possible partners for a
-     * given state given a binary rule, for pattern matching. (see i.e.
-     * automata.condensed.PMFactoryRestrictive.) Only a dummy in TreeAutomaton,
-     * needs implementation in more advanced decomposition automata.
+     * given state given a rule label. (see i.e.
+     * automata.condensed.PMFactoryRestrictive.) Default implementation
+     * returns all previously entered potential siblings, override and
+     * use automaton-specific indexing for faster parsing.
      *
+     * @param labelID
      * @return
      */
-    public BinaryPartnerFinder makeNewBinaryPartnerFinder() {
-        return new BinaryPartnerFinder.DummyBinaryPartnerFinder();
+    public SiblingFinder makeNewPartnerFinder(int labelID) {
+        return new SiblingFinder.SetPartnerFinder(signature.getArity(labelID));
     }
 }

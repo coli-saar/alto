@@ -16,6 +16,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
+import de.up.ling.irtg.siblingfinder.SiblingFinder;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.irtg.util.LambdaStopwatch;
@@ -24,6 +25,7 @@ import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntIterable;
+import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -34,6 +36,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -352,6 +355,90 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         public boolean isBottomUpDeterministic() {
             return isBottomUpDeterministic;
         }
+        
+        @Override
+        public SiblingFinder makeNewPartnerFinder(int labelID) {
+            if (labelID == concatSymbolId) {
+                return new SpanPartnerFinder(words.length+1, this);
+            } else {
+                return super.makeNewPartnerFinder(labelID);
+            }
+        }
+        
+        
+    }
+
+    private static class SpanPartnerFinder extends SiblingFinder {
+
+        private final IntList[] leftSeenStates;
+        private final IntList[] rightSeenStates;
+        private final CkyAutomaton auto;
+        
+        public SpanPartnerFinder(int spanBound, CkyAutomaton auto) {
+            super(2);
+            leftSeenStates = new IntList[spanBound];
+            rightSeenStates = new IntList[spanBound];
+            this.auto = auto;
+        }
+
+        @Override
+        public Iterable<int[]> getPartners(int stateID, int pos) {
+            IntList relevantList = null;
+            switch (pos) {
+                case 0:
+                    relevantList = rightSeenStates[auto.getStateForId(stateID).end];
+                    break;
+                case 1:
+                    relevantList = leftSeenStates[auto.getStateForId(stateID).start];
+                    break;
+            }
+            if (relevantList == null) {
+                return new ArrayList<>();
+            }
+            IntIterator intIter = relevantList.iterator();
+            int[] resArray = new int[2];
+            resArray[pos] = stateID;
+            int otherPos = (pos+1) % 2;
+            return () -> new Iterator<int[]>() {
+                
+                @Override
+                public boolean hasNext() {
+                    return intIter.hasNext();
+                }
+                
+                @Override
+                public int[] next() {
+                    resArray[otherPos]= intIter.next();
+                    return resArray;
+                }
+            };
+        }
+
+        @Override
+        protected void performAddState(int stateID, int pos) {
+            switch (pos) {
+                case 0:
+                    int slotNr = auto.getStateForId(stateID).end;
+                    IntList relevantList = leftSeenStates[slotNr];
+                    if (relevantList == null) {
+                        relevantList = new IntArrayList();
+                        leftSeenStates[slotNr] = relevantList;
+                    }
+                    relevantList.add(stateID);
+                    break;
+                case 1:
+                    slotNr = auto.getStateForId(stateID).start;
+                    relevantList = rightSeenStates[slotNr];
+                    if (relevantList == null) {
+                        relevantList = new IntArrayList();
+                        rightSeenStates[slotNr] = relevantList;
+                    }
+                    relevantList.add(stateID);
+                    break;
+            }
+            
+        }
+        
     }
 
     public static class Span implements Serializable {
