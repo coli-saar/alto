@@ -381,6 +381,10 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
     }
     
+    
+    public static int pfQueries = 0;
+    public static int pfAdditions = 0;
+    
     private class MPFBinaryPartnerFinder extends BinaryPartnerFinder{
         MergePartnerFinder mpf;
         BitSet seen = new BitSet();
@@ -391,6 +395,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         @Override
         public IntCollection getPartners(int labelID, int stateID) {
             if (labelID == getMergeLabelID()) {
+                pfQueries++;
                 return mpf.getAllMergePartners(stateID);
             } else {
                 throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -400,6 +405,7 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         @Override
         public void addState(int stateID) {
             if (!seen.get(stateID)) {
+                pfAdditions++;
                 mpf.insert(stateID);
                 seen.set(stateID);
             }

@@ -15,6 +15,7 @@ import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.irtg.util.LambdaStopwatch;
@@ -178,6 +179,17 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     
     
 
+    @OperationAnnotation(code="getSentenceLength")
+    public static int getSentenceLength(List<String> sentence) {
+        return sentence.size();
+    }
+    
+    @OperationAnnotation(code ="getStringMaxChartSize")
+    public static int getMaxChartSize(int sentenceLength) {
+        return (sentenceLength*(sentenceLength+1))/2;
+    }
+    
+    
     private class CkyAutomaton extends TreeAutomaton<Span> {
 
         private int[] words;

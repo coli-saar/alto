@@ -25,6 +25,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
 import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.LongArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
@@ -828,6 +829,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
+    @OperationAnnotation(code = "viterbi")
     public Tree<String> viterbi() {
         WeightedTree raw = viterbiRaw();
 
@@ -1426,6 +1428,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param other the other automaton.
      * @return an automaton representing the intersected language.
      */
+    @OperationAnnotation(code = "intersect")
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(TreeAutomaton<OtherState> other) {
         return intersect(other, signature.getIdentityMapper());
     }
@@ -2090,6 +2093,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param tree
      * @return
      */
+    @OperationAnnotation(code ="getWeight")
     public double getWeight(final Tree<String> tree) {
         return getWeightRaw(getSignature().addAllSymbols(tree));
     }
@@ -3032,6 +3036,12 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
+    
+    @OperationAnnotation(code ="countStates")
+    public int getNumberOfSeenStates() {
+        return stateInterner.getNextIndex()-1;
+    }
+    
     /**
      * This returns an object that stores and finds possible partners for a
      * given state given a binary rule, for pattern matching. (see i.e.

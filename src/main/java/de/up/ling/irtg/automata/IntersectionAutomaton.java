@@ -17,6 +17,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -58,6 +59,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     // receive corresponding left states, but not vice versa. This keeps outer map very dense,
     // and makes it suitable for a fast ArrayMap)
 
+    @OperationAnnotation(code = "bottomUpIntersectionAutomaton")
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
 
@@ -981,4 +983,19 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
         public void accept(int state);
     }
+    
+    @OperationAnnotation(code = "buIntersect")
+    public static IntersectionAutomaton intersectBottomUpNaive(TreeAutomaton lhs, TreeAutomaton rhs) {
+        IntersectionAutomaton ret = new IntersectionAutomaton(lhs, rhs);
+        ret.makeAllRulesExplicit();
+        return ret;
+    }
+    
+    @OperationAnnotation(code = "tdbuIntersect")
+    public static IntersectionAutomaton intersectTopDownBottomUpCKY(TreeAutomaton lhs, TreeAutomaton rhs) {
+        IntersectionAutomaton ret = new IntersectionAutomaton(lhs, rhs);
+        ret.makeAllRulesExplicitCKY();
+        return ret;
+    }
+    
 }

@@ -5,6 +5,7 @@
 package de.up.ling.irtg.automata.condensed;
 
 import de.up.ling.irtg.automata.*;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.SignatureMapper;
 
 
@@ -20,6 +21,17 @@ import de.up.ling.irtg.signature.SignatureMapper;
  * @param <RightState>
  */
 public class CondensedIntersectionAutomaton<LeftState, RightState> extends GenericCondensedIntersectionAutomaton<LeftState, RightState> {
+    
+    /**
+     * Assumes the signatures are identical.
+     * @param left
+     * @param right 
+     */
+    @OperationAnnotation(code = "condensedIntersection")
+    public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right) {
+        this(left, right, left.getSignature().getIdentityMapper());
+    }
+    
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
         super(left, right, sigMapper);
     }

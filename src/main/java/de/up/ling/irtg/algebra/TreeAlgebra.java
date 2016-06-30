@@ -7,6 +7,7 @@ package de.up.ling.irtg.algebra;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.SingletonAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
@@ -109,7 +110,38 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
     
     
     
+    @OperationAnnotation(code = "countBracketsInTree")
+    public static int countBrackets(Tree<String> tree) {
+        return getBrackets(tree, 0).size();
+    }
     
+    @OperationAnnotation(code = "treeRecall")
+    public static double recall(Tree<String> result, Tree<String> gold) {
+        List<Bracket> resultBrackets = getBrackets(result, 0);
+        List<Bracket> goldBrackets = getBrackets(gold, 0);
+        double weight = goldBrackets.size();
+        int found = 0;
+        for (Bracket goldBracket : goldBrackets) {
+            if (resultBrackets.contains(goldBracket)) {
+                found ++;
+            }
+        }
+        return (weight > 0) ? found/weight : 1;
+    }
+    
+    @OperationAnnotation(code = "treePrecision")
+    public static double precision(Tree<String> result, Tree<String> gold) {
+        List<Bracket> resultBrackets = getBrackets(result, 0);
+        List<Bracket> goldBrackets = getBrackets(gold, 0);
+        double weight = resultBrackets.size();
+        int found = 0;
+        for (Bracket resultBracket : resultBrackets) {
+            if (goldBrackets.contains(resultBracket)) {
+                found ++;
+            }
+        }
+        return (weight > 0) ? found/weight : 1;
+    }
     
     
     

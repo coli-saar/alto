@@ -12,6 +12,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
@@ -29,7 +30,6 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 /**
  * Produces pattern matcher automata to compute the inverse of decomposition
@@ -541,6 +540,9 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             }
         }
     }
+    
+    private int rhsQueries = 0;
+    private int rhsRules = 0;
 
     //iterates over all combinations in rhsChildIDs and checks if the rhs automaton has matching bottom up rules.
     private void getRulesBottomUpForRhsChildren(int pos, TreeAutomaton<State> rhs, List<IntCollection> rhsChildIDs, int rhsLabelID, Rule matcherRule, int arity, List<Pair<Integer, Integer>> agenda, Set<Pair<Integer, Integer>> seen, ConcreteTreeAutomaton<Pair<String, State>> intersectionAutomaton) {
@@ -874,6 +876,12 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
         }
         storedRules.add(new Pair(rule, pos));
     }
+    
+    @OperationAnnotation(code="condensedPMInvhom")
+    public static CondensedTreeAutomaton invhomWithNewFactory(TreeAutomaton rhs, Homomorphism hom) {
+        return new PMFactoryRestrictive(hom).invhom(rhs);
+    }
+    
 
     /*private void writeRestrictiveMatcherLog(CpuTimeStopwatch sw) {
      if (logTitle.equals("")) {
@@ -901,4 +909,30 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
      System.err.println("could not write restrictive matcher log!");
      }
      }*/
+    
+    /*
+    public static void main(String[] args) throws IOException, ParserException {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("../../alto-very-lazy-invhom/examples/LittlePrinceCurrent.irtg"));
+        //InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("../../examples/tinyAMR.irtg"));
+        SGraph input = new GraphAlgebra().parseString("[a2/adore-01 -ARG0-> t/they; a2 -ARG1-> f/figure; a/and -op1-> a2; p/please-01 -ARG1-> t; p -ARG2-> t2/that; a -op2-> p]");
+        //SGraph input = new GraphAlgebra().parseString("(g / sleep  :ARG0 (s / girl))");
+        CpuTimeStopwatch watch = new CpuTimeStopwatch();
+        for (int i = 0; i<1; i++) {
+            watch.record(0);
+            InterpretedTreeAutomaton f = irtg.filterForAppearingConstants("graph", input);
+            PMFactoryRestrictive pmFactory = new PMFactoryRestrictive(f.getInterpretation("graph").getHomomorphism());
+            CondensedIntersectionAutomaton intersect = new CondensedIntersectionAutomaton(f.getAutomaton(), pmFactory.invhom(f.getInterpretation("graph").getAlgebra().decompose(input)), f.getAutomaton().getSignature().getIdentityMapper());
+            //PMFactoryRestrictive pmFactory = new PMFactoryRestrictive(irtg.getInterpretation("graph").getHomomorphism());
+            //CondensedIntersectionAutomaton intersect = new CondensedIntersectionAutomaton(irtg.getAutomaton(), pmFactory.invhom(irtg.getInterpretation("graph").getAlgebra().decompose(input)), irtg.getAutomaton().getSignature().getIdentityMapper());
+            System.err.println(intersect.viterbi());
+            System.err.println("rhs queries " + pmFactory.rhsQueries);
+            System.err.println("rhs rules " + pmFactory.rhsRules);
+            watch.record(1);
+            System.err.println(watch.printTimeBefore(1, "time"));
+            System.err.println("pf queries "+SGraphBRDecompositionAutomatonBottomUp.pfQueries);
+            System.err.println("pf additions "+SGraphBRDecompositionAutomatonBottomUp.pfAdditions);
+        }
+    }
+    */
+    
 }

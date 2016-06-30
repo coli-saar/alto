@@ -9,6 +9,7 @@ import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.OutputCodec;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.tree.Tree;
@@ -95,6 +96,7 @@ public abstract class Algebra<E> implements Serializable {
      * symbols)
      * @return
      */
+    @OperationAnnotation(code = "eval")
     public E evaluate(Tree<String> t) {
         return (E) t.dfs(new TreeVisitor<String, Void, E>() {
             @Override
@@ -121,6 +123,7 @@ public abstract class Algebra<E> implements Serializable {
      * @param value
      * @return
      */
+    @OperationAnnotation(code = "decomp")
     public TreeAutomaton decompose(E value) {
         return new EvaluatingDecompositionAutomaton(value);
     }

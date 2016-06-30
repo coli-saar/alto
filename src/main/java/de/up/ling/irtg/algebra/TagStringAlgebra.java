@@ -9,6 +9,7 @@ import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.StringAlgebra.Span;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.*;
@@ -697,6 +698,22 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         }
     }
 
+    @OperationAnnotation(code ="getTAGSentenceLength")
+    public static int getSentenceLength(Pair<List<String>, List<String>> sentence) {
+        return sentence.left.size();
+    }
+    
+    @OperationAnnotation(code ="getTAGMaxChartSize")
+    public static int getMaxChartSize(Object sentenceLength) {
+        int n = (Integer)sentenceLength+1;//why need +1 here? is this even correct?
+        //count all states (i,k) with i <= k and (i,j,k,l) with i <= j < k <= l
+        return n+1 //for spans with i=k
+                +(n*(n+1))//for spans with i != k and span pairs with i=j, k=l
+                +Math.max(0, (n*(n+1)*(n-1)*(n-2))/24)
+                +Math.max(0, (n*(n+1)*(n-1))/3);//for span pairs with 3 distinct borders
+                
+    }
+    
     private static Pair<Span, Span>[] getChildStates(int[] childStateIds, TreeAutomaton<Pair<Span, Span>> auto) {
         Pair<Span, Span>[] childStates = new Pair[childStateIds.length];
 

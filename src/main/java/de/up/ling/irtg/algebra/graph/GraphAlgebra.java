@@ -13,11 +13,16 @@ import de.up.ling.irtg.codec.IsiAmrInputCodec;
 import de.up.ling.irtg.codec.SGraphInputCodec;
 import de.up.ling.irtg.codec.TikzSgraphOutputCodec;
 import de.up.ling.irtg.codec.isiamr.IsiAmrParser;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -243,6 +248,11 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
             else return null;
     }
     
+    @OperationAnnotation(code="decompTopDown")
+    public TreeAutomaton decomposeTopDown(SGraph value) {
+        return decompose(value, SGraphBRDecompositionAutomatonTopDown.class);
+    }
+    
     /**
      * Writes (nearly) all the rules in the decomposition automaton of the
      * SGraph value (with respect to the signature in this algebra) into the
@@ -418,6 +428,92 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 //
 //        return ret;
 //    }
+    
+    
+    /**
+     * Computes the smatch score of the two given graphs. Uses the python implementation
+     * from ISI ({@url http://amr.isi.edu/evaluation.html}), the python file must
+     * be in the current working directory.
+     * @param graph
+     * @param gold
+     * @return 
+     * @throws java.io.IOException 
+     */
+    @OperationAnnotation(code = "smatch")
+    public static double smatch(SGraph graph, SGraph gold) throws IOException {
+        File temp1 = new File("TEMPFILE1");
+        File temp2 = new File("TEMPFILE2");
+        FileWriter writer = new FileWriter(temp1);
+        writer.write(graph.toIsiAmrString());
+        writer.close();
+        writer = new FileWriter(temp2);
+        writer.write(gold.toIsiAmrString());
+        writer.close();
+        
+        Process p = Runtime.getRuntime().exec("python smatch_2.0/smatch.py -f TEMPFILE1 TEMPFILE2");
+        
+        // read any errors from the attempted command
+        BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+        String s;
+        while ((s = stdError.readLine()) != null) {
+            System.err.println(s);
+        }
+            
+        
+        BufferedReader stdOutput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        
+        String outputLine = stdOutput.readLine();
+        temp1.delete();
+        temp2.delete();
+        return Double.parseDouble(outputLine.substring(outputLine.length()-4));// -4 for 1 digit before comma, dot, 2 digits after comma
+    }
+    
+    /**
+     * Computes the smatch score of the two given arrays of graphs. Uses the python implementation
+     * from ISI ({@url http://amr.isi.edu/evaluation.html}), the python file must
+     * be in the current working directory.
+     * @param graphs
+     * @param gold
+     * @return 
+     * @throws java.io.IOException 
+     */
+    @OperationAnnotation(code = "globalSmatch")
+    public static double smatch(Object[] graphs, Object[] gold) throws IOException {
+        File temp1 = new File("TEMPFILE1");
+        File temp2 = new File("TEMPFILE2");
+        FileWriter writer = new FileWriter(temp1);
+        for (Object obj : graphs) {
+            writer.write(((SGraph)obj).toIsiAmrString()+"\n\n");
+        }
+        writer.close();
+        writer = new FileWriter(temp2);
+        for (Object obj : gold) {
+            writer.write(((SGraph)obj).toIsiAmrString()+"\n\n");
+        }
+        writer.close();
+        
+        Process p = Runtime.getRuntime().exec("python smatch_2.0/smatch.py -f TEMPFILE1 TEMPFILE2");
+        
+        // read any errors from the attempted command
+        BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+
+        String s;
+        while ((s = stdError.readLine()) != null) {
+            System.err.println(s);
+        }
+            
+        
+        BufferedReader stdOutput = new BufferedReader(new InputStreamReader(p.getInputStream()));
+        
+        String outputLine = stdOutput.readLine();
+        temp1.delete();
+        temp2.delete();
+        return Double.parseDouble(outputLine.substring(outputLine.length()-4));// -4 for 1 digit before comma, dot, 2 digits after comma
+    }
+    
+    
+    
     
     /**
      * Returns the set of all source names appearing in {@code signature}.
