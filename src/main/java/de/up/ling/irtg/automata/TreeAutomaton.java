@@ -18,6 +18,8 @@ import com.google.common.collect.SortedMultiset;
 import com.google.common.collect.TreeMultiset;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
+import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.condensed.CondensedBottomUpIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
@@ -37,7 +39,6 @@ import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.DebuggingWriter;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Logging;
-import de.up.ling.irtg.util.TupleIterator;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
@@ -47,7 +48,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayFIFOQueue;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntList;
@@ -55,8 +55,11 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.Serializable;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -2926,22 +2929,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
         //initialize agenda by processing constants
         IntList agenda = new IntArrayList();
         IntSet seen = new IntOpenHashSet();
-        Int2ObjectMap<IntList> symbols = new Int2ObjectOpenHashMap<>();
 
-        Map<String, Integer> symbolsFromAuto = getSignature().getSymbolsWithArities();
-        int j = 0;
-        for (String s : symbolsFromAuto.keySet()) {
-            int arity = symbolsFromAuto.get(s);
-            IntList symbolsHere = symbols.get(arity);
-            if (symbolsHere == null) {
-                symbolsHere = new IntArrayList();
-                symbols.put(arity, symbolsHere);
-            }
-            symbolsHere.add(getSignature().getIdForSymbol(s));
-        }
-        IntList constants = symbols.get(0);
-        if (constants != null) {
-            for (int c : constants) {
+        //first constants
+        for (int c = 1; c<=signature.getMaxSymbolId(); c++) {
+            if (signature.getArity(c) == 0) {
                 if (Thread.interrupted()) {
                     return ret;
                 }
@@ -2964,12 +2955,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
         seen.addAll(Sets.newHashSet(agenda));
 
-        //now iterate
-        Int2ObjectMap<IntList> labelsToIterate = new Int2ObjectOpenHashMap<>(symbols);
-        labelsToIterate.remove(0);//already checked constants above
 
+        //now iterate
         Int2ObjectMap<SiblingFinder> siblingFinders = new Int2ObjectOpenHashMap<>();
-        for (int labelID = 1; labelID < signature.getMaxSymbolId(); labelID++) {
+        for (int labelID = 1; labelID <= signature.getMaxSymbolId(); labelID++) {
             if (signature.getArity(labelID) >= 2) {
                 siblingFinders.put(labelID, makeNewPartnerFinder(labelID));
             }
@@ -2984,24 +2973,22 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 ret = true;
             }
 
-            for (int arity : labelsToIterate.keySet()) {
-                List<Iterable<Rule>> foundRules = new ArrayList<>();
-                if (arity == 1) {
-                    for (int label : symbols.get(arity)) {
-                        //find all rules
-                        foundRules.add(getRulesBottomUp(label, new int[]{a}));
-                    }
-                } else {
-                    for (int label : symbols.get(arity)) {
-                        SiblingFinder sf = siblingFinders.get(label);
+            for (int labelID = 1; labelID<=signature.getMaxSymbolId(); labelID++) {
+                int arity = signature.getArity(labelID);
+                if (arity > 0) {
+                    List<Iterable<Rule>> foundRules = new ArrayList<>();
+                    if (arity == 1) {
+                        foundRules.add(getRulesBottomUp(labelID, new int[]{a}));
+                    } else {
+                        SiblingFinder sf = siblingFinders.get(labelID);
                         for (int k = 0; k<arity; k++) {
                             sf.addState(a, k);
                             for (int[] children : sf.getPartners(a, k)) {
-                                foundRules.add(getRulesBottomUp(label, children));
+                                foundRules.add(getRulesBottomUp(labelID, children));
                             }
                         }
                     }
-
+                    
                     //process found rules and add newfound states to agenda
                     foundRules.forEach(ruleIt -> {
                         ruleIt.forEach(rule -> {
@@ -3021,7 +3008,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
-
+    
+    
     
     @OperationAnnotation(code ="countStates")
     public int getNumberOfSeenStates() {

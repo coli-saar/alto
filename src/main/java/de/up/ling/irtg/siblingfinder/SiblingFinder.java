@@ -79,20 +79,12 @@ public abstract class SiblingFinder {
         
         
          
-        
-        /*@Override
-        public Collection<int[]> getPartners(int stateID, int pos) {
-        }*/
-
         /**
          *
          * @param stateID
          * @param pos
          * @return 
          */
-        
-
-
         @Override
         public Iterable<int[]> getPartners(int stateID, int pos) {
             if (arity == 1) {

@@ -5,7 +5,6 @@
 package de.up.ling.irtg.algebra.graph;
 
 import com.google.common.collect.Sets;
-import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.EvaluatingAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -25,14 +24,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JComponent;
@@ -110,41 +107,6 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
         this.useTopDownAutomaton= useTopDownAutomaton;
     }
     
-    @Override
-    public List<Pair<Pair<String,String>,  Pair<Function<SGraph, Object>, Class>>> getDecompositionImplementations(String interpretationName) {
-        List<Pair<Pair<String,String>,  Pair<Function<SGraph, Object>, Class>>> ret = new ArrayList<>();
-        try {
-            Function<SGraph, Object> bottomup = graph -> decompose(graph, SGraphBRDecompositionAutomatonBottomUp.class);
-            Function<SGraph, Object> topdown = graph -> decompose(graph, SGraphBRDecompositionAutomatonTopDown.class);
-            Class returnType = getClass().getMethod("decompose", new Class[]{SGraph.class, Class.class}).getReturnType();
-            ret.add(new Pair(new Pair("Bottom-up", "bup"), new Pair(bottomup, returnType)));
-            ret.add(new Pair(new Pair("Top-down", "tdown"), new Pair(topdown, returnType)));
-        } catch (NoSuchMethodException | SecurityException e) {
-            System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
-        }
-        return ret;
-    }
-
-    @Override
-    public List<Pair<Pair<String, String>, Function<SGraph, Double>>> getObjectProperties() {
-        List<Pair<Pair<String, String>, Function<SGraph, Double>>> ret = new ArrayList<>();
-        Function<SGraph, Double> nodeCountFunction = (SGraph graph) -> (double)graph.getGraph().vertexSet().size();
-        ret.add(new Pair(new Pair("Node count", "node_count"), nodeCountFunction));
-        
-        Function<SGraph, Double> maxDegFunction = (SGraph graph) -> {
-            double maxDeg = 0;
-            for (GraphNode node : graph.getGraph().vertexSet()) {
-                int degHere = graph.getGraph().inDegreeOf(node)+graph.getGraph().outDegreeOf(node);
-                if (node.getLabel() != null && !node.getLabel().equals("")) {
-                    degHere++;
-                }
-                maxDeg = Math.max(maxDeg, degHere);
-            }
-            return maxDeg;
-        };
-        ret.add(new Pair(new Pair("Maximum degree", "max_deg_labels_as_loops"), maxDegFunction));
-        return ret;
-    }
     
     
     

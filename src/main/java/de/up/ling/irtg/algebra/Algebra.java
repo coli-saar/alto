@@ -5,13 +5,11 @@
 package de.up.ling.irtg.algebra;
 
 import com.google.common.collect.Iterators;
-import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
 import java.io.Reader;
@@ -24,7 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Set;
-import java.util.function.Function;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 
@@ -151,54 +148,6 @@ public abstract class Algebra<E> implements Serializable {
     abstract public E parseString(String representation) throws ParserException;
 
     
-    /**
-     * Returns all implementations this algebra provides for decomposition.
-     * By default, his is the singleton list containing the decompose(E) function with key "Standard".
-     * Returns a list of implementations. Each implementation is a pair of pairs.
-     * The left pair has the name of the implementation on its left, this is shown
-     * to the user and has no internal consequences. The right String of the left
-     * pair is the code of the implementation, changing it removes backward
-     * compatibility when recovering this implementation from a string.
-     * The right pair has the actual implementing function on its left, and the return
-     * type on its right.
-     * @param interpretationName
-     * @return 
-     */
-    public List<Pair<Pair<String,String>,  Pair<Function<E, Object>, Class>>> getDecompositionImplementations(String interpretationName) {
-        List<Pair<Pair<String,String>,  Pair<Function<E, Object>, Class>>> ret = new ArrayList<>();
-        try {
-            Function<E, Object> function = value -> decompose(value);
-            Pair<String, String> nameAndCode = new Pair("Standard", "std");
-            //getting the return type of the actual decompose function is a bit complicated... edit: did not make it work, just using TreeAutomaton for now.
-            ret.add(new Pair(nameAndCode, new Pair(function, TreeAutomaton.class)));
-        } catch (java.lang.Exception e) {
-            System.err.println("Could not collect decomposition implementations for interpretation " + interpretationName +": "+e.toString());
-        }
-        return ret;
-    }
-    
-    /**
-     * Returns all evaluation methods for this algebra. Default is an empty map.
-     * @return Maps the name of the evaluation method to a function that takes
-     * a pair of objects (result left, gold right) to a pair of doubles: left
-     * is the score, and right is the weight (if i.e. in a corpus we want to 
-     * compute the weighted average).
-     */
-    public List<Evaluator> getEvaluationMethods() {
-        return new ArrayList<>();
-    }
-    
-    /**
-     * Returns all numerical properties this algebra provides for its objects.
-     * Default is the length if the object is represented as a string.
-     * @return Maps a pair of name and code of the property to a function that maps an object to the
-     * property.
-     */
-    public List<Pair<Pair<String, String>, Function<E, Double>>> getObjectProperties() {
-        List<Pair<Pair<String, String>, Function<E, Double>>> ret = new ArrayList<>();
-        ret.add(new Pair(new Pair("String length", "string_length"), (Function<E, Double>) (E t) -> (double) t.toString().length()));
-        return ret;
-    }
     
     /**
      * Sets the options of the algebra implementation. Most algebras do not have
