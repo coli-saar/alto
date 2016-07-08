@@ -133,6 +133,9 @@ public class EditDistanceTreeAutomatonTest {
         Tree<Pair<EditDistanceState,String>> inter = choice.map(ir);
         Set<Tree<String>> choices = ta.selectCoveringSetForFalse(inter);
         
+        boolean[] bs = ta.getMarkedFromIncorrect(inter);
+        assertEquals(Arrays.toString(bs),"[false, true, false, true]");
+        
         assertEquals(choices.size(),2);
         assertTrue(choices.contains(TreeParser.parse("*(a,*(b,b))")));
         assertTrue(choices.contains(TreeParser.parse("*(a,*(a,*(b,b)))")));
@@ -163,6 +166,10 @@ public class EditDistanceTreeAutomatonTest {
         
         Status[] errs = ta.computeStatusGeneral(inter);
         choices = ta.selectCoveringTreeForCorrect(errs);
+        
+        bs = ta.getMarkedFromIncorrect(inter);
+        
+        assertEquals(Arrays.toString(bs).trim(),"[false, false, false, true]");
         
         assertEquals(choices.size(),3);
         assertTrue(choices.contains(TreeParser.parse("a")));

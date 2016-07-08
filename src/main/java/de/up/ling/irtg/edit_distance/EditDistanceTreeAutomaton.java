@@ -18,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.IntToDoubleFunction;
-import java.util.function.Predicate;
 
 /**
  * Works for the binary StringAlgebra.
@@ -469,6 +468,31 @@ public class EditDistanceTreeAutomaton extends ConcreteTreeAutomaton<EditDistanc
         SUBSTITUTED;
     }
 
+    /**
+     * 
+     * @param incorrect
+     * @return 
+     */
+    public boolean[] getMarkedFromIncorrect(Tree<Pair<EditDistanceState,String>> incorrect) {
+        List<Pair<EditDistanceState,String>> leaves = incorrect.getLeafLabels();
+        boolean[] b = new boolean[leaves.size()];
+        
+        int pos = 0;
+        for(Pair<EditDistanceState,String> leaf : leaves) {
+            int dist = leaf.getLeft().getReadSpanEnd()-leaf.getLeft().getReadSpanStart();
+            if(dist == 0) {
+                b[pos++] = true;
+            } else {
+                String s = leaf.getRight();
+                int index = leaf.getLeft().getReadSpanStart();
+                
+                b[pos++] = !this.inputSentence.get(index).equals(s);
+            }
+        }
+        
+        return b;
+    }
+    
     /**
      *
      */
