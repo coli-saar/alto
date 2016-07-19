@@ -37,4 +37,22 @@ public interface AlignmentInformation {
      * @return 
      */
     public IntSet getMinimumContainingSet(int marker);
+        
+    /**
+     * 
+     */
+    public enum Feasibility {
+        /**
+         * 
+         */
+        FEASIBLE,
+        /**
+         * 
+         */
+        INFEASIBLE,
+        /**
+         * 
+         */
+        SUBSUMING;
+    }
 }

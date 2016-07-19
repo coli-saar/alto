@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.edit_distance;
 
-import com.google.common.base.Function;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.StringAlgebra;
 import de.up.ling.irtg.automata.Rule;
@@ -17,8 +16,6 @@ import static de.up.ling.irtg.edit_distance.EditDistanceTreeAutomaton.Status.KEP
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
-import it.unimi.dsi.fastutil.ints.IntIterator;
-import java.util.Arrays;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
