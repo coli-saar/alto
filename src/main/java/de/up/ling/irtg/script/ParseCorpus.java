@@ -5,12 +5,17 @@
  */
 package de.up.ling.irtg.script;
 
+import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedBottomUpIntersectionAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomaton;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
+import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.tree.Tree;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
@@ -67,12 +72,13 @@ public class ParseCorpus {
                 } else {
                     bw.newLine();
                 }
-                m.clear();
-                m.put(inputInterpretation, ins.getInputObjects().get(inputInterpretation));
+                Interpretation pret = ita.getInterpretation(inputInterpretation);
+                CondensedTreeAutomaton cta = pret.parseToCondensed(ins.getInputObjects().get(inputInterpretation));               
                 
-                TreeAutomaton ta = ita.parseInputObjects(m);
-                if(!ta.isEmpty()) {
-                    Tree<String> ts = ta.viterbi();
+                CondensedIntersectionAutomaton cia = new CondensedIntersectionAutomaton(ita.getAutomaton(), cta, ita.getAutomaton().getSignature().getIdentityMapper());
+                
+                if(!cia.isEmpty()) {
+                    Tree<String> ts = cia.viterbi();
                     Object o = ita.interpret(ts, outputInterpretation);
                     
                     bw.write(o.toString());

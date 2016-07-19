@@ -16,6 +16,7 @@ import static de.up.ling.irtg.edit_distance.EditDistanceTreeAutomaton.Status.KEP
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeParser;
+import java.util.Arrays;
 import java.util.Set;
 import org.junit.Before;
 import org.junit.Test;
