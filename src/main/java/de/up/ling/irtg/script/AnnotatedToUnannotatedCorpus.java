@@ -54,8 +54,8 @@ public class AnnotatedToUnannotatedCorpus {
         String secondAlternativeAlgebraType = props.getProperty("secondAlternateAlgbra");
         String maxLength = props.getProperty("maxLength");
         
-        int mL = maxLength == null ? Integer.MAX_VALUE : Integer.parseInt(maxLength);
-        mL = mL < 1 ? Integer.MAX_VALUE : Integer.parseInt(maxLength);
+        int mL = (maxLength == null ? Integer.MAX_VALUE : Integer.parseInt(maxLength));
+        mL = mL < 1 ? Integer.MAX_VALUE :mL;
         
         
         Algebra firstAlg = (Algebra) Class.forName(firstAlgebraType).newInstance();
