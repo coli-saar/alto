@@ -40,8 +40,13 @@ public class SampleEM implements TreeExtractor {
     /**
      *
      */
-    private int sampleSize = 5000;
+    private int adaptionSampleSize = 50;
 
+    /**
+     * 
+     */
+    private int learnSampleSize = 1000;
+    
     /**
      *
      */
@@ -106,7 +111,7 @@ public class SampleEM implements TreeExtractor {
      *
      */
     private double lexiconAdditionFactor = 1.0;
-
+    
     /**
      *
      * @param lexiconAdditionFactor
@@ -206,6 +211,13 @@ public class SampleEM implements TreeExtractor {
                     Pair<TreeSample<Rule>, Double> done = fut.get();
 
                     negLogLikelihood += done.getRight();
+                    if(negLogLikelihood < 0.0) {
+                        System.out.println(negLogLikelihood);
+                        System.out.println(done.getRight());
+                        
+                        throw new IllegalStateException("tada");
+                    }
+                    
                     TreeSample<Rule> fin = done.getLeft();
 
                     SubtreeCounting sc = automataToSample.get(batchNumber);
@@ -272,10 +284,18 @@ public class SampleEM implements TreeExtractor {
      *
      * @param sampleSize
      */
-    public void setSampleSize(int sampleSize) {
-        this.sampleSize = sampleSize;
+    public void setAdaptionSampleSize(int sampleSize) {
+        this.adaptionSampleSize = sampleSize;
     }
 
+    /**
+     * 
+     * @param learnSampleSize 
+     */
+    public void setLearnSampleSize(int learnSampleSize) {
+        this.learnSampleSize = learnSampleSize;
+    }
+    
     /**
      *
      * @param adaptionRounds
@@ -327,8 +347,21 @@ public class SampleEM implements TreeExtractor {
             val += Math.exp(fin.getLogTargetWeight(i) - fin.getLogPropWeight(i) - max);
         }
 
-        val = -Math.log(val / fin.populationSize()) - max;
-        return val;
+        val /= fin.populationSize();
+        
+        double m = -(Math.log(val)+max);
+        
+        if(m < 0.0) {
+            System.out.println("---------------");
+            System.out.println(val);
+            System.out.println(max);
+            System.out.println(m);
+            
+            
+            throw new IllegalStateException("hmm");
+        }
+        
+        return m;
     }
 
     /**
@@ -423,7 +456,7 @@ public class SampleEM implements TreeExtractor {
         @Override
         public Pair<TreeSample<Rule>, Double> call() throws Exception {
             TreeSample<Rule> result
-                    = ads.adaSampleMinimal(adaptionRounds, sampleSize, suc, true, reset);
+                    = ads.adaSampleMinimal(adaptionRounds, adaptionSampleSize, learnSampleSize, suc, true, reset);
 
             double d = computeNegativeLogLikelihood(result);
 

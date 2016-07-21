@@ -128,7 +128,7 @@ public class CreateSingularGrammarByEM {
         trex.setNormalizationDivisor(Double.parseDouble(normalizationDivisor));
         trex.setNormalizationExponent(Integer.parseInt(normalizationExponent));
         trex.setResultSize(Integer.parseInt(resultSampleSize));
-        trex.setSampleSize(Integer.parseInt(adaptionSampleSize));
+        trex.setAdaptionSampleSize(Integer.parseInt(adaptionSampleSize));
         trex.setSamplerLearningRate(Double.parseDouble(sgdStepSize));
         trex.setSeed(Long.parseLong(seed));
         trex.setSmooth(Double.parseDouble(smooth));

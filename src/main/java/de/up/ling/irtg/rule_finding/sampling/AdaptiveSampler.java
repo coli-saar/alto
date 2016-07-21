@@ -81,8 +81,17 @@ public class AdaptiveSampler {
         return result;
     }
 
-    
-    public TreeSample<Rule> adaSampleMinimal(int rounds, int populationSize, RuleWeighting rw,
+    /**
+     * 
+     * @param rounds
+     * @param adaptionPopulationSize
+     * @param finalPopulationSize
+     * @param rw
+     * @param deterministic
+     * @param reset
+     * @return 
+     */
+    public TreeSample<Rule> adaSampleMinimal(int rounds, int adaptionPopulationSize, int finalPopulationSize, RuleWeighting rw,
             boolean deterministic, boolean reset) {
         ProposalSumComputer psc = new ProposalSumComputer();
         
@@ -92,16 +101,16 @@ public class AdaptiveSampler {
 
         TreeSample<Rule> sample = null;
         for (int i = 0; i < rounds; ++i) {
-            sample = prop.getTreeSample(rw, populationSize);
+            sample = prop.getTreeSample(rw, adaptionPopulationSize);
 
-            for (int j = 0; j < populationSize; ++j) {
+            for (int j = 0; j < adaptionPopulationSize; ++j) {
                 sample.setLogTargetWeight(j, rw.getLogTargetProbability(sample.getSample(j)));
             }
 
             if (!deterministic) {
                 psc.reset();
 
-                for (int j = 0; j < populationSize; ++j) {
+                for (int j = 0; j < adaptionPopulationSize; ++j) {
                     sample.setLogSumWeight(j, psc.computeInside(sample.getSample(j), rw));
                 }
             }
@@ -109,9 +118,21 @@ public class AdaptiveSampler {
             rw.adapt(sample, deterministic);
         }
 
+        sample = prop.getTreeSample(rw, finalPopulationSize);
+        for (int j = 0; j < finalPopulationSize; ++j) {
+            sample.setLogTargetWeight(j, rw.getLogTargetProbability(sample.getSample(j)));
+        }
+
+        if (!deterministic) {
+            psc.reset();
+
+            for (int j = 0; j < finalPopulationSize; ++j) {
+                sample.setLogSumWeight(j, psc.computeInside(sample.getSample(j), rw));
+            }
+        }
+        
         return sample;
     }
-    
     
     /**
      *

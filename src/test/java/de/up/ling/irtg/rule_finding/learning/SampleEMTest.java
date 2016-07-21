@@ -85,7 +85,7 @@ public class SampleEMTest {
         this.sam.setAdaptionRounds(20);
         this.sam.setNormalizationDivisor(100);
         this.sam.setNormalizationExponent(2);
-        this.sam.setSampleSize(100);
+        this.sam.setAdaptionSampleSize(100);
         this.sam.setTrainIterations(10);
 
         dl = new DoubleArrayList();
@@ -113,6 +113,7 @@ public class SampleEMTest {
         sam.setIterationProgress(pl);
         sam.setReset(false);
         sam.setLexiconAdditionFactor(2.0);
+        sam.setThreads(1);
     }
 
     /**

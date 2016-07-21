@@ -6,14 +6,10 @@
 package de.up.ling.irtg.script.grammar_learning;
 
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.rule_finding.ExtractJointTrees;
 import de.up.ling.irtg.rule_finding.learning.ExtractGrammar;
 import de.up.ling.irtg.rule_finding.learning.SampleEM;
-import de.up.ling.irtg.rule_finding.sampling.rule_weighting.SubtreeCounting;
-import de.up.ling.irtg.signature.Signature;
-import de.up.ling.irtg.util.FunctionIterable;
 import de.up.ling.irtg.util.ProgressListener;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -76,6 +72,9 @@ public class CreateGrammarByEM {
 
         String seed = props.getProperty("seed");
 
+        String trainSampleSize = props.getProperty("trainingSampleSize");
+        
+        
         Algebra a1 = (Algebra) Class.forName(firstAlgebra).newInstance();
         Algebra a2 = (Algebra) Class.forName(secondAlgebra).newInstance();
 
@@ -103,10 +102,6 @@ public class CreateGrammarByEM {
             };
         };
 
-        IrtgInputCodec iic = new IrtgInputCodec();
-
-        //SubtreeCounting.CentralCounter counter = new SubtreeCounting.CentralCounter(Double.parseDouble(smooth), sigs);
-
         ProgressListener pog = (int done, int target, String line) -> {
             StringBuilder sb = new StringBuilder();
             sb.append(done);
@@ -125,7 +120,8 @@ public class CreateGrammarByEM {
         trex.setNormalizationDivisor(Double.parseDouble(normalizationDivisor));
         trex.setNormalizationExponent(Integer.parseInt(normalizationExponent));
         trex.setResultSize(Integer.parseInt(resultSampleSize));
-        trex.setSampleSize(Integer.parseInt(adaptionSampleSize));
+        trex.setAdaptionSampleSize(Integer.parseInt(adaptionSampleSize));
+        trex.setLearnSampleSize(Integer.parseInt(trainSampleSize));
         trex.setSamplerLearningRate(Double.parseDouble(sgdStepSize));
         trex.setSeed(Long.parseLong(seed));
         trex.setSmooth(Double.parseDouble(smooth));
