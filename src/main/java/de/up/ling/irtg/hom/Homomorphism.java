@@ -469,5 +469,5 @@ public class Homomorphism implements Serializable {
     
     public HomomorphismSymbol v(String variable) {
         return HomomorphismSymbol.createVariable(variable);
-    }
+    }   
 }

@@ -10,7 +10,8 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.shorts.ShortIterator;
-import it.unimi.dsi.fastutil.shorts.ShortArraySet;
+import it.unimi.dsi.fastutil.shorts.ShortOpenHashSet;
+import it.unimi.dsi.fastutil.shorts.ShortSet;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -26,20 +27,21 @@ class ShortBasedEdgeSet implements IdBasedEdgeSet {
 
     //static int idCounter = 0;
     //private final String ID;
-    private final ShortArraySet edges;
+    private final ShortSet edges;
 
     /**
      * Creates a new empty edge set.
      */
     ShortBasedEdgeSet() {
-        edges = new ShortArraySet();
+        edges = new ShortOpenHashSet();
         //ID = "ID"+String.valueOf(idCounter);//for debugging
         //idCounter++;
         //System.err.println(ID + " created from scratch");
     }
 
     private ShortBasedEdgeSet(ShortBasedEdgeSet input) {
-        edges = input.edges.clone();
+        edges = new ShortOpenHashSet();
+        edges.addAll(input.edges);
         //edges = cloneLongSet(input.edges);
         //ID = "ID"+String.valueOf(idCounter);
         //idCounter++;

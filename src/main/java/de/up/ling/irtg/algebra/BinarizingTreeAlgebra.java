@@ -28,7 +28,14 @@ public class BinarizingTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
         return new TreePanel(object);
     }
 
+<<<<<<< local
+    @Override
+    public List<Evaluator> getEvaluationMethods() {
+        return new TreeAlgebra().getEvaluationMethods(); //To change body of generated methods, choose Tools | Templates.
+    }    
+=======
     
     
     
+>>>>>>> other
 }

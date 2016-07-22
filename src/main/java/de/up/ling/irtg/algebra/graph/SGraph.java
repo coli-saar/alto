@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import org.jgrapht.DirectedGraph;
@@ -51,7 +52,7 @@ public class SGraph{
     private Map<String, String> sourceToNodename;
     private SetMultimap<String, String> nodenameToSources;
     private ListMultimap<String, String> labelToNodename;
-    private static long nextGensym = 1;
+    private static AtomicLong nextGensym = new AtomicLong(1);
     private boolean hasCachedHashcode;
     private int cachedHashcode;
     private boolean equalsMeansIsomorphy;
@@ -65,8 +66,8 @@ public class SGraph{
      * Creates an empty s-graph.
      */
     public SGraph() {
-        graph = new DefaultDirectedGraph<GraphNode, GraphEdge>(new GraphEdgeFactory());
-        nameToNode = new HashMap<String, GraphNode>();
+        graph = new DefaultDirectedGraph<>(new GraphEdgeFactory());
+        nameToNode = new HashMap<>();
         sourceToNodename = new HashMap<>();
         nodenameToSources = HashMultimap.create();
         hasCachedHashcode = false;
@@ -137,11 +138,8 @@ public class SGraph{
      */
     public GraphNode addAnonymousNode(String label) {
         String anonymousName = gensym("_u");
-        GraphNode u = new GraphNode(anonymousName, label);
-        graph.addVertex(u);
-        nameToNode.put(anonymousName, u);
-        invalidate();
-        return u;
+        
+        return this.addNode(anonymousName, label);
     }
 
     /**
@@ -270,7 +268,7 @@ public class SGraph{
         }
 
         SGraph ret = new SGraph();
-        copyInto(ret);
+        SGraph.this.copyInto(ret);
         boolean ok = other.copyInto(ret, renamingF(nodeRenaming));
 
         return ok ? ret : null;
@@ -301,8 +299,7 @@ public class SGraph{
 
         // make fast, shallow copy of sgraph; this is okay if this sgraph
         // is not modified after making the copy
-        SGraph ret = new SGraph();
-        shallowCopyInto(ret);
+        SGraph ret = makeShallowCopy();
 
         // rename the source
         ret.sourceToNodename = new HashMap<>();
@@ -329,8 +326,7 @@ public class SGraph{
 
         // make fast, shallow copy of sgraph; this is okay if this sgraph
         // is not modified after making the copy
-        SGraph ret = new SGraph();
-        shallowCopyInto(ret);
+        SGraph ret = makeShallowCopy();
 
         // rename the source
         ret.sourceToNodename = new HashMap<>();
@@ -359,10 +355,7 @@ public class SGraph{
      * @return 
      */
     public SGraph forgetSourcesExcept(Set<String> retainedSources) {
-        // make fast, shallow copy of sgraph; this is okay if this sgraph
-        // is not modified after making the copy
-        SGraph ret = new SGraph();
-        shallowCopyInto(ret);
+        SGraph ret = makeShallowCopy();
 
         // forget the other sources
         ret.sourceToNodename = new HashMap<>();
@@ -378,6 +371,18 @@ public class SGraph{
             }
         }
 
+        return ret;
+    }
+
+    /**
+     * 
+     * @return 
+     */
+    protected SGraph makeShallowCopy() {
+        // make fast, shallow copy of sgraph; this is okay if this sgraph
+        // is not modified after making the copy
+        SGraph ret = new SGraph();
+        shallowCopyInto(ret);
         return ret;
     }
 
@@ -434,20 +439,30 @@ public class SGraph{
         }
 
         SGraph ret = new SGraph();
-        copyInto(ret, renamingF(renaming));
+        SGraph.this.copyInto(ret, renamingF(renaming));
 
         return ret;
     }
 
-    private void shallowCopyInto(SGraph into) {
+    protected void shallowCopyInto(SGraph into) {
         into.graph = graph;
         into.nameToNode = nameToNode;
         into.sourceToNodename = sourceToNodename;
         into.nodenameToSources = nodenameToSources;
     }
 
+    /**
+     * 
+     * @param into
+     * @param nodeRenaming
+     * @return 
+     */
+    protected boolean copyInto(SGraph into, Map<String,String> nodeRenaming) {
+        return this.copyInto(into, renamingF(nodeRenaming));
+    }
+    
     private void copyInto(SGraph into) {
-        copyInto(into, x -> {
+        SGraph.this.copyInto(into, x -> {
             return x;
         });
     }
@@ -523,7 +538,7 @@ public class SGraph{
     }
 
     private static String gensym(String prefix) {
-        return prefix + "_" + (nextGensym++);
+        return prefix + "_" + (nextGensym.getAndIncrement());
     }
 
 //    private static final Pattern TOKEN_PATTERN = Pattern.compile("[-a-zA-z0-9]+");

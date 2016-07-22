@@ -8,7 +8,8 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.bytes.ByteIterator;
-import it.unimi.dsi.fastutil.bytes.ByteArraySet;
+import it.unimi.dsi.fastutil.bytes.ByteOpenHashSet;
+import it.unimi.dsi.fastutil.bytes.ByteSet;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.util.ArrayList;
@@ -26,20 +27,21 @@ class ByteBasedEdgeSet implements IdBasedEdgeSet {
 
     //private static int idCounter = 0;
     //private final String ID;
-    private final ByteArraySet edges;
+    private final ByteSet edges;
     
     /**
      * Creates a new empty edge set.
      */
     ByteBasedEdgeSet() {
-        edges = new ByteArraySet();
+        edges = new ByteOpenHashSet();
         //ID = "ID"+String.valueOf(idCounter);//for debugging
         //idCounter++;
         //System.err.println(ID + " created from scratch");
     }
 
     private ByteBasedEdgeSet(ByteBasedEdgeSet input) {
-        edges = input.edges.clone();
+        edges = new ByteOpenHashSet();
+        edges.addAll(input.edges);
         //edges = cloneLongSet(input.edges);
         //ID = "ID"+String.valueOf(idCounter);
         //idCounter++;

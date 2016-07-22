@@ -915,7 +915,84 @@ public abstract class TreeAutomaton<State> implements Serializable {
             return new WeightedTree(t, weightBestFinalState);
         }
     }
+    
+    /**
+     * 
+     */
+    private static final ViterbiWithBackpointerSemiring vwbs = new ViterbiWithBackpointerSemiring();
+    
+    /**
+     * 
+     * @return 
+     */
+    public Tree<Rule> maxRuleTree() {
+        // run Viterbi algorithm bottom-up, saving rules as backpointers
 
+        Int2ObjectMap<Pair<Double, Rule>> map
+                = evaluateInSemiring2(vwbs, rule -> new Pair(rule.getWeight(), rule));
+
+        // find final state with highest weight
+        int bestFinalState = -1;
+        double weightBestFinalState = Double.NEGATIVE_INFINITY;
+
+        for (int s : getFinalStates()) {
+            Pair<Double, Rule> result = map.get(s);
+
+            // ignore final states that (for some crazy reason) can't
+            // be expanded
+            if (result.right != null) {
+                if (map.get(s).left > weightBestFinalState) {
+                    bestFinalState = s;
+                    weightBestFinalState = map.get(s).left;
+
+                    if (D.isEnabled()) {
+                        System.err.println("update best final state to " + getStateForId(s) + ": " + weightBestFinalState);
+                    }
+                }
+            }
+        }
+
+        assert bestFinalState > -1 : "Maximization failed: no useful final state found";
+
+        // extract best tree from backpointers
+        Tree<Rule> t = extractRuleTreeFromBackPointers(bestFinalState, map, 0);
+
+        if (t == null) {
+            return null;
+        } else {
+            return t;
+        }
+    }
+    
+    /**
+     * 
+     * @param state
+     * @param map
+     * @param depth
+     * @return 
+     */
+    private Tree<Rule> extractRuleTreeFromBackPointers(int state, Int2ObjectMap<Pair<Double, Rule>> map, int depth) {
+         if (map.containsKey(state)) {
+            Rule backpointer = map.get(state).right;
+            List<Tree<Rule>> childTrees = new ArrayList<>();
+
+            for (int child : backpointer.getChildren()) {
+                Tree<Rule> childTree = extractRuleTreeFromBackPointers(child, map, depth + 1);
+
+                childTrees.add(childTree);
+            }
+
+            Tree<Rule> ret = Tree.create(backpointer, childTrees);
+            return ret;
+        } else {
+            D.D(depth, () -> "(no entries for " + getStateForId(state) + ")");
+        }
+
+//        System.err.println(getStateForId(state) + " -> null");
+        return null; // if language is empty, return null
+    }
+    
+    
     private Tree<Integer> extractTreeFromViterbi(int state, Int2ObjectMap<Pair<Double, Rule>> map, int depth) {
         D.D(depth, () -> "etfv " + getStateForId(state));
 
@@ -1174,7 +1251,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
             Rule found = null;
 
             for (Rule rr : tmp) {
-                if (stateRemap.remapForward(r.getParent()) == rr.getParent() && labelRemap.remapForward(r.getLabel()) == rr.getLabel()) {
+                if (stateRemap.remapForward(r.getParent()) == rr.getParent() && labelRemap.remapForward(r.getLabel()) == rr.getLabel() && r.getWeight() == rr.getWeight()) {
                     // children are necessarily the same because both rule sets were found
                     // using getRulesBottomUp with remapped child states
                     found = rr;
@@ -1333,7 +1410,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         ret.stateInterner = stateInterner;
 
         makeAllRulesExplicit();
-
+        
         for (Rule rule : getRuleSet()) {
             ret.addRule(rule);
         }
@@ -2343,10 +2420,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
      *
      * @return
      */
-    public List<Integer> getStatesInBottomUpOrder() {
-        List<Integer> ret = new ArrayList<Integer>();
+    public IntList getStatesInBottomUpOrder() {
+        IntList ret = new IntArrayList();
 //        SetMultimap<Integer, Integer> children = HashMultimap.create(); // children(q) = {q1,...,qn} means that q1,...,qn occur as child states of rules of which q is parent state
-        Set<Integer> visited = new HashSet<Integer>();
+        IntSet visited = new IntOpenHashSet();
 
         // traverse all rules to compute graph
 //        Map<Integer, Map<int[], Set<Rule>>> rules = getAllRules();
@@ -2370,7 +2447,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         return ret;
     }
 
-    private void dfsForStatesInBottomUpOrder(int q, SetMultimap<Integer, Integer> children, Set<Integer> visited, List<Integer> ret) {
+    private void dfsForStatesInBottomUpOrder(int q, SetMultimap<Integer, Integer> children, IntSet visited, IntList ret) {
         if (!visited.contains(q)) {
             visited.add(q);
 
@@ -2941,14 +3018,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
                     }
 
                     int parent = rule.getParent();
-                    if (!agenda.contains(parent)) {
+                    if (!seen.contains(parent)) {
                         agenda.add(parent);//assuming here that no (or at least not too many) constants appear multiple times. Otherwise should check for duplicates
+                        seen.add(parent);
                     }
 
                 }
             }
         }
-        seen.addAll(Sets.newHashSet(agenda));
 
 
         //now iterate
@@ -2972,6 +3049,19 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 int arity = signature.getArity(labelID);
                 if (arity > 0) {
                     List<Iterable<Rule>> foundRules = new ArrayList<>();
+<<<<<<< local
+                    switch (arity) {
+                        case 1:
+                            foundRules.add(getRulesBottomUp(label, new int[]{a}));
+                            break;
+                        case 2:
+                            IntCollection partnerList = bpFinder.getPartners(label, a);
+                            foundRules.add(getRulesBottomUp(label, new int[]{a, a}));
+                                
+                            for (int p : partnerList) {
+                                foundRules.add(getRulesBottomUp(label, new int[]{a, p}));
+                                foundRules.add(getRulesBottomUp(label, new int[]{p, a}));
+=======
                     if (arity == 1) {
                         foundRules.add(getRulesBottomUp(labelID, new int[]{a}));
                     } else {
@@ -2980,6 +3070,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                             sf.addState(a, k);
                             for (int[] children : sf.getPartners(a, k)) {
                                 foundRules.add(getRulesBottomUp(labelID, children));
+>>>>>>> other
                             }
                         }
                     }

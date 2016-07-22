@@ -1,1 +1,7 @@
 .DS_Store
+^nb-configuration\.xml$
+^src/main/java/de/up/ling/irtg/algebra/graph/SGraphBRDecompositionAutomatonBottomUp\.java\.orig$
+^src/main/java/de/up/ling/irtg/automata/TreeAutomaton\.java\.orig$
+^src/main/java/de/up/ling/irtg/algebra/graph/BoundaryRepresentation\.java\.orig$
+^src/main/java/de/up/ling/irtg/algebra/graph/GraphAlgebra\.java\.orig$
+^src/main/java/de/up/ling/irtg/algebra/graph/GraphInfo\.java\.orig$

@@ -83,7 +83,7 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
         });
     }
     
-    private static Tree<String> stripArities(Tree<String> tree) {
+    public static Tree<String> stripArities(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {

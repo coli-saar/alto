@@ -1037,7 +1037,5 @@ public class GraphAlgebra extends EvaluatingAlgebra<SGraph> {
 //        }*/
 //
 //        writer.close();
-//    }
-    
-    
+//    }    
 }

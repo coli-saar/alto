@@ -240,4 +240,34 @@ public class Rule implements Serializable, Comparable<Rule> {
     public boolean isLoop() {
         return getArity() == 1 && children[0] == parent;
     }
+
+    @Override
+    public int compareTo(Rule o) {
+        int comp;
+        
+        comp = Integer.compare(this.getChildren().length, o.getChildren().length);
+        if (comp != 0) {
+            return comp;
+        }
+        
+        comp = Integer.compare(this.getLabel(), o.getLabel());
+        if (comp != 0) {
+            return comp;
+        }
+        
+        for(int i=0;i<this.getChildren().length;++i) {
+            comp = Integer.compare(this.getChildren()[i],o.getChildren()[i]);
+            
+            if(comp != 0) {
+                return comp;
+            }
+        }
+        
+        comp = Integer.compare(this.parent, o.parent);
+        if (comp != 0) {
+            return comp;
+        }
+        
+        return 0;
+    }
 }

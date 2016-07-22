@@ -80,6 +80,15 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
             return getRulesBottomUpFromExplicit(label, childStates);
         } else {
             Set<Rule> ret = new HashSet<Rule>();
+            if(childStates.length != this.signature.getArity(label)){
+                return ret;
+            }
+            /*
+            System.out.println(this.signature.resolveSymbolId(label));
+            for(int i : childStates){
+                System.out.println(this.getStateForId(i));
+            }
+            System.out.println("");*/
 
             // run RHS automaton on given child states
             IntIterable resultStates = rhsAutomaton.run(hom.get(label), remappingHomSymbolToIntFunction, tree -> {

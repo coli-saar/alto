@@ -290,6 +290,14 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
         } else {
             log.info("Optimization was unsuccessful.");
         }
+        
+        /*
+        try {
+            writeWeights(new FileWriter("weights.txt"));
+        } catch (IOException ex) {
+            Logger.getLogger(MaximumEntropyIrtg.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        */
 
         return bfgs.isConverged();
     }
@@ -524,8 +532,11 @@ public class MaximumEntropyIrtg extends InterpretedTreeAutomaton {
                     }
 
                     if (listener != null) {
-                        listener.accept(instanceNum++, n, null);
-//                        listener.update(iteration, instanceNum++);
+                        if( instanceNum % 10 == 0 ) {
+                            listener.accept(instanceNum, n, null);
+                        }
+                        
+                        instanceNum++;
                     }
                 }
 

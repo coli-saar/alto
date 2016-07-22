@@ -5,7 +5,7 @@
  */
 package de.up.ling.irtg.algebra.graph;
 
-import de.up.ling.irtg.script.SGraphParsingEvaluation;
+import de.up.ling.irtg.script.AMR_String_Tree_preprocessing.SGraphParsingEvaluation;
 import de.up.ling.irtg.util.AverageLogger;
 import org.jgrapht.DirectedGraph;
 import java.util.Set;
@@ -157,7 +157,7 @@ public class BoundaryRepresentation {
             GraphNode v = wholeGraph.getNode(vName);
             boolean isSource = isSource(vName, completeGraphInfo);
             for (GraphEdge e : g.edgeSet()) {
-                if (!isSource || isInBoundary(e, completeGraphInfo)) {
+                if (!isSource || isInBoundary(e)) {
                     GraphNode target = e.getTarget();
                     GraphNode source = e.getSource();
                     if (source == v && !(target == v)) {
@@ -221,7 +221,7 @@ public class BoundaryRepresentation {
         return sourceToNode[s];
     }
 
-    boolean isInBoundary(GraphEdge e, GraphInfo completeGraphInfo) {
+    boolean isInBoundary(GraphEdge e) {
         return inBoundaryEdges.contains(e, completeGraphInfo);
     }
 
@@ -571,7 +571,7 @@ public class BoundaryRepresentation {
      * Checks this via the internally stored GraphInfo, by testing whether all edges incident to source nodes are in the subgraph.
      * @return
      */
-    boolean isCompleteGraph() {
+    public boolean isCompleteGraph() {
         for (int source = 0; source < sourceToNode.length; source++) {
             if (sourceToNode[source] != -1) {
                 for (int edge : completeGraphInfo.getIncidentEdges(sourceToNode[source])) {
@@ -760,7 +760,7 @@ public class BoundaryRepresentation {
         return stringRep;
     }
 
-    private IntList getAssignedSources(int vNr) {
+    IntList getAssignedSources(int vNr) {
         IntList ret = new IntArrayList();
         for (int source = 0; source < sourceToNode.length; source++) {
             if (sourceToNode[source] == vNr) {
@@ -858,6 +858,25 @@ public class BoundaryRepresentation {
             }
         }
         return ret;
+    }
+    
+    private IntList allSourceIDs;
+    /**
+     * Returns all source names used in this subgraph. Is chached,
+     * so it may not be modified!.
+     * @return
+     */
+    IntList getAllSourceIDs() {
+        if (allSourceIDs == null) {
+            allSourceIDs = new IntArrayList();
+            for (int source = 0; source<sourceToNode.length; source++) {
+                if (sourceToNode[source]>=0) {
+                    allSourceIDs.add(source);
+                }
+            }
+        }
+        
+        return allSourceIDs;
     }
     
     private IntList sortedBoundaryEdges;

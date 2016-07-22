@@ -125,6 +125,10 @@ public class GraphInfo {
                 edgeTargetList.add(vNr);
                 edgesBySourceAndTarget[vNr][vNr] = edgeId;
                 edgeList.add(edgeId);
+                GraphNode dummyNode =  new GraphNode(intToNodename[vNr], null);
+                GraphEdge actualEdge = new GraphEdge(dummyNode, dummyNode);
+                actualEdge.setLabel(vLabel);
+                edgeToId.put(actualEdge, edgeId);
                 edgeId++;
             }
         }
@@ -137,7 +141,7 @@ public class GraphInfo {
             allEdges[j] = edgeList.get(j);
         }
         idToEdge = new GraphEdge[edgeList.size()];
-        for (GraphEdge e : graph.getGraph().edgeSet()) {
+        for (GraphEdge e : edgeToId.keySet()) {
             idToEdge[edgeToId.get(e)] = e;
         }
 
@@ -457,8 +461,5 @@ public class GraphInfo {
      */
     public int dist(int vNr1, int vNr2) {
         return pwsp.getDistance(vNr1, vNr2);
-    }
-
-    
-    
+    }   
 }

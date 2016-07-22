@@ -118,7 +118,7 @@ public class GuiUtils {
             try {
                 final E result = worker.compute(listener);
                 final long time = System.nanoTime() - start;
-
+                
                 SwingUtilities.invokeLater(() -> {
                     andThen.accept(result, time);
                 });

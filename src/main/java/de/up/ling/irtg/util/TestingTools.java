@@ -162,6 +162,16 @@ public class TestingTools {
         return Arrays.asList(s.split("\\s+"));
     }
 
+    /**
+     * 
+     * @param t
+     * @return
+     * @throws IOException 
+     */
+    public static TreeAutomaton<String> automatonFromItsString(TreeAutomaton t) throws IOException{
+        return pa(t.toString());
+    }
+
     // multiplies the item weight by a factor given by the rule label
     public static class MultiplyMapItemEvaluator implements ItemEvaluator<Void> {
         private Map<String, Double> factors;
