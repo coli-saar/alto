@@ -23,9 +23,6 @@ import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.laboratory.OperationAnnotation;
-import de.up.ling.irtg.siblingfinder.SiblingFinderIntersection;
-import de.up.ling.irtg.siblingfinder.SiblingFinderInvhom;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.Logging;
@@ -33,8 +30,6 @@ import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeBottomUpVisitor;
 import de.up.ling.tree.TreeVisitor;
-import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
-import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import java.io.*;
@@ -108,7 +103,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      *
      * @return
      */
-    @OperationAnnotation(code = "auto")
     public TreeAutomaton<String> getAutomaton() {
         return automaton;
     }
@@ -129,7 +123,6 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param interp
      * @return
      */
-    @OperationAnnotation(code="interp")
     public Interpretation getInterpretation(String interp) {
         return interpretations.get(interp);
     }
@@ -217,21 +210,6 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return parseInputObjects(inputs);
     }
-    
-    @OperationAnnotation(code = "parseSimple")
-    public TreeAutomaton parseSimple(String interpretationName, Object input) throws ParserException {
-        Map<String, Object> inputs = new HashMap<>();
-        inputs.put(interpretationName, input);
-        return parseInputObjects(inputs);
-    }
-    
-    @OperationAnnotation(code = "parseSimpleWithSiblingFinder")
-    public TreeAutomaton parseWithSiblingFinder(String interpretationName, Object input) throws ParserException {
-        SiblingFinderInvhom invhom = new SiblingFinderInvhom(interpretations.get(interpretationName).getAlgebra().decompose(input), interpretations.get(interpretationName).getHomomorphism());
-        SiblingFinderIntersection inters = new SiblingFinderIntersection((ConcreteTreeAutomaton)automaton, invhom);
-        inters.makeAllRulesExplicit();
-        return inters.seenRulesAsAutomaton();
-    }
 
     /**
      * Parses a map of input objects to a parse chart. The process is as in
@@ -262,7 +240,7 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return ret;
     }
-    
+
     /**
      * Decodes a parse chart to a term chart over some output algebra. The term
      * chart describes a language of the terms over the specified output
@@ -884,17 +862,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     public static InterpretedTreeAutomaton read(InputStream r) throws IOException, CodecParseException {
         return new IrtgInputCodec().read(r);
     }
-    
-    
-    @OperationAnnotation(code = "irtgFromString")
-    public static InterpretedTreeAutomaton fromString(String s) throws IOException, CodecParseException {
-        return read(new ByteArrayInputStream(s.getBytes("UTF-8")));
-    }
-    
-    @OperationAnnotation(code = "irtgFromPath")
-    public static InterpretedTreeAutomaton fromPath(String path) throws IOException, CodecParseException {
-        return read(new FileInputStream(path));
-    }
 
     /**
      * Creates an empty IRTG for the given algebras. The IRTG contains a tree
@@ -915,7 +882,6 @@ public class InterpretedTreeAutomaton implements Serializable {
     }
     
     
-    @OperationAnnotation(code = "filter")
     public InterpretedTreeAutomaton filterForAppearingConstants(String interpName, Object input) {
         
         TreeAutomaton decompositionAutomaton = getInterpretation(interpName).getAlgebra().decompose(input);
@@ -995,105 +961,6 @@ public class InterpretedTreeAutomaton implements Serializable {
         
         return filteredIRTG;
         
-    }
-    
-    @OperationAnnotation(code = "filterBinarized")
-    public InterpretedTreeAutomaton filterBinarizedForAppearingConstants(String interpName, Object input) {
-        
-        TreeAutomaton decompositionAutomaton = getInterpretation(interpName).getAlgebra().decompose(input);
-        
-        //clone automaton signature
-        Signature autoSig = (Signature)automaton.getSignature().clone();
-        
-        InterpretedTreeAutomaton filteredIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>(autoSig));
-        
-        //add states to automaton
-        for (int stateID : automaton.getStateInterner().getKnownIds()) {
-            filteredIRTG.automaton.getStateInterner().addObjectWithIndex(stateID, automaton.getStateInterner().resolveId(stateID));
-        }
-        
-        //getting matching rules
-        Iterable<Rule> matchingRules = getConstantMatchingRulesWithCaching(interpName, decompositionAutomaton);
-        
-        Set<String> allowedLabels = new HashSet<>();
-        for (Rule rule : matchingRules) {
-            allowedLabels.add(rule.getLabel(automaton));
-        }
-        
-        Set<String> forbiddenStems = new HashSet<>();
-        for (Rule rule: automaton.getRuleSet()) {
-            if (!allowedLabels.contains(rule.getLabel(automaton))) {
-                forbiddenStems.add(getBinarizationStem(rule.getLabel(automaton)));
-            }
-        }
-        
-        //add rules and labels to automaton
-        for (Rule matchingRule : matchingRules) {
-            if (!forbiddenStems.contains(getBinarizationStem(matchingRule.getLabel(automaton)))) {
-                ((ConcreteTreeAutomaton)filteredIRTG.automaton).addRule(matchingRule);
-            }
-        }
-        
-        //set final states
-        for (int finalState : automaton.getFinalStates()) {
-            ((ConcreteTreeAutomaton)filteredIRTG.automaton).addFinalState(finalState);
-        }
-        
-        //make homomorphisms
-        Map<String, Interpretation> newInterps = new HashMap<>();
-        for (Map.Entry<String, Interpretation> nameAndInterp : getInterpretations().entrySet()) {
-            Interpretation interp = nameAndInterp.getValue();
-            Signature interpSig = (Signature)interp.getHomomorphism().getTargetSignature().clone();
-            Homomorphism newHom = new Homomorphism(autoSig, interpSig);
-            for (Rule rule : filteredIRTG.automaton.getRuleSet()) {
-                newHom.add(rule.getLabel(), interp.getHomomorphism().get(rule.getLabel()));
-            }
-            newInterps.put(nameAndInterp.getKey(), new Interpretation(interp.getAlgebra(), newHom));
-        }
-        
-        
-        //add interpretations
-        filteredIRTG.addAllInterpretations(newInterps);
-        
-        return filteredIRTG;
-        
-    }
-    
-    private Iterable<Rule> getConstantMatchingRulesWithCaching(String interpName, TreeAutomaton decompositionAutomaton) {
-        Homomorphism hom = getInterpretation(interpName).getHomomorphism();
-        List<Rule> ret = new ArrayList<>();
-        Int2BooleanMap constCacher = new Int2BooleanOpenHashMap();
-        for (Rule rule : automaton.getRuleSet()) {
-            //check if constant rules are in decomposition automaton
-            boolean allConstantsFound = true;
-            for (HomomorphismSymbol label : hom.get(rule.getLabel()).getLeafLabels()) {
-                if (label.isConstant()) {
-                    if (constCacher.containsKey(label.getValue())) {
-                        if (!constCacher.get(label.getValue())) {
-                            allConstantsFound = false;
-                            break;
-                        } //else continue looking
-                    } else {
-                        if (decompositionAutomaton.getRulesBottomUp(label.getValue(), new int[]{}).iterator().hasNext()) {
-                            constCacher.put(label.getValue(), true);
-                        } else {
-                            constCacher.put(label.getValue(), false);
-                            allConstantsFound = false;
-                            break;
-                        }
-                    }
-                }
-            }
-            if (allConstantsFound) {
-                //System.out.println("All constants found!");
-                ret.add(rule);
-            }
-        }
-        return ret;
-    }
-    
-    private static String getBinarizationStem(String ruleLabel) {
-        return ruleLabel.split("_br")[0];
     }
     
     

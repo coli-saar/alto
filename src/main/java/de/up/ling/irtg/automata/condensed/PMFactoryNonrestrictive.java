@@ -22,8 +22,6 @@ import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.IntIterable;
-import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
@@ -35,7 +33,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Currently not working properly. Use PMFactoryRestrictive instead.
+ * Currently not working.
  * @author groschwitz
  */
 class PMFactoryNonrestrictive<State> extends PatternMatchingInvhomAutomatonFactory<Set<String>, State>{
@@ -221,6 +219,10 @@ class PMFactoryNonrestrictive<State> extends PatternMatchingInvhomAutomatonFacto
         }
     }
 
+    @Override
+    protected int getLabelSetIDForMatcherStartStateID(int matcherStateID) {
+        return startStateIdToLabelSetID.get(matcherStateID);
+    }
 
     @Override
     protected Set<String> getMatcherStateForID(int matcherStateID) {
@@ -229,16 +231,6 @@ class PMFactoryNonrestrictive<State> extends PatternMatchingInvhomAutomatonFacto
 
     @Override
     protected List<int[]> forAllMatches(List<int[]> prevList, int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom, Consumer<int[]> fn) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    protected IntIterable getLabelSetIDsForMatcherStartStateID(int matcherStateID) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
-
-    @Override
-    protected IntList getStartStateIDs() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     

@@ -9,7 +9,6 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
-import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.tree.Tree;
@@ -50,7 +49,6 @@ public class CondensedNondeletingInverseHomAutomaton<State> extends CondensedTre
     private IntCollection validLabelSetIDs;
     private Int2ObjectMap<IntSet> statesToNullaryLabelSets; // maps a parentstate that derives no children to the coresponding labelsetids
 
-    @OperationAnnotation(code = "condensedNondeletingInvhom")
     public CondensedNondeletingInverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
         assert hom.isNonDeleting();

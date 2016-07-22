@@ -7,7 +7,6 @@ package de.up.ling.irtg.automata.condensed;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.hom.HomomorphismSymbol;
@@ -16,7 +15,6 @@ import de.up.ling.irtg.util.ArrayInt2IntMap;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntIterable;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -37,9 +35,6 @@ import java.util.function.Consumer;
 public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State> {
 
     
-    
-    
-    
     protected IntList startStateIDs;
     protected final Homomorphism hom;
     private Tree<HomomorphismSymbol>[] rightmostVariableForLabelSetID;
@@ -50,7 +45,7 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
     //private Map<String, Set<Rule>> matcherConstantRulesByNodeLabel;       idea for later!
     //private Map<String, Set<Rule>> matcherConstantRulesWithoutNodeLabelsByTerm;
     //private Int2ObjectMap<IntSet> rhsState2MatchingStartStates;
-    protected boolean computeCompleteMatcher = true;
+    protected boolean computeCompleteMatcher = false;
     public Writer logWriter;
     public String logTitle = "";
 
@@ -178,7 +173,6 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
             intersectionAutomaton = intersectWithMatcherTopDown(rhs);
         }
 
-        startStateIDs = getStartStateIDs();
         
         return getInvhomFromMatchingIntersection(intersectionAutomaton, rhs);
     }
@@ -200,7 +194,7 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
     }
 
     
-    protected abstract IntIterable getLabelSetIDsForMatcherStartStateID(int matcherStateID);
+    protected abstract int getLabelSetIDForMatcherStartStateID(int matcherStateID);
     protected abstract MatcherState getMatcherStateForID(int matcherStateID);
     
     
@@ -232,8 +226,6 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
             return hom.getLabelSetByLabelSetID(labelSetID);
         }
     }
-    
-    protected abstract IntList getStartStateIDs();
 
     private class LazyCondensedInvhomAutomaton extends CondensedTreeAutomaton<State> {
 
@@ -262,37 +254,36 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
                     //int innerIntersStateID = intersectionAutomaton.getIdForState(new ImmutablePair(restrictiveMatcher.getStateForId(matcherStateIDUnprocessed), intersState.getRight()));
                     if (intersectionAutomaton.getRulesTopDown(intersStateID).iterator().hasNext()) {//this seems inefficient. But maybe not so bad since intersectionAutomaton is explicit?
 
-                        for (int labelSetID : getLabelSetIDsForMatcherStartStateID(matcherStateIDUnprocessed)) {
-                            if (labelSetID >= 1) {
-                                Tree<HomomorphismSymbol> term = hom.getByLabelSetID(labelSetID);
-                                int numVariables = arityForLabelSetID.get(labelSetID);
+                        int labelSetID = getLabelSetIDForMatcherStartStateID(matcherStateIDUnprocessed);
+                        if (labelSetID >= 1) {
+                            Tree<HomomorphismSymbol> term = hom.getByLabelSetID(labelSetID);
+                            int numVariables = arityForLabelSetID.get(labelSetID);
 
-                                if (numVariables == 0) {
-                                    ret.add(new CondensedRule(parentState, labelSetID, new int[0], 1));
-                                } else {
-                                    /*int[] childStates = new int[numVariables];
-                                     forAllMatchesRestrictive(intersStateID, term, rightmostVariableForLabelSetID[labelSetID], childStates, rhs, intersectionAutomaton, mapperIntersToHom, cs -> {
-                                     //                        System.err.println("match! " + Arrays.stream(cs).mapToObj(rhs::getStateForId).collect(Collectors.toList()));
-                                     ret.addRule(new CondensedRule(rhsStateID, labelSetID, cs.clone(), 1));
-                                     });*/
-                                    int[] seed = new int[numVariables];
-                                    List<int[]> seedList = new ArrayList<>();
-                                    seedList.add(seed);
-                                    forAllMatches(seedList, intersStateID, term, rightmostVariableForLabelSetID[labelSetID], rhs, intersectionAutomaton, mapperIntersToHom,
-                                                                childStates -> {
-                                                                    ret.add(new CondensedRule(parentState, labelSetID, childStates, 1));
-                                                                        });
+                            if (numVariables == 0) {
+                                ret.add(new CondensedRule(parentState, labelSetID, new int[0], 1));
+                            } else {
+                                /*int[] childStates = new int[numVariables];
+                                 forAllMatchesRestrictive(intersStateID, term, rightmostVariableForLabelSetID[labelSetID], childStates, rhs, intersectionAutomaton, mapperIntersToHom, cs -> {
+                                 //                        System.err.println("match! " + Arrays.stream(cs).mapToObj(rhs::getStateForId).collect(Collectors.toList()));
+                                 ret.addRule(new CondensedRule(rhsStateID, labelSetID, cs.clone(), 1));
+                                 });*/
+                                int[] seed = new int[numVariables];
+                                List<int[]> seedList = new ArrayList<>();
+                                seedList.add(seed);
+                                forAllMatches(seedList, intersStateID, term, rightmostVariableForLabelSetID[labelSetID], rhs, intersectionAutomaton, mapperIntersToHom,
+                                                            childStates -> {
+                                                                ret.add(new CondensedRule(parentState, labelSetID, childStates, 1));
+                                                                    });
 
-        //                            forAllMatchesRestrictive2(intersStateID, term, null, seed, rhs, intersectionAutomaton, mapperIntersToHom, 
-        //                                                        childStates -> ret.addRule(new CondensedRule(rhsStateID, labelSetID, childStates, 1)));
+    //                            forAllMatchesRestrictive2(intersStateID, term, null, seed, rhs, intersectionAutomaton, mapperIntersToHom, 
+    //                                                        childStates -> ret.addRule(new CondensedRule(rhsStateID, labelSetID, childStates, 1)));
 
-                                    /*StringJoiner sj = new StringJoiner(", ", "{", "}");
-                                     for (int[] array : res) {
-                                     sj.add(Arrays.toString(array));
-                                     }
-                                     System.err.println(sj);*/
-                                    //System.err.println(res.size());
-                                }
+                                /*StringJoiner sj = new StringJoiner(", ", "{", "}");
+                                 for (int[] array : res) {
+                                 sj.add(Arrays.toString(array));
+                                 }
+                                 System.err.println(sj);*/
+                                //System.err.println(res.size());
                             }
                         }
                     }
@@ -357,54 +348,172 @@ public abstract class PatternMatchingInvhomAutomatonFactory<MatcherState, State>
         }
     }
     
-    protected List<int[]> forAllMatches(List<int[]> prevList, int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom, Consumer<int[]> fn) {
-//      System.err.println("dfs for " + rhsAuto.getStateForId(rhsState) + "@" + nondetMatcher.getStateForId(matcherState) + " at " + HomomorphismSymbol.toStringTree(term, hom.getTargetSignature()));
+    protected abstract List<int[]> forAllMatches(List<int[]> prevList, int intersState, Tree<HomomorphismSymbol> term, Tree<HomomorphismSymbol> rightmostVariable, TreeAutomaton<State> rhsAuto, TreeAutomaton<Pair<String, State>> intersectionAuto, SignatureMapper mapperintersToHom, Consumer<int[]> fn);
 
-        if (intersState < 1) {
-            System.err.println("Terrible error in PatternMatchingInvhomAutomatonFactory#forAllMatchesRestrictive: intersState is " + intersState);
-        }
-
-        if (term.getChildren().isEmpty()) {
-            if (term.getLabel().isVariable()) {
-//                System.err.println("var " + term.getLabel().getValue() + " -> " + rhsAuto.getStateForId(rhsState));
-
-                List<int[]> ret = new ArrayList<>();
-
-                for (int[] prev : prevList) {
-                    int[] newArray = prev.clone();
-                    newArray[term.getLabel().getValue()] = rhsAuto.getIdForState(intersectionAuto.getStateForId(intersState).getRight());
-                    if (term == rightmostVariable) {
-                        fn.accept(newArray);
-                    } else {
-                        ret.add(newArray);
-                    }
-                }
-
-                return ret;
-            } else {
-                return prevList;
-            }
-        } else {
-
-//            System.err.println("term label is " + term.getLabel() + ", value = " + term.getLabel().getValue() + ", str=" + hom.getTargetSignature().resolveSymbolId(term.getLabel().getValue()));
-//            System.err.println("  in rhsauto sig: " + rhsAuto.getSignature().resolveSymbolId(term.getLabel().getValue()));
-            Iterable<Rule> rules = intersectionAuto.getRulesTopDown(mapperintersToHom.remapBackward(term.getLabel().getValue()), intersState);
-            /*for (Rule rule : rules) {
-             for (int child : rule.getChildren()) {
-             System.err.println(intersectionAuto.getStateForId(child));
-             }
-             }*/
-            List<int[]> ret = new ArrayList<>();
-            for (Rule rule : rules) {
-                List<int[]> tempList = prevList;
-                for (int i = 0; i < rule.getChildren().length; i++) {
-                    tempList = forAllMatches(tempList, rule.getChildren()[i], term.getChildren().get(i), rightmostVariable, rhsAuto, intersectionAuto, mapperintersToHom, fn);
-                }
-                ret.addAll(tempList);
-            }
-            return ret;
-        }
-    }
     
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+    
+
+    
+    /*public static void main(String[] args) throws Exception {
+
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrgTestingCleanS.irtg"));
+        Homomorphism hom = irtg.getInterpretation("graph").getHomomorphism();
+        GraphAlgebra alg = (GraphAlgebra) irtg.getInterpretation("graph").getAlgebra();
+
+        PatternMatchingInvhomAutomatonFactory f = new PMFactoryRestrictive(hom, alg);
+        f.computeCompleteMatcher = true;
+        f.computeMatcherFromHomomorphism();
+
+        System.err.println(alg.getSignature());
+        for (int labelSetID = 1; labelSetID <= hom.getMaxLabelSetID(); labelSetID++) {
+            System.err.println(hom.getByLabelSetID(labelSetID));
+        }
+        String ex0 = "(g<root >/ go-01 :ARG0 (b / boy))";
+        String ex1 = "(w<root> / want-01  :ARG0 (b / boy)  :ARG1 (g<vcomp> / go-01 :ARG0 b))";
+        String ex2 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (bel / believe-01 :ARG0 (g / girl) :ARG1 (l / like-01 :ARG0 (b2 / boy) :ARG1 (g2 / girl))) :dummy g)";
+        String ex3 = "(w<root> / want-01 :ARG0 (b / boy) :ARG1 (go / go-01 :ARG0 (g / girl)) :dummy g)";
+        String input = ex2;
+        SGraph sgraph = alg.parseString(input);
+
+        TreeAutomaton<BoundaryRepresentation> rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
+
+        /*System.err.println(rhs);
+         int ruleCount = 0;
+         Iterator it = rhs.getRuleSet().iterator();
+         while (it.hasNext()) {
+         it.next();
+         ruleCount++;
+         }
+         System.err.println("rule count: " + ruleCount);*/
+        /*CondensedTreeAutomaton<BoundaryRepresentation> invhom = f.invhom(rhs);
+        //System.err.println(f.restrictiveMatcher);
+        //System.err.println(f.matcherChild2Rule);
+        TreeAutomaton finalIntAut = new CondensedIntersectionAutomaton<String, BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
+        //new IntersectionAutomaton(irtg.getAutomaton(), invhom); 
+
+        System.err.println("INVHOM:\n" + invhom);
+        System.err.println("FINALINTERSECTION:\n" + finalIntAut);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("graph", input);
+        TreeAutomaton chart = irtg.parse(map);
+        System.err.println("IRTG parse:\n" + chart);
+
+        int warmupIterations = 10000;
+        for (int i = 0; i < warmupIterations; i++) {
+            f = new PMFactoryRestrictive(hom, alg);
+            f.computeCompleteMatcher = true;
+            f.computeMatcherFromHomomorphism();
+        }
+
+        f.computeCompleteMatcher = false;
+        f.initialize(true);
+        for (int i = 0; i < warmupIterations; i++) {
+            rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
+            invhom = f.invhom(rhs);
+            finalIntAut = new CondensedIntersectionAutomaton<String, BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
+        }
+
+        f.computeCompleteMatcher = true;
+        f.initialize(true);
+        for (int i = 0; i < warmupIterations; i++) {
+            rhs = alg.decompose(alg.parseString(input), SGraphBRDecompositionAutomatonBottomUp.class);
+            invhom = f.invhom(rhs);
+            finalIntAut = new CondensedIntersectionAutomaton<String, BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
+        }
+
+        CpuTimeStopwatch sw = new CpuTimeStopwatch();
+        int setupIterations = 0;
+        int iterations = 100000;
+        int standardIterations = 100000;
+
+        sw.record(0);
+        for (int i = 0; i < setupIterations; i++) {
+            f = new PMFactoryRestrictive(hom, alg);
+            f.computeCompleteMatcher = true;
+            f.initialize(true);
+        }
+
+        sw.record(1);
+        f.computeCompleteMatcher = false;
+        f.initialize(true);
+        for (int i = 0; i < iterations; i++) {
+            rhs = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class);
+            invhom = f.invhom(rhs);
+            finalIntAut = new CondensedIntersectionAutomaton<String, BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
+        }
+
+        sw.record(2);
+        f.computeCompleteMatcher = true;
+        f.initialize(true);
+        for (int i = 0; i < standardIterations; i++) {
+            rhs = alg.decompose(sgraph, SGraphBRDecompositionAutomatonBottomUp.class);
+            invhom = f.invhom(rhs);
+            finalIntAut = new CondensedIntersectionAutomaton<String, BoundaryRepresentation>(irtg.getAutomaton(), invhom, irtg.getAutomaton().getSignature().getIdentityMapper());
+        }
+        sw.record(3);
+        System.err.println(iterations + "/" + standardIterations + " iterations:");
+        sw.printMilliseconds("create pattern matching automaton (" + setupIterations + " iterations)", "invhom via pattern matching lazy (" + iterations + " iterations)", "invhom via pattern matching complete (" + standardIterations + " iterations)");
+
+        /*CpuTimeStopwatch sw = new CpuTimeStopwatch();
+         sw.record(0);
+
+         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream(args[0]));
+         Homomorphism hom = irtg.getInterpretation("string").getHomomorphism();
+         Algebra<List<String>> alg = irtg.getInterpretation("string").getAlgebra();
+
+         sw.record(1);
+
+         PatternMatchingInvhomAutomatonFactory f = new PatternMatchingInvhomAutomatonFactory(hom);
+         f.computeMatcherFromHomomorphism();
+
+         sw.record(2);
+         sw.printMilliseconds("load", "prepare");
+
+         int numSent = 0;
+         BufferedReader buf = new BufferedReader(new FileReader(args[1]));
+         do {
+         String line = buf.readLine();
+
+         if (line == null) {
+         break;
+         }
+
+         List<String> sent = alg.parseString(line);
+         TreeAutomaton decomp = alg.decompose(sent);
+
+         System.err.println("\n" + (numSent + 1) + " - " + sent.size() + " words");
+
+         CpuTimeStopwatch w2 = new CpuTimeStopwatch();
+         w2.record(0);
+
+         CondensedTreeAutomaton invhom = f.invhom(decomp);
+         w2.record(1);
+
+         TreeAutomaton chart = new CondensedViterbiIntersectionAutomaton(irtg.getAutomaton(), invhom, new IdentitySignatureMapper(invhom.getSignature()));
+         chart.makeAllRulesExplicit();
+
+         w2.record(2);
+            
+         System.err.println(chart.viterbi());
+            
+         w2.record(3);
+
+         w2.printMilliseconds("invhom", "intersect", "viterbi");
+
+         numSent++;
+         } while (true);*/
+    //}
 }

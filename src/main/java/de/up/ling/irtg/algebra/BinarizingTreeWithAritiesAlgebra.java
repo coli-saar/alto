@@ -4,8 +4,10 @@
  */
 package de.up.ling.irtg.algebra;
 
+import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
+import java.util.List;
 import javax.swing.JComponent;
 
 /**
@@ -26,6 +28,11 @@ public class BinarizingTreeWithAritiesAlgebra extends BinarizingAlgebra<Tree<Str
     @Override
     public JComponent visualize(Tree<String> object) {
         return new TreePanel(object);
+    }
+
+    @Override
+    public List<Evaluator> getEvaluationMethods() {
+        return new TreeAlgebra().getEvaluationMethods(); //To change body of generated methods, choose Tools | Templates.
     }
     
     

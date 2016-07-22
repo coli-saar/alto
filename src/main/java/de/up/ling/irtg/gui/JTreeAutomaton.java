@@ -203,7 +203,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
     public void setParsingEnabled(boolean enabled) {
         miParse.setEnabled(enabled);
-        miParse1.setEnabled(enabled);
         miBulkParse.setEnabled(enabled);
 
         miTrainEM.setEnabled(enabled);
@@ -253,7 +252,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         jMenu4 = new javax.swing.JMenu();
         miShowLanguage = new javax.swing.JMenuItem();
         miParse = new javax.swing.JMenuItem();
-        miParse1 = new javax.swing.JMenuItem();
         miBulkParse = new javax.swing.JMenuItem();
         miBinarize = new javax.swing.JMenuItem();
         jSeparator3 = new javax.swing.JPopupMenu.Separator();
@@ -392,17 +390,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
             }
         });
         jMenu4.add(miParse);
-
-        miParse1.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_I, java.awt.event.InputEvent.META_MASK));
-        miParse1.setText("Parse with Sibling Finder ...");
-        miParse1.setToolTipText("");
-        miParse1.setEnabled(false);
-        miParse1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                miParseSFActionPerformed(evt);
-            }
-        });
-        jMenu4.add(miParse1);
 
         miBulkParse.setText("Bulk Parse ...");
         miBulkParse.setEnabled(false);
@@ -909,64 +896,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
         automaton.analyze();
     }//GEN-LAST:event_jMenuItem3ActionPerformed
 
-    private void miParseSFActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miParseSFActionPerformed
-        if (irtg != null) {
-            List<Boolean> hasOptions = new ArrayList<Boolean>(annotationsInOrder.size());
-            for (String intp : annotationsInOrder) {
-                hasOptions.add(irtg.getInterpretation(intp).getAlgebra().hasOptions());
-            }
-
-            JInputForm jif = JInputForm.showForm(this, annotationsInOrder, hasOptions);
-            jif.setVisible(true);
-
-            final Map<String, String> inputs = jif.getInputValues();
-            final Map<String, String> options = jif.getOptions();
-
-            if (inputs != null) {
-                Map.Entry<String, String> theOneNonemptyInput = null;
-                for (Map.Entry<String, String> entry : inputs.entrySet()) {
-                    if (entry.getValue() != null && !entry.getValue().equals("")) {
-                        if (theOneNonemptyInput == null) {
-                            theOneNonemptyInput = entry;
-                        } else {
-                            GuiMain.log("Error: sibling-finder parsing only possible with exactly one input value");
-                            return;
-                        }
-                    }
-                }
-                if (theOneNonemptyInput == null) {
-                    GuiMain.log("Error: sibling-finder parsing only possible with exactly one input value");
-                    return;
-                }
-                final Map.Entry<String, String> e = theOneNonemptyInput;
-                GuiUtils.withProgressBar(this, "Parsing progress", "Parsing ...",
-                        listener -> {
-                            GuiUtils.setGlobalListener(listener);
-
-                            for (String intp : options.keySet()) {
-                                irtg.getInterpretation(intp).getAlgebra().setOptions(options.get(intp));
-                            }
-
-                            
-                            TreeAutomaton chart = irtg.parseWithSiblingFinder(e.getKey(), irtg.parseString(e.getKey(), e.getValue()));
-
-                            GuiUtils.setGlobalListener(null);
-                            return chart;
-                        },
-                        (chart, time) -> {
-                            GuiMain.log("Computed parse chart using sibling finders, for " + inputs + ", " + Util.formatTime(time));
-                            if (chart != null) {
-                                JTreeAutomaton jta = new JTreeAutomaton(chart, null);
-                                jta.setIrtg(irtg);
-                                jta.setTitle("Parse chart: " + inputs);
-                                jta.pack();
-                                jta.setVisible(true);
-                            }
-                        });
-            }
-        }
-    }//GEN-LAST:event_miParseSFActionPerformed
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu debugMenu;
     private javax.swing.table.DefaultTableModel entries;
@@ -993,7 +922,6 @@ public class JTreeAutomaton extends javax.swing.JFrame {
     private javax.swing.JMenuItem miOpenAutomaton;
     private javax.swing.JMenuItem miOpenIrtg;
     private javax.swing.JMenuItem miParse;
-    private javax.swing.JMenuItem miParse1;
     private javax.swing.JMenuItem miQuit;
     private javax.swing.JMenuItem miSaveAutomaton;
     private javax.swing.JMenuItem miSaveIrtg;

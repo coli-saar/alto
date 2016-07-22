@@ -8,6 +8,7 @@ package de.up.ling.irtg.algebra.graph;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.StringAlgebra;
+import de.up.ling.irtg.automata.BinaryPartnerFinder;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.index.BinaryBottomUpRuleIndex;
@@ -16,7 +17,6 @@ import de.up.ling.irtg.automata.index.RuleStore;
 import de.up.ling.irtg.codec.BolinasGraphOutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
-import de.up.ling.irtg.siblingfinder.SiblingFinder;
 import de.up.ling.irtg.util.AverageLogger;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
@@ -24,6 +24,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntCollection;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -367,379 +368,72 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return mergeLabelID;
     }
     
+    @Override
+    public BinaryPartnerFinder makeNewBinaryPartnerFinder() {
+        if (isAlgebraPure()) {
+            return new MPFBinaryPartnerFinder(this); //To change body of generated methods, choose Tools | Templates.
+        } else {
+            return new ImpureMPFBinaryPartnerFinder(this);
+        }
+    }
 
     @Override
     public Iterable<Rule> getRulesTopDown(int labelId, int parentState) {
         throw new UnsupportedOperationException("Not supported."); //To change body of generated methods, choose Tools | Templates.
     }
     
-    
-    
-    @Override
-    public SiblingFinder makeNewPartnerFinder(int labelID) {
-        if (labelID == this.getMergeLabelID()) {
-            return new MergePartnerFinder();
-        } else {
-            return super.makeNewPartnerFinder(labelID);
-        }
-    }
-    
-    
-    private SinglesideMergePartnerFinder makeNewSinglesideMergePartnerFinder() {
-        if (isAlgebraPure()) {
-            return new DynamicMergePartnerFinder(0 , this.completeGraphInfo.getNrSources(), this.completeGraphInfo.getNrNodes(), this); //To change body of generated methods, choose Tools | Templates.
-        } else {
-            System.err.println("WARNING: impure algebra found, falling back on SetPartnerFinder (default)");
-            return new StorageMPF(this);
-            //return new ImpureMPFBinaryPartnerFinder(this);
-        }
-    }
-    
-    private class MergePartnerFinder extends SiblingFinder {
-        private final SinglesideMergePartnerFinder bpfLeft;
-        private final SinglesideMergePartnerFinder bpfRight;
-
-        public MergePartnerFinder() {
-            super(2);
-            bpfLeft = makeNewSinglesideMergePartnerFinder();
-            bpfRight = makeNewSinglesideMergePartnerFinder();
+    private class MPFBinaryPartnerFinder extends BinaryPartnerFinder{
+        MergePartnerFinder mpf;
+        BitSet seen = new BitSet();
+        public MPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
+            mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
         }
         
-
-
-
         @Override
-        public String toString() {
-            return "\n"+bpfLeft.toString()+"\n"+bpfRight.toString()+"\n";
-        }
-
-        @Override
-        public List<int[]> getPartners(int stateID, int pos) {
-            List<int[]> ret = new ArrayList<>();
-            if (pos == 0) {
-                for (int partner : bpfRight.getAllMergePartners(stateID)) {
-                    ret.add(new int[]{stateID, partner});
-                }
+        public IntCollection getPartners(int labelID, int stateID) {
+            if (labelID == getMergeLabelID()) {
+                return mpf.getAllMergePartners(stateID);
             } else {
-                for (int partner : bpfLeft.getAllMergePartners(stateID)) {
-                    ret.add(new int[]{partner, stateID});
-                }
-            }
-            return ret;
-        }
-
-        @Override
-        protected void performAddState(int stateID, int pos) {
-            if (pos == 0) {
-                bpfLeft.insert(stateID);
-            } else if (pos == 1) {
-                bpfRight.insert(stateID);
-            } else {
-                System.err.println("Error: tried to at a state at position "+pos+" to the arity-2 merge partner finder");
+                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
             }
         }
+
+        @Override
+        public void addState(int stateID) {
+            if (!seen.get(stateID)) {
+                mpf.insert(stateID);
+                seen.set(stateID);
+            }
+        }
+        
     }
     
-    //original MergePartnerFinder
-    private static interface SinglesideMergePartnerFinder {
-        /**
-         * stores the graph state represented by the int, for future reference
-         * @param graph
-         */
-        public abstract void insert(int graph);
-
-        /**
-         * returns all graph states that are potential merge partners for the parameter graph.
-         * @param graph
-         * @return
-         */
-        public abstract IntList getAllMergePartners(int graph);
-
-        /**
-         * prints all stored graphs, and the structure how they are stored, via System.out
-         * @param prefix
-         * @param indent
-         */
-        public abstract void print(String prefix, int indent);
-
-    }
-    
-    private static class DynamicMergePartnerFinder implements SinglesideMergePartnerFinder {
-
-        private final IntSet vertices;
-        private final SinglesideMergePartnerFinder[] children;
-        private final int sourceNr;
-        private final int sourcesRemaining;
-        private final SGraphBRDecompositionAutomatonBottomUp auto;
-        private final int botIndex = 0;//the index for the children if the source is not assigned
-
-        public DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto)//maybe give expected size of finalSet as parameter?
-        {
-            this.auto = auto;
-
-            this.vertices = new IntOpenHashSet();
-
-            sourceNr = currentSource;
-            children = new SinglesideMergePartnerFinder[nrNodes+1];
-            sourcesRemaining = nrSources;
-
+    private class ImpureMPFBinaryPartnerFinder extends BinaryPartnerFinder{
+        MergePartnerFinder mpf;
+        IntSet backupset;
+        public ImpureMPFBinaryPartnerFinder(SGraphBRDecompositionAutomatonBottomUp auto) {
+            mpf = new DynamicMergePartnerFinder(0 , auto.completeGraphInfo.getNrSources(), auto.completeGraphInfo.getNrNodes(), auto);
+            backupset = new IntOpenHashSet();
         }
-
-        private DynamicMergePartnerFinder(int currentSource, int nrSources, int nrNodes, SGraphBRDecompositionAutomatonBottomUp auto, IntSet vertices)//maybe give expected size of finalSet as parameter?
-        {
-            this.auto = auto;
-
-            this.vertices = vertices;
-
-            sourceNr = currentSource;
-            children = new SinglesideMergePartnerFinder[nrNodes+1];
-            sourcesRemaining = nrSources;
-
-        }
-
+        
         @Override
-        public void insert(int rep) {
-
-            int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
-            insertInto(vNr, rep);//if source is not assigned, vNr is -1.
-        }
-
-        private void insertInto(int vNr, int rep) {
-            int index = vNr+1;//if source is not assigned, then index=0=botIndex.
-            if (children[index] == null) {
-                IntSet newVertices = new IntOpenHashSet();
-                newVertices.addAll(vertices);
-                if (vNr!= -1) {
-                    newVertices.add(vNr);
-                }
-                if (sourcesRemaining == 1) {
-                    //children[index] = new StorageMPF(auto);
-                    children[index] = new EdgeMPF(newVertices, auto);
-                } else {
-                    children[index] = new DynamicMergePartnerFinder(sourceNr + 1, sourcesRemaining - 1, children.length-1, auto, newVertices);
-                }
-            }
-
-            children[index].insert(rep);
-        }
-
-        @Override
-        public IntList getAllMergePartners(int rep) {
-            int vNr = auto.getStateForId(rep).getSourceNode(sourceNr);
-            int index = vNr+1;
-            IntList ret = new IntArrayList();//list is fine, since the two lists we get bottom up are disjoint anyway.
-
-
-            if (vNr != -1) {
-                if (children[index] != null) {
-                    ret.addAll(children[index].getAllMergePartners(rep));
-                }
-                if (children[botIndex] != null){
-                    ret.addAll(children[botIndex].getAllMergePartners(rep));
-                }
+        public IntCollection getPartners(int labelID, int stateID) {
+            if (signature.resolveSymbolId(labelID).equals(GraphAlgebra.OP_MERGE)) {
+                return mpf.getAllMergePartners(stateID);
             } else {
-                for (SinglesideMergePartnerFinder child : children) {
-                    if (child != null) {
-                        ret.addAll(child.getAllMergePartners(rep));
-                    }
-                }
+                return backupset;
             }
-
-            return ret;
         }
 
         @Override
-        public void print(String prefix, int indent) {
-            int indentSpaces = 5;
-            StringBuilder indenter = new StringBuilder();
-            for (int i = 0; i < indent * indentSpaces; i++) {
-                indenter.append(" ");
-            }
-            System.out.println(indenter.toString() + prefix + "S" + String.valueOf(sourceNr) + "(#V="+vertices.size()+")"+":");
-            for (int i = 0; i < indentSpaces; i++) {
-                indenter.append(" ");
-            }
-            for (int i = 0; i < children.length; i++) {
-                String newPrefix = "V" + String.valueOf(i) + ": ";
-
-                if (children[i] != null) {
-                    children[i].print(newPrefix, indent + 1);
-                } else {
-                    System.out.println(indenter.toString() + newPrefix + "--");
-                }
+        public void addState(int stateID) {
+            if (!backupset.contains(stateID)) {
+                mpf.insert(stateID);
+                backupset.add(stateID);
             }
         }
+        
     }
-    
-    private static class EdgeMPF implements SinglesideMergePartnerFinder{
-        private final int[] local2GlobalEdgeIDs;
-        private final Int2IntMap global2LocalEdgeIDs;//maybe better just use global ids and an int to object map for children?
-        private final int currentIndex;
-        private final SGraphBRDecompositionAutomatonBottomUp auto;
-        private final SinglesideMergePartnerFinder[] children;
-        private final boolean[] childIsEdgeMPF;
-        private final StorageMPF storeHere;
-        private final int parentEdge;
-
-        public EdgeMPF(IntSet vertices, SGraphBRDecompositionAutomatonBottomUp auto) {
-            currentIndex = -1;
-            local2GlobalEdgeIDs = auto.completeGraphInfo.getAllIncidentEdges(vertices);
-            Arrays.sort(local2GlobalEdgeIDs);
-            global2LocalEdgeIDs = new Int2IntOpenHashMap();
-            for (int i = 0; i<local2GlobalEdgeIDs.length; i++) {
-                global2LocalEdgeIDs.put(local2GlobalEdgeIDs[i], i);
-            }
-            this.auto = auto;
-            children = new SinglesideMergePartnerFinder[local2GlobalEdgeIDs.length];
-            childIsEdgeMPF = new boolean[local2GlobalEdgeIDs.length];
-            parentEdge = -1;
-            storeHere = new StorageMPF(auto);
-        }
-
-        private EdgeMPF(int[] local2Global, Int2IntMap global2Local, int currentIndex, SGraphBRDecompositionAutomatonBottomUp auto, int parentEdge) {
-            local2GlobalEdgeIDs = local2Global;
-            global2LocalEdgeIDs = global2Local;
-            this.currentIndex = currentIndex;
-            this.auto = auto;
-            children = new SinglesideMergePartnerFinder[local2GlobalEdgeIDs.length - currentIndex];
-            childIsEdgeMPF = new boolean[local2GlobalEdgeIDs.length - currentIndex];
-            this.parentEdge = parentEdge;
-            storeHere = new StorageMPF(auto);
-        }
-
-
-
-
-        @Override
-        public void insert(int rep) {
-            BoundaryRepresentation bRep = auto.getStateForId(rep);
-
-            int nextEdgeIndex;
-            if (parentEdge == -1) {
-                nextEdgeIndex = 0;
-            } else {
-                nextEdgeIndex = bRep.getSortedInBEdges().indexOf(parentEdge)+1;
-            }
-
-
-            if (nextEdgeIndex >= bRep.getSortedInBEdges().size()) {
-                storeHere.insert(rep);
-            } else {
-                int nextEdge = bRep.getSortedInBEdges().get(nextEdgeIndex);
-                int localEdgeID = global2LocalEdgeIDs.get(nextEdge);
-                int childIndex = localEdgeID-currentIndex-1;
-
-                SinglesideMergePartnerFinder targetChild = children[childIndex];
-                if (targetChild == null) {
-                    if (currentIndex == local2GlobalEdgeIDs.length - 1) {
-                        childIsEdgeMPF[childIndex]=false;
-                        targetChild = new StorageMPF(auto);
-                    } else {
-                        targetChild = new EdgeMPF(local2GlobalEdgeIDs, global2LocalEdgeIDs, localEdgeID, auto, nextEdge);
-                        childIsEdgeMPF[childIndex]=true;
-                    }
-                    children[childIndex] = targetChild;
-                }
-
-
-                targetChild.insert(rep);
-            }
-        }
-
-        @Override
-        public IntList getAllMergePartners(int rep) {
-            IntList ret = new IntArrayList();
-            IntList repNonEdgesLocal = new IntArrayList();
-            BoundaryRepresentation bRep = auto.getStateForId(rep);
-            for (int localID = 0; localID<local2GlobalEdgeIDs.length; localID++) {
-                if (!bRep.getInBoundaryEdges().contains(local2GlobalEdgeIDs[localID])) {
-                    repNonEdgesLocal.add(localID);
-                }
-            }
-            ret.addAll(storeHere.getAllMergePartners(rep));
-            int listIndex = 0;
-            for (int i : repNonEdgesLocal) {
-                if (children[i] != null) {
-                    if (childIsEdgeMPF[i]) {
-                        ret.addAll(((EdgeMPF)children[i]).getAllMergePartners(rep, repNonEdgesLocal.subList(listIndex+1, repNonEdgesLocal.size())));
-                    } else {
-                        ret.addAll(children[i].getAllMergePartners(rep));
-                    }
-                }
-                listIndex++;
-            }
-            /*auto.getStateForId(rep).getInBoundaryEdges().forEach(edgeID -> {
-                if (children[edgeID] != null) {
-                    ret.addAll(children[edgeID].getAllMergePartners(rep));
-                }
-            });*/
-            return ret;
-        }
-
-        private IntList getAllMergePartners(int rep, IntList remainingRepNonEdgesLocal) {//does not quite work, since children are general MergePartnerFinder
-            IntList ret = new IntArrayList();
-            ret.addAll(storeHere.getAllMergePartners(rep));
-            int listIndex = 0;
-            for (int i : remainingRepNonEdgesLocal) {
-                int childID = i-currentIndex-1;
-                if (children[childID]!= null) {
-                    if (childIsEdgeMPF[childID]) {
-                        ret.addAll(((EdgeMPF)children[childID]).getAllMergePartners(rep, remainingRepNonEdgesLocal.subList(listIndex+1, remainingRepNonEdgesLocal.size())));
-                    } else {
-                        ret.addAll(children[childID].getAllMergePartners(rep));
-                    }
-                }
-                listIndex++;
-            }
-            return ret;
-        }
-
-        @Override
-        public void print(String prefix, int indent) {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-        }
-
-    }
-
-    private static class StorageMPF implements SinglesideMergePartnerFinder{
-        private final IntList finalSet;//list is fine, since every subgraph gets sorted in at most once.
-        private final SGraphBRDecompositionAutomatonBottomUp auto;
-
-        public StorageMPF(SGraphBRDecompositionAutomatonBottomUp auto){
-            finalSet = new IntArrayList();
-            this.auto = auto;
-        }
-
-        @Override
-        public void insert(int rep) {
-            finalSet.add(rep);
-        }
-
-        @Override
-        public IntList getAllMergePartners(int rep) {
-            return finalSet;
-        }
-
-        @Override
-        public void print(String prefix, int indent) {
-            int indentSpaces= 5;
-            StringBuilder indenter = new StringBuilder();
-            for (int i= 0; i<indent*indentSpaces; i++){
-                indenter.append(" ");
-            }
-            StringBuilder content = new StringBuilder();
-            for (int i : finalSet)
-            {
-                //content.append(String.valueOf(i)+",");
-                content.append(auto.getStateForId(i).toString()+",");
-            }
-            System.out.println(indenter.toString()+prefix+content);
-        }
-
-    }
-    
-    
-    
     
     
     
@@ -1057,13 +751,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         return String.valueOf(stateId)+"_"+getStateForId(stateId).allSourcesToString();
     }
 
-    
-    
-    
-    
-    
-    
-    
     /**
      * Writes the decomposition automata for all specified graphs in the corpus,
      * with one restriction: There are no rename operations on states only
@@ -1173,13 +860,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         
     }
     
-    
-    
-    
-    
-    
-    
-    
     /**
      * Writes the decomposition automata for a given corpus.
      * Calls {@code writeDecompositionAutomata} with the given arguments.
@@ -1233,7 +913,6 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     }
     
     
-<<<<<<< local
     private static interface MergePartnerFinder {
         /**
          * stores the graph state represented by the int, for future reference
@@ -1530,8 +1209,4 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
         }
 
     }    
-}=======
-
-    
 }
->>>>>>> other

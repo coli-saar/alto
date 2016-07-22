@@ -121,7 +121,6 @@ public class GraphEdge{
     
     
     static class EdgeLabelEquivalenceComparator implements EquivalenceComparator<GraphEdge, Graph<GraphNode, GraphEdge>> {
-        @Override
         public boolean equivalenceCompare(GraphEdge e, GraphEdge e1, Graph<GraphNode, GraphEdge> c, Graph<GraphNode, GraphEdge> c1) {
             if (e.label == null) {
                 return e1.label == null;
@@ -130,7 +129,6 @@ public class GraphEdge{
             }
         }
 
-        @Override
         public int equivalenceHashcode(GraphEdge e, Graph<GraphNode, GraphEdge> c) {
             if (e.label == null) {
                 return -1;
@@ -139,5 +137,5 @@ public class GraphEdge{
             }
         }
     }
-       
+    
 }

@@ -4,9 +4,10 @@
  */
 package de.up.ling.irtg.algebra;
 
+import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.SingletonAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.laboratory.OperationAnnotation;
+import de.up.ling.irtg.util.Evaluator;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreePanel;
 import de.up.ling.tree.TreeParser;
@@ -64,42 +65,51 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         return Tree.class;
     }
 
-    
-    
-    
-    
-    @OperationAnnotation(code = "countBracketsInTree")
-    public static int countBrackets(Tree<String> tree) {
-        return getBrackets(tree, 0).size();
-    }
-    
-    @OperationAnnotation(code = "treeRecall")
-    public static double recall(Tree<String> result, Tree<String> gold) {
-        List<Bracket> resultBrackets = getBrackets(result, 0);
-        List<Bracket> goldBrackets = getBrackets(gold, 0);
-        double weight = goldBrackets.size();
-        int found = 0;
-        for (Bracket goldBracket : goldBrackets) {
-            if (resultBrackets.contains(goldBracket)) {
-                found ++;
+    @Override
+    public List<Evaluator> getEvaluationMethods() {
+        List<Evaluator> ret = new ArrayList<>();
+        ret.add(new Evaluator<Tree<String>>("Recall", "recall") {
+            
+            @Override
+            public Pair<Double, Double> evaluate(Tree<String> result, Tree<String> gold) {
+                List<Bracket> resultBrackets = getBrackets(result, 0);
+                List<Bracket> goldBrackets = getBrackets(gold, 0);
+                double weight = goldBrackets.size();
+                int found = 0;
+                for (Bracket goldBracket : goldBrackets) {
+                    if (resultBrackets.contains(goldBracket)) {
+                        found ++;
+                    }
+                }
+                double score = found/weight;
+                return new Pair(score, weight);
             }
-        }
-        return (weight > 0) ? found/weight : 1;
+        });
+        ret.add(new Evaluator<Tree<String>>("Precision", "precision") {
+            
+            @Override
+            public Pair<Double, Double> evaluate(Tree<String> result, Tree<String> gold) {
+                List<Bracket> resultBrackets = getBrackets(result, 0);
+                List<Bracket> goldBrackets = getBrackets(gold, 0);
+                double weight = resultBrackets.size();
+                int found = 0;
+                for (Bracket resultBracket : resultBrackets) {
+                    if (goldBrackets.contains(resultBracket)) {
+                        found ++;
+                    }
+                }
+                double score = (weight > 0) ? found/weight : 1;
+                return new Pair(score, weight);
+            }
+        });
+        return ret;
     }
     
-    @OperationAnnotation(code = "treePrecision")
-    public static double precision(Tree<String> result, Tree<String> gold) {
-        List<Bracket> resultBrackets = getBrackets(result, 0);
-        List<Bracket> goldBrackets = getBrackets(gold, 0);
-        double weight = resultBrackets.size();
-        int found = 0;
-        for (Bracket resultBracket : resultBrackets) {
-            if (goldBrackets.contains(resultBracket)) {
-                found ++;
-            }
-        }
-        return (weight > 0) ? found/weight : 1;
-    }
+    
+    
+    
+    
+    
     
     
     

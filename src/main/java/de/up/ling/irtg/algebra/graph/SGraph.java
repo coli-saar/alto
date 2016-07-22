@@ -12,7 +12,6 @@ import com.google.common.collect.SetMultimap;
 import com.google.common.collect.Sets;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.codec.SgraphAmrOutputCodec;
-import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.Util;
 import java.util.ArrayList;
@@ -1212,11 +1211,6 @@ public class SGraph{
             boolean commonSources = !Collections.disjoint(sourceToNodename.keySet(), other.sourceToNodename.keySet());
             return commonSources;
         }
-    }
-    
-    @OperationAnnotation(code = "nrNodes")
-    public int nodeCount() {
-        return getAllNodeNames().size();
     }
 
 }

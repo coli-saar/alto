@@ -6,7 +6,6 @@ package de.up.ling.irtg.hom;
 
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.CONSTANT;
 import static de.up.ling.irtg.hom.HomomorphismSymbol.Type.VARIABLE;
-import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.tree.Tree;
@@ -269,7 +268,6 @@ public class Homomorphism implements Serializable {
         });
     }
 
-    @OperationAnnotation(code = "apply")
     public Tree<String> apply(Tree<String> tree) {
         return getTargetSignature().resolve(applyRaw(getSourceSignature().addAllSymbols(tree)));
     }

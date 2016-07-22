@@ -6,14 +6,12 @@ package de.up.ling.irtg;
 
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.automata.InverseHomAutomaton;
-import de.up.ling.irtg.automata.NondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.PMFactoryRestrictive;
 import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
 import de.up.ling.irtg.hom.Homomorphism;
-import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 import java.io.Serializable;
@@ -45,12 +43,10 @@ public class Interpretation<E> implements Serializable {
         return algebra.evaluate(hom.apply(t));
     }
 
-    @OperationAnnotation(code="alg")
     public Algebra<E> getAlgebra() {
         return algebra;
     }
 
-    @OperationAnnotation(code="hom")
     public Homomorphism getHomomorphism() {
         return hom;
     }
@@ -60,7 +56,6 @@ public class Interpretation<E> implements Serializable {
      * @param auto
      * @return 
      */
-    @OperationAnnotation(code = "invhom")
     public TreeAutomaton invhom(TreeAutomaton auto) {
         
         if (hom.isNonDeleting()) {
@@ -92,11 +87,6 @@ public class Interpretation<E> implements Serializable {
         
     }
 
-    @OperationAnnotation(code = "basicNonDelInvHom")
-    public TreeAutomaton basicNonDelInvHom(TreeAutomaton auto) {
-        return new NondeletingInverseHomAutomaton(auto, hom);
-    }
-    
     public TreeAutomaton parse(E object) {
         TreeAutomaton decompositionAutomaton = algebra.decompose(object);
 

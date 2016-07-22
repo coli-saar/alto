@@ -36,11 +36,6 @@ public class Signature implements Serializable {
         arities = new Int2IntOpenHashMap();
         arities.defaultReturnValue(-1);      // arity for unknown symbols
     }
-    
-    private Signature(Interner<String> interner, Int2IntMap arities) {
-        this.interner = interner;
-        this.arities = arities;
-    }
 
     public SignatureMapper getMapperTo(Signature other) {
         return interner.getMapperTo(other.interner);
@@ -173,13 +168,6 @@ public class Signature implements Serializable {
         });
     }
 
-    @Override
-    public Object clone() {
-        Int2IntMap aritiesClone = new Int2IntOpenHashMap();
-        aritiesClone.putAll(arities);
-        return new Signature((Interner<String>)interner.clone(), aritiesClone);
-    }
-    
     @Override
     public String toString() {
         List<String> syms = new ArrayList<String>();
