@@ -1,1 +1,2 @@
 .DS_Store
+^src/main/java/de/up/ling/irtg/script/ParseCorpus\.java$
