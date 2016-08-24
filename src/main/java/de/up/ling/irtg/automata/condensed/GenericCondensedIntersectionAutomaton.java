@@ -12,6 +12,7 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.pruning.HistogramPruningPolicy;
 import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
 import de.up.ling.irtg.automata.pruning.PruningPolicy;
 import de.up.ling.irtg.automata.pruning.QuotientPruningPolicy;
@@ -132,8 +133,12 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             // force recomputation of final states
             finalStates = null;
 
-            if (pp != null && (pp instanceof QuotientPruningPolicy)) {
-                ((QuotientPruningPolicy) pp).printStatistics();
+            if (pp != null) {
+                if (pp instanceof QuotientPruningPolicy) {
+                    ((QuotientPruningPolicy) pp).printStatistics();
+                } else if (pp instanceof HistogramPruningPolicy) {
+                    ((HistogramPruningPolicy) pp).printStatistics();
+                }
             }
         }
     }
@@ -146,12 +151,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         }
     }
 
-    
     private String strPartners(IntSet is) {
         Set states = Util.mapToSet(is, p -> left.getStateForId(p));
         return states.toString();
     }
-    
+
     /**
      * Iterate over all states in the right (condensed) automaton to find
      * partner states in the left one.
@@ -201,7 +205,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                         // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
                         remappedChildren.add(partners.get(rightChildren[i]));
                     }
-                    
+
 //                    System.err.println("partners(" + i + "): " + strPartners(remappedChildren.get(i)));
                 }
 
@@ -290,7 +294,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                                 // i is a loop position
                                 makeLeftChildStateSets(leftChildStateSets, rightChildren, i, leftState, partners);
                                 left.foreachRuleBottomUpForSets(rightLabelSet, leftChildStateSets, leftToRightSignatureMapper, leftRule -> {
-                                    pp.collect(q, leftRule, rightRule); // need to call this to update FOMs, even if no further pruning takes place here
+                                                            pp.collect(q, leftRule, rightRule); // need to call this to update FOMs, even if no further pruning takes place here
                                                             Rule rule = combineRules(leftRule, rightRule);
                                                             collectOutputRule(rule);
                                                             addPartner(rightRule.getParent(), leftRule.getParent(), partners);
