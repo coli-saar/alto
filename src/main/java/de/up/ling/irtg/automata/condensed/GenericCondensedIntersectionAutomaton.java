@@ -12,6 +12,8 @@ import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
+import de.up.ling.irtg.automata.pruning.PruningPolicy;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
@@ -65,6 +67,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     private final CondensedTreeAutomaton<RightState> right;
     public static boolean DEBUG = false;
     private final SignatureMapper leftToRightSignatureMapper;
+    private final PruningPolicy pp;
 
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
     // (index first by right state, then by left state because almost all right states
@@ -80,11 +83,16 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
         public TreeAutomaton intersect(TreeAutomaton left, CondensedTreeAutomaton right);
     }
-
+    
     public GenericCondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
+        this(left, right, sigMapper, new NoPruningPolicy());
+    }
+
+    public GenericCondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper, PruningPolicy pp) {
         super(left.getSignature()); // TODO = should intersect this with the (remapped) right signature
 
         this.leftToRightSignatureMapper = sigMapper;
+        this.pp = pp;
 
         this.left = left;
         this.right = right;
@@ -153,6 +161,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         if (!visited.contains(q)) {
             visited.add(q);
             D(depth, () -> "-> processing " + right.getStateForId(q));
+            
+            pp.reset();
 
             final IntList foundPartners = new IntArrayList();
             List<CondensedRule> loopRules = new ArrayList<>();
