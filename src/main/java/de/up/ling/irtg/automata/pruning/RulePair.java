@@ -26,7 +26,7 @@ class RulePair implements Comparable<RulePair> {
 
     @Override
     public int compareTo(RulePair o) {
-        return Double.compare(value, o.value);
+        return -Double.compare(value, o.value);
     }
     
 }

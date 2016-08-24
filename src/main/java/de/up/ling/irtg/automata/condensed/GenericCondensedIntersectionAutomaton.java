@@ -14,6 +14,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
 import de.up.ling.irtg.automata.pruning.PruningPolicy;
+import de.up.ling.irtg.automata.pruning.QuotientPruningPolicy;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
@@ -83,7 +84,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
         public TreeAutomaton intersect(TreeAutomaton left, CondensedTreeAutomaton right);
     }
-    
+
     public GenericCondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
         this(left, right, sigMapper, new NoPruningPolicy());
     }
@@ -115,10 +116,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             Int2ObjectMap<IntSet> partners = new Int2ObjectOpenHashMap<>();
 
             long t1 = System.nanoTime();
-            
+
 //            System.err.println("left: " + left);
 //            System.err.println("\n\nright: " + right + "\n\n");
-
             // Perform a DFS in the right automaton to find all partner states
             IntSet visited = new IntOpenHashSet();
             right.getFinalStates().forEach((q) -> {
@@ -132,9 +132,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             // force recomputation of final states
             finalStates = null;
 
-            if (DEBUG) {
-                System.err.println("CKY runtime: " + (System.nanoTime() - t1) / 1000000 + "ms");
-                System.err.println("Intersection automaton CKY:\n" + toString() + "\n~~~~~~~~~~~~~~~~~~");
+            if (pp != null && (pp instanceof QuotientPruningPolicy)) {
+                ((QuotientPruningPolicy) pp).printStatistics();
             }
         }
     }
@@ -161,15 +160,11 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         if (!visited.contains(q)) {
             visited.add(q);
             D(depth, () -> "-> processing " + right.getStateForId(q));
-            
-            pp.reset();
 
             final IntList foundPartners = new IntArrayList();
             List<CondensedRule> loopRules = new ArrayList<>();
 
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
-                D(depth, () -> "Right rule: " + rightRule.toString(right, s -> s.contains("asbestos") || s.contains("There") || s.contains("now")));
-
                 // If the right rule is a "self-loop", i.e. of the form q -> f(q),
                 // the normal DFS doesn't work. We give it special treatment by
                 // postponing its combination with the right rules until below.
@@ -211,50 +206,58 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 
                 // find all rules bottom-up in the left automaton that have the same (remapped) children as the right rule.
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
-                    // create a new rule
-                    pp.collect(leftRule, rightRule);
-                    
-                    
-                    Rule rule = combineRules(leftRule, rightRule);
+                                            // create a new rule
+                                            pp.collect(q, leftRule, rightRule);
+                                        });
+            }
+
+            pp.foreachPrunedRulePair(q, (leftRule, rightRule, value) -> {
+                                 Rule rule = combineRules(leftRule, rightRule);
+
+                                 // transfer rule to staging area for output rules
+                                 collectOutputRule(rule);
+
+                                 assert q == rightRule.getParent() : "found right rule " + rightRule.toString(right) + " at right state " + right.getStateForId(q);
+                                 addPartner(rightRule.getParent(), leftRule.getParent(), partners);
+                             });
 
 //                    if (!selfSeen.contains(rule.getParent())) {
 //                        selfToDo.add(leftRule.getParent());
 //
 //                        selfSeen.add(rule.getParent());
 //                    }
-                    D(depth, () -> "Left rule: " + leftRule.toString(left));
-                    D(depth, () -> "Combined rule: " + rule.toString(this));
-                    D(depth, () -> "");
-
-//                    System.err.println(right.getStateForId(q) + " -> " + rule.toString(this));
-                    // transfer rule to staging area for output rules
-                    collectOutputRule(rule);
-
-                    // schedule the two parent states for addition
-                    // -- they cannot be added to the partners sets here
-                    // because we are inside an iteration over these sets
-                    assert q == rightRule.getParent();
-                    foundPartners.add(rightRule.getParent());
-                    foundPartners.add(leftRule.getParent());
-                });
-
-                // now go through to-do list and add all state pairs to partner sets
-                for (int i = 0; i < foundPartners.size(); i += 2) {
-                    addPartner(foundPartners.get(i), foundPartners.get(i + 1), partners);
-                }
-
-                if (GuiUtils.getGlobalListener() != null) {
-                    GuiUtils.getGlobalListener().accept((progressListenerCount++) % 2000, 2000, "");
-                }
-            }
-
+//            D(depth, () -> "Left rule: " + leftRule.toString(left));
+//            D(depth, () -> "Combined rule: " + rule.toString(this));
+//            D(depth, () -> "");
+//
+////                    System.err.println(right.getStateForId(q) + " -> " + rule.toString(this));
+//            // transfer rule to staging area for output rules
+//            collectOutputRule(rule);
+//
+//            // schedule the two parent states for addition
+//            // -- they cannot be added to the partners sets here
+//            // because we are inside an iteration over these sets
+//            assert q == rightRule.getParent();
+//            foundPartners.add(rightRule.getParent());
+//            foundPartners.add(leftRule.getParent());
+//        });
+//
+//        // now go through to-do list and add all state pairs to partner sets
+//        for (int i = 0; i < foundPartners.size(); i += 2) {
+//            addPartner(foundPartners.get(i), foundPartners.get(i + 1), partners);
+//        }
+//
+//        if (GuiUtils.getGlobalListener() != null) {
+//            GuiUtils.getGlobalListener().accept((progressListenerCount++) % 2000, 2000, "");
+//        }
+//    }
             // Now that we have seen all children of q through rules that
             // are not self-loops, go through the self-loops and process them.
             if (partners.get(q) != null) {
                 // If q has no partners, that means we have found no non-loopy
                 // rules for expanding it. Thus any loopy expansions will be
                 // unproductive, so we can skip them.
-                
+
                 for (CondensedRule rightRule : loopRules) {
                     int rightParent = rightRule.getParent();
                     int[] rightChildren = rightRule.getChildren();
@@ -265,67 +268,27 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
 //                        System.err.println("** loopy rule " + rightRule.toString(right));
 //                        System.err.println("** but parent q=" + right.getStateForId(q) + " has null partners");
 //                    }
-
                     IntAgenda agenda = new IntAgenda(partners.get(q));
                     while (!agenda.isEmpty()) {
                         int leftState = agenda.pop();
 
                         for (int i = 0; i < rightRule.getArity(); i++) {
-                        // left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
+                            // left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                             // List<IntSet> childStateSets
                             if (rightChildren[i] == rightParent) {
                                 // i is a loop position
                                 makeLeftChildStateSets(leftChildStateSets, rightChildren, i, leftState, partners);
                                 left.foreachRuleBottomUpForSets(rightLabelSet, leftChildStateSets, leftToRightSignatureMapper, leftRule -> {
-                                    Rule rule = combineRules(leftRule, rightRule);
-                                    collectOutputRule(rule);
-                                    addPartner(rightRule.getParent(), leftRule.getParent(), partners);
-                                    agenda.enqueue(leftRule.getParent());
-                                });
+                                                            Rule rule = combineRules(leftRule, rightRule);
+                                                            collectOutputRule(rule);
+                                                            addPartner(rightRule.getParent(), leftRule.getParent(), partners);
+                                                            agenda.enqueue(leftRule.getParent());
+                                                        });
                             }
                         }
                     }
                 }
             }
-
-            /*
-             int[] children = new int[1];
-             for (int i = 0; i < selfToDo.size(); ++i) {
-             int leftState = selfToDo.get(i);
-
-             children[0] = leftState;
-
-             for (int k = 0; k < selfLoops.size(); ++k) {
-             CondensedRule rightRule = selfLoops.get(k);
-
-             rightRule.getLabels(right).forEach(labelId -> {
-             Iterable<Rule> rules = left.getRulesBottomUp(leftToRightSignatureMapper.remapForward(labelId), children);
-
-             rules.forEach(leftRule -> {
-             // create a new rule
-             Rule rule = combineRules(leftRule, rightRule);
-
-             if (!selfSeen.contains(rule.getParent())) {
-             //                                selfToDo.add(rule.getParent());
-             selfToDo.add(leftRule.getParent());
-
-             selfSeen.add(rule.getParent());
-             }
-
-             D(depth, () -> "Left rule: " + leftRule.toString(left));
-             D(depth, () -> "Combined rule (post-hoc): " + rule.toString(this));
-             D(depth, () -> "");
-
-             // transfer rule to staging area for output rules
-             collectOutputRule(rule);
-
-             addPartner(rightRule.getParent(), leftRule.getParent(), partners);
-
-             });
-             });
-             }
-             }
-             */
         }
     }
 
@@ -410,10 +373,10 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
     private void collectStatePairs(IntSet leftStates, IntSet rightStates, IntSet pairStates) {
         leftStates.forEach((leftState) -> {
             rightStates.stream().map((rightState) -> getStateMapping(leftState, rightState))
-                    .filter((state)
-                            -> (state != 0)).forEach((state) -> {
-                        pairStates.add(state);
-                    });
+                    .filter((state) ->
+                            (state != 0)).forEach((state) -> {
+                pairStates.add(state);
+            });
         });
     }
 

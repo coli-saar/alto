@@ -14,7 +14,6 @@ import de.up.ling.irtg.automata.condensed.CondensedRule;
  * @author koller
  */
 public interface PruningPolicy {
-    public void foreachPrunedRulePair(RulePairConsumer consumer);
-    public void collect(Rule left, CondensedRule right);
-    public void reset();
+    public void foreachPrunedRulePair(int rightParent, RulePairConsumer consumer);
+    public void collect(int rightParent, Rule left, CondensedRule right);
 }

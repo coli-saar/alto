@@ -129,19 +129,18 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @param interp
      * @return
      */
-    @OperationAnnotation(code="interp")
+    @OperationAnnotation(code = "interp")
     public Interpretation getInterpretation(String interp) {
         return interpretations.get(interp);
     }
-    
-    
+
     /**
-     * Interprets the given derivation tree in the interpretation with
-     * the given name, and returns an object of the algebra.
-     * 
+     * Interprets the given derivation tree in the interpretation with the given
+     * name, and returns an object of the algebra.
+     *
      * @param derivationTree
      * @param interpretationName
-     * @return 
+     * @return
      */
     public Object interpret(Tree<String> derivationTree, String interpretationName) {
         return getInterpretation(interpretationName).interpret(derivationTree);
@@ -156,15 +155,17 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @return
      */
     public Map<String, Object> interpret(Tree<String> derivationTree) {
-        Map<String, Object> ret = new HashMap<String, Object>();
+        if (derivationTree == null) {
+            return null;
+        } else {
+            Map<String, Object> ret = new HashMap<String, Object>();
 
-        for (String interpretationName : interpretations.keySet()) {
-            ret.put(interpretationName, interpret(derivationTree, interpretationName));
-//            Interpretation interp = interpretations.get(interpretationName);
-//            ret.put(interpretationName, interp.getAlgebra().evaluate(interp.getHomomorphism().apply(derivationTree)));
+            for (String interpretationName : interpretations.keySet()) {
+                ret.put(interpretationName, interpret(derivationTree, interpretationName));
+            }
+
+            return ret;
         }
-
-        return ret;
     }
 
     /**
@@ -217,18 +218,18 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return parseInputObjects(inputs);
     }
-    
+
     @OperationAnnotation(code = "parseSimple")
     public TreeAutomaton parseSimple(String interpretationName, Object input) throws ParserException {
         Map<String, Object> inputs = new HashMap<>();
         inputs.put(interpretationName, input);
         return parseInputObjects(inputs);
     }
-    
+
     @OperationAnnotation(code = "parseSimpleWithSiblingFinder")
     public TreeAutomaton parseWithSiblingFinder(String interpretationName, Object input) throws ParserException {
         SiblingFinderInvhom invhom = new SiblingFinderInvhom(interpretations.get(interpretationName).getAlgebra().decompose(input), interpretations.get(interpretationName).getHomomorphism());
-        SiblingFinderIntersection inters = new SiblingFinderIntersection((ConcreteTreeAutomaton)automaton, invhom);
+        SiblingFinderIntersection inters = new SiblingFinderIntersection((ConcreteTreeAutomaton) automaton, invhom);
         inters.makeAllRulesExplicit();
         return inters.seenRulesAsAutomaton();
     }
@@ -262,7 +263,7 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return ret;
     }
-    
+
     /**
      * Decodes a parse chart to a term chart over some output algebra. The term
      * chart describes a language of the terms over the specified output
@@ -305,7 +306,6 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return ret;
     }
-
 
     /**
      * ***********************************************************************
@@ -772,7 +772,7 @@ public class InterpretedTreeAutomaton implements Serializable {
                     TreeAutomaton chart = input.hasCharts() ? inst.getChart() : parseInputObjects(inst.getInputObjects());
 //                    System.err.println("ok");
                     WeightedTree t = chart.viterbiRaw();
-                    
+
                     if (t == null) {
                         Instance parsedInst = new Instance();
                         parsedInst.setAsNull();
@@ -798,13 +798,13 @@ public class InterpretedTreeAutomaton implements Serializable {
                         parsedInst.setInputObjects(values);
                         parsedInst.setDerivationTree(t.getTree());
                         parsedInst.setComments("parse_time_ms", Double.toString(sw.getTimeBefore(1) / 1000000),
-                                "weight=", Double.toString(t.getWeight()));
+                                               "weight=", Double.toString(t.getWeight()));
                         corpusConsumer.accept(parsedInst);
                     }
 
                     if (listener != null) {
                         i++;
-                        listener.accept(i, N, "Parsing " + (i+1) + "/" + N);
+                        listener.accept(i, N, "Parsing " + (i + 1) + "/" + N);
                     }
                 }
             }
@@ -884,13 +884,12 @@ public class InterpretedTreeAutomaton implements Serializable {
     public static InterpretedTreeAutomaton read(InputStream r) throws IOException, CodecParseException {
         return new IrtgInputCodec().read(r);
     }
-    
-    
+
     @OperationAnnotation(code = "irtgFromString")
     public static InterpretedTreeAutomaton fromString(String s) throws IOException, CodecParseException {
         return read(new ByteArrayInputStream(s.getBytes("UTF-8")));
     }
-    
+
     @OperationAnnotation(code = "irtgFromPath")
     public static InterpretedTreeAutomaton fromPath(String path) throws IOException, CodecParseException {
         return read(new FileInputStream(path));
@@ -913,34 +912,33 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         return irtg;
     }
-    
-    
+
     @OperationAnnotation(code = "filter")
     public InterpretedTreeAutomaton filterForAppearingConstants(String interpName, Object input) {
-        
+
         TreeAutomaton decompositionAutomaton = getInterpretation(interpName).getAlgebra().decompose(input);
         Int2IntMap old2NewSignature = new Int2IntOpenHashMap();
         Signature filteredSourceSignature = new Signature();
         InterpretedTreeAutomaton filteredIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>(filteredSourceSignature));
         Map<String, Algebra> filteredAlgebras = new HashMap<>();
         Map<String, Homomorphism> filteredHomomorphisms = new HashMap<>();
-        
+
         //getting matching rules
         Iterable<Rule> matchingRules = getConstantMatchingRules(interpName, decompositionAutomaton);
-        
+
         //build the signatures and algebras
-        for (String interpNameHere: getInterpretations().keySet()) {
+        for (String interpNameHere : getInterpretations().keySet()) {
             try {
                 filteredAlgebras.put(interpNameHere, getInterpretation(interpNameHere).getAlgebra().getClass().newInstance());
             } catch (InstantiationException | IllegalAccessException ex) {
-                System.err.println("Cound not instantiate algebra for interpretation "+interpNameHere +": "+ex.toString());
+                System.err.println("Cound not instantiate algebra for interpretation " + interpNameHere + ": " + ex.toString());
             }
         }
         for (Rule matchingRule : matchingRules) {
             //using that each label only appears in one rule
             int newSymbolID = filteredSourceSignature.addSymbol(matchingRule.getLabel(this.automaton), matchingRule.getArity());
             old2NewSignature.put(matchingRule.getLabel(), newSymbolID);
-            
+
             //now the signatures in the algebras
             getInterpretations().entrySet().stream().forEach((entry) -> {
                 Algebra algebraHere = filteredAlgebras.get(entry.getKey());
@@ -956,109 +954,106 @@ public class InterpretedTreeAutomaton implements Serializable {
                 });
             });
         }
-        
+
         //building the homomorphisms
-        for (String interpNameHere: getInterpretations().keySet()) {
+        for (String interpNameHere : getInterpretations().keySet()) {
             filteredHomomorphisms.put(interpNameHere, new Homomorphism(filteredSourceSignature, filteredAlgebras.get(interpNameHere).getSignature()));
         }
         for (Rule matchingRule : matchingRules) {
             getInterpretations().entrySet().stream().forEach((entry) -> {
                 Homomorphism filteredHomomorphism = filteredHomomorphisms.get(entry.getKey());
                 filteredHomomorphism.add(filteredSourceSignature.resolveSymbolId(old2NewSignature.get(matchingRule.getLabel())),
-                        entry.getValue().getHomomorphism().get(entry.getValue().getHomomorphism().getSourceSignature().resolveSymbolId(matchingRule.getLabel())));
+                                         entry.getValue().getHomomorphism().get(entry.getValue().getHomomorphism().getSourceSignature().resolveSymbolId(matchingRule.getLabel())));
             });
         }
-        
-        
-        
+
         //add interpretations
-        for (String interpNameHere: getInterpretations().keySet()) {
+        for (String interpNameHere : getInterpretations().keySet()) {
             Algebra algebraHere = filteredAlgebras.get(interpNameHere);
             Interpretation filteredInterpretation = new Interpretation(algebraHere, filteredHomomorphisms.get(interpNameHere));
             filteredIRTG.addInterpretation(interpNameHere, filteredInterpretation);
         }
-        
+
         //add states to automaton
         for (int stateID : automaton.getStateInterner().getKnownIds()) {
             filteredIRTG.automaton.getStateInterner().addObjectWithIndex(stateID, automaton.getStateInterner().resolveId(stateID));
         }
         //add rules and labels to automaton
         for (Rule matchingRule : matchingRules) {
-            ((ConcreteTreeAutomaton)filteredIRTG.automaton).addRule(filteredIRTG.automaton.createRule(
+            ((ConcreteTreeAutomaton) filteredIRTG.automaton).addRule(filteredIRTG.automaton.createRule(
                     matchingRule.getParent(), old2NewSignature.get(matchingRule.getLabel()), matchingRule.getChildren(), matchingRule.getWeight()));
         }
-        
+
         //set final states
         for (int finalState : automaton.getFinalStates()) {
-            ((ConcreteTreeAutomaton)filteredIRTG.automaton).addFinalState(finalState);
+            ((ConcreteTreeAutomaton) filteredIRTG.automaton).addFinalState(finalState);
         }
-        
+
         return filteredIRTG;
-        
+
     }
-    
+
     @OperationAnnotation(code = "filterBinarized")
     public InterpretedTreeAutomaton filterBinarizedForAppearingConstants(String interpName, Object input) {
-        
+
         TreeAutomaton decompositionAutomaton = getInterpretation(interpName).getAlgebra().decompose(input);
-        
+
         //clone automaton signature
-        Signature autoSig = (Signature)automaton.getSignature().clone();
-        
+        Signature autoSig = (Signature) automaton.getSignature().clone();
+
         InterpretedTreeAutomaton filteredIRTG = new InterpretedTreeAutomaton(new ConcreteTreeAutomaton<>(autoSig));
-        
+
         //add states to automaton
         for (int stateID : automaton.getStateInterner().getKnownIds()) {
             filteredIRTG.automaton.getStateInterner().addObjectWithIndex(stateID, automaton.getStateInterner().resolveId(stateID));
         }
-        
+
         //getting matching rules
         Iterable<Rule> matchingRules = getConstantMatchingRulesWithCaching(interpName, decompositionAutomaton);
-        
+
         Set<String> allowedLabels = new HashSet<>();
         for (Rule rule : matchingRules) {
             allowedLabels.add(rule.getLabel(automaton));
         }
-        
+
         Set<String> forbiddenStems = new HashSet<>();
-        for (Rule rule: automaton.getRuleSet()) {
+        for (Rule rule : automaton.getRuleSet()) {
             if (!allowedLabels.contains(rule.getLabel(automaton))) {
                 forbiddenStems.add(getBinarizationStem(rule.getLabel(automaton)));
             }
         }
-        
+
         //add rules and labels to automaton
         for (Rule matchingRule : matchingRules) {
             if (!forbiddenStems.contains(getBinarizationStem(matchingRule.getLabel(automaton)))) {
-                ((ConcreteTreeAutomaton)filteredIRTG.automaton).addRule(matchingRule);
+                ((ConcreteTreeAutomaton) filteredIRTG.automaton).addRule(matchingRule);
             }
         }
-        
+
         //set final states
         for (int finalState : automaton.getFinalStates()) {
-            ((ConcreteTreeAutomaton)filteredIRTG.automaton).addFinalState(finalState);
+            ((ConcreteTreeAutomaton) filteredIRTG.automaton).addFinalState(finalState);
         }
-        
+
         //make homomorphisms
         Map<String, Interpretation> newInterps = new HashMap<>();
         for (Map.Entry<String, Interpretation> nameAndInterp : getInterpretations().entrySet()) {
             Interpretation interp = nameAndInterp.getValue();
-            Signature interpSig = (Signature)interp.getHomomorphism().getTargetSignature().clone();
+            Signature interpSig = (Signature) interp.getHomomorphism().getTargetSignature().clone();
             Homomorphism newHom = new Homomorphism(autoSig, interpSig);
             for (Rule rule : filteredIRTG.automaton.getRuleSet()) {
                 newHom.add(rule.getLabel(), interp.getHomomorphism().get(rule.getLabel()));
             }
             newInterps.put(nameAndInterp.getKey(), new Interpretation(interp.getAlgebra(), newHom));
         }
-        
-        
+
         //add interpretations
         filteredIRTG.addAllInterpretations(newInterps);
-        
+
         return filteredIRTG;
-        
+
     }
-    
+
     private Iterable<Rule> getConstantMatchingRulesWithCaching(String interpName, TreeAutomaton decompositionAutomaton) {
         Homomorphism hom = getInterpretation(interpName).getHomomorphism();
         List<Rule> ret = new ArrayList<>();
@@ -1073,14 +1068,12 @@ public class InterpretedTreeAutomaton implements Serializable {
                             allConstantsFound = false;
                             break;
                         } //else continue looking
+                    } else if (decompositionAutomaton.getRulesBottomUp(label.getValue(), new int[]{}).iterator().hasNext()) {
+                        constCacher.put(label.getValue(), true);
                     } else {
-                        if (decompositionAutomaton.getRulesBottomUp(label.getValue(), new int[]{}).iterator().hasNext()) {
-                            constCacher.put(label.getValue(), true);
-                        } else {
-                            constCacher.put(label.getValue(), false);
-                            allConstantsFound = false;
-                            break;
-                        }
+                        constCacher.put(label.getValue(), false);
+                        allConstantsFound = false;
+                        break;
                     }
                 }
             }
@@ -1091,12 +1084,11 @@ public class InterpretedTreeAutomaton implements Serializable {
         }
         return ret;
     }
-    
+
     private static String getBinarizationStem(String ruleLabel) {
         return ruleLabel.split("_br")[0];
     }
-    
-    
+
     private Iterable<Rule> getConstantMatchingRules(String interpName, TreeAutomaton decompositionAutomaton) {
         Homomorphism hom = getInterpretation(interpName).getHomomorphism();
         List<Rule> ret = new ArrayList<>();
@@ -1115,5 +1107,5 @@ public class InterpretedTreeAutomaton implements Serializable {
         }
         return ret;
     }
-    
+
 }

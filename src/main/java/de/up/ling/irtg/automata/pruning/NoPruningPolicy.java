@@ -3,11 +3,12 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,25 +17,33 @@ import java.util.List;
  * @author koller
  */
 public class NoPruningPolicy implements PruningPolicy {
-    private final List<RulePair> rulePairs;
+    private final Int2ObjectMap<List<RulePair>> rulePairsPerParent;
 
     public NoPruningPolicy() {
-        rulePairs = new ArrayList<>();
-    }
-    
-    @Override
-    public void foreachPrunedRulePair(RulePairConsumer consumer) {
-        rulePairs.forEach(rp -> consumer.accept(rp.left, rp.right, rp.value));
+        rulePairsPerParent = new Int2ObjectOpenHashMap<>();
     }
 
     @Override
-    public void collect(Rule left, CondensedRule right) {
+    public void foreachPrunedRulePair(int rightParent, RulePairConsumer consumer) {
+        List<RulePair> rulePairs = rulePairsPerParent.get(rightParent);
+
+        if (rulePairs != null) {
+            rulePairs.forEach(rp -> consumer.accept(rp.left, rp.right, rp.value));
+        }
+        
+        rulePairsPerParent.remove(rightParent);
+    }
+
+    @Override
+    public void collect(int rightParent, Rule left, CondensedRule right) {
+        List<RulePair> rulePairs = rulePairsPerParent.get(rightParent);
+        
+        if( rulePairs == null ) {
+            rulePairs = new ArrayList<>();
+            rulePairsPerParent.put(rightParent, rulePairs);
+        }
+        
+        
         rulePairs.add(new RulePair(left, right, 1));
     }
-
-    @Override
-    public void reset() {
-        rulePairs.clear();
-    }
-    
 }

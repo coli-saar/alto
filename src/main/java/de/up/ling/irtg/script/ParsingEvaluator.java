@@ -63,7 +63,7 @@ public class ParsingEvaluator {
         if (param.inputInterpretations == null) {
             usage("No input interpretations specified.");
         }
-        
+
         InputCodec<InterpretedTreeAutomaton> icGrammar = InputCodec.getInputCodecByNameOrExtension(param.grammarName, null);
         InterpretedTreeAutomaton irtg = icGrammar.read(new FileInputStream(param.grammarName)); // generalize to arbitrary input codecs  InterpretedTreeAutomaton.read(new FileInputStream(param.grammarName));
         List<String> interpretations = Arrays.asList(param.inputInterpretations.split(","));
@@ -71,25 +71,25 @@ public class ParsingEvaluator {
         String firstInterp = interpretations.get(0); // will be used to display instance
         Algebra firstAlgebra = irtg.getInterpretation(firstInterp).getAlgebra();
         PrintWriter out = new PrintWriter(new FileWriter(param.outCorpusFilename));
-        
+
         DoubleList precisions = new DoubleArrayList();
         DoubleList recalls = new DoubleArrayList();
         IntList precisionWeights = new IntArrayList();
         IntList recallWeights = new IntArrayList();
-        
-        Map<String,OutputCodec> ocForInterpretation = new HashMap<>();
-        for( String interp : outputInterpretations ) {
+
+        Map<String, OutputCodec> ocForInterpretation = new HashMap<>();
+        for (String interp : outputInterpretations) {
             String ocName = param.outputCodecs.get(interp);
             OutputCodec oc = null;
-            
-            if( "alg".equals(ocName)) {
+
+            if ("alg".equals(ocName)) {
                 Interpretation i = irtg.getInterpretation(interp);
                 oc = new AlgebraStringRepresentationOutputCodec(i.getAlgebra());
             } else {
                 oc = OutputCodec.getOutputCodecByName(ocName);
             }
-            
-            if( oc == null ) {
+
+            if (oc == null) {
                 System.err.println("Could not resolve output codec '" + ocName + "' for interpretation '" + interp + "'.");
                 System.exit(1);
             } else {
@@ -98,7 +98,7 @@ public class ParsingEvaluator {
         }
 
         long overallStart = System.nanoTime();
-        
+
         for (String filename : param.inputFiles) {
             Corpus corpus = irtg.readCorpus(new FileReader(filename));
             System.err.println("Processing " + filename + " (" + corpus.getNumberOfInstances() + " instances) ...");
@@ -113,7 +113,7 @@ public class ParsingEvaluator {
                 TreeAutomaton chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
                 Tree<String> dt = chart.viterbi();
                 System.err.print(Util.formatTimeSince(start));
-                
+
                 // write to output corpus
                 out.println(dt);
 
@@ -130,24 +130,34 @@ public class ParsingEvaluator {
                 if (param.blankLinkes) {
                     out.println();
                 }
-                
+
                 out.flush();
-                
+
                 // collect parseval measures
-                if( param.parseval != null ) {
+                if (param.parseval != null) {
                     Tree gold = (Tree) inst.getInputObjects().get(param.parseval);
-                    Tree found = (Tree) results.get(param.parseval);
-                    
-                    double P = TreeAlgebra.precision(found, gold) * 100;
-                    double R = TreeAlgebra.recall(found, gold) * 100;
-                    System.err.printf(", P=%02.0f R=%02.0f", P, R);
-                    
-                    precisions.add(P);
-                    recalls.add(R);
-                    precisionWeights.add(TreeAlgebra.countBrackets(found));
-                    recallWeights.add(TreeAlgebra.countBrackets(gold));
+
+                    if (dt == null) {
+                        // no parse found
+                        precisions.add(1);
+                        recalls.add(0);
+
+                        precisionWeights.add(0);
+                        recallWeights.add(TreeAlgebra.countBrackets(gold));
+                    } else {
+                        Tree found = (Tree) results.get(param.parseval);
+
+                        double P = TreeAlgebra.precision(found, gold) * 100;
+                        double R = TreeAlgebra.recall(found, gold) * 100;
+                        System.err.printf(", P=%02.0f R=%02.0f", P, R);
+
+                        precisions.add(P);
+                        recalls.add(R);
+                        precisionWeights.add(TreeAlgebra.countBrackets(found));
+                        recallWeights.add(TreeAlgebra.countBrackets(gold));
+                    }
                 }
-                
+
                 // new line in stderr output
                 System.err.println();
             }
@@ -155,13 +165,13 @@ public class ParsingEvaluator {
 
         out.flush();
         out.close();
-        
+
         System.err.println("Done, total time: " + Util.formatTimeSince(overallStart));
-        
-        if( param.parseval != null ) {
+
+        if (param.parseval != null) {
             double overallP = Util.weightedAverageWithIntWeights(precisions.toArray(), precisionWeights.toArray());
             double overallR = Util.weightedAverageWithIntWeights(recalls.toArray(), recallWeights.toArray());
-            System.err.printf("Overall precision = %05.2f, recall = %05.2f, F1 = %05.2f\n", overallP, overallR, 2*overallP*overallR/(overallP+overallR));
+            System.err.printf("Overall precision = %05.2f, recall = %05.2f, F1 = %05.2f\n", overallP, overallR, 2 * overallP * overallR / (overallP + overallR));
         }
     }
 
@@ -184,8 +194,8 @@ public class ParsingEvaluator {
 
         @Parameter(names = {"--blank-lines", "-b"}, description = "Insert a blank line between any two output instances.")
         public boolean blankLinkes = false;
-        
-        @Parameter(names="--parseval", description = "Measure precision and recall on this interpretation.")
+
+        @Parameter(names = "--parseval", description = "Measure precision and recall on this interpretation.")
         public String parseval = null;
 
         @Parameter(names = "--verbose", description = "Print some debugging output.")
