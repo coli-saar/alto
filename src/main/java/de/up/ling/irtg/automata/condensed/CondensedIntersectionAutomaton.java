@@ -5,6 +5,7 @@
 package de.up.ling.irtg.automata.condensed;
 
 import de.up.ling.irtg.automata.*;
+import de.up.ling.irtg.automata.pruning.PruningPolicy;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.SignatureMapper;
 
@@ -34,6 +35,10 @@ public class CondensedIntersectionAutomaton<LeftState, RightState> extends Gener
     
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
         super(left, right, sigMapper);
+    }
+    
+    public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper, PruningPolicy pp) {
+        super(left, right, sigMapper, pp);
     }
     
     public CondensedIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper, boolean debug) {

@@ -167,9 +167,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             final IntList foundPartners = new IntArrayList();
             List<CondensedRule> loopRules = new ArrayList<>();
 
-//            final ArrayList<CondensedRule> selfLoops = new ArrayList<>();
-//            final IntList selfToDo = new IntArrayList();
-//            final IntSet selfSeen = new IntOpenHashSet();
             for (final CondensedRule rightRule : right.getCondensedRulesByParentState(q)) {
                 D(depth, () -> "Right rule: " + rightRule.toString(right, s -> s.contains("asbestos") || s.contains("There") || s.contains("now")));
 
@@ -187,7 +184,6 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                         }
                     }
 
-//                    selfLoops.add(rightRule);
                     continue;
                 }
 
@@ -216,6 +212,9 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 // find all rules bottom-up in the left automaton that have the same (remapped) children as the right rule.
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                     // create a new rule
+                    pp.collect(leftRule, rightRule);
+                    
+                    
                     Rule rule = combineRules(leftRule, rightRule);
 
 //                    if (!selfSeen.contains(rule.getParent())) {

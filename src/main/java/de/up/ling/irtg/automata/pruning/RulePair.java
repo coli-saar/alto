@@ -7,6 +7,7 @@
 package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.condensed.CondensedRule;
 
 /**
  *
@@ -14,10 +15,10 @@ import de.up.ling.irtg.automata.Rule;
  */
 class RulePair implements Comparable<RulePair> {
     public Rule left;
-    public Rule right;
+    public CondensedRule right;
     public double value;
 
-    public RulePair(Rule left, Rule right, double value) {
+    public RulePair(Rule left, CondensedRule right, double value) {
         this.left = left;
         this.right = right;
         this.value = value;

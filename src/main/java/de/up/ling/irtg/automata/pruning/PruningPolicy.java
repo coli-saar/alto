@@ -7,6 +7,7 @@
 package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.condensed.CondensedRule;
 
 /**
  *
@@ -14,6 +15,6 @@ import de.up.ling.irtg.automata.Rule;
  */
 public interface PruningPolicy {
     public void foreachPrunedRulePair(RulePairConsumer consumer);
-    public void collect(Rule left, Rule right);
+    public void collect(Rule left, CondensedRule right);
     public void reset();
 }

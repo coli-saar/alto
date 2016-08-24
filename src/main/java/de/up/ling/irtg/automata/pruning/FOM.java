@@ -7,11 +7,12 @@
 package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.condensed.CondensedRule;
 
 /**
  *
  * @author koller
  */
 public interface FOM {
-    public double evaluate(Rule left, Rule right);
+    public double evaluate(Rule left, CondensedRule right);
 }

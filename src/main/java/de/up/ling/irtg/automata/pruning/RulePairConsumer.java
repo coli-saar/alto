@@ -7,6 +7,7 @@
 package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.condensed.CondensedRule;
 
 /**
  *
@@ -14,5 +15,5 @@ import de.up.ling.irtg.automata.Rule;
  */
 @FunctionalInterface
 public interface RulePairConsumer {
-    public void accept(Rule left, Rule right, double value);
+    public void accept(Rule left, CondensedRule right, double value);
 }

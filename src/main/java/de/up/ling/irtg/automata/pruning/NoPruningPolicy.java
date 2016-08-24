@@ -7,6 +7,7 @@
 package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.condensed.CondensedRule;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class NoPruningPolicy implements PruningPolicy {
     }
 
     @Override
-    public void collect(Rule left, Rule right) {
+    public void collect(Rule left, CondensedRule right) {
         rulePairs.add(new RulePair(left, right, 1));
     }
 
