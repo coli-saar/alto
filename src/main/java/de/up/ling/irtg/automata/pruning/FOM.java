@@ -15,4 +15,5 @@ import de.up.ling.irtg.automata.condensed.CondensedRule;
  */
 public interface FOM {
     public double evaluate(Rule left, CondensedRule right);
+    public double evaluateStates(int leftState, int rightState);
 }

@@ -16,6 +16,7 @@ import de.up.ling.irtg.automata.pruning.HistogramPruningPolicy;
 import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
 import de.up.ling.irtg.automata.pruning.PruningPolicy;
 import de.up.ling.irtg.automata.pruning.QuotientPruningPolicy;
+import de.up.ling.irtg.automata.pruning.StatewiseHistogramPruningPolicy;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
@@ -138,6 +139,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                     ((QuotientPruningPolicy) pp).printStatistics();
                 } else if (pp instanceof HistogramPruningPolicy) {
                     ((HistogramPruningPolicy) pp).printStatistics();
+                } else if (pp instanceof StatewiseHistogramPruningPolicy) {
+                    ((StatewiseHistogramPruningPolicy) pp).printStatistics();
                 }
             }
         }

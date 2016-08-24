@@ -36,7 +36,7 @@ public class SemiringFOM implements FOM {
 //        System.err.println("[eval] left  " + left);
         
         for( int i = 0; i < left.getArity(); i++ ) {
-            double childVal = getStatesEvaluation(left.getChildren()[i], right.getChildren()[i]);
+            double childVal = evaluateStates(left.getChildren()[i], right.getChildren()[i]);
             
             if( Double.isNaN(childVal) ) {
                 // child state pair not previously evaluated => violates invariant => return NaN
@@ -46,7 +46,7 @@ public class SemiringFOM implements FOM {
             ruleVal = semiring.multiply(ruleVal, childVal);
         }
         
-        double parentStateVal = getStatesEvaluation(left.getParent(), right.getParent());
+        double parentStateVal = evaluateStates(left.getParent(), right.getParent());
         double newParentStateVal = Double.isNaN(parentStateVal) ? ruleVal : semiring.add(ruleVal, parentStateVal);
         
         setStatesEvaluation(left.getParent(), right.getParent(), newParentStateVal);
@@ -54,8 +54,9 @@ public class SemiringFOM implements FOM {
         return ruleVal;
     }
     
-    private double getStatesEvaluation(int p, int q) {
-        long encoding = NumbersCombine.combine(p, q);
+    @Override
+    public double evaluateStates(int leftState, int rightState) {
+        long encoding = NumbersCombine.combine(leftState, rightState);
         return statesToEvaluation.get(encoding);
     }
     
