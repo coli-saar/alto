@@ -18,7 +18,6 @@ import de.up.ling.irtg.automata.pruning.QuotientPruningPolicy;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.signature.SignatureMapper;
-import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.IntAgenda;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Util;
@@ -42,6 +41,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -146,6 +146,12 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
         }
     }
 
+    
+    private String strPartners(IntSet is) {
+        Set states = Util.mapToSet(is, p -> left.getStateForId(p));
+        return states.toString();
+    }
+    
     /**
      * Iterate over all states in the right (condensed) automaton to find
      * partner states in the left one.
@@ -195,6 +201,8 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                         // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
                         remappedChildren.add(partners.get(rightChildren[i]));
                     }
+                    
+//                    System.err.println("partners(" + i + "): " + strPartners(remappedChildren.get(i)));
                 }
 
                 foundPartners.clear();
@@ -207,7 +215,10 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                 // find all rules bottom-up in the left automaton that have the same (remapped) children as the right rule.
                 left.foreachRuleBottomUpForSets(rightRule.getLabels(right), remappedChildren, leftToRightSignatureMapper, leftRule -> {
                                             // create a new rule
+//                                            System.err.println("[dfs] " + leftRule);
+//                                            System.err.println("collect for " + right.getStateForId(q) + ":\n  left " + leftRule.toString(left) + "\n  right " + rightRule.toString(right));
                                             pp.collect(q, leftRule, rightRule);
+//                                            System.err.println("left ar " + leftRule.getArity());
                                         });
             }
 
@@ -279,6 +290,7 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
                                 // i is a loop position
                                 makeLeftChildStateSets(leftChildStateSets, rightChildren, i, leftState, partners);
                                 left.foreachRuleBottomUpForSets(rightLabelSet, leftChildStateSets, leftToRightSignatureMapper, leftRule -> {
+                                    pp.collect(q, leftRule, rightRule); // need to call this to update FOMs, even if no further pruning takes place here
                                                             Rule rule = combineRules(leftRule, rightRule);
                                                             collectOutputRule(rule);
                                                             addPartner(rightRule.getParent(), leftRule.getParent(), partners);

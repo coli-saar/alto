@@ -18,8 +18,8 @@ import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
  * @author koller
  */
 public class SemiringFOM implements FOM {
-    private Semiring<Double> semiring;
-    private Long2DoubleMap statesToEvaluation;
+    private final Semiring<Double> semiring;
+    private final Long2DoubleMap statesToEvaluation;
 
     public SemiringFOM(Semiring<Double> semiring) {
         this.semiring = semiring;
@@ -30,6 +30,10 @@ public class SemiringFOM implements FOM {
     @Override
     public double evaluate(Rule left, CondensedRule right) {
         double ruleVal = semiring.multiply(left.getWeight(), right.getWeight());
+        
+//        System.err.println("[eval] initial ruleVal " + ruleVal);
+//        System.err.println("[eval] left arity " + left.getArity());
+//        System.err.println("[eval] left  " + left);
         
         for( int i = 0; i < left.getArity(); i++ ) {
             double childVal = getStatesEvaluation(left.getChildren()[i], right.getChildren()[i]);
