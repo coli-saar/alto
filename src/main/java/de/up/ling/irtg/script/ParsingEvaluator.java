@@ -11,6 +11,7 @@ import com.beust.jcommander.Parameter;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
 import de.up.ling.irtg.codec.InputCodec;
@@ -20,6 +21,10 @@ import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -67,6 +72,11 @@ public class ParsingEvaluator {
         Algebra firstAlgebra = irtg.getInterpretation(firstInterp).getAlgebra();
         PrintWriter out = new PrintWriter(new FileWriter(param.outCorpusFilename));
         
+        DoubleList precisions = new DoubleArrayList();
+        DoubleList recalls = new DoubleArrayList();
+        IntList precisionWeights = new IntArrayList();
+        IntList recallWeights = new IntArrayList();
+        
         Map<String,OutputCodec> ocForInterpretation = new HashMap<>();
         for( String interp : outputInterpretations ) {
             String ocName = param.outputCodecs.get(interp);
@@ -102,8 +112,9 @@ public class ParsingEvaluator {
                 long start = System.nanoTime();
                 TreeAutomaton chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
                 Tree<String> dt = chart.viterbi();
-                System.err.println(Util.formatTimeSince(start));
-
+                System.err.print(Util.formatTimeSince(start));
+                
+                // write to output corpus
                 out.println(dt);
 
                 Map<String, Object> results = irtg.interpret(dt);
@@ -112,7 +123,6 @@ public class ParsingEvaluator {
                         out.println("<null>");
                     } else {
                         OutputCodec oc = ocForInterpretation.get(interp);
-                                //OutputCodec.getOutputCodecByName(param.outputCodecs.get(interp));
                         out.println(oc.asString(results.get(interp)));
                     }
                 }
@@ -122,6 +132,24 @@ public class ParsingEvaluator {
                 }
                 
                 out.flush();
+                
+                // collect parseval measures
+                if( param.parseval != null ) {
+                    Tree gold = (Tree) inst.getInputObjects().get(param.parseval);
+                    Tree found = (Tree) results.get(param.parseval);
+                    
+                    double P = TreeAlgebra.precision(found, gold) * 100;
+                    double R = TreeAlgebra.recall(found, gold) * 100;
+                    System.err.printf(", P=%02.0f R=%02.0f", P, R);
+                    
+                    precisions.add(P);
+                    recalls.add(R);
+                    precisionWeights.add(TreeAlgebra.countBrackets(found));
+                    recallWeights.add(TreeAlgebra.countBrackets(gold));
+                }
+                
+                // new line in stderr output
+                System.err.println();
             }
         }
 
@@ -129,6 +157,12 @@ public class ParsingEvaluator {
         out.close();
         
         System.err.println("Done, total time: " + Util.formatTimeSince(overallStart));
+        
+        if( param.parseval != null ) {
+            double overallP = Util.weightedAverageWithIntWeights(precisions.toArray(), precisionWeights.toArray());
+            double overallR = Util.weightedAverageWithIntWeights(recalls.toArray(), recallWeights.toArray());
+            System.err.printf("Overall precision = %05.2f, recall = %05.2f, F1 = %05.2f\n", overallP, overallR, 2*overallP*overallR/(overallP+overallR));
+        }
     }
 
     private static class CmdLineParameters {
@@ -150,6 +184,9 @@ public class ParsingEvaluator {
 
         @Parameter(names = {"--blank-lines", "-b"}, description = "Insert a blank line between any two output instances.")
         public boolean blankLinkes = false;
+        
+        @Parameter(names="--parseval", description = "Measure precision and recall on this interpretation.")
+        public String parseval = null;
 
         @Parameter(names = "--verbose", description = "Print some debugging output.")
         public boolean verbose = false;

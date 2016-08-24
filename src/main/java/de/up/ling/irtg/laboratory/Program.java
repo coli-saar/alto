@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.laboratory;
 
+import cc.mallet.util.CollectionUtils;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.graph.GraphAlgebra;
@@ -43,6 +44,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.google.common.reflect.ClassPath;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.util.MutableInteger;
+import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -888,7 +890,15 @@ public class Program {
     public static void main(String[] args) throws FileNotFoundException, IOException, ParseException, Throwable {
 
         //System.out.println(getAllAnnotatedConstructors());
-        System.err.println(getAllAnnotatedStaticMethods());
+        Map<String, Method> ms = getAllAnnotatedStaticMethods();
+        String longest = Collections.max(ms.keySet(), Comparator.comparing(s -> s.length()));
+        int maxLen = longest.length();
+        
+        for( String key : ms.keySet() ) {
+            System.err.printf("[%-" + maxLen + "s] %s\n", key, ms.get(key).toString());
+        }
+        
+        System.exit(0);
 
         List<String> programCode = new ArrayList<>();
         programCode.add("export pruningPolicy = histogramPP(insideFOM, 10)");
