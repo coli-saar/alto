@@ -8,6 +8,7 @@ package de.up.ling.irtg.codec;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.ProgressListener;
+import de.up.ling.irtg.util.Util;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -175,6 +176,42 @@ public abstract class InputCodec<E> {
         }
 
         return codecByExtension.get(extension);
+    }
+    
+    /**
+     * Returns the input codec specified by the given codec name and/or
+     * filename. If the codecName is non-null, tries to resolve it to a
+     * registered input codec; if none is found, the method throws an
+     * exception. If the codecName is null, tries to determine the input
+     * codec from the filename extension of the (non-null) filename argument.
+     * If this is not possible, or both arguments are null, throws an exception.
+     * 
+     * @param filename
+     * @param codecName
+     * @return
+     * @throws Exception 
+     */
+    public static InputCodec getInputCodecByNameOrExtension(String filename, String codecName) throws Exception {
+        InputCodec ic = null;
+        
+        if( codecName != null ) {
+            ic = InputCodec.getInputCodecByName(codecName);
+            
+            if( ic == null ) {
+                throw new Exception("Unknown input codec: " + codecName);
+            }
+        } else if( filename != null ) {            
+            String ext = Util.getFilenameExtension(filename);
+            ic = InputCodec.getInputCodecByExtension(ext);
+            
+            if( ic == null ) {
+                throw new Exception("Could not determine input codec from filename extension '" + ext + "'");
+            }
+        } else {
+            throw new Exception("Specify an input codec, either explicitly or through the filename extension of the input file.");
+        }
+        
+        return ic;
     }
     
     /**

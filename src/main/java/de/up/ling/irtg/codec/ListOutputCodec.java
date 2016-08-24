@@ -16,10 +16,14 @@ import java.util.List;
 
 /**
  * An output codec that takes a list of objects, transforms them into
- * strings, and concatenates them with spaces.
+ * strings, and concatenates them with spaces.<p>
+ * 
+ * This codec is deprecated and not registered in the output codec service.
+ * Use {@link AlgebraStringRepresentationOutputCodec} instead.
  * 
  * @author koller
  */
+@Deprecated
 @CodecMetadata(name = "list", description = "space-separated (e.g. words)", type = List.class)
 public class ListOutputCodec extends OutputCodec<List> {
     @Override
