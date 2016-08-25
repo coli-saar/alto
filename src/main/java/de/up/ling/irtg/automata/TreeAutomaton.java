@@ -24,9 +24,8 @@ import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomato
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
 import de.up.ling.irtg.automata.index.RuleStore;
+import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
 import de.up.ling.irtg.automata.pruning.PruningPolicy;
-import de.up.ling.irtg.automata.pruning.SemiringFOM;
-import de.up.ling.irtg.automata.pruning.StatewiseHistogramPruningPolicy;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
