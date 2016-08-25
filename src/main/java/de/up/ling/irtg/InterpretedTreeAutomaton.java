@@ -204,7 +204,11 @@ public class InterpretedTreeAutomaton implements Serializable {
      * derivation trees that map to the given input objects.<p>
      *
      * The interpretations for which inputs are specified in "representations"
-     * may be any subset of the interpretations that this IRTG understands.
+     * may be any subset of the interpretations that this IRTG understands.<p>
+     * 
+     * Note that this method makes no guarantees regarding reducedness of the
+     * resulting tree automaton. Depending on the way parsing was done, it may
+     * still contain states that are unreachable or unproductive.
      *
      * @param representations
      * @return
@@ -244,22 +248,25 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @return
      */
     public TreeAutomaton parseInputObjects(Map<String, Object> inputs) {
-//        Logging.get().fine(() -> "parseInputObjects: " + inputs);
-
         TreeAutomaton ret = automaton;
 
         for (String interpName : inputs.keySet()) {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
 
-//            Logging.get().fine(() -> "Input: " + input);
             TreeAutomaton interpParse = interp.parse(input);
             ret = ret.intersect(interpParse);
-
-//            Logging.get().finest(() -> ("Intersect: " + ret));
         }
 
-        ret = ret.reduceTopDown();
+        // In earlier versions, we reduced the chart top-down. This is needed
+        // in certain circumstances (like EM training) to ensure that no 
+        // unproductive states are left in the chart. We have deleted it for
+        // efficiency reasons (it consumed 25% of the parsing time, and is
+        // not needed if the chart is only used to compute the language or
+        // Viterbi). If your code requires that the chart is reduced,
+        // you can simply call reduceTopDown yourself.
+        
+	//        ret = ret.reduceTopDown();
 
         return ret;
     }
@@ -426,7 +433,7 @@ public class InterpretedTreeAutomaton implements Serializable {
                 }
             }
 
-            // get the new log likelihood and substract the old one from it for comparrison with the given threshold
+            // get the new log likelihood and substract the old one from it for comparison with the given threshold
             double logLikelihood = estep(parses, globalRuleCount, intersectedRuleToOriginalRule, listener, iteration);
             assert logLikelihood >= oldLogLikelihood;
             difference = logLikelihood - oldLogLikelihood;
@@ -559,7 +566,10 @@ public class InterpretedTreeAutomaton implements Serializable {
 
     /**
      * Performs the E-step of the EM algorithm. This means that the expected
-     * counts are computed for all rules that occur in the parsed corpus.
+     * counts are computed for all rules that occur in the parsed corpus.<p>
+     * 
+     * This method assumes that the automaton is top-down reduced
+     * (see {@link TreeAutomaton#reduceTopDown() }).
      *
      * @param parses
      * @param intersectedRuleToOriginalRule
@@ -645,12 +655,13 @@ public class InterpretedTreeAutomaton implements Serializable {
         }
 
         for (Instance instance : trainingData) {
-            parses.add(instance.getChart());
+            TreeAutomaton chartHere = instance.getChart().reduceTopDown(); // ensure that chart is top-down reduced
+            parses.add(chartHere); 
 
-            Iterable<Rule> rules = instance.getChart().getRuleSet();
+            Iterable<Rule> rules = chartHere.getRuleSet();
             Map<Rule, Rule> irtorHere = new HashMap<Rule, Rule>();
             for (Rule intersectedRule : rules) {
-                Rule originalRule = getRuleInGrammar(intersectedRule, instance.getChart());
+                Rule originalRule = getRuleInGrammar(intersectedRule, chartHere);
 
                 irtorHere.put(intersectedRule, originalRule);
 

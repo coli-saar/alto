@@ -121,6 +121,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //    protected boolean explicitIsBottomUpDeterministic = true;
     protected Interner<State> stateInterner;
     protected boolean hasStoredConstants = false;
+    protected boolean isKnownToBeTopDownReduced = false;
 
     public TreeAutomaton(Signature signature) {
         ruleStore = new RuleStore(this);
@@ -733,10 +734,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     /**
-     * 
+     *
      * @param state
      * @param children
-     * @return 
+     * @return
      */
     private boolean exploreForCyclicity(int state, Int2ObjectMap<IntSet> children) {
         IntSet kids = new IntOpenHashSet();
@@ -1469,8 +1470,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
-	//        PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
-	        PruningPolicy pp = new NoPruningPolicy();
+	//PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
+        PruningPolicy pp = new NoPruningPolicy();
 //        PruningPolicy pp = new HistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 120);
 //        PruningPolicy pp = new StatewiseHistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 100);
         TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper, pp);
@@ -2097,7 +2098,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param tree
      * @return
      */
-    @OperationAnnotation(code ="getWeight")
+    @OperationAnnotation(code = "getWeight")
     public double getWeight(final Tree<String> tree) {
         return getWeightRaw(getSignature().addAllSymbols(tree));
     }
@@ -2111,38 +2112,44 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return
      */
     public TreeAutomaton<State> reduceTopDown() {
-        IntSet reachableStates = getReachableStates();
-        ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
+        if (isKnownToBeTopDownReduced) {
+            return this;
+        } else {
+            IntSet reachableStates = getReachableStates();
+            ConcreteTreeAutomaton<State> ret = new ConcreteTreeAutomaton<State>();
 
-        ret.signature = this.signature;
-        ret.stateInterner = (Interner) stateInterner.clone();
+            ret.signature = this.signature;
+            ret.stateInterner = (Interner) stateInterner.clone();
 
-        // copy all rules that only contain productive states
-        for (Rule rule : getRuleSet()) {
-            boolean allReachable = reachableStates.contains(rule.getParent());
+            // copy all rules that only contain productive states
+            for (Rule rule : getRuleSet()) {
+                boolean allReachable = reachableStates.contains(rule.getParent());
 
-            for (int child : rule.getChildren()) {
-                if (!reachableStates.contains(child)) {
-                    allReachable = false;
+                for (int child : rule.getChildren()) {
+                    if (!reachableStates.contains(child)) {
+                        allReachable = false;
+                    }
+                }
+
+                if (allReachable) {
+                // caution advised: this will only work correctly if both the signature
+                    // and the state interner of ret and this are the same
+                    ret.addRule(rule);
                 }
             }
 
-            if (allReachable) {
-                // caution advised: this will only work correctly if both the signature
-                // and the state interner of ret and this are the same
-                ret.addRule(rule);
-            }
-        }
+            // copy all final states that are actually states in the reduced automaton
+            ret.finalStates = new IntOpenHashSet(getFinalStates());
+            ret.finalStates.retainAll(reachableStates);
 
-        // copy all final states that are actually states in the reduced automaton
-        ret.finalStates = new IntOpenHashSet(getFinalStates());
-        ret.finalStates.retainAll(reachableStates);
-
-        // copy set of reachable states
+            // copy set of reachable states
 //        ret.allStates = new IntOpenHashSet(reachableStates);
-        ret.stateInterner.retainOnly(reachableStates);
+            ret.stateInterner.retainOnly(reachableStates);
 
-        return ret;
+            ret.isKnownToBeTopDownReduced = true;
+
+            return ret;
+        }
     }
 
     /**
@@ -2681,21 +2688,20 @@ public abstract class TreeAutomaton<State> implements Serializable {
             throw new UnsupportedOperationException("Not supported.");
         }
     }
-    
+
     /**
-     * Returns the number of rules in this automaton.
-     * The default implementation iterates over all
-     * rules, and can thus be quite slow.
-     * 
-     * @return 
+     * Returns the number of rules in this automaton. The default implementation
+     * iterates over all rules, and can thus be quite slow.
+     *
+     * @return
      */
     public long getNumberOfRules() {
         long numRules = 0;
-        
-        for( Rule rule : getRuleSet() ) {
+
+        for (Rule rule : getRuleSet()) {
             numRules++;
         }
-        
+
         return numRules;
     }
 
@@ -2931,7 +2937,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         IntSet seen = new IntOpenHashSet();
 
         //first constants
-        for (int c = 1; c<=signature.getMaxSymbolId(); c++) {
+        for (int c = 1; c <= signature.getMaxSymbolId(); c++) {
             if (signature.getArity(c) == 0) {
                 if (Thread.interrupted()) {
                     return ret;
@@ -2955,7 +2961,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         }
         seen.addAll(Sets.newHashSet(agenda));
 
-
         //now iterate
         Int2ObjectMap<SiblingFinder> siblingFinders = new Int2ObjectOpenHashMap<>();
         for (int labelID = 1; labelID <= signature.getMaxSymbolId(); labelID++) {
@@ -2973,7 +2978,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 ret = true;
             }
 
-            for (int labelID = 1; labelID<=signature.getMaxSymbolId(); labelID++) {
+            for (int labelID = 1; labelID <= signature.getMaxSymbolId(); labelID++) {
                 int arity = signature.getArity(labelID);
                 if (arity > 0) {
                     List<Iterable<Rule>> foundRules = new ArrayList<>();
@@ -2981,14 +2986,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
                         foundRules.add(getRulesBottomUp(labelID, new int[]{a}));
                     } else {
                         SiblingFinder sf = siblingFinders.get(labelID);
-                        for (int k = 0; k<arity; k++) {
+                        for (int k = 0; k < arity; k++) {
                             sf.addState(a, k);
                             for (int[] children : sf.getPartners(a, k)) {
                                 foundRules.add(getRulesBottomUp(labelID, children));
                             }
                         }
                     }
-                    
+
                     //process found rules and add newfound states to agenda
                     foundRules.forEach(ruleIt -> {
                         ruleIt.forEach(rule -> {
@@ -3008,20 +3013,18 @@ public abstract class TreeAutomaton<State> implements Serializable {
 
         return ret;
     }
-    
-    
-    
-    @OperationAnnotation(code ="countStates")
+
+    @OperationAnnotation(code = "countStates")
     public int getNumberOfSeenStates() {
-        return stateInterner.getNextIndex()-1;
+        return stateInterner.getNextIndex() - 1;
     }
-    
+
     /**
      * This returns an object that stores and finds possible partners for a
      * given state given a rule label. (see i.e.
-     * automata.condensed.PMFactoryRestrictive.) Default implementation
-     * returns all previously entered potential siblings, override and
-     * use automaton-specific indexing for faster parsing.
+     * automata.condensed.PMFactoryRestrictive.) Default implementation returns
+     * all previously entered potential siblings, override and use
+     * automaton-specific indexing for faster parsing.
      *
      * @param labelID
      * @return
