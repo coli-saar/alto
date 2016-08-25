@@ -1469,8 +1469,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
-        PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
-	//        PruningPolicy pp = new NoPruningPolicy();
+	//        PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
+	        PruningPolicy pp = new NoPruningPolicy();
 //        PruningPolicy pp = new HistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 120);
 //        PruningPolicy pp = new StatewiseHistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 100);
         TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper, pp);
