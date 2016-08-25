@@ -1,0 +1,11 @@
+#! /bin/bash
+
+# acc = Alto Codec Converter
+
+# Converts a corpus from one codec to another. The input file is assumed to
+# represent a list of instances, one per line, using some input codec; blank lines are allowed.
+# This tool will iterate over these instances and convert each into a string, using
+# given output codecs, which it writes into an output file. Each instance may
+# be converted by multiple output codecs or just a single one.
+
+java -cp $ALTO_JAR de.up.ling.irtg.script.CodecConverter "$@"

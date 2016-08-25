@@ -1,0 +1,22 @@
+#! /bin/bash
+
+# agc = Alto Grammar Converter
+
+# Converts a grammar from one format to another.
+#
+# The input is read from a file if one is specified on the
+# command-line, or otherwise from stdin. The input codec is determined,
+# in this order, (a) from the --input-codec command-line argument
+# if one is given, or (b) from the filename, if one is given and its
+# extension can be resolved to an input codec. If no input codec can be
+# determined, the script aborts.
+#
+# The output is written to a file if one is specified with the
+# --output-file command-line argument, or otherwise to stdout.
+# The output codec is determined, in this order, (a) from the --output-codec
+# command-line argument if one is given; (b) from the output file name
+# if one was specified and its extension can be resolved to an output codec;
+# (c) the {@link ToStringOutputCodec} if no other output codec can be
+# determined.
+
+java -cp $ALTO_JAR de.up.ling.irtg.script.GrammarConverter "$@"
