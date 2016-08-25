@@ -24,8 +24,7 @@ import de.up.ling.irtg.automata.condensed.CondensedNondeletingInverseHomAutomato
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedViterbiIntersectionAutomaton;
 import de.up.ling.irtg.automata.index.RuleStore;
-import de.up.ling.irtg.automata.pruning.NoPruningPolicy;
-import de.up.ling.irtg.automata.pruning.PruningPolicy;
+import de.up.ling.irtg.automata.pruning.*;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
@@ -1470,8 +1469,8 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
-//        PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
-        PruningPolicy pp = new NoPruningPolicy();
+        PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
+	//        PruningPolicy pp = new NoPruningPolicy();
 //        PruningPolicy pp = new HistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 120);
 //        PruningPolicy pp = new StatewiseHistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 100);
         TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper, pp);

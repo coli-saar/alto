@@ -1,0 +1,5 @@
+#! /bin/bash
+
+# acc = Alto Parsing Evaluator
+
+java -cp $ALTO_JAR de.up.ling.irtg.script.ParsingEvaluator "$@"
