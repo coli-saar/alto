@@ -8,11 +8,15 @@ package de.up.ling.irtg.script;
 import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.TreeAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.coarse_to_fine.CoarseToFineParser;
+import de.up.ling.irtg.automata.coarse_to_fine.FineToCoarseMapping;
+import de.up.ling.irtg.automata.coarse_to_fine.GrammarCoarsifier;
 import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.OutputCodec;
@@ -97,6 +101,21 @@ public class ParsingEvaluator {
             }
         }
 
+        // initialize coarse-to-fine parsing if requested
+        CoarseToFineParser coarseToFineParser = null;
+        String ctfInterpretation = null;
+
+        if (param.ctf != null) {
+            if (interpretations.size() != 1) {
+                System.err.println("Coarse-to-fine parsing only supports a single input interpretation.");
+                System.exit(1);
+            }
+
+            ctfInterpretation = interpretations.iterator().next();
+            FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(StringTools.slurp(new FileReader(param.ctf)));
+            coarseToFineParser = new CoarseToFineParser(irtg, ctfInterpretation, ftc, 0); // TODO - no pruning yet
+        }
+
         long overallStart = System.nanoTime();
 
         for (String filename : param.inputFiles) {
@@ -107,11 +126,19 @@ public class ParsingEvaluator {
             int pos = 1;
 
             for (Instance inst : corpus) {
+                Tree<String> dt = null;
+
                 System.err.printf(formatString, pos++, firstAlgebra.representAsString(inst.getInputObjects().get(firstInterp)));
 
                 long start = System.nanoTime();
-                TreeAutomaton chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
-                Tree<String> dt = chart.viterbi();
+
+                if (param.ctf == null) {
+                    dt = parseViterbi(irtg, inst, interpretations);
+                } else {
+                    dt = parseCtf(coarseToFineParser, inst, ctfInterpretation);
+                }
+//                TreeAutomaton chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
+//                Tree<String> dt = chart.viterbi();
                 System.err.print(Util.formatTimeSince(start));
 
                 // write to output corpus
@@ -175,6 +202,26 @@ public class ParsingEvaluator {
         }
     }
 
+    private static Tree<String> parseViterbi(InterpretedTreeAutomaton irtg, Instance inst, List<String> interpretations) {
+        TreeAutomaton chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
+        Tree<String> dt = chart.viterbi();
+        return dt;
+    }
+
+    private static Tree<String> parseCtf(CoarseToFineParser ctfp, Instance inst, String interpretation) {
+        Object inp = inst.getInputObjects().get(interpretation);
+        TreeAutomaton chart = ctfp.parseInputObject(inp);
+        
+        System.err.println(chart);
+
+        Tree<String> dt = chart.viterbi();
+        
+        System.err.println(dt);
+        
+        System.exit(0);
+        return dt;
+    }
+
     private static class CmdLineParameters {
 
         @Parameter
@@ -197,6 +244,9 @@ public class ParsingEvaluator {
 
         @Parameter(names = "--parseval", description = "Measure precision and recall on this interpretation.")
         public String parseval = null;
+
+        @Parameter(names = "--ctf", description = "Perform coarse-to-fine parsing with the given CTF map file.")
+        public String ctf = null;
 
         @Parameter(names = "--verbose", description = "Print some debugging output.")
         public boolean verbose = false;

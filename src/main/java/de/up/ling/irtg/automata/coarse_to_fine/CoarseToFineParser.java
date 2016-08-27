@@ -15,25 +15,27 @@ import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.NumbersCombine;
+import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  *
  * @author koller
  */
 public class CoarseToFineParser {
+
     private InterpretedTreeAutomaton irtg;
     private RuleRefinementTree rrt;
     private String inputInterpretation;
     private FineToCoarseMapping ftc;
     private double theta;
+    public static boolean DEBUG = false;
 
     public CoarseToFineParser(InterpretedTreeAutomaton irtg, String inputInterpretation, FineToCoarseMapping ftc, double theta) {
         this.irtg = irtg;
@@ -43,18 +45,19 @@ public class CoarseToFineParser {
 
         GrammarCoarsifier gc = new GrammarCoarsifier(ftc);
         this.rrt = gc.coarsify(irtg, inputInterpretation);
-        
-//        System.err.println(rrt.toString(irtg.getAutomaton()));
+
+        if (DEBUG) {
+            System.err.println(rrt.toString(irtg.getAutomaton()));
+        }
     }
 
-    public TreeAutomaton parse(Map<String, String> input) throws ParserException {
-        // create condensed invhom automaton
-        Map<String, Object> inputObjects = new HashMap<String, Object>();
-        for (String interp : input.keySet()) {
-            inputObjects.put(interp, irtg.parseString(interp, input.get(interp)));
-        }
+    public TreeAutomaton parse(String input) throws ParserException {
+        return parseInputObject(irtg.parseString(inputInterpretation, input));
+    }
 
-        CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObjects.get(inputInterpretation));
+    public TreeAutomaton parseInputObject(Object inputObject) {
+        // create condensed invhom automaton
+        CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
 
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
@@ -70,8 +73,10 @@ public class CoarseToFineParser {
             Long2DoubleMap outside = new Long2DoubleOpenHashMap();
             double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
-//            System.err.println("\n\nCHART AT LEVEL " + level + ":\n");
-//            printChart(coarseNodes, partnerInvhomRules, invhom, inside, outside);
+            if (DEBUG) {
+                System.err.println("\n\nCHART AT LEVEL " + level + ":\n");
+                printChart(coarseNodes, partnerInvhomRules, invhom, inside, outside);
+            }
 
             List<RuleRefinementNode> finerNodes = new ArrayList<>();
             List<CondensedRule> finerInvhomPartners = new ArrayList<>();
@@ -80,8 +85,10 @@ public class CoarseToFineParser {
             for (int i = 0; i < coarseNodes.size(); i++) {
                 RuleRefinementNode n = coarseNodes.get(i);
                 CondensedRule r = partnerInvhomRules.get(i);
-                
-//                printRulePair(i, r, n, invhom, inside, outside);
+
+                if (DEBUG) {
+                    printRulePair(i, r, n, invhom, inside, outside);
+                }
 
                 double score = outside.get(NumbersCombine.combine(n.getParent(), r.getParent())) * n.getWeight() * r.getWeight();
                 for (int j = 0; j < r.getArity(); j++) {
@@ -91,21 +98,26 @@ public class CoarseToFineParser {
                 if (score > theta * totalSentenceInside) {
                     // rule not filtered out => refine and copy to finer structure
                     for (RuleRefinementNode nn : n.getRefinements()) {
-//                        System.err.println("- consider refinement: " + nn.localToString(irtg.getAutomaton()));
-                        
+                        if (DEBUG) {
+                            System.err.println("- consider refinement: " + nn.localToString(irtg.getAutomaton()));
+                        }
+
                         if (productivityChecker.isRefinementProductive(nn, r)) {
                             finerNodes.add(nn);
                             finerInvhomPartners.add(r);
                             productivityChecker.recordParents(nn, r);
-//                            System.err.println("   -> record it: " + irtg.getAutomaton().getStateForId(nn.getParent()) + "+" + invhom.getStateForId(r.getParent()) + "\n");
-                        } else {
-//                            System.err.println("   -> removed, unproductive\n");
+
+                            if (DEBUG) {
+                                System.err.println("   -> record it: " + irtg.getAutomaton().getStateForId(nn.getParent()) + " " + invhom.getStateForId(r.getParent()) + "\n");
+                            }
+                        } else if (DEBUG) {
+                            System.err.println("   -> removed, unproductive\n");
                         }
                     }
-                } else {
-//                    System.err.println("removed with score " + score + ":");
-//                    System.err.println("- " + r.toString(invhom, x -> false));
-//                    System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                } else if (DEBUG) {
+                    System.err.println("removed with score " + score + ":");
+                    System.err.println("- " + r.toString(invhom, x -> false));
+                    System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
                 }
             }
 
@@ -118,6 +130,7 @@ public class CoarseToFineParser {
     }
 
     private class ProductiveRulesChecker {
+
         private LongSet bottomUpStatesDiscovered = new LongOpenHashSet();
 
         public void recordParents(RuleRefinementNode n, CondensedRule r) {
@@ -226,5 +239,11 @@ public class CoarseToFineParser {
         }
 
         return totalSentenceInside;
+    }
+
+    private static void D(int depth, Supplier<String> s) {
+        if (DEBUG) {
+            System.err.println(Util.repeat("  ", depth) + s.get());
+        }
     }
 }

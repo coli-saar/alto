@@ -28,6 +28,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton
 import de.up.ling.irtg.automata.condensed.CondensedIntersectionAutomatonTest
 
 import de.up.ling.irtg.automata.index.*
+import de.up.ling.irtg.codec.InputCodec
 
 
 /**
@@ -41,15 +42,49 @@ class CoarseToFineParserTest {
         InterpretedTreeAutomaton irtg = pi(GrammarCoarsifierTest.IRTG);
         CoarseToFineParser ctfp = new CoarseToFineParser(irtg, "i", ftc, 0);
         
-        TreeAutomaton chart = ctfp.parse(["i": "john watches the woman with the telescope"]);
+        TreeAutomaton chart = ctfp.parse("john watches the woman with the telescope");
         
         assertEquals(new HashSet([pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"), 
                                     pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))")]),
                             chart.language())
+    }
+    
+    @Test
+    public void testLoop() {
+        FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(GrammarCoarsifierTest.PTB_CTF);
+        InterpretedTreeAutomaton irtg = pi(LOOP_IRTG);
+        CoarseToFineParser ctfp = new CoarseToFineParser(irtg, "i", ftc, 0);
+        TreeAutomaton chart = ctfp.parse("hallo");
         
-//        
-//        System.err.println(chart)
-//        System.err.println(chart.language())
+        assert ! chart.language().isEmpty()
+    }
+    
+    public static String LOOP_IRTG = """
+interpretation i: de.up.ling.irtg.algebra.StringAlgebra
+
+S! -> r1(XX)
+  [i] ?1\n\
+
+XX -> r3(YY)\n\
+  [i] ?1\n\
+
+YY -> r2\n\
+  [i] hallo
+""";
+    
+    @Test
+    public void testPtb() {
+
+        InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByNameOrExtension("g10.irtb", null);
+        InterpretedTreeAutomaton irtg = ic.read(rs("g10.irtb"));
+        FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(GrammarCoarsifierTest.PTB_CTF);
+        CoarseToFineParser ctfp = new CoarseToFineParser(irtg, "string", ftc, 0);
+        
+        CoarseToFineParser.DEBUG = true;
+        TreeAutomaton chart = ctfp.parse("IN");
+        CoarseToFineParser.DEBUG = false;
+        
+        System.err.println(chart);
     }
 }
 
