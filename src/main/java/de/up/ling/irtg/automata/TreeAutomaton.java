@@ -124,6 +124,10 @@ public abstract class TreeAutomaton<State> implements Serializable {
     protected boolean isKnownToBeTopDownReduced = false;
 
     public TreeAutomaton(Signature signature) {
+        this(signature, new Interner<State>());
+    }
+    
+    protected TreeAutomaton(Signature signature, Interner<State> stateInterner) {
         ruleStore = new RuleStore(this);
 
 //        MapFactory factory = depth -> {
@@ -143,8 +147,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
 //        isExplicit = false;
 //        rulesForRhsState = null;
         this.signature = signature;
-        stateInterner = new Interner<State>();
-
+        this.stateInterner = stateInterner;
     }
 
     /**

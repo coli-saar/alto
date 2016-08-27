@@ -5,6 +5,8 @@
  */
 package de.up.ling.irtg.util;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -19,6 +21,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -102,6 +105,14 @@ public class Util {
 
     public static <E, Up> Tree<Up> mapTree(Tree<E> tree, com.google.common.base.Function<E, Up> fn) {
         return tree.dfs((node, children) -> Tree.create(fn.apply(node.getLabel()), children));
+    }
+    
+    public static int[] mapIntArray(int[] array, IntUnaryOperator fn) {
+        int[] ret = new int[array.length];
+        for( int i = 0; i < array.length; i++ ) {
+            ret[i] = fn.applyAsInt(array[i]);
+        }
+        return ret;
     }
 
     public static <T> Stream<T> stream(Iterable<T> iterable) {
@@ -394,5 +405,16 @@ public class Util {
         StringWriter sw = new StringWriter();
         ex.printStackTrace(new PrintWriter(sw));
         return sw.toString();
+    }
+    
+    
+    public static <E,F> ListMultimap<E,F> groupBy(Iterable<F> elements, Function<F,E> by) {
+        ListMultimap<E,F> groups = ArrayListMultimap.create();
+        
+        for( F e : elements ) {
+            groups.put(by.apply(e), e);
+        }
+        
+        return groups;
     }
 }

@@ -4,6 +4,7 @@
  */
 package de.up.ling.irtg.automata;
 
+import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import it.unimi.dsi.fastutil.ints.IntSet;
@@ -24,6 +25,17 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
 
     public ConcreteTreeAutomaton(Signature signature) {
         super(signature);
+        ruleStore.setExplicit(true);
+    }
+    
+    /**
+     * Only use this if you know what you're doing.
+     * 
+     * @param signature
+     * @param interner 
+     */
+    public ConcreteTreeAutomaton(Signature signature, Interner<State> interner) {
+        super(signature, interner);
         ruleStore.setExplicit(true);
     }
 

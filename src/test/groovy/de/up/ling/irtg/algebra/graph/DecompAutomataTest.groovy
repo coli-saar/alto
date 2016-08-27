@@ -58,7 +58,7 @@ class DecompAutomataTest {
         GraphAlgebra.writeRestrictedDecompositionAutomaton(input, 2, writer)
         //System.err.println(writer.toString())
         //System.err.println(decompAutoGold)
-        System.err.println(writer.toString())
+//        System.err.println(writer.toString())
         assertEquals(decompAutoGold, writer.toString())
     }
     

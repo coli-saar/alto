@@ -160,7 +160,7 @@ public class Homomorphism implements Serializable {
             System.err.println("Getting mapping for " + label);
         }
 
-        int termID = labelToLabelSet.get(label);
+        int termID = getTermID(label);
 
         if (termID == 0) {
             return null;
@@ -196,9 +196,17 @@ public class Homomorphism implements Serializable {
     }
 
     public int getTermID(int label) {
-        return getLabelSetID(label);
+        return labelToLabelSet.get(label);
     }
 
+    /** 
+     * This method is deprecated. Use {@link #getTermID(int) } instead.
+     * 
+     * @param label
+     * @return
+     * @deprecated
+     */
+    @Deprecated
     public int getLabelSetID(int label) {
         return labelToLabelSet.get(label);
     }
