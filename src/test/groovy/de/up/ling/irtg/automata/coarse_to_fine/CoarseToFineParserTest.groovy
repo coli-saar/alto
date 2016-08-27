@@ -34,14 +34,15 @@ import de.up.ling.irtg.automata.index.*
  *
  * @author koller
  */
-class CondensedCoarsestParserTest {
+class CoarseToFineParserTest {
     @Test
-    public void testCoarsestParser() {
+    public void testCoarseToFine() {
         FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(GrammarCoarsifierTest.PTB_CTF);
         InterpretedTreeAutomaton irtg = pi(GrammarCoarsifierTest.IRTG);
-        CoarseToFineParser ctfp = new CoarseToFineParser(irtg, "i", ftc);
+        CoarseToFineParser ctfp = new CoarseToFineParser(irtg, "i", ftc, 0);
         
-        ctfp.parse(["i": "john watches the woman with the telescope"]);
+        TreeAutomaton chart = ctfp.parse(["i": "john watches the woman with the telescope"]);
+        System.err.println(chart)
     }
 }
 

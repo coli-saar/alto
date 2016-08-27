@@ -139,7 +139,7 @@ public class RuleRefinementNode {
             buf.append(auto.getStateForId(children[i]));
         }
         
-        buf.append(String.format(") [%f]\n", weight));
+        buf.append(String.format(") [%f]", weight));
     }
     
     
@@ -152,7 +152,8 @@ public class RuleRefinementNode {
     private void buildString(int depth, TreeAutomaton<String> auto, StringBuilder buf) {
         String prefix = (depth == 0) ? "" : String.format("%" + depth + "s", " ");
         
-        appendLocalToString(auto, prefix, buf);        
+        appendLocalToString(auto, prefix, buf);
+        buf.append("\n");
         
         for( RuleRefinementNode fine : refinements ) {
             fine.buildString(depth + 2, auto, buf);
