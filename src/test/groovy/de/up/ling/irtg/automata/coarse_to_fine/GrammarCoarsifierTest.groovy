@@ -52,8 +52,8 @@ class GrammarCoarsifierTest {
         RuleRefinementTree rrt = gc.coarsify(irtg, "i");
 //        System.err.println(rrt.toString(irtg.getAutomaton()));
         
-        assert rrt.getCoarsestFinalStates().contains(irtg.getAutomaton().getIdForState("P"));
-        assert ! rrt.getCoarsestFinalStates().contains(irtg.getAutomaton().getIdForState("S"));
+        assert rrt.getFinalStatesAtLevel(0).contains(irtg.getAutomaton().getIdForState("P"));
+        assert ! rrt.getFinalStatesAtLevel(0).contains(irtg.getAutomaton().getIdForState("S"));
         
         RuleRefinementNode n = rrt.getFinestNodeForRule(findRule("r1", irtg.getAutomaton()));
         assert n != null;
@@ -67,11 +67,11 @@ class GrammarCoarsifierTest {
         RuleRefinementTree rrt = gc.coarsify(irtg, "i");
         
         // coarse IRTG should still parse original string (otherwise we may have over-coarsified)
-        InterpretedTreeAutomaton coarse = rrt.makeIrtgWithCoarsestAutomaton(irtg);        
+        InterpretedTreeAutomaton coarse = rrt.makeIrtgWithCoarsestAutomaton(irtg);
+//        System.err.println(coarse);
+
         TreeAutomaton chart = coarse.parse(["i": "john watches the woman with the telescope"])
-        assert chart.viterbi() != null;
-        
-        //        System.err.println(coarse);
+        assert chart.viterbi() != null;        
     }
     
     private Rule findRule(String label, TreeAutomaton auto) {
@@ -91,11 +91,11 @@ S! -> r1(NP,VP)
   [i] *(?1,?2)
 
 
-VP -> r4(V,NP) 
+VP -> r4(V,NP) [0.6]
   [i] *(?1,?2)
 
 
-VP -> r5(VP,PP)
+VP -> r5(VP,PP) [0.4]
   [i] *(?1,?2)
 
 
@@ -103,11 +103,11 @@ PP -> r6(P,NP)
   [i] *(?1,?2)
 
 
-NP -> r7
+NP -> r7 [0.5]
   [i] john
 
 
-NP -> r2(Det,N)
+NP -> r2(Det,N) [0.5]
   [i] *(?1,?2)
 
 
@@ -119,14 +119,14 @@ Det -> r9
   [i] the
 
 
-N -> r10
+N -> r10 [0.3]
   [i] woman
 
 
-N -> r11
+N -> r11 [0.3]
   [i] telescope
 
-N -> r3(N,PP)
+N -> r3(N,PP) [0.4]
   [i] *(?1,?2)
 
 P -> r12

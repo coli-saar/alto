@@ -43,7 +43,6 @@ public class RuleRefinementNode {
     
     static RuleRefinementNode makeCoarser(List<RuleRefinementNode> finerNodes, RrtSummary summary) {
         RuleRefinementNode ret = new RuleRefinementNode();
-        int termId = -1;
         
         ret.parent = summary.getCoarseParent();
         ret.children = summary.getCoarseChildren();
@@ -51,15 +50,17 @@ public class RuleRefinementNode {
         ret.labelSet = new IntOpenHashSet();
         ret.weight = 0;
         
+        ret.termId = -1;
+
         for( RuleRefinementNode fine : finerNodes ) {
             ret.labelSet.addAll(fine.labelSet);
             ret.weight += fine.weight;
             
             int termIdHere = fine.termId;
-            if( termId == -1 ) {
-                termId = termIdHere;
+            if( ret.termId == -1 ) {
+                ret.termId = termIdHere;
             } else {
-                assert termId == termIdHere;
+                assert ret.termId == termIdHere;
             }
         }
         
@@ -91,6 +92,10 @@ public class RuleRefinementNode {
     public IntSet getLabelSet() {
         return labelSet;
     }
+
+    public int getTermId() {
+        return termId;
+    }    
     
     /**
      * Returns an arbitrary label from this node's label set.
@@ -113,18 +118,17 @@ public class RuleRefinementNode {
         return refinements;
     }
     
-    public String toString(TreeAutomaton<String> auto) {
+    public String localToString(TreeAutomaton<String> auto) {
         StringBuilder buf = new StringBuilder();
-        buildString(0, auto, buf);
+        appendLocalToString(auto, "", buf);
         return buf.toString();
     }
-
-    private void buildString(int depth, TreeAutomaton<String> auto, StringBuilder buf) {
-        String prefix = (depth == 0) ? "" : String.format("%" + depth + "s", " ");
-        
-        buf.append(String.format("%s%s -> %s(", 
+    
+    public void appendLocalToString(TreeAutomaton<String> auto, String prefix, StringBuilder buf) {
+        buf.append(String.format("%s%s -> %d:%s(", 
                                  prefix, 
-                                 auto.getStateForId(parent), 
+                                 auto.getStateForId(parent),
+                                 termId,
                                  Util.mapToSet(labelSet, f -> auto.getSignature().resolveSymbolId(f)).toString()));
 
         for( int i = 0; i < children.length; i++ ) {
@@ -136,6 +140,19 @@ public class RuleRefinementNode {
         }
         
         buf.append(String.format(") [%f]\n", weight));
+    }
+    
+    
+    public String toString(TreeAutomaton<String> auto) {
+        StringBuilder buf = new StringBuilder();
+        buildString(0, auto, buf);
+        return buf.toString();
+    }
+
+    private void buildString(int depth, TreeAutomaton<String> auto, StringBuilder buf) {
+        String prefix = (depth == 0) ? "" : String.format("%" + depth + "s", " ");
+        
+        appendLocalToString(auto, prefix, buf);        
         
         for( RuleRefinementNode fine : refinements ) {
             fine.buildString(depth + 2, auto, buf);

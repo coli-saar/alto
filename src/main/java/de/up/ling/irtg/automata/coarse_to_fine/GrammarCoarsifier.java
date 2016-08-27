@@ -6,6 +6,7 @@
 package de.up.ling.irtg.automata.coarse_to_fine;
 
 import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Lists;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -44,9 +45,13 @@ public class GrammarCoarsifier {
         Map<Rule, RuleRefinementNode> ruleToFinestNode = new HashMap<>();
         List<RuleRefinementNode> coarse = null;
         Set<String> coarseFinalStates = null;
+        IntSet coarseFinalStateIds = null;
+        List<IntSet> finalStatesPerLevel = new ArrayList<>();
 
         // make finest layer
         Set<String> fineFinalStates = Util.mapToSet(irtg.getAutomaton().getFinalStates(), irtg.getAutomaton()::getStateForId);
+        finalStatesPerLevel.add(irtg.getAutomaton().getFinalStates());
+        
         List<RuleRefinementNode> fine = new ArrayList<>();
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
             RuleRefinementNode n = RuleRefinementNode.makeFinest(rule, inputHom);
@@ -70,19 +75,18 @@ public class GrammarCoarsifier {
             
             // make "fine" final states one step coarser
             coarseFinalStates = new HashSet<>();
+            coarseFinalStateIds = new IntOpenHashSet();
             for( String ffs : fineFinalStates ) {
-                coarseFinalStates.add(ftc.coarsify(ffs));
+                String cfs = ftc.coarsify(ffs);
+                coarseFinalStates.add(cfs);
+                coarseFinalStateIds.add(stateInterner.resolveObject(cfs));
             }
             
+            finalStatesPerLevel.add(coarseFinalStateIds);
             fineFinalStates = coarseFinalStates;
         }
         
-        IntSet coarsestFinalStates = new IntOpenHashSet();
-        for( String fs : fineFinalStates ) {
-            coarsestFinalStates.add(stateInterner.resolveObject(fs));
-        }        
-        
-        return new RuleRefinementTree(fine, coarsestFinalStates, ruleToFinestNode::get);
+        return new RuleRefinementTree(fine, Lists.reverse(finalStatesPerLevel), ruleToFinestNode::get);
     }
     
     private RrtSummary summarize(RuleRefinementNode node, Interner<String> stateInterner, Homomorphism hom) {

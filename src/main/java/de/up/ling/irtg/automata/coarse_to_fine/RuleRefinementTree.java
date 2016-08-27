@@ -7,10 +7,13 @@ package de.up.ling.irtg.automata.coarse_to_fine;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.FastutilUtils;
+import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.IntSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -21,12 +24,26 @@ import java.util.function.Function;
 public class RuleRefinementTree {
     private List<RuleRefinementNode> toplevel;
     private Function<Rule,RuleRefinementNode> finestNodes;
-    private IntSet coarsestFinalStates;
+    private List<IntSet> finalStatesPerLevel; // 0 = coarsest; size-1 = finest
+    private IntTrie<List<RuleRefinementNode>> coarsestTrie;  // termId -> child1 -> ... -> childn -> List<RRN>
 
-    public RuleRefinementTree(List<RuleRefinementNode> toplevel, IntSet coarsestFinalStates, Function<Rule, RuleRefinementNode> finestNodes) {
+    public RuleRefinementTree(List<RuleRefinementNode> toplevel, List<IntSet> finalStatesPerLevel, Function<Rule, RuleRefinementNode> finestNodes) {
         this.toplevel = toplevel;
         this.finestNodes = finestNodes;
-        this.coarsestFinalStates = coarsestFinalStates;
+        this.finalStatesPerLevel = finalStatesPerLevel;
+        this.coarsestTrie = new IntTrie<>();
+        
+        for( RuleRefinementNode node : toplevel ) {
+            int[] key = makeKey(node);
+            List<RuleRefinementNode> tn = coarsestTrie.get(key);
+            
+            if( tn == null ) {
+                tn = new ArrayList<>();
+                coarsestTrie.put(key, tn);
+            }
+            
+            tn.add(node);            
+        }
     }
 
     public List<RuleRefinementNode> getCoarsestNodes() {
@@ -44,7 +61,7 @@ public class RuleRefinementTree {
             ret.addRule(ret.createRule(node.getParent(), node.getRepresentativeLabel(), node.getChildren(), node.getWeight()));
         }
         
-        FastutilUtils.forEach(coarsestFinalStates, ret::addFinalState);
+        FastutilUtils.forEach(finalStatesPerLevel.get(0), ret::addFinalState);
         
         return ret;
     }
@@ -57,15 +74,37 @@ public class RuleRefinementTree {
         
         return ret;
     }
-
-    public IntSet getCoarsestFinalStates() {
-        return coarsestFinalStates;
+    
+    public IntSet getFinalStatesAtLevel(int level) {
+        return finalStatesPerLevel.get(level);
     }
+    
+    private int[] makeKey(RuleRefinementNode node) {
+        int[] key = new int[node.getChildren().length+1];
+        key[0] = node.getTermId();
+        for( int i = 0; i < node.getChildren().length; i++ ) {
+            key[i+1] = node.getChildren()[i];
+        }
+        
+        return key;
+    }
+
+    public IntTrie<List<RuleRefinementNode>> getCoarsestTrie() {
+        return coarsestTrie;
+    }
+    
     
     
     
     public String toString(TreeAutomaton auto) {
         StringBuilder buf = new StringBuilder();
+        
+        buf.append("Final states at level:\n");
+        for( int level = 0; level < finalStatesPerLevel.size(); level ++ ) {
+            buf.append(String.format("[%d] %s\n", level, Util.mapToList(getFinalStatesAtLevel(level), q -> auto.getStateForId(q)).toString()));
+        }
+        
+        buf.append("\n");
         
         for( RuleRefinementNode node : toplevel ) {
             buf.append(node.toString(auto) + "\n");

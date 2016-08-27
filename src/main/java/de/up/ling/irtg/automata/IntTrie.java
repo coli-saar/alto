@@ -125,6 +125,10 @@ public class IntTrie<E> implements Serializable {
             }
         }
     }
+    
+    public IntTrie<E> step(int oneStepKey) {
+        return nextStep.get(oneStepKey);
+    }
 
     public void foreachValueForKeySets(List<IntSet> keySets, Consumer<E> fn) {
         foreachValueForKeySets(0, keySets, fn);
