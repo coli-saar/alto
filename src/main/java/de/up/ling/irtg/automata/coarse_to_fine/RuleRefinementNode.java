@@ -7,6 +7,7 @@ package de.up.ling.irtg.automata.coarse_to_fine;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
@@ -25,21 +26,24 @@ public class RuleRefinementNode {
     private IntSet labelSet;
     private int[] children;
     private double weight;
+    private int termId;  // invariant: all labels in the labelSet must have the same termId (namely, this one) wrt the input homomorphism
     
     private List<RuleRefinementNode> refinements;
     
-    static RuleRefinementNode makeFinest(Rule rule) {
+    static RuleRefinementNode makeFinest(Rule rule, Homomorphism hom) {
         RuleRefinementNode ret = new RuleRefinementNode();
         ret.parent = rule.getParent();
         ret.labelSet = IntSets.singleton(rule.getLabel());
         ret.children = rule.getChildren();
         ret.weight = rule.getWeight();
+        ret.termId = hom.getTermID(rule.getLabel());
         
         return ret;
     }
     
     static RuleRefinementNode makeCoarser(List<RuleRefinementNode> finerNodes, RrtSummary summary) {
         RuleRefinementNode ret = new RuleRefinementNode();
+        int termId = -1;
         
         ret.parent = summary.getCoarseParent();
         ret.children = summary.getCoarseChildren();
@@ -50,6 +54,13 @@ public class RuleRefinementNode {
         for( RuleRefinementNode fine : finerNodes ) {
             ret.labelSet.addAll(fine.labelSet);
             ret.weight += fine.weight;
+            
+            int termIdHere = fine.termId;
+            if( termId == -1 ) {
+                termId = termIdHere;
+            } else {
+                assert termId == termIdHere;
+            }
         }
         
         ret.refinements = finerNodes;

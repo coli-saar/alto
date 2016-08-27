@@ -49,7 +49,7 @@ public class GrammarCoarsifier {
         Set<String> fineFinalStates = Util.mapToSet(irtg.getAutomaton().getFinalStates(), irtg.getAutomaton()::getStateForId);
         List<RuleRefinementNode> fine = new ArrayList<>();
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
-            RuleRefinementNode n = RuleRefinementNode.makeFinest(rule);
+            RuleRefinementNode n = RuleRefinementNode.makeFinest(rule, inputHom);
             fine.add(n);
             ruleToFinestNode.put(rule, n);
         }
