@@ -84,6 +84,9 @@ class GrammarCoarsifierTest {
         return null;
     }
     
+    // [r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11)))))), 
+    // r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))]
+    
     public static String IRTG = """\n\
 interpretation i: de.up.ling.irtg.algebra.StringAlgebra
 

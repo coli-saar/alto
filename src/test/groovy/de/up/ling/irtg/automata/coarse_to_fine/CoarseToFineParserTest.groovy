@@ -42,7 +42,14 @@ class CoarseToFineParserTest {
         CoarseToFineParser ctfp = new CoarseToFineParser(irtg, "i", ftc, 0);
         
         TreeAutomaton chart = ctfp.parse(["i": "john watches the woman with the telescope"]);
-        System.err.println(chart)
+        
+        assertEquals(new HashSet([pt("r1(r7,r4(r8,r2(r9,r3(r10,r6(r12,r2(r9,r11))))))"), 
+                                    pt("r1(r7,r5(r4(r8,r2(r9,r10)),r6(r12,r2(r9,r11))))")]),
+                            chart.language())
+        
+//        
+//        System.err.println(chart)
+//        System.err.println(chart.language())
     }
 }
 
