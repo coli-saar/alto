@@ -36,12 +36,23 @@ import java.util.regex.Pattern;
  * Penn Treebank have NP nodes with one children, two children, and so on.
  * Thus when you write a grammar that generates PTB-style parse trees,
  * you'll want to use a {@link TreeWithAritiesAlgebra} instead of a
- * {@link TreeAlgebra}.
+ * {@link TreeAlgebra}.<p>
+ * 
+ * This algebra can be in <i>permissive mode</i> or not. In non-permissive mode,
+ * when you try to evaluate a term like <code>f_2(a_0)</code>, evaluation will fail
+ * with an {@link IllegalArgumentException}, because <code>f_2</code> should have
+ * two children, but only got one. In permissive mode, such mismatches are ignored.
+ * By default, the algebra is in permissive mode; this simplifies PTB parsing,
+ * but has the theoretical problem that now not every term that evaluates to som
+ * tree t is in the language of the decomposition automaton (because the latter only
+ * accepts trees with the correct arities in the labels). You can switch it to
+ * non-permissive mode using {@link #setPermissive(boolean) }.
  *
  * @author koller
  */
 public class TreeWithAritiesAlgebra extends TreeAlgebra {
     private static final Pattern ARITY_STRIPPING_PATTERN = Pattern.compile("(.+)_(\\d+)");
+    private boolean permissive = true;
 
     @Override
     public Tree<String> evaluate(Tree<String> t) {
@@ -83,23 +94,34 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
         });
     }
     
-    protected static Tree<String> stripArities(Tree<String> tree) {
+    protected Tree<String> stripArities(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
                 Matcher m = ARITY_STRIPPING_PATTERN.matcher(node.getLabel());
                 
                 if( m.matches() ) {
-                    if( Integer.parseInt(m.group(2)) == childrenValues.size() ) {
+                    int arity = Integer.parseInt(m.group(2));
+                    
+                    if( permissive || arity == childrenValues.size() ) {
                         return Tree.create(m.group(1), childrenValues);
                     } else {
-                        throw new IllegalArgumentException("Node with label " + node.getLabel() + " has " + childrenValues.size() + " children in tree: " + childrenValues);
+                        String msg = String.format("Node with label '%s' should have %d children, but has %d: %s", node.getLabel(), arity, childrenValues.size(), childrenValues.toString());
+                        throw new IllegalArgumentException(msg);
                     }
                 } else {
                     throw new IllegalArgumentException("Node label " + node.getLabel() + " is not of the form label_arity");
                 }
             }           
         });
+    }
+
+    public boolean isPermissive() {
+        return permissive;
+    }
+
+    public void setPermissive(boolean permissive) {
+        this.permissive = permissive;
     }
 
     
