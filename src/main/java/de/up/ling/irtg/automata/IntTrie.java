@@ -5,7 +5,6 @@
  */
 package de.up.ling.irtg.automata;
 
-import de.up.ling.irtg.util.ArrayMap;
 import de.up.ling.irtg.util.FastutilUtils;
 import de.up.ling.irtg.util.MapFactory;
 import de.up.ling.irtg.util.Util;
@@ -22,7 +21,9 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
 /**
@@ -57,6 +58,7 @@ public class IntTrie<E> implements Serializable {
     }
 
     private static final MapFactory alwaysHashMapFactory = depth -> new Int2ObjectOpenHashMap<>();
+
     
     private class CollectionValueCounter implements ToLongFunction<E>, Serializable {
         @Override
@@ -264,6 +266,7 @@ public class IntTrie<E> implements Serializable {
 //            System.err.println("uses ArrayMap with density " + ((ArrayMap) nextStep).getStatistics());
 //        }
     }
+    
 
     private void collectStatistics(int depth, Int2IntMap totalKeysPerDepth, Int2IntMap totalNodesPerDepth, Int2IntMap maxKeysPerDepth, Int2LongMap totalValuesPerDepth) {
         int x = totalKeysPerDepth.get(depth);
@@ -288,5 +291,26 @@ public class IntTrie<E> implements Serializable {
         for (int key : nextStep.keySet()) {
             nextStep.get(key).collectStatistics(depth + 1, totalKeysPerDepth, totalNodesPerDepth, maxKeysPerDepth, totalValuesPerDepth);
         }
+    }
+    
+    
+    
+    
+    public void print(BiFunction<Integer,Integer,String> keyToString, Function<E,String> valueToString) {
+        print(0, keyToString, valueToString);
+    }
+    
+    private void print(int depth, BiFunction<Integer, Integer, String> keyToString, Function<E, String> valueToString) {
+        String prefix = Util.repeat(" ", depth*2);
+        
+        if( value != null ) {
+            String s = valueToString.apply(value).replaceAll("\\n", "\n   " + prefix);
+            System.err.printf("%s-> %s\n", prefix, s);
+        }
+        
+        for( int key : nextStep.keySet() ) {
+            System.err.printf("%s%d (%s):\n", prefix, key, keyToString.apply(key, depth));
+            nextStep.get(key).print(depth+1, keyToString, valueToString);
+        }        
     }
 }

@@ -13,9 +13,12 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.hom.Homomorphism;
+import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.NumbersCombine;
 import de.up.ling.irtg.util.Util;
+import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
@@ -47,7 +50,27 @@ public class CoarseToFineParser {
         this.rrt = gc.coarsify(irtg, inputInterpretation);
 
         if (DEBUG) {
-            System.err.println(rrt.toString(irtg.getAutomaton()));
+            // show the automaton's state interner
+            System.err.println(irtg.getAutomaton().getStateInterner());
+            
+            
+            // print the entire RRT trie
+//            rrt.getCoarsestTrie().print((key, depth) -> {
+//                if( depth == 0 ) {
+//                    // key is termID
+//                    Homomorphism hom = irtg.getInterpretation(inputInterpretation).getHomomorphism();
+//                    Tree<HomomorphismSymbol> h = hom.getByLabelSetID(key);
+//                    Tree<String> hs = HomomorphismSymbol.toStringTree(h, hom.getTargetSignature());
+//                    return hs.toString();
+//                } else {
+//                    return irtg.getAutomaton().getStateForId(key);
+//                }
+//            },
+//                                        (List<RuleRefinementNode> rrnl) -> Util.mapToList(rrnl, rrn -> rrn.toString(irtg.getAutomaton())).toString()
+//            );
+
+            // print the RRT itself
+//            System.err.println(rrt.toString(irtg.getAutomaton()));
         }
     }
 
@@ -63,7 +86,7 @@ public class CoarseToFineParser {
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
         List<CondensedRule> partnerInvhomRules = new ArrayList<>();
         CondensedCoarsestParser ccp = new CondensedCoarsestParser(rrt, invhom);
-        ccp.setRrnToString(irtg.getAutomaton()); // for debugging
+        ccp.setToStringFunctions(irtg.getAutomaton()); // for debugging
         ccp.parse(coarseNodes, partnerInvhomRules);
 
         assert coarseNodes.size() == partnerInvhomRules.size();

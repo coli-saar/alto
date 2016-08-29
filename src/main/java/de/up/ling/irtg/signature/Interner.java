@@ -11,12 +11,14 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -305,7 +307,20 @@ public class Interner<E> implements Serializable, Cloneable {
 
     @Override
     public String toString() {
-        return intToObject.toString();
+        processUncachedObjects();
+        IntList sortedKnownIds = new IntArrayList(getKnownIds());
+        Collections.sort(sortedKnownIds);
+        int max = Collections.max(sortedKnownIds);
+        int maxLen = (int) (Math.log10(max) + 1.5);
+        
+        StringBuilder buf = new StringBuilder();
+        
+        buf.append("trusting: " + isTrustingMode() + "\n");
+        FastutilUtils.forEach(sortedKnownIds, id -> {
+           buf.append(String.format("[%" + maxLen + "d] %s\n" , id, resolveId(id)));
+        });
+        
+        return buf.toString();
     }
 
     public boolean isTrustingMode() {

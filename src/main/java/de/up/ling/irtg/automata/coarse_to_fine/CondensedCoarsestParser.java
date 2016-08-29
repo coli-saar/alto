@@ -21,6 +21,7 @@ import it.unimi.dsi.fastutil.ints.IntSets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 /**
@@ -35,9 +36,11 @@ public class CondensedCoarsestParser<InvhomState> {
     private List<CondensedRule> partnerInvhomRules;
     public static boolean DEBUG = false;
     Function<RuleRefinementNode,String> rrnToString = x -> x.toString();
+    IntFunction<String> coarseStateToString = x -> Integer.toString(x);
     
-    void setRrnToString(TreeAutomaton auto) {
+    void setToStringFunctions(TreeAutomaton auto) {
         rrnToString = x -> x.localToString(auto);
+        coarseStateToString = q -> auto.getStateForId(q).toString();
     }
 
     public CondensedCoarsestParser(RuleRefinementTree coarseGrammar, CondensedTreeAutomaton<InvhomState> invhom) {
@@ -64,12 +67,12 @@ public class CondensedCoarsestParser<InvhomState> {
         if (!visited.contains(q)) {
             visited.add(q);
 
-            D(depth, () -> "visit: " + invhom.getStateForId(q));
+            D(depth, () -> "\nvisit: " + invhom.getStateForId(q));
 
             for (final CondensedRule rightRule : invhom.getCondensedRulesByParentState(q)) {
                 IntTrie<List<RuleRefinementNode>> trieForTermId = coarseGrammar.getCoarsestTrie().step(rightRule.getLabelSetID());
 
-                D(depth, () -> "inv rule: " + rightRule.toString(invhom));
+                D(depth, () -> "*** inv rule: " + rightRule.toString(invhom));
                 D(depth, () -> "labelSetId: " + rightRule.getLabelSetID());
                 D(depth, () -> "trie found: " + (trieForTermId != null));
 
@@ -129,7 +132,7 @@ public class CondensedCoarsestParser<InvhomState> {
                 }
             }
 
-            D(depth, () -> "partners of q: " + partners.get(q));
+            D(depth, () -> "\nbefore loopy: partners of q: " + Util.mapToList(partners.get(q), coarseStateToString::apply));
 
             // Now that we have seen all children of q through rules that
             // are not self-loops, go through the self-loops and process them.
@@ -140,6 +143,8 @@ public class CondensedCoarsestParser<InvhomState> {
 
                 for (CondensedRule rightRule : loopRules) {
                     IntTrie<List<RuleRefinementNode>> trieForTermId = coarseGrammar.getCoarsestTrie().step(rightRule.getLabelSetID());
+                    D(depth, () -> "** loopy rule: " + rightRule.toString(invhom));
+                    D(depth, () -> "found trie for loopy rule: " + trieForTermId);
 
                     int rightParent = rightRule.getParent();
                     int[] rightChildren = rightRule.getChildren();
@@ -149,17 +154,20 @@ public class CondensedCoarsestParser<InvhomState> {
 
                     while (!agenda.isEmpty()) {
                         int leftState = agenda.pop();
-                        D(depth, () -> "pop left state: " + leftState);
+                        D(depth, () -> "pop left state: " + leftState + " " + coarseStateToString.apply(leftState));
 
                         for (int i = 0; i < rightRule.getArity(); i++) {
                             if (rightChildren[i] == rightParent) {
                                 // i is a loop position
                                 makeLeftChildStateSets(leftChildStateSets, rightChildren, i, leftState, partners);
+                                
                                 trieForTermId.foreachValueForKeySets(leftChildStateSets, rrns -> {
                                     for (RuleRefinementNode rrn : rrns) {
+                                        D(depth, () -> "consider rrn: " + rrnToString.apply(rrn));
                                         partnerInvhomRules.add(rightRule);
                                         coarseNodes.add(rrn);
 
+                                        D(depth, () -> "add partner for " + invhom.getStateForId(rightRule.getParent()) + " and enqueue: " + coarseStateToString.apply(rrn.getParent()));
                                         addPartner(rightRule.getParent(), rrn.getParent(), partners);
                                         agenda.enqueue(rrn.getParent());
                                     }

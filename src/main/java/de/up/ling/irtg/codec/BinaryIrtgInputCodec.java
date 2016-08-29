@@ -100,6 +100,8 @@ public class BinaryIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             String symbol = sc.readString();
             sig.addObjectWithIndex(id, symbol);
         }
+        
+        sig.setTrustingMode(false);
     }
 
     private List<String> readInterpretations(NumberCodec nc, StringCodec sc, InterpretedTreeAutomaton irtg) throws IOException, ClassNotFoundException, InstantiationException, IllegalAccessException {
