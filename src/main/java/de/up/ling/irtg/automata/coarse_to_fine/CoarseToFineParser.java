@@ -13,14 +13,13 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
-import de.up.ling.irtg.hom.Homomorphism;
-import de.up.ling.irtg.hom.HomomorphismSymbol;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.NumbersCombine;
 import de.up.ling.irtg.util.Util;
-import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import java.util.ArrayList;
@@ -52,8 +51,7 @@ public class CoarseToFineParser {
         if (DEBUG) {
             // show the automaton's state interner
             System.err.println(irtg.getAutomaton().getStateInterner());
-            
-            
+
             // print the entire RRT trie
 //            rrt.getCoarsestTrie().print((key, depth) -> {
 //                if( depth == 0 ) {
@@ -68,7 +66,6 @@ public class CoarseToFineParser {
 //            },
 //                                        (List<RuleRefinementNode> rrnl) -> Util.mapToList(rrnl, rrn -> rrn.toString(irtg.getAutomaton())).toString()
 //            );
-
             // print the RRT itself
 //            System.err.println(rrt.toString(irtg.getAutomaton()));
         }
@@ -92,9 +89,15 @@ public class CoarseToFineParser {
         assert coarseNodes.size() == partnerInvhomRules.size();
 
         // refine the chart level-1 times
+        Long2DoubleMap inside = new Long2DoubleOpenHashMap();
+        Long2DoubleMap outside = new Long2DoubleOpenHashMap();
+        ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
+
         for (int level = 0; level < ftc.numLevels() - 1; level++) {
-            Long2DoubleMap inside = new Long2DoubleOpenHashMap();
-            Long2DoubleMap outside = new Long2DoubleOpenHashMap();
+            inside.clear();
+            outside.clear();
+            productivityChecker.clear();
+
             double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
             if (DEBUG) {
@@ -104,7 +107,6 @@ public class CoarseToFineParser {
 
             List<RuleRefinementNode> finerNodes = new ArrayList<>();
             List<CondensedRule> finerInvhomPartners = new ArrayList<>();
-            ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
 
             for (int i = 0; i < coarseNodes.size(); i++) {
                 RuleRefinementNode n = coarseNodes.get(i);
@@ -150,7 +152,7 @@ public class CoarseToFineParser {
         }
 
         // decode final chart into tree automaton
-        return createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom);
+        return createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs());
     }
 
     private class ProductiveRulesChecker {
@@ -170,31 +172,57 @@ public class CoarseToFineParser {
 
             return true;
         }
+
+        public void clear() {
+            bottomUpStatesDiscovered.clear();
+        }
+
+        public LongSet getStatePairs() {
+            return bottomUpStatesDiscovered;
+        }
     }
 
-    private TreeAutomaton createTreeAutomaton(List<RuleRefinementNode> nodes, List<CondensedRule> invhomRules, CondensedTreeAutomaton invhom) {
+    private TreeAutomaton createTreeAutomaton(List<RuleRefinementNode> nodes, List<CondensedRule> invhomRules, CondensedTreeAutomaton invhom, LongSet stateIdPairs) {
         Signature sig = irtg.getAutomaton().getSignature();
         ConcreteTreeAutomaton auto = new ConcreteTreeAutomaton(sig);
 
+        // create states in automaton
+        auto.getStateInterner().setTrustingMode(true);
+
+        LongIterator it = stateIdPairs.iterator();
+        IntInt2IntMap stateIdPairToState = new IntInt2IntMap();
+        stateIdPairToState.setDefaultReturnValue(-1000);
+        while (it.hasNext()) {
+            long stateIdPair = it.nextLong();
+            int grammarStateId = NumbersCombine.getFirst(stateIdPair);
+            int invhomStateId = NumbersCombine.getSecond(stateIdPair);
+            Pair statePair = new Pair(irtg.getAutomaton().getStateForId(grammarStateId), invhom.getStateForId(invhomStateId));
+            int newState = auto.addState(statePair);
+            stateIdPairToState.put(grammarStateId, invhomStateId, newState);
+
+            if (invhom.getFinalStates().contains(invhomStateId) && irtg.getAutomaton().getFinalStates().contains(grammarStateId)) {
+                auto.addFinalState(newState);
+            }
+        }
+
+        auto.getStateInterner().setTrustingMode(false);
+
+        // create rules
         for (int i = 0; i < nodes.size(); i++) {
             RuleRefinementNode n = nodes.get(i);
             CondensedRule r = invhomRules.get(i);
 
             assert n.getLabelSet().size() == 1;
 
-            Object parentPair = new Pair(irtg.getAutomaton().getStateForId(n.getParent()), invhom.getStateForId(r.getParent()));
-            String label = sig.resolveSymbolId(n.getRepresentativeLabel());
-            Object[] childrenPairs = new Object[r.getArity()];
+            int parent = stateIdPairToState.get(n.getParent(), r.getParent());
+            int label = n.getRepresentativeLabel();
+            int[] children = new int[r.getArity()];
             for (int j = 0; j < r.getArity(); j++) {
-                childrenPairs[j] = new Pair(irtg.getAutomaton().getStateForId(n.getChildren()[j]), invhom.getStateForId(r.getChildren()[j]));
+                children[j] = stateIdPairToState.get(n.getChildren()[j], r.getChildren()[j]);
             }
-
-            Rule rule = auto.createRule(parentPair, label, childrenPairs, n.getWeight() * r.getWeight());
+            
+            Rule rule = auto.createRule(parent, label, children, n.getWeight() * r.getWeight());
             auto.addRule(rule);
-
-            if (invhom.getFinalStates().contains(r.getParent()) && irtg.getAutomaton().getFinalStates().contains(n.getParent())) {
-                auto.addFinalState(auto.addState(parentPair));
-            }
         }
 
         return auto;

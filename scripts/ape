@@ -2,4 +2,4 @@
 
 # acc = Alto Parsing Evaluator
 
-java -cp $ALTO_JAR de.up.ling.irtg.script.ParsingEvaluator "$@"
+java -Xmx8G -cp $ALTO_JAR de.up.ling.irtg.script.ParsingEvaluator "$@"
