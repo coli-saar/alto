@@ -6,9 +6,9 @@
 package de.up.ling.irtg.automata.coarse_to_fine;
 
 import de.up.ling.irtg.automata.IntTrie;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
-import static de.up.ling.irtg.automata.condensed.GenericCondensedIntersectionAutomaton.DEBUG;
 import de.up.ling.irtg.util.IntAgenda;
 import de.up.ling.irtg.util.Util;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -20,6 +20,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -27,11 +28,17 @@ import java.util.function.Supplier;
  * @author koller
  */
 public class CondensedCoarsestParser<InvhomState> {
+
     private final RuleRefinementTree coarseGrammar;
     private final CondensedTreeAutomaton<InvhomState> invhom;
     private List<RuleRefinementNode> coarseNodes;
     private List<CondensedRule> partnerInvhomRules;
-    private static final boolean DEBUG = false;
+    public static boolean DEBUG = false;
+    Function<RuleRefinementNode,String> rrnToString = x -> x.toString();
+    
+    void setRrnToString(TreeAutomaton auto) {
+        rrnToString = x -> x.localToString(auto);
+    }
 
     public CondensedCoarsestParser(RuleRefinementTree coarseGrammar, CondensedTreeAutomaton<InvhomState> invhom) {
         this.coarseGrammar = coarseGrammar;
@@ -56,12 +63,12 @@ public class CondensedCoarsestParser<InvhomState> {
 
         if (!visited.contains(q)) {
             visited.add(q);
-            
+
             D(depth, () -> "visit: " + invhom.getStateForId(q));
 
             for (final CondensedRule rightRule : invhom.getCondensedRulesByParentState(q)) {
                 IntTrie<List<RuleRefinementNode>> trieForTermId = coarseGrammar.getCoarsestTrie().step(rightRule.getLabelSetID());
-                
+
                 D(depth, () -> "inv rule: " + rightRule.toString(invhom));
                 D(depth, () -> "labelSetId: " + rightRule.getLabelSetID());
                 D(depth, () -> "trie found: " + (trieForTermId != null));
@@ -72,6 +79,7 @@ public class CondensedCoarsestParser<InvhomState> {
                     // postponing its combination with the right rules until below.
                     if (rightRule.isLoop()) {
                         loopRules.add(rightRule);
+                        D(depth, () -> "loopy rule: " + rightRule.toString(invhom));
 
                         // make sure that all non-loopy children have been explored
                         for (int i = 0; i < rightRule.getArity(); i++) {
@@ -98,19 +106,19 @@ public class CondensedCoarsestParser<InvhomState> {
                             remappedChildren.add(partners.get(rightChildren[i]));
                         }
                     }
-                    
+
                     D(depth, () -> "remappedChildren: " + remappedChildren);
 
                     // find all rules bottom-up in the left automaton that have the same (remapped) children as the right rule.
                     trieForTermId.foreachValueForKeySets(remappedChildren, rrns -> {
-                                                     for (RuleRefinementNode rrn : rrns) {
-                                                         D(depth, () -> "found rrn: " + rrn);
-                                                         partnerInvhomRules.add(rightRule);
-                                                         coarseNodes.add(rrn);
-                                                         foundPartners.add(rightRule.getParent());
-                                                         foundPartners.add(rrn.getParent());
-                                                     }
-                                                 });
+                        for (RuleRefinementNode rrn : rrns) {
+                            D(depth, () -> "found rrn: " + rrnToString.apply(rrn));
+                            partnerInvhomRules.add(rightRule);
+                            coarseNodes.add(rrn);
+                            foundPartners.add(rightRule.getParent());
+                            foundPartners.add(rrn.getParent());
+                        }
+                    });
 
                     // now go through to-do list and add all state pairs to partner sets
                     for (int i = 0; i < foundPartners.size(); i += 2) {
@@ -120,6 +128,8 @@ public class CondensedCoarsestParser<InvhomState> {
                     foundPartners.clear();
                 }
             }
+
+            D(depth, () -> "partners of q: " + partners.get(q));
 
             // Now that we have seen all children of q through rules that
             // are not self-loops, go through the self-loops and process them.
@@ -133,31 +143,27 @@ public class CondensedCoarsestParser<InvhomState> {
 
                     int rightParent = rightRule.getParent();
                     int[] rightChildren = rightRule.getChildren();
-//                IntSet rightLabelSet = rightRule.getLabels(right);
                     List<IntSet> leftChildStateSets = new ArrayList<>(rightChildren.length);
 
-//                    if (partners.get(q) == null) {
-//                        System.err.println("** loopy rule " + rightRule.toString(right));
-//                        System.err.println("** but parent q=" + right.getStateForId(q) + " has null partners");
-//                    }
                     IntAgenda agenda = new IntAgenda(partners.get(q));  // agenda of coarse states that we have seen with q
 
                     while (!agenda.isEmpty()) {
                         int leftState = agenda.pop();
+                        D(depth, () -> "pop left state: " + leftState);
 
                         for (int i = 0; i < rightRule.getArity(); i++) {
                             if (rightChildren[i] == rightParent) {
                                 // i is a loop position
                                 makeLeftChildStateSets(leftChildStateSets, rightChildren, i, leftState, partners);
                                 trieForTermId.foreachValueForKeySets(leftChildStateSets, rrns -> {
-                                                                 for (RuleRefinementNode rrn : rrns) {
-                                                                     partnerInvhomRules.add(rightRule);
-                                                                     coarseNodes.add(rrn);
+                                    for (RuleRefinementNode rrn : rrns) {
+                                        partnerInvhomRules.add(rightRule);
+                                        coarseNodes.add(rrn);
 
-                                                                     addPartner(rightRule.getParent(), rrn.getParent(), partners);
-                                                                     agenda.enqueue(rrn.getParent());
-                                                                 }
-                                                             });
+                                        addPartner(rightRule.getParent(), rrn.getParent(), partners);
+                                        agenda.enqueue(rrn.getParent());
+                                    }
+                                });
                             }
                         }
                     }
@@ -190,7 +196,7 @@ public class CondensedCoarsestParser<InvhomState> {
             }
         }
     }
-    
+
     private void D(int depth, Supplier<String> s) {
         if (DEBUG) {
             System.err.println(Util.repeat("  ", depth) + s.get());

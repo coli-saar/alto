@@ -81,8 +81,10 @@ YY -> r2\n\
         CoarseToFineParser ctfp = new CoarseToFineParser(irtg, "string", ftc, 0);
         
         CoarseToFineParser.DEBUG = true;
+        CondensedCoarsestParser.DEBUG = true;
         TreeAutomaton chart = ctfp.parse("IN");
         CoarseToFineParser.DEBUG = false;
+        CondensedCoarsestParser.DEBUG = false;
         
         System.err.println(chart);
     }

@@ -63,6 +63,7 @@ public class CoarseToFineParser {
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
         List<CondensedRule> partnerInvhomRules = new ArrayList<>();
         CondensedCoarsestParser ccp = new CondensedCoarsestParser(rrt, invhom);
+        ccp.setRrnToString(irtg.getAutomaton()); // for debugging
         ccp.parse(coarseNodes, partnerInvhomRules);
 
         assert coarseNodes.size() == partnerInvhomRules.size();
