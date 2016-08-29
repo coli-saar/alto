@@ -113,7 +113,7 @@ public class ParsingEvaluator {
 
             ctfInterpretation = interpretations.iterator().next();
             FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(StringTools.slurp(new FileReader(param.ctf)));
-            coarseToFineParser = new CoarseToFineParser(irtg, ctfInterpretation, ftc, 0); // TODO - no pruning yet
+            coarseToFineParser = new CoarseToFineParser(irtg, ctfInterpretation, ftc, 1e-5);
         }
 
         long overallStart = System.nanoTime();
@@ -144,14 +144,19 @@ public class ParsingEvaluator {
                 // write to output corpus
                 out.println(dt);
 
-                Map<String, Object> results = irtg.interpret(dt);
-                for (String interp : outputInterpretations) {
-                    if (dt == null) {
-                        out.println("<null>");
-                    } else {
-                        OutputCodec oc = ocForInterpretation.get(interp);
-                        out.println(oc.asString(results.get(interp)));
+                Map<String, Object> results = null;
+                try {
+                    results = irtg.interpret(dt);
+                    for (String interp : outputInterpretations) {
+                        if (dt == null) {
+                            out.println("<null>");
+                        } else {
+                            OutputCodec oc = ocForInterpretation.get(interp);
+                            out.println(oc.asString(results.get(interp)));
+                        }
                     }
+                } catch (Exception e) {
+                    System.err.printf(" ** %s", e.getMessage());
                 }
 
                 if (param.blankLinkes) {
@@ -164,8 +169,8 @@ public class ParsingEvaluator {
                 if (param.parseval != null) {
                     Tree gold = (Tree) inst.getInputObjects().get(param.parseval);
 
-                    if (dt == null) {
-                        // no parse found
+                    if (dt == null || results == null) {
+                        // no parse found, or parse could not be interpreted
                         precisions.add(1);
                         recalls.add(0);
 
@@ -211,14 +216,12 @@ public class ParsingEvaluator {
     private static Tree<String> parseCtf(CoarseToFineParser ctfp, Instance inst, String interpretation) {
         Object inp = inst.getInputObjects().get(interpretation);
         TreeAutomaton chart = ctfp.parseInputObject(inp);
-        
-        System.err.println(chart);
 
+//        System.err.println(chart);
         Tree<String> dt = chart.viterbi();
-        
-        System.err.println(dt);
-        
-        System.exit(0);
+
+//        System.err.println(dt);
+//        System.exit(0);
         return dt;
     }
 
