@@ -43,7 +43,7 @@ public class IntInt2DoubleMap implements Serializable {
         return map.get(x);
     }
 
-    public void put(int x, int y, int value) {
+    public void put(int x, int y, double value) {
         Int2DoubleMap m = map.get(x);
 
         if (m == null) {

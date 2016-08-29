@@ -113,7 +113,7 @@ public class ParsingEvaluator {
 
             ctfInterpretation = interpretations.iterator().next();
             FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(StringTools.slurp(new FileReader(param.ctf)));
-            coarseToFineParser = new CoarseToFineParser(irtg, ctfInterpretation, ftc, 1e-5);
+            coarseToFineParser = new CoarseToFineParser(irtg, ctfInterpretation, ftc, 1e-4);
         }
 
         long overallStart = System.nanoTime();

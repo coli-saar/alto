@@ -14,6 +14,7 @@ import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.IntInt2DoubleMap;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.NumbersCombine;
 import de.up.ling.irtg.util.Util;
@@ -74,7 +75,42 @@ public class CoarseToFineParser {
     public TreeAutomaton parse(String input) throws ParserException {
         return parseInputObject(irtg.parseString(inputInterpretation, input));
     }
+    
+    private static interface IIntInt2DoubleMap {
+        public void put(int x, int y, double value);
+        public double get(int x, int y);
+        public void clear();
+        public void setDefaultReturnValue(double value);
+    }
+    
+    private static class MyIntInt2DoubleMap  implements IIntInt2DoubleMap {
+        private IntInt2DoubleMap map;
 
+        public MyIntInt2DoubleMap() {
+            map = new IntInt2DoubleMap();
+        }
+
+        @Override
+        public void put(int x, int y, double value) {
+            map.put(y,x,value);
+        }
+
+        @Override
+        public double get(int x, int y) {
+            return map.get(y,x);
+        }
+
+        @Override
+        public void clear() {
+            map.clear();
+        }
+
+        @Override
+        public void setDefaultReturnValue(double value) {
+            map.setDefaultReturnValue(value);
+        }        
+    }
+    
     public TreeAutomaton parseInputObject(Object inputObject) {
         // create condensed invhom automaton
         CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
@@ -89,8 +125,10 @@ public class CoarseToFineParser {
         assert coarseNodes.size() == partnerInvhomRules.size();
 
         // refine the chart level-1 times
-        Long2DoubleMap inside = new Long2DoubleOpenHashMap();
-        Long2DoubleMap outside = new Long2DoubleOpenHashMap();
+//        Long2DoubleMap inside = new Long2DoubleOpenHashMap();
+//        Long2DoubleMap outside = new Long2DoubleOpenHashMap();
+        IIntInt2DoubleMap inside = new MyIntInt2DoubleMap();
+        IIntInt2DoubleMap outside = new MyIntInt2DoubleMap();
         ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
 
         for (int level = 0; level < ftc.numLevels() - 1; level++) {
@@ -116,9 +154,9 @@ public class CoarseToFineParser {
                     printRulePair(i, r, n, invhom, inside, outside);
                 }
 
-                double score = outside.get(NumbersCombine.combine(n.getParent(), r.getParent())) * n.getWeight() * r.getWeight();
+                double score = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
                 for (int j = 0; j < r.getArity(); j++) {
-                    score *= inside.get(NumbersCombine.combine(n.getChildren()[j], r.getChildren()[j]));
+                    score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
                 }
 
                 if (score > theta * totalSentenceInside) {
@@ -228,7 +266,7 @@ public class CoarseToFineParser {
         return auto;
     }
 
-    private void printChart(List<RuleRefinementNode> coarseNodes, List<CondensedRule> partnerInvhomRules, CondensedTreeAutomaton invhom, Long2DoubleMap inside, Long2DoubleMap outside) {
+    private void printChart(List<RuleRefinementNode> coarseNodes, List<CondensedRule> partnerInvhomRules, CondensedTreeAutomaton invhom, IIntInt2DoubleMap inside, IIntInt2DoubleMap outside) {
         for (int i = 0; i < coarseNodes.size(); i++) {
             CondensedRule r = partnerInvhomRules.get(i);
             RuleRefinementNode n = coarseNodes.get(i);
@@ -236,18 +274,18 @@ public class CoarseToFineParser {
         }
     }
 
-    private void printRulePair(int i, CondensedRule r, RuleRefinementNode n, CondensedTreeAutomaton invhom, Long2DoubleMap inside, Long2DoubleMap outside) {
+    private void printRulePair(int i, CondensedRule r, RuleRefinementNode n, CondensedTreeAutomaton invhom, IIntInt2DoubleMap inside, IIntInt2DoubleMap outside) {
         System.err.printf("[%04d] %s\n", i, r.toString(invhom, x -> false));
         System.err.printf(" %4s  %s\n", "", n.localToString(irtg.getAutomaton()));
-        System.err.printf(" %4s  inside(parent): %f\n", "", inside.get(NumbersCombine.combine(n.getParent(), r.getParent())));
-        System.err.printf(" %4s  outside(parent): %f\n\n", "", outside.get(NumbersCombine.combine(n.getParent(), r.getParent())));
+        System.err.printf(" %4s  inside(parent): %f\n", "", inside.get(n.getParent(), r.getParent()));
+        System.err.printf(" %4s  outside(parent): %f\n\n", "", outside.get(n.getParent(), r.getParent()));
     }
 
-    private double computeInsideOutside(int level, List<RuleRefinementNode> coarseNodes, List<CondensedRule> partnerInvhomRules, CondensedTreeAutomaton invhom, Long2DoubleMap inside, Long2DoubleMap outside) {
+    private double computeInsideOutside(int level, List<RuleRefinementNode> coarseNodes, List<CondensedRule> partnerInvhomRules, CondensedTreeAutomaton invhom, IIntInt2DoubleMap inside, IIntInt2DoubleMap outside) {
         double totalSentenceInside = 0;
 
-        inside.defaultReturnValue(0);
-        outside.defaultReturnValue(0);
+        inside.setDefaultReturnValue(0);
+        outside.setDefaultReturnValue(0);
 
         // calculate coarse inside
         for (int i = 0; i < coarseNodes.size(); i++) {
@@ -256,14 +294,14 @@ public class CoarseToFineParser {
 
             double insideHere = n.getWeight() * r.getWeight();
             for (int j = 0; j < r.getArity(); j++) {
-                insideHere *= inside.get(NumbersCombine.combine(n.getChildren()[j], r.getChildren()[j]));
+                insideHere *= inside.get(n.getChildren()[j], r.getChildren()[j]);
             }
 
-            long key = NumbersCombine.combine(n.getParent(), r.getParent());
-            inside.put(key, inside.get(key) + insideHere);
+//            long key = NumbersCombine.combine();
+            inside.put(n.getParent(), r.getParent(), inside.get(n.getParent(), r.getParent()) + insideHere);
 
             if (invhom.getFinalStates().contains(r.getParent()) && rrt.getFinalStatesAtLevel(level).contains(n.getParent())) {
-                outside.put(key, 1);
+                outside.put(n.getParent(), r.getParent(), 1);
                 totalSentenceInside += insideHere;
             }
         }
@@ -272,21 +310,21 @@ public class CoarseToFineParser {
         for (int i = coarseNodes.size() - 1; i >= 0; i--) {
             RuleRefinementNode n = coarseNodes.get(i);
             CondensedRule r = partnerInvhomRules.get(i);
-            long parentKey = NumbersCombine.combine(n.getParent(), r.getParent());
+//            long parentKey = NumbersCombine.combine(n.getParent(), r.getParent());
 
             double[] childInside = new double[r.getArity()];
-            long[] childKey = new long[r.getArity()];
-            double val = outside.get(parentKey) * n.getWeight() * r.getWeight();
+//            long[] childKey = new long[r.getArity()];
+            double val = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
 
             for (int j = 0; j < r.getArity(); j++) {
-                childKey[j] = NumbersCombine.combine(n.getChildren()[j], r.getChildren()[j]);
-                childInside[j] = inside.get(childKey[j]);
+//                childKey[j] = NumbersCombine.combine(n.getChildren()[j], r.getChildren()[j]);
+                childInside[j] = inside.get(n.getChildren()[j], r.getChildren()[j]);
                 val *= childInside[j];
             }
 
             // at this point: val = outside(parent) * P(rule) * inside(ch1) * ... * inside(chn)
             for (int j = 0; j < r.getArity(); j++) {
-                outside.put(childKey[j], outside.get(childKey[j]) + val / childInside[j]); // take inside(ch_j) away
+                outside.put(n.getChildren()[j], r.getChildren()[j], outside.get(n.getChildren()[j], r.getChildren()[j]) + val / childInside[j]); // take inside(ch_j) away
             }
         }
 
