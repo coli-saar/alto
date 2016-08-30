@@ -23,6 +23,7 @@ import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
+import de.up.ling.irtg.laboratory.BasicOperations;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
@@ -203,8 +204,8 @@ public class ParsingEvaluator {
         System.err.println("Done, total time: " + Util.formatTimeSince(overallStart));
 
         if (param.parseval != null) {
-            double overallP = Util.weightedAverageWithIntWeights(precisions.toArray(), precisionWeights.toArray());
-            double overallR = Util.weightedAverageWithIntWeights(recalls.toArray(), recallWeights.toArray());
+            double overallP = BasicOperations.weightedAverageWithIntWeights(precisions.toArray(), precisionWeights.toArray());
+            double overallR = BasicOperations.weightedAverageWithIntWeights(recalls.toArray(), recallWeights.toArray());
             System.err.printf("Overall precision = %05.2f, recall = %05.2f, F1 = %05.2f\n", overallP, overallR, 2 * overallP * overallR / (overallP + overallR));
         }
     }

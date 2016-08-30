@@ -35,34 +35,40 @@ public class Interpretation<E> implements Serializable {
     }
 
     /**
-     * Applies the homomorphism to the derivation tree "t"
-     * and evaluates it in the algebra.
-     * 
+     * Applies the homomorphism to the derivation tree "t" and evaluates it in
+     * the algebra.
+     *
      * @param t
-     * @return 
+     * @return
      */
+    @OperationAnnotation(code = "interpret")
     public E interpret(Tree<String> t) {
-        return algebra.evaluate(hom.apply(t));
+        if (t == null) {
+            return null;
+        } else {
+            return algebra.evaluate(hom.apply(t));
+        }
     }
 
-    @OperationAnnotation(code="alg")
+    @OperationAnnotation(code = "alg")
     public Algebra<E> getAlgebra() {
         return algebra;
     }
 
-    @OperationAnnotation(code="hom")
+    @OperationAnnotation(code = "hom")
     public Homomorphism getHomomorphism() {
         return hom;
     }
 
     /**
      * Returns the image under inverse homomorphism of the given automaton.
+     *
      * @param auto
-     * @return 
+     * @return
      */
     @OperationAnnotation(code = "invhom")
     public TreeAutomaton invhom(TreeAutomaton auto) {
-        
+
         if (hom.isNonDeleting()) {
             if (hom.getSourceSignature().getMaxArity() <= 2 || !auto.supportsTopDownQueries() || !auto.supportsBottomUpQueries()) {
                 //if source signature is binarized, use pattern matcher. Also
@@ -89,23 +95,22 @@ public class Interpretation<E> implements Serializable {
                 return auto.inverseHomomorphism(hom);
             }
         }
-        
+
     }
 
     @OperationAnnotation(code = "basicNonDelInvHom")
     public TreeAutomaton basicNonDelInvHom(TreeAutomaton auto) {
         return new NondeletingInverseHomAutomaton(auto, hom);
     }
-    
+
     public TreeAutomaton parse(E object) {
         TreeAutomaton decompositionAutomaton = algebra.decompose(object);
 
         // It is much preferable to return a condensed automaton for the
         // inverse homomorphism, if that is possible. Pattern matching works for both top down
         // and bottom up queries.
-        
         return invhom(decompositionAutomaton);
-        
+
     }
 
     public CondensedTreeAutomaton parseToCondensed(E object) {

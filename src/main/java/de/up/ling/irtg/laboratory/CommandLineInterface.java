@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.laboratory;
 
+import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.converters.IParameterSplitter;
@@ -12,8 +13,11 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.util.GuiUtils;
+import de.up.ling.irtg.util.ProgressBarWorker;
+import de.up.ling.irtg.util.ProgressListener;
 import de.up.ling.tree.ParseException;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,8 +43,9 @@ public class CommandLineInterface {
     @Parameter(names = "-taskID", description = "ID of the task (the one to be run) in the database", required = true)
     private int taskID;
 
-    @Parameter(names = {"-varRemapping", "-v"}, description = "Follow with parameters v1 w1 v2 w2 ... where v_i are variable names in the task tree (without '?'), to replace v_i with w_i", variableArity = true, splitter = NullSplitter.class)
-    private List<String> varRemapping = new ArrayList<>();
+    @DynamicParameter(names = {"-V"}) //, description = "Follow with parameters v1 w1 v2 w2 ... where v_i are variable names in the task tree (without '?'), to replace v_i with w_i", variableArity = true, splitter = NullSplitter.class)
+    private Map<String,String> varRemapping = new HashMap<>();
+//    private List<String> varRemapping = new ArrayList<>();
 
     @Parameter(names = {"-data"}, description = "Follow with the IDs of additional data you want to use in your parse", variableArity = true)
     private List<String> additionalData = new ArrayList<>();
@@ -48,15 +53,20 @@ public class CommandLineInterface {
     @Parameter(names = {"-threads"}, description = "Number of threads over which the instances should be parallelized", required = false)
     private int numThreads = 1;
     
+    @Parameter(names = {"--verbose", "-v"}, description = "Print detailed measurements while parsing", required=false)
+    private boolean verbose = false;
+    
     private Map<String, String> getVarRemapper() {
-        Map<String, String> ret = new HashMap<>();
-        if (varRemapping.size() % 2 != 0) {
-            throw new com.beust.jcommander.ParameterException("ERROR: uneven amount of parameters for -varRemapping/-v");
-        }
-        for (int i = 0; i < varRemapping.size(); i += 2) {
-            ret.put(varRemapping.get(i), varRemapping.get(i + 1));
-        }
-        return ret;
+        return varRemapping;
+        
+//        Map<String, String> ret = new HashMap<>();
+//        if (varRemapping.size() % 2 != 0) {
+//            throw new com.beust.jcommander.ParameterException("ERROR: uneven amount of parameters for -varRemapping/-v");
+//        }
+//        for (int i = 0; i < varRemapping.size(); i += 2) {
+//            ret.put(varRemapping.get(i), varRemapping.get(i + 1));
+//        }
+//        return ret;
     }
 
     @Parameter(names = "-local", description = "Local mode, i.e. not uploading results to database")
@@ -95,10 +105,21 @@ public class CommandLineInterface {
             commander.usage();
             return -1;
         }
+        
         if (cli.help) {
             commander.usage();
             return -1;
         }
+        
+        if(cli.verbose) {
+            // sanity checks for verbosity flag
+            if( cli.numThreads > 1 ) {
+                System.err.println("Verbose output is only supported when running in a single thread.");
+                System.exit(1);
+            }
+        }
+        
+        
         if (cli.hostname == null) {
             Scanner s = null;
             try {
@@ -148,46 +169,30 @@ public class CommandLineInterface {
             
             System.err.println("Running " + task.getWarmup() + " warmup instances...");
             
-            GuiUtils.withConsoleProgressBar(60, System.err, listener -> {
-                task.getProgram().run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup());
+            withProgressbar(cli.verbose, 60, System.err, listener -> {
+                task.getProgram().run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), false);
                 return null;
             });
-            
-//            task.getProgram().run(corpus, new ResultManager.PrintingManager(),
-//                    i -> {
-//                        System.err.println(i + "/" + task.getWarmup());
-//                    }, task.getWarmup());
 
             System.err.println("Running experiment...");
             if (cli.local) {
-                GuiUtils.withConsoleProgressBar(60, System.err, listener -> {
+                withProgressbar(cli.verbose, 60, System.err, listener -> {
                     task.getProgram().run(corpus, 
                             cli.showResults ? new ResultManager.PrintingManager() : new ResultManager.DummyManager(), 
                             i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()), 
-                            -1);
+                            -1, cli.verbose);
                     return null;
                 });
-                
-//                task.getProgram().run(corpus, cli.showResults ? new ResultManager.PrintingManager() : new ResultManager.DummyManager(),
-//                        i -> {
-//                            System.err.println(i + "/" + corpus.getNumberOfInstances());
-//                        }, -1);
                 
                 System.err.println("Done!");
             } else {
-                GuiUtils.withConsoleProgressBar(60, System.err, listener -> {
+                withProgressbar(cli.verbose, 60, System.err, listener -> {
                     task.getProgram().run(corpus, 
                             new DBResultManager(dbLoader, experimentID, ex -> System.err.println("Error when uploading result to database: " + ex.toString()), cli.showResults),
                             i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
-                            -1);
+                            -1, cli.verbose);
                     return null;
                 });
-                
-//                task.getProgram().run(corpus, new DBResultManager(dbLoader, experimentID,
-//                        ex -> System.err.println("Error when uploading result to database: " + ex.toString()), cli.showResults),
-//                        i -> {
-//                            System.err.println(i + "/" + corpus.getNumberOfInstances());
-//                        }, -1);
                 
                 dbLoader.updateExperimentStateFinished(experimentID);
                 System.err.println("Done! Experiment ID: " + experimentID);
@@ -196,6 +201,21 @@ public class CommandLineInterface {
         } catch (SQLException | IOException | ParseException | ParserException ex) {
             System.err.println("Error: " + ex.toString());
             return -1;
+        }
+    }
+    
+    private static final ProgressListener dummyListener = new ProgressListener() {
+        @Override
+        public void accept(int currentValue, int maxValue, String string) {
+        }
+    };
+    
+    private static <E> void withProgressbar(boolean verbose, int width, PrintStream strm, ProgressBarWorker<E> worker) throws Exception {
+        // In verbose mode, a progress bar is not needed -> supply dummy listener.
+        if( verbose ) {
+            worker.compute(dummyListener);
+        } else {
+            GuiUtils.withConsoleProgressBar(width, strm, worker);
         }
     }
     

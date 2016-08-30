@@ -64,76 +64,83 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         return Tree.class;
     }
 
-    
-    
-    
-    
     @OperationAnnotation(code = "countBracketsInTree")
     public static int countBrackets(Tree<String> tree) {
-        return getBrackets(tree, 0).size();
+        if (tree == null) {
+            // no parse found => zero brackets
+            return 0;
+        } else {
+            return getBrackets(tree, 0).size();
+        }
     }
-    
+
     @OperationAnnotation(code = "treeRecall")
     public static double recall(Tree<String> result, Tree<String> gold) {
-        List<Bracket> resultBrackets = getBrackets(result, 0);
-        List<Bracket> goldBrackets = getBrackets(gold, 0);
-        double weight = goldBrackets.size();
-        int found = 0;
-        for (Bracket goldBracket : goldBrackets) {
-            if (resultBrackets.contains(goldBracket)) {
-                found ++;
+        if (result == null) {
+            // no parse found => precision is 0
+            return 0;
+        } else {
+            List<Bracket> resultBrackets = getBrackets(result, 0);
+            List<Bracket> goldBrackets = getBrackets(gold, 0);
+            double weight = goldBrackets.size();
+            int found = 0;
+            for (Bracket goldBracket : goldBrackets) {
+                if (resultBrackets.contains(goldBracket)) {
+                    found++;
+                }
             }
+            return (weight > 0) ? found / weight : 1;
         }
-        return (weight > 0) ? found/weight : 1;
     }
-    
+
     @OperationAnnotation(code = "treePrecision")
     public static double precision(Tree<String> result, Tree<String> gold) {
-        List<Bracket> resultBrackets = getBrackets(result, 0);
-        List<Bracket> goldBrackets = getBrackets(gold, 0);
-        double weight = resultBrackets.size();
-        int found = 0;
-        for (Bracket resultBracket : resultBrackets) {
-            if (goldBrackets.contains(resultBracket)) {
-                found ++;
+        if (result == null) {
+            // no parse found => precision is "1"
+            return 1;
+        } else {
+            List<Bracket> resultBrackets = getBrackets(result, 0);
+            List<Bracket> goldBrackets = getBrackets(gold, 0);
+            double weight = resultBrackets.size();
+            int found = 0;
+            for (Bracket resultBracket : resultBrackets) {
+                if (goldBrackets.contains(resultBracket)) {
+                    found++;
+                }
             }
+            return (weight > 0) ? found / weight : 1;
         }
-        return (weight > 0) ? found/weight : 1;
     }
-    
-    
-    
-    
+
     private static List<Bracket> getBrackets(Tree<String> tree, int nrWordsToTheLeft) {
         List<Bracket> ret = new ArrayList<>();
         List<Tree<String>> children = tree.getChildren();
         if (children.isEmpty()) {
-            ret.add(new Bracket(nrWordsToTheLeft, nrWordsToTheLeft+1, tree.getLabel()));
+            ret.add(new Bracket(nrWordsToTheLeft, nrWordsToTheLeft + 1, tree.getLabel()));
             return ret;
         } else {
             int additionalWordsToTheLeft = 0;
             for (Tree<String> child : children) {
-                List<Bracket> bracketsHere = getBrackets(child, nrWordsToTheLeft+additionalWordsToTheLeft);
-                additionalWordsToTheLeft+= bracketsHere.get(bracketsHere.size()-1).getWidth();
+                List<Bracket> bracketsHere = getBrackets(child, nrWordsToTheLeft + additionalWordsToTheLeft);
+                additionalWordsToTheLeft += bracketsHere.get(bracketsHere.size() - 1).getWidth();
                 ret.addAll(bracketsHere);
             }
-            ret.add(new Bracket(nrWordsToTheLeft, nrWordsToTheLeft+additionalWordsToTheLeft, tree.getLabel()));//notice how the last bracket is always the last in the list
+            ret.add(new Bracket(nrWordsToTheLeft, nrWordsToTheLeft + additionalWordsToTheLeft, tree.getLabel()));//notice how the last bracket is always the last in the list
             return ret;
         }
     }
-    
-    
+
     private static class Bracket {
+
         private int start;
         private int stop;
         private String label;
-        
+
         int getWidth() {
-            return stop-start;
+            return stop - start;
         }
-        
-        
-        public Bracket (int start, int stop, String label) {
+
+        public Bracket(int start, int stop, String label) {
             this.start = start;
             this.stop = stop;
             this.label = label;
@@ -141,10 +148,8 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
 
         @Override
         public String toString() {
-            return "["+start + ", " + stop + "," + label + ']';
+            return "[" + start + ", " + stop + "," + label + ']';
         }
-        
-        
 
         @Override
         public int hashCode() {
@@ -175,8 +180,7 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
             }
             return true;
         }
-        
-        
+
     }
-    
+
 }

@@ -44,6 +44,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import com.google.common.reflect.ClassPath;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.util.MutableInteger;
+import de.up.ling.irtg.util.Util;
 import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinPool;
@@ -74,6 +75,7 @@ public class Program {
     private final List<Tree<Operation>> program;
     private final int interpCount;
     private int numThreads;
+    private String firstMentionedInterpretation = null; // first interpretation in the program that is mentioned as input, i.e. "<interpretation>"
 
     public static final String BASE_IRTG_SYMBOL = "$";
     public static final String ADDITIONAL_DATA_SYMBOL = "#";
@@ -417,10 +419,18 @@ public class Program {
                             retLabel = new Operation.NullOperation();
                         }
                     } else if (code.startsWith(LEFT_INPUT_DELIMITER) && code.endsWith(RIGHT_INPUT_DELIMITER)) {
-                        int lookupIndex = interp2Index.getInt(code.substring(LEFT_INPUT_DELIMITER.length(), code.length() - RIGHT_INPUT_DELIMITER.length()));
+                        String interpName = code.substring(LEFT_INPUT_DELIMITER.length(), code.length() - RIGHT_INPUT_DELIMITER.length());
+
+                        if (firstMentionedInterpretation == null) {
+                            firstMentionedInterpretation = interpName;
+                        }
+
+                        int lookupIndex = interp2Index.getInt(interpName);
+
                         if (lineIsGlobal) {
                             neededForGlobal[lookupIndex] = true;
                         }
+
                         retLabel = new Operation.LookupVariableOperation(variableTracker, variableTypeTracker, lookupIndex, null);
                     } else if (code.startsWith(LEFT_STRING_DELIMITER) && code.endsWith(RIGHT_STRING_DELIMITER)) {
                         retLabel = new Operation.StringOperation(code.substring(LEFT_STRING_DELIMITER.length(), code.length() - RIGHT_STRING_DELIMITER.length()));
@@ -515,6 +525,10 @@ public class Program {
         return result;
     }
 
+    private InterpretedTreeAutomaton getGlobalIrtg() {
+        return (InterpretedTreeAutomaton) globalVariableTracker[0];
+    }
+
     private void parseProgram(List<Tree<String>> unparsedProgram, InterpretedTreeAutomaton baseIRTG) {
         Class[] variableTypeTracker = new Class[shiftIndex(unparsedProgram.size())];
 
@@ -548,7 +562,8 @@ public class Program {
     }
 
     @SuppressWarnings("ThrowableResultIgnored")
-    private Int2ObjectMap<Throwable> run(Instance instance, Tree<Operation>[] localProgram, Object[] localVariableTracker, Map<String, CpuTimeStopwatch> name2Watch) {
+    private Int2ObjectMap<Throwable> run(int instanceId, Instance instance, Tree<Operation>[] localProgram, Object[] localVariableTracker, Map<String, CpuTimeStopwatch> name2Watch) {
+
         for (String interpName : interp2Index.keySet()) {
             localVariableTracker[interp2Index.get(interpName)] = instance.getInputObjects().get(interpName);
         }
@@ -643,7 +658,10 @@ public class Program {
      * @param maxInstances Cancels the run when this number of instances is
      * reached. input -1 to parse the whole corpus.
      */
-    public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances) {
+    public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances, boolean verbose) {
+        int width = (int) (Math.ceil(Math.log10(corpus.getNumberOfInstances())));
+        String formatString = verbose ? "%0" + width + "d [%-50.50s] " : null;
+        Algebra firstAlgebra = verbose ? getGlobalIrtg().getInterpretation(firstMentionedInterpretation).getAlgebra() : null;
 
         // brute force make everything explicit for parallelisation. TODO: do this properly
         // force building the bottom-up rule index
@@ -725,15 +743,15 @@ public class Program {
                     }
                 }
 
-                //run
-                Int2ObjectMap<Throwable> errors = run(instance, localProgram, variableTrackerHere, name2Watch);
+                // process one instance
+                if (verbose) {
+                    System.err.printf(formatString, i, firstAlgebra.representAsString(instance.getInputObjects().get(firstMentionedInterpretation)));
+                }
+
+                Int2ObjectMap<Throwable> errors = run(i, instance, localProgram, variableTrackerHere, name2Watch);
 
                 //now accept data in ResultManager
                 for (int k = 0; k < program.size(); k++) {
-                    if (!isGlobal[shiftIndex(k)]) {
-                        resMan.acceptResult(variableTrackerHere[shiftIndex(k)], i, varNames[k], doExport[shiftIndex(k)], false, isNumeric[shiftIndex(k)]);
-                    }
-
                     //use this loop instead of just iterating over watch2Name.entrySet() in order to get only watches that were stopped.
                     List<String> watchesStoppingHere = watchesStoppingAfter.get(k);
                     if (watchesStoppingHere != null) {
@@ -742,8 +760,29 @@ public class Program {
                             long time = watch.getTimeBefore(1) / 1000000;//want time in ms
                             resMan.acceptTime(time, i, watchName, false);
                             watchName2Times.get(watchName)[i] = time;
+
+                            if (verbose) {
+                                System.err.printf("%s:%s ", watchName, Util.formatTime(watch.getTimeBefore(1)));
+                            }
                         }
                     }
+
+                    if (!isGlobal[shiftIndex(k)]) {
+                        Object value = variableTrackerHere[shiftIndex(k)];
+                        resMan.acceptResult(value, i, varNames[k], doExport[shiftIndex(k)], false, isNumeric[shiftIndex(k)]);
+
+                        if (verbose && doExport[shiftIndex(k)]) {
+                            if (value == null) {
+                                System.err.printf("%s=<null> ", varNames[k]);
+                            } else {
+                                System.err.printf("%s=%s ", varNames[k], value.toString());
+                            }
+                        }
+                    }
+                }
+
+                if (verbose) {
+                    System.err.println();
                 }
 
                 for (Int2ObjectMap.Entry<Throwable> idAndError : errors.int2ObjectEntrySet()) {
@@ -899,51 +938,50 @@ public class Program {
 
         System.exit(0);
 
-        List<String> programCode = new ArrayList<>();
-        programCode.add("export pruningPolicy = histogramPP(insideFOM, 10)");
-        /*programCode.add("starttime all");
-         programCode.add("starttime filter");
-         programCode.add("F = filter($, __graph__, <graph>)");
-         programCode.add("stoptime filter");
-         programCode.add("D = F.[graph].alg.decomp(<graph>)");
-         programCode.add("Invhom = F.[graph].invhom(D)");
-         programCode.add("Intersect = F.auto.intersect(Invhom)");
-         programCode.add("export Vit = Intersect.viterbi");
-         programCode.add("Tree = F.[graph].hom.apply(Vit)");
-         programCode.add("starttime eval");
-         programCode.add("export Result = F.[graph].alg.eval(Tree)");
-         programCode.add("stoptime eval");
-         programCode.add("stoptime all");*/
-        /*for (Tree<String> tree : program) {
-         System.err.println(tree);
-         }*/
-
-        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
-
-        /*List<Tree<String>> program = new ArrayList<>();
-         program.add(TreeParser.parse("filter('$', '__graph__', '<graph>')"));
-         program.add(TreeParser.parse("decomp(alg(interp(F,'__graph__')),'<graph>')"));
-         program.add(TreeParser.parse("invhom(interp(F,'__graph__'),D)"));
-         program.add(TreeParser.parse("intersect(auto(F),Invhom)"));
-         program.add(TreeParser.parse("viterbi(Intersect)"));
-         program.add(TreeParser.parse("apply(hom(interp(F,'__string__')), Vit)"));
-         program.add(TreeParser.parse("eval(alg(interp(F,'__string__')), Tree)"));*/
-        Program prog = new Program(irtg, null, programCode, new HashMap<>());
-
-        Instance instance = new Instance();
-        Map<String, Object> input = new HashMap<>();
-        input.put("string", new GraphAlgebra().parseString("(w / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))"));
-        instance.setInputObjects(input);
-        Corpus testCorpus = new Corpus();
-        testCorpus.addInstance(instance);
-        prog.run(testCorpus, new ResultManager.PrintingManager(), null, -1);
-        /*for (String varName : prog.varName2Index.keySet()) {
-         String resString = prog.getLastResults()[prog.varName2Index.get(varName)].toString();
-         System.err.println();
-         System.err.println(varName+" = "+resString.substring(0, Math.min(30, resString.length())));
-         System.err.println();
-         }*/
-
+//        List<String> programCode = new ArrayList<>();
+//        programCode.add("export pruningPolicy = histogramPP(insideFOM, 10)");
+//        /*programCode.add("starttime all");
+//         programCode.add("starttime filter");
+//         programCode.add("F = filter($, __graph__, <graph>)");
+//         programCode.add("stoptime filter");
+//         programCode.add("D = F.[graph].alg.decomp(<graph>)");
+//         programCode.add("Invhom = F.[graph].invhom(D)");
+//         programCode.add("Intersect = F.auto.intersect(Invhom)");
+//         programCode.add("export Vit = Intersect.viterbi");
+//         programCode.add("Tree = F.[graph].hom.apply(Vit)");
+//         programCode.add("starttime eval");
+//         programCode.add("export Result = F.[graph].alg.eval(Tree)");
+//         programCode.add("stoptime eval");
+//         programCode.add("stoptime all");*/
+//        /*for (Tree<String> tree : program) {
+//         System.err.println(tree);
+//         }*/
+//
+//        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
+//
+//        /*List<Tree<String>> program = new ArrayList<>();
+//         program.add(TreeParser.parse("filter('$', '__graph__', '<graph>')"));
+//         program.add(TreeParser.parse("decomp(alg(interp(F,'__graph__')),'<graph>')"));
+//         program.add(TreeParser.parse("invhom(interp(F,'__graph__'),D)"));
+//         program.add(TreeParser.parse("intersect(auto(F),Invhom)"));
+//         program.add(TreeParser.parse("viterbi(Intersect)"));
+//         program.add(TreeParser.parse("apply(hom(interp(F,'__string__')), Vit)"));
+//         program.add(TreeParser.parse("eval(alg(interp(F,'__string__')), Tree)"));*/
+//        Program prog = new Program(irtg, null, programCode, new HashMap<>());
+//
+//        Instance instance = new Instance();
+//        Map<String, Object> input = new HashMap<>();
+//        input.put("string", new GraphAlgebra().parseString("(w / want  :ARG0 (b / boy)  :ARG1 (g / go :ARG0 b))"));
+//        instance.setInputObjects(input);
+//        Corpus testCorpus = new Corpus();
+//        testCorpus.addInstance(instance);
+//        prog.run(testCorpus, new ResultManager.PrintingManager(), null, -1);
+//        /*for (String varName : prog.varName2Index.keySet()) {
+//         String resString = prog.getLastResults()[prog.varName2Index.get(varName)].toString();
+//         System.err.println();
+//         System.err.println(varName+" = "+resString.substring(0, Math.min(30, resString.length())));
+//         System.err.println();
+//         }*/
     }
 
     public int getNumThreads() {
