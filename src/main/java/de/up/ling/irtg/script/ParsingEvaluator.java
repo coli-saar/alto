@@ -23,13 +23,16 @@ import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusReadingException;
 import de.up.ling.irtg.corpus.Instance;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.Util;
+import de.up.ling.tree.ParseException;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -112,8 +115,7 @@ public class ParsingEvaluator {
             }
 
             ctfInterpretation = interpretations.iterator().next();
-            FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(StringTools.slurp(new FileReader(param.ctf)));
-            coarseToFineParser = new CoarseToFineParser(irtg, ctfInterpretation, ftc, 1e-4);
+            coarseToFineParser = makeCoarseToFineParserFromFile(irtg, ctfInterpretation, param.ctf, 1e-4);
         }
 
         long overallStart = System.nanoTime();
@@ -206,6 +208,11 @@ public class ParsingEvaluator {
             System.err.printf("Overall precision = %05.2f, recall = %05.2f, F1 = %05.2f\n", overallP, overallR, 2 * overallP * overallR / (overallP + overallR));
         }
     }
+    
+    private static CoarseToFineParser makeCoarseToFineParserFromFile(InterpretedTreeAutomaton irtg, String interpretation, String ftcMapFilename, double theta) throws FileNotFoundException, IOException, ParseException {
+        FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(StringTools.slurp(new FileReader(ftcMapFilename)));
+        return new CoarseToFineParser(irtg, interpretation, ftc, theta);
+    }
 
     private static Tree<String> parseViterbi(InterpretedTreeAutomaton irtg, Instance inst, List<String> interpretations) {
         TreeAutomaton chart = irtg.parseInputObjects(inst.getRestrictedInputObjects(interpretations));
@@ -213,7 +220,8 @@ public class ParsingEvaluator {
         return dt;
     }
 
-    private static Tree<String> parseCtf(CoarseToFineParser ctfp, Instance inst, String interpretation) {
+
+    public static Tree<String> parseCtf(CoarseToFineParser ctfp, Instance inst, String interpretation) {
         Object inp = inst.getInputObjects().get(interpretation);
         TreeAutomaton chart = ctfp.parseInputObject(inp);
 

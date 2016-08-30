@@ -6,6 +6,7 @@
 package de.up.ling.irtg.automata.coarse_to_fine;
 
 import de.saar.basic.Pair;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
@@ -13,16 +14,21 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.IntInt2DoubleMap;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.NumbersCombine;
 import de.up.ling.irtg.util.Util;
+import de.up.ling.tree.ParseException;
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
 import it.unimi.dsi.fastutil.longs.Long2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.longs.LongIterator;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
@@ -111,6 +117,7 @@ public class CoarseToFineParser {
         }        
     }
     
+    @OperationAnnotation(code = "parseInputObject")
     public TreeAutomaton parseInputObject(Object inputObject) {
         // create condensed invhom automaton
         CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
@@ -335,5 +342,12 @@ public class CoarseToFineParser {
         if (DEBUG) {
             System.err.println(Util.repeat("  ", depth) + s.get());
         }
+    }
+    
+    
+    @OperationAnnotation(code = "makeCtfParser")
+    public static CoarseToFineParser makeCoarseToFineParser(InterpretedTreeAutomaton irtg, String interpretation, String ftcMap, double theta) throws FileNotFoundException, IOException, ParseException {
+        FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(ftcMap);
+        return new CoarseToFineParser(irtg, interpretation, ftc, theta);
     }
 }

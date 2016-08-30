@@ -90,6 +90,7 @@ public class Program {
     public static final String START_WATCH_CODE = "starttime";
     public static final String STOP_WATCH_CODE = "stoptime";
     public static final String ASSIGNMENT_PATTERN = " ?= ?";
+    public static final String COMMENT_SYMBOL = "//";
     public static final Method GET_ALG_METHOD = getGetAlgMethod();//necessary for getting return type
 
     public Program(InterpretedTreeAutomaton irtg, List<String> additionalData, List<String> unparsedProgram, Map<String, String> varRemapper) throws VariableNotDefinedException {
@@ -161,11 +162,11 @@ public class Program {
     private static Set<Class> getAllClassesIn_irtg_Classpath() {
         Set<Class> ret = new HashSet<>();
         /*Reflections reflections = new Reflections(new ConfigurationBuilder()
-                                  .setUrls(ClasspathHelper.forJavaClassPath())
-                                  .setScanners(new MethodAnnotationsScanner()));*/
- /*Reflections reflections = new Reflections("de.up.ling.irtg.corpus", new SubTypesScanner(false));
-        Set<String> classes = reflections.getStore().getSubTypesOf(Object.class.getName());
-        System.err.println(classes);*/
+         .setUrls(ClasspathHelper.forJavaClassPath())
+         .setScanners(new MethodAnnotationsScanner()));*/
+        /*Reflections reflections = new Reflections("de.up.ling.irtg.corpus", new SubTypesScanner(false));
+         Set<String> classes = reflections.getStore().getSubTypesOf(Object.class.getName());
+         System.err.println(classes);*/
         try {
             ClassPath cPath = ClassPath.from(ClassLoader.getSystemClassLoader());
             for (ClassPath.ClassInfo info : cPath.getTopLevelClassesRecursive("de.up.ling.irtg")) {
@@ -218,36 +219,40 @@ public class Program {
 
         for (String commandLine : input) {
             int posInProgram = ret.size();
-            if (commandLine.startsWith(START_WATCH_CODE + " ")) {
-                List<String> watchesStartingHere = watchesStartingBefore.get(posInProgram);
-                if (watchesStartingHere == null) {
-                    watchesStartingHere = new ArrayList<>();
-                    watchesStartingBefore.put(posInProgram, watchesStartingHere);
-                }
-                watchesStartingHere.add(commandLine.substring(START_WATCH_CODE.length() + 1));
-            } else if (commandLine.startsWith(STOP_WATCH_CODE + " ")) {
-                String watchName = commandLine.substring(STOP_WATCH_CODE.length() + 1);
-                allWatchNames.add(watchName);
-                List<String> watchesStoppingHere = watchesStoppingAfter.get(posInProgram-1);
-                if (watchesStoppingHere == null) {
-                    watchesStoppingHere = new ArrayList<>();
-                    watchesStoppingAfter.put(posInProgram-1, watchesStoppingHere);
-                }
-                watchesStoppingHere.add(watchName);
-            } else {
-                String[] varAndCommand = commandLine.split(ASSIGNMENT_PATTERN);
-                if (varAndCommand.length == 1) {
-                    String[] keywordsAndVarName = commandLine.trim().split(" ");
-                    String remappedCode = varRemapper.get(keywordsAndVarName[keywordsAndVarName.length - 1]);
-                    if (remappedCode == null) {
-                        throw new VariableNotDefinedException(keywordsAndVarName[keywordsAndVarName.length - 1]);
-                    } else {
-                        ret.add(commandLine + ASSIGNMENT_PATTERN.replace("?", "") + remappedCode);
-                    }
-                } else {
-                    ret.add(commandLine);
-                }
 
+            if (!"".equals(commandLine.trim()) && !commandLine.startsWith(COMMENT_SYMBOL)) {
+
+                if (commandLine.startsWith(START_WATCH_CODE + " ")) {
+                    List<String> watchesStartingHere = watchesStartingBefore.get(posInProgram);
+                    if (watchesStartingHere == null) {
+                        watchesStartingHere = new ArrayList<>();
+                        watchesStartingBefore.put(posInProgram, watchesStartingHere);
+                    }
+                    watchesStartingHere.add(commandLine.substring(START_WATCH_CODE.length() + 1));
+                } else if (commandLine.startsWith(STOP_WATCH_CODE + " ")) {
+                    String watchName = commandLine.substring(STOP_WATCH_CODE.length() + 1);
+                    allWatchNames.add(watchName);
+                    List<String> watchesStoppingHere = watchesStoppingAfter.get(posInProgram - 1);
+                    if (watchesStoppingHere == null) {
+                        watchesStoppingHere = new ArrayList<>();
+                        watchesStoppingAfter.put(posInProgram - 1, watchesStoppingHere);
+                    }
+                    watchesStoppingHere.add(watchName);
+                } else {
+                    String[] varAndCommand = commandLine.split(ASSIGNMENT_PATTERN);
+                    if (varAndCommand.length == 1) {
+                        String[] keywordsAndVarName = commandLine.trim().split(" ");
+                        String remappedCode = varRemapper.get(keywordsAndVarName[keywordsAndVarName.length - 1]);
+                        if (remappedCode == null) {
+                            throw new VariableNotDefinedException(keywordsAndVarName[keywordsAndVarName.length - 1]);
+                        } else {
+                            ret.add(commandLine + ASSIGNMENT_PATTERN.replace("?", "") + remappedCode);
+                        }
+                    } else {
+                        ret.add(commandLine);
+                    }
+
+                }
             }
         }
         return ret;
@@ -317,16 +322,16 @@ public class Program {
                 }
 
                 /*@Override
-                public void exitCommand(DottedCommandParser.CommandContext ctx) {
-                    ParseTree child0 = ctx.children.get(0);
-                    if (child0 instanceof DottedCommandParser.DottedExprContext) {
-                        String label = ctx.children.get(2).getText();
-                        parses.put(ctx, parses.get(ctx.children.get(0)));
-                        comm2Label.put(ctx, label);
-                    } else if (child0 instanceof TerminalNode) {
-                        comm2Label.put(ctx, ctx.children.get(0).getText());
-                    }
-                }*/
+                 public void exitCommand(DottedCommandParser.CommandContext ctx) {
+                 ParseTree child0 = ctx.children.get(0);
+                 if (child0 instanceof DottedCommandParser.DottedExprContext) {
+                 String label = ctx.children.get(2).getText();
+                 parses.put(ctx, parses.get(ctx.children.get(0)));
+                 comm2Label.put(ctx, label);
+                 } else if (child0 instanceof TerminalNode) {
+                 comm2Label.put(ctx, ctx.children.get(0).getText());
+                 }
+                 }*/
                 @Override
                 public void exitDottedExpr(DottedCommandParser.DottedExprContext ctx) {
                     ParseTree child0 = ctx.children.get(0);
@@ -513,7 +518,6 @@ public class Program {
     private void parseProgram(List<Tree<String>> unparsedProgram, InterpretedTreeAutomaton baseIRTG) {
         Class[] variableTypeTracker = new Class[shiftIndex(unparsedProgram.size())];
 
-        
         //assigning the baseIRTG to the variableTracker
         globalVariableTracker[0] = baseIRTG;
         variableTypeTracker[0] = baseIRTG.getClass();
@@ -587,7 +591,6 @@ public class Program {
 //        } catch (InterruptedException ex) {
 //            Logger.getLogger(Program.class.getName()).log(Level.SEVERE, null, ex);
 //        }
-
         return ret;
     }
 
@@ -641,21 +644,18 @@ public class Program {
      * reached. input -1 to parse the whole corpus.
      */
     public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances) {
-        
+
         // brute force make everything explicit for parallelisation. TODO: do this properly
         // force building the bottom-up rule index
-        ((InterpretedTreeAutomaton)globalVariableTracker[0]).getAutomaton().getRuleSet();
+        ((InterpretedTreeAutomaton) globalVariableTracker[0]).getAutomaton().getRuleSet();
         if (corpus.iterator().hasNext()) {
             Instance testInstance = corpus.iterator().next();
             for (Entry<String, Object> entry : testInstance.getInputObjects().entrySet()) {
-                ((InterpretedTreeAutomaton)globalVariableTracker[0]).filterBinarizedForAppearingConstants(entry.getKey(), entry.getValue());
-                ((InterpretedTreeAutomaton)globalVariableTracker[0]).filterForAppearingConstants(entry.getKey(), entry.getValue());
+                ((InterpretedTreeAutomaton) globalVariableTracker[0]).filterBinarizedForAppearingConstants(entry.getKey(), entry.getValue());
+                ((InterpretedTreeAutomaton) globalVariableTracker[0]).filterForAppearingConstants(entry.getKey(), entry.getValue());
             }
         }
-            
-        
-        
-        
+
         //first setup the localResults array
         for (int j = 0; j < globalVariableTracker.length; j++) {
             if (!isGlobal[j]) {
@@ -703,9 +703,8 @@ public class Program {
                 synchronized (instanceID) {
                     i = instanceID.incValue();
                 }
-                
-//                System.err.println("exec: " + i);
 
+//                System.err.println("exec: " + i);
                 //make local copies of global prototypical objects
                 Object[] variableTrackerHere = new Object[variableTracker.length];
                 Tree<Operation>[] localProgram = new Tree[program.size()];
@@ -768,7 +767,7 @@ public class Program {
                 }
             });
         }
-        
+
         forkJoinPool.shutdown();
         try {
             forkJoinPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
@@ -777,78 +776,78 @@ public class Program {
         }
 
         /*
-        int i = 0;
-        for (Instance instance : corpus) {
+         int i = 0;
+         for (Instance instance : corpus) {
             
-            //make local copies of global prototypical objects
-            Object[] variableTrackerHere = new Object[variableTracker.length];
-            Tree<Operation>[] localProgram = new Tree[program.size()];
-            for (int j = 0; j < program.size(); j++) {
-                localProgram[j] = createLocalOperationTreeCopy(program.get(j), variableTrackerHere);
-            }
+         //make local copies of global prototypical objects
+         Object[] variableTrackerHere = new Object[variableTracker.length];
+         Tree<Operation>[] localProgram = new Tree[program.size()];
+         for (int j = 0; j < program.size(); j++) {
+         localProgram[j] = createLocalOperationTreeCopy(program.get(j), variableTrackerHere);
+         }
             
-            if (i>= maxInstances && maxInstances > -1) {
-                break;
-            }
-            Map<String, CpuTimeStopwatch> name2Watch = new HashMap<>();
-            for (List<String> watchNameList : watchesStartingBefore.values()) {
-                if (watchNameList != null) {
-                    for (String watchName : watchNameList) {
-                        name2Watch.put(watchName, new CpuTimeStopwatch());
-                    }
-                }
-            }
+         if (i>= maxInstances && maxInstances > -1) {
+         break;
+         }
+         Map<String, CpuTimeStopwatch> name2Watch = new HashMap<>();
+         for (List<String> watchNameList : watchesStartingBefore.values()) {
+         if (watchNameList != null) {
+         for (String watchName : watchNameList) {
+         name2Watch.put(watchName, new CpuTimeStopwatch());
+         }
+         }
+         }
             
-            //run
-            Int2ObjectMap<Throwable> errors = run(instance, localProgram, variableTrackerHere, name2Watch);
+         //run
+         Int2ObjectMap<Throwable> errors = run(instance, localProgram, variableTrackerHere, name2Watch);
             
-            //now accept data in ResultManager
-            for (int k = 0; k<program.size(); k++) {
-                if (!isGlobal[shiftIndex(k)]) {
-                    resMan.acceptResult(variableTracker[shiftIndex(k)], i, varNames[k], doExport[shiftIndex(k)], false, isNumeric[shiftIndex(k)]);
-                }
+         //now accept data in ResultManager
+         for (int k = 0; k<program.size(); k++) {
+         if (!isGlobal[shiftIndex(k)]) {
+         resMan.acceptResult(variableTracker[shiftIndex(k)], i, varNames[k], doExport[shiftIndex(k)], false, isNumeric[shiftIndex(k)]);
+         }
                 
-                //use this loop instead of just iterating over watch2Name.entrySet() in order to get only watches that were stopped.
-                List<String> watchesStoppingHere = watchesStoppingAfter.get(k);
-                if (watchesStoppingHere != null) {
-                    for (String watchName : watchesStoppingHere) {
-                        CpuTimeStopwatch watch = name2Watch.get(watchName);
-                        long time = watch.getTimeBefore(1)/1000000;//want time in ms
-                        resMan.acceptTime(time, i, watchName, false);
-                        watchName2Times.get(watchName)[i] = time;
-                    }
-                }
-            }
+         //use this loop instead of just iterating over watch2Name.entrySet() in order to get only watches that were stopped.
+         List<String> watchesStoppingHere = watchesStoppingAfter.get(k);
+         if (watchesStoppingHere != null) {
+         for (String watchName : watchesStoppingHere) {
+         CpuTimeStopwatch watch = name2Watch.get(watchName);
+         long time = watch.getTimeBefore(1)/1000000;//want time in ms
+         resMan.acceptTime(time, i, watchName, false);
+         watchName2Times.get(watchName)[i] = time;
+         }
+         }
+         }
             
-            for (Int2ObjectMap.Entry<Throwable> idAndError : errors.int2ObjectEntrySet()) {
-                int k = idAndError.getIntKey();
-                //do not need to check if entry for k is not global, only non-global k can appear here.
-                resMan.acceptError(idAndError.getValue(), i, varNames[k], doExport[shiftIndex(k)], false);
-            }
+         for (Int2ObjectMap.Entry<Throwable> idAndError : errors.int2ObjectEntrySet()) {
+         int k = idAndError.getIntKey();
+         //do not need to check if entry for k is not global, only non-global k can appear here.
+         resMan.acceptError(idAndError.getValue(), i, varNames[k], doExport[shiftIndex(k)], false);
+         }
             
-            for (int j = 0; j<globalVariableTracker.length; j++) {
-                if (!isGlobal[j]) {
-                    if (neededForGlobal[j]) {
-                        ((Object[])globalVariableTracker[j])[i] = variableTracker[j];
-                    }
-                    variableTracker[j] = null;//do not need to store this further than here, so free up memory.
-                }
-            }
+         for (int j = 0; j<globalVariableTracker.length; j++) {
+         if (!isGlobal[j]) {
+         if (neededForGlobal[j]) {
+         ((Object[])globalVariableTracker[j])[i] = variableTracker[j];
+         }
+         variableTracker[j] = null;//do not need to store this further than here, so free up memory.
+         }
+         }
             
-            if (onInstanceSuccess != null) {
-                onInstanceSuccess.accept(i);
-            }
+         if (onInstanceSuccess != null) {
+         onInstanceSuccess.accept(i);
+         }
             
-            i++;
-        }
+         i++;
+         }
          */
- /*System.err.println("--------------------local--------------------");
-        for (int j = 0; j<globalVariableTracker.length; j++) {
-            if (!isGlobal[j]) {
-                System.err.println("--------------------"+j+"--------------------");
-                System.err.println(Arrays.toString(Arrays.copyOf((Object[])globalVariableTracker[j], 10)));
-            }
-        }*/
+        /*System.err.println("--------------------local--------------------");
+         for (int j = 0; j<globalVariableTracker.length; j++) {
+         if (!isGlobal[j]) {
+         System.err.println("--------------------"+j+"--------------------");
+         System.err.println(Arrays.toString(Arrays.copyOf((Object[])globalVariableTracker[j], 10)));
+         }
+         }*/
         //run globally
         Int2ObjectMap<Throwable> errors = runGlobal(false);
         //System.err.println("--------------------global--------------------");
@@ -893,42 +892,42 @@ public class Program {
         Map<String, Method> ms = getAllAnnotatedStaticMethods();
         String longest = Collections.max(ms.keySet(), Comparator.comparing(s -> s.length()));
         int maxLen = longest.length();
-        
-        for( String key : ms.keySet() ) {
+
+        for (String key : ms.keySet()) {
             System.err.printf("[%-" + maxLen + "s] %s\n", key, ms.get(key).toString());
         }
-        
+
         System.exit(0);
 
         List<String> programCode = new ArrayList<>();
         programCode.add("export pruningPolicy = histogramPP(insideFOM, 10)");
         /*programCode.add("starttime all");
-        programCode.add("starttime filter");
-        programCode.add("F = filter($, __graph__, <graph>)");
-        programCode.add("stoptime filter");
-        programCode.add("D = F.[graph].alg.decomp(<graph>)");
-        programCode.add("Invhom = F.[graph].invhom(D)");
-        programCode.add("Intersect = F.auto.intersect(Invhom)");
-        programCode.add("export Vit = Intersect.viterbi");
-        programCode.add("Tree = F.[graph].hom.apply(Vit)");
-        programCode.add("starttime eval");
-        programCode.add("export Result = F.[graph].alg.eval(Tree)");
-        programCode.add("stoptime eval");
-        programCode.add("stoptime all");*/
- /*for (Tree<String> tree : program) {
-            System.err.println(tree);
-        }*/
+         programCode.add("starttime filter");
+         programCode.add("F = filter($, __graph__, <graph>)");
+         programCode.add("stoptime filter");
+         programCode.add("D = F.[graph].alg.decomp(<graph>)");
+         programCode.add("Invhom = F.[graph].invhom(D)");
+         programCode.add("Intersect = F.auto.intersect(Invhom)");
+         programCode.add("export Vit = Intersect.viterbi");
+         programCode.add("Tree = F.[graph].hom.apply(Vit)");
+         programCode.add("starttime eval");
+         programCode.add("export Result = F.[graph].alg.eval(Tree)");
+         programCode.add("stoptime eval");
+         programCode.add("stoptime all");*/
+        /*for (Tree<String> tree : program) {
+         System.err.println(tree);
+         }*/
 
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("examples/hrg.irtg"));
 
         /*List<Tree<String>> program = new ArrayList<>();
-        program.add(TreeParser.parse("filter('$', '__graph__', '<graph>')"));
-        program.add(TreeParser.parse("decomp(alg(interp(F,'__graph__')),'<graph>')"));
-        program.add(TreeParser.parse("invhom(interp(F,'__graph__'),D)"));
-        program.add(TreeParser.parse("intersect(auto(F),Invhom)"));
-        program.add(TreeParser.parse("viterbi(Intersect)"));
-        program.add(TreeParser.parse("apply(hom(interp(F,'__string__')), Vit)"));
-        program.add(TreeParser.parse("eval(alg(interp(F,'__string__')), Tree)"));*/
+         program.add(TreeParser.parse("filter('$', '__graph__', '<graph>')"));
+         program.add(TreeParser.parse("decomp(alg(interp(F,'__graph__')),'<graph>')"));
+         program.add(TreeParser.parse("invhom(interp(F,'__graph__'),D)"));
+         program.add(TreeParser.parse("intersect(auto(F),Invhom)"));
+         program.add(TreeParser.parse("viterbi(Intersect)"));
+         program.add(TreeParser.parse("apply(hom(interp(F,'__string__')), Vit)"));
+         program.add(TreeParser.parse("eval(alg(interp(F,'__string__')), Tree)"));*/
         Program prog = new Program(irtg, null, programCode, new HashMap<>());
 
         Instance instance = new Instance();
@@ -939,11 +938,11 @@ public class Program {
         testCorpus.addInstance(instance);
         prog.run(testCorpus, new ResultManager.PrintingManager(), null, -1);
         /*for (String varName : prog.varName2Index.keySet()) {
-            String resString = prog.getLastResults()[prog.varName2Index.get(varName)].toString();
-            System.err.println();
-            System.err.println(varName+" = "+resString.substring(0, Math.min(30, resString.length())));
-            System.err.println();
-        }*/
+         String resString = prog.getLastResults()[prog.varName2Index.get(varName)].toString();
+         System.err.println();
+         System.err.println(varName+" = "+resString.substring(0, Math.min(30, resString.length())));
+         System.err.println();
+         }*/
 
     }
 

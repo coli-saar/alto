@@ -1,0 +1,6 @@
+#! /bin/bash
+
+# alab = Alto Lab Task Runner
+
+java -Xmx8G -cp $ALTO_JAR de.up.ling.irtg.laboratory.CommandLineInterface "$@"
+
