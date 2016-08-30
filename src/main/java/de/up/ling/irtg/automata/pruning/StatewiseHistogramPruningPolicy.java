@@ -7,6 +7,7 @@ package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import it.unimi.dsi.fastutil.Arrays;
 import it.unimi.dsi.fastutil.Swapper;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -15,7 +16,6 @@ import it.unimi.dsi.fastutil.ints.IntComparator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.List;
 
 /**
@@ -144,10 +144,28 @@ public class StatewiseHistogramPruningPolicy implements PruningPolicy {
 
         partnersHere.add(left.getParent());
     }
-
-    public void printStatistics() {
-//        System.err.printf("QuotientPP collected %d rules, skipped %d rules, iterated over %d rules (%5.2f%%).\n", collectedRules, unevalRules, iteratedRules, (100.0 * iteratedRules / collectedRules));
-        System.err.printf("[%d/%d rules = %5.2f%%] ", iteratedRules, collectedRules, (100.0 * iteratedRules / collectedRules));
+    
+    
+    @Override
+    @OperationAnnotation(code = "numIteratedRules")
+    public long numIteratedRules() {
+        return iteratedRules;
     }
 
+    @Override
+    @OperationAnnotation(code = "numCollectedRules")
+    public long numCollectedRules() {
+        return collectedRules;
+    }
+//
+//    @Override
+//    public void printStatistics() {
+////        System.err.printf("QuotientPP collected %d rules, skipped %d rules, iterated over %d rules (%5.2f%%).\n", collectedRules, unevalRules, iteratedRules, (100.0 * iteratedRules / collectedRules));
+//        System.err.printf("[%d/%d rules = %5.2f%%] ", iteratedRules, collectedRules, (100.0 * iteratedRules / collectedRules));
+//    }
+
+    @OperationAnnotation(code = "ppStatewiseHistogram")
+    public static PruningPolicy createStatewiseHistogramPruningPolicy(FOM fom, int k) {
+        return new StatewiseHistogramPruningPolicy(fom, k);
+    }
 }

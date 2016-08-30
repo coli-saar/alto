@@ -126,7 +126,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
     public TreeAutomaton(Signature signature) {
         this(signature, new Interner<State>());
     }
-    
+
     protected TreeAutomaton(Signature signature, Interner<State> stateInterner) {
         ruleStore = new RuleStore(this);
 
@@ -1473,11 +1473,23 @@ public abstract class TreeAutomaton<State> implements Serializable {
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, SignatureMapper signatureMapper) {
-	//PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
-        PruningPolicy pp = new NoPruningPolicy();
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
+        ret.makeAllRulesExplicit();
+        return ret;
+    }
+
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
+        return intersectCondensed(other, signature.getIdentityMapper());
+    }
+    
+    @OperationAnnotation(code = "intersectCondensedPruning")
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, PruningPolicy pp) {
+        //PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
+        //PruningPolicy pp = new NoPruningPolicy();
 //        PruningPolicy pp = new HistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 120);
 //        PruningPolicy pp = new StatewiseHistogramPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 10);
-        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signatureMapper, pp);
+
+        TreeAutomaton<Pair<State, OtherState>> ret = new CondensedIntersectionAutomaton<State, OtherState>(this, other, signature.getIdentityMapper(), pp);
         ret.makeAllRulesExplicit();
         return ret;
     }
@@ -1496,10 +1508,6 @@ public abstract class TreeAutomaton<State> implements Serializable {
         TreeAutomaton<Pair<State, OtherState>> ret = new CondensedViterbiIntersectionAutomaton<State, OtherState>(this, other, signatureMapper);
         ret.makeAllRulesExplicit();
         return ret;
-    }
-
-    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
-        return intersectCondensed(other, signature.getIdentityMapper());
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectViterbi(CondensedTreeAutomaton<OtherState> other) {
@@ -2135,7 +2143,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
                 }
 
                 if (allReachable) {
-                // caution advised: this will only work correctly if both the signature
+                    // caution advised: this will only work correctly if both the signature
                     // and the state interner of ret and this are the same
                     ret.addRule(rule);
                 }

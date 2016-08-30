@@ -8,6 +8,7 @@ package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 
 /**
  *
@@ -16,4 +17,10 @@ import de.up.ling.irtg.automata.condensed.CondensedRule;
 public interface PruningPolicy {
     public void foreachPrunedRulePair(int rightParent, RulePairConsumer consumer);
     public void collect(int rightParent, Rule left, CondensedRule right);
+    
+    @OperationAnnotation(code = "numIteratedRules")
+    public long numIteratedRules();
+    
+    @OperationAnnotation(code = "numCollectedRules")
+    public long numCollectedRules();
 }

@@ -7,6 +7,7 @@ package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import it.unimi.dsi.fastutil.ints.Int2DoubleMap;
 import it.unimi.dsi.fastutil.ints.Int2DoubleOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -83,9 +84,28 @@ public class QuotientPruningPolicy implements PruningPolicy {
             bestFomPerParent.put(rightParent, value);
         }
     }
+//
+//    @Override
+//    public void printStatistics() {
+////        System.err.printf("QuotientPP collected %d rules, skipped %d rules, iterated over %d rules (%5.2f%%).\n", collectedRules, unevalRules, iteratedRules, (100.0 * iteratedRules / collectedRules));
+//        System.err.printf("[%d/%d rules = %5.2f%%] ", iteratedRules, collectedRules, (100.0 * iteratedRules / collectedRules));
+//    }
+    
+    
+    @Override
+    @OperationAnnotation(code = "numIteratedRules")
+    public long numIteratedRules() {
+        return iteratedRules;
+    }
 
-    public void printStatistics() {
-//        System.err.printf("QuotientPP collected %d rules, skipped %d rules, iterated over %d rules (%5.2f%%).\n", collectedRules, unevalRules, iteratedRules, (100.0 * iteratedRules / collectedRules));
-        System.err.printf("[%d/%d rules = %5.2f%%] ", iteratedRules, collectedRules, (100.0 * iteratedRules / collectedRules));
+    @Override
+    @OperationAnnotation(code = "numCollectedRules")
+    public long numCollectedRules() {
+        return collectedRules;
+    }
+    
+    @OperationAnnotation(code = "ppQuotient")
+    public static PruningPolicy createQuotientPruningPolicy(FOM fom, double factor) {
+        return new QuotientPruningPolicy(fom, factor);
     }
 }

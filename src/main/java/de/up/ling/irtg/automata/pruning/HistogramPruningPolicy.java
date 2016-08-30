@@ -7,6 +7,7 @@ package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
@@ -68,9 +69,26 @@ public class HistogramPruningPolicy implements PruningPolicy {
         }
     }
     
-    public void printStatistics() {
-//        System.err.printf("QuotientPP collected %d rules, skipped %d rules, iterated over %d rules (%5.2f%%).\n", collectedRules, unevalRules, iteratedRules, (100.0 * iteratedRules / collectedRules));
-        System.err.printf("[%d/%d rules = %5.2f%%] ", iteratedRules, collectedRules, (100.0 * iteratedRules / collectedRules));
-    }
+//    @Override
+//    public void printStatistics() {
+////        System.err.printf("QuotientPP collected %d rules, skipped %d rules, iterated over %d rules (%5.2f%%).\n", collectedRules, unevalRules, iteratedRules, (100.0 * iteratedRules / collectedRules));
+//        System.err.printf("[%d/%d rules = %5.2f%%] ", iteratedRules, collectedRules, (100.0 * iteratedRules / collectedRules));
+//    }
     
+    @OperationAnnotation(code = "ppHistogram")
+    public static PruningPolicy createHistogramPruningPolicy(FOM fom, int k) {
+        return new HistogramPruningPolicy(fom, k);
+    }
+
+    @Override
+    @OperationAnnotation(code = "numIteratedRules")
+    public long numIteratedRules() {
+        return iteratedRules;
+    }
+
+    @Override
+    @OperationAnnotation(code = "numCollectedRules")
+    public long numCollectedRules() {
+        return collectedRules;
+    }
 }

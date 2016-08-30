@@ -10,7 +10,6 @@ import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.automata.IntersectionAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.codec.InputCodec;

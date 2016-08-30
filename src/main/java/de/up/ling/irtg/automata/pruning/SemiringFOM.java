@@ -8,6 +8,8 @@ package de.up.ling.irtg.automata.pruning;
 
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
+import de.up.ling.irtg.laboratory.OperationAnnotation;
+import de.up.ling.irtg.semiring.DoubleArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.util.NumbersCombine;
 import it.unimi.dsi.fastutil.longs.Long2DoubleMap;
@@ -65,4 +67,8 @@ public class SemiringFOM implements FOM {
         statesToEvaluation.put(encoding, newValue);
     }
     
+    @OperationAnnotation(code = "insideFom")
+    public static FOM createInsideFom() {
+        return new SemiringFOM(new DoubleArithmeticSemiring());
+    }
 }

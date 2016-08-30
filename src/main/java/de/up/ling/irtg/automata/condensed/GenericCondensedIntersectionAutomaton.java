@@ -134,15 +134,12 @@ public abstract class GenericCondensedIntersectionAutomaton<LeftState, RightStat
             // force recomputation of final states
             finalStates = null;
 
-            if (pp != null) {
-                if (pp instanceof QuotientPruningPolicy) {
-                    ((QuotientPruningPolicy) pp).printStatistics();
-                } else if (pp instanceof HistogramPruningPolicy) {
-                    ((HistogramPruningPolicy) pp).printStatistics();
-                } else if (pp instanceof StatewiseHistogramPruningPolicy) {
-                    ((StatewiseHistogramPruningPolicy) pp).printStatistics();
-                }
-            }
+            // print some statistics about pruning -- this does not belong here
+//            if (pp != null) {
+//                long iteratedRules = pp.numIteratedRules();
+//                long collectedRules = pp.numCollectedRules();
+//                System.err.printf("[%d/%d rules = %5.2f%%] ", iteratedRules, collectedRules, (100.0 * iteratedRules / collectedRules));
+//            }
         }
     }
 
