@@ -95,6 +95,8 @@ public class Program {
     public static final String COMMENT_SYMBOL = "//";
     public static final Method GET_ALG_METHOD = getGetAlgMethod();//necessary for getting return type
 
+    public static final String VERBOSE_ALL = "ALL";
+
     public Program(InterpretedTreeAutomaton irtg, List<String> additionalData, List<String> unparsedProgram, Map<String, String> varRemapper) throws VariableNotDefinedException {
 
         //preprocessing (currently the watches and varibale remapping)
@@ -658,7 +660,9 @@ public class Program {
      * @param maxInstances Cancels the run when this number of instances is
      * reached. input -1 to parse the whole corpus.
      */
-    public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances, boolean verbose) {
+    public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances, Set<String> verboseMeasurements) {
+        boolean verbose = (verboseMeasurements != null);
+        boolean verboseAll = (verboseMeasurements != null) && verboseMeasurements.contains(VERBOSE_ALL);
         int width = (int) (Math.ceil(Math.log10(corpus.getNumberOfInstances())));
         String formatString = verbose ? "%0" + width + "d [%-50.50s] " : null;
         Algebra firstAlgebra = verbose ? getGlobalIrtg().getInterpretation(firstMentionedInterpretation).getAlgebra() : null;
@@ -771,12 +775,17 @@ public class Program {
                         Object value = variableTrackerHere[shiftIndex(k)];
                         resMan.acceptResult(value, i, varNames[k], doExport[shiftIndex(k)], false, isNumeric[shiftIndex(k)]);
 
-                        if (verbose && doExport[shiftIndex(k)]) {
-                            if (value == null) {
-                                System.err.printf("%s=<null> ", varNames[k]);
-                            } else {
-                                System.err.printf("%s=%s ", varNames[k], value.toString());
+                        if (verbose) {
+                            if (verboseAll || verboseMeasurements.contains(varNames[k])) {
+                                if (doExport[shiftIndex(k)]) {
+                                    if (value == null) {
+                                        System.err.printf("%s=<null> ", varNames[k]);
+                                    } else {
+                                        System.err.printf("%s=%s ", varNames[k], value.toString());
+                                    }
+                                }
                             }
+
                         }
                     }
                 }

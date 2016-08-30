@@ -22,9 +22,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
 
 /**
  *
@@ -53,20 +55,15 @@ public class CommandLineInterface {
     @Parameter(names = {"-threads"}, description = "Number of threads over which the instances should be parallelized", required = false)
     private int numThreads = 1;
     
-    @Parameter(names = {"--verbose", "-v"}, description = "Print detailed measurements while parsing", required=false)
-    private boolean verbose = false;
+    @Parameter(names = {"--verbose", "-v"}, description = "Print detailed measurements while parsing", variableArity = true)
+    private List<String> verboseMeasurements = new ArrayList<>();
+    
+    public boolean isVerbose() {
+        return ! verboseMeasurements.isEmpty();
+    }
     
     private Map<String, String> getVarRemapper() {
         return varRemapping;
-        
-//        Map<String, String> ret = new HashMap<>();
-//        if (varRemapping.size() % 2 != 0) {
-//            throw new com.beust.jcommander.ParameterException("ERROR: uneven amount of parameters for -varRemapping/-v");
-//        }
-//        for (int i = 0; i < varRemapping.size(); i += 2) {
-//            ret.put(varRemapping.get(i), varRemapping.get(i + 1));
-//        }
-//        return ret;
     }
 
     @Parameter(names = "-local", description = "Local mode, i.e. not uploading results to database")
@@ -111,7 +108,9 @@ public class CommandLineInterface {
             return -1;
         }
         
-        if(cli.verbose) {
+        Set<String> verboseMeasurementsSet = cli.isVerbose() ? new HashSet<>(cli.verboseMeasurements) : null;
+        
+        if(cli.isVerbose()) {
             // sanity checks for verbosity flag
             if( cli.numThreads > 1 ) {
                 System.err.println("Verbose output is only supported when running in a single thread.");
@@ -169,28 +168,28 @@ public class CommandLineInterface {
             
             System.err.println("Running " + task.getWarmup() + " warmup instances...");
             
-            withProgressbar(cli.verbose, 60, System.err, listener -> {
-                task.getProgram().run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), false);
+            withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
+                task.getProgram().run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), null);
                 return null;
             });
 
             System.err.println("Running experiment...");
             if (cli.local) {
-                withProgressbar(cli.verbose, 60, System.err, listener -> {
+                withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
                     task.getProgram().run(corpus, 
                             cli.showResults ? new ResultManager.PrintingManager() : new ResultManager.DummyManager(), 
                             i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()), 
-                            -1, cli.verbose);
+                            -1, verboseMeasurementsSet);
                     return null;
                 });
                 
                 System.err.println("Done!");
             } else {
-                withProgressbar(cli.verbose, 60, System.err, listener -> {
+                withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
                     task.getProgram().run(corpus, 
                             new DBResultManager(dbLoader, experimentID, ex -> System.err.println("Error when uploading result to database: " + ex.toString()), cli.showResults),
                             i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
-                            -1, cli.verbose);
+                            -1, verboseMeasurementsSet);
                     return null;
                 });
                 
