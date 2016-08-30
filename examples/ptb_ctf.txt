@@ -1,0 +1,44 @@
+___(
+TOP(TOP(TOP(TOP))),
+
+P(
+  HP(
+    S_(
+      S,
+      VP,
+      SQ,
+      SBAR,
+      SBARQ,
+      SINV
+    ),
+    N_(
+      NP,
+      NAC,
+      NX,
+      LST,
+      X,
+      UCP,
+      FRAG
+    )
+  ),
+  MP(
+    A_(
+      ADJP,
+      QP,
+      CONJP,
+      ADVP,
+      INTJ,
+      PRN,
+      PRT
+    ),
+    P_(
+      PP,
+      RRC,
+      WHADJP,
+      WHADVP,
+      WHNP,
+      WHPP
+    )
+  )
+)
+)
