@@ -76,5 +76,11 @@ public abstract class AbstractCorpusWriter implements Consumer<Instance> {
             throw new RuntimeException(ex);
         }
     }
+    
+    public void writeCorpus(Corpus corpus) throws IOException {
+        for( Instance inst : corpus ) {
+            writeInstance(inst);
+        }
+    }
 
 }
