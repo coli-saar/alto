@@ -46,6 +46,14 @@ public abstract class Cache<E> {
         return getCacheFile(identifier).exists();
     }
 
+    public E get(String identifier, boolean forceReload) throws ValueReadingException, IOException {
+        if( forceReload ) {
+            return getFromRemote(identifier);
+        } else {
+            return get(identifier);
+        }
+    }
+    
     public E get(String identifier) throws ValueReadingException, IOException {
         E ret = loadFromCache(identifier);
 

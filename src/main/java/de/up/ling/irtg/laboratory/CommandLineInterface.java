@@ -69,6 +69,9 @@ public class CommandLineInterface {
 
     @Parameter(names = {"--config"}, description = "Location of configuration file")
     private String configFilename = DEFAULT_CONFIG_FILENAME;
+    
+    @Parameter(names = {"--reload"}, description = "Force reload of task, grammar, and corpus")
+    private boolean forceReload = false;
 
     public boolean isVerbose() {
         return !verboseMeasurements.isEmpty();
@@ -169,24 +172,24 @@ public class CommandLineInterface {
             URI baseURI = new URI(altolabBase);
 
             TaskCache tc = new TaskCache(baseDir, baseURI.resolve("task/"));
-            UnparsedTask task = tc.get(Integer.toString(cli.taskID));
+            UnparsedTask task = tc.get(Integer.toString(cli.taskID), cli.forceReload);
 
             GrammarCache gc = new GrammarCache(baseDir, baseURI);
             String gid = String.format("grammar_%d.irtg", task.grammar);
-            System.err.printf("Loading grammar #%d (%s) ... ", task.grammar, gc.isInCache(gid) ? "local" : "remote");
-            InterpretedTreeAutomaton irtg = gc.get(gid);
+            System.err.printf("Loading grammar #%d (%s) ... ", task.grammar, rl(gc.isInCache(gid), cli.forceReload));
+            InterpretedTreeAutomaton irtg = gc.get(gid, cli.forceReload);
             System.err.println("done.");
 
             CorpusCache cc = new CorpusCache(baseDir, baseURI, irtg);
             String cid = String.format("corpus_%d.txt", task.corpus);
-            System.err.printf("Loading corpus #%d (%s) ... ", task.corpus, cc.isInCache(cid) ? "local" : "remote");
-            Corpus corpus = cc.get(cid);
+            System.err.printf("Loading corpus #%d (%s) ... ", task.corpus, rl(cc.isInCache(cid), cli.forceReload));
+            Corpus corpus = cc.get(cid, cli.forceReload);
             System.err.println("done.");
 
             AdditionalDataCache ac = new AdditionalDataCache(baseDir, baseURI.resolve("additional_data/"));
             List<String> additionalData = new ArrayList<>();
             for (String ad : cli.additionalData) {
-                additionalData.add(ac.get(ad));
+                additionalData.add(ac.get(ad, cli.forceReload));
             }
 
             DBLoader dbLoader = cli.local ? null : new DBLoader();
@@ -267,4 +270,13 @@ public class CommandLineInterface {
         }
     }
 
+    private static String rl(boolean inCache, boolean forceReload) {
+        if( forceReload ) {
+            return "forced reload";
+        } else if( inCache ) {
+            return "local";
+        } else {
+            return "remote";
+        }
+    }
 }
