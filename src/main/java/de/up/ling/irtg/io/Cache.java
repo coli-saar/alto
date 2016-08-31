@@ -27,37 +27,6 @@ import java.util.logging.Level;
  * @author koller
  */
 public abstract class Cache<E> {
-
-    public static void main(String[] args) throws URISyntaxException, ValueReadingException, IOException {
-        Logging.get().setLevel(Level.ALL);
-
-        /*
-        GrammarCache gc = new GrammarCache(Paths.get(".alto", "cache"), new URI("http://tcl.ling.uni-potsdam.de:5000/rest/"));
-        long startTime = System.currentTimeMillis();
-        InterpretedTreeAutomaton irtg = gc.get("grammar_7.irtg");
-        long endTime = System.currentTimeMillis();
-                */
-
-        Path baseDir = Paths.get(".alto", "cache");
-        URI baseURI = new URI("http://tcl.ling.uni-potsdam.de:5000/rest/");
-        
-        GrammarCache gc = new GrammarCache(baseDir, baseURI);
-        CpuTimeStopwatch sw = new CpuTimeStopwatch();
-        sw.record();
-        InterpretedTreeAutomaton irtg = gc.get("grammar_16.irtg");
-        sw.record();
-        
-        CorpusCache cc = new CorpusCache(baseDir, baseURI, irtg);
-        Corpus c = cc.get("corpus_23.txt");
-        sw.record();
-        
-        System.err.println(c.getNumberOfInstances());
-        sw.printMilliseconds("load grammar", "load corpus");
-
-//        System.err.println(irtg);
-//        System.err.println("Loading took " + Util.formatTime(endTime - startTime));
-    }
-
     private final Path baseDir;  // e.g. ~/.alto/cache
 
     abstract protected E loadFromRemote(String identifier) throws ValueReadingException, IOException;

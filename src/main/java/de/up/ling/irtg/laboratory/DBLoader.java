@@ -16,7 +16,6 @@ import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import de.up.ling.tree.TreeParser;
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
@@ -33,8 +32,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.function.IntConsumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -143,49 +140,14 @@ public class DBLoader {
      * Connects to the database specified in the database.data file.
      * @throws SQLException 
      */
-    public void connect() throws SQLException {
+    public void connect(Properties props) throws SQLException {
         
-        String serverName=null;
-        String userName=null;
-        String password=null;
-        String port=null;
-        String dbName=null;
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader("database.data"));
-            String line = reader.readLine();
-            if (line == null || !line.startsWith("serverName=")) {
-                throwDBDataFileError("error in line 1");
-            } else {
-                serverName = line.substring("serverName=".length());
-            }
-            line = reader.readLine();
-            if (line == null || !line.startsWith("userName=")) {
-                throwDBDataFileError("error in line 2");
-            } else {
-                userName = line.substring("userName=".length());
-            }
-            line = reader.readLine();
-            if (line == null || !line.startsWith("password=")) {
-                throwDBDataFileError("error in line 3");
-            } else {
-                password = line.substring("password=".length());
-            }
-            line = reader.readLine();
-            if (line == null || !line.startsWith("port=")) {
-                throwDBDataFileError("error in line 4");
-            } else {
-                port = line.substring("port=".length());
-            }
-            line = reader.readLine();
-            if (line == null || !line.startsWith("dbName=")) {
-                throwDBDataFileError("error in line 5");
-            } else {
-                dbName = line.substring("dbName=".length());
-            }
-            
-        } catch (IOException ex) {
-            throwDBDataFileError(ex.toString());
-        }
+        String serverName=props.getProperty("db.serverName");
+        String userName=props.getProperty("db.userName");
+        String password=props.getProperty("db.password");
+        String port=props.getProperty("db.port");
+        String dbName=props.getProperty("db.dbName");
+        
         setUp(serverName, userName, password, port, dbName);
     }
     
@@ -601,10 +563,10 @@ public class DBLoader {
 //        return uploadExperimentStartData(taskRef, comment, hostname);
 //    }
     
-    public int uploadExperimentStartData(TaskReference taskRef, String comment, String hostname, Map<String, String> varRemapper, List<String> dataIDs) throws SQLException {
+    public int uploadExperimentStartData(int taskId, String comment, String hostname, Map<String, String> varRemapper, List<String> dataIDs) throws SQLException {
         reconnectIfNecessary();
         String query = "INSERT INTO experiment(id, timestamp, task_id, comments, hostname, status, sys_revision) " +
-                "VALUES (NULL, NULL, " + taskRef.id+", '"+comment+"', '"+hostname+"', 'started', ?)";
+                "VALUES (NULL, NULL, " + taskId + ", '"+comment+"', '"+hostname+"', 'started', ?)";
         PreparedStatement prepStmt = conn.prepareStatement(query);
         prepStmt.setString(1, getSystemRevision());
         prepStmt.executeUpdate();

@@ -5,10 +5,8 @@
  */
 package de.up.ling.irtg.laboratory;
 
-import cc.mallet.util.CollectionUtils;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.graph.GraphAlgebra;
 import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
@@ -18,7 +16,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -131,10 +128,11 @@ public class Program {
 
         //parse the code
         parseProgram(getTreesFromCommandCode(preprocessedProgram), irtg);
-        System.err.println("parsed program: ");
-        for (Tree<Operation> tree : program) {
-            System.err.println(tree);
-        }
+//        System.err.println("parsed program: ");
+//        for (Tree<Operation> tree : program) {
+//            System.err.println(tree);
+//        }
+        
         //System.err.println("parsed: "+program);
     }
 
@@ -660,7 +658,7 @@ public class Program {
      * @param maxInstances Cancels the run when this number of instances is
      * reached. input -1 to parse the whole corpus.
      */
-    public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances, Set<String> verboseMeasurements) {
+    public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances, boolean isWarmup, Set<String> verboseMeasurements) {
         boolean verbose = (verboseMeasurements != null);
         boolean verboseAll = (verboseMeasurements != null) && verboseMeasurements.contains(VERBOSE_ALL);
         int width = (int) (Math.ceil(Math.log10(corpus.getNumberOfInstances())));
@@ -823,47 +821,48 @@ public class Program {
             Logger.getLogger(Program.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        
-        //run globally
-        Int2ObjectMap<Throwable> errors = runGlobal(false);
+        if (!isWarmup) {      // only report global results if not warmup
+            //run globally
+            Int2ObjectMap<Throwable> errors = runGlobal(false);
         //System.err.println("--------------------global--------------------");
-        //System.err.println(Arrays.toString(globalVariableTracker));
+            //System.err.println(Arrays.toString(globalVariableTracker));
 
-        //accept global data in ResultManager
-        for (int k = 0; k < program.size(); k++) {
-            if (isGlobal[shiftIndex(k)] && !isInitialization[shiftIndex(k)]) {
-                resMan.acceptResult(globalVariableTracker[shiftIndex(k)], -1, varNames[k], doExport[shiftIndex(k)], true, isNumeric[shiftIndex(k)]);
-                
-                if( verbose && doExport[shiftIndex(k)]) {
-                    Object val = globalVariableTracker[shiftIndex(k)];
-                    
-                    if( val == null ) {
-                        System.err.printf("%s: <null>\n", varNames[k]);
-                    } else {
-                        System.err.printf("%s: %s\n", varNames[k], val.toString());
+            //accept global data in ResultManager
+            for (int k = 0; k < program.size(); k++) {
+                if (isGlobal[shiftIndex(k)] && !isInitialization[shiftIndex(k)]) {
+                    resMan.acceptResult(globalVariableTracker[shiftIndex(k)], -1, varNames[k], doExport[shiftIndex(k)], true, isNumeric[shiftIndex(k)]);
+
+                    if (verbose && doExport[shiftIndex(k)]) {
+                        Object val = globalVariableTracker[shiftIndex(k)];
+
+                        if (val == null) {
+                            System.err.printf("%s: <null>\n", varNames[k]);
+                        } else {
+                            System.err.printf("%s: %s\n", varNames[k], val.toString());
+                        }
                     }
                 }
             }
-        }
 
-        //upload time sums
-        for (Entry<String, long[]> nameAndTime : watchName2Times.entrySet()) {
-            long sum;
-            try {
-                sum = Arrays.stream(nameAndTime.getValue()).reduce((long left, long right) -> left + right).getAsLong();
-            } catch (java.util.NoSuchElementException ex) {
-                sum = 0;
+            //upload time sums
+            for (Entry<String, long[]> nameAndTime : watchName2Times.entrySet()) {
+                long sum;
+                try {
+                    sum = Arrays.stream(nameAndTime.getValue()).reduce((long left, long right) -> left + right).getAsLong();
+                } catch (java.util.NoSuchElementException ex) {
+                    sum = 0;
+                }
+
+                resMan.acceptTime(sum, -1, "total " + nameAndTime.getKey(), true);
+                System.err.printf("total %s: %s\n", nameAndTime.getKey(), Util.formatTime(sum * 1000000L)); // convert back to ns
             }
-            
-            resMan.acceptTime(sum, -1, "total " + nameAndTime.getKey(), true);
-            System.err.printf("total %s: %s\n", nameAndTime.getKey(), Util.formatTime(sum*1000000L)); // convert back to ns
-        }
 
-        //TODO: accept runtimes -- EDIT: currently only measuring non-global runtimes
-        for (Int2ObjectMap.Entry<Throwable> idAndError : errors.int2ObjectEntrySet()) {
-            int k = idAndError.getIntKey();
-            //do not need to check if entry for k is global, only global k can appear here.
-            resMan.acceptError(idAndError.getValue(), -1, varNames[k], doExport[shiftIndex(k)], true);
+            //TODO: accept runtimes -- EDIT: currently only measuring non-global runtimes
+            for (Int2ObjectMap.Entry<Throwable> idAndError : errors.int2ObjectEntrySet()) {
+                int k = idAndError.getIntKey();
+                //do not need to check if entry for k is global, only global k can appear here.
+                resMan.acceptError(idAndError.getValue(), -1, varNames[k], doExport[shiftIndex(k)], true);
+            }
         }
     }
 
