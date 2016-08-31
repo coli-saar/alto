@@ -823,79 +823,7 @@ public class Program {
             Logger.getLogger(Program.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        /*
-         int i = 0;
-         for (Instance instance : corpus) {
-            
-         //make local copies of global prototypical objects
-         Object[] variableTrackerHere = new Object[variableTracker.length];
-         Tree<Operation>[] localProgram = new Tree[program.size()];
-         for (int j = 0; j < program.size(); j++) {
-         localProgram[j] = createLocalOperationTreeCopy(program.get(j), variableTrackerHere);
-         }
-            
-         if (i>= maxInstances && maxInstances > -1) {
-         break;
-         }
-         Map<String, CpuTimeStopwatch> name2Watch = new HashMap<>();
-         for (List<String> watchNameList : watchesStartingBefore.values()) {
-         if (watchNameList != null) {
-         for (String watchName : watchNameList) {
-         name2Watch.put(watchName, new CpuTimeStopwatch());
-         }
-         }
-         }
-            
-         //run
-         Int2ObjectMap<Throwable> errors = run(instance, localProgram, variableTrackerHere, name2Watch);
-            
-         //now accept data in ResultManager
-         for (int k = 0; k<program.size(); k++) {
-         if (!isGlobal[shiftIndex(k)]) {
-         resMan.acceptResult(variableTracker[shiftIndex(k)], i, varNames[k], doExport[shiftIndex(k)], false, isNumeric[shiftIndex(k)]);
-         }
-                
-         //use this loop instead of just iterating over watch2Name.entrySet() in order to get only watches that were stopped.
-         List<String> watchesStoppingHere = watchesStoppingAfter.get(k);
-         if (watchesStoppingHere != null) {
-         for (String watchName : watchesStoppingHere) {
-         CpuTimeStopwatch watch = name2Watch.get(watchName);
-         long time = watch.getTimeBefore(1)/1000000;//want time in ms
-         resMan.acceptTime(time, i, watchName, false);
-         watchName2Times.get(watchName)[i] = time;
-         }
-         }
-         }
-            
-         for (Int2ObjectMap.Entry<Throwable> idAndError : errors.int2ObjectEntrySet()) {
-         int k = idAndError.getIntKey();
-         //do not need to check if entry for k is not global, only non-global k can appear here.
-         resMan.acceptError(idAndError.getValue(), i, varNames[k], doExport[shiftIndex(k)], false);
-         }
-            
-         for (int j = 0; j<globalVariableTracker.length; j++) {
-         if (!isGlobal[j]) {
-         if (neededForGlobal[j]) {
-         ((Object[])globalVariableTracker[j])[i] = variableTracker[j];
-         }
-         variableTracker[j] = null;//do not need to store this further than here, so free up memory.
-         }
-         }
-            
-         if (onInstanceSuccess != null) {
-         onInstanceSuccess.accept(i);
-         }
-            
-         i++;
-         }
-         */
-        /*System.err.println("--------------------local--------------------");
-         for (int j = 0; j<globalVariableTracker.length; j++) {
-         if (!isGlobal[j]) {
-         System.err.println("--------------------"+j+"--------------------");
-         System.err.println(Arrays.toString(Arrays.copyOf((Object[])globalVariableTracker[j], 10)));
-         }
-         }*/
+        
         //run globally
         Int2ObjectMap<Throwable> errors = runGlobal(false);
         //System.err.println("--------------------global--------------------");
@@ -905,6 +833,16 @@ public class Program {
         for (int k = 0; k < program.size(); k++) {
             if (isGlobal[shiftIndex(k)] && !isInitialization[shiftIndex(k)]) {
                 resMan.acceptResult(globalVariableTracker[shiftIndex(k)], -1, varNames[k], doExport[shiftIndex(k)], true, isNumeric[shiftIndex(k)]);
+                
+                if( verbose && doExport[shiftIndex(k)]) {
+                    Object val = globalVariableTracker[shiftIndex(k)];
+                    
+                    if( val == null ) {
+                        System.err.printf("%s: <null>\n", varNames[k]);
+                    } else {
+                        System.err.printf("%s: %s\n", varNames[k], val.toString());
+                    }
+                }
             }
         }
 
@@ -916,7 +854,9 @@ public class Program {
             } catch (java.util.NoSuchElementException ex) {
                 sum = 0;
             }
+            
             resMan.acceptTime(sum, -1, "total " + nameAndTime.getKey(), true);
+            System.err.printf("total %s: %s\n", nameAndTime.getKey(), Util.formatTime(sum*1000000L)); // convert back to ns
         }
 
         //TODO: accept runtimes -- EDIT: currently only measuring non-global runtimes
