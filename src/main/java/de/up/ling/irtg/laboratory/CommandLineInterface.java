@@ -44,24 +44,24 @@ public class CommandLineInterface {
 
     private static final String DEFAULT_CONFIG_FILENAME = Paths.get(System.getProperty("user.home"), ".alto", "alto.cfg").toString();
 
+    @Parameter(description = "<task ID>")
     private List<String> parameters = new ArrayList<>();
 
-    @Parameter(names = {"-hostname"}, description = "Name of the host this program is running on")
+    @Parameter(names = {"--hostname", "-h"}, description = "Name of the host this program is running on")
     private String hostname;
 
-    @Parameter(names = {"-comment"}, description = "Comment on this experiment run", variableArity = true)
+    @Parameter(names = {"--comment", "-c"}, description = "Comment on this experiment run", variableArity = true)
     private List<String> comment = new ArrayList<>();
 
-    @Parameter(names = "-taskID", description = "ID of the task (the one to be run) in the database", required = true)
-    private int taskID;
-
+//    @Parameter(names = "-taskID", description = "ID of the task (the one to be run) in the database", required = true)
+//    private int taskID;
     @DynamicParameter(names = {"-V"}) //, description = "Follow with parameters v1 w1 v2 w2 ... where v_i are variable names in the task tree (without '?'), to replace v_i with w_i", variableArity = true, splitter = NullSplitter.class)
     private Map<String, String> varRemapping = new HashMap<>();
 
-    @Parameter(names = {"-data"}, description = "Follow with the IDs of additional data you want to use in your parse", variableArity = true)
+    @Parameter(names = {"--data"}, description = "Follow with the IDs of additional data you want to use in your parse", variableArity = true)
     private List<String> additionalData = new ArrayList<>();
 
-    @Parameter(names = {"-threads"}, description = "Number of threads over which the instances should be parallelized", required = false)
+    @Parameter(names = {"--threads"}, description = "Number of threads over which the instances should be parallelized", required = false)
     private int numThreads = 1;
 
     @Parameter(names = {"--verbose", "-v"}, description = "Print detailed measurements and times while parsing. Use multiple -v options to print multiple measurements, or use -v ALL for all measurements.", variableArity = true)
@@ -69,9 +69,12 @@ public class CommandLineInterface {
 
     @Parameter(names = {"--config"}, description = "Location of configuration file")
     private String configFilename = DEFAULT_CONFIG_FILENAME;
-    
+
     @Parameter(names = {"--reload"}, description = "Force reload of task, grammar, and corpus")
     private boolean forceReload = false;
+
+    @Parameter(names = {"--local", "-l"}, description = "Local mode, i.e. not uploading results to database")
+    private boolean local = false;
 
     public boolean isVerbose() {
         return !verboseMeasurements.isEmpty();
@@ -81,15 +84,11 @@ public class CommandLineInterface {
         return varRemapping;
     }
 
-    @Parameter(names = "-local", description = "Local mode, i.e. not uploading results to database")
-    private boolean local = false;
-
-    @Parameter(names = {"-show", "-showresults"}, description = "With this flag, results are printed in the console via stderr")
-    private boolean showResults = false;
-
+//    @Parameter(names = {"-show", "-showresults"}, description = "With this flag, results are printed in the console via stderr")
+//    private boolean showResults = false;
 //    @Parameter(names = {"-progressbar", "-pb"}, description="Show progress bar (do not use with -show)")
 //    private boolean showProgressBar = false;
-    @Parameter(names = {"-h", "-help", "-?"}, description = "displays help if this is the only command", help = true)
+    @Parameter(names = {"--help", "-?"}, description = "displays help if this is the only command", help = true)
     private boolean help = false;
 
     public static void main(String[] args) throws Exception {
@@ -108,6 +107,8 @@ public class CommandLineInterface {
     public static int run(String[] args) throws Exception {
         CommandLineInterface cli = new CommandLineInterface();
         JCommander commander = new JCommander(cli);
+        commander.setProgramName("alab");
+
         try {
             commander.parse(args);
         } catch (com.beust.jcommander.ParameterException ex) {
@@ -133,6 +134,14 @@ public class CommandLineInterface {
         }
 
         Set<String> verboseMeasurementsSet = cli.isVerbose() ? new HashSet<>(cli.verboseMeasurements) : null;
+
+        if (cli.parameters.isEmpty()) {
+            System.err.println("You need to specify exactly one task ID.");
+            commander.usage();
+            System.exit(1);
+        }
+
+        int taskId = Integer.parseInt(cli.parameters.get(0));
 
         if (cli.isVerbose()) {
             // sanity checks for verbosity flag
@@ -172,7 +181,7 @@ public class CommandLineInterface {
             URI baseURI = new URI(altolabBase);
 
             TaskCache tc = new TaskCache(baseDir, baseURI.resolve("task/"));
-            UnparsedTask task = tc.get(Integer.toString(cli.taskID), cli.forceReload);
+            UnparsedTask task = tc.get(Integer.toString(taskId), cli.forceReload);
 
             GrammarCache gc = new GrammarCache(baseDir, baseURI);
             String gid = String.format("grammar_%d.irtg", task.grammar);
@@ -221,7 +230,8 @@ public class CommandLineInterface {
             if (cli.local) {
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
                     program.run(corpus,
-                            cli.showResults ? new ResultManager.PrintingManager() : new ResultManager.DummyManager(),
+                            //                            cli.showResults ? new ResultManager.PrintingManager() : new ResultManager.DummyManager(),
+                            new ResultManager.DummyManager(), // TODO clean this up
                             i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
                             -1, false, verboseMeasurementsSet);
                     return null;
@@ -231,7 +241,7 @@ public class CommandLineInterface {
             } else {
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
                     program.run(corpus,
-                            new DBResultManager(dbLoader, experimentID, ex -> System.err.println("Error when uploading result to database: " + ex.toString()), cli.showResults),
+                            new DBResultManager(dbLoader, experimentID, ex -> System.err.println("Error when uploading result to database: " + ex.toString()), false), // TODO clean up cli.showResults
                             i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
                             -1, false, verboseMeasurementsSet);
                     return null;
@@ -271,9 +281,9 @@ public class CommandLineInterface {
     }
 
     private static String rl(boolean inCache, boolean forceReload) {
-        if( forceReload ) {
+        if (forceReload) {
             return "forced reload";
-        } else if( inCache ) {
+        } else if (inCache) {
             return "local";
         } else {
             return "remote";
