@@ -55,7 +55,7 @@ public class CommandLineInterface {
     @Parameter(names = {"-threads"}, description = "Number of threads over which the instances should be parallelized", required = false)
     private int numThreads = 1;
     
-    @Parameter(names = {"--verbose", "-v"}, description = "Print detailed measurements while parsing", variableArity = true)
+    @Parameter(names = {"--verbose", "-v"}, description = "Print detailed measurements and times while parsing. Use multiple -v options to print multiple measurements, or use -v ALL for all measurements.", variableArity = true)
     private List<String> verboseMeasurements = new ArrayList<>();
     
     public boolean isVerbose() {
