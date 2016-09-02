@@ -125,7 +125,7 @@ public class Program {
         globalVariableTracker = new Object[shiftIndex(length)];
         program = new ArrayList<>();
         interp2Index = new Object2IntOpenHashMap<>();
-
+        
         //parse the code
         parseProgram(getTreesFromCommandCode(preprocessedProgram), irtg);
 //        System.err.println("parsed program: ");
@@ -391,7 +391,6 @@ public class Program {
      * @return
      */
     private Tree<Operation> getOperationsFromCodeTree(Tree<String> codeTree, Class[] variableTypeTracker, boolean lineIsGlobal) {
-
         Map<String, Method> allAnnotatedStaticMethods = getAllAnnotatedStaticMethods();
         Map<String, Constructor> allAnnotatedConstructors = getAllAnnotatedConstructors();
         return codeTree.dfs((Tree<String> node, List<Tree<Operation>> childrenValues) -> {
@@ -550,6 +549,11 @@ public class Program {
             globalVariableTracker[shiftAdditionalDataIndex(i)] = additionalData.get(i);
         }
 
+//        for( int i = 1; i < globalVariableTracker.length; i++ ) {
+//            Object x = globalVariableTracker[i];
+//            System.err.printf("%d: %s", i, x == null ? "<null>" : x.toString());
+//        }
+        
         for (int i = 0; i < unparsedProgram.size(); i++) {
             Tree<String> command = unparsedProgram.get(i);
             Tree<Operation> parsedCommand = getOperationsFromCodeTree(command, variableTypeTracker, isGlobal[shiftIndex(i)]);

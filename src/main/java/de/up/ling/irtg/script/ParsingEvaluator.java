@@ -114,6 +114,8 @@ public class ParsingEvaluator {
                 System.err.println("Coarse-to-fine parsing only supports a single input interpretation.");
                 System.exit(1);
             }
+            
+            System.err.printf("Reading fine-to-coarse symbol map from %s ...\n", param.ctf);
 
             ctfInterpretation = interpretations.iterator().next();
             coarseToFineParser = makeCoarseToFineParserFromFile(irtg, ctfInterpretation, param.ctf, 1e-4);
