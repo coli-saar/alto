@@ -270,7 +270,7 @@ public class ParsingEvaluator {
     private static void usage(String errorMessage) {
         if (jc != null) {
             if (errorMessage != null) {
-                System.out.println("No input files specified.");
+                System.out.println(errorMessage);
             }
 
             jc.setProgramName("java -cp <alto.jar> de.up.ling.irtg.script.ParsingEvaluator <inputfiles>");
