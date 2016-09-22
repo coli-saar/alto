@@ -6,13 +6,11 @@
 package de.up.ling.irtg.corpus;
 
 import com.google.common.collect.Maps;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.tree.Tree;
 import java.io.IOException;
-import java.io.Writer;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -36,24 +34,19 @@ import java.util.function.Function;
  * @author koller
  */
 public class CorpusConverter<E> implements Consumer<E> {
-
     private final Map<String, Function<E, ? extends Object>> conv;
-//    private final InterpretedTreeAutomaton irtg;
     private final AbstractCorpusWriter cw;
     private Function<E, Tree<Integer>> derivationTreeMaker;
+    private List<Function<E, E>> transformations;
+    private List<Consumer<E>> otherConsumers;
 
     public CorpusConverter(AbstractCorpusWriter cw, Map<String, Function<E, ? extends Object>> conv) throws IOException {
         this.conv = conv;
-//        this.irtg = irtg;
         this.cw = cw;
+        transformations = new ArrayList<>();
+        otherConsumers = new ArrayList<>();
     }
 
-//    @Deprecated
-//    public CorpusConverter(String inputCorpusName, Map<String, Algebra> algebras, Map<String, Function<E, ? extends Object>> conv, Writer writer) throws IOException {
-//        this.conv = conv;
-//        irtg = InterpretedTreeAutomaton.forAlgebras(algebras);
-//        cw = new CorpusWriter(irtg, false, "Converted from " + inputCorpusName + "\non " + new Date().toString(), writer);
-//    }
     public void setDerivationTreeMaker(Function<E, Tree<Integer>> derivationTreeMaker) {
         this.derivationTreeMaker = derivationTreeMaker;
         cw.setAnnotated(true);
@@ -73,18 +66,38 @@ public class CorpusConverter<E> implements Consumer<E> {
         return inst;
     }
 
+    private E applyTransformations(E obj) {
+        for (Function<E, E> trf : transformations) {
+            obj = trf.apply(obj);
+        }
+
+        return obj;
+    }
+
+    public void addTransformation(Function<E, E> transformation) {
+        transformations.add(transformation);
+    }
+    
+    public void addConsumer(Consumer<E> consumer) {
+        otherConsumers.add(consumer);
+    }
+
     @Override
     public void accept(E element) {
-        Instance instance = toInstance(element);
+        E transformed = applyTransformations(element);
+        Instance instance = toInstance(transformed);
+        
+//        System.err.println(transformed);
 
         if (derivationTreeMaker != null) {
-            Tree<Integer> dt = derivationTreeMaker.apply(element);
+            Tree<Integer> dt = derivationTreeMaker.apply(transformed);
             instance.setDerivationTree(dt);
-//            Tree<String> dt = derivationTreeMaker.apply(element);
-//            instance.setDerivationTree(irtg.getAutomaton().getSignature().addAllSymbols(dt));
-//            System.exit(0);
         }
 
         cw.accept(instance);
+        
+        for( Consumer<E> other : otherConsumers ) {
+            other.accept(transformed);
+        }
     }
 }

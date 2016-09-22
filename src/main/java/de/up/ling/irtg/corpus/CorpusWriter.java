@@ -87,8 +87,8 @@ public class CorpusWriter extends AbstractCorpusWriter {
             }
         }
 
-        withDerivationTree(inst, irtg.getAutomaton().getSignature(), repr -> writer.write(repr + "\n"));
         forEachInterpretation(inst, (key, repr) -> writer.write(repr + "\n"));
+        withDerivationTree(inst, irtg.getAutomaton().getSignature(), repr -> writer.write(repr + "\n"));
 
         if (printSeparatorLines) {
             writer.write("\n");
@@ -112,7 +112,7 @@ public class CorpusWriter extends AbstractCorpusWriter {
             }
 
             for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
-                buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + irtg.getInterpretation(interp.getLeft()).getAlgebra().getClass() + "\n");
+                buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + irtg.getInterpretation(interp.getLeft()).getAlgebra().getClass().getName() + "\n");
             }
         }
 

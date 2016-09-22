@@ -176,8 +176,9 @@ q_0-2 -> *(q1_q, q2_q) [1.0]     """)
         List bcd =  ["b", "c", "d"] //p(binarized, "left", "b c d")
         List dabc = ["d", "a", "b", "c"]  //p(binarized, "right", "d a b c")
         
-        assertDecoding(binarized, ["left": bcd, "right": dabc], "left", 2.0)
-        assertDecoding(binarized, ["left": bcd, "right": dabc], "right", 2.0)
+        // for weights, see comment in testBinarizeTree
+        assertDecoding(binarized, ["left": bcd, "right": dabc], "left", 1.0)
+        assertDecoding(binarized, ["left": bcd, "right": dabc], "right", 1.0)
     }
     
     private Object p(InterpretedTreeAutomaton irtg, String interpretation, String value) {
@@ -307,8 +308,10 @@ Y -> (.want :arg0 .*2 :arg1 .*1);
         List leftObj = ["a", "b", "c"] 
         Object rightObj = pt("f(d, a, g(c), b)")
         
-        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "left", 2.0)        
-        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "right", 2.0)
+        // this used to be assert weight = 2, but as of Aug 15, 2016,
+        // we normalize weights after binarization; so weights will be 1
+        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "left", 1.0)        
+        assertDecoding(binarized, ["left": leftObj, "right": rightObj], "right", 1.0)
     }
     
     @Test

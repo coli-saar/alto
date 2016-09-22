@@ -204,6 +204,14 @@ public class Corpus implements Iterable<Instance> {
                     if (!irtg.getInterpretations().containsKey(interpretationName)) {
                         throw new CorpusReadingException("Corpus file specified interpretation '" + interpretationName + "', which is not declared in IRTG");
                     }
+                    
+                    String interpretationAlgebraName = interpretationMatcher.group(2);
+                    String irtgAlgebraName = irtg.getInterpretation(interpretationName).getAlgebra().getClass().getName();
+                    
+                    // too heavy-handed
+//                    if( ! interpretationAlgebraName.equals(irtgAlgebraName)) {
+//                        throw new CorpusReadingException("Corpus file uses algebra '" + interpretationAlgebraName + "' for interpretation '" + interpretationName + "', but grammar expected '" + irtgAlgebraName + "'");
+//                    }
 
                     interpretationOrder.add(interpretationName);
                 }
@@ -243,7 +251,7 @@ public class Corpus implements Iterable<Instance> {
 
                 if (annotated) {
                     String annoLine = readNextLine(br, lineNumber);
-
+                    
                     if (annoLine == null) {
                         throw new CorpusReadingException("Expected a derivation tree in line " + lineNumber);
                     }

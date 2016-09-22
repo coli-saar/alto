@@ -84,11 +84,13 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
             List<Bracket> goldBrackets = getBrackets(gold, 0);
             double weight = goldBrackets.size();
             int found = 0;
+            
             for (Bracket goldBracket : goldBrackets) {
                 if (resultBrackets.contains(goldBracket)) {
                     found++;
                 }
             }
+            
             return (weight > 0) ? found / weight : 1;
         }
     }
