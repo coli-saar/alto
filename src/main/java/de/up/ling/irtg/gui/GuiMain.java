@@ -57,6 +57,7 @@ import org.simplericity.macify.eawt.Application;
 import org.simplericity.macify.eawt.ApplicationEvent;
 import org.simplericity.macify.eawt.ApplicationListener;
 import org.simplericity.macify.eawt.DefaultApplication;
+import static de.up.ling.irtg.util.GuiUtils.showError;
 
 /**
  *
@@ -123,6 +124,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         miQuit = new javax.swing.JMenuItem();
         jMenu2 = new javax.swing.JMenu();
         miComputeDecompositionAutomaton = new javax.swing.JMenuItem();
+        miVisualizeInput = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Alto GUI");
@@ -217,6 +219,14 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         });
         jMenu2.add(miComputeDecompositionAutomaton);
 
+        miVisualizeInput.setText("Visualize input object");
+        miVisualizeInput.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miVisualizeInputActionPerformed(evt);
+            }
+        });
+        jMenu2.add(miVisualizeInput);
+
         jMenuBar1.add(jMenu2);
 
         setJMenuBar(jMenuBar1);
@@ -285,8 +295,16 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         }
     }//GEN-LAST:event_miLoadIrtgFromWebDirectoryActionPerformed
 
+    private void miVisualizeInputActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miVisualizeInputActionPerformed
+        showVisualizationDialog(this);
+    }//GEN-LAST:event_miVisualizeInputActionPerformed
+
     public static void showDecompositionDialog(java.awt.Frame parent) {
         new DecompositionDialog(parent, true).setVisible(true);
+    }
+    
+    public static void showVisualizationDialog(java.awt.Frame parent) {
+        new VisualizeDialog(parent, true).setVisible(true);
     }
 
     public static void quit() {
@@ -733,6 +751,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
     private javax.swing.JMenuItem miLoadIrtgFromWebDirectory;
     private javax.swing.JMenuItem miLoadTemplateIrtg;
     private javax.swing.JMenuItem miQuit;
+    private javax.swing.JMenuItem miVisualizeInput;
     private javax.swing.JScrollPane spLog;
     // End of variables declaration//GEN-END:variables
 
