@@ -54,6 +54,9 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntPriorityQueue;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -3042,5 +3045,13 @@ public abstract class TreeAutomaton<State> implements Serializable {
      */
     public SiblingFinder makeNewPartnerFinder(int labelID) {
         return new SiblingFinder.SetPartnerFinder(signature.getArity(labelID));
+    }
+    
+    
+    public void dumpToFile(String filename) throws IOException {
+        PrintWriter pw = new PrintWriter(new FileWriter(filename));
+        pw.println(this);
+        pw.flush();
+        pw.close();
     }
 }

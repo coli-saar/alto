@@ -433,106 +433,8 @@ public class DBLoader {
         
     }
     
-    /**
-     * Loads a task from the DB. Since the task contains a tree, which contains TAAOperationWrappers which link to an irtg,
-     * this in fact also returns the corresponding irtg and writes all TAAOperationWrappers in the given list (clears the list before).
-     * @param taskRef
-     * @param irtg the irtg corresponding to this task, already loaded.
-     * @param varRemapper
-     * @param additionalDataIDs
-     * @return
-     * @throws SQLException
-     * @throws ParseException
-     * @throws IOException 
-     * @throws de.up.ling.irtg.laboratory.VariableNotDefinedException 
-     * @throws de.up.ling.irtg.parsing.VariableNotDefinedException 
-     */
-    public Task loadTaskFromDBWithIrtg(TaskReference taskRef, InterpretedTreeAutomaton irtg, Map<String, String> varRemapper, List<String> additionalDataIDs) throws SQLException, ParseException, IOException, VariableNotDefinedException {
-        reconnectIfNecessary();
-        String query = "SELECT * FROM task WHERE id = "+taskRef.id;
-        Statement stmt = conn.createStatement();
-        ResultSet res = stmt.executeQuery(query);
-        if (res.next()) {
-            //first read out all the data, and close the statement
-            int grammarID = res.getInt("grammar_id");
-            int corpusID = res.getInt("corpus_id");
-            String name = res.getString("name");
-            String programString = res.getString("tree");
-            int iterations = res.getInt("iterations");
-            int warmup = res.getInt("warmup");
-            res.close();
-            
-            //load the grammar
-            //already loaded this if irtg is known, but why not just load it again instead of also passing the GrammarReference
-            GrammarReference grammar;
-            query = "SELECT name FROM grammar WHERE id = "+grammarID;
-            try (ResultSet grammarRes = stmt.executeQuery(query)) {
-                if (grammarRes.next()) {
-                    grammar = new GrammarReference(grammarID, grammarRes.getString("name"));
-                } else {
-                    throw new SQLException("Grammar id "+grammarID+" not found in database");
-                }
-            }
-            /*
-            //now done in separate function
-            InterpretedTreeAutomaton irtg = loadGrammarFromDB(grammar);
-            allOperations.clear();
-            allOperations.addAll(TAAOperationWrapper.getAllTAAOperations(irtg));*/
-            //toFillWithAllInstanceProperties.clear();
-            //toFillWithAllInstanceProperties.addAll(InstanceProperty.getAllInstanceProperties(irtg));
-            
-            //load the corpus
-            CorpusReference corpus;
-            query = "SELECT name FROM corpus WHERE id = "+corpusID;
-            try (ResultSet corpusRes = stmt.executeQuery(query)) {
-                if (corpusRes.next()) {
-                    corpus = new CorpusReference(corpusID, corpusRes.getString("name"));
-                } else {
-                    throw new SQLException("Corpus id "+corpusID+" not found in database");
-                }
-            }
-            
-            //load additional data
-            List<String> additionalData = new ArrayList<>();
-            for (String idString : additionalDataIDs) {
-                query = "SELECT data FROM additional_data WHERE id = "+ idString;
-                try (ResultSet dataRes = stmt.executeQuery(query)) {
-                    if (dataRes.next()) {
-                        additionalData.add(dataRes.getString("data"));
-                    } else {
-                        throw new SQLException("additional_data id "+idString+" not found in database");
-                    }
-                }
-            }
-            
-            //get the program now
-            List<String> unparsedProgram = Arrays.asList(programString.split("\r?\n"));
-            Program program = new Program(irtg, additionalData, unparsedProgram, varRemapper);
-            
-            
-            
-            stmt.close();
-            return new Task(name, grammar, corpus, program, warmup, iterations);
-            
-        } else {
-            stmt.close();
-            throw new SQLException("task not found");
-        }
-    }
     
-    int getMatchingTaskIDFromDB(int experimentID) throws SQLException {
-        reconnectIfNecessary();
-        String query = "SELECT task_id FROM experiment WHERE id = "+experimentID;
-        Statement stmt = conn.createStatement();
-        ResultSet res = stmt.executeQuery(query);
-        if (res.next()) {
-            //first read out all the data, and close the statement
-            return res.getInt("task_id");
-        } else {
-            return -1;
-        }
-    }
-    
+    /*
     double getNumericMeasurement(int experimentID, int instance, String measurement) throws SQLException {
         reconnectIfNecessary();
         String query = "SELECT result FROM experiment_data_numeric WHERE experiment_id = "+experimentID+" AND instance = "+instance +" AND measurement = '"+measurement+"'";
@@ -545,7 +447,7 @@ public class DBLoader {
             return -1;
         }
     }
-    
+    */
     
 //    public int uploadExperimentStartDataUnknownTask(Task task, TaskReference possibleCorrespondingTaskRef, String comment, String hostname) throws SQLException, ParseException, IOException {
 //        reconnectIfNecessary();
