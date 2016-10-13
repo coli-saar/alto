@@ -234,7 +234,7 @@ public class InterpretedTreeAutomaton implements Serializable {
     public TreeAutomaton parseWithSiblingFinder(String interpretationName, Object input) throws ParserException {
         SiblingFinderInvhom invhom = new SiblingFinderInvhom(interpretations.get(interpretationName).getAlgebra().decompose(input), interpretations.get(interpretationName).getHomomorphism());
         SiblingFinderIntersection inters = new SiblingFinderIntersection((ConcreteTreeAutomaton) automaton, invhom);
-        inters.makeAllRulesExplicit();
+        inters.makeAllRulesExplicit(null);
         return inters.seenRulesAsAutomaton();
     }
 

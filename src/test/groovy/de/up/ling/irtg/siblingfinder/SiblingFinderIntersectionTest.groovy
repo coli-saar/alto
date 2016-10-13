@@ -67,7 +67,7 @@ NP -> r6
         SiblingFinderInvhom invhom = new SiblingFinderInvhom(decompAuto, irtg.getInterpretations().get("i").getHomomorphism());
         //intersection
         SiblingFinderIntersection intersect = new SiblingFinderIntersection((ConcreteTreeAutomaton)irtg.getAutomaton(), invhom);
-        intersect.makeAllRulesExplicit();
+        intersect.makeAllRulesExplicit(null);
         //viterbi
         Tree<String> res = intersect.seenRulesAsAutomaton().viterbi();
         assert res.toString().equals("r1(r4,r2(r5,r6))")

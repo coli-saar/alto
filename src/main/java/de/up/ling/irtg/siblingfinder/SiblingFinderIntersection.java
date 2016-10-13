@@ -7,7 +7,6 @@ package de.up.ling.irtg.siblingfinder;
 
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
-import de.up.ling.irtg.automata.IntTrie;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
@@ -22,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  *
@@ -39,6 +39,10 @@ public class SiblingFinderIntersection<LeftState, RightState> {
     private final Int2IntMap intersectState2rhsState;
     private final IntInt2IntMap lhs2rhs2IntersectState;//for every state (l,r) in the intersection THAT HAS BEEN ASKED AS A QUESTION, this maps the id of l and the id of r to the id of (l,r)
     private boolean isExplicit = false;
+    
+    public int getRhsState4IntersectState(int intersectState) {
+        return intersectState2rhsState.get(intersectState);
+    }
     
     @OperationAnnotation(code="veryLazyIntersection")
     public SiblingFinderIntersection(ConcreteTreeAutomaton<LeftState> leftAutomaton, SiblingFinderInvhom<RightState> rightAutomaton) {
@@ -191,9 +195,12 @@ public class SiblingFinderIntersection<LeftState, RightState> {
         return seenRulesAsAutomaton().toString();
     }
     
-    public void makeAllRulesExplicit() {
+    public void makeAllRulesExplicit(Consumer<Rule> consumer) {
         if (!isExplicit) {
             isExplicit = true;
+            if (consumer == null) {
+                consumer = rule -> {};
+            }
             BitSet dequeued = new BitSet();//this one cares only about the state
             Queue<Rule> agenda = new LinkedList<>();
 
@@ -202,7 +209,8 @@ public class SiblingFinderIntersection<LeftState, RightState> {
 
                 if (seenRulesAuto.getSignature().getArity(ruleLabel) == 0) {
                     for (Rule foundRule : getConstantBottomUp(ruleLabel)) {
-
+                        
+                        consumer.accept(foundRule);
                         agenda.offer(foundRule);
 
                     }
@@ -220,6 +228,7 @@ public class SiblingFinderIntersection<LeftState, RightState> {
 
                     Iterable<Rule> foundRules = getRulesBottomUp(parentStateID);
                     for (Rule foundRule : foundRules) { 
+                        consumer.accept(foundRule);
                         agenda.offer(foundRule);
                     }
                 }
@@ -229,7 +238,7 @@ public class SiblingFinderIntersection<LeftState, RightState> {
     
     @OperationAnnotation(code="explicitFromVeryLazy")
     public static ConcreteTreeAutomaton makeVeryLazyExplicit(SiblingFinderIntersection veryLazyAuto) {
-        veryLazyAuto.makeAllRulesExplicit();
+        veryLazyAuto.makeAllRulesExplicit(null);
         return veryLazyAuto.seenRulesAsAutomaton();
     }
     
