@@ -12,6 +12,7 @@ import com.jgraph.layout.hierarchical.JGraphHierarchicalLayout;
 import java.awt.Color;
 import java.awt.geom.Rectangle2D;
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 import javax.swing.BorderFactory;
@@ -35,32 +36,32 @@ public class SGraphDrawer {
     // map nodes and edges to the strings that are displayed visually.
     // However, the create*Cell methods of the factory are never called,
     // and so the default string representations are used after all.
+    // EDIT -- This solution is certainly not beautiful, but it works. Jonas
     private static class MyModelAdapter extends JGraphModelAdapter<GraphNode, GraphEdge> {
         private JGraphModelAdapter.CellFactory<GraphNode, GraphEdge> cf;
 
         public MyModelAdapter(Graph<GraphNode, GraphEdge> graph, Function<GraphNode, String> nodeF, Function<GraphEdge, String> edgeF) {
-            super(graph);
+            super(graph, makeVertexAttr(), makeEdgeAttr(), new MappingCellFactory<>(nodeF, edgeF));
 
-            cf = new MappingCellFactory<GraphNode, GraphEdge, String, String>(nodeF, edgeF);
+            
         }
 
         @Override
         public AttributeMap getDefaultEdgeAttributes() {
-            AttributeMap map = new AttributeMap();
-
-            GraphConstants.setLineEnd(map, GraphConstants.ARROW_TECHNICAL);
-            GraphConstants.setEndFill(map, true);
-            GraphConstants.setEndSize(map, 10);
-
-            GraphConstants.setForeground(map, Color.black);
-//            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
-            GraphConstants.setLineColor(map, Color.decode("#7AA1E6"));
-
-            return map;
+            return makeEdgeAttr();
         }
 
         @Override
         public AttributeMap getDefaultVertexAttributes() {
+            return makeVertexAttr();
+        }
+
+        @Override
+        public JGraphModelAdapter.CellFactory<GraphNode, GraphEdge> getCellFactory() {
+            return cf;
+        }
+        
+        private static AttributeMap makeVertexAttr() {
             AttributeMap map = new AttributeMap();
 
             GraphConstants.setBounds(map, new Rectangle2D.Double(50, 50, 90, 30));
@@ -72,10 +73,19 @@ public class SGraphDrawer {
 
             return map;
         }
+        
+        private static AttributeMap makeEdgeAttr() {
+            AttributeMap map = new AttributeMap();
 
-        @Override
-        public JGraphModelAdapter.CellFactory<GraphNode, GraphEdge> getCellFactory() {
-            return cf;
+            GraphConstants.setLineEnd(map, GraphConstants.ARROW_TECHNICAL);
+            GraphConstants.setEndFill(map, true);
+            GraphConstants.setEndSize(map, 10);
+
+            GraphConstants.setForeground(map, Color.black);
+//            GraphConstants.setFont(map, GraphConstants.DEFAULTFONT.deriveFont(Font.BOLD, 12));
+            GraphConstants.setLineColor(map, Color.decode("#7AA1E6"));
+
+            return map;
         }
     }
 
@@ -111,7 +121,15 @@ public class SGraphDrawer {
     public static JComponent makeComponent(SGraph sgraph) {
         JGraphModelAdapter<GraphNode, GraphEdge> adapter = 
                 new MyModelAdapter(sgraph.getGraph(), 
-                                    node -> node.getLabel() + "/" + sgraph.getSourceLabel(node.getName()),
+                                    node -> {
+                                        Collection<String> sources = sgraph.getSourcesAtNode(node.getName());
+                                        if (!sources.isEmpty()) {
+                                            return node.getName()+"/"+node.getLabel() + "/" + sgraph.getSourceLabel(node.getName());
+                                        } else {
+                                            return node.getName()+"/"+node.getLabel();
+                                        }
+                                        
+                                                },
                                     edge -> edge.getLabel());
 
         JGraph jgraph = new JGraph(adapter);
@@ -122,7 +140,7 @@ public class SGraphDrawer {
 
         final Map nestedMap = facade.createNestedMap(true, true);
         jgraph.getGraphLayoutCache().edit(nestedMap);
-
+        
         return jgraph;
     }
 

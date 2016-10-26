@@ -4,34 +4,22 @@
  */
 package de.up.ling.irtg.gui;
 
-import com.bric.window.WindowMenu;
-import de.up.ling.irtg.Interpretation;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.automata.language_iteration.SortedLanguageIterator;
-import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.automata.WeightedTree;
-import static de.up.ling.irtg.gui.GuiMain.log;
+import de.up.ling.irtg.codec.AlgebraStringRepresentationOutputCodec;
+import de.up.ling.irtg.codec.OutputCodec;
 import de.up.ling.irtg.util.GuiUtils;
-import de.up.ling.irtg.util.Util;
-import static de.up.ling.irtg.util.Util.formatTimeSince;
-import de.up.ling.tree.Tree;
-import java.awt.Component;
 import java.awt.Dimension;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
-import static de.up.ling.irtg.gui.GuiMain.log;
 import javax.swing.JComponent;
-import static de.up.ling.irtg.gui.GuiMain.log;
-import static de.up.ling.irtg.gui.GuiMain.log;
-import static de.up.ling.irtg.gui.GuiMain.log;
-import static de.up.ling.irtg.gui.GuiMain.log;
-import static de.up.ling.irtg.gui.GuiMain.log;
-import static de.up.ling.irtg.gui.GuiMain.log;
 import java.awt.Color;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Supplier;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
+import javax.swing.ToolTipManager;
 
 /**
  *
@@ -39,28 +27,56 @@ import javax.swing.JScrollPane;
  */
 public class JVisualizationViewer extends javax.swing.JFrame {
 
-    private TreeAutomaton automaton;
-    private SortedLanguageIterator languageIterator;
-    private long numTrees;
-    private List<WeightedTree> cachedTrees;
-    private InterpretedTreeAutomaton currentIrtg;
-    private Tree<String> currentTree;
     private boolean hasBeenPacked = false; // window has been packed once -- after this, only allow manual size changes
 
 
     /**
-     * Creates new form JLanguageViewer
-     * @param vis
+     * Creates new form JVisualizationViewer, displaying the object as visualized
+     * by the algebra.
+     * @param alg
+     * @param object
      */
-    public JVisualizationViewer(JComponent vis) {
+    public JVisualizationViewer(Algebra alg, String object) {
         initComponents();
 
+        JComponent vis;
+        try {
+            Object value = alg.parseString(object);
+            vis = alg.visualize(value);
+
+            Map<String, Supplier<String>> popupEntries = new LinkedHashMap<>();
+
+            OutputCodec oc = new AlgebraStringRepresentationOutputCodec(alg);
+            popupEntries.put(oc.getMetadata().description(), oc.asStringSupplier(value));
+
+            for (OutputCodec codec : OutputCodec.getOutputCodecs(value.getClass())) {
+                if (codec.getMetadata().displayInPopup()) {
+                    popupEntries.put(codec.getMetadata().description(), codec.asStringSupplier(value));
+                }
+            }
+
+            new PopupMenu(popupEntries).addAsMouseListener(vis);
+        } catch (Exception e) {
+            vis = makeErrorComponent(e);
+            e.printStackTrace(System.err);
+        }
 
         valuePanel.add(sp(vis));
 
         if (!GuiMain.isMac()) {
             GuiUtils.replaceMetaByCtrl(jMenuBar1);
         }
+    }
+    
+    private JComponent makeErrorComponent(Exception e) {
+        JLabel ret = new JLabel("<Can't evaluate: " + e.toString() + ">");
+
+        String tooltipText = "<html>" + e + "<br>" + StringTools.join(Arrays.asList(e.getStackTrace()), "<br>\n") + "</html>";
+
+        ret.setToolTipText(tooltipText);
+        ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
+
+        return ret;
     }
 
     

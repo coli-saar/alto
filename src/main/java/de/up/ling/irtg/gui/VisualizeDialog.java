@@ -187,9 +187,8 @@ public class VisualizeDialog extends javax.swing.JDialog {
                 alg.setOptions(tfOptions.getText());
             }
 
-            JComponent jcomp = alg.visualize(alg.parseString(tfValue.getText()));
 
-            JVisualizationViewer jvv = new JVisualizationViewer(jcomp);
+            JVisualizationViewer jvv = new JVisualizationViewer(alg, tfValue.getText());
             jvv.setTitle("Visualization of " + tfValue.getText());
             jvv.pack();
             jvv.setVisible(true);
