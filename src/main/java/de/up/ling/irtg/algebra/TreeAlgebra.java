@@ -40,7 +40,7 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
 
     @Override
     public TreeAutomaton decompose(Tree<String> value) {
-        return new SingletonAutomaton(value);
+        return new SingletonAutomaton(value, this.signature);
     }
 
     @Override
