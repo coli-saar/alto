@@ -70,6 +70,7 @@ public class JsonResultManager implements ResultManager {
     }
 
     private static class Buffer {
+        public int experimentID;
         public List<Result> results = new ArrayList<>();
         public List<Time> times = new ArrayList<>();
         public List<Error> errors = new ArrayList<>();
@@ -86,8 +87,9 @@ public class JsonResultManager implements ResultManager {
 
     private String url;
 
-    public JsonResultManager(String url) {
+    public JsonResultManager(int experimentID, String url) {
         this.url = url + "post_results";
+        this.buffer.experimentID = experimentID;
     }
 
     @Override

@@ -243,7 +243,7 @@ public class CommandLineInterface {
                 System.err.println("Done!");
             } else {
 //                ResultManager resman = new DBResultManager(dbLoader, experimentID, ex -> System.err.println("Error when uploading result to database: " + ex.toString()), false); // TODO clean up cli.showResults
-                ResultManager resman = new JsonResultManager(altolabBase);
+                ResultManager resman = new JsonResultManager(experimentID, altolabBase);
                 
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
                     program.run(corpus,
