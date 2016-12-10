@@ -73,8 +73,11 @@ public class CommandLineInterface {
     @Parameter(names = {"--reload"}, description = "Force reload of task, grammar, and corpus")
     private boolean forceReload = false;
 
-    @Parameter(names = {"--local", "-l"}, description = "Local mode, i.e. not uploading results to database")
+    @Parameter(names = {"--local", "-l"}, description = "Local mode, i.e. don't upload results to database")
     private boolean local = false;
+    
+    @Parameter(names = {"--flush-every", "-f"}, description = "Flush results buffer every k instances (k = 1: every instance; k = 0: only after last instance)")
+    private int flushFrequency = 1;
 
     public boolean isVerbose() {
         return !verboseMeasurements.isEmpty();
@@ -221,7 +224,7 @@ public class CommandLineInterface {
             if (task.getWarmup() > 0) {
                 System.err.println("\nRunning " + task.getWarmup() + " warmup instances...");
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
-                    program.run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), true, null);
+                    program.run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), true, null, cli.flushFrequency);
                     return null;
                 });
             }
@@ -233,17 +236,20 @@ public class CommandLineInterface {
                             //                            cli.showResults ? new ResultManager.PrintingManager() : new ResultManager.DummyManager(),
                             new ResultManager.DummyManager(), // TODO clean this up
                             i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
-                            -1, false, verboseMeasurementsSet);
+                            -1, false, verboseMeasurementsSet, cli.flushFrequency);
                     return null;
                 });
 
                 System.err.println("Done!");
             } else {
+//                ResultManager resman = new DBResultManager(dbLoader, experimentID, ex -> System.err.println("Error when uploading result to database: " + ex.toString()), false); // TODO clean up cli.showResults
+                ResultManager resman = new JsonResultManager();
+                
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
                     program.run(corpus,
-                            new DBResultManager(dbLoader, experimentID, ex -> System.err.println("Error when uploading result to database: " + ex.toString()), false), // TODO clean up cli.showResults
+                            resman,
                             i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
-                            -1, false, verboseMeasurementsSet);
+                            -1, false, verboseMeasurementsSet, cli.flushFrequency);
                     return null;
                 });
 

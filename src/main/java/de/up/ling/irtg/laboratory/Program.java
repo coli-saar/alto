@@ -125,14 +125,14 @@ public class Program {
         globalVariableTracker = new Object[shiftIndex(length)];
         program = new ArrayList<>();
         interp2Index = new Object2IntOpenHashMap<>();
-        
+
         //parse the code
         parseProgram(getTreesFromCommandCode(preprocessedProgram), irtg);
 //        System.err.println("parsed program: ");
 //        for (Tree<Operation> tree : program) {
 //            System.err.println(tree);
 //        }
-        
+
         //System.err.println("parsed: "+program);
     }
 
@@ -166,7 +166,7 @@ public class Program {
         /*Reflections reflections = new Reflections(new ConfigurationBuilder()
          .setUrls(ClasspathHelper.forJavaClassPath())
          .setScanners(new MethodAnnotationsScanner()));*/
-        /*Reflections reflections = new Reflections("de.up.ling.irtg.corpus", new SubTypesScanner(false));
+ /*Reflections reflections = new Reflections("de.up.ling.irtg.corpus", new SubTypesScanner(false));
          Set<String> classes = reflections.getStore().getSubTypesOf(Object.class.getName());
          System.err.println(classes);*/
         try {
@@ -553,7 +553,6 @@ public class Program {
 //            Object x = globalVariableTracker[i];
 //            System.err.printf("%d: %s", i, x == null ? "<null>" : x.toString());
 //        }
-        
         for (int i = 0; i < unparsedProgram.size(); i++) {
             Tree<String> command = unparsedProgram.get(i);
             Tree<Operation> parsedCommand = getOperationsFromCodeTree(command, variableTypeTracker, isGlobal[shiftIndex(i)]);
@@ -661,8 +660,13 @@ public class Program {
      * giving the user feedback).
      * @param maxInstances Cancels the run when this number of instances is
      * reached. input -1 to parse the whole corpus.
+     * @param isWarmup if true, do not send results to manager
+     * @param verboseMeasurements measurements which are to be displayed locally
+     * for each iteration
+     * @param flushFrequency only flush the ResultManager every k iterations
+     *
      */
-    public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances, boolean isWarmup, Set<String> verboseMeasurements) {
+    public void run(Corpus corpus, ResultManager resMan, IntConsumer onInstanceSuccess, int maxInstances, boolean isWarmup, Set<String> verboseMeasurements, int flushFrequency) {
         boolean verbose = (verboseMeasurements != null);
         boolean verboseAll = (verboseMeasurements != null) && verboseMeasurements.contains(VERBOSE_ALL);
         int width = (int) (Math.ceil(Math.log10(corpus.getNumberOfInstances())));
@@ -725,6 +729,7 @@ public class Program {
                 // get unique instance-counter value i for this instance
                 int i = -1;
                 synchronized (instanceID) {
+                    // TODO - here we need to use not position in sequence, but position in corpus
                     i = instanceID.incValue();
                 }
 
@@ -810,9 +815,15 @@ public class Program {
                     }
                 }
 
-                if (onInstanceSuccess != null) {
-                    synchronized (instanceCounter) {
-                        onInstanceSuccess.accept(instanceCounter.incValue());
+                synchronized (instanceCounter) {
+                    int instanceNum = instanceCounter.incValue();
+
+                    if (onInstanceSuccess != null) {
+                        onInstanceSuccess.accept(instanceNum);
+                    }
+
+                    if (flushFrequency > 0 && (instanceNum % flushFrequency == 0)) {
+                        resMan.flush();
                     }
                 }
             });
@@ -825,10 +836,13 @@ public class Program {
             Logger.getLogger(Program.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        // flush remaining per-instance results
+        resMan.flush();
+
         if (!isWarmup) {      // only report global results if not warmup
             //run globally
             Int2ObjectMap<Throwable> errors = runGlobal(false);
-        //System.err.println("--------------------global--------------------");
+            //System.err.println("--------------------global--------------------");
             //System.err.println(Arrays.toString(globalVariableTracker));
 
             //accept global data in ResultManager
@@ -867,6 +881,9 @@ public class Program {
                 //do not need to check if entry for k is global, only global k can appear here.
                 resMan.acceptError(idAndError.getValue(), -1, varNames[k], doExport[shiftIndex(k)], true);
             }
+            
+            // flush all global results in one batch
+            resMan.flush();
         }
     }
 

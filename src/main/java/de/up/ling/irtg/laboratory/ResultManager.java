@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.laboratory;
 
+import com.sun.org.apache.xml.internal.utils.StringBufferPool;
 import de.up.ling.irtg.util.Util;
 
 /**
@@ -47,6 +48,17 @@ public interface ResultManager {
     public void acceptError(Throwable error, int instanceID, String name, boolean doExport, boolean isGlobal);
     
     /**
+     * Send data to the persistent storage. For efficiency reasons, a ResultManager
+     * may cache results as they are presented to it. It will then only send the
+     * cached results to the persistent storage (database, file, etc.) when the
+     * flush() method is called. Notice the risk-efficiency tradeoff: flushing
+     * rarely will increase efficiency, but runs the risk of losing unflushed
+     * data.
+     * 
+     */
+    public void flush();
+    
+    /**
      * Does literally nothing.
      */
     public static class DummyManager implements ResultManager {
@@ -65,6 +77,10 @@ public interface ResultManager {
         public void acceptError(Throwable error, int instanceID, String name, boolean doExport, boolean isGlobal) {
             
         }
+
+        @Override
+        public void flush() {
+        }
         
     }
     
@@ -73,27 +89,32 @@ public interface ResultManager {
      * prints the results to System.err.
      */
     public static class PrintingManager implements ResultManager {
+        private StringBuilder buf = new StringBuilder();
 
         @Override
         public synchronized void acceptResult(Object result, int instanceID, String name, boolean doExport, boolean isGlobal, boolean isNumeric) {
             if (doExport) {
                 String resString = (result == null) ? "NULL" : result.toString();
-                System.out.println("'"+name+"' for instance "+instanceID+": "+resString);
+                buf.append("'"+name+"' for instance "+instanceID+": "+resString + "\n");
             }
         }
 
         @Override
         public synchronized void acceptTime(long time, int instanceID, String name, boolean isGlobal) {
-            System.out.println("Time '"+name+"' for instance "+instanceID+": "+time+" ms");
+            buf.append("Time '"+name+"' for instance "+instanceID+": "+time+" ms" + "\n");
         }
 
         @Override
         public synchronized void acceptError(Throwable error, int instanceID, String name, boolean doExport, boolean isGlobal) {
-            System.out.println("ERROR when computing '"+name+"': "+Util.getStackTrace(error));
+            buf.append("ERROR when computing '"+name+"': "+Util.getStackTrace(error) + "\n");
         }
-        
+
+        @Override
+        public synchronized void flush() {
+            System.out.print(buf.toString());
+            System.out.flush();
+            buf.setLength(0);
+        }        
     }
-    
-    //public static class StoringManager -- maybe implement later
     
 }

@@ -62,5 +62,10 @@ public class DBResultManager implements ResultManager {
             }
         }
     }
+
+    @Override
+    public void flush() {
+        // do nothing - the DBResultManager flushes after each accept* operation
+    }
     
 }
