@@ -15,6 +15,7 @@ import java.util.function.Consumer;
  *
  * @author Jonas
  */
+@Deprecated
 class DBResultManager implements ResultManager {
 
     private final DBLoader dbLoader;

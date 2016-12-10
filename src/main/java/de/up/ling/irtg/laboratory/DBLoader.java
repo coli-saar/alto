@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
  *
  * @author groschwitz
  */
+@Deprecated
 class DBLoader {
     
     private Connection conn;
