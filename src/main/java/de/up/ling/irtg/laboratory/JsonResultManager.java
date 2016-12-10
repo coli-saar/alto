@@ -77,11 +77,13 @@ public class JsonResultManager implements ResultManager {
 
     private final String postResultsUrl;
     private final String finishExperimentUrl;
+    private final AltoLabHttpClient labClient;
 
-    public JsonResultManager(int experimentID, String url) {
+    public JsonResultManager(int experimentID, String url, AltoLabHttpClient labClient) {
         this.postResultsUrl = url + "post_results";
         this.finishExperimentUrl = url + "finish_experiment";
         this.buffer.experimentID = experimentID;
+        this.labClient = labClient;
     }
 
     @Override
@@ -108,7 +110,7 @@ public class JsonResultManager implements ResultManager {
 
     @Override
     public synchronized void flush() throws IOException {
-        JsonResultManagerFactory.postJson(postResultsUrl, buffer);
+        labClient.postJson(postResultsUrl, buffer);
         buffer.clear();
     }
 
@@ -120,6 +122,6 @@ public class JsonResultManager implements ResultManager {
     @Override
     public void finish() throws Exception {
         flush();
-        JsonResultManagerFactory.postJson(finishExperimentUrl, buffer);
+        labClient.postJson(finishExperimentUrl, buffer);
     }
 }

@@ -76,7 +76,7 @@ public class CommandLineInterface {
 
     @Parameter(names = {"--local", "-l"}, description = "Local mode, i.e. don't upload results to database")
     private boolean local = false;
-    
+
     @Parameter(names = {"--flush-every", "-f"}, description = "Flush results buffer every k instances (k = 1: every instance; k = 0: only after last instance)")
     private int flushFrequency = 1;
 
@@ -175,6 +175,21 @@ public class CommandLineInterface {
             Path baseDir = Paths.get(".alto", "cache");
 
             String altolabBase = props.getProperty("altolab.baseurl");
+            String altolabUser = props.getProperty("altolab.username");
+            String altolabPassword = props.getProperty("altolab.password");
+
+            AltoLabHttpClient labClient = null;
+            
+            try {
+                labClient = new AltoLabHttpClient(altolabBase, altolabUser, altolabPassword);
+            } catch (Exception e) {
+                if(cli.local) {
+                    System.err.println(e.getMessage());
+                    System.err.println("(but we're running in local mode, will try to load data from cache)\n");
+                } else {
+                    throw e;
+                }
+            }
 
             if (altolabBase.endsWith("/")) {
                 altolabBase = altolabBase + "rest/";
@@ -183,6 +198,8 @@ public class CommandLineInterface {
             }
 
             URI baseURI = new URI(altolabBase);
+            
+            // TODO - use labClient in caches
 
             TaskCache tc = new TaskCache(baseDir, baseURI.resolve("task/"));
             UnparsedTask task = tc.get(Integer.toString(taskId), cli.forceReload);
@@ -208,55 +225,55 @@ public class CommandLineInterface {
             List<String> unparsedProgram = Arrays.asList(task.getTree().split("\r?\n"));
             Program program = new Program(irtg, additionalData, unparsedProgram, cli.getVarRemapper());
             program.setNumThreads(cli.numThreads);
-            
-            final ResultManager resman = cli.createResultManager(task, altolabBase);
+
+            final ResultManager resman = cli.createResultManager(task, altolabBase, labClient);
 
             if (task.getWarmup() > 0) {
                 System.err.println("\nRunning " + task.getWarmup() + " warmup instances...");
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
-                    program.run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), true, null, cli.flushFrequency);
-                    return null;
-                });
+                            program.run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), true, null, cli.flushFrequency);
+                            return null;
+                        });
             }
 
             System.err.println("\nRunning experiment...");
             if (cli.local) {
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
-                    program.run(corpus,
-                            //                            cli.showResults ? new ResultManager.PrintingManager() : new ResultManager.DummyManager(),
-                            new ResultManager.DummyManager(), // TODO clean this up
-                            i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
-                            -1, false, verboseMeasurementsSet, cli.flushFrequency);
-                    return null;
-                });
+                            program.run(corpus,
+                                        //                            cli.showResults ? new ResultManager.PrintingManager() : new ResultManager.DummyManager(),
+                                        new ResultManager.DummyManager(), // TODO clean this up
+                                        i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
+                                        -1, false, verboseMeasurementsSet, cli.flushFrequency);
+                            return null;
+                        });
 
                 System.err.println("Done!");
             } else {
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
-                    program.run(corpus,
-                            resman,
-                            i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
-                            -1, false, verboseMeasurementsSet, cli.flushFrequency);
-                    return null;
-                });
-                
+                            program.run(corpus,
+                                        resman,
+                                        i -> listener.accept(i, corpus.getNumberOfInstances(), i + "/" + corpus.getNumberOfInstances()),
+                                        -1, false, verboseMeasurementsSet, cli.flushFrequency);
+                            return null;
+                        });
+
                 resman.finish();
                 System.err.println("Done! Experiment ID: " + resman.getExperimentID());
             }
-            
+
             return resman.getExperimentID();
         } catch (SQLException | IOException | ParseException | ParserException ex) {
             System.err.println("Error: " + ex.toString());
             return -1;
         }
     }
-    
-    private ResultManager createResultManager(UnparsedTask task, String altolabBase) throws IOException {
-        if( local ) {
+
+    private ResultManager createResultManager(UnparsedTask task, String altolabRestBase, AltoLabHttpClient labClient) throws IOException {
+        if (local) {
             return new ResultManager.DummyManager();
-        } else {            
+        } else {
             System.err.println("Setting up experiment...");
-            JsonResultManagerFactory factory = new JsonResultManagerFactory(altolabBase);
+            JsonResultManagerFactory factory = new JsonResultManagerFactory(altolabRestBase, labClient);
             final ResultManager resman = factory.startExperiment(task.getId(), comment, hostname, getVarRemapper(), additionalData);
             System.err.println("Experiment ID is " + resman.getExperimentID());
             return resman;
