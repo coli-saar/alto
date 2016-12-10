@@ -5,8 +5,8 @@
  */
 package de.up.ling.irtg.laboratory;
 
-import com.sun.org.apache.xml.internal.utils.StringBufferPool;
 import de.up.ling.irtg.util.Util;
+import java.io.IOException;
 
 /**
  * Handles the results obtained during parsing. For example, storing them,
@@ -56,7 +56,7 @@ public interface ResultManager {
      * data.
      * 
      */
-    public void flush();
+    public void flush() throws IOException;
     
     /**
      * Does literally nothing.

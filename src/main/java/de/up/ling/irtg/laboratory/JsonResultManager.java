@@ -8,11 +8,17 @@ package de.up.ling.irtg.laboratory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mysql.jdbc.Util;
-import de.saar.basic.StringTools;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  *
@@ -62,21 +68,27 @@ public class JsonResultManager implements ResultManager {
             this.error = error;
         }
     }
-    
+
     private static class Buffer {
         public List<Result> results = new ArrayList<>();
         public List<Time> times = new ArrayList<>();
         public List<Error> errors = new ArrayList<>();
-        
+
         public void clear() {
             results.clear();
             times.clear();
             errors.clear();
         }
     }
-    
+
     private Buffer buffer = new Buffer();
     private ObjectMapper mapper = new ObjectMapper();
+
+    private String url;
+
+    public JsonResultManager(String url) {
+        this.url = url + "post_results";
+    }
 
     @Override
     public void acceptResult(Object result, int instanceID, String name, boolean doExport, boolean isGlobal, boolean isNumeric) {
@@ -101,11 +113,25 @@ public class JsonResultManager implements ResultManager {
     }
 
     @Override
-    public void flush() {
+    public synchronized void flush() throws IOException {
         try {
             String s = mapper.writeValueAsString(buffer);
-            System.err.println(s);
             buffer.clear();
+
+            if (url == null) {
+                System.err.println(s);
+            } else {
+                HttpClient httpClient = HttpClientBuilder.create().build();
+                HttpPost request = new HttpPost(url);
+                StringEntity params = new StringEntity(s);
+                request.addHeader("content-type", "application/json");
+                request.setEntity(params);
+                HttpResponse response = httpClient.execute(request);
+                
+                if( response.getStatusLine().getStatusCode() != HttpStatus.SC_OK ) {
+                    throw new IOException("HTTP error: " + response.getStatusLine().toString());
+                }
+            }
         } catch (JsonProcessingException ex) {
             Logger.getLogger(JsonResultManager.class.getName()).log(Level.SEVERE, null, ex);
         }
