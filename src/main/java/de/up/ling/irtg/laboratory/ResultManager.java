@@ -59,6 +59,19 @@ public interface ResultManager {
     public void flush() throws IOException;
     
     /**
+     * Returns the experiment ID in this result manager.
+     * 
+     * @return 
+     */
+    public int getExperimentID();
+    
+    /**
+     * Marks the experiment as finished.
+     */
+    public void finish() throws Exception;
+    
+    
+    /**
      * Does literally nothing.
      */
     public static class DummyManager implements ResultManager {
@@ -80,6 +93,16 @@ public interface ResultManager {
 
         @Override
         public void flush() {
+        }
+
+        @Override
+        public int getExperimentID() {
+            return 0;
+        }
+
+        @Override
+        public void finish() {
+            
         }
         
     }
@@ -115,6 +138,16 @@ public interface ResultManager {
             System.out.flush();
             buf.setLength(0);
         }        
+
+        @Override
+        public int getExperimentID() {
+            return 0;
+        }
+
+        @Override
+        public void finish() {
+            System.out.println("Experiment finished.");
+        }
     }
     
 }

@@ -5,20 +5,10 @@
  */
 package de.up.ling.irtg.laboratory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mysql.jdbc.Util;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  *
@@ -82,13 +72,15 @@ public class JsonResultManager implements ResultManager {
         }
     }
 
-    private Buffer buffer = new Buffer();
-    private ObjectMapper mapper = new ObjectMapper();
+    private final Buffer buffer = new Buffer();
+//    private ObjectMapper mapper = new ObjectMapper();
 
-    private String url;
+    private final String postResultsUrl;
+    private final String finishExperimentUrl;
 
     public JsonResultManager(int experimentID, String url) {
-        this.url = url + "post_results";
+        this.postResultsUrl = url + "post_results";
+        this.finishExperimentUrl = url + "finish_experiment";
         this.buffer.experimentID = experimentID;
     }
 
@@ -116,28 +108,18 @@ public class JsonResultManager implements ResultManager {
 
     @Override
     public synchronized void flush() throws IOException {
-        try {
-            String s = mapper.writeValueAsString(buffer);
-            buffer.clear();
-
-            if (url == null) {
-                System.err.println(s);
-            } else {
-                HttpClient httpClient = HttpClientBuilder.create().build();
-                HttpPost request = new HttpPost(url);
-                StringEntity params = new StringEntity(s);
-                request.addHeader("content-type", "application/json");
-                request.setEntity(params);
-                HttpResponse response = httpClient.execute(request);
-                
-                if( response.getStatusLine().getStatusCode() != HttpStatus.SC_OK ) {
-                    throw new IOException("HTTP error: " + response.getStatusLine().toString());
-                }
-            }
-        } catch (JsonProcessingException ex) {
-            Logger.getLogger(JsonResultManager.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
+        JsonResultManagerFactory.postJson(postResultsUrl, buffer);
+        buffer.clear();
     }
 
+    @Override
+    public int getExperimentID() {
+        return buffer.experimentID;
+    }
+
+    @Override
+    public void finish() throws Exception {
+        flush();
+        JsonResultManagerFactory.postJson(finishExperimentUrl, buffer);
+    }
 }

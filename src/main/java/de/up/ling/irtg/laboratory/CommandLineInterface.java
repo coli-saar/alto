@@ -9,6 +9,7 @@ import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.converters.IParameterSplitter;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.corpus.Corpus;
@@ -50,8 +51,8 @@ public class CommandLineInterface {
     @Parameter(names = {"--hostname", "-h"}, description = "Name of the host this program is running on")
     private String hostname;
 
-    @Parameter(names = {"--comment", "-c"}, description = "Comment on this experiment run", variableArity = true)
-    private List<String> comment = new ArrayList<>();
+    @Parameter(names = {"--comment", "-c"}, description = "Comment on this experiment run (enclose in quotes if necessary)")
+    private String comment = "";
 
 //    @Parameter(names = "-taskID", description = "ID of the task (the one to be run) in the database", required = true)
 //    private int taskID;
@@ -204,22 +205,11 @@ public class CommandLineInterface {
                 additionalData.add(ac.get(ad, cli.forceReload));
             }
 
-            DBLoader dbLoader = cli.local ? null : new DBLoader();
-
             List<String> unparsedProgram = Arrays.asList(task.getTree().split("\r?\n"));
             Program program = new Program(irtg, additionalData, unparsedProgram, cli.getVarRemapper());
             program.setNumThreads(cli.numThreads);
-
-            System.err.println("Setting up experiment...");
-            int _experimentID = -1;
-            if (!cli.local) {
-                System.err.println("Connecting to database...");
-                dbLoader.connect(props);
-
-                _experimentID = dbLoader.uploadExperimentStartData(task.getId(), cli.comment.stream().reduce("", (String t, String u) -> t.concat(" ").concat(u)), cli.hostname, cli.getVarRemapper(), cli.additionalData);
-                System.err.println("Experiment ID is " + _experimentID);
-            }
-            final int experimentID = _experimentID;  // for use from lambda expression
+            
+            final ResultManager resman = cli.createResultManager(task, altolabBase);
 
             if (task.getWarmup() > 0) {
                 System.err.println("\nRunning " + task.getWarmup() + " warmup instances...");
@@ -242,9 +232,6 @@ public class CommandLineInterface {
 
                 System.err.println("Done!");
             } else {
-//                ResultManager resman = new DBResultManager(dbLoader, experimentID, ex -> System.err.println("Error when uploading result to database: " + ex.toString()), false); // TODO clean up cli.showResults
-                ResultManager resman = new JsonResultManager(experimentID, altolabBase);
-                
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
                     program.run(corpus,
                             resman,
@@ -252,14 +239,27 @@ public class CommandLineInterface {
                             -1, false, verboseMeasurementsSet, cli.flushFrequency);
                     return null;
                 });
-
-                dbLoader.updateExperimentStateFinished(experimentID);
-                System.err.println("Done! Experiment ID: " + experimentID);
+                
+                resman.finish();
+                System.err.println("Done! Experiment ID: " + resman.getExperimentID());
             }
-            return experimentID;
+            
+            return resman.getExperimentID();
         } catch (SQLException | IOException | ParseException | ParserException ex) {
             System.err.println("Error: " + ex.toString());
             return -1;
+        }
+    }
+    
+    private ResultManager createResultManager(UnparsedTask task, String altolabBase) throws IOException {
+        if( local ) {
+            return new ResultManager.DummyManager();
+        } else {            
+            System.err.println("Setting up experiment...");
+            JsonResultManagerFactory factory = new JsonResultManagerFactory(altolabBase);
+            final ResultManager resman = factory.startExperiment(task.getId(), comment, hostname, getVarRemapper(), additionalData);
+            System.err.println("Experiment ID is " + resman.getExperimentID());
+            return resman;
         }
     }
 

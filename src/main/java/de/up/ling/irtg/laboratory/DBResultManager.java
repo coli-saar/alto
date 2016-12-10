@@ -7,20 +7,30 @@ package de.up.ling.irtg.laboratory;
 
 import de.up.ling.irtg.util.Util;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
  *
  * @author Jonas
  */
-public class DBResultManager implements ResultManager {
+class DBResultManager implements ResultManager {
 
     private final DBLoader dbLoader;
     private final int experimentID;
     private final Consumer<SQLException> sqlErrorHandler;
     private final boolean showResults;
     
-    public DBResultManager(DBLoader dbLoader, int experimentID, Consumer<SQLException> sqlErrorHandler, boolean showResults) {
+//        public int startExperiment(int taskId, String comment, String hostname, Map<String,String> varRemapper, List<String> dataIDs) throws Exception;
+    
+
+    public static DBResultManager startExperiment(DBLoader dbLoader, int taskId, String comment, String hostname, Map<String,String> varRemapper, List<String> dataIDs) throws Exception {
+        int experimentID = dbLoader.uploadExperimentStartData(taskId, comment, hostname, varRemapper, dataIDs);
+        return new DBResultManager(dbLoader, experimentID, x -> System.err.println(x), false);
+    }
+    
+    private DBResultManager(DBLoader dbLoader, int experimentID, Consumer<SQLException> sqlErrorHandler, boolean showResults) {
         this.dbLoader = dbLoader;
         this.experimentID = experimentID;
         this.sqlErrorHandler = sqlErrorHandler;
@@ -66,6 +76,16 @@ public class DBResultManager implements ResultManager {
     @Override
     public void flush() {
         // do nothing - the DBResultManager flushes after each accept* operation
+    }
+
+    @Override
+    public int getExperimentID() {
+        return experimentID;
+    }
+
+    @Override
+    public void finish() throws SQLException {
+        dbLoader.updateExperimentStateFinished(getExperimentID());
     }
     
 }
