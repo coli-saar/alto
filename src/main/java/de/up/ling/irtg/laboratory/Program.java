@@ -24,7 +24,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -42,6 +41,10 @@ import com.google.common.reflect.ClassPath;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
+import it.unimi.dsi.fastutil.longs.Long2LongMap;
+import it.unimi.dsi.fastutil.longs.Long2LongOpenHashMap;
+import it.unimi.dsi.fastutil.longs.LongCollection;
+import it.unimi.dsi.fastutil.longs.LongIterator;
 import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinPool;
@@ -692,9 +695,9 @@ public class Program {
         }
 
         //keep track of measured times globally
-        Map<String, long[]> watchName2Times = new HashMap<>();
+        Map<String, Long2LongMap> watchName2Times = new HashMap<>();
         for (String watchName : allWatchNames) {
-            watchName2Times.put(watchName, new long[corpus.getNumberOfInstances()]);
+            watchName2Times.put(watchName, new Long2LongOpenHashMap()); //new long[corpus.getNumberOfInstances()]);
         }
 
         //run initialization
@@ -720,29 +723,24 @@ public class Program {
         // before each actual computation starts). If the corpora ever grow to a size that
         // makes this infeasible in terms of memory, we should look into implementing a
         // spliterator for Corpus that supports parallelization in a more fine-grained way.
-        MutableInteger instanceID = new MutableInteger(0);         // assigns unique ID to instance when processing starts
+        MutableInteger nextInstanceID = new MutableInteger(1);     // assigns unique ID to instance when processing starts
         MutableInteger instanceCounter = new MutableInteger(1);    // counts up instance number when processing finishes, for updating the progress bar
         ForkJoinPool forkJoinPool = new ForkJoinPool(numThreads);
 
         for (Instance instance : corpus) {
-            forkJoinPool.execute(() -> {
-                // get unique instance-counter value i for this instance
-                int i = -1;
-                synchronized (instanceID) {
-                    // TODO - here we need to use not position in sequence, but position in corpus
-                    i = instanceID.incValue();
-                }
+            // position of instance in corpus, starting at 1
+            final int instanceID = nextInstanceID.incValue();
 
-//                System.err.println("exec: " + i);
+            if (instanceID >= maxInstances && maxInstances > -1) {
+                return;
+            }
+
+            forkJoinPool.execute(() -> {
                 //make local copies of global prototypical objects
                 Object[] variableTrackerHere = new Object[variableTracker.length];
                 Tree<Operation>[] localProgram = new Tree[program.size()];
                 for (int j = 0; j < program.size(); j++) {
                     localProgram[j] = createLocalOperationTreeCopy(program.get(j), variableTrackerHere);
-                }
-
-                if (i >= maxInstances && maxInstances > -1) {
-                    return;
                 }
 
                 Map<String, CpuTimeStopwatch> name2Watch = new HashMap<>();
@@ -756,10 +754,10 @@ public class Program {
 
                 // process one instance
                 if (verbose) {
-                    System.err.printf(formatString, i, firstAlgebra.representAsString(instance.getInputObjects().get(firstMentionedInterpretation)));
+                    System.err.printf(formatString, instanceID, firstAlgebra.representAsString(instance.getInputObjects().get(firstMentionedInterpretation)));
                 }
 
-                Int2ObjectMap<Throwable> errors = run(i, instance, localProgram, variableTrackerHere, name2Watch);
+                Int2ObjectMap<Throwable> errors = run(instanceID, instance, localProgram, variableTrackerHere, name2Watch);
 
                 //now accept data in ResultManager
                 for (int k = 0; k < program.size(); k++) {
@@ -769,8 +767,8 @@ public class Program {
                         for (String watchName : watchesStoppingHere) {
                             CpuTimeStopwatch watch = name2Watch.get(watchName);
                             long time = watch.getTimeBefore(1) / 1000000;//want time in ms
-                            resMan.acceptTime(time, i, watchName, false);
-                            watchName2Times.get(watchName)[i] = time;
+                            resMan.acceptTime(time, instanceID, watchName, false);
+                            watchName2Times.get(watchName).put(instanceID, time);
 
                             if (verbose) {
                                 System.err.printf("%s:%s ", watchName, Util.formatTime(watch.getTimeBefore(1)));
@@ -780,7 +778,7 @@ public class Program {
 
                     if (!isGlobal[shiftIndex(k)]) {
                         Object value = variableTrackerHere[shiftIndex(k)];
-                        resMan.acceptResult(value, i, varNames[k], doExport[shiftIndex(k)], false, isNumeric[shiftIndex(k)]);
+                        resMan.acceptResult(value, instanceID, varNames[k], doExport[shiftIndex(k)], false, isNumeric[shiftIndex(k)]);
 
                         if (verbose) {
                             if (verboseAll || verboseMeasurements.contains(varNames[k])) {
@@ -804,17 +802,18 @@ public class Program {
                 for (Int2ObjectMap.Entry<Throwable> idAndError : errors.int2ObjectEntrySet()) {
                     int k = idAndError.getIntKey();
                     //do not need to check if entry for k is not global, only non-global k can appear here.
-                    resMan.acceptError(idAndError.getValue(), i, varNames[k], doExport[shiftIndex(k)], false);
+                    resMan.acceptError(idAndError.getValue(), instanceID, varNames[k], doExport[shiftIndex(k)], false);
                 }
 
                 for (int j = 0; j < globalVariableTracker.length; j++) {
                     if (!isGlobal[j]) {
                         if (neededForGlobal[j]) {
-                            ((Object[]) globalVariableTracker[j])[i] = variableTrackerHere[j];
+                            ((Object[]) globalVariableTracker[j])[instanceID] = variableTrackerHere[j];
                         }
                     }
                 }
 
+                // update progress bar and, if necessary, flush result manager
                 synchronized (instanceCounter) {
                     int instanceNum = instanceCounter.incValue();
 
@@ -823,7 +822,11 @@ public class Program {
                     }
 
                     if (flushFrequency > 0 && (instanceNum % flushFrequency == 0)) {
-                        resMan.flush();
+                        try {
+                            resMan.flush();
+                        } catch (IOException ex) {
+                            handleFatalException("Fatal error while sending results: ", ex);
+                        }
                     }
                 }
             });
@@ -833,11 +836,15 @@ public class Program {
         try {
             forkJoinPool.awaitTermination(Long.MAX_VALUE, TimeUnit.DAYS);
         } catch (InterruptedException ex) {
-            Logger.getLogger(Program.class.getName()).log(Level.SEVERE, null, ex);
+            handleFatalException("Thread pool was interrupted before completing all work: ", ex);
         }
 
-        // flush remaining per-instance results
-        resMan.flush();
+        try {
+            // flush remaining per-instance results
+            resMan.flush();
+        } catch (IOException ex) {
+            handleFatalException("Fatal error while sending remaining results: ", ex);
+        }
 
         if (!isWarmup) {      // only report global results if not warmup
             //run globally
@@ -863,10 +870,12 @@ public class Program {
             }
 
             //upload time sums
-            for (Entry<String, long[]> nameAndTime : watchName2Times.entrySet()) {
+            for (Entry<String, Long2LongMap> nameAndTime : watchName2Times.entrySet()) {
                 long sum;
                 try {
-                    sum = Arrays.stream(nameAndTime.getValue()).reduce((long left, long right) -> left + right).getAsLong();
+                    sum = sum(nameAndTime.getValue().values());
+                    // Arrays.stream(nameAndTime.getValue())
+                    // .reduce((long left, long right) -> left + right).getAsLong();
                 } catch (java.util.NoSuchElementException ex) {
                     sum = 0;
                 }
@@ -881,10 +890,29 @@ public class Program {
                 //do not need to check if entry for k is global, only global k can appear here.
                 resMan.acceptError(idAndError.getValue(), -1, varNames[k], doExport[shiftIndex(k)], true);
             }
-            
-            // flush all global results in one batch
-            resMan.flush();
+
+            try {
+                // flush all global results in one batch
+                resMan.flush();
+            } catch (IOException ex) {
+                handleFatalException("Fatal error while sending global results: ", ex);
+            }
         }
+    }
+    
+    private void handleFatalException(String message, Exception ex) {
+        Logger.getLogger(Program.class.getName()).log(Level.SEVERE, message + ex.toString());
+        System.exit(1);
+    }
+    
+    private long sum(LongCollection lc) {
+        long ret = 0;
+        LongIterator it = lc.iterator();
+        while(it.hasNext()) {
+            ret += it.nextLong();
+        }
+        
+        return ret;
     }
 
     private boolean isClassNumeric(Class maybeNumber) {
