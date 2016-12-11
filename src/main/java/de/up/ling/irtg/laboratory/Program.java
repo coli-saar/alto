@@ -881,7 +881,7 @@ public class Program {
                 }
 
                 resMan.acceptTime(sum, -1, "total " + nameAndTime.getKey(), true);
-                System.err.printf("total %s: %s\n", nameAndTime.getKey(), Util.formatTime(sum * 1000000L)); // convert back to ns
+                System.err.printf("\ntotal %s: %s", nameAndTime.getKey(), Util.formatTime(sum * 1000000L)); // convert back to ns
             }
 
             //TODO: accept runtimes -- EDIT: currently only measuring non-global runtimes

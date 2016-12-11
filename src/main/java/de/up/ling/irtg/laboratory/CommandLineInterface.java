@@ -269,7 +269,7 @@ public class CommandLineInterface {
                             return null;
                         });
 
-                System.err.println("Done!");
+                System.err.println("\nDone!");
             } else {
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
                             program.run(corpus,
@@ -280,7 +280,7 @@ public class CommandLineInterface {
                         });
 
                 resman.finish();
-                System.err.println("Done! Experiment ID: " + resman.getExperimentID());
+                System.err.println("\nDone! Experiment ID: " + resman.getExperimentID());
             }
 
             return resman.getExperimentID();
