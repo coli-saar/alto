@@ -9,12 +9,9 @@ import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.converters.IParameterSplitter;
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.corpus.Corpus;
-import de.up.ling.irtg.io.CorpusCache;
-import de.up.ling.irtg.io.GrammarCache;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.ProgressBarWorker;
 import de.up.ling.irtg.util.ProgressListener;
@@ -172,6 +169,7 @@ public class CommandLineInterface {
         }
 
         try {
+            // Set up connection to Alto Lab.
             Path baseDir = Paths.get(".alto", "cache");
 
             String altolabBase = props.getProperty("altolab.baseurl");
@@ -179,11 +177,11 @@ public class CommandLineInterface {
             String altolabPassword = props.getProperty("altolab.password");
 
             AltoLabHttpClient labClient = null;
-            
+
             try {
                 labClient = new AltoLabHttpClient(altolabBase, altolabUser, altolabPassword);
             } catch (Exception e) {
-                if(cli.local) {
+                if (cli.local) {
                     System.err.println(e.getMessage());
                     System.err.println("(but we're running in local mode, will try to load data from cache)\n");
                 } else {
@@ -197,31 +195,55 @@ public class CommandLineInterface {
                 altolabBase = altolabBase + "/rest/";
             }
 
+            // Retrieve data for experiment, if possible from caches.
+            // Notice that even if the connection to the AltoLabHttpClient failed
+            // (in which case labClient is null), this can still succeed, if all
+            // data is available in local caches.
             URI baseURI = new URI(altolabBase);
-            
-            // TODO - use labClient in caches
-
-            TaskCache tc = new TaskCache(baseDir, baseURI.resolve("task/"));
+            TaskCache tc = new TaskCache(baseDir, baseURI.resolve("task/"), labClient);
             UnparsedTask task = tc.get(Integer.toString(taskId), cli.forceReload);
 
-            GrammarCache gc = new GrammarCache(baseDir, baseURI);
+            if (task == null) {
+                System.err.println(String.format("Failed to load task %d.", taskId));
+                System.exit(1);
+            }
+
+            GrammarCache gc = new GrammarCache(baseDir, baseURI, labClient);
             String gid = String.format("grammar_%d.irtg", task.grammar);
             System.err.printf("Loading grammar #%d (%s) ... ", task.grammar, rl(gc.isInCache(gid), cli.forceReload));
             InterpretedTreeAutomaton irtg = gc.get(gid, cli.forceReload);
-            System.err.println("done.");
+            if (irtg == null) {
+                System.err.println("failed.");
+                System.exit(1);
+            } else {
+                System.err.println("done.");
+            }
 
-            CorpusCache cc = new CorpusCache(baseDir, baseURI, irtg);
+            CorpusCache cc = new CorpusCache(baseDir, baseURI, irtg, labClient);
             String cid = String.format("corpus_%d.txt", task.corpus);
             System.err.printf("Loading corpus #%d (%s) ... ", task.corpus, rl(cc.isInCache(cid), cli.forceReload));
             Corpus corpus = cc.get(cid, cli.forceReload);
-            System.err.println("done.");
-
-            AdditionalDataCache ac = new AdditionalDataCache(baseDir, baseURI.resolve("additional_data/"));
-            List<String> additionalData = new ArrayList<>();
-            for (String ad : cli.additionalData) {
-                additionalData.add(ac.get(ad, cli.forceReload));
+            if (corpus == null) {
+                System.err.println("failed.");
+                System.exit(1);
+            } else {
+                System.err.println("done.");
             }
 
+            AdditionalDataCache ac = new AdditionalDataCache(baseDir, baseURI.resolve("additional_data/"), labClient);
+            List<String> additionalData = new ArrayList<>();
+            for (String ad : cli.additionalData) {
+                String data = ac.get(ad, cli.forceReload);
+
+                if (data == null) {
+                    System.err.println(String.format("Failed to load additional data with ID %s.", ad));
+                    System.exit(1);
+                } else {
+                    additionalData.add(data);
+                }
+            }
+
+            // Prepare program that is to be executed.
             List<String> unparsedProgram = Arrays.asList(task.getTree().split("\r?\n"));
             Program program = new Program(irtg, additionalData, unparsedProgram, cli.getVarRemapper());
             program.setNumThreads(cli.numThreads);

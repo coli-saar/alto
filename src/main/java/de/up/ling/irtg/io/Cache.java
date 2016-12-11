@@ -5,10 +5,6 @@
  */
 package de.up.ling.irtg.io;
 
-import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.corpus.Corpus;
-import de.up.ling.irtg.util.CpuTimeStopwatch;
-import de.up.ling.irtg.util.Logging;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -16,11 +12,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.logging.Level;
 
 /**
  *

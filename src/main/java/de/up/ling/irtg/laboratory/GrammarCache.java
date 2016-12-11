@@ -4,9 +4,8 @@
  * and open the template in the editor.
  */
 
-package de.up.ling.irtg.io;
+package de.up.ling.irtg.laboratory;
 
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.codec.BinaryIrtgInputCodec;
 import de.up.ling.irtg.codec.BinaryIrtgOutputCodec;
@@ -22,9 +21,9 @@ import java.nio.file.Path;
  *
  * @author koller
  */
-public class GrammarCache extends HttpCache<InterpretedTreeAutomaton> {
-    public GrammarCache(Path baseDir, URI baseURL) {
-        super(baseDir, baseURL);
+public class GrammarCache extends AltoLabHttpCache<InterpretedTreeAutomaton> {
+    public GrammarCache(Path baseDir, URI baseURL, AltoLabHttpClient labClient) {
+        super(baseDir, baseURL, labClient);
     }
 
     @Override

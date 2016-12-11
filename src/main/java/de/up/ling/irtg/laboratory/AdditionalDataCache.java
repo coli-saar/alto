@@ -7,7 +7,6 @@
 package de.up.ling.irtg.laboratory;
 
 import de.saar.basic.StringTools;
-import de.up.ling.irtg.io.HttpCache;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -21,9 +20,9 @@ import java.nio.file.Path;
  *
  * @author koller
  */
-public class AdditionalDataCache extends HttpCache<String> {
-    public AdditionalDataCache(Path baseDir, URI baseURL) {
-        super(baseDir, baseURL);
+public class AdditionalDataCache extends AltoLabHttpCache<String> {
+    public AdditionalDataCache(Path baseDir, URI baseURL, AltoLabHttpClient labClient) {
+        super(baseDir, baseURL, labClient);
     }
     
     @Override

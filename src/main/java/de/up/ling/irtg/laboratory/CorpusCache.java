@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package de.up.ling.irtg.io;
+package de.up.ling.irtg.laboratory;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.corpus.Corpus;
@@ -16,7 +16,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.URI;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -24,12 +23,12 @@ import java.time.format.DateTimeFormatter;
  *
  * @author koller
  */
-public class CorpusCache extends HttpCache<Corpus> {
+public class CorpusCache extends AltoLabHttpCache<Corpus> {
 
     private InterpretedTreeAutomaton irtg;
 
-    public CorpusCache(Path baseDir, URI baseURL, InterpretedTreeAutomaton irtg) {
-        super(baseDir, baseURL);
+    public CorpusCache(Path baseDir, URI baseURL, InterpretedTreeAutomaton irtg, AltoLabHttpClient labClient) {
+        super(baseDir, baseURL, labClient);
         this.irtg = irtg;
     }
 
