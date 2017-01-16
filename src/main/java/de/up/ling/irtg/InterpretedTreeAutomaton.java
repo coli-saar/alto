@@ -11,6 +11,7 @@ import de.saar.basic.Pair;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.Intersectable;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.WeightedTree;
@@ -254,7 +255,7 @@ public class InterpretedTreeAutomaton implements Serializable {
             Interpretation interp = interpretations.get(interpName);
             Object input = inputs.get(interpName);
 
-            TreeAutomaton interpParse = interp.parse(input);
+            Intersectable interpParse = interp.parse(input);
             ret = ret.intersect(interpParse);
         }
 

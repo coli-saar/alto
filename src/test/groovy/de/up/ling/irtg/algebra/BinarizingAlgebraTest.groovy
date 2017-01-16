@@ -59,5 +59,33 @@ class BinarizingAlgebraTest {
             assertEquals(orig, alg.evaluate(it))
         }
     }
+    
+    @Test
+    public void testBinarizingTreeInvhom() {
+        InterpretedTreeAutomaton irtg = pi(binTreeGram);
+        Map<String, Object> input = new HashMap<>();
+        input.put("english", "s(np(prp(he)),vp(aux(does),rb(not),vb(go)))");
+        TreeAutomaton auto = irtg.parse(input);
+        assert auto.languageIterator().hasNext();
+    }
+    
+    String binTreeGram = """ /* Example tree-to-string transducer from Galley et al. 04 */
+
+interpretation french: de.up.ling.irtg.algebra.StringAlgebra
+interpretation english: de.up.ling.irtg.algebra.BinarizingTreeAlgebra
+
+S! -> r1(NP,VB)
+[french]  *(*(*(?1, ne), ?2), pas)
+[english] s(?1, vp('_@_'(aux(does), '_@_'(rb(not), ?2))))
+
+NP -> r2
+[french]  il
+[english] np(prp(he))
+
+VB -> r3
+[french]  va
+[english] vb(go)
+"""
+    
 }
 

@@ -9,6 +9,7 @@ package de.up.ling.irtg.siblingfinder;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.IntTrie;
+import de.up.ling.irtg.automata.Intersectable;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -36,7 +37,7 @@ import java.util.Set;
  * @author groschwitz
  * @param <State>
  */
-public class SiblingFinderInvhom<State> {
+public class SiblingFinderInvhom<State> implements Intersectable<State> {
 
     private final Homomorphism hom;
     private final TreeAutomaton<State> decompAuto;
@@ -221,7 +222,7 @@ public class SiblingFinderInvhom<State> {
                 Map<String, SiblingFinder> pos2PF = term2pos2PF.get(ruleLabel);
                 SiblingFinder pf = pos2PF.get(parentPath);
                 if (pf == null) {
-                    pf = decompAuto.makeNewPartnerFinder(rhsParentLabelID);
+                    pf = decompAuto.newSiblingFinder(rhsParentLabelID);
                     pos2PF.put(parentPath, pf);
                 }
                 pf.addState(prevState, rhsGivenChildPos);

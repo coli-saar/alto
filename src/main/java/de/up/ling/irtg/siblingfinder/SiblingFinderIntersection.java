@@ -8,6 +8,7 @@ package de.up.ling.irtg.siblingfinder;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.ArrayInt2IntMap;
 import de.up.ling.irtg.util.IntInt2IntMap;
@@ -45,14 +46,24 @@ public class SiblingFinderIntersection<LeftState, RightState> {
     }
     
     @OperationAnnotation(code="veryLazyIntersection")
-    public SiblingFinderIntersection(ConcreteTreeAutomaton<LeftState> leftAutomaton, SiblingFinderInvhom<RightState> rightAutomaton) {
+    public SiblingFinderIntersection(TreeAutomaton<LeftState> leftAutomaton, SiblingFinderInvhom<RightState> rightAutomaton) {
+        ConcreteTreeAutomaton leftConcrete;
+        if (leftAutomaton instanceof ConcreteTreeAutomaton) {
+            leftConcrete = (ConcreteTreeAutomaton)leftAutomaton;
+        } else {
+            if (leftAutomaton.supportsBottomUpQueries()) {
+                leftConcrete = leftAutomaton.asConcreteTreeAutomatonBottomUp();
+            } else {
+                leftConcrete = leftAutomaton.asConcreteTreeAutomaton();
+            }
+        }
         
-        seenRulesAuto = new ConcreteTreeAutomaton<>(leftAutomaton.getSignature());
-        this.leftAutomaton = leftAutomaton;
+        seenRulesAuto = new ConcreteTreeAutomaton<>(leftConcrete.getSignature());
+        this.leftAutomaton = leftConcrete;
         this.rightAutomaton = rightAutomaton;
         
         //setup for IRTG side
-        int totalNrRules = leftAutomaton.getSignature().getMaxSymbolId();
+        int totalNrRules = leftConcrete.getSignature().getMaxSymbolId();
         BitSet relevantRules = new BitSet(totalNrRules+1);
         //BitSet precomputedRules = new BitSet(totalNrRules+1);
         

@@ -32,7 +32,7 @@ class SiblingFinderTest {
         
         TreeAutomaton decomp = (new StringAlgebra()).decompose((new StringAlgebra()).parseString("John loves Mary"));
         decomp.makeAllRulesExplicit();
-        SiblingFinder test = decomp.makeNewPartnerFinder(decomp.getSignature().getIdForSymbol("*"));
+        SiblingFinder test = decomp.newSiblingFinder(decomp.getSignature().getIdForSymbol("*"));
         
         int span1 = decomp.getIdForState(new Span(0,1));
         int span2 = decomp.getIdForState(new Span(1,2));
@@ -65,7 +65,7 @@ class SiblingFinderTest {
         GraphAlgebra alg = new GraphAlgebra(graphSig);
         TreeAutomaton decomp = alg.decompose(alg.parseString("(l / sleep-01 :ARG0 (j / john))"));
         decomp.makeAllRulesExplicit();
-        SiblingFinder test = decomp.makeNewPartnerFinder(decomp.getSignature().getIdForSymbol(GraphAlgebra.OP_MERGE));
+        SiblingFinder test = decomp.newSiblingFinder(decomp.getSignature().getIdForSymbol(GraphAlgebra.OP_MERGE));
         
         int left = decomp.getRulesBottomUp(leftS, new int[0]).iterator().next().getParent();
         int right0 = decomp.getRulesBottomUp(right0S, new int[0]).iterator().next().getParent();

@@ -5,6 +5,7 @@
 package de.up.ling.irtg;
 
 import de.up.ling.irtg.algebra.Algebra;
+import de.up.ling.irtg.automata.Intersectable;
 import de.up.ling.irtg.automata.InverseHomAutomaton;
 import de.up.ling.irtg.automata.NondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -14,6 +15,7 @@ import de.up.ling.irtg.automata.condensed.PMFactoryRestrictive;
 import de.up.ling.irtg.automata.condensed.PatternMatchingInvhomAutomatonFactory;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
+import de.up.ling.irtg.siblingfinder.SiblingFinderInvhom;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.tree.Tree;
 import java.io.Serializable;
@@ -67,21 +69,27 @@ public class Interpretation<E> implements Serializable {
      * @return
      */
     @OperationAnnotation(code = "invhom")
-    public TreeAutomaton invhom(TreeAutomaton auto) {
-
+    public Intersectable invhom(TreeAutomaton auto) {
         if (hom.isNonDeleting()) {
-            if (hom.getSourceSignature().getMaxArity() <= 2 || !auto.supportsTopDownQueries() || !auto.supportsBottomUpQueries()) {
-                //if source signature is binarized, use pattern matcher. Also
-                //use pattern matcher if only bottom up queries can be answered,
-                //since this is not supported by CondensedNondeletingInverseHomAutomaton
+            if (!auto.supportsBottomUpQueries()) {
                 if (pmFactory == null) {
                     pmFactory = new PMFactoryRestrictive(hom);
                 }
-                Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching.");
+                Logging.get().info(() -> "Using condensed inverse hom automaton via pattern matching and top-down queries only.");
                 return pmFactory.invhom(auto);
             } else {
-                Logging.get().info(() -> "Using condensed inverse hom automaton.");
-                return new CondensedNondeletingInverseHomAutomaton(auto, hom);
+                if (!auto.supportsTopDownQueries()) {
+                    if (auto.useSiblingFinder()) {
+                        Logging.get().info(() -> "Using sibling finder inverse hom automaton.");
+                        return new SiblingFinderInvhom(auto, hom);
+                    } else {
+                        Logging.get().info(() -> "Using basic bottom up iverse hom automaton.");
+                        return new NondeletingInverseHomAutomaton(auto, hom);
+                    }
+                } else {
+                    Logging.get().info(() -> "Using condensed inverse hom automaton.");
+                    return new CondensedNondeletingInverseHomAutomaton(auto, hom);
+                }
             }
 
             //return new CondensedNondeletingInverseHomAutomaton(decompositionAutomaton, hom);//this works only using top down queries.
@@ -103,9 +111,8 @@ public class Interpretation<E> implements Serializable {
         return new NondeletingInverseHomAutomaton(auto, hom);
     }
 
-    public TreeAutomaton parse(E object) {
+    public Intersectable parse(E object) {
         TreeAutomaton decompositionAutomaton = algebra.decompose(object);
-
         // It is much preferable to return a condensed automaton for the
         // inverse homomorphism, if that is possible. Pattern matching works for both top down
         // and bottom up queries.

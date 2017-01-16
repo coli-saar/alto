@@ -335,12 +335,17 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         }
         
         @Override
-        public SiblingFinder makeNewPartnerFinder(int labelID) {
+        public SiblingFinder newSiblingFinder(int labelID) {
             if (labelID == concatSymbolId) {
                 return new SpanPartnerFinder(words.length+1, this);
             } else {
-                return super.makeNewPartnerFinder(labelID);
+                return super.newSiblingFinder(labelID);
             }
+        }
+        
+        @Override
+        public boolean useSiblingFinder() {
+            return true;
         }
         
         

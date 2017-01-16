@@ -375,12 +375,17 @@ public class SGraphBRDecompositionAutomatonBottomUp extends TreeAutomaton<Bounda
     
     
     @Override
-    public SiblingFinder makeNewPartnerFinder(int labelID) {
+    public SiblingFinder newSiblingFinder(int labelID) {
         if (labelID == this.getMergeLabelID()) {
             return new MergePartnerFinder();
         } else {
-            return super.makeNewPartnerFinder(labelID);
+            return super.newSiblingFinder(labelID);
         }
+    }
+    
+    @Override
+    public boolean useSiblingFinder() {
+        return true;
     }
     
     

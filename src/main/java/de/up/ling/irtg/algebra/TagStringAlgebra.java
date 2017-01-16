@@ -610,7 +610,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         }
         
         @Override
-        public SiblingFinder makeNewPartnerFinder(int labelID) {
+        public SiblingFinder newSiblingFinder(int labelID) {
             String label = signature.resolveSymbolId(labelID);
             if (label.equals(CONCAT11())) {
                 return new SingleLookupBinaryPF(stateID -> getStateForId(stateID).left.end, stateID -> getStateForId(stateID).left.start);
@@ -625,9 +625,15 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                 return new DoubleLookupBinaryPF(stateID -> getStateForId(stateID).left.end, stateID -> getStateForId(stateID).right.start,
                         stateID -> getStateForId(stateID).left.start, stateID -> getStateForId(stateID).right.end);
             } else {
-                return super.makeNewPartnerFinder(labelID);
+                return super.newSiblingFinder(labelID);
             }
         }
+        
+        @Override
+        public boolean useSiblingFinder() {
+            return true;
+        }
+        
     }
     
     private static class SingleLookupBinaryPF extends SiblingFinder {

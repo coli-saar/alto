@@ -639,7 +639,7 @@ public class PMFactoryRestrictive<State> extends PatternMatchingInvhomAutomatonF
             default:
                 SiblingFinder rhsSiblingFinder = matcherState2RhsSiblingFinder.get(matcherRule.getParent());
                 if (rhsSiblingFinder == null) {
-                    rhsSiblingFinder = rhs.makeNewPartnerFinder(rhsLabelID);
+                    rhsSiblingFinder = rhs.newSiblingFinder(rhsLabelID);
                     matcherState2RhsSiblingFinder.put(matcherRule.getParent(), rhsSiblingFinder);
                 }
                 rhsSiblingFinder.addState(rhsChildID, pos);

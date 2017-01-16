@@ -32,6 +32,8 @@ import de.up.ling.irtg.semiring.LongArithmeticSemiring;
 import de.up.ling.irtg.semiring.Semiring;
 import de.up.ling.irtg.semiring.ViterbiWithBackpointerSemiring;
 import de.up.ling.irtg.siblingfinder.SiblingFinder;
+import de.up.ling.irtg.siblingfinder.SiblingFinderIntersection;
+import de.up.ling.irtg.siblingfinder.SiblingFinderInvhom;
 import de.up.ling.irtg.signature.Interner;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
@@ -102,7 +104,7 @@ import java.util.stream.Collectors;
  *
  * @author koller
  */
-public abstract class TreeAutomaton<State> implements Serializable {
+public abstract class TreeAutomaton<State> implements Serializable, Intersectable<State> {
 
     public static boolean DEBUG_STORE = false;
     public static DebuggingWriter D = new DebuggingWriter();
@@ -1436,8 +1438,14 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @return an automaton representing the intersected language.
      */
     @OperationAnnotation(code = "intersect")
-    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(TreeAutomaton<OtherState> other) {
-        return intersect(other, signature.getIdentityMapper());
+    public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(Intersectable<OtherState> other) {
+        if (other instanceof SiblingFinderInvhom) {
+            SiblingFinderIntersection inters = new SiblingFinderIntersection(this, (SiblingFinderInvhom)other);
+            inters.makeAllRulesExplicit(null);
+            return inters.seenRulesAsAutomaton();
+        } else {
+            return intersect((TreeAutomaton)other, signature.getIdentityMapper());
+        }
     }
 
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(TreeAutomaton<OtherState> other, SignatureMapper mapper) {
@@ -2979,7 +2987,7 @@ public abstract class TreeAutomaton<State> implements Serializable {
         Int2ObjectMap<SiblingFinder> siblingFinders = new Int2ObjectOpenHashMap<>();
         for (int labelID = 1; labelID <= signature.getMaxSymbolId(); labelID++) {
             if (signature.getArity(labelID) >= 2) {
-                siblingFinders.put(labelID, makeNewPartnerFinder(labelID));
+                siblingFinders.put(labelID, newSiblingFinder(labelID));
             }
         }
 
@@ -3043,8 +3051,19 @@ public abstract class TreeAutomaton<State> implements Serializable {
      * @param labelID
      * @return
      */
-    public SiblingFinder makeNewPartnerFinder(int labelID) {
+    public SiblingFinder newSiblingFinder(int labelID) {
         return new SiblingFinder.SetPartnerFinder(signature.getArity(labelID));
+    }
+    
+    /**
+     * Algorithms such as invhom check this function to decide whether their
+     * sibling finder variant should be used or not. Override this to return
+     * true, if your automaton has a non-trivial sibling finder implementation
+     * you want to use.
+     * @return 
+     */
+    public boolean useSiblingFinder() {
+        return false;
     }
     
     
