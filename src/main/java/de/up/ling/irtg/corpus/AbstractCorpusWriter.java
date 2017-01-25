@@ -56,7 +56,12 @@ public abstract class AbstractCorpusWriter implements Consumer<Instance> {
         boolean isn = inst.isNull();
 
         for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
-            fn.accept(interp.getLeft(), isn ? NULL : interp.getRight().asString(inst.getInputObjects().get(interp.getLeft())));
+            Object o = inst.getInputObjects().get(interp.getLeft());
+            if(o == null) {
+                continue;
+            }
+            
+            fn.accept(interp.getLeft(), isn ? NULL : interp.getRight().asString(o));
         }
     }
 
@@ -78,8 +83,16 @@ public abstract class AbstractCorpusWriter implements Consumer<Instance> {
     }
     
     public void writeCorpus(Corpus corpus) throws IOException {
+        int count = 0;
+        
         for( Instance inst : corpus ) {
-            writeInstance(inst);
+            ++count;
+            
+            try {
+                writeInstance(inst);
+            } catch(NullPointerException exception) {
+                throw new NullPointerException("Instance "+inst+" at count "+count+" caused error:"+System.getProperty("line.separator")+exception.getMessage());
+            }
         }
     }
 
