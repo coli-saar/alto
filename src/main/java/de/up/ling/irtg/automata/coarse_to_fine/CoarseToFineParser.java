@@ -140,7 +140,7 @@ public class CoarseToFineParser {
         IIntInt2DoubleMap outside = new MyIntInt2DoubleMap();
         ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
 
-        if (ftc.numLevels() > 0) {
+        if (ftc.numLevels() > 1) {
             for (int level = 0; level < ftc.numLevels() - 1; level++) {
                 inside.clear();
                 outside.clear();
@@ -232,7 +232,7 @@ public class CoarseToFineParser {
         IIntInt2DoubleMap outside = new MyIntInt2DoubleMap();
         ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
 
-        if (ftc.numLevels() > 0) {
+        if (ftc.numLevels() > 1) {
             for (int level = 0; level < ftc.numLevels() - 1; level++) {
                 inside.clear();
                 outside.clear();
