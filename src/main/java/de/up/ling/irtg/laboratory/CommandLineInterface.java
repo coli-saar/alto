@@ -76,7 +76,7 @@ public class CommandLineInterface {
 
     @Parameter(names = {"--flush-every", "-f"}, description = "Flush results buffer every k instances (k = 1: every instance; k = 0: only after last instance)")
     private int flushFrequency = 1;
-
+    
     public boolean isVerbose() {
         return !verboseMeasurements.isEmpty();
     }
@@ -253,7 +253,7 @@ public class CommandLineInterface {
             if (task.getWarmup() > 0) {
                 System.err.println("\nRunning " + task.getWarmup() + " warmup instances...");
                 withProgressbar(cli.isVerbose(), 60, System.err, listener -> {
-                            program.run(corpus, new ResultManager.PrintingManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), true, null, cli.flushFrequency);
+                            program.run(corpus, new ResultManager.DummyManager(), i -> listener.accept(i, task.getWarmup(), i + "/" + task.getWarmup()), task.getWarmup(), true, null, cli.flushFrequency);
                             return null;
                         });
             }
