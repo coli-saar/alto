@@ -1440,11 +1440,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     @OperationAnnotation(code = "intersect")
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersect(Intersectable<OtherState> other) {
         if (other instanceof SiblingFinderInvhom) {
-            SiblingFinderIntersection inters = new SiblingFinderIntersection(this, (SiblingFinderInvhom)other);
+            SiblingFinderIntersection inters = new SiblingFinderIntersection(this, (SiblingFinderInvhom) other);
             inters.makeAllRulesExplicit(null);
             return inters.seenRulesAsAutomaton();
         } else {
-            return intersect((TreeAutomaton)other, signature.getIdentityMapper());
+            return intersect((TreeAutomaton) other, signature.getIdentityMapper());
         }
     }
 
@@ -1492,7 +1492,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other) {
         return intersectCondensed(other, signature.getIdentityMapper());
     }
-    
+
     @OperationAnnotation(code = "intersectCondensedPruning")
     public <OtherState> TreeAutomaton<Pair<State, OtherState>> intersectCondensed(CondensedTreeAutomaton<OtherState> other, PruningPolicy pp) {
         //PruningPolicy pp = new QuotientPruningPolicy(new SemiringFOM(new DoubleArithmeticSemiring()), 0.00005);
@@ -2114,6 +2114,8 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * accept the tree; the weight of a run is the product of the weights of the
      * rules it uses. If the automaton does not accept the tree, the method
      * returns a weight of zero.<p>
+     * 
+     * The method also returns a weight of zero if the tree is null.<p>
      *
      * The labels of the nodes of the tree are assumed to be strings.
      *
@@ -2122,7 +2124,11 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     @OperationAnnotation(code = "getWeight")
     public double getWeight(final Tree<String> tree) {
-        return getWeightRaw(getSignature().addAllSymbols(tree));
+        if (tree == null) {
+            return 0;
+        } else {
+            return getWeightRaw(getSignature().addAllSymbols(tree));
+        }
     }
 
     /**
@@ -3054,19 +3060,19 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     public SiblingFinder newSiblingFinder(int labelID) {
         return new SiblingFinder.SetPartnerFinder(signature.getArity(labelID));
     }
-    
+
     /**
      * Algorithms such as invhom check this function to decide whether their
      * sibling finder variant should be used or not. Override this to return
      * true, if your automaton has a non-trivial sibling finder implementation
      * you want to use.
-     * @return 
+     *
+     * @return
      */
     public boolean useSiblingFinder() {
         return false;
     }
-    
-    
+
     public void dumpToFile(String filename) throws IOException {
         PrintWriter pw = new PrintWriter(new FileWriter(filename));
         pw.println(this);

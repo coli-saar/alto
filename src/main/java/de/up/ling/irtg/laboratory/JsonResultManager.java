@@ -89,7 +89,8 @@ public class JsonResultManager implements ResultManager {
     @Override
     public void acceptResult(Object result, int instanceID, String name, boolean doExport, boolean isGlobal, boolean isNumeric) {
         if (doExport) {
-            Result r = new Result(instanceID, isNumeric, isGlobal, name, result.toString());
+            String repr = (result == null) ? "<null>" : result.toString();
+            Result r = new Result(instanceID, isNumeric, isGlobal, name, repr);
             buffer.results.add(r);
         }
     }
