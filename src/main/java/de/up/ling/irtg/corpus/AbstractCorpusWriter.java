@@ -56,12 +56,12 @@ public abstract class AbstractCorpusWriter implements Consumer<Instance> {
         boolean isn = inst.isNull();
 
         for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
-            Object o = inst.getInputObjects().get(interp.getLeft());
-            if(o == null) {
-                continue;
+            // skip interpretations that are defined in the grammar, but not in the corpus
+            // (more precisely, in this instance)
+            if( inst.getInputObjects().containsKey(interp.getLeft())) {
+                Object o = inst.getInputObjects().get(interp.getLeft());
+                fn.accept(interp.getLeft(), isn ? NULL : interp.getRight().asString(o));
             }
-            
-            fn.accept(interp.getLeft(), isn ? NULL : interp.getRight().asString(o));
         }
     }
 

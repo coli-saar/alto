@@ -54,8 +54,6 @@ public class Corpus implements Iterable<Instance> {
     private static final Pattern ANNOTATED_CORPUS_DECLARATION_PATTERN = Pattern.compile("\\s*(\\S+)\\s*IRTG annotated corpus file, v(\\S+).*", Pattern.CASE_INSENSITIVE);
     private static final Pattern INTERPRETATION_DECLARATION_PATTERN = Pattern.compile("\\s*interpretation\\s+([^: ]+)\\s*:\\s*(\\S+).*", Pattern.CASE_INSENSITIVE);
 
-//    private static final Pattern COMMENT_PATTERN = Pattern.compile("\\s*#.*");
-//    private static final Pattern INTERPRETATION_DECLARATION_PATTERN = Pattern.compile("\\s*#\\s*interpretation\\s+([^: ]+)\\s*:\\s*(\\S+).*", Pattern.CASE_INSENSITIVE);
     private final List<Instance> instances;
     private ChartAttacher charts;
     private boolean isAnnotated;

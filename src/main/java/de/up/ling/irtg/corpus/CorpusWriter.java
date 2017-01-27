@@ -10,6 +10,7 @@ import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.codec.OutputCodec;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Set;
 
 /**
  * Comment lines are prepended with the <code>commentPrefix</code>. If
@@ -70,12 +71,12 @@ public class CorpusWriter extends AbstractCorpusWriter {
     @Override
     public void writeInstance(Instance inst) throws IOException {
         if (!isHeaderWritten) {
-            writer.write(makeHeader(comment));
-            
-            if( printSeparatorLines ) {
+            writer.write(makeHeader(comment, inst));
+
+            if (printSeparatorLines) {
                 writer.write("\n");
             }
-            
+
             isHeaderWritten = true;
         }
 
@@ -97,8 +98,9 @@ public class CorpusWriter extends AbstractCorpusWriter {
         writer.flush();
     }
 
-    private String makeHeader(String comment) {
+    private String makeHeader(String comment, Instance firstInstanceOfCorpus) {
         StringBuilder buf = new StringBuilder();
+        Set<String> interpretationsInFirstInstance = firstInstanceOfCorpus.getInputObjects().keySet();
 
         if (commentPrefix != null) {
             buf.append(commentPrefix + "IRTG " + (annotated ? "" : "un") + "annotated corpus file, v" + Corpus.CORPUS_VERSION + "\n");
@@ -112,7 +114,11 @@ public class CorpusWriter extends AbstractCorpusWriter {
             }
 
             for (Pair<String, OutputCodec> interp : printingPolicy.get()) {
-                buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + irtg.getInterpretation(interp.getLeft()).getAlgebra().getClass().getName() + "\n");
+                // skip interpretations that are defined in grammar, but not in the corpus
+                // (or more precisely, in the first instance of the corpus)
+                if (interpretationsInFirstInstance.contains(interp.getLeft())) {
+                    buf.append(commentPrefix + "interpretation " + interp.getLeft() + ": " + irtg.getInterpretation(interp.getLeft()).getAlgebra().getClass().getName() + "\n");
+                }
             }
         }
 
