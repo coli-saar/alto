@@ -88,7 +88,11 @@ public interface ResultManager {
 
         @Override
         public void acceptError(Throwable error, int instanceID, String name, boolean doExport, boolean isGlobal) {
+            String inst = (instanceID >= 0) ? ("in instance #" + instanceID) : "(global)";
             
+            System.err.println("ERROR " + inst + ": " + error.toString());
+            System.err.println(Util.getStackTrace(error));
+            System.err.println();
         }
 
         @Override
