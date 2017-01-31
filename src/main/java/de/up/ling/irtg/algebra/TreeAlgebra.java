@@ -82,10 +82,16 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         } else {
             List<Bracket> resultBrackets = getBrackets(result, 0);
             List<Bracket> goldBrackets = getBrackets(gold, 0);
-            double weight = goldBrackets.size();
+            double weight = 0.0;
             int found = 0;
             
             for (Bracket goldBracket : goldBrackets) {
+                if(goldBracket.ignorable) {
+                    continue;
+                }
+                
+                ++weight;
+                
                 if (resultBrackets.contains(goldBracket)) {
                     found++;
                 }
@@ -103,9 +109,15 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         } else {
             List<Bracket> resultBrackets = getBrackets(result, 0);
             List<Bracket> goldBrackets = getBrackets(gold, 0);
-            double weight = resultBrackets.size();
+            double weight = 0;
             int found = 0;
             for (Bracket resultBracket : resultBrackets) {
+                if(resultBracket.ignorable) {
+                    continue;
+                }
+                
+                ++weight;
+                
                 if (goldBrackets.contains(resultBracket)) {
                     found++;
                 }
@@ -118,7 +130,7 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         List<Bracket> ret = new ArrayList<>();
         List<Tree<String>> children = tree.getChildren();
         if (children.isEmpty()) {
-            ret.add(new Bracket(nrWordsToTheLeft, nrWordsToTheLeft + 1, tree.getLabel()));
+            ret.add(new Bracket(nrWordsToTheLeft, nrWordsToTheLeft + 1, tree.getLabel(),true));
             return ret;
         } else {
             int additionalWordsToTheLeft = 0;
@@ -134,9 +146,11 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
 
     private static class Bracket {
 
-        private int start;
-        private int stop;
-        private String label;
+        private final int start;
+        private final int stop;
+        private final String label;
+        private final boolean ignorable;
+        
 
         int getWidth() {
             return stop - start;
@@ -146,6 +160,14 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
             this.start = start;
             this.stop = stop;
             this.label = label;
+            ignorable = false;
+        }
+        
+        public Bracket(int start, int stop, String label, boolean ignorable) {
+            this.start = start;
+            this.stop = stop;
+            this.label = label;
+            this.ignorable = ignorable;
         }
 
         @Override
