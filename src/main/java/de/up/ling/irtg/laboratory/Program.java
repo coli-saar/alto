@@ -38,6 +38,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import com.google.common.reflect.ClassPath;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.algebra.Algebra;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.irtg.util.Util;
@@ -902,6 +903,7 @@ public class Program {
     
     private void handleFatalException(String message, Exception ex) {
         Logger.getLogger(Program.class.getName()).log(Level.SEVERE, message + ex.toString());
+        Logger.getLogger(Program.class.getName()).log(Level.INFO, Util.getStackTrace(ex));
         System.exit(1);
     }
     

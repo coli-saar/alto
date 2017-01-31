@@ -72,7 +72,8 @@ public class AltoLabHttpClient {
         HttpResponse response = httpClient.execute(request);
 
         if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
-            throw new IOException("HTTP error: " + response.getStatusLine().toString());
+            System.err.println("JSON for HTTP error was: " + json);
+            throw new IOException("HTTP error: " + response.getStatusLine().toString() + " while trying to POST to " + url);
         } else {
             return EntityUtils.toString(response.getEntity());
         }
