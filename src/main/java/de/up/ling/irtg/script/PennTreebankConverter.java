@@ -24,6 +24,7 @@ import de.up.ling.irtg.binarization.*;
 import de.up.ling.irtg.codec.PtbTreeInputCodec;
 import de.up.ling.irtg.codec.PtbTreeOutputCodec;
 import de.up.ling.irtg.corpus.AbstractCorpusWriter;
+import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusConverter;
 import de.up.ling.irtg.corpus.CorpusWriter;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -85,7 +86,8 @@ public class PennTreebankConverter {
         CorpusConverter<Tree<String>> converter = new CorpusConverter<Tree<String>>(cw,
                 ImmutableMap.of("string", (Tree<String> tree) -> tree.getLeafLabels(), "tree", x -> x));
 
-        DerivationTreeMaker dtm = new DerivationTreeMaker(true); // ! param.removeLeaves); // if leaves removed, can't skip leaves in DT construction
+        // if leaves removed, can't skip leaves in DT construction
+        DerivationTreeMaker dtm = new DerivationTreeMaker(! param.removeLeaves);
         converter.setDerivationTreeMaker(dtm);
 
         if (param.verbose) {
@@ -107,28 +109,7 @@ public class PennTreebankConverter {
                 System.err.println("- remove NONE");
             }
         }
-
-//        if (param.ctfMappingFilename.length() > 0 && param.ctfLevel > 0) {
-//            Map<String, String> ctfMapping = readInCtfMapping(new FileReader(param.ctfMappingFilename));
-//
-//            // apply the transformations multiple times to create coarser grammars
-//            for (int i = 0; i < param.ctfLevel; ++i) {
-//                final int i2 = i;
-//                converter.addTransformation(tnl(s -> {
-//                    if (ctfMapping.containsKey(s)) {
-////                        System.err.println("Replacing " + s + " by " + ctfMapping.get(s) + "(level " + i2 +")");
-//                        return ctfMapping.get(s);
-//                    } else {
-//                        return s;
-//                    }
-//                }));
-//            }
-//
-//            if (param.verbose) {
-//                System.err.println("- creating coarse grammar " + param.ctfLevel + " times");
-//            }
-//        }
-
+        
         if (param.addTop) {
             converter.addTransformation(t -> Tree.create("TOP", t));
             if (param.verbose) {
@@ -136,9 +117,9 @@ public class PennTreebankConverter {
             }
         }
 
-        if( param.removeLeaves ) {
+        if (param.removeLeaves) {
             converter.addTransformation(makeWordsPos());
-            if( param.verbose ) {
+            if (param.verbose) {
                 System.err.println("- remove leaves");
             }
         }
@@ -152,7 +133,24 @@ public class PennTreebankConverter {
                 for (String filename : param.inputFiles) {
                     InputStream corpus = new FileInputStream(filename);
                     System.err.println("Processing " + filename + " ...");
-                    codec.readCorpus(corpus).forEach(corpusConsumer);
+
+                    List<Tree<String>> c = codec.readCorpus(corpus);
+                    long instanceNum = 1;
+
+                    for (Tree<String> t : c) {
+                        try {
+//                            System.err.println(t);
+                            corpusConsumer.accept(t);
+                            instanceNum++;
+                        } catch (Exception e) {
+                            System.err.println("Exception while reading instance #" + instanceNum);
+                            System.err.println(t);
+                            System.err.println("\nCause:");
+                            System.err.println(e);
+                            e.printStackTrace(System.err);
+                            System.exit(3);
+                        }
+                    }
                 }
 
                 cw.close();
@@ -297,7 +295,6 @@ public class PennTreebankConverter {
         @Parameter(names = "--len", description = "Maximum length of an input")
         public int maxLen = 100;
 
-
         AbstractCorpusWriter corpusWriterFromFilename(String[] args) throws IOException {
             Writer w = new FileWriter(outCorpusFilename);
             String joinedArgs = Joiner.on(" ").join(args);
@@ -339,12 +336,12 @@ public class PennTreebankConverter {
     private static Function<Tree<String>, Tree<String>> makeWordsPos() {
         return tree -> {
             return tree.dfs((node, children) -> {
-               if( children.size() == 1 && children.get(0).getChildren().isEmpty() ) {
-                   // I am preterminal, make my terminal the same as myself
-                   return Tree.create(node.getLabel(), Tree.create(node.getLabel()));
-               } else {
-                   return Tree.create(node.getLabel(), children);
-               }
+                if (children.size() == 1 && children.get(0).getChildren().isEmpty()) {
+                    // I am preterminal, forget my child.
+                    return Tree.create(node.getLabel());
+                } else {
+                    return Tree.create(node.getLabel(), children);
+                }
             });
         };
     }
@@ -444,6 +441,9 @@ public class PennTreebankConverter {
 
         @Override
         public Tree<Integer> apply(Tree<String> derivedTree) {
+//            System.err.println("\n******\n");
+//            System.err.println("deriv tree: " + derivedTree);
+            
             Tree<String> dt = derivedTree.dfs((node, children) -> {
 //                System.err.println("call: " + node);
 //                System.err.println("    " + children);
@@ -458,7 +458,6 @@ public class PennTreebankConverter {
 
 //                    System.err.println(label + ": " + ruleHere);
 //                    System.err.println("    " + children);
-
                     List<String> ruleChildren = new ArrayList<>();           // for the RTG rule
                     List<Tree<String>> derivTreeChildren = new ArrayList<>();      // for the deriv tree
                     List<Tree<String>> homChildren = new ArrayList<>();            // for the homomorphisms
@@ -542,8 +541,6 @@ public class PennTreebankConverter {
         public String toString() {
             return lhs + " -> " + rhs;
         }
-
-
 
     }
 }
