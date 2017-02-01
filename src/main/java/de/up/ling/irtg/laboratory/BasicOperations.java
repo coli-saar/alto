@@ -108,7 +108,7 @@ public class BasicOperations {
     }
 
     @OperationAnnotation(code = "sumDoubleLists")
-    public DoubleList sumLists(Object[] list) {
+    public static DoubleList sumLists(Object[] list) {
         DoubleList dl = new DoubleArrayList();
 
         for (Object o : list) {
@@ -127,7 +127,7 @@ public class BasicOperations {
     }
 
     @OperationAnnotation(code = "averageDoubleLists")
-    public DoubleList averageLists(Object[] list) {
+    public static DoubleList averageLists(Object[] list) {
         DoubleList dl = new DoubleArrayList();
 
         for (Object o : list) {
