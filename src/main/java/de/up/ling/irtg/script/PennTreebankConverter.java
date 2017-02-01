@@ -87,7 +87,7 @@ public class PennTreebankConverter {
                 ImmutableMap.of("string", (Tree<String> tree) -> tree.getLeafLabels(), "tree", x -> x));
 
         // if leaves removed, can't skip leaves in DT construction
-        DerivationTreeMaker dtm = new DerivationTreeMaker(! param.removeLeaves);
+        DerivationTreeMaker dtm = new DerivationTreeMaker(!param.removeLeaves);
         converter.setDerivationTreeMaker(dtm);
 
         if (param.verbose) {
@@ -109,7 +109,7 @@ public class PennTreebankConverter {
                 System.err.println("- remove NONE");
             }
         }
-        
+
         if (param.addTop) {
             converter.addTransformation(t -> Tree.create("TOP", t));
             if (param.verbose) {
@@ -130,17 +130,24 @@ public class PennTreebankConverter {
 
         withPtbCompressionConsumer(param, converter, corpusConsumer -> {
             try {
+                long skipped = 0;
+                long instanceNum = 1;
+
                 for (String filename : param.inputFiles) {
                     InputStream corpus = new FileInputStream(filename);
                     System.err.println("Processing " + filename + " ...");
 
                     List<Tree<String>> c = codec.readCorpus(corpus);
-                    long instanceNum = 1;
-
                     for (Tree<String> t : c) {
                         try {
-//                            System.err.println(t);
-                            corpusConsumer.accept(t);
+                            int len = t.getLeafLabels().size();
+
+                            if (len <= param.maxLen) {
+                                corpusConsumer.accept(t);
+                            } else {
+                                skipped++;
+                            }
+
                             instanceNum++;
                         } catch (Exception e) {
                             System.err.println("Exception while reading instance #" + instanceNum);
@@ -154,7 +161,12 @@ public class PennTreebankConverter {
                 }
 
                 cw.close();
-                System.err.println("Done.");
+
+                if (skipped > 0) {
+                    System.err.println(String.format("Done: %d instances, %d skipped for length.", instanceNum, skipped));
+                } else {
+                    System.err.println(String.format("Done: %d instances.", instanceNum));
+                }
             } catch (Exception e) {
                 System.err.println(e);
                 e.printStackTrace(System.err);
@@ -205,14 +217,12 @@ public class PennTreebankConverter {
             PtbTreeOutputCodec oc = new PtbTreeOutputCodec();
 
             Consumer<Tree<String>> ptbCompressionConsumer = tree -> {
-                if (param.maxLen >= tree.getLeafLabels().size()) {
-                    try {
-                        ptbWriter.write(oc.asString(tree));
-                        ptbWriter.write("\n");
-                    } catch (IOException e) {
-                        System.err.println(e);
-                        System.exit(2);
-                    }
+                try {
+                    ptbWriter.write(oc.asString(tree));
+                    ptbWriter.write("\n");
+                } catch (IOException e) {
+                    System.err.println(e);
+                    System.exit(2);
                 }
             };
 
@@ -293,7 +303,7 @@ public class PennTreebankConverter {
         private boolean help;
 
         @Parameter(names = "--len", description = "Maximum length of an input")
-        public int maxLen = 100;
+        public int maxLen = 10000;
 
         AbstractCorpusWriter corpusWriterFromFilename(String[] args) throws IOException {
             Writer w = new FileWriter(outCorpusFilename);
@@ -443,7 +453,7 @@ public class PennTreebankConverter {
         public Tree<Integer> apply(Tree<String> derivedTree) {
 //            System.err.println("\n******\n");
 //            System.err.println("deriv tree: " + derivedTree);
-            
+
             Tree<String> dt = derivedTree.dfs((node, children) -> {
 //                System.err.println("call: " + node);
 //                System.err.println("    " + children);
