@@ -2723,6 +2723,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      *
      * @return
      */
+    @OperationAnnotation(code = "countRules")
     public long getNumberOfRules() {
         long numRules = 0;
 
@@ -3046,7 +3047,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     public int getNumberOfSeenStates() {
         return stateInterner.getNextIndex() - 1;
     }
-
+    
     /**
      * This returns an object that stores and finds possible partners for a
      * given state given a rule label. (see i.e.
