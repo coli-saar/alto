@@ -333,11 +333,13 @@ public class CoarseToFineParser {
         LongSet passed = new LongRBTreeSet();
         DoubleList constituentsSeen = new DoubleArrayList();
         DoubleList constituentsPruned = new DoubleArrayList();
+        DoubleList rulesInChart = new DoubleArrayList();
 
         if (ftc.numLevels() > 1) {
             for (int level = 0; level < ftc.numLevels() - 1; level++) {
                 seen.clear();
                 passed.clear();
+                rulesInChart.add(coarseNodes.size());
             
                 inside.clear();
                 outside.clear();
@@ -406,6 +408,8 @@ public class CoarseToFineParser {
                 constituentsPruned.add(seen.size()-passed.size());
             }
         } else {
+            rulesInChart.add(coarseNodes.size());
+            
             for (int i = 0; i < coarseNodes.size(); i++) {
                 RuleRefinementNode n = coarseNodes.get(i);
                 Rule r = partnerInvhomRules.get(i);
@@ -422,7 +426,7 @@ public class CoarseToFineParser {
 
         // decode final chart into tree automaton
         return new Combination(createTreeAutomatonNoncondensed(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
-                                                        constituentsSeen,constituentsPruned);
+                                                        constituentsSeen,constituentsPruned, rulesInChart);
     }
     
     
@@ -451,11 +455,13 @@ public class CoarseToFineParser {
         LongSet passed = new LongRBTreeSet();
         DoubleList constituentsSeen = new DoubleArrayList();
         DoubleList constituentsPruned = new DoubleArrayList();
+        DoubleList rulesInChart = new DoubleArrayList();
 
         if (ftc.numLevels() > 1) {
             for (int level = 0; level < ftc.numLevels() - 1; level++) {
                 seen.clear();
                 passed.clear();
+                rulesInChart.add(coarseNodes.size());
                 
                 inside.clear();
                 outside.clear();
@@ -522,6 +528,8 @@ public class CoarseToFineParser {
                 constituentsPruned.add(seen.size()-passed.size());
             }
         } else {
+            rulesInChart.add(coarseNodes.size());
+            
             for (int i = 0; i < coarseNodes.size(); i++) {
                 RuleRefinementNode n = coarseNodes.get(i);
                 CondensedRule r = partnerInvhomRules.get(i);
@@ -538,7 +546,7 @@ public class CoarseToFineParser {
 
         // decode final chart into tree automaton
         return new Combination(createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
-                                                        constituentsSeen,constituentsPruned);
+                                                        constituentsSeen,constituentsPruned, rulesInChart);
     }
     
     
@@ -546,11 +554,14 @@ public class CoarseToFineParser {
         private final TreeAutomaton chart;
         private final DoubleList seen;
         private final DoubleList pruned;
+        private final DoubleList rulesInChart;
 
-        public Combination(TreeAutomaton chart, DoubleList seen, DoubleList pruned) {
+        public Combination(TreeAutomaton chart, DoubleList seen,
+                            DoubleList pruned, DoubleList rulesInChart) {
             this.chart = chart;
             this.seen = seen;
             this.pruned = pruned;
+            this.rulesInChart = rulesInChart;
         }
         
         @OperationAnnotation(code = "getCTFCombinationChart")
@@ -566,6 +577,11 @@ public class CoarseToFineParser {
         @OperationAnnotation(code = "getCTFPruned")
         public DoubleList getPruned() {
             return pruned;
+        }
+        
+        @OperationAnnotation(code = "getCTFChartRuleNumber")
+        public DoubleList getRulesInChart() {
+            return rulesInChart;
         }
         
     }
