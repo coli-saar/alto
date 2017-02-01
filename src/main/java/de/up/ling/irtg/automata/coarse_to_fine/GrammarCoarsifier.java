@@ -132,13 +132,17 @@ public class GrammarCoarsifier {
                     String[] parts = symbol.split("_");
                     StringBuilder buf = new StringBuilder();
                     
+//                    System.err.println("\nsym: " + symbol);
+//                    System.err.println("#parts: " + parts.length);
+                    
                     for (int i = 0; i < parts.length; i++) {
                         if( i > 0) {
                             buf.append("_");
                         }
-                        buf.append(fineSymbolToCoarse.getOrDefault(symbol, symbol));
+                        buf.append(fineSymbolToCoarse.getOrDefault(parts[i], parts[i]));
                     }
                     
+//                    System.err.println(" -> " + buf.toString());
                     return buf.toString();
                 } else {
                     return fineSymbolToCoarse.getOrDefault(symbol, symbol);
