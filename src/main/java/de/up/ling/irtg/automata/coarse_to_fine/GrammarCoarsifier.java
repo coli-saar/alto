@@ -130,10 +130,16 @@ public class GrammarCoarsifier {
                 if (symbol.contains("_")) {
                     // for nonterminals created by the "inside" binarization strategy
                     String[] parts = symbol.split("_");
+                    StringBuilder buf = new StringBuilder();
+                    
                     for (int i = 0; i < parts.length; i++) {
-                        parts[i] = fineSymbolToCoarse.getOrDefault(symbol, symbol);
+                        if( i > 0) {
+                            buf.append("_");
+                        }
+                        buf.append(fineSymbolToCoarse.getOrDefault(symbol, symbol));
                     }
-                    return StringTools.join(parts, "_");
+                    
+                    return buf.toString();
                 } else {
                     return fineSymbolToCoarse.getOrDefault(symbol, symbol);
                 }
