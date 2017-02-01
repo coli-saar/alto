@@ -16,7 +16,6 @@ import java.util.List;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 
-
 /**
  * An algebra with binarizing terms. Let A be some algebra of your choice. The
  * binarizing algebra B is defined on top of the underlying algebra A as
@@ -72,10 +71,14 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
 
     @Override
     public E evaluate(Tree<String> t) {
-        Tree<String> unbin = unbinarize(t);
-        return underlyingAlgebra.evaluate(unbin);
+        if (t == null) {
+            return null;
+        } else {
+            Tree<String> unbin = unbinarize(t);
+            return underlyingAlgebra.evaluate(unbin);
+        }
     }
-    
+
     Tree<String> unbinarize(Tree<String> t) {
         signature.addAllSymbols(t);
 
@@ -100,7 +103,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
                     //  - many children with singleton lists: children = [[a], [b], [c]] => f(a,b,c)
                     List<Tree<String>> children = new ArrayList<>();
                     childrenValues.forEach(l -> children.addAll(l));
-                    
+
                     Tree<String> tree = Tree.create(node.getLabel(), children); // childrenValues.get(0)
                     List<Tree<String>> ret = new ArrayList<Tree<String>>();
                     ret.add(tree);
@@ -108,9 +111,9 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
                 }
             }
         });
-        
+
         assert underlyingTerm.size() == 1;
-        
+
         return underlyingTerm.get(0);
     }
 
@@ -159,7 +162,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
         final TreeAutomaton<? extends Object> underlyingAutomaton = underlyingAlgebra.decompose(value);
         return binarizeTreeAutomaton(underlyingAutomaton);
     }
-    
+
     private void addBinarizationRules(List<String> childrenStates, String ruleName, ConcreteTreeAutomaton<String> auto) {
         for (int start = 0; start <= childrenStates.size() - 2; start++) {
             for (int width1 = 1; start + width1 <= childrenStates.size() - 1; width1++) {

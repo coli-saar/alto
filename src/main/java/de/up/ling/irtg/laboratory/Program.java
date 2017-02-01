@@ -485,7 +485,7 @@ public class Program {
                                     }
                                 }
                                 if (m == null) {
-                                    throw new RuntimeException(new ParseException("Code " + code + " not found in class " + invokingType.getName()));
+                                    throw new RuntimeException(new ParseException("Method " + code + " not found in class " + invokingType.getName()));
                                 }
                                 if (m.equals(GET_ALG_METHOD)) {
                                     String interpName;

@@ -48,6 +48,11 @@ public interface Operation {
             if (!isStatic) {
                 invokingObject = input.remove(0);
             }
+            
+            if( invokingObject == null && ! isStatic ) {
+                throw new NullPointerException("Attempting to invoke method " + m.toString() + " on null object.");
+            }
+            
             if (input != null && !input.isEmpty()) {
                 return m.invoke(invokingObject, input.toArray());
             } else {
@@ -262,19 +267,33 @@ public interface Operation {
                     return node.getLabel().apply(childrenValues);//TODO: add null handling there (if a null pointer exception occurs and that is because an input was null, do not throw an error but return null (do that whenever an error occurs?)
                 } catch (IllegalAccessException ex) {
                     System.err.println("Error in executing parsing program: "+ex.toString());
-                    throw new RuntimeException(ex);//TODO: should make shure that this can never occur, i.e. in tests and class checking in the tree before calling this.
+                    throw new WrapperException(ex);//TODO: should make shure that this can never occur, i.e. in tests and class checking in the tree before calling this.
                 } catch ( InvocationTargetException ex) {
-                    throw new RuntimeException(ex.getCause());//this covers all errors occuring in executing the code tree
+                    throw new WrapperException(ex.getCause());//this covers all errors occuring in executing the code tree
                 } catch (InstantiationException ex) {
-                    throw new RuntimeException(ex);//TODO: should make shure that this can never occur, i.e. in tests and class checking in the tree before calling this --TODO: think about whether this can be caused by a poorly written program
+                    throw new WrapperException(ex);//TODO: should make shure that this can never occur, i.e. in tests and class checking in the tree before calling this --TODO: think about whether this can be caused by a poorly written program
                 }
             });
-        } catch (java.lang.RuntimeException ex) {
-            throw ex.getCause();
+        } catch(WrapperException e) {
+            throw e.getCause();
         }
     }
     
-    
+    static class WrapperException extends RuntimeException {
+
+        public WrapperException(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public WrapperException(Throwable cause) {
+            super(cause);
+        }
+
+        public WrapperException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+            super(message, cause, enableSuppression, writableStackTrace);
+        }
+        
+    }
     
     
 }

@@ -95,12 +95,16 @@ public abstract class Algebra<E> implements Serializable {
      */
     @OperationAnnotation(code = "eval")
     public E evaluate(Tree<String> t) {
-        return (E) t.dfs(new TreeVisitor<String, Void, E>() {
-            @Override
-            public E combine(Tree<String> node, List<E> childrenValues) {
-                return evaluate(node.getLabel(), childrenValues);
-            }
-        });
+        if (t == null) {
+            return null;
+        } else {
+            return (E) t.dfs(new TreeVisitor<String, Void, E>() {
+                @Override
+                public E combine(Tree<String> node, List<E> childrenValues) {
+                    return evaluate(node.getLabel(), childrenValues);
+                }
+            });
+        }
     }
 
     /**
@@ -147,8 +151,6 @@ public abstract class Algebra<E> implements Serializable {
      */
     abstract public E parseString(String representation) throws ParserException;
 
-    
-    
     /**
      * Sets the options of the algebra implementation. Most algebras do not have
      * options; for these algebras, it is okay to reuse the default
@@ -224,20 +226,18 @@ public abstract class Algebra<E> implements Serializable {
     public String representAsString(E object) {
         return object.toString();
     }
-    
+
     /**
-     * Returns the class of the elements of this algebra.
-     * The default interpretation simply returns {@link Object};
-     * you may override this with the actual class of the objects
-     * of your algebra.<p>
-     * 
-     * This method is used in some places throughout Alto to
-     * figure out what {@link OutputCodec}s are appropriate
-     * for encoding objects of the algebra. By overriding the
-     * method to return more specific classes than Object, you
+     * Returns the class of the elements of this algebra. The default
+     * interpretation simply returns {@link Object}; you may override this with
+     * the actual class of the objects of your algebra.<p>
+     *
+     * This method is used in some places throughout Alto to figure out what
+     * {@link OutputCodec}s are appropriate for encoding objects of the algebra.
+     * By overriding the method to return more specific classes than Object, you
      * make more output codecs available in those places.
-     * 
-     * @return 
+     *
+     * @return
      */
     public Class getClassOfValues() {
         return Object.class;

@@ -199,9 +199,9 @@ public class Homomorphism implements Serializable {
         return labelToLabelSet.get(label);
     }
 
-    /** 
+    /**
      * This method is deprecated. Use {@link #getTermID(int) } instead.
-     * 
+     *
      * @param label
      * @return
      * @deprecated
@@ -241,7 +241,7 @@ public class Homomorphism implements Serializable {
     public IntCollection getLabelsetIDsForTgtSymbols(IntSet tgtSymbols) {
         IntList ret = new IntArrayList();
 
-                    // TODO - this might be inefficient, use better data structure
+        // TODO - this might be inefficient, use better data structure
 //        Logging.get().fine(() -> "tgt sig: " + getTargetSignature());
 //        Logging.get().fine("src sig: " + getSourceSignature());
 //        Logging.get().fine("labelset IDs: " + labelSetList);
@@ -279,7 +279,11 @@ public class Homomorphism implements Serializable {
 
     @OperationAnnotation(code = "apply")
     public Tree<String> apply(Tree<String> tree) {
-        return getTargetSignature().resolve(applyRaw(getSourceSignature().addAllSymbols(tree)));
+        if (tree == null) {
+            return null;
+        } else {
+            return getTargetSignature().resolve(applyRaw(getSourceSignature().addAllSymbols(tree)));
+        }
     }
 
     /**
@@ -422,13 +426,13 @@ public class Homomorphism implements Serializable {
     }
 
     private transient Boolean nondeleting = null;
-    
+
     private void checkNondeleting() {
         if (nondeleting == null) {
             for (int label : labelToLabelSet.keySet()) {
                 Tree<HomomorphismSymbol> rhs = get(label);
                 Set<HomomorphismSymbol> variables = new HashSet<>();
-                
+
                 for (HomomorphismSymbol l : rhs.getLeafLabels()) {
                     if (l.isVariable()) {
                         variables.add(l);
@@ -466,15 +470,15 @@ public class Homomorphism implements Serializable {
 
         return signatureMapper;
     }
-    
+
     public HomomorphismSymbol c(String constant) {
-        return c(constant,0);
+        return c(constant, 0);
     }
-    
+
     public HomomorphismSymbol c(String constant, int arity) {
         return HomomorphismSymbol.createConstant(constant, tgtSignature, arity);
     }
-    
+
     public HomomorphismSymbol v(String variable) {
         return HomomorphismSymbol.createVariable(variable);
     }
