@@ -568,7 +568,7 @@ public class Program {
     }
 
     @SuppressWarnings("ThrowableResultIgnored")
-    private Int2ObjectMap<Throwable> run(int instanceId, Instance instance, Tree<Operation>[] localProgram, Object[] localVariableTracker, Map<String, CpuTimeStopwatch> name2Watch) {
+    private Int2ObjectMap<Throwable> run(Instance instance, Tree<Operation>[] localProgram, Object[] localVariableTracker, Map<String, CpuTimeStopwatch> name2Watch) {
 
         for (String interpName : interp2Index.keySet()) {
             localVariableTracker[interp2Index.get(interpName)] = instance.getInputObjects().get(interpName);
@@ -757,7 +757,7 @@ public class Program {
                     System.err.printf(formatString, instanceID, firstAlgebra.representAsString(instance.getInputObjects().get(firstMentionedInterpretation)));
                 }
 
-                Int2ObjectMap<Throwable> errors = run(instanceID, instance, localProgram, variableTrackerHere, name2Watch);
+                Int2ObjectMap<Throwable> errors = run(instance, localProgram, variableTrackerHere, name2Watch);
 
                 //now accept data in ResultManager
                 for (int k = 0; k < program.size(); k++) {
@@ -808,7 +808,7 @@ public class Program {
                 for (int j = 0; j < globalVariableTracker.length; j++) {
                     if (!isGlobal[j]) {
                         if (neededForGlobal[j]) {
-                            ((Object[]) globalVariableTracker[j])[instanceID] = variableTrackerHere[j];
+                            ((Object[]) globalVariableTracker[j])[instanceID-1] = variableTrackerHere[j];
                         }
                     }
                 }
