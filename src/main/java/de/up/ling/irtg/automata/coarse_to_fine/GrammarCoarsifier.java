@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
+import de.up.ling.irtg.binarization.InsideRuleFactory;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Interner;
@@ -127,17 +128,17 @@ public class GrammarCoarsifier {
         return new FineToCoarseMapping() {
             @Override
             public String coarsify(String symbol) {
-                if (symbol.contains("_")) {
+                if (symbol.contains(InsideRuleFactory.NONTERMINAL_SEPARATOR)) {
                     // for nonterminals created by the "inside" binarization strategy
-                    String[] parts = symbol.split("_");
+                    String[] parts = symbol.split(InsideRuleFactory.NONTERMINAL_SEPARATOR);
                     StringBuilder buf = new StringBuilder();
                     
 //                    System.err.println("\nsym: " + symbol);
 //                    System.err.println("#parts: " + parts.length);
                     
                     for (int i = 0; i < parts.length; i++) {
-                        if( i > 0) {
-                            buf.append("_");
+                        if( i > 0 ) {
+                            buf.append(InsideRuleFactory.NONTERMINAL_SEPARATOR);
                         }
                         buf.append(fineSymbolToCoarse.getOrDefault(parts[i], parts[i]));
                     }

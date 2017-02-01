@@ -39,7 +39,7 @@ class GrammarCoarsifierTest {
     public void testFtc() {
         FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(PTB_CTF);
         assert ftc.numLevels() == 4;
-        assertEquals("SSS", ftc.coarsify("S"))
+        assertEquals("S_", ftc.coarsify("S"))
         assertEquals("TOP", ftc.coarsify("TOP"))
         assertEquals("P", ftc.coarsify("P"))  // "P" is top-level; it coarsifies to itself
     }
@@ -146,7 +146,7 @@ TOP(TOP(TOP(TOP))),
 
 P(
   HP(
-    SSS(
+    S_(
       S,
       VP,
       SQ,
@@ -154,7 +154,7 @@ P(
       SBARQ,
       SINV
     ),
-    NNN(
+    N_(
       NP,
       NAC,
       NX,
@@ -165,7 +165,7 @@ P(
     )
   ),
   MP(
-    AAA(
+    A_(
       ADJP,
       QP,
       CONJP,
@@ -174,7 +174,7 @@ P(
       PRN,
       PRT
     ),
-    PPP(
+    P_(
       PP,
       RRC,
       WHADJP,

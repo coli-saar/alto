@@ -21,6 +21,8 @@ import java.util.function.Function;
  * @author koller
  */
 public class InsideRuleFactory implements BinaryRuleFactory {
+    public static String NONTERMINAL_SEPARATOR = ">>";
+    
     private RuleByEquivalenceStore equiv;
 
     public InsideRuleFactory(InterpretedTreeAutomaton irtg) {
@@ -57,7 +59,7 @@ public class InsideRuleFactory implements BinaryRuleFactory {
                 }
             }
             
-            parent = StringTools.join(insideLeaves, "_");
+            parent = StringTools.join(insideLeaves, NONTERMINAL_SEPARATOR);
         }
         
         
