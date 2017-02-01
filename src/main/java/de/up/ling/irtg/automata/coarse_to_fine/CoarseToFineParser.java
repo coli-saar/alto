@@ -425,6 +425,123 @@ public class CoarseToFineParser {
                                                         constituentsSeen,constituentsPruned);
     }
     
+    
+    @OperationAnnotation(code = "parseInputObjectSizes")
+    public Combination parseInputObjectTrackSizes(Object inputObject) {
+        // create condensed invhom automaton
+        CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
+
+        // coarse parsing
+        List<RuleRefinementNode> coarseNodes = new ArrayList<>();
+        List<CondensedRule> partnerInvhomRules = new ArrayList<>();
+        CondensedCoarsestParser ccp = new CondensedCoarsestParser(rrt, invhom);
+        ccp.setToStringFunctions(irtg.getAutomaton()); // for debugging
+        ccp.parse(coarseNodes, partnerInvhomRules);
+
+        assert coarseNodes.size() == partnerInvhomRules.size();
+
+        // refine the chart level-1 times
+//        Long2DoubleMap inside = new Long2DoubleOpenHashMap();
+//        Long2DoubleMap outside = new Long2DoubleOpenHashMap();
+        IIntInt2DoubleMap inside = new MyIntInt2DoubleMap();
+        IIntInt2DoubleMap outside = new MyIntInt2DoubleMap();
+        ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
+        
+        LongSet seen = new LongRBTreeSet();
+        LongSet passed = new LongRBTreeSet();
+        DoubleList constituentsSeen = new DoubleArrayList();
+        DoubleList constituentsPruned = new DoubleArrayList();
+
+        if (ftc.numLevels() > 1) {
+            for (int level = 0; level < ftc.numLevels() - 1; level++) {
+                seen.clear();
+                passed.clear();
+                
+                inside.clear();
+                outside.clear();
+                productivityChecker.clear();
+
+                double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
+
+                if (DEBUG) {
+                    System.err.println("\n\nCHART AT LEVEL " + level + ":\n");
+                    printChart(coarseNodes, partnerInvhomRules, invhom, inside, outside);
+                }
+
+                List<RuleRefinementNode> finerNodes = new ArrayList<>();
+                List<CondensedRule> finerInvhomPartners = new ArrayList<>();
+
+                for (int i = 0; i < coarseNodes.size(); i++) {
+                    RuleRefinementNode n = coarseNodes.get(i);
+                    CondensedRule r = partnerInvhomRules.get(i);
+
+                    long combined = NumbersCombine.combine(r.getParent(), n.getParent());
+                    seen.add(combined);
+                    
+                    if (DEBUG) {
+                        printRulePair(i, r, n, invhom, inside, outside);
+                    }
+
+                    double score = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
+                    for (int j = 0; j < r.getArity(); j++) {
+                        score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
+                    }
+
+                    if (score > theta * totalSentenceInside) {
+                        passed.add(combined);
+                        
+                        // rule not filtered out => refine and copy to finer structure
+                        for (RuleRefinementNode nn : n.getRefinements()) {
+                            if (DEBUG) {
+                                System.err.println("- consider refinement: " + nn.localToString(irtg.getAutomaton()));
+                            }
+
+                            if (productivityChecker.isRefinementProductive(nn, r)) {
+                                finerNodes.add(nn);
+                                finerInvhomPartners.add(r);
+                                productivityChecker.recordParents(nn, r);
+
+                                if (DEBUG) {
+                                    System.err.println("   -> record it: " + irtg.getAutomaton().getStateForId(nn.getParent()) + " " + invhom.getStateForId(r.getParent()) + "\n");
+                                }
+                            } else if (DEBUG) {
+                                System.err.println("   -> removed, unproductive\n");
+                            }
+                        }
+                    } else if (DEBUG) {
+                        System.err.println("removed with score " + score + ":");
+                        System.err.println("- " + r.toString(invhom, x -> false));
+                        System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                    }
+                }
+
+                coarseNodes = finerNodes;
+                partnerInvhomRules = finerInvhomPartners;
+                
+                constituentsSeen.add(seen.size());
+                constituentsPruned.add(seen.size()-passed.size());
+            }
+        } else {
+            for (int i = 0; i < coarseNodes.size(); i++) {
+                RuleRefinementNode n = coarseNodes.get(i);
+                CondensedRule r = partnerInvhomRules.get(i);
+                
+                productivityChecker.recordParents(n, r);
+                
+                long combined = NumbersCombine.combine(r.getParent(), n.getParent());
+                seen.add(combined);
+            }
+            
+            constituentsSeen.add(seen.size());
+            constituentsPruned.add(0);
+        }
+
+        // decode final chart into tree automaton
+        return new Combination(createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
+                                                        constituentsSeen,constituentsPruned);
+    }
+    
+    
     public class Combination {
         private final TreeAutomaton chart;
         private final DoubleList seen;
