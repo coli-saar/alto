@@ -190,20 +190,36 @@ public class BkvBinarizer {
     private String addRulesToAutomaton(Rule originalRule, final Tree<String> vartree, InterpretedTreeAutomaton irtg, InterpretedTreeAutomaton binarizedIrtg, BinaryRuleFactory binarizedRuleFactory) {
         TreeAutomaton rtg = irtg.getAutomaton();
         ConcreteTreeAutomaton<String> binarizedRtg = (ConcreteTreeAutomaton<String>) binarizedIrtg.getAutomaton();
-
-        return vartree.dfs(new TreeVisitor<String, Void, String>() {
-            @Override
-            public String combine(Tree<String> node, List<String> childrenValues) {
-                if (childrenValues.isEmpty() && NUMBER_PATTERN.matcher(node.getLabel()).matches()) {
+        
+        return dfsWithPaths(vartree, (tree, node, childrenValues, path) -> {
+            if (childrenValues.isEmpty() && NUMBER_PATTERN.matcher(node.getLabel()).matches()) {
                     int var = Integer.parseInt(node.getLabel());
                     return rtg.getStateForId(originalRule.getChildren()[var]).toString();
                 } else {
-                    Rule newRule = binarizedRuleFactory.generateBinarizedRule(node, childrenValues, originalRule, vartree, irtg, binarizedIrtg);
+                    Rule newRule = binarizedRuleFactory.generateBinarizedRule(node, childrenValues, path, originalRule, vartree, irtg, binarizedIrtg);
                     binarizedRtg.addRule(newRule);
                     return binarizedRtg.getStateForId(newRule.getParent());
                 }
-            }
         });
+    }
+    
+    public static interface TreeWithPathVisitor<E,F> {
+        public E combine(Tree<F> tree, Tree<F> node, List<E> childrenValues, String path);
+    }
+
+    private static <E,F> E dfsWithPaths(Tree<F> tree, TreeWithPathVisitor<E,F> visitor) {
+        return dfsWithPaths(tree, tree, visitor, "");
+    }
+    
+    private static <E,F> E dfsWithPaths(Tree<F> tree, Tree<F> node, TreeWithPathVisitor<E,F> visitor, String path) {
+        List<E> childrenValues = new ArrayList<>();
+        
+        for( int i = 0; i < node.getChildren().size(); i++ ) {
+            String pathToChild = path.equals("") ? Integer.toString(i) : (path + "_" + i);
+            childrenValues.add(dfsWithPaths(tree, node.getChildren().get(i), visitor, pathToChild));
+        }
+        
+        return visitor.combine(tree, node, childrenValues, path);
     }
 
     RuleBinarization binarizeRule(Rule rule, InterpretedTreeAutomaton irtg) {

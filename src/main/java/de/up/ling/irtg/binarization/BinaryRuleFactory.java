@@ -16,5 +16,17 @@ import java.util.List;
  * @author koller
  */
 public interface BinaryRuleFactory {
-    public Rule generateBinarizedRule(Tree<String> nodeInVartree, List<String> binarizedChildStates, Rule originalRule, Tree<String> vartree, InterpretedTreeAutomaton originalIrtg, InterpretedTreeAutomaton binarizedIrtg);
+    /**
+     * Generates an automaton rule for a single node of the common variable tree.
+     * 
+     * @param nodeInVartree - the node in the variable tree at which we are generating a rule
+     * @param pathToNode - the path from the root to this node in the variable tree (in a suitable format for {@link Tree#select(java.lang.String, int) })
+     * @param binarizedChildStates - the states that were generated for the children
+     * @param originalRule - the rule in the original, unbinarized IRTG
+     * @param vartree - the variable tree for which we are generating rules
+     * @param originalIrtg - the original, unbinarized IRTG
+     * @param binarizedIrtg - the binarized IRTG whose rules we are currently creating
+     * @return - the created binarized rule
+     */
+    public Rule generateBinarizedRule(Tree<String> nodeInVartree, List<String> binarizedChildStates, String pathToNode, Rule originalRule, Tree<String> vartree, InterpretedTreeAutomaton originalIrtg, InterpretedTreeAutomaton binarizedIrtg);
 }

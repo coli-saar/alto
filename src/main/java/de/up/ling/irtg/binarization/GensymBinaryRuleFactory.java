@@ -21,7 +21,7 @@ public class GensymBinaryRuleFactory implements BinaryRuleFactory {
     private long nextGensym = 1;
 
     @Override
-    public Rule generateBinarizedRule(Tree<String> nodeInVartree, List<String> binarizedChildStates, Rule originalRule, Tree<String> vartree, InterpretedTreeAutomaton originalIrtg, InterpretedTreeAutomaton binarizedIrtg) {
+    public Rule generateBinarizedRule(Tree<String> nodeInVartree, List<String> binarizedChildStates, String pathToNode, Rule originalRule, Tree<String> vartree, InterpretedTreeAutomaton originalIrtg, InterpretedTreeAutomaton binarizedIrtg) {
         ConcreteTreeAutomaton<String> binarizedRtg = (ConcreteTreeAutomaton<String>) binarizedIrtg.getAutomaton();
         String oldRuleParent = originalIrtg.getAutomaton().getStateForId(originalRule.getParent());
         String parent;

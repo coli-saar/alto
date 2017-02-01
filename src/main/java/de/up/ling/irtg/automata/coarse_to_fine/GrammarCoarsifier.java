@@ -7,6 +7,7 @@ package de.up.ling.irtg.automata.coarse_to_fine;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
+import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.hom.Homomorphism;
@@ -32,12 +33,13 @@ import java.util.Set;
  * @author koller
  */
 public class GrammarCoarsifier {
+
     private final FineToCoarseMapping ftc;
 
     public GrammarCoarsifier(FineToCoarseMapping ftcMapping) {
         this.ftc = ftcMapping;
     }
-    
+
     public RuleRefinementTree coarsify(InterpretedTreeAutomaton irtg, String inputInterpretation) {
         Homomorphism inputHom = irtg.getInterpretation(inputInterpretation).getHomomorphism();
         Signature sig = irtg.getAutomaton().getSignature();
@@ -51,7 +53,7 @@ public class GrammarCoarsifier {
         // make finest layer
         Set<String> fineFinalStates = Util.mapToSet(irtg.getAutomaton().getFinalStates(), irtg.getAutomaton()::getStateForId);
         finalStatesPerLevel.add(irtg.getAutomaton().getFinalStates());
-        
+
         List<RuleRefinementNode> fine = new ArrayList<>();
         for (Rule rule : irtg.getAutomaton().getRuleSet()) {
             RuleRefinementNode n = RuleRefinementNode.makeFinest(rule, inputHom);
@@ -61,42 +63,42 @@ public class GrammarCoarsifier {
 
         for (int i = 1; i < ftc.numLevels(); i++) { // iterate numLevels-1 times
             // make "fine" rules one step coarser
-            coarse = new ArrayList<>();            
-            ListMultimap<RrtSummary,RuleRefinementNode> equivalenceClasses = Util.groupBy(fine, node -> summarize(node, stateInterner, inputHom));
+            coarse = new ArrayList<>();
+            ListMultimap<RrtSummary, RuleRefinementNode> equivalenceClasses = Util.groupBy(fine, node -> summarize(node, stateInterner, inputHom));
             // TODO - maybe this can be made more efficient by only attempting to merge classes that already have the same term ID
-            
-            for( RrtSummary summary : equivalenceClasses.keySet() ) {
+
+            for (RrtSummary summary : equivalenceClasses.keySet()) {
                 List<RuleRefinementNode> equivClass = equivalenceClasses.get(summary);
                 RuleRefinementNode coarser = RuleRefinementNode.makeCoarser(equivClass, summary);
                 coarse.add(coarser);
             }
-            
+
             fine = coarse;
-            
+
             // make "fine" final states one step coarser
             coarseFinalStates = new HashSet<>();
             coarseFinalStateIds = new IntOpenHashSet();
-            for( String ffs : fineFinalStates ) {
+            for (String ffs : fineFinalStates) {
                 String cfs = ftc.coarsify(ffs);
                 coarseFinalStates.add(cfs);
                 coarseFinalStateIds.add(stateInterner.resolveObject(cfs));
             }
-            
+
             finalStatesPerLevel.add(coarseFinalStateIds);
             fineFinalStates = coarseFinalStates;
         }
-        
+
         return new RuleRefinementTree(fine, Lists.reverse(finalStatesPerLevel), ruleToFinestNode::get);
     }
-    
+
     private RrtSummary summarize(RuleRefinementNode node, Interner<String> stateInterner, Homomorphism hom) {
         int coarseParent = coarsifyState(node.getParent(), stateInterner);
         int[] coarseChildren = Util.mapIntArray(node.getChildren(), q -> coarsifyState(q, stateInterner));
         int termId = hom.getTermID(node.getRepresentativeLabel());
-        
+
         return new RrtSummary(coarseParent, termId, coarseChildren);
     }
-    
+
     private int coarsifyState(int fineState, Interner<String> stateInterner) {
         return stateInterner.addObject(ftc.coarsify(stateInterner.resolveId(fineState)));
     }
@@ -125,7 +127,16 @@ public class GrammarCoarsifier {
         return new FineToCoarseMapping() {
             @Override
             public String coarsify(String symbol) {
-                return fineSymbolToCoarse.getOrDefault(symbol, symbol);
+                if (symbol.contains("_")) {
+                    // for nonterminals created by the "inside" binarization strategy
+                    String[] parts = symbol.split("_");
+                    for (int i = 0; i < parts.length; i++) {
+                        parts[i] = fineSymbolToCoarse.getOrDefault(symbol, symbol);
+                    }
+                    return StringTools.join(parts, "_");
+                } else {
+                    return fineSymbolToCoarse.getOrDefault(symbol, symbol);
+                }
             }
 
             @Override
@@ -134,7 +145,5 @@ public class GrammarCoarsifier {
             }
         };
     }
-    
-    
-    
+
 }

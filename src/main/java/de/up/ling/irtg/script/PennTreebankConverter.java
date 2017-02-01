@@ -187,10 +187,8 @@ public class PennTreebankConverter {
             Map<String, RegularSeed> seeds = ImmutableMap.of(
                     "string", new StringAlgebraSeed(irtg.getInterpretation("string").getAlgebra(), newAlgebras.get("string")),
                     "tree", new BinarizingAlgebraSeed(irtg.getInterpretation("tree").getAlgebra(), newAlgebras.get("tree")));
-            Function<InterpretedTreeAutomaton, BinaryRuleFactory> rff = "complete".equals(param.binarizationMode)
-                    ? GensymBinaryRuleFactory.createFactoryFactory()
-                    : XbarRuleFactory.createFactoryFactory();
-
+            
+            Function<InterpretedTreeAutomaton, BinaryRuleFactory> rff = makeRuleFactoryFactory(param.binarizationMode);
             BkvBinarizer binarizer = new BkvBinarizer(seeds, rff);
 
             InterpretedTreeAutomaton binarized = GuiUtils.withConsoleProgressBar(60, System.out, listener -> {
@@ -259,6 +257,16 @@ public class PennTreebankConverter {
             return s;
         }
     });
+
+    private static Function<InterpretedTreeAutomaton, BinaryRuleFactory> makeRuleFactoryFactory(String binarizationMode) {
+        switch(binarizationMode) {
+            case "complete": return GensymBinaryRuleFactory.createFactoryFactory();
+            case "xbar": return XbarRuleFactory.createFactoryFactory();
+            case "inside": return InsideRuleFactory.createFactoryFactory();
+        }
+        
+        throw new UnsupportedOperationException("Undefined binarization mode: " + binarizationMode);
+    }
 
     private static class CmdLineParameters {
 
@@ -332,7 +340,7 @@ public class PennTreebankConverter {
 
     public static class BinarizationStyleValidator implements IParameterValidator {
 
-        private final List<String> allows = Lists.newArrayList("complete", "xbar");
+        private final List<String> allows = Lists.newArrayList("complete", "xbar", "inside", "outside");
 
         @Override
         public void validate(String key, String value) throws ParameterException {
