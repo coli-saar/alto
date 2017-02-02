@@ -5,6 +5,7 @@
 package de.up.ling.irtg.algebra;
 
 import com.google.common.base.Predicate;
+import static de.up.ling.irtg.algebra.TreeWithAritiesAlgebra.stripArities;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.tree.ParseException;
@@ -41,11 +42,10 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
     private int _C;
     private int _P1;
 
-//    private Signature signature;
     public TagTreeAlgebra() {
-//        signature = new Signature();
         _C = signature.addSymbol(C, 2);
         _P1 = signature.addSymbol(P1, 0);
+
         // plus all tree labels with their own arities, see #parseString
     }
 
@@ -61,24 +61,11 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
             return Tree.create(label, childrenValues);
         }
     }
-
-//    @Override
-//    public Tree<String> evaluate(final Tree<String> t) {
-//        return t.dfs(new TreeVisitor<String, Void, Tree<String>>() {
-//            @Override
-//            public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
-//                if (node.getLabel().equals(C)) {
-//                    return childrenValues.get(0).substitute(new Predicate<Tree<String>>() {
-//                        public boolean apply(Tree<String> t) {
-//                            return t.getLabel().equals(P1);
-//                        }
-//                    }, childrenValues.get(1));
-//                } else {
-//                    return Tree.create(node.getLabel(), childrenValues);
-//                }
-//            }
-//        });
-//    }
+    
+    @Override
+    public Tree<String> evaluate(Tree<String> t) {
+        return stripArities(super.evaluate(t));
+    }
 
     @Override
     public TreeAutomaton decompose(Tree<String> value) {
@@ -89,17 +76,13 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
     public Tree<String> parseString(String representation) throws ParserException {
         try {
             Tree<String> ret = TreeParser.parse(representation);
-            signature.addAllSymbols(ret);
+            signature.addAllSymbols(TreeWithAritiesAlgebra.addArities(ret));
             return ret;
         } catch (ParseException ex) {
             throw new ParserException(ex);
         }
     }
 
-//    @Override
-//    public Signature getSignature() {
-//        return signature;
-//    }
     @Override
     public JComponent visualize(Tree<String> object) {
         return new TreePanel(object);

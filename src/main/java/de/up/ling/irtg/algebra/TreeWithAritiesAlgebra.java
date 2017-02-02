@@ -38,21 +38,20 @@ import java.util.regex.Pattern;
  * you'll want to use a {@link TreeWithAritiesAlgebra} instead of a
  * {@link TreeAlgebra}.<p>
  * 
- * This algebra can be in <i>permissive mode</i> or not. In non-permissive mode,
+ * By default, this algebra is in <i>permissive mode</i> or not. In non-permissive mode,
  * when you try to evaluate a term like <code>f_2(a_0)</code>, evaluation will fail
  * with an {@link IllegalArgumentException}, because <code>f_2</code> should have
  * two children, but only got one. In permissive mode, such mismatches are ignored.
  * By default, the algebra is in permissive mode; this simplifies PTB parsing,
- * but has the theoretical problem that now not every term that evaluates to som
+ * but has the theoretical problem that now not every term that evaluates to some
  * tree t is in the language of the decomposition automaton (because the latter only
- * accepts trees with the correct arities in the labels). You can switch it to
- * non-permissive mode using {@link #setPermissive(boolean) }.
+ * accepts trees with the correct arities in the labels).
  *
  * @author koller
  */
 public class TreeWithAritiesAlgebra extends TreeAlgebra {
     private static final Pattern ARITY_STRIPPING_PATTERN = Pattern.compile("(.+)_(\\d+)");
-    private boolean permissive = true;
+    private static boolean permissive = true;
 
     @Override
     public Tree<String> evaluate(Tree<String> t) {
@@ -78,7 +77,13 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
     
     
     
-    
+    /**
+     * Annotates each label in the given tree with its arity. Thus, the
+     * tree A(B(C), D) will be converted to A_2(B_1(C_0), D_0).
+     * 
+     * @param tree
+     * @return 
+     */
     public static Tree<String> addArities(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
@@ -94,7 +99,16 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
         });
     }
     
-    protected Tree<String> stripArities(Tree<String> tree) {
+    /**
+     * Removes arity annotations from the labels of the given tree.
+     * More precisely, it removes annotations of the form _xxx where
+     * xxx consists of digits. Thus, this method is the inverse
+     * of {@link #addArities(de.up.ling.tree.Tree) }.
+     * 
+     * @param tree
+     * @return 
+     */
+    public static Tree<String> stripArities(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
             public Tree<String> combine(Tree<String> node, List<Tree<String>> childrenValues) {
@@ -110,19 +124,20 @@ public class TreeWithAritiesAlgebra extends TreeAlgebra {
                         throw new IllegalArgumentException(msg);
                     }
                 } else {
-                    throw new IllegalArgumentException("Node label " + node.getLabel() + " is not of the form label_arity");
+                    return Tree.create(node.getLabel(), childrenValues);
+//                    throw new IllegalArgumentException("Node label " + node.getLabel() + " is not of the form label_arity");
                 }
             }           
         });
     }
-
-    public boolean isPermissive() {
-        return permissive;
-    }
-
-    public void setPermissive(boolean permissive) {
-        this.permissive = permissive;
-    }
+//
+//    public boolean isPermissive() {
+//        return permissive;
+//    }
+//
+//    public void setPermissive(boolean permissive) {
+//        this.permissive = permissive;
+//    }
 
     
     
