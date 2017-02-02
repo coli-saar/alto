@@ -647,6 +647,21 @@ public class CoarseToFineParser {
             return rulesInChart;
         }
 
+        @OperationAnnotation(code = "getSaturation")
+        public DoubleList getSaturation() {
+            return saturation;
+        }
+        
+        @OperationAnnotation(code = "getInverseRulesNumber")
+        public DoubleList getInverseRulesNumber() {
+            return inverseRules;
+        }
+        
+        @OperationAnnotation(code = "getGrammarRulesNumber")
+        public DoubleList getGrammarRulesNumber() {
+            return grammarRules;
+        }
+        
     }
 
     private class ProductiveRulesChecker {
