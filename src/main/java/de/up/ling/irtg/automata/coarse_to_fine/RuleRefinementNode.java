@@ -14,6 +14,7 @@ import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.ints.IntSets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -158,6 +159,36 @@ public class RuleRefinementNode {
         for( RuleRefinementNode fine : refinements ) {
             fine.buildString(depth + 2, auto, buf);
         }
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 79 * hash + this.parent;
+        hash = 79 * hash + Arrays.hashCode(this.children);
+        hash = 79 * hash + this.termId;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final RuleRefinementNode other = (RuleRefinementNode) obj;
+        if (this.parent != other.parent) {
+            return false;
+        }
+        if (!Arrays.equals(this.children, other.children)) {
+            return false;
+        }
+        if (this.termId != other.termId) {
+            return false;
+        }
+        return true;
     }
     
 }
