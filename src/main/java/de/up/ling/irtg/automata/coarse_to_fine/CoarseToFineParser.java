@@ -344,6 +344,10 @@ public class CoarseToFineParser {
         DoubleList constituentsPruned = new DoubleArrayList();
         DoubleList rulesInChart = new DoubleArrayList();
         
+        IntSet inverseParents = new IntRBTreeSet();
+        IntSet grammarParents = new IntRBTreeSet();
+        DoubleList stateSaturation = new DoubleArrayList();
+        
         DoubleList inverseRulesUsed = new DoubleArrayList();
         Set<Rule> inverseRules = new ObjectOpenHashSet<>();
         DoubleList grammarRulesUsed = new DoubleArrayList();
@@ -356,6 +360,9 @@ public class CoarseToFineParser {
                 seen.clear();
                 passed.clear();
                 rulesInChart.add(coarseNodes.size());
+                
+                inverseParents.clear();
+                grammarParents.clear();
                 
                 inverseRules.clear();
                 grammarRules.clear();
@@ -383,6 +390,9 @@ public class CoarseToFineParser {
 
                     inverseRules.add(r);
                     grammarRules.add(n);
+                    
+                    inverseParents.add(r.getParent());
+                    grammarParents.add(n.getParent());
                     
                     /*
                      if (DEBUG) {
@@ -432,6 +442,8 @@ public class CoarseToFineParser {
                 inverseRulesUsed.add(inverseRules.size());
                 grammarRulesUsed.add(grammarRules.size());
                 saturation.add(rulesInChart.getDouble(level)/(inverseRulesUsed.getDouble(level)*grammarRulesUsed.getDouble(level)));
+                
+                stateSaturation.add((double) seen.size() / ((double) inverseParents.size()*grammarParents.size()));
             }
         } else {
             rulesInChart.add(coarseNodes.size());
@@ -447,6 +459,9 @@ public class CoarseToFineParser {
                 
                 inverseRules.add(r);
                 grammarRules.add(n);
+                
+                inverseParents.add(r.getParent());
+                grammarParents.add(n.getParent());
             }
 
             constituentsSeen.add(seen.size());
@@ -455,11 +470,13 @@ public class CoarseToFineParser {
             inverseRulesUsed.add(inverseRules.size());
             grammarRulesUsed.add(grammarRules.size());
             saturation.add(rulesInChart.getDouble(0)/(inverseRulesUsed.getDouble(0)*grammarRulesUsed.getDouble(0)));
+            
+            stateSaturation.add((double) seen.size() / ((double) inverseParents.size()*grammarParents.size()));
         }
 
         // decode final chart into tree automaton
         return new Combination(createTreeAutomatonNoncondensed(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
-                constituentsSeen, constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed, saturation);
+                constituentsSeen, constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed, saturation, stateSaturation);
     }
 
     @OperationAnnotation(code = "parseInputObjectSizes")
@@ -489,6 +506,10 @@ public class CoarseToFineParser {
         DoubleList constituentsSeen = new DoubleArrayList();
         DoubleList constituentsPruned = new DoubleArrayList();
         DoubleList rulesInChart = new DoubleArrayList();
+        
+        IntSet inverseParents = new IntRBTreeSet();
+        IntSet grammarParents = new IntRBTreeSet();
+        DoubleList stateSaturation = new DoubleArrayList();
 
         DoubleList inverseRulesUsed = new DoubleArrayList();
         Set<CondensedRule> inverseRules = new ObjectOpenHashSet<>();
@@ -504,6 +525,9 @@ public class CoarseToFineParser {
                 rulesInChart.add(coarseNodes.size());
                 inverseRules.clear();
                 grammarRules.clear();
+                
+                inverseParents.clear();
+                grammarParents.clear();
 
                 inside.clear();
                 outside.clear();
@@ -525,6 +549,9 @@ public class CoarseToFineParser {
 
                     inverseRules.add(r);
                     grammarRules.add(n);
+                    
+                    inverseParents.add(r.getParent());
+                    grammarParents.add(n.getParent());
                     
                     long combined = NumbersCombine.combine(r.getParent(), n.getParent());
                     seen.add(combined);
@@ -575,6 +602,8 @@ public class CoarseToFineParser {
                 inverseRulesUsed.add(inverseRules.size());
                 grammarRulesUsed.add(grammarRules.size());
                 saturation.add(rulesInChart.getDouble(level)/(inverseRulesUsed.getDouble(level)*grammarRulesUsed.getDouble(level)));
+                
+                stateSaturation.add((double) seen.size() / ((double) inverseParents.size()*grammarParents.size()));
             }
         } else {
             rulesInChart.add(coarseNodes.size());
@@ -590,6 +619,9 @@ public class CoarseToFineParser {
 
                 inverseRules.add(r);
                 grammarRules.add(n);
+                
+                inverseParents.add(r.getParent());
+                grammarParents.add(n.getParent());
             }
 
             constituentsSeen.add(seen.size());
@@ -598,11 +630,14 @@ public class CoarseToFineParser {
             inverseRulesUsed.add(inverseRules.size());
             grammarRulesUsed.add(grammarRules.size());
             saturation.add(rulesInChart.getDouble(0)/(inverseRulesUsed.getDouble(0)*grammarRulesUsed.getDouble(0)));
+            
+            stateSaturation.add((double) seen.size() / ((double) inverseParents.size()*grammarParents.size()));
         }
 
         // decode final chart into tree automaton
         return new Combination(createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
-                constituentsSeen, constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed, saturation);
+                constituentsSeen, constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed, saturation,
+                stateSaturation);
     }
 
     public class Combination {
@@ -614,10 +649,12 @@ public class CoarseToFineParser {
         private final DoubleList saturation;
         private final DoubleList inverseRules;
         private final DoubleList grammarRules;
+        private final DoubleList stateSaturation;
 
         public Combination(TreeAutomaton chart, DoubleList seen,
                 DoubleList pruned, DoubleList rulesInChart,
-                DoubleList inverseRules, DoubleList grammarRules, DoubleList saturation) {
+                DoubleList inverseRules, DoubleList grammarRules, DoubleList saturation,
+                DoubleList stateSaturation) {
             this.chart = chart;
             this.seen = seen;
             this.pruned = pruned;
@@ -625,6 +662,7 @@ public class CoarseToFineParser {
             this.inverseRules = inverseRules;
             this.grammarRules = grammarRules;
             this.saturation = saturation;
+            this.stateSaturation = stateSaturation;
         }
 
         @OperationAnnotation(code = "getCTFCombinationChart")
@@ -662,6 +700,10 @@ public class CoarseToFineParser {
             return grammarRules;
         }
         
+        @OperationAnnotation(code = "getStateSaturation")
+        public DoubleList getStateSaturation() {
+            return stateSaturation;
+        }
     }
 
     private class ProductiveRulesChecker {
