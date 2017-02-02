@@ -11,6 +11,10 @@ package de.up.ling.irtg.laboratory;
  */
 public class VariableNotDefinedException extends Exception {
     
+    public VariableNotDefinedException(String variableName, String line) {
+        super("Variable " +variableName + " in line " + line + " is undefined in this program and was not found in the variable remapper");
+    }
+    
     public VariableNotDefinedException(String variableName) {
         super("Variable " +variableName + " is undefined in this program and was not found in the variable remapper");
     }

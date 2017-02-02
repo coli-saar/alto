@@ -250,7 +250,7 @@ public class Program {
                         String[] keywordsAndVarName = commandLine.trim().split(" ");
                         String remappedCode = varRemapper.get(keywordsAndVarName[keywordsAndVarName.length - 1]);
                         if (remappedCode == null) {
-                            throw new VariableNotDefinedException(keywordsAndVarName[keywordsAndVarName.length - 1]);
+                            throw new VariableNotDefinedException(keywordsAndVarName[keywordsAndVarName.length - 1], commandLine);
                         } else {
                             ret.add(commandLine + ASSIGNMENT_PATTERN.replace("?", "") + remappedCode);
                         }
