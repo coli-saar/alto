@@ -431,7 +431,7 @@ public class CoarseToFineParser {
                 
                 inverseRulesUsed.add(inverseRules.size());
                 grammarRulesUsed.add(grammarRules.size());
-                saturation.add(rulesInChart.getDouble(level)/(inverseRulesUsed.getDouble(level))*grammarRulesUsed.getDouble(level));
+                saturation.add(rulesInChart.getDouble(level)/(inverseRulesUsed.getDouble(level)*grammarRulesUsed.getDouble(level)));
             }
         } else {
             rulesInChart.add(coarseNodes.size());
@@ -454,7 +454,7 @@ public class CoarseToFineParser {
             
             inverseRulesUsed.add(inverseRules.size());
             grammarRulesUsed.add(grammarRules.size());
-            saturation.add(rulesInChart.getDouble(0)/(inverseRulesUsed.getDouble(0))*grammarRulesUsed.getDouble(0));
+            saturation.add(rulesInChart.getDouble(0)/(inverseRulesUsed.getDouble(0)*grammarRulesUsed.getDouble(0)));
         }
 
         // decode final chart into tree automaton
@@ -574,7 +574,7 @@ public class CoarseToFineParser {
 
                 inverseRulesUsed.add(inverseRules.size());
                 grammarRulesUsed.add(grammarRules.size());
-                saturation.add(rulesInChart.getDouble(level)/(inverseRulesUsed.getDouble(level))*grammarRulesUsed.getDouble(level));
+                saturation.add(rulesInChart.getDouble(level)/(inverseRulesUsed.getDouble(level)*grammarRulesUsed.getDouble(level)));
             }
         } else {
             rulesInChart.add(coarseNodes.size());
@@ -597,7 +597,7 @@ public class CoarseToFineParser {
 
             inverseRulesUsed.add(inverseRules.size());
             grammarRulesUsed.add(grammarRules.size());
-            saturation.add(rulesInChart.getDouble(0)/(inverseRulesUsed.getDouble(0))*grammarRulesUsed.getDouble(0));
+            saturation.add(rulesInChart.getDouble(0)/(inverseRulesUsed.getDouble(0)*grammarRulesUsed.getDouble(0)));
         }
 
         // decode final chart into tree automaton
