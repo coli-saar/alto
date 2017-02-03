@@ -110,8 +110,8 @@ public class BasicOperations {
     
     @OperationAnnotation(code = "selfNormDifference") 
     public static double selfNormDifference(Object d1, Object d2) {
-       double v1 = getObjectValue(d1);
-       double v2 = getObjectValue(d2);
+       double v1 = d1 == null ? 0.0 : getObjectValue(d1);
+       double v2 = d2 == null ? 0.0 : getObjectValue(d2);
         
        double val = Math.abs(v1-v2) / v1;
        if(Double.isNaN(val)) {
