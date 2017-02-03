@@ -19,6 +19,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.tree.Tree;
 import de.up.ling.tree.TreeVisitor;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -298,8 +299,14 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
     }
 
 
-
-    
+    /**
+     * Translates the specified .irtg file to a .irtb file at the same location.
+     * @param args 
+     */
+    public static void main(String[] args) throws IOException {
+        InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.fromPath(args[0]);
+        new BinaryIrtgOutputCodec().write(irtg, new FileOutputStream(args[0].substring(0, args[0].length()-4)+"irtb"));
+    }
     
     
 
