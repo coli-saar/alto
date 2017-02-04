@@ -413,7 +413,7 @@ public class CoarseToFineParser {
                     String s = irtg.getAutomaton().getStateForId(n.getParent());
 
                     inverseParents.add(r.getParent());
-                    if (s.contains(">>")) {
+                    if (!s.contains(">>")) {
                         grammarParents.add(n.getParent());
                         parentsSeen.add(combined);
                     } else {
@@ -504,7 +504,7 @@ public class CoarseToFineParser {
                 inverseParents.add(r.getParent());
 
                 String s = irtg.getAutomaton().getStateForId(n.getParent());
-                if (s.contains(">>")) {
+                if (!s.contains(">>")) {
                     grammarParents.add(n.getParent());
                     parentsSeen.add(combined);
                 } else {
@@ -640,7 +640,7 @@ public class CoarseToFineParser {
                     String s = irtg.getAutomaton().getStateForId(n.getParent());
 
                     inverseParents.add(r.getParent());
-                    if (s.contains(">>")) {
+                    if (!s.contains(">>")) {
                         grammarParents.add(n.getParent());
                         parentsSeen.add(combined);
                     } else {
@@ -731,7 +731,7 @@ public class CoarseToFineParser {
                 inverseParents.add(r.getParent());
 
                 String s = irtg.getAutomaton().getStateForId(n.getParent());
-                if (s.contains(">>")) {
+                if (!s.contains(">>")) {
                     grammarParents.add(n.getParent());
                     parentsSeen.add(combined);
                 } else {
