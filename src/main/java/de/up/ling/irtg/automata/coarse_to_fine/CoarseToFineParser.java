@@ -330,13 +330,13 @@ public class CoarseToFineParser {
         CpuTimeStopwatch cts = new CpuTimeStopwatch();
         double initialTime;
         DoubleList levelTimes = new DoubleArrayList();
-       
+
         cts.record(0);
         //the important results are stored in coarseNodes and partnerInvhomRules, the invhom is only for future reference
         ConcreteTreeAutomaton invhom = sfcp.parse(coarseNodes, partnerInvhomRules);
         cts.record(1);
         initialTime = cts.getMillisecondsBefore(1);
-        
+
         assert coarseNodes.size() == partnerInvhomRules.size();
 
         // refine the chart level-1 times
@@ -461,7 +461,7 @@ public class CoarseToFineParser {
                 }
                 cts.record(1);
                 levelTimes.add(cts.getMillisecondsBefore(1));
-                
+
                 coarseNodes = finerNodes;
                 partnerInvhomRules = finerInvhomPartners;
 
@@ -487,8 +487,27 @@ public class CoarseToFineParser {
                 }
             }
         } else {
-            rulesInChart.add(coarseNodes.size());
+            for (int i = 0; i < coarseNodes.size(); i++) {
+                RuleRefinementNode n = coarseNodes.get(i);
+                Rule r = partnerInvhomRules.get(i);
 
+                productivityChecker.recordParents(n, r);
+            }
+        }
+        
+        {
+            seen.clear();
+            passed.clear();
+            rulesInChart.add(coarseNodes.size());
+            inverseRules.clear();
+            grammarRules.clear();
+
+            inverseParents.clear();
+            grammarParents.clear();
+            binarizedParents.clear();
+            binarizedParentsSeen.clear();
+            parentsSeen.clear();
+            
             for (int i = 0; i < coarseNodes.size(); i++) {
                 RuleRefinementNode n = coarseNodes.get(i);
                 Rule r = partnerInvhomRules.get(i);
@@ -512,13 +531,13 @@ public class CoarseToFineParser {
                     binarizedParentsSeen.add(combined);
                 }
             }
-
+            
             constituentsSeen.add(seen.size());
             constituentsPruned.add(0);
-
+            
             inverseRulesUsed.add(inverseRules.size());
             grammarRulesUsed.add(grammarRules.size());
-
+            
             double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0) * grammarRulesUsed.getDouble(0));
             if (!Double.isNaN(d)) {
                 saturation.add(d);
@@ -548,7 +567,7 @@ public class CoarseToFineParser {
             InstantiationException, IllegalAccessException {
         // create condensed invhom automaton
         CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
-        
+
         CpuTimeStopwatch cts = new CpuTimeStopwatch();
         double initialTime;
         DoubleList levelTimes = new DoubleArrayList();
@@ -556,14 +575,14 @@ public class CoarseToFineParser {
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
         List<CondensedRule> partnerInvhomRules = new ArrayList<>();
-        
+
         cts.record(0);
         CondensedCoarsestParser ccp = new CondensedCoarsestParser(rrt, invhom);
         ccp.setToStringFunctions(irtg.getAutomaton()); // for debugging
         ccp.parse(coarseNodes, partnerInvhomRules);
         cts.record(1);
         initialTime = cts.getMillisecondsBefore(1);
-        
+
         assert coarseNodes.size() == partnerInvhomRules.size();
 
         // refine the chart level-1 times
@@ -614,7 +633,7 @@ public class CoarseToFineParser {
                 inside.clear();
                 outside.clear();
                 productivityChecker.clear();
-                
+
                 cts.record(0);
 
                 double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
@@ -684,9 +703,9 @@ public class CoarseToFineParser {
                         System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
                     }
                 }
-                
+
                 cts.record(1);
-                
+
                 levelTimes.add(cts.getMillisecondsBefore(1));
 
                 coarseNodes = finerNodes;
@@ -714,8 +733,27 @@ public class CoarseToFineParser {
                 }
             }
         } else {
-            rulesInChart.add(coarseNodes.size());
+            for (int i = 0; i < coarseNodes.size(); i++) {
+                RuleRefinementNode n = coarseNodes.get(i);
+                CondensedRule r = partnerInvhomRules.get(i);
 
+                productivityChecker.recordParents(n, r);
+            }
+        }
+
+        {
+            seen.clear();
+            passed.clear();
+            rulesInChart.add(coarseNodes.size());
+            inverseRules.clear();
+            grammarRules.clear();
+
+            inverseParents.clear();
+            grammarParents.clear();
+            binarizedParents.clear();
+            binarizedParentsSeen.clear();
+            parentsSeen.clear();
+            
             for (int i = 0; i < coarseNodes.size(); i++) {
                 RuleRefinementNode n = coarseNodes.get(i);
                 CondensedRule r = partnerInvhomRules.get(i);
@@ -739,13 +777,13 @@ public class CoarseToFineParser {
                     binarizedParentsSeen.add(combined);
                 }
             }
-
+            
             constituentsSeen.add(seen.size());
             constituentsPruned.add(0);
-
+            
             inverseRulesUsed.add(inverseRules.size());
             grammarRulesUsed.add(grammarRules.size());
-
+            
             double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0) * grammarRulesUsed.getDouble(0));
             if (!Double.isNaN(d)) {
                 saturation.add(d);
@@ -789,7 +827,7 @@ public class CoarseToFineParser {
                 DoubleList pruned, DoubleList rulesInChart,
                 DoubleList inverseRules, DoubleList grammarRules, DoubleList saturation,
                 DoubleList stateSaturation, DoubleList binarizedStateSaturation,
-                double initialTime,DoubleList timeTakenForLevel) {
+                double initialTime, DoubleList timeTakenForLevel) {
             this.chart = chart;
             this.seen = seen;
             this.pruned = pruned;
@@ -807,12 +845,12 @@ public class CoarseToFineParser {
         public DoubleList getTimeTakenPerLevel() {
             return timeTakenForLevel;
         }
-        
+
         @OperationAnnotation(code = "getInitialTime")
         public double getInitialTime() {
             return initialTime;
         }
-        
+
         @OperationAnnotation(code = "getCTFCombinationChart")
         public TreeAutomaton getChart() {
             return chart;
