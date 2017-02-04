@@ -494,64 +494,62 @@ public class CoarseToFineParser {
                 productivityChecker.recordParents(n, r);
             }
         }
-        
-        {
-            seen.clear();
-            passed.clear();
-            rulesInChart.add(coarseNodes.size());
-            inverseRules.clear();
-            grammarRules.clear();
 
-            inverseParents.clear();
-            grammarParents.clear();
-            binarizedParents.clear();
-            binarizedParentsSeen.clear();
-            parentsSeen.clear();
-            
-            for (int i = 0; i < coarseNodes.size(); i++) {
-                RuleRefinementNode n = coarseNodes.get(i);
-                Rule r = partnerInvhomRules.get(i);
+        seen.clear();
+        passed.clear();
+        rulesInChart.add(coarseNodes.size());
+        inverseRules.clear();
+        grammarRules.clear();
 
-                productivityChecker.recordParents(n, r);
+        inverseParents.clear();
+        grammarParents.clear();
+        binarizedParents.clear();
+        binarizedParentsSeen.clear();
+        parentsSeen.clear();
 
-                long combined = NumbersCombine.combine(r.getParent(), n.getParent());
-                seen.add(combined);
+        for (int i = 0; i < coarseNodes.size(); i++) {
+            RuleRefinementNode n = coarseNodes.get(i);
+            Rule r = partnerInvhomRules.get(i);
 
-                inverseRules.add(r);
-                grammarRules.add(n);
+            productivityChecker.recordParents(n, r);
 
-                inverseParents.add(r.getParent());
+            long combined = NumbersCombine.combine(r.getParent(), n.getParent());
+            seen.add(combined);
 
-                String s = irtg.getAutomaton().getStateForId(n.getParent());
-                if (!s.contains(">>")) {
-                    grammarParents.add(n.getParent());
-                    parentsSeen.add(combined);
-                } else {
-                    binarizedParents.add(n.getParent());
-                    binarizedParentsSeen.add(combined);
-                }
+            inverseRules.add(r);
+            grammarRules.add(n);
+
+            inverseParents.add(r.getParent());
+
+            String s = irtg.getAutomaton().getStateForId(n.getParent());
+            if (!s.contains(">>")) {
+                grammarParents.add(n.getParent());
+                parentsSeen.add(combined);
+            } else {
+                binarizedParents.add(n.getParent());
+                binarizedParentsSeen.add(combined);
             }
-            
-            constituentsSeen.add(seen.size());
-            constituentsPruned.add(0);
-            
-            inverseRulesUsed.add(inverseRules.size());
-            grammarRulesUsed.add(grammarRules.size());
-            
-            double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0) * grammarRulesUsed.getDouble(0));
-            if (!Double.isNaN(d)) {
-                saturation.add(d);
-            }
+        }
 
-            d = (double) parentsSeen.size() / ((double) inverseParents.size() * grammarParents.size());
-            if (!Double.isNaN(d)) {
-                stateSaturation.add(d);
-            }
+        constituentsSeen.add(seen.size());
+        constituentsPruned.add(0);
 
-            d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size() * binarizedParents.size());
-            if (!Double.isNaN(d)) {
-                binaryStateSaturation.add(d);
-            }
+        inverseRulesUsed.add(inverseRules.size());
+        grammarRulesUsed.add(grammarRules.size());
+
+        double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0) * grammarRulesUsed.getDouble(0));
+        if (!Double.isNaN(d)) {
+            saturation.add(d);
+        }
+
+        d = (double) parentsSeen.size() / ((double) inverseParents.size() * grammarParents.size());
+        if (!Double.isNaN(d)) {
+            stateSaturation.add(d);
+        }
+
+        d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size() * binarizedParents.size());
+        if (!Double.isNaN(d)) {
+            binaryStateSaturation.add(d);
         }
 
         // decode final chart into tree automaton
@@ -741,63 +739,61 @@ public class CoarseToFineParser {
             }
         }
 
-        {
-            seen.clear();
-            passed.clear();
-            rulesInChart.add(coarseNodes.size());
-            inverseRules.clear();
-            grammarRules.clear();
+        seen.clear();
+        passed.clear();
+        rulesInChart.add(coarseNodes.size());
+        inverseRules.clear();
+        grammarRules.clear();
 
-            inverseParents.clear();
-            grammarParents.clear();
-            binarizedParents.clear();
-            binarizedParentsSeen.clear();
-            parentsSeen.clear();
-            
-            for (int i = 0; i < coarseNodes.size(); i++) {
-                RuleRefinementNode n = coarseNodes.get(i);
-                CondensedRule r = partnerInvhomRules.get(i);
+        inverseParents.clear();
+        grammarParents.clear();
+        binarizedParents.clear();
+        binarizedParentsSeen.clear();
+        parentsSeen.clear();
 
-                productivityChecker.recordParents(n, r);
+        for (int i = 0; i < coarseNodes.size(); i++) {
+            RuleRefinementNode n = coarseNodes.get(i);
+            CondensedRule r = partnerInvhomRules.get(i);
 
-                long combined = NumbersCombine.combine(r.getParent(), n.getParent());
-                seen.add(combined);
+            productivityChecker.recordParents(n, r);
 
-                inverseRules.add(r);
-                grammarRules.add(n);
+            long combined = NumbersCombine.combine(r.getParent(), n.getParent());
+            seen.add(combined);
 
-                inverseParents.add(r.getParent());
+            inverseRules.add(r);
+            grammarRules.add(n);
 
-                String s = irtg.getAutomaton().getStateForId(n.getParent());
-                if (!s.contains(">>")) {
-                    grammarParents.add(n.getParent());
-                    parentsSeen.add(combined);
-                } else {
-                    binarizedParents.add(n.getParent());
-                    binarizedParentsSeen.add(combined);
-                }
+            inverseParents.add(r.getParent());
+
+            String s = irtg.getAutomaton().getStateForId(n.getParent());
+            if (!s.contains(">>")) {
+                grammarParents.add(n.getParent());
+                parentsSeen.add(combined);
+            } else {
+                binarizedParents.add(n.getParent());
+                binarizedParentsSeen.add(combined);
             }
-            
-            constituentsSeen.add(seen.size());
-            constituentsPruned.add(0);
-            
-            inverseRulesUsed.add(inverseRules.size());
-            grammarRulesUsed.add(grammarRules.size());
-            
-            double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0) * grammarRulesUsed.getDouble(0));
-            if (!Double.isNaN(d)) {
-                saturation.add(d);
-            }
+        }
 
-            d = (double) parentsSeen.size() / ((double) inverseParents.size() * grammarParents.size());
-            if (!Double.isNaN(d)) {
-                stateSaturation.add(d);
-            }
+        constituentsSeen.add(seen.size());
+        constituentsPruned.add(0);
 
-            d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size() * binarizedParents.size());
-            if (!Double.isNaN(d)) {
-                binaryStateSaturation.add(d);
-            }
+        inverseRulesUsed.add(inverseRules.size());
+        grammarRulesUsed.add(grammarRules.size());
+
+        double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0) * grammarRulesUsed.getDouble(0));
+        if (!Double.isNaN(d)) {
+            saturation.add(d);
+        }
+
+        d = (double) parentsSeen.size() / ((double) inverseParents.size() * grammarParents.size());
+        if (!Double.isNaN(d)) {
+            stateSaturation.add(d);
+        }
+
+        d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size() * binarizedParents.size());
+        if (!Double.isNaN(d)) {
+            binaryStateSaturation.add(d);
         }
 
         // decode final chart into tree automaton
