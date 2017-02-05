@@ -351,6 +351,7 @@ public class CoarseToFineParser {
         DoubleList constituentsSeen = new DoubleArrayList();
         DoubleList constituentsPruned = new DoubleArrayList();
         DoubleList rulesInChart = new DoubleArrayList();
+        DoubleList rulesPruned = new DoubleArrayList();
 
         IntSet inverseParents = new IntRBTreeSet();
 
@@ -378,7 +379,7 @@ public class CoarseToFineParser {
 
                 inverseRules.clear();
                 grammarRules.clear();
-                
+
                 inverseParents.clear();
                 grammarParents.clear();
 
@@ -391,6 +392,8 @@ public class CoarseToFineParser {
                 inside.clear();
                 outside.clear();
                 productivityChecker.clear();
+                
+                double rPruned = 0.0;
 
                 cts.record(0);
                 double totalSentenceInside = computeInsideOutsideNoncondensed(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
@@ -455,7 +458,10 @@ public class CoarseToFineParser {
                                 System.err.println("   -> removed, unproductive\n");
                             }
                         }
-                    }/* else if (DEBUG) {
+                    } else {
+                        ++rPruned;
+                    }
+                        /* else if (DEBUG) {
                      System.err.println("removed with score " + score + ":");
                      System.err.println("- " + r.toString(invhom, x -> false));
                      System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
@@ -488,6 +494,8 @@ public class CoarseToFineParser {
                 if (!Double.isNaN(d)) {
                     binaryStateSaturation.add(d);
                 }
+                
+                rulesPruned.add(rPruned);
             }
         } else {
             for (int i = 0; i < coarseNodes.size(); i++) {
@@ -560,7 +568,7 @@ public class CoarseToFineParser {
                 invhom, productivityChecker.getStatePairs()), constituentsSeen,
                 constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed,
                 saturation, stateSaturation, binaryStateSaturation, initialTime,
-                levelTimes);
+                levelTimes, rulesPruned);
     }
 
     @OperationAnnotation(code = "parseInputObjectWithSFTimes")
@@ -668,9 +676,10 @@ public class CoarseToFineParser {
         // decode final chart into tree automaton
         return new Combination(createTreeAutomatonNoncondensed(coarseNodes, partnerInvhomRules,
                 invhom, productivityChecker.getStatePairs()), null,
-                null, null, null, null, null, null, null, initialTime, levelTimes);
+                null, null, null, null, null, null, null, initialTime,
+                levelTimes, null);
     }
-        
+
     @OperationAnnotation(code = "parseInputObjectSizes")
     public Combination parseInputObjectTrackSizes(Object inputObject) throws ClassNotFoundException,
             InstantiationException, IllegalAccessException {
@@ -706,6 +715,7 @@ public class CoarseToFineParser {
         DoubleList constituentsSeen = new DoubleArrayList();
         DoubleList constituentsPruned = new DoubleArrayList();
         DoubleList rulesInChart = new DoubleArrayList();
+        DoubleList rulesPruned = new DoubleArrayList();
 
         IntSet inverseParents = new IntRBTreeSet();
 
@@ -744,6 +754,8 @@ public class CoarseToFineParser {
                 productivityChecker.clear();
 
                 cts.record(0);
+
+                double rPruned = 0.0;
 
                 double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
@@ -806,10 +818,14 @@ public class CoarseToFineParser {
                                 System.err.println("   -> removed, unproductive\n");
                             }
                         }
-                    } else if (DEBUG) {
-                        System.err.println("removed with score " + score + ":");
-                        System.err.println("- " + r.toString(invhom, x -> false));
-                        System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                    } else {
+                        ++rPruned;
+
+                        if (DEBUG) {
+                            System.err.println("removed with score " + score + ":");
+                            System.err.println("- " + r.toString(invhom, x -> false));
+                            System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                        }
                     }
                 }
 
@@ -840,6 +856,8 @@ public class CoarseToFineParser {
                 if (!Double.isNaN(d)) {
                     binaryStateSaturation.add(d);
                 }
+
+                rulesPruned.add(rPruned);
             }
         } else {
             for (int i = 0; i < coarseNodes.size(); i++) {
@@ -910,7 +928,7 @@ public class CoarseToFineParser {
         // decode final chart into tree automaton
         return new Combination(createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
                 constituentsSeen, constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed, saturation,
-                stateSaturation, binaryStateSaturation, initialTime, levelTimes);
+                stateSaturation, binaryStateSaturation, initialTime, levelTimes, rulesPruned);
     }
 
     @OperationAnnotation(code = "parseInputObjectTimes")
@@ -1015,13 +1033,13 @@ public class CoarseToFineParser {
                 productivityChecker.recordParents(n, r);
             }
         }
-        
+
         // decode final chart into tree automaton
         return new Combination(createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
                 null, null, null, null, null, null,
-                null, null, initialTime, levelTimes);
+                null, null, initialTime, levelTimes, null);
     }
-    
+
     /**
      *
      */
@@ -1038,12 +1056,13 @@ public class CoarseToFineParser {
         private final DoubleList binarizedStateSaturation;
         private final double initialTime;
         private final DoubleList timeTakenForLevel;
+        private final DoubleList rulesPruned;
 
         public Combination(TreeAutomaton chart, DoubleList seen,
                 DoubleList pruned, DoubleList rulesInChart,
                 DoubleList inverseRules, DoubleList grammarRules, DoubleList saturation,
                 DoubleList stateSaturation, DoubleList binarizedStateSaturation,
-                double initialTime, DoubleList timeTakenForLevel) {
+                double initialTime, DoubleList timeTakenForLevel, DoubleList rulesPruned) {
             this.chart = chart;
             this.seen = seen;
             this.pruned = pruned;
@@ -1055,6 +1074,12 @@ public class CoarseToFineParser {
             this.binarizedStateSaturation = binarizedStateSaturation;
             this.initialTime = initialTime;
             this.timeTakenForLevel = timeTakenForLevel;
+            this.rulesPruned = rulesPruned;
+        }
+        
+        @OperationAnnotation(code = "getLevelRulesPruned")
+        public DoubleList getRulesPruned() {
+            return rulesPruned;
         }
 
         @OperationAnnotation(code = "getLevelTimes")
