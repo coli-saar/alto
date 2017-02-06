@@ -24,9 +24,6 @@ import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -34,13 +31,11 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongRBTreeSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -480,17 +475,17 @@ public class CoarseToFineParser {
                 inverseRulesUsed.add(inverseRules.size());
                 grammarRulesUsed.add(grammarRules.size());
 
-                double d = rulesInChart.getDouble(level) / (inverseRulesUsed.getDouble(level) * grammarRulesUsed.getDouble(level));
+                double d = rulesInChart.getDouble(level) / (inverseRulesUsed.getDouble(level));
                 if (!Double.isNaN(d)) {
                     saturation.add(d);
                 }
 
-                d = (double) parentsSeen.size() / ((double) inverseParents.size() * grammarParents.size());
+                d = (double) parentsSeen.size() / ((double) inverseParents.size());
                 if (!Double.isNaN(d)) {
                     stateSaturation.add(d);
                 }
 
-                d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size() * binarizedParents.size());
+                d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size());
                 if (!Double.isNaN(d)) {
                     binaryStateSaturation.add(d);
                 }
@@ -548,17 +543,17 @@ public class CoarseToFineParser {
         inverseRulesUsed.add(inverseRules.size());
         grammarRulesUsed.add(grammarRules.size());
 
-        double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0) * grammarRulesUsed.getDouble(0));
+        double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0));
         if (!Double.isNaN(d)) {
             saturation.add(d);
         }
 
-        d = (double) parentsSeen.size() / ((double) inverseParents.size() * grammarParents.size());
+        d = (double) parentsSeen.size() / ((double) inverseParents.size());
         if (!Double.isNaN(d)) {
             stateSaturation.add(d);
         }
 
-        d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size() * binarizedParents.size());
+        d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size());
         if (!Double.isNaN(d)) {
             binaryStateSaturation.add(d);
         }
@@ -842,17 +837,17 @@ public class CoarseToFineParser {
                 inverseRulesUsed.add(inverseRules.size());
                 grammarRulesUsed.add(grammarRules.size());
 
-                double d = rulesInChart.getDouble(level) / (inverseRulesUsed.getDouble(level) * grammarRulesUsed.getDouble(level));
+                double d = rulesInChart.getDouble(level) / (inverseRulesUsed.getDouble(level));
                 if (!Double.isNaN(d)) {
                     saturation.add(d);
                 }
 
-                d = (double) parentsSeen.size() / ((double) inverseParents.size() * grammarParents.size());
+                d = (double) parentsSeen.size() / ((double) inverseParents.size());
                 if (!Double.isNaN(d)) {
                     stateSaturation.add(d);
                 }
 
-                d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size() * binarizedParents.size());
+                d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size());
                 if (!Double.isNaN(d)) {
                     binaryStateSaturation.add(d);
                 }
@@ -910,17 +905,17 @@ public class CoarseToFineParser {
         inverseRulesUsed.add(inverseRules.size());
         grammarRulesUsed.add(grammarRules.size());
 
-        double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0) * grammarRulesUsed.getDouble(0));
+        double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0));
         if (!Double.isNaN(d)) {
             saturation.add(d);
         }
 
-        d = (double) parentsSeen.size() / ((double) inverseParents.size() * grammarParents.size());
+        d = (double) parentsSeen.size() / ((double) inverseParents.size());
         if (!Double.isNaN(d)) {
             stateSaturation.add(d);
         }
 
-        d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size() * binarizedParents.size());
+        d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size());
         if (!Double.isNaN(d)) {
             binaryStateSaturation.add(d);
         }
