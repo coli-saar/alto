@@ -16,6 +16,7 @@ import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
+import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.IntInt2DoubleMap;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.NumbersCombine;
@@ -23,9 +24,6 @@ import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
-import it.unimi.dsi.fastutil.ints.Int2ObjectAVLTreeMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntRBTreeSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.LongIterator;
@@ -33,13 +31,11 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongRBTreeSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectRBTreeSet;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
@@ -326,8 +322,15 @@ public class CoarseToFineParser {
         List<Rule> partnerInvhomRules = new ArrayList<>();
         SiblingFinderCoarserstParser sfcp = new SiblingFinderCoarserstParser(rrt, hom, decomp);
 
+        CpuTimeStopwatch cts = new CpuTimeStopwatch();
+        double initialTime;
+        DoubleList levelTimes = new DoubleArrayList();
+
+        cts.record(0);
         //the important results are stored in coarseNodes and partnerInvhomRules, the invhom is only for future reference
         ConcreteTreeAutomaton invhom = sfcp.parse(coarseNodes, partnerInvhomRules);
+        cts.record(1);
+        initialTime = cts.getMillisecondsBefore(1);
 
         assert coarseNodes.size() == partnerInvhomRules.size();
 
@@ -343,16 +346,24 @@ public class CoarseToFineParser {
         DoubleList constituentsSeen = new DoubleArrayList();
         DoubleList constituentsPruned = new DoubleArrayList();
         DoubleList rulesInChart = new DoubleArrayList();
-        
+        DoubleList rulesPruned = new DoubleArrayList();
+
         IntSet inverseParents = new IntRBTreeSet();
+
         IntSet grammarParents = new IntRBTreeSet();
+        LongSet parentsSeen = new LongRBTreeSet();
+
+        IntSet binarizedParents = new IntRBTreeSet();
+        LongSet binarizedParentsSeen = new LongRBTreeSet();
+
         DoubleList stateSaturation = new DoubleArrayList();
-        
+        DoubleList binaryStateSaturation = new DoubleArrayList();
+
         DoubleList inverseRulesUsed = new DoubleArrayList();
         Set<Rule> inverseRules = new ObjectOpenHashSet<>();
         DoubleList grammarRulesUsed = new DoubleArrayList();
         Set<RuleRefinementNode> grammarRules = new ObjectOpenHashSet<>();
-        
+
         DoubleList saturation = new DoubleArrayList();
 
         if (ftc.numLevels() > 1) {
@@ -360,17 +371,26 @@ public class CoarseToFineParser {
                 seen.clear();
                 passed.clear();
                 rulesInChart.add(coarseNodes.size());
-                
-                inverseParents.clear();
-                grammarParents.clear();
-                
+
                 inverseRules.clear();
                 grammarRules.clear();
+
+                inverseParents.clear();
+                grammarParents.clear();
+
+                inverseParents.clear();
+                grammarParents.clear();
+                binarizedParents.clear();
+                binarizedParentsSeen.clear();
+                parentsSeen.clear();
 
                 inside.clear();
                 outside.clear();
                 productivityChecker.clear();
+                
+                double rPruned = 0.0;
 
+                cts.record(0);
                 double totalSentenceInside = computeInsideOutsideNoncondensed(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
                 /*
@@ -390,10 +410,18 @@ public class CoarseToFineParser {
 
                     inverseRules.add(r);
                     grammarRules.add(n);
-                    
+
+                    String s = irtg.getAutomaton().getStateForId(n.getParent());
+
                     inverseParents.add(r.getParent());
-                    grammarParents.add(n.getParent());
-                    
+                    if (!s.contains(">>")) {
+                        grammarParents.add(n.getParent());
+                        parentsSeen.add(combined);
+                    } else {
+                        binarizedParents.add(n.getParent());
+                        binarizedParentsSeen.add(combined);
+                    }
+
                     /*
                      if (DEBUG) {
                      printRulePair(i, r, n, invhom, inside, outside);
@@ -425,6 +453,199 @@ public class CoarseToFineParser {
                                 System.err.println("   -> removed, unproductive\n");
                             }
                         }
+                    } else {
+                        ++rPruned;
+                    }
+                        /* else if (DEBUG) {
+                     System.err.println("removed with score " + score + ":");
+                     System.err.println("- " + r.toString(invhom, x -> false));
+                     System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                     }*/
+
+                }
+                cts.record(1);
+                levelTimes.add(cts.getMillisecondsBefore(1));
+
+                coarseNodes = finerNodes;
+                partnerInvhomRules = finerInvhomPartners;
+
+                constituentsSeen.add(seen.size());
+                constituentsPruned.add(seen.size() - passed.size());
+
+                inverseRulesUsed.add(inverseRules.size());
+                grammarRulesUsed.add(grammarRules.size());
+
+                double d = rulesInChart.getDouble(level) / (inverseRulesUsed.getDouble(level));
+                if (!Double.isNaN(d)) {
+                    saturation.add(d);
+                }
+
+                d = (double) parentsSeen.size() / ((double) inverseParents.size());
+                if (!Double.isNaN(d)) {
+                    stateSaturation.add(d);
+                }
+
+                d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size());
+                if (!Double.isNaN(d)) {
+                    binaryStateSaturation.add(d);
+                }
+                
+                rulesPruned.add(rPruned);
+            }
+        } else {
+            for (int i = 0; i < coarseNodes.size(); i++) {
+                RuleRefinementNode n = coarseNodes.get(i);
+                Rule r = partnerInvhomRules.get(i);
+
+                productivityChecker.recordParents(n, r);
+            }
+        }
+
+        seen.clear();
+        passed.clear();
+        rulesInChart.add(coarseNodes.size());
+        inverseRules.clear();
+        grammarRules.clear();
+
+        inverseParents.clear();
+        grammarParents.clear();
+        binarizedParents.clear();
+        binarizedParentsSeen.clear();
+        parentsSeen.clear();
+
+        for (int i = 0; i < coarseNodes.size(); i++) {
+            RuleRefinementNode n = coarseNodes.get(i);
+            Rule r = partnerInvhomRules.get(i);
+
+            productivityChecker.recordParents(n, r);
+
+            long combined = NumbersCombine.combine(r.getParent(), n.getParent());
+            seen.add(combined);
+
+            inverseRules.add(r);
+            grammarRules.add(n);
+
+            inverseParents.add(r.getParent());
+
+            String s = irtg.getAutomaton().getStateForId(n.getParent());
+            if (!s.contains(">>")) {
+                grammarParents.add(n.getParent());
+                parentsSeen.add(combined);
+            } else {
+                binarizedParents.add(n.getParent());
+                binarizedParentsSeen.add(combined);
+            }
+        }
+
+        constituentsSeen.add(seen.size());
+        constituentsPruned.add(0);
+
+        inverseRulesUsed.add(inverseRules.size());
+        grammarRulesUsed.add(grammarRules.size());
+
+        double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0));
+        if (!Double.isNaN(d)) {
+            saturation.add(d);
+        }
+
+        d = (double) parentsSeen.size() / ((double) inverseParents.size());
+        if (!Double.isNaN(d)) {
+            stateSaturation.add(d);
+        }
+
+        d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size());
+        if (!Double.isNaN(d)) {
+            binaryStateSaturation.add(d);
+        }
+
+        // decode final chart into tree automaton
+        return new Combination(createTreeAutomatonNoncondensed(coarseNodes, partnerInvhomRules,
+                invhom, productivityChecker.getStatePairs()), constituentsSeen,
+                constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed,
+                saturation, stateSaturation, binaryStateSaturation, initialTime,
+                levelTimes, rulesPruned);
+    }
+
+    @OperationAnnotation(code = "parseInputObjectWithSFTimes")
+    public Combination parseInputObjectWithSFTrackTimes(Object inputObject) {
+        // create condensed invhom automaton
+        Homomorphism hom = irtg.getInterpretation(inputInterpretation).getHomomorphism();
+        TreeAutomaton decomp = irtg.getInterpretation(inputInterpretation).getAlgebra().decompose(inputObject);
+
+        // coarse parsing
+        List<RuleRefinementNode> coarseNodes = new ArrayList<>();
+        List<Rule> partnerInvhomRules = new ArrayList<>();
+        SiblingFinderCoarserstParser sfcp = new SiblingFinderCoarserstParser(rrt, hom, decomp);
+
+        CpuTimeStopwatch cts = new CpuTimeStopwatch();
+        double initialTime;
+        DoubleList levelTimes = new DoubleArrayList();
+
+        cts.record(0);
+        //the important results are stored in coarseNodes and partnerInvhomRules, the invhom is only for future reference
+        ConcreteTreeAutomaton invhom = sfcp.parse(coarseNodes, partnerInvhomRules);
+        cts.record(1);
+        initialTime = cts.getMillisecondsBefore(1);
+
+        assert coarseNodes.size() == partnerInvhomRules.size();
+
+        // refine the chart level-1 times
+//        Long2DoubleMap inside = new Long2DoubleOpenHashMap();
+//        Long2DoubleMap outside = new Long2DoubleOpenHashMap();
+        IIntInt2DoubleMap inside = new MyIntInt2DoubleMap();
+        IIntInt2DoubleMap outside = new MyIntInt2DoubleMap();
+        ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
+
+        if (ftc.numLevels() > 1) {
+            for (int level = 0; level < ftc.numLevels() - 1; level++) {
+                inside.clear();
+                outside.clear();
+                productivityChecker.clear();
+
+                cts.record(0);
+                double totalSentenceInside = computeInsideOutsideNoncondensed(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
+
+                /*
+                 if (DEBUG) {
+                 System.err.println("\n\nCHART AT LEVEL " + level + ":\n");
+                 printChart(coarseNodes, partnerInvhomRules, invhom, inside, outside);
+                 }*/
+                List<RuleRefinementNode> finerNodes = new ArrayList<>();
+                List<Rule> finerInvhomPartners = new ArrayList<>();
+
+                for (int i = 0; i < coarseNodes.size(); i++) {
+                    RuleRefinementNode n = coarseNodes.get(i);
+                    Rule r = partnerInvhomRules.get(i);
+
+                    /*
+                     if (DEBUG) {
+                     printRulePair(i, r, n, invhom, inside, outside);
+                     }*/
+                    double score = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
+                    for (int j = 0; j < r.getArity(); j++) {
+                        score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
+                    }
+
+                    if (score > theta * totalSentenceInside) {
+                        // rule not filtered out => refine and copy to finer structure
+                        for (RuleRefinementNode nn : n.getRefinements()) {
+                            if (DEBUG) {
+                                System.err.println("- consider refinement: " + nn.localToString(irtg.getAutomaton()));
+                            }
+
+                            if (productivityChecker.isRefinementProductive(nn, r)) {
+                                finerNodes.add(nn);
+                                finerInvhomPartners.add(r);
+                                productivityChecker.recordParents(nn, r);
+
+                                /*
+                                 if (DEBUG) {
+                                 System.err.println("   -> record it: " + irtg.getAutomaton().getStateForId(nn.getParent()) + " " + invhom.getStateForId(r.getParent()) + "\n");
+                                 }*/
+                            } else if (DEBUG) {
+                                System.err.println("   -> removed, unproductive\n");
+                            }
+                        }
                     }/* else if (DEBUG) {
                      System.err.println("removed with score " + score + ":");
                      System.err.println("- " + r.toString(invhom, x -> false));
@@ -432,51 +653,26 @@ public class CoarseToFineParser {
                      }*/
 
                 }
+                cts.record(1);
+                levelTimes.add(cts.getMillisecondsBefore(1));
 
                 coarseNodes = finerNodes;
                 partnerInvhomRules = finerInvhomPartners;
-
-                constituentsSeen.add(seen.size());
-                constituentsPruned.add(seen.size() - passed.size());
-                
-                inverseRulesUsed.add(inverseRules.size());
-                grammarRulesUsed.add(grammarRules.size());
-                saturation.add(rulesInChart.getDouble(level)/(inverseRulesUsed.getDouble(level)*grammarRulesUsed.getDouble(level)));
-                
-                stateSaturation.add((double) seen.size() / ((double) inverseParents.size()*grammarParents.size()));
             }
         } else {
-            rulesInChart.add(coarseNodes.size());
-
             for (int i = 0; i < coarseNodes.size(); i++) {
                 RuleRefinementNode n = coarseNodes.get(i);
                 Rule r = partnerInvhomRules.get(i);
 
                 productivityChecker.recordParents(n, r);
-
-                long combined = NumbersCombine.combine(r.getParent(), n.getParent());
-                seen.add(combined);
-                
-                inverseRules.add(r);
-                grammarRules.add(n);
-                
-                inverseParents.add(r.getParent());
-                grammarParents.add(n.getParent());
             }
-
-            constituentsSeen.add(seen.size());
-            constituentsPruned.add(0);
-            
-            inverseRulesUsed.add(inverseRules.size());
-            grammarRulesUsed.add(grammarRules.size());
-            saturation.add(rulesInChart.getDouble(0)/(inverseRulesUsed.getDouble(0)*grammarRulesUsed.getDouble(0)));
-            
-            stateSaturation.add((double) seen.size() / ((double) inverseParents.size()*grammarParents.size()));
         }
 
         // decode final chart into tree automaton
-        return new Combination(createTreeAutomatonNoncondensed(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
-                constituentsSeen, constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed, saturation, stateSaturation);
+        return new Combination(createTreeAutomatonNoncondensed(coarseNodes, partnerInvhomRules,
+                invhom, productivityChecker.getStatePairs()), null,
+                null, null, null, null, null, null, null, initialTime,
+                levelTimes, null);
     }
 
     @OperationAnnotation(code = "parseInputObjectSizes")
@@ -485,12 +681,20 @@ public class CoarseToFineParser {
         // create condensed invhom automaton
         CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
 
+        CpuTimeStopwatch cts = new CpuTimeStopwatch();
+        double initialTime;
+        DoubleList levelTimes = new DoubleArrayList();
+
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
         List<CondensedRule> partnerInvhomRules = new ArrayList<>();
+
+        cts.record(0);
         CondensedCoarsestParser ccp = new CondensedCoarsestParser(rrt, invhom);
         ccp.setToStringFunctions(irtg.getAutomaton()); // for debugging
         ccp.parse(coarseNodes, partnerInvhomRules);
+        cts.record(1);
+        initialTime = cts.getMillisecondsBefore(1);
 
         assert coarseNodes.size() == partnerInvhomRules.size();
 
@@ -506,18 +710,26 @@ public class CoarseToFineParser {
         DoubleList constituentsSeen = new DoubleArrayList();
         DoubleList constituentsPruned = new DoubleArrayList();
         DoubleList rulesInChart = new DoubleArrayList();
-        
+        DoubleList rulesPruned = new DoubleArrayList();
+
         IntSet inverseParents = new IntRBTreeSet();
+
         IntSet grammarParents = new IntRBTreeSet();
+        LongSet parentsSeen = new LongRBTreeSet();
+
+        IntSet binarizedParents = new IntRBTreeSet();
+        LongSet binarizedParentsSeen = new LongRBTreeSet();
+
         DoubleList stateSaturation = new DoubleArrayList();
+        DoubleList binaryStateSaturation = new DoubleArrayList();
 
         DoubleList inverseRulesUsed = new DoubleArrayList();
         Set<CondensedRule> inverseRules = new ObjectOpenHashSet<>();
         DoubleList grammarRulesUsed = new DoubleArrayList();
         Set<RuleRefinementNode> grammarRules = new ObjectOpenHashSet<>();
-        
+
         DoubleList saturation = new DoubleArrayList();
-        
+
         if (ftc.numLevels() > 1) {
             for (int level = 0; level < ftc.numLevels() - 1; level++) {
                 seen.clear();
@@ -525,13 +737,20 @@ public class CoarseToFineParser {
                 rulesInChart.add(coarseNodes.size());
                 inverseRules.clear();
                 grammarRules.clear();
-                
+
                 inverseParents.clear();
                 grammarParents.clear();
+                binarizedParents.clear();
+                binarizedParentsSeen.clear();
+                parentsSeen.clear();
 
                 inside.clear();
                 outside.clear();
                 productivityChecker.clear();
+
+                cts.record(0);
+
+                double rPruned = 0.0;
 
                 double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
@@ -547,14 +766,22 @@ public class CoarseToFineParser {
                     RuleRefinementNode n = coarseNodes.get(i);
                     CondensedRule r = partnerInvhomRules.get(i);
 
-                    inverseRules.add(r);
-                    grammarRules.add(n);
-                    
-                    inverseParents.add(r.getParent());
-                    grammarParents.add(n.getParent());
-                    
                     long combined = NumbersCombine.combine(r.getParent(), n.getParent());
                     seen.add(combined);
+
+                    inverseRules.add(r);
+                    grammarRules.add(n);
+
+                    String s = irtg.getAutomaton().getStateForId(n.getParent());
+
+                    inverseParents.add(r.getParent());
+                    if (!s.contains(">>")) {
+                        grammarParents.add(n.getParent());
+                        parentsSeen.add(combined);
+                    } else {
+                        binarizedParents.add(n.getParent());
+                        binarizedParentsSeen.add(combined);
+                    }
 
                     if (DEBUG) {
                         printRulePair(i, r, n, invhom, inside, outside);
@@ -586,12 +813,20 @@ public class CoarseToFineParser {
                                 System.err.println("   -> removed, unproductive\n");
                             }
                         }
-                    } else if (DEBUG) {
-                        System.err.println("removed with score " + score + ":");
-                        System.err.println("- " + r.toString(invhom, x -> false));
-                        System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                    } else {
+                        ++rPruned;
+
+                        if (DEBUG) {
+                            System.err.println("removed with score " + score + ":");
+                            System.err.println("- " + r.toString(invhom, x -> false));
+                            System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                        }
                     }
                 }
+
+                cts.record(1);
+
+                levelTimes.add(cts.getMillisecondsBefore(1));
 
                 coarseNodes = finerNodes;
                 partnerInvhomRules = finerInvhomPartners;
@@ -601,45 +836,208 @@ public class CoarseToFineParser {
 
                 inverseRulesUsed.add(inverseRules.size());
                 grammarRulesUsed.add(grammarRules.size());
-                saturation.add(rulesInChart.getDouble(level)/(inverseRulesUsed.getDouble(level)*grammarRulesUsed.getDouble(level)));
-                
-                stateSaturation.add((double) seen.size() / ((double) inverseParents.size()*grammarParents.size()));
+
+                double d = rulesInChart.getDouble(level) / (inverseRulesUsed.getDouble(level));
+                if (!Double.isNaN(d)) {
+                    saturation.add(d);
+                }
+
+                d = (double) parentsSeen.size() / ((double) inverseParents.size());
+                if (!Double.isNaN(d)) {
+                    stateSaturation.add(d);
+                }
+
+                d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size());
+                if (!Double.isNaN(d)) {
+                    binaryStateSaturation.add(d);
+                }
+
+                rulesPruned.add(rPruned);
             }
         } else {
-            rulesInChart.add(coarseNodes.size());
-
             for (int i = 0; i < coarseNodes.size(); i++) {
                 RuleRefinementNode n = coarseNodes.get(i);
                 CondensedRule r = partnerInvhomRules.get(i);
 
                 productivityChecker.recordParents(n, r);
-
-                long combined = NumbersCombine.combine(r.getParent(), n.getParent());
-                seen.add(combined);
-
-                inverseRules.add(r);
-                grammarRules.add(n);
-                
-                inverseParents.add(r.getParent());
-                grammarParents.add(n.getParent());
             }
+        }
 
-            constituentsSeen.add(seen.size());
-            constituentsPruned.add(0);
+        seen.clear();
+        passed.clear();
+        rulesInChart.add(coarseNodes.size());
+        inverseRules.clear();
+        grammarRules.clear();
 
-            inverseRulesUsed.add(inverseRules.size());
-            grammarRulesUsed.add(grammarRules.size());
-            saturation.add(rulesInChart.getDouble(0)/(inverseRulesUsed.getDouble(0)*grammarRulesUsed.getDouble(0)));
-            
-            stateSaturation.add((double) seen.size() / ((double) inverseParents.size()*grammarParents.size()));
+        inverseParents.clear();
+        grammarParents.clear();
+        binarizedParents.clear();
+        binarizedParentsSeen.clear();
+        parentsSeen.clear();
+
+        for (int i = 0; i < coarseNodes.size(); i++) {
+            RuleRefinementNode n = coarseNodes.get(i);
+            CondensedRule r = partnerInvhomRules.get(i);
+
+            productivityChecker.recordParents(n, r);
+
+            long combined = NumbersCombine.combine(r.getParent(), n.getParent());
+            seen.add(combined);
+
+            inverseRules.add(r);
+            grammarRules.add(n);
+
+            inverseParents.add(r.getParent());
+
+            String s = irtg.getAutomaton().getStateForId(n.getParent());
+            if (!s.contains(">>")) {
+                grammarParents.add(n.getParent());
+                parentsSeen.add(combined);
+            } else {
+                binarizedParents.add(n.getParent());
+                binarizedParentsSeen.add(combined);
+            }
+        }
+
+        constituentsSeen.add(seen.size());
+        constituentsPruned.add(0);
+
+        inverseRulesUsed.add(inverseRules.size());
+        grammarRulesUsed.add(grammarRules.size());
+
+        double d = rulesInChart.getDouble(0) / (inverseRulesUsed.getDouble(0));
+        if (!Double.isNaN(d)) {
+            saturation.add(d);
+        }
+
+        d = (double) parentsSeen.size() / ((double) inverseParents.size());
+        if (!Double.isNaN(d)) {
+            stateSaturation.add(d);
+        }
+
+        d = (double) binarizedParentsSeen.size() / ((double) inverseParents.size());
+        if (!Double.isNaN(d)) {
+            binaryStateSaturation.add(d);
         }
 
         // decode final chart into tree automaton
         return new Combination(createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
                 constituentsSeen, constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed, saturation,
-                stateSaturation);
+                stateSaturation, binaryStateSaturation, initialTime, levelTimes, rulesPruned);
     }
 
+    @OperationAnnotation(code = "parseInputObjectTimes")
+    public Combination parseInputObjectTrackTimes(Object inputObject) throws ClassNotFoundException,
+            InstantiationException, IllegalAccessException {
+        // create condensed invhom automaton
+        CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
+
+        CpuTimeStopwatch cts = new CpuTimeStopwatch();
+        double initialTime;
+        DoubleList levelTimes = new DoubleArrayList();
+
+        // coarse parsing
+        List<RuleRefinementNode> coarseNodes = new ArrayList<>();
+        List<CondensedRule> partnerInvhomRules = new ArrayList<>();
+
+        cts.record(0);
+        CondensedCoarsestParser ccp = new CondensedCoarsestParser(rrt, invhom);
+        ccp.setToStringFunctions(irtg.getAutomaton()); // for debugging
+        ccp.parse(coarseNodes, partnerInvhomRules);
+        cts.record(1);
+        initialTime = cts.getMillisecondsBefore(1);
+
+        assert coarseNodes.size() == partnerInvhomRules.size();
+
+        // refine the chart level-1 times
+//        Long2DoubleMap inside = new Long2DoubleOpenHashMap();
+//        Long2DoubleMap outside = new Long2DoubleOpenHashMap();
+        IIntInt2DoubleMap inside = new MyIntInt2DoubleMap();
+        IIntInt2DoubleMap outside = new MyIntInt2DoubleMap();
+        ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
+
+        if (ftc.numLevels() > 1) {
+            for (int level = 0; level < ftc.numLevels() - 1; level++) {
+                inside.clear();
+                outside.clear();
+                productivityChecker.clear();
+
+                cts.record(0);
+
+                double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
+
+                if (DEBUG) {
+                    System.err.println("\n\nCHART AT LEVEL " + level + ":\n");
+                    printChart(coarseNodes, partnerInvhomRules, invhom, inside, outside);
+                }
+
+                List<RuleRefinementNode> finerNodes = new ArrayList<>();
+                List<CondensedRule> finerInvhomPartners = new ArrayList<>();
+
+                for (int i = 0; i < coarseNodes.size(); i++) {
+                    RuleRefinementNode n = coarseNodes.get(i);
+                    CondensedRule r = partnerInvhomRules.get(i);
+
+                    if (DEBUG) {
+                        printRulePair(i, r, n, invhom, inside, outside);
+                    }
+
+                    double score = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
+                    for (int j = 0; j < r.getArity(); j++) {
+                        score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
+                    }
+
+                    if (score > theta * totalSentenceInside) {
+                        // rule not filtered out => refine and copy to finer structure
+                        for (RuleRefinementNode nn : n.getRefinements()) {
+                            if (DEBUG) {
+                                System.err.println("- consider refinement: " + nn.localToString(irtg.getAutomaton()));
+                            }
+
+                            if (productivityChecker.isRefinementProductive(nn, r)) {
+                                finerNodes.add(nn);
+                                finerInvhomPartners.add(r);
+                                productivityChecker.recordParents(nn, r);
+
+                                if (DEBUG) {
+                                    System.err.println("   -> record it: " + irtg.getAutomaton().getStateForId(nn.getParent()) + " " + invhom.getStateForId(r.getParent()) + "\n");
+                                }
+                            } else if (DEBUG) {
+                                System.err.println("   -> removed, unproductive\n");
+                            }
+                        }
+                    } else if (DEBUG) {
+                        System.err.println("removed with score " + score + ":");
+                        System.err.println("- " + r.toString(invhom, x -> false));
+                        System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                    }
+                }
+
+                cts.record(1);
+
+                levelTimes.add(cts.getMillisecondsBefore(1));
+
+                coarseNodes = finerNodes;
+                partnerInvhomRules = finerInvhomPartners;
+            }
+        } else {
+            for (int i = 0; i < coarseNodes.size(); i++) {
+                RuleRefinementNode n = coarseNodes.get(i);
+                CondensedRule r = partnerInvhomRules.get(i);
+
+                productivityChecker.recordParents(n, r);
+            }
+        }
+
+        // decode final chart into tree automaton
+        return new Combination(createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
+                null, null, null, null, null, null,
+                null, null, initialTime, levelTimes, null);
+    }
+
+    /**
+     *
+     */
     public class Combination {
 
         private final TreeAutomaton chart;
@@ -650,11 +1048,16 @@ public class CoarseToFineParser {
         private final DoubleList inverseRules;
         private final DoubleList grammarRules;
         private final DoubleList stateSaturation;
+        private final DoubleList binarizedStateSaturation;
+        private final double initialTime;
+        private final DoubleList timeTakenForLevel;
+        private final DoubleList rulesPruned;
 
         public Combination(TreeAutomaton chart, DoubleList seen,
                 DoubleList pruned, DoubleList rulesInChart,
                 DoubleList inverseRules, DoubleList grammarRules, DoubleList saturation,
-                DoubleList stateSaturation) {
+                DoubleList stateSaturation, DoubleList binarizedStateSaturation,
+                double initialTime, DoubleList timeTakenForLevel, DoubleList rulesPruned) {
             this.chart = chart;
             this.seen = seen;
             this.pruned = pruned;
@@ -663,6 +1066,25 @@ public class CoarseToFineParser {
             this.grammarRules = grammarRules;
             this.saturation = saturation;
             this.stateSaturation = stateSaturation;
+            this.binarizedStateSaturation = binarizedStateSaturation;
+            this.initialTime = initialTime;
+            this.timeTakenForLevel = timeTakenForLevel;
+            this.rulesPruned = rulesPruned;
+        }
+        
+        @OperationAnnotation(code = "getLevelRulesPruned")
+        public DoubleList getRulesPruned() {
+            return rulesPruned;
+        }
+
+        @OperationAnnotation(code = "getLevelTimes")
+        public DoubleList getTimeTakenPerLevel() {
+            return timeTakenForLevel;
+        }
+
+        @OperationAnnotation(code = "getInitialTime")
+        public double getInitialTime() {
+            return initialTime;
         }
 
         @OperationAnnotation(code = "getCTFCombinationChart")
@@ -689,20 +1111,25 @@ public class CoarseToFineParser {
         public DoubleList getSaturation() {
             return saturation;
         }
-        
+
         @OperationAnnotation(code = "getInverseRulesNumber")
         public DoubleList getInverseRulesNumber() {
             return inverseRules;
         }
-        
+
         @OperationAnnotation(code = "getGrammarRulesNumber")
         public DoubleList getGrammarRulesNumber() {
             return grammarRules;
         }
-        
+
         @OperationAnnotation(code = "getStateSaturation")
         public DoubleList getStateSaturation() {
             return stateSaturation;
+        }
+
+        @OperationAnnotation(code = "getBinarizedStateSaturation")
+        public DoubleList getBinarizedStateSaturation() {
+            return binarizedStateSaturation;
         }
     }
 

@@ -106,6 +106,21 @@ public class BasicOperations {
             return (object.equals(other)) ? 1 : 0;
         }
     }
+    
+    
+    @OperationAnnotation(code = "selfNormDifference") 
+    public static double selfNormDifference(Object d1, Object d2) {
+       double v1 = d1 == null ? 0.0 : getObjectValue(d1);
+       double v2 = d2 == null ? 0.0 : getObjectValue(d2);
+        
+       double val = Math.abs(v1-v2) / v1;
+       if(Double.isNaN(val)) {
+           return 0.0;
+       } else {
+           return val;
+       }
+    }
+    
 
     @OperationAnnotation(code = "sumDoubleLists")
     public static DoubleList sumLists(Object[] list) {

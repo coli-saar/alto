@@ -36,6 +36,10 @@ public class CpuTimeStopwatch {
     public long getTimeBefore(int id) {
         return timestamps.get(id) - timestamps.get(id - 1);
     }
+    
+    public double getMillisecondsBefore(int id) {
+        return this.getTimeBefore(id) / ((double) 1000000);
+    }
 
     public String printTimeBefore(int id, String label) {
         return String.format("%-" + label.length() + "s : %d ms", label, getTimeBefore(id) / 1000000);
