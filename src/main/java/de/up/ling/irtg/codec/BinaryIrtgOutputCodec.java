@@ -159,7 +159,7 @@ public class BinaryIrtgOutputCodec extends OutputCodec<InterpretedTreeAutomaton>
         return bytes;
     }
 
-    private long writeSignature(Signature sig, NumberCodec nc, StringCodec sc) throws IOException {
+    protected long writeSignature(Signature sig, NumberCodec nc, StringCodec sc) throws IOException {
         long bytes = 0;
 
         bytes += nc.writeInt(sig.getMaxSymbolId());

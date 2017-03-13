@@ -122,7 +122,7 @@ public class BinaryIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return ret;
     }
 
-    private void readRules(InterpretedTreeAutomaton irtg, List<String> interpNamesInOrder, NumberCodec nc) throws IOException {
+    protected void readRules(InterpretedTreeAutomaton irtg, List<String> interpNamesInOrder, NumberCodec nc) throws IOException {
         ConcreteTreeAutomaton<String> auto = (ConcreteTreeAutomaton<String>) irtg.getAutomaton();
 
         // read final states
@@ -156,7 +156,7 @@ public class BinaryIrtgInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         }
     }
 
-    private Tree<HomomorphismSymbol> readHomTree(Signature sig, NumberCodec nc) throws IOException {
+    protected Tree<HomomorphismSymbol> readHomTree(Signature sig, NumberCodec nc) throws IOException {
         int value = nc.readSignedInt();
 
         if (value <= 0) {
