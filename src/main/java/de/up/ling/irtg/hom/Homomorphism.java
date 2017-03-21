@@ -10,7 +10,6 @@ import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.signature.SignatureMapper;
 import de.up.ling.tree.Tree;
-import de.up.ling.tree.TreeVisitor;
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -260,21 +259,10 @@ public class Homomorphism implements Serializable {
      *
      */
     public Tree<Integer> applyRaw(Tree<Integer> tree) {
-        return tree.dfs(new TreeVisitor<Integer, Void, Tree<Integer>>() {
-            @Override
-            public Tree<Integer> combine(Tree<Integer> node, List<Tree<Integer>> childrenValues) {
-                Tree<Integer> ret = constructRaw(get(node.getLabel()), childrenValues);
-                if (debug) {
-                    System.err.println("\n" + node + ":");
-                    System.err.println("  " + rhsAsString(get(node.getLabel())));
-                    for (Tree<Integer> child : childrenValues) {
-                        System.err.println("   + " + child);
-                    }
-                    System.err.println("  => " + ret);
-                }
-                return ret;
-            }
-        });
+        Tree<HomomorphismSymbol> homSym = get(tree.getLabel());
+        Tree<Integer> ti = constructRaw(homSym, tree.getChildren());
+
+        return ti;
     }
 
     @OperationAnnotation(code = "apply")
@@ -297,23 +285,22 @@ public class Homomorphism implements Serializable {
      * @return
      */
     private Tree<Integer> constructRaw(final Tree<HomomorphismSymbol> tree, final List<Tree<Integer>> subtrees) {
-        final Tree<Integer> ret = tree.dfs(new TreeVisitor<HomomorphismSymbol, Void, Tree<Integer>>() {
-            @Override
-            public Tree<Integer> combine(Tree<HomomorphismSymbol> node, List<Tree<Integer>> childrenValues) {
-                HomomorphismSymbol label = node.getLabel();
+        HomomorphismSymbol label = tree.getLabel();
+        switch (label.getType()) {
+            case VARIABLE:
+                return applyRaw(subtrees.get(label.getValue()));
+            case CONSTANT:
+                int size = tree.getChildren().size();
+                Tree<Integer>[] children = new Tree[size];
 
-                switch (label.getType()) {
-                    case VARIABLE:
-                        return subtrees.get(label.getValue());
-                    case CONSTANT:
-                        return Tree.create(label.getValue(), childrenValues);
-                    default:
-                        throw new RuntimeException("undefined homomorphism symbol type");
+                for (int i = 0; i < size; ++i) {
+                    children[i] = constructRaw(tree.getChildren().get(i), subtrees);
                 }
-            }
-        });
 
-        return ret;
+                return Tree.create(label.getValue(), children);
+            default:
+                throw new RuntimeException("undefined homomorphism symbol type");
+        }
     }
 
     public String toStringCondensed() {

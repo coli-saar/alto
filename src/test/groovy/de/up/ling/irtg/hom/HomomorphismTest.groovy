@@ -109,6 +109,17 @@ class HomomorphismTest {
     }
     
     @Test
+    public void testIgnoreUnreachable() {
+        Tree t = pt("f(a,a,b)");
+
+        Homomorphism h1 = hom(["f":"g(?1,h(?2))", "a":"k(b)"], sig(["f":3, "a":0, "b":0]));
+
+        Tree<String> ts = h1.apply(t);
+        assertEquals(ts,pt("g(k(b),h(k(b)))"));
+    }
+
+
+    @Test
     public void testNondeletingWithSetsAndEpsilonRules() {
         Homomorphism h1 = hom(["A":"g(?1,?2)", "B":"g(?1,?2)", "C":"c", "D":"d", "E":"?1", "F":"?1"], sig(["A":2, "B":2, "C":0, "D":0, "E":1, "F":1]));
         assert h1.isNonDeleting()
