@@ -21,7 +21,14 @@ import de.up.ling.tree.Tree;
 import java.io.Serializable;
 
 /**
- *
+ * This class represents an interpretation, a standard component of an IRTG which
+ * maps a derivation tree to a value.
+ * 
+ * An interpretation consists of a homomorphism and an algebra. The Homomorphism
+ * maps a derivation tree to an expression in the algebra (also represented as
+ * a tree) and the algebra evaluates it.
+ * 
+ * 
  * @author koller
  */
 public class Interpretation<E> implements Serializable {
@@ -30,6 +37,12 @@ public class Interpretation<E> implements Serializable {
     private Homomorphism hom;
     private PatternMatchingInvhomAutomatonFactory pmFactory;
 
+    /**
+     * Constructs  new instance with the given algebra and homomorphism.
+     * 
+     * @param algebra
+     * @param hom 
+     */
     public Interpretation(Algebra<E> algebra, Homomorphism hom) {
         this.algebra = algebra;
         this.hom = hom;
@@ -52,11 +65,21 @@ public class Interpretation<E> implements Serializable {
         }
     }
 
+    /**
+     * Obtains the algebra used by the interpretation.
+     * 
+     * @return 
+     */
     @OperationAnnotation(code = "alg")
     public Algebra<E> getAlgebra() {
         return algebra;
     }
 
+    /**
+     * Obtains the homomorphism used by the interpretation.
+     * 
+     * @return 
+     */
     @OperationAnnotation(code = "hom")
     public Homomorphism getHomomorphism() {
         return hom;
@@ -65,6 +88,8 @@ public class Interpretation<E> implements Serializable {
     /**
      * Returns the image under inverse homomorphism of the given automaton.
      *
+     * This is based on the homomorphism of this interpretation. 
+     * 
      * @param auto
      * @return
      */
@@ -106,11 +131,30 @@ public class Interpretation<E> implements Serializable {
 
     }
 
+    /**
+     * This returns an inverse homomorphism automaton with the added assumption
+     * that the underlying homomorphism is non-deleting.
+     * 
+     * If the homomorphism is in fact deleting, then behavior is not well defined.
+     * 
+     * @param auto
+     * @return 
+     */
     @OperationAnnotation(code = "basicNonDelInvHom")
     public TreeAutomaton basicNonDelInvHom(TreeAutomaton auto) {
         return new NondeletingInverseHomAutomaton(auto, hom);
     }
 
+    /**
+     * This method takes the given object and attempts to compute its inverse
+     * homomorphism automaton.
+     * 
+     * This means that the decomposition automaton under the algebra of this
+     * interpretation is found and then inverse of the homomorphism is applied.
+     * 
+     * @param object
+     * @return 
+     */
     public Intersectable parse(E object) {
         TreeAutomaton decompositionAutomaton = algebra.decompose(object);
         // It is much preferable to return a condensed automaton for the
@@ -120,15 +164,39 @@ public class Interpretation<E> implements Serializable {
 
     }
 
+    /**
+     * This method takes the given object and attempts to compute its inverse
+     * homomorphism automaton in the form of an condensed automaton.
+     * 
+     * This means that the decomposition automaton under the algebra of this
+     * interpretation is found and then inverse of the homomorphism is applied.
+     * 
+     * @param object
+     * @return 
+     */
     public CondensedTreeAutomaton parseToCondensed(E object) {
         return algebra.decompose(object).inverseCondensedHomomorphism(hom);
     }
 
+    /**
+     * Returns a string containing the algebra class and homomorphism used
+     * by this interpretation.
+     * 
+     * @return 
+     */
     @Override
     public String toString() {
         return algebra.getClass() + "\n" + hom.toString();
     }
 
+    /**
+     * Equality holds if obj is also an interpretation, which has the same
+     * class of algebra and an homomorphism that is equals to the homomorphism
+     * for this interpretation.
+     * 
+     * @param obj
+     * @return 
+     */
     @Override
     public boolean equals(Object obj) {
         if (obj == null) {
@@ -147,6 +215,13 @@ public class Interpretation<E> implements Serializable {
         return true;
     }
 
+    /**
+     * This method allows the user to set the name under which feedback from 
+     * the pattern matching factory is logged.
+     * 
+     * 
+     * @param name 
+     */
     public void setPmLogName(String name) {
         pmFactory.logTitle = name;
     }
