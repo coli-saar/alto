@@ -82,7 +82,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      */
     public InterpretedTreeAutomaton(TreeAutomaton<String> automaton) {
         this.automaton = automaton;
-        interpretations = new HashMap<String, Interpretation>();
+        interpretations = new HashMap<>();
     }
 
     /**
@@ -178,6 +178,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      */
     /**
      * Resolves the string representation to an object of the given algebra.
+     * 
      * This is a helper function that retrieves the algebra for the given
      * interpretation, and then calls {@link Algebra#parseString(java.lang.String)
      * }
@@ -216,7 +217,7 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @throws ParserException
      */
     public TreeAutomaton parse(Map<String, String> representations) throws ParserException {
-        Map<String, Object> inputs = new HashMap<String, Object>();
+        Map<String, Object> inputs = new HashMap<>();
         for (String interp : representations.keySet()) {
             inputs.put(interp, parseString(interp, representations.get(interp)));
         }
@@ -224,6 +225,15 @@ public class InterpretedTreeAutomaton implements Serializable {
         return parseInputObjects(inputs);
     }
 
+    /**
+     * Parses a single input representations to a parse chart without using any optimization in the parsing process.
+     * 
+     * 
+     * @param interpretationName name of the interpretation from which the object comes.
+     * @param input
+     * @return a tree automaton containing all possible derivation trees that are mapped to the input by the interpretation.
+     * @throws ParserException 
+     */
     @OperationAnnotation(code = "parseSimple")
     public TreeAutomaton parseSimple(String interpretationName, Object input) throws ParserException {
         Map<String, Object> inputs = new HashMap<>();
@@ -231,6 +241,14 @@ public class InterpretedTreeAutomaton implements Serializable {
         return parseInputObjects(inputs);
     }
 
+    /**
+     * Parses a single input representations to a parse chart without using a sibling finder in the intersection.
+     * 
+     * @param interpretationName name of the interpretation from which the object comes.
+     * @param input
+     * @return a tree automaton containing all possible derivation trees that are mapped to the input by the interpretation.
+     * @throws ParserException 
+     */
     @OperationAnnotation(code = "parseSimpleWithSiblingFinder")
     public TreeAutomaton parseWithSiblingFinder(String interpretationName, Object input) throws ParserException {
         SiblingFinderInvhom invhom = new SiblingFinderInvhom(interpretations.get(interpretationName).getAlgebra().decompose(input), interpretations.get(interpretationName).getHomomorphism());
@@ -382,8 +400,8 @@ public class InterpretedTreeAutomaton implements Serializable {
      * details)
      * .<p>
      *
-     * The algorithm terminates after a given number of iterations or as soon as
-     * the rate the likelihood increases drops below a given threshold.
+     * The algorithm terminates as soon as the rate of the likelihood increases
+     * drops below 1E-5.
      *
      * @param trainingData
      */
@@ -391,10 +409,43 @@ public class InterpretedTreeAutomaton implements Serializable {
         trainEM(trainingData, null);
     }
 
+    /**
+     * Performs expectation maximization (EM) training of this (weighted) IRTG
+     * using the given corpus and gives progress information to the passed progress
+     * listener. The corpus may be unannotated; if it contains
+     * annotated derivation trees, these are ignored by the algorithm. However,
+     * it must contain a parse chart for each instance (see {@link Corpus} for
+     * details)
+     * .<p>
+     *
+     * The algorithm terminates as soon as the rate of the likelihood increases
+     * drops below 1E-5.
+     * 
+     * @param trainingData
+     * @param listener 
+     */
     public void trainEM(Corpus trainingData, ProgressListener listener) {
         trainEM(trainingData, 0, 1E-5, listener);
     }
 
+    /**
+     * Performs expectation maximization (EM) training of this (weighted) IRTG
+     * using the given corpus and gives progress information to the passed progress
+     * listener. The corpus may be unannotated; if it contains
+     * annotated derivation trees, these are ignored by the algorithm. However,
+     * it must contain a parse chart for each instance (see {@link Corpus} for
+     * details)
+     * .<p>
+     *
+     * The algorithm terminates after a given number of iterations or as soon as
+     * the rate the likelihood increases drops below a given threshold.
+     * 
+     * 
+     * @param trainingData
+     * @param iterations maximum number of iterations allowed
+     * @param threshold minimum change in log-likelihood that prevents stopping of the iterations
+     * @param listener 
+     */
     public void trainEM(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
         if (!trainingData.hasCharts()) {
             System.err.println("EM training can only be performed on a corpus with attached charts.");
@@ -476,15 +527,48 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Modifies the rule weights of the derivation tree automaton such that the
      * weights for all rules with the same parent state sum to one.
+     * 
+     * This calls {@link de.up.ling.irtg.automata.TreeAutomaton#normalizeRuleWeights normalizeWeights}
+     * on the tree automaton that produces the derivation trees.
      */
     public void normalizeRuleWeights() {
         automaton.normalizeRuleWeights();
     }
 
+    /**
+     * Performs Variational Bayes (VB) training of this (weighted) IRTG using
+     * the given corpus. The corpus may be unannotated; if it contains annotated
+     * derivation trees, these are ignored by the algorithm. However, it must
+     * contain a parse chart for each instance (see {@link Corpus} for details)
+     * .<p>
+     *
+     * This method implements the algorithm from Jones et al., "Semantic Parsing
+     * with Bayesian Tree Transducers", ACL 2012.
+     * 
+     * Iteration will terminate once the change in the ELBO falls below 1E-5.
+     *
+     * @param trainingData a corpus of parse charts
+     */
     public void trainVB(Corpus trainingData) {
         trainVB(trainingData, null);
     }
 
+    /**
+     * Performs Variational Bayes (VB) training of this (weighted) IRTG using
+     * the given corpus. The corpus may be unannotated; if it contains annotated
+     * derivation trees, these are ignored by the algorithm. However, it must
+     * contain a parse chart for each instance (see {@link Corpus} for details)
+     * .<p>
+     *
+     * This method implements the algorithm from Jones et al., "Semantic Parsing
+     * with Bayesian Tree Transducers", ACL 2012.
+     * 
+     * Iteration will terminate once the change in the ELBO falls below 1E-5.
+     *
+     * @param trainingData a corpus of parse charts
+     * @param listener a progress listener that will be given information about
+     * the progress of the optimization.
+     */
     public void trainVB(Corpus trainingData, ProgressListener listener) {
         trainVB(trainingData, 0, 1E-5, listener);
     }
@@ -500,6 +584,10 @@ public class InterpretedTreeAutomaton implements Serializable {
      * with Bayesian Tree Transducers", ACL 2012.
      *
      * @param trainingData a corpus of parse charts
+     * @param iterations the maximum number of iterations allowed
+     * @param threshold the minimum change in the ELBO before iterations are stopped
+     * @param listener a progress listener that will be given information about
+     * the progress of the optimization.
      */
     public void trainVB(Corpus trainingData, int iterations, double threshold, ProgressListener listener) {
         if (!trainingData.hasCharts()) {
@@ -573,7 +661,10 @@ public class InterpretedTreeAutomaton implements Serializable {
      * (see {@link TreeAutomaton#reduceTopDown() }).
      *
      * @param parses
+     * @param globalRuleCount
      * @param intersectedRuleToOriginalRule
+     * @param listener
+     * @param iteration
      * @return
      */
     protected double estep(List<TreeAutomaton> parses, Map<Rule, Double> globalRuleCount, List<Map<Rule, Rule>> intersectedRuleToOriginalRule, ProgressListener listener, int iteration) {
@@ -715,8 +806,11 @@ public class InterpretedTreeAutomaton implements Serializable {
     }
 
     /**
-     * Loads a corpus for this IRTG from a reader.
+     * Loads a corpus for this IRTG using the given a reader.
      *
+     * The corpus must define a subset of the interpretations which this IRTG
+     * defines.
+     * 
      * @param reader
      * @return
      * @throws IOException
@@ -829,6 +923,8 @@ public class InterpretedTreeAutomaton implements Serializable {
     /**
      * Returns a string representation of the IRTG.
      *
+     * The IRTG is given in the same format that the IrtgInputCodec understands.
+     * 
      * @return
      */
     @Override
@@ -893,15 +989,42 @@ public class InterpretedTreeAutomaton implements Serializable {
         return true;
     }
 
+    /**
+     * Helper method that reads an IRTG from an input stream as with {@link de.up.ling.irtg.codec.IrtgInputCodec#read read}
+     * from an IRTG input codec.
+     * 
+     * @param r
+     * @return
+     * @throws IOException
+     * @throws CodecParseException 
+     */
     public static InterpretedTreeAutomaton read(InputStream r) throws IOException, CodecParseException {
         return new IrtgInputCodec().read(r);
     }
 
+    /**
+     * Helper method that reads an IRTG from a string as with {@link de.up.ling.irtg.codec.IrtgInputCodec#read read}
+     * from an IRTG input codec.
+     * 
+     * @param s
+     * @return
+     * @throws IOException
+     * @throws CodecParseException 
+     */
     @OperationAnnotation(code = "irtgFromString")
     public static InterpretedTreeAutomaton fromString(String s) throws IOException, CodecParseException {
         return read(new ByteArrayInputStream(s.getBytes("UTF-8")));
     }
 
+    /**
+     * Helper method that creates a stream from the given path and reads it as with
+     * {@link de.up.ling.irtg.codec.IrtgInputCodec#read read} from an IRTG input codec.
+     * 
+     * @param path
+     * @return
+     * @throws IOException
+     * @throws CodecParseException 
+     */
     @OperationAnnotation(code = "irtgFromPath")
     public static InterpretedTreeAutomaton fromPath(String path) throws IOException, CodecParseException {
         return read(new FileInputStream(path));
@@ -925,6 +1048,16 @@ public class InterpretedTreeAutomaton implements Serializable {
         return irtg;
     }
 
+    /**
+     * Creates a new IRTG with many of the rules filtered out.
+     * 
+     * The rules are filtered out if they contain a constant in the given interpretation
+     * which cannot be used in deriving the given object.
+     * 
+     * @param interpName
+     * @param input
+     * @return 
+     */
     @OperationAnnotation(code = "filter")
     public InterpretedTreeAutomaton filterForAppearingConstants(String interpName, Object input) {
 
@@ -1005,6 +1138,17 @@ public class InterpretedTreeAutomaton implements Serializable {
 
     }
 
+    /**
+     * Creates a new IRTG with many of the rules filtered out.
+     * 
+     * The rules are filtered out if they contain a constant in the given interpretation
+     * which cannot be used in deriving the given object or rules which are connected
+     * by binarization to the rules that have been removed.
+     * 
+     * @param interpName
+     * @param input
+     * @return 
+     */
     @OperationAnnotation(code = "filterBinarized")
     public InterpretedTreeAutomaton filterBinarizedForAppearingConstants(String interpName, Object input) {
 
