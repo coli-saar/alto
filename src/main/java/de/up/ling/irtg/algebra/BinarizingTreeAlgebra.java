@@ -12,13 +12,23 @@ import javax.swing.JComponent;
  * A {@link BinarizingAlgebra} that interprets values
  * over a {@link TreeAlgebra}.
  * 
+ * This is a BinarizingAlgebra where the underlying algebra is a TreeAlgebra.
+ * 
  * @author koller
  */
 public class BinarizingTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
+    
+    /**
+     * Creates a new instance with its own signature.
+     */
     public BinarizingTreeAlgebra() {
         super(new TreeAlgebra());
     }
     
+    /**
+     * Creates a new instance with its own signature and a user specified concatenation symbol.
+     * @param appendSymbol 
+     */
     public BinarizingTreeAlgebra(String appendSymbol) {
         super(new TreeAlgebra(), appendSymbol);
     }
@@ -28,7 +38,4 @@ public class BinarizingTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
         return new TreePanel(object);
     }
 
-    
-    
-    
 }

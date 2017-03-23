@@ -13,9 +13,16 @@ import javax.swing.JComponent;
 /**
  * A {@link BinarizingAlgebra} whose underlying algebra is a {@link TagTreeAlgebra}.
  * 
+ * This will behave exactly as a BinarizingAlgebra with the underlying algebra being
+ * a TagTreeAlgebra.
+ * 
  * @author koller
  */
 public class BinarizingTagTreeAlgebra extends BinarizingAlgebra<Tree<String>> {
+    
+    /**
+     * Creates a new instance with a new signature. 
+     */
     public BinarizingTagTreeAlgebra() {
         super(new TagTreeAlgebra());
     }
