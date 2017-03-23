@@ -19,6 +19,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * Extends the TagTreeAlgebra with arity annotation.
+ * 
+ * This similar is to {@link  TreeWithAritiesAlgebra} but using the tag operations.
+ * 
  * Warning: this class is written to work with Grammar 35 in Alto Lab, and is
  * not annotating constants with _0.
  * @author Jonas
@@ -47,11 +51,14 @@ public class TagTreeWithAritiesAlgebra extends TagTreeAlgebra {
         } catch (de.up.ling.tree.ParseException ex) {
             throw new ParserException(ex);
         }
-    }
+    }    
     
-    
-    
-    
+    /**
+     * Decorates the nodes in a tree with arities.
+     * 
+     * @param tree
+     * @return 
+     */
     public static Tree<String> addArities(Tree<String> tree) {
         return tree.dfs(new TreeVisitor<String, Void, Tree<String>>() {
             @Override
@@ -90,14 +97,28 @@ public class TagTreeWithAritiesAlgebra extends TagTreeAlgebra {
         });
     }
 
+    /**
+     * Permissiveness controls whether matching between the arity annotation and the actual arities is
+     * enforced, this method can be used to check the current setting for this parameter.
+     * 
+     * @return 
+     */
     public boolean isPermissive() {
         return permissive;
     }
 
+    /**
+     * Permissiveness controls whether matching between the arity annotation and the actual arities is
+     * enforced, this method can be used to set this parameter.
+     * 
+     * @param permissive 
+     */
     public void setPermissive(boolean permissive) {
         this.permissive = permissive;
     }
     
+    /*
+    // this should be moved into a test case; for now I commented it out - christoph
     public static void main(String[] args) throws IOException, ParserException {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.fromPath("examples/grammar_35.irtg");
         Object input = irtg.getInterpretation("string").getAlgebra().parseString("There is no asbestos in our products now . ''");
@@ -108,6 +129,6 @@ public class TagTreeWithAritiesAlgebra extends TagTreeAlgebra {
         inputs.put("string", input);
         System.err.println(irtg.parseInputObjects(inputs).viterbi());
         System.err.println(filtered.parseInputObjects(inputs).viterbi());
-    }
+    }*/
     
 }

@@ -28,7 +28,7 @@ import java.util.function.IntUnaryOperator;
  * <p>
  *
  * This algebra defines the string-combining operations described in Koller and
- * Kuhlmann 2012, <a href="http://www.ling.uni-potsdam.de/~koller/showpaper.php?id=tag-irtg">"Decomposing TAG Algorithms Using Simple Algebraizations"</a>,
+ * Kuhlmann 2012, <a href="http://www.coli.uni-saarland.de/~koller/showpaper.php?id=tag-irtg">"Decomposing TAG Algorithms Using Simple Algebraizations"</a>,
  * In particular:
  * <ul>
  * <li>*CONC11*(v,w) concatenates two strings into the string vw.</li>
@@ -51,14 +51,23 @@ import java.util.function.IntUnaryOperator;
 public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> {
 
 //    private Signature signature;
-    private Int2ObjectMap<Operation> namesToOperations = new Int2ObjectOpenHashMap<Operation>();
+    private final Int2ObjectMap<Operation> namesToOperations = new Int2ObjectOpenHashMap<>();
 
+    /**
+     * This enumerable represents the different operations used by the algebra.
+     * 
+     * This includes their corresponding string label. When saying that an operation
+     * takes a string argument we mean a pair consisting of some string and null.
+     */
     public static enum Operation {
 
         //
         //
         // string + string -> string
 
+        /**
+         * This operation represents standards string concatenation.
+         */
         CONC11(new BinaryOperation("*CONC11*", 1, 1, 1) {
             @Override
             protected Pair<List<String>, List<String>> evaluate(Pair<List<String>, List<String>> first, Pair<List<String>, List<String>> second) {
@@ -67,7 +76,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
             @Override
             public Set<Rule> makeTopDownRules(Pair<Span, Span> parent, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
 
                 if (_arity(parent) == 1) {
                     // string + string
@@ -92,6 +101,12 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         //
         //
         // string + string pair -> string pair
+        
+        /**
+         * This operations takes a string and a string pair and creates a new pair consisting of the
+         * concatenation of the string and  the first element of the pair and the second element
+         * of the pair.
+         */
         CONC12(new BinaryOperation("*CONC12*", 1, 2, 2) {
             @Override
             protected Pair<List<String>, List<String>> evaluate(Pair<List<String>, List<String>> first, Pair<List<String>, List<String>> second) {
@@ -100,7 +115,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
             @Override
             public Set<Rule> makeTopDownRules(Pair<Span, Span> parent, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
                 if (_arity(parent) == 2) {
                     for (int split = parent.left.start; split <= parent.left.end; split++) {
                         ret.add(auto.createRule(parent, getName(),
@@ -122,6 +137,11 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         //
         //
         // string pair + string -> string pair
+        
+        /**
+         * This operations takes a string pair and a string and creates a new pair consisting of the first
+         * element of the pair and the concatenation of the string and the second element of the pair.
+         */
         CONC21(new BinaryOperation("*CONC21*", 2, 1, 2) {
             @Override
             protected Pair<List<String>, List<String>> evaluate(Pair<List<String>, List<String>> first, Pair<List<String>, List<String>> second) {
@@ -130,7 +150,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
             @Override
             public Set<Rule> makeTopDownRules(Pair<Span, Span> parent, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
                 if (_arity(parent) == 2) {
 
                     for (int split = parent.right.start; split <= parent.right.end; split++) {
@@ -154,6 +174,12 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         //
         //
         // string pair + string -> string
+        
+        /**
+         * This operation takes a pair of strings and a string and creates a pair
+         * from the first element of the pair and the concatenation of the string
+         * and the second element of the pair.
+         */
         WRAP21(new BinaryOperation("*WRAP21*", 2, 1, 1) {
             @Override
             protected Pair<List<String>, List<String>> evaluate(Pair<List<String>, List<String>> first, Pair<List<String>, List<String>> second) {
@@ -162,7 +188,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
             @Override
             public Set<Rule> makeTopDownRules(Pair<Span, Span> parent, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
 
                 if (_arity(parent) == 1) {
                     for (int start = parent.left.start; start <= parent.left.end; start++) {
@@ -188,6 +214,16 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         //
         //
         // string pair + string pair -> string pair
+        
+        /**
+         * This operation takes two pairs of strings as arguments and creates a
+         * pair of strings consisting of the concatenation of the first element
+         * of the first pair and the first element of the second pair and the concatenation
+         * of the second element of the second pair and the second element of the first pair.
+         * 
+         * For example: a,a + b,b becomes ab,ba
+         * 
+         */
         WRAP22(new BinaryOperation("*WRAP22*", 2, 2, 2) {
             @Override
             protected Pair<List<String>, List<String>> evaluate(Pair<List<String>, List<String>> first, Pair<List<String>, List<String>> second) {
@@ -196,7 +232,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
             @Override
             public Set<Rule> makeTopDownRules(Pair<Span, Span> parent, TreeAutomaton<Pair<Span, Span>> auto) {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
 
                 if (_arity(parent) == 2) {
                     for (int split1 = parent.left.start; split1 <= parent.left.end; split1++) {
@@ -222,6 +258,10 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         //
         //
         // the string pair (epsilon, epsilon)
+        
+        /**
+         * A constant which represents a pair of empty strings.
+         */
         EPSILON_EPSILON(null) {
                     @Override
                     Pair<List<String>, List<String>> evaluate(List<Pair<List<String>, List<String>>> children) {
@@ -229,12 +269,12 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                             throw new UnsupportedOperationException("*EE* is a constant");
                         }
 
-                        return new Pair(new ArrayList<String>(), new ArrayList<String>());
+                        return new Pair(new ArrayList<>(), new ArrayList<>());
                     }
 
                     @Override
                     Set<Rule> makeBottomUpRules(int[] children, int n, TreeAutomaton<Pair<Span, Span>> auto) {
-                        Set<Rule> ret = new HashSet<Rule>();
+                        Set<Rule> ret = new HashSet<>();
 
                         if (children.length > 0) {
                             return ret;
@@ -253,7 +293,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
                     @Override
                     Set<Rule> makeTopDownRules(int parentId, TreeAutomaton<Pair<Span, Span>> auto) {
-                        Set<Rule> ret = new HashSet<Rule>();
+                        Set<Rule> ret = new HashSet<>();
                         Pair<Span, Span> parent = auto.getStateForId(parentId);
 
                         if (_arity(parent) == 2) {
@@ -278,6 +318,10 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         //
         //
         // the empty string epsilon
+        /**
+         * A constant which represents the empty string, i.e. a pair of the empty
+         * string and null.
+         */
         EPSILON(null) {
                     @Override
                     Pair<List<String>, List<String>> evaluate(List<Pair<List<String>, List<String>>> children) {
@@ -285,12 +329,12 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                             throw new UnsupportedOperationException("*EE* is a constant");
                         }
 
-                        return new Pair(new ArrayList<String>(), null);
+                        return new Pair(new ArrayList<>(), null);
                     }
 
                     @Override
                     Set<Rule> makeBottomUpRules(int[] children, int n, TreeAutomaton<Pair<Span, Span>> auto) {
-                        Set<Rule> ret = new HashSet<Rule>();
+                        Set<Rule> ret = new HashSet<>();
 
                         if (children.length > 0) {
                             return ret;
@@ -306,7 +350,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
 
                     @Override
                     Set<Rule> makeTopDownRules(int parentId, TreeAutomaton<Pair<Span, Span>> auto) {
-                        Set<Rule> ret = new HashSet<Rule>();
+                        Set<Rule> ret = new HashSet<>();
                         Pair<Span, Span> parent = auto.getStateForId(parentId);
 
                         if (_arity(parent) == 1) {
@@ -334,10 +378,20 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
             this.binop = binop;
         }
 
+        /**
+         * Returns the string representing the operation in question.
+         * 
+         * @return 
+         */
         public String label() {
             return binop.getName();
         }
 
+        /**
+         * Returns the number of arguments the operation accepts.
+         * 
+         * @return 
+         */
         public int arity() {
             return binop.getArity();
         }
@@ -355,14 +409,31 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         }
     }
 
+    /**
+     * Returns the wrapping operation for pairs of strings and a string.
+     * 
+     * @return 
+     */
     public static String WRAP21() {
         return Operation.WRAP21.label();
     }
 
+    /**
+     * Returns the wrapping operation for two pairs of strings.
+     * 
+     * @return 
+     */
     public static String WRAP22() {
         return Operation.WRAP22.label();
     }
 
+    /**
+     * This method can be used to obtain a wrapping operation.
+     * 
+     * @param i parameter is ignored
+     * @param j used to switch between wrapping operations (j=1 means wrap21, all else mean wrap22)
+     * @return 
+     */
     public static String WRAP(int i, int j) {
         if (j == 1) {
             return WRAP21();
@@ -371,18 +442,40 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         }
     }
 
+    /**
+     * Returns simple string concatenation.
+     * 
+     * @return 
+     */
     public static String CONCAT11() {
         return Operation.CONC11.label();
     }
 
+    /**
+     * Return the concat operation for a pair and a string.
+     * 
+     * @return 
+     */
     public static String CONCAT21() {
         return Operation.CONC21.label();
     }
 
+    /**
+     * Returns the concat operation for a string and a pair.
+     * 
+     * @return 
+     */
     public static String CONCAT12() {
         return Operation.CONC12.label();
     }
 
+    /**
+     * This method can be used to obtain a concat operation.
+     * 
+     * @param i parameter is used to switch between concat1 and concat2
+     * @param j used to switch between concat operations (j=1 means concat11/concat21, all else mean concat12/concat22)
+     * @return 
+     */
     public static String CONCAT(int i, int j) {
         if (i == 1) {
             if (j == 1) {
@@ -399,10 +492,20 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         return null;
     }
 
+    /**
+     * Returns the constant that represents a pair of empty strings.
+     * 
+     * @return 
+     */
     public static String EE() {
         return Operation.EPSILON_EPSILON.label();
     }
 
+    /**
+     * Returns the constant representing an empty string.
+     * 
+     * @return 
+     */
     public static String E() {
         return Operation.EPSILON.label();
     }
@@ -417,13 +520,17 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     }
 
     private static Pair<Span, Span> p(Span first, Span second) {
-        return new Pair<Span, Span>(first, second);
+        return new Pair<>(first, second);
     }
 
     private static Pair[] l2(Pair p1, Pair p2) {
         return new Pair[]{p1, p2};
     }
 
+    /**
+     * Creates a new instance with a new signature and containing all the
+     * basic TAG operations.
+     */
     public TagStringAlgebra() {
 //        signature = new Signature();
 
@@ -451,9 +558,9 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         if (namesToOperations.containsKey(labelId)) {
             return namesToOperations.get(labelId).evaluate(childrenValues);
         } else {
-            List<String> l = new ArrayList<String>();
+            List<String> l = new ArrayList<>();
             l.add(label);
-            return new Pair<List<String>, List<String>>(l, null);
+            return new Pair<>(l, null);
         }
     }
 
@@ -491,7 +598,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
             signature.addSymbol(word, 0);
         }
 
-        return new Pair<List<String>, List<String>>(words, null);
+        return new Pair<>(words, null);
     }
 
 //    @Override
@@ -513,15 +620,35 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
     }
     
     
-
+    /**
+     * Used to find out if a pair represents a string (arity 1) or a pair (arity 2).
+     * 
+     * This method checks whether the second element of the pair is null.
+     * 
+     * @param <E>
+     * @param <F>
+     * @param pair
+     * @return 
+     */
     public static <E, F> int _arity(Pair<E, F> pair) {
         return pair.right == null ? 1 : 2;
     }
 
+    /**
+     * An automaton that represents all possible terms in a given TAG algebra
+     * which evaluate to a fixed sequence of words.
+     * 
+     */
     public class TagDecompositionAutomaton extends TreeAutomaton<Pair<Span, Span>> {
 
         private int[] words;
 
+        /**
+         * Constructs an instance which contains all possible terms for the given
+         * sequence of words.
+         * 
+         * @param words 
+         */
         public TagDecompositionAutomaton(List<String> words) {
             super(TagStringAlgebra.this.getSignature());
 
@@ -558,11 +685,11 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
             if (namesToOperations.containsKey(labelId)) {
                 return namesToOperations.get(labelId).makeBottomUpRules(childStates, words.length, this);
             } else {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
                 for (int i = 0; i < words.length; i++) {
                     if (words[i] == labelId) {
                         Pair parent = new Pair(new Span(i, i + 1), null);
-                        List<Pair<Span, Span>> children = new ArrayList<Pair<Span, Span>>();
+                        List<Pair<Span, Span>> children = new ArrayList<>();
                         ret.add(createRule(parent, getSignature().resolveSymbolId(labelId), children));
                     }
                 }
@@ -576,7 +703,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
             if (namesToOperations.containsKey(label)) {
                 return namesToOperations.get(label).makeTopDownRules(parentStateId, this);
             } else {
-                Set<Rule> ret = new HashSet<Rule>();
+                Set<Rule> ret = new HashSet<>();
                 Pair<Span, Span> parentState = getStateForId(parentStateId);
 
                 if (_arity(parentState) == 1) {
@@ -591,6 +718,17 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
             }
         }
 
+        // I marked this as deprecated, because it gives the impression of being
+        // connected to the way the automaton represents its states, but is actually
+        // never used anywhere.
+        /**
+         * Parses a string representation of a state as string-string into a state
+         * which consists of a pair of strings.
+         * 
+         * @deprecated 
+         * @param state
+         * @return 
+         */
         public Pair<Span, Span> parseState(String state) {
             String[] parts = state.split("[-,]");
 

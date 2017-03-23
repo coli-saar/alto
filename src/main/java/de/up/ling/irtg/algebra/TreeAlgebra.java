@@ -64,6 +64,12 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         return Tree.class;
     }
 
+    /**
+     * Counts the number of nodes in a tree - minus the number of the leaf nodes.
+     * 
+     * @param tree
+     * @return 
+     */
     @OperationAnnotation(code = "countBracketsInTree")
     public static int countBrackets(Tree<String> tree) {
         if (tree == null) {
@@ -74,6 +80,13 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         }
     }
 
+    /**
+     * Computes the standard recall measure for two trees.
+     * 
+     * @param result
+     * @param gold
+     * @return 
+     */
     @OperationAnnotation(code = "treeRecall")
     public static double recall(Tree<String> result, Tree<String> gold) {
         if (result == null) {
@@ -101,6 +114,13 @@ public class TreeAlgebra extends Algebra<Tree<String>> {
         }
     }
 
+    /**
+     * Computes the standard precision measure for two trees.
+     * 
+     * @param result
+     * @param gold
+     * @return 
+     */
     @OperationAnnotation(code = "treePrecision")
     public static double precision(Tree<String> result, Tree<String> gold) {
         if (result == null) {

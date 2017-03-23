@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.algebra;
 
-import com.google.common.base.Predicate;
 import static de.up.ling.irtg.algebra.TreeWithAritiesAlgebra.stripArities;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -36,12 +35,25 @@ import javax.swing.JComponent;
  */
 public class TagTreeAlgebra extends Algebra<Tree<String>> {
 
+    /**
+     * This label indicates replacement operations.
+     */
     public static final String C = "@";
+    
+    /**
+     * This labels indicates substitution sites within a tree.
+     */
     public static final String P1 = "*";
 
     private int _C;
     private int _P1;
 
+    /**
+     * Creates a new instance with a new algebra and with two labels already added.
+     * 
+     * These labels are TagTreeAlgebra.C which indicates that a replacement operation should
+     * take place and TagTreeAlgebra.P1 which indicates a site for replacement.
+     */
     public TagTreeAlgebra() {
         _C = signature.addSymbol(C, 2);
         _P1 = signature.addSymbol(P1, 0);
@@ -52,11 +64,7 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
     @Override
     protected Tree<String> evaluate(String label, List<Tree<String>> childrenValues) {
         if (label.equals(C)) {
-            return childrenValues.get(0).substitute(new Predicate<Tree<String>>() {
-                public boolean apply(Tree<String> t) {
-                    return t.getLabel().equals(P1);
-                }
-            }, childrenValues.get(1));
+            return childrenValues.get(0).substitute((Tree<String> t) -> t.getLabel().equals(P1), childrenValues.get(1));
         } else {
             return Tree.create(label, childrenValues);
         }
@@ -118,7 +126,7 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
 
         @Override
         public Set<Rule> getRulesBottomUp(int labelId, int[] childStateIds) {
-            Set<Rule> ret = new HashSet<Rule>();
+            Set<Rule> ret = new HashSet<>();
 
             if (labelId == _P1) {
                 if (childStateIds.length == 0) {
@@ -176,7 +184,7 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
 
         @Override
         public Set<Rule> getRulesTopDown(int labelId, int parentStateId) {
-            Set<Rule> ret = new HashSet<Rule>();
+            Set<Rule> ret = new HashSet<>();
             Context parent = getStateForId(parentStateId);
 
             if (labelId == _P1) {
@@ -199,7 +207,7 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
             } else {
                 Tree<String> subtree = tree.select(parent.top, 0);
                 if (subtree.getLabel().equals(getSignature().resolveSymbolId(labelId))) {
-                    List<Integer> children = new ArrayList<Integer>();
+                    List<Integer> children = new ArrayList<>();
 
                     if (parent.isTree()) {
                         for (int i = 0; i < subtree.getChildren().size(); i++) {
@@ -272,10 +280,8 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
             if ((this.top == null) ? (other.top != null) : !this.top.equals(other.top)) {
                 return false;
             }
-            if ((this.bottom == null) ? (other.bottom != null) : !this.bottom.equals(other.bottom)) {
-                return false;
-            }
-            return true;
+            
+            return !((this.bottom == null) ? (other.bottom != null) : !this.bottom.equals(other.bottom));
         }
 
         @Override
