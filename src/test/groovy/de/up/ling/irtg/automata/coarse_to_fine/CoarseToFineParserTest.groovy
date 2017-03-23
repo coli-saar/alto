@@ -88,7 +88,6 @@ YY -> r2\n\
     **/
     @Test
     public void testPtb() {
-
         InputCodec<InterpretedTreeAutomaton> ic = InputCodec.getInputCodecByNameOrExtension("g10.irtb", null);
         InterpretedTreeAutomaton irtg = ic.read(rs("g10.irtb"));
         FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(GrammarCoarsifierTest.PTB_CTF);

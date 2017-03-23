@@ -58,6 +58,9 @@ public abstract class Algebra<E> implements Serializable {
 
     protected Signature signature;
 
+    /**
+     * Constructs a new instance which is based on a newly created Signature.
+     */
     public Algebra() {
         signature = new Signature();
     }
@@ -245,6 +248,8 @@ public abstract class Algebra<E> implements Serializable {
 
     /**
      * Returns an iterator over all subclasses of Algebra.
+     * 
+     * This is used for finding all available types of algebras.
      *
      * @return
      */

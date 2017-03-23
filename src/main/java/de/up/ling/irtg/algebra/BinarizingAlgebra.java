@@ -41,29 +41,62 @@ import it.unimi.dsi.fastutil.ints.IntList;
  * specify your own symbol by passing it to the constructor.
  *
  * @author koller
+ * @param <E>
  */
 public class BinarizingAlgebra<E> extends Algebra<E> {
 
     private final String appendSymbol;
     private Algebra<E> underlyingAlgebra;
-    private Signature signature;
+    private Signature localSignature;
 
+    /**
+     * Create a new instance with _@_ as the concatenation symbol.
+     * 
+     * This algebra will use the underlying algebra to evaluate trees after
+     * removing the _@_ symbol.
+     * 
+     * @param underlyingAlgebra 
+     */
     public BinarizingAlgebra(Algebra<E> underlyingAlgebra) {
         this(underlyingAlgebra, "_@_");
     }
 
+    /**
+     * Create a new instance with a user specified concatenation symbol.
+     * 
+     * This algebra will use the underlying algebra to evaluate trees after
+     * removing the _@_ symbol.
+     * 
+     * @param underlyingAlgebra
+     * @param appendSymbol 
+     */
     public BinarizingAlgebra(Algebra<E> underlyingAlgebra, String appendSymbol) {
         this.underlyingAlgebra = underlyingAlgebra;
 
         this.appendSymbol = appendSymbol;
-        signature = new Signature();
-        signature.addSymbol(appendSymbol, 2);
+        localSignature = new Signature();
+        localSignature.addSymbol(appendSymbol, 2);
     }
 
+    /**
+     * Returns the concatenation symbol used by this algebra.
+     * 
+     * @return 
+     */
     public String getAppendSymbol() {
         return appendSymbol;
     }
 
+    /**
+     * This method is currently not supported.
+     * 
+     * This is the case since some intermediate values would have to be lists,
+     * which does not match the declared type.
+     * 
+     * @param label
+     * @param childrenValues
+     * @return 
+     */
     @Override
     protected E evaluate(String label, List<E> childrenValues) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
@@ -79,8 +112,8 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
         }
     }
 
-    Tree<String> unbinarize(Tree<String> t) {
-        signature.addAllSymbols(t);
+    private Tree<String> unbinarize(Tree<String> t) {
+        localSignature.addAllSymbols(t);
 
         List<Tree<String>> underlyingTerm = t.dfs(new TreeVisitor<String, Void, List<Tree<String>>>() {
             @Override
@@ -93,7 +126,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
                 } else if (childrenValues.isEmpty()) {
                     // leaf: create singleton list
                     Tree<String> tree = Tree.create(node.getLabel());
-                    List<Tree<String>> ret = new ArrayList<Tree<String>>();
+                    List<Tree<String>> ret = new ArrayList<>();
                     ret.add(tree);
                     return ret;
                 } else {
@@ -105,7 +138,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
                     childrenValues.forEach(l -> children.addAll(l));
 
                     Tree<String> tree = Tree.create(node.getLabel(), children); // childrenValues.get(0)
-                    List<Tree<String>> ret = new ArrayList<Tree<String>>();
+                    List<Tree<String>> ret = new ArrayList<>();
                     ret.add(tree);
                     return ret;
                 }
@@ -117,8 +150,18 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
         return underlyingTerm.get(0);
     }
 
+    /**
+     * Returns a tree automaton in which all rules are binarized by introducing
+     * intermediate rules with the concatenation symbol of this algebra.
+     * 
+     * This method is mainly intended to take decomposition automata from other
+     * algebras and turn them into decomposition automata for a Binarizing Algebra.
+     * 
+     * @param underlyingAutomaton
+     * @return 
+     */
     public TreeAutomaton binarizeTreeAutomaton(TreeAutomaton<? extends Object> underlyingAutomaton) {
-        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
+        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>();
 
         // ensure states in ret are created with same id as in underlyingAutomaton
         IntList allUnderlyingStates = new IntArrayList(underlyingAutomaton.getAllStates());
@@ -133,7 +176,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
         for (Rule rule : underlyingAutomaton.getRuleSet()) {
             String parentStr = underlyingAutomaton.getStateForId(rule.getParent()).toString();
             String labelStr = underlyingAutomaton.getSignature().resolveSymbolId(rule.getLabel());
-            List<String> childrenStrings = new ArrayList<String>();
+            List<String> childrenStrings = new ArrayList<>();
 
             for (int child : rule.getChildren()) {
                 childrenStrings.add(underlyingAutomaton.getStateForId(child).toString());
@@ -144,7 +187,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
             } else {
                 String ruleName = parentStr + "+" + labelStr + "+" + StringTools.join(childrenStrings, "+");
                 addBinarizationRules(childrenStrings, ruleName, ret);
-                List<String> newChildren = new ArrayList<String>();
+                List<String> newChildren = new ArrayList<>();
                 newChildren.add(ruleName);
                 ret.addRule(ret.createRule(parentStr, labelStr, newChildren));
             }
@@ -167,7 +210,7 @@ public class BinarizingAlgebra<E> extends Algebra<E> {
         for (int start = 0; start <= childrenStates.size() - 2; start++) {
             for (int width1 = 1; start + width1 <= childrenStates.size() - 1; width1++) {
                 for (int width2 = 1; start + width1 + width2 <= childrenStates.size(); width2++) {
-                    List<String> children = new ArrayList<String>();
+                    List<String> children = new ArrayList<>();
                     children.add(width1 == 1 ? childrenStates.get(start) : makeStateName(ruleName, start, width1));
                     children.add(width2 == 1 ? childrenStates.get(start + width1) : makeStateName(ruleName, start + width1, width2));
 

@@ -65,7 +65,7 @@ public class TemplateInterpretedTreeAutomaton {
     public TemplateInterpretedTreeAutomaton() {
         ruleTemplates = new ArrayList<>();
         algebraClasses = new HashMap<>();
-        features = new ArrayList<FeatureDeclaration>();
+        features = new ArrayList<>();
     }
 
     /**
@@ -172,8 +172,8 @@ public class TemplateInterpretedTreeAutomaton {
     }
 
     private static void forAllInstances(TemplateRule trule, FirstOrderModel model, RuleConsumer consumer) {
-        List<Set<String>> nUniverses = new ArrayList<Set<String>>();
-        for (int i = 0; i < trule.variables.size(); i++) {
+        List<Set<String>> nUniverses = new ArrayList<>();
+        for (String variable : trule.variables) {
             nUniverses.add(model.getUniverse());
         }
 
@@ -227,15 +227,29 @@ public class TemplateInterpretedTreeAutomaton {
         return ret;
     }
 
+    /**
+     * Returns the number of feature declarations this IRTG contains. 
+     * 
+     * @return 
+     */
     public int getNumFeatures() {
         return (features == null? 0 : features.size());
     }
 
+    /**
+     * Returns a list of ids of the feature declarations this IRTG contains.
+     * 
+     * @return 
+     */
     public List<String> getFeatureIds() {
         return features.stream().map( f-> {return f.id;}).collect(Collectors.toList());
     }
     
     /**
+     * Returns a string to string map of algebra classes.
+     * 
+     * Returns the actual map, not a defensive copy.
+     * 
      * @return the algebraClasses
      */
     public Map<String, String> getAlgebraClasses() {
@@ -243,6 +257,11 @@ public class TemplateInterpretedTreeAutomaton {
     }
 
     /**
+     * Returns a double array which contains the current settings of the feature
+     * weights.
+     * 
+     * Returns actual array used by the class, not a defensive copy.
+     * 
      * @return the featureWeights
      */
     public double[] getFeatureWeights() {
@@ -250,12 +269,20 @@ public class TemplateInterpretedTreeAutomaton {
     }
 
     /**
+     * Allows for the feature weights to be set externally.
+     * 
      * @param featureWeights the featureWeights to set
      */
     public void setFeatureWeights(double[] featureWeights) {
         this.featureWeights = featureWeights;
     }
 
+    /**
+     * Returns an specific entry for the feature weights.
+     * 
+     * @param i
+     * @return 
+     */
     public double getFeatureWeight(int i) {
         if (featureWeights != null && i < featureWeights.length) {
             return featureWeights[i];
@@ -263,7 +290,13 @@ public class TemplateInterpretedTreeAutomaton {
             return Double.NaN;
         }
     }
-    
+
+    /**
+     * Allows for setting a single entry for the feature weights.
+     * 
+     * @param index
+     * @param weight 
+     */
     public void setFeatureWeight(int index, double weight) {
         featureWeights[index] = weight;
     }
@@ -273,6 +306,10 @@ public class TemplateInterpretedTreeAutomaton {
         void accept(String parent, String label, List<String> children, double weight, Map<String, String> variableAssignment);
     }
 
+    /**
+     * This class represents a template for a rule, from which multiple concrete
+     * rules can be instantiated.
+     */
     public static class TemplateRule {
 
         public List<String> variables;
@@ -284,6 +321,11 @@ public class TemplateInterpretedTreeAutomaton {
         public List<String> rhs;
         public Map<String, Tree<String>> hom;
 
+        /**
+         * Constructs a new instance, with all the members set to default (empty) values.
+         * 
+         * Members must be set by directly accessing them.
+         */
         public TemplateRule() {
             variables = new ArrayList<>();
             rhs = new ArrayList<>();
@@ -297,19 +339,19 @@ public class TemplateInterpretedTreeAutomaton {
             return lhs + " -> " + label + rhs;
         }
     }
-
-    public abstract static class Guard {
+    
+    public interface Guard {
 
         abstract boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model);
     }
 
-    public static class AtomicGuard extends Guard {
+    public static class AtomicGuard implements Guard {
 
         private String predicate;
         private List<String> arguments;
 
         @Override
-        boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model) {
+        public boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model) {
             Set<List<String>> extension = model.getInterpretation(predicate);
             List<String> values = new ArrayList<>();
 
@@ -336,12 +378,12 @@ public class TemplateInterpretedTreeAutomaton {
 
     }
 
-    public static class ConjGuard extends Guard {
+    public static class ConjGuard implements Guard {
 
         private final List<Guard> subguards;
 
         @Override
-        boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model) {
+        public boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model) {
             return subguards.stream().allMatch(sub -> sub.isSatisfiedBy(variableAssignment, model));
         }
 
@@ -361,10 +403,10 @@ public class TemplateInterpretedTreeAutomaton {
         }
     }
 
-    public static class TopGuard extends Guard {
+    public static class TopGuard implements Guard {
 
         @Override
-        boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model) {
+        public boolean isSatisfiedBy(Map<String, String> variableAssignment, FirstOrderModel model) {
             return true;
         }
 
