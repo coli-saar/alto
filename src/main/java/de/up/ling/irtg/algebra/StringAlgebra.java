@@ -54,7 +54,9 @@ import java.util.Set;
  * @author koller
  */
 public class StringAlgebra extends Algebra<List<String>> implements Serializable {
-
+    /**
+     * The reserved concatenation symbol used by this algebra.
+     */
     public static final String CONCAT = "*";
 
     /**
@@ -70,8 +72,16 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 
     protected final int concatSymbolId;
 
-    private IntSet concatSet;
+    /*
+    * This set should always contain only the concatenation symbols for the
+    * algebra and is used when asking for labels top down in the decomposition
+    * automaton.
+    */
+    private final IntSet concatSet;
 
+    /**
+     * Creates a new instance with a new signature.
+     */
     public StringAlgebra() {
         concatSymbolId = signature.addSymbol(CONCAT, 2);
 
@@ -129,9 +139,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     public TreeAutomaton decompose(List<String> words) {
         return new CkyAutomaton(words);
     }
-
-
-    
     
     @Override
     public Class getClassOfValues() {
@@ -157,9 +164,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         return StringTools.join(object, " ");
     }
 
-    
-    
-
     @OperationAnnotation(code="getSentenceLength")
     public static int getSentenceLength(List<String> sentence) {
         return sentence.size();
@@ -169,7 +173,6 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     public static int getMaxChartSize(int sentenceLength) {
         return (sentenceLength*(sentenceLength+1))/2;
     }
-    
     
     private class CkyAutomaton extends TreeAutomaton<Span> {
 
@@ -424,15 +427,35 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         
     }
 
+    /**
+     * This class is used to represent a sub-span of an input string via its beginning
+     * and end index.
+     * 
+     * This is similar to the spans used in CKY-parsing.
+     */
     public static class Span implements Serializable {
 
-        public int start, end;
+        /**
+         * These two values represent the start and the end of the span.
+         */
+        public final int start, end;
 
+        /**
+         * Creates a new instance with the given start and end.
+         * 
+         * @param start
+         * @param end 
+         */
         public Span(int start, int end) {
             this.start = start;
             this.end = end;
         }
 
+        /**
+         * Returns the number of symbols covered by this span.
+         * 
+         * @return 
+         */
         public int length() {
             return end - start;
         }
@@ -469,10 +492,25 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         }
     }
 
+    /**
+     * Returns the concatenation symbol for this algebra.
+     * 
+     * This is important for non-binary string algebras which extend this class.
+     * 
+     * @return 
+     */
     public String getBinaryConcatenation() {
         return CONCAT;
     }
 
+    /**
+     * This class is used to directly obtain a (condensed) inverse homomorphism automaton
+     * for a string in a way that can make use of the particular properties of the 
+     * string algebra.
+     * 
+     * This is hopefully more efficient then standard techniques for obtaining the inverse
+     * homomorphism automaton.
+     */
     private static class InvhomDecompFactory {
 
         private static final int UNDEF = -1;
@@ -482,6 +520,12 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
 //        private Int2IntMap wordIdToLabelSetId;
         private Homomorphism hom;
 
+        /**
+         * Creates a new instance which will produce inverse homomorphic
+         * images for the given homomorphism.
+         * 
+         * @param hom 
+         */
         public InvhomDecompFactory(Homomorphism hom) {
             this.hom = hom;
 
@@ -521,6 +565,12 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
             System.err.println("constants: " + wordIdsToLabelSetIds.size());
         }
 
+        /**
+         * Used to obtain the inverse image automaton for the given value.
+         * 
+         * @param sentence
+         * @return 
+         */
         public CondensedTreeAutomaton<Span> getInvDecomp(List<String> sentence) {
             ConcreteCondensedTreeAutomaton<Span> ret = new ConcreteCondensedTreeAutomaton<>(hom.getSourceSignature());
             int n = sentence.size();
@@ -599,8 +649,9 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
     }
     
     
-
-    public static void main(String[] args) throws Exception {
+// this looks like a kind of test that was left in the code, I commented it out and nothing seems
+// to have dependended on it - it apparently just tested the runtime of parsing. - Christoph.
+/*    public static void main(String[] args) throws Exception {
 //        String grammar = "a.irtg";
 //        String sentence = "Pierre Vinken , 61 years old , will join the board as a nonexecutive director Nov. 29 .";
         String grammar = "gont/wsj0221_bin.irtg";
@@ -619,5 +670,5 @@ public class StringAlgebra extends Algebra<List<String>> implements Serializable
         Tree t = chart.viterbi();
         System.err.println(t);
         System.err.println(irtg.interpret(t));
-    }
+    }*/
 }

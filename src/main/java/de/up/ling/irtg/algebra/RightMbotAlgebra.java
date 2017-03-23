@@ -9,7 +9,10 @@ package de.up.ling.irtg.algebra;
 import de.up.ling.tree.Tree;
 
 /**
- * An experimental algebra for MBOTs. Expect bugs when using this.
+ * An experimental algebra for MBOTs.
+ * 
+ * This algebra represents instances of the TupleAlgebra, which are defined
+ * over tuples of trees with string labels. Expect bugs when using this.
  * 
  * @author koller
  */

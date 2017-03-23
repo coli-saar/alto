@@ -62,6 +62,9 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
 //    private Set<List<String>> allIndividualsAsTuples;
     private Lazy<IntSet> allStates = null;
 
+    /**
+     * Creates a new instance with a new model and signature.
+     */
     public SetAlgebra() {
         this.model = new FirstOrderModel();
 //        this.atomicInterpretations = null;
@@ -72,6 +75,12 @@ public class SetAlgebra extends Algebra<Set<List<String>>> {
         allStates = null;
     }
 
+    /**
+     * Creates a new instance with a new signature and model, which adds the
+     * given atomicInterpretations to the model.
+     * 
+     * @param atomicInterpretations 
+     */
     public SetAlgebra(Map<String, Set<List<String>>> atomicInterpretations) {
         this();
 
