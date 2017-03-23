@@ -34,7 +34,6 @@ import java.util.Set;
  * You should also expect that a parser using these generic
  * decomposition automata are not particularly efficient.<p>
  * 
- * 
  * See {@link SetAlgebra} for a use case of this class.
  * 
  * @author koller
@@ -43,6 +42,9 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
 
     protected Signature signature;
 
+    /**
+     * Creates a new instance that will have a new signature.
+     */
     public EvaluatingAlgebra() {
         signature = new Signature();
 
@@ -66,6 +68,7 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
      * @param childrenValues
      * @return 
      */
+    @Override
     protected abstract E evaluate(String label, List<E> childrenValues);
 
     /**
@@ -76,14 +79,12 @@ public abstract class EvaluatingAlgebra<E> extends Algebra<E> {
      * @param value
      * @return 
      */
+    @Override
     protected abstract boolean isValidValue(E value);
 
     
     @Override
     public abstract E parseString(String representation) throws ParserException;
-    
-    
-    
     
 
     @Override
