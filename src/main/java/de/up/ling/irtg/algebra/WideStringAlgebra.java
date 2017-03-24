@@ -41,6 +41,12 @@ public class WideStringAlgebra extends StringAlgebra {
 
     private static final String WIDE_BINARY_CONCATENATION = "conc2";
 
+    /**
+     * Creates a new instance.
+     * 
+     * This algebra will not define the symbol * as the StringAlgebra does,
+     * but instead has a conc2 operation.
+     */
     public WideStringAlgebra() {
         getSignature().clear(); // remove * from StringAlgebra
 
@@ -182,22 +188,20 @@ public class WideStringAlgebra extends StringAlgebra {
                     } else {
                         assert arity >= 2;
 
-                        forAscendingTuple(parentSpan.start + 1, parentSpan.end, 0, new int[arity - 1], new Function<int[], Void>() {
-                            public Void apply(int[] tuple) {
-                                int[] childStates = new int[arity];
-
-                                childStates[0] = addState(new Span(parentSpan.start, tuple[0]));
-
-                                for (int i = 0; i < arity - 2; i++) {
-                                    childStates[i + 1] = addState(new Span(tuple[i], tuple[i + 1]));
-                                }
-
-                                childStates[arity - 1] = addState(new Span(tuple[arity - 2], parentSpan.end));
-                                Rule rule = createRule(parentState, label, childStates, 1);
-                                storeRuleTopDown(rule);
-
-                                return null;
+                        forAscendingTuple(parentSpan.start + 1, parentSpan.end, 0, new int[arity - 1], (int[] tuple) -> {
+                            int[] childStates = new int[arity];
+                            
+                            childStates[0] = addState(new Span(parentSpan.start, tuple[0]));
+                            
+                            for (int i = 0; i < arity - 2; i++) {
+                                childStates[i + 1] = addState(new Span(tuple[i], tuple[i + 1]));
                             }
+                            
+                            childStates[arity - 1] = addState(new Span(tuple[arity - 2], parentSpan.end));
+                            Rule rule = createRule(parentState, label, childStates, 1);
+                            storeRuleTopDown(rule);
+                            
+                            return null;
                         });
                     }
                 } else if ((parentSpan.length() == 1) && label == words[parentSpan.start]) {

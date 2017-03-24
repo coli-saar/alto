@@ -13,15 +13,47 @@ import java.util.List;
 import javax.swing.JComponent;
 
 /**
- * An experimental algebra for tuples of objects. Expect bugs when using this.
+ * An experimental algebra for tuples of objects.
+ * 
+ * This algebra is based on an underlying algebra and defines tree types of
+ * operations:
+ * 
+ * - proj_i where I may be any integer greater than or equal to 0; this unary operation
+ * takes a tuple and returns a new tuple containing only the ith element in the
+ * list.
+ * - ** is used to concatenate two tuples into a single tuple so e.g. **([a,b,c],[d,e])
+ * will evaluate to [a,b,c,d,e]. This operation is binary.
+ * - Based on every operation of the underlying algebra, an operation with the
+ * same name and arity is defined. This new operation op in the algebra will take the
+ * first elements of all the tuples that are arguments to op and apply the underlying
+ * operation to them to create a new element e. The resulting tuple will then be
+ * [e].
+ * 
+ * Expect bugs when using this. The algebra defines a decomposition automaton
+ * only via the evaluating decomposition automaton. This means that decomposition
+ * may be very inefficient.
  * 
  * @author koller
  */
 class TupleAlgebra<E> extends Algebra<List<E>>{
     private final Algebra<E> underlyingAlgebra;
+    
+    /**
+     * The prefix used to identify projection operations.
+     */
     public static final String PROJ = "proj_";
+    
+    /**
+     * The name of the tuple concatenation operation.
+     */
     public static final String TUP = "**";
 
+    /**
+     * Create a new instance with a new signature and based on the given underlying
+     * algebra.
+     * 
+     * @param underlyingAlgebra 
+     */
     public TupleAlgebra(Algebra<E> underlyingAlgebra) {
         this.underlyingAlgebra = underlyingAlgebra;
     }
@@ -57,7 +89,6 @@ class TupleAlgebra<E> extends Algebra<List<E>>{
         } else {
             return super.visualize(object);
         }
-    }
-    
+    }    
     
 }
