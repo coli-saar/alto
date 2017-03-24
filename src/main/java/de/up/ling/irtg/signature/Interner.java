@@ -11,7 +11,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -30,6 +29,7 @@ import java.util.Set;
  * same numeric ID.
  * 
  * @author koller
+ * @param <E>
  */
 public class Interner<E> implements Serializable, Cloneable {
     protected Object2IntMap<E> objectToInt;
@@ -43,10 +43,10 @@ public class Interner<E> implements Serializable, Cloneable {
      * Creates an empty interner.
      */
     public Interner() {
-        objectToInt = new Object2IntOpenHashMap<E>();
-        intToObject = new Int2ObjectOpenHashMap<E>();
+        objectToInt = new Object2IntOpenHashMap<>();
+        intToObject = new Int2ObjectOpenHashMap<>();
 //        intToObject = new ArrayMap<>();
-        uncachedObjects = new ArrayList<E>();
+        uncachedObjects = new ArrayList<>();
         nextIndex = 1;
         firstIndexForUncachedObjects = 1;
         trustingMode = false;

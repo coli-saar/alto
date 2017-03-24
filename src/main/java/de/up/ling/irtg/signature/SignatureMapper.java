@@ -22,6 +22,14 @@ public class SignatureMapper {
         
     }
 
+    /**
+     * Creates a new mapper for the two given interners.
+     * 
+     * It will map ids to each other which correspond to the same string.
+     * 
+     * @param input
+     * @param output 
+     */
     public SignatureMapper(Interner input, Interner output) {
         this.input = input;
         this.output = output;
@@ -69,12 +77,12 @@ public class SignatureMapper {
 
         buf.append("Forward mappings:\n");
         for (int i = 1; i < forward.length; i++) {
-            buf.append("" + i + " -> " + remapForward(i) + " (input=" + input.resolveId(i) + ", output=" + output.resolveId(remapForward(i)) + "\n");
+            buf.append("").append(i).append(" -> ").append(remapForward(i)).append(" (input=").append(input.resolveId(i)).append(", output=").append(output.resolveId(remapForward(i))).append("\n");
         }
 
         buf.append("\nBackward mappings:\n");
         for (int i = 1; i < backward.length; i++) {
-            buf.append("" + i + " -> " + remapBackward(i) + " (output=" + output.resolveId(i) + ", input=" + input.resolveId(remapBackward(i)) + "\n");
+            buf.append("").append(i).append(" -> ").append(remapBackward(i)).append(" (output=").append(output.resolveId(i)).append(", input=").append(input.resolveId(remapBackward(i))).append("\n");
         }
 
         return buf.toString();

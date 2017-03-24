@@ -24,8 +24,8 @@ public class HomomorphismSymbol implements Serializable {
         CONSTANT, VARIABLE
         // GENSYM
     };
-    private Type type;
-    private int value;
+    private final Type type;
+    private final int value;
 
     private HomomorphismSymbol(int value, Type type) {
         this.type = type;
