@@ -4,7 +4,6 @@
  */
 package de.up.ling.irtg.signature;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Iterables;
 import de.up.ling.irtg.util.FastutilUtils;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
@@ -29,7 +28,7 @@ import java.util.Set;
  * same numeric ID.
  * 
  * @author koller
- * @param <E>
+ * @param <E> The type of objects which are interned by this interner.
  */
 public class Interner<E> implements Serializable, Cloneable {
     protected Object2IntMap<E> objectToInt;
@@ -55,6 +54,8 @@ public class Interner<E> implements Serializable, Cloneable {
     /**
      * Creates an object that maps back and forth between the
      * numeric IDs in this interner and those in another interner.
+     * 
+     * It will map ids to each other if they correspond to the same object.
      * 
      * @param other
      * @return 
@@ -183,11 +184,7 @@ public class Interner<E> implements Serializable, Cloneable {
      * @return 
      */
     public Iterable<E> resolveIds(Collection<Integer> indices) {
-        return Iterables.transform(indices, new Function<Integer, E>() {
-            public E apply(Integer f) {
-                return resolveId(f);
-            }
-        });
+        return Iterables.transform(indices, (Integer f) -> resolveId(f));
     }
 
     /**
@@ -246,17 +243,26 @@ public class Interner<E> implements Serializable, Cloneable {
         return nextIndex;
     }
 
+    /**
+     * Returns a map from the objects known to the interner to the ids
+     * by which the objects are known.
+     * 
+     * @return 
+     */
     public Map<E, Integer> getSymbolTable() {
         processUncachedObjects();
         return objectToInt;
     }
 
-    /*
+    /**
      * Returns an arrary x such that the symbol
      * i in this interner is the same as the symbol
      * x[i] in the other interner. If the symbol
      * does not exist in the other interner, x[i]
      * will be 0.
+     * 
+     * @param other
+     * @return 
      */
     public int[] remap(Interner<E> other) {
         processUncachedObjects();
@@ -282,7 +288,7 @@ public class Interner<E> implements Serializable, Cloneable {
 
     @Override
     public Object clone() {
-        Interner<E> ret = new Interner<E>();
+        Interner<E> ret = new Interner<>();
 
         processUncachedObjects();
         ret.intToObject.putAll(intToObject);
@@ -292,6 +298,12 @@ public class Interner<E> implements Serializable, Cloneable {
         return ret;
     }
     
+    /**
+     * This removes from the interner all the objects that do not corresponds to ids
+     * in this given set.
+     * 
+     * @param retainedIds 
+     */
     public void retainOnly(IntSet retainedIds) {
         processUncachedObjects();
         
@@ -315,7 +327,7 @@ public class Interner<E> implements Serializable, Cloneable {
         
         StringBuilder buf = new StringBuilder();
         
-        buf.append("trusting: " + isTrustingMode() + "\n");
+        buf.append("trusting: ").append(isTrustingMode()).append("\n");
         FastutilUtils.forEach(sortedKnownIds, id -> {
            buf.append(String.format("[%" + maxLen + "d] %s\n" , id, resolveId(id)));
         });
@@ -323,6 +335,11 @@ public class Interner<E> implements Serializable, Cloneable {
         return buf.toString();
     }
 
+    /**
+     * Returns whether the interner is currently in trusting mode, meaing it assumes
+     * that there will be no attempts to add the same object twice.
+     * @return 
+     */
     public boolean isTrustingMode() {
         return trustingMode;
     }

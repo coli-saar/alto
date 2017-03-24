@@ -6,10 +6,17 @@
 package de.up.ling.irtg.signature;
 
 /**
- *
+ * This is a special mapper for a single interner, which always maps a symbol
+ * to itself.
+ * 
  * @author koller
  */
 public class IdentitySignatureMapper extends SignatureMapper {
+    
+    /**
+     * Creates a new instance for the given interner.
+     * @param interner 
+     */
     public IdentitySignatureMapper(Interner interner) {
         forward = null;
         backward = null;
@@ -21,8 +28,6 @@ public class IdentitySignatureMapper extends SignatureMapper {
 //        this(signature.getInterner());
 //    }
     
-    
-
     @Override
     public void recompute() {
         // NOP

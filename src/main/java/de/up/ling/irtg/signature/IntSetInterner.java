@@ -7,15 +7,26 @@ package de.up.ling.irtg.signature;
 import it.unimi.dsi.fastutil.ints.IntSet;
 
 /**
- *
+ * A specialized interner for IntSets used for example to keep track of sets
+ * of symbol ids.
+ * 
+ * This adds a special method used to extend a set which has been interned.
+ * 
  * @author gontrum
  */
 public class IntSetInterner extends Interner<it.unimi.dsi.fastutil.ints.IntSet>{
-
-    public IntSetInterner() {
-        super();
-    }
     
+    /**
+     * This method adds the given newValue to the set which is associated with
+     * the given index.
+     * 
+     * The method returns true if such a set exists and false otherwise. In the
+     * latter case nothing is changed within the interner.
+     * 
+     * @param index
+     * @param newValue
+     * @return 
+     */
     public boolean addValueToSetByID(int index, int newValue) {
         IntSet toChange = resolveId(index);
         
@@ -32,6 +43,5 @@ public class IntSetInterner extends Interner<it.unimi.dsi.fastutil.ints.IntSet>{
         } else return false;
         return true;
     }
-   
     
 }
