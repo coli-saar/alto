@@ -27,8 +27,13 @@ import java.util.function.Function;
 import java.util.function.ToLongFunction;
 
 /**
- *
+ * This is a trie data structure used to map sequences of integers to a value.
+ * 
+ * This is generally used by tree automata to map sequences of state ids to
+ * possible rules.
+ * 
  * @author koller
+ * @param <E>
  */
 public class IntTrie<E> implements Serializable {
 
@@ -45,19 +50,37 @@ public class IntTrie<E> implements Serializable {
         valueCounter = new CollectionValueCounter();
     }
 
+    /**
+     * This creates a new instance which builds the maps it uses by calling
+     * the provided factory.
+     * 
+     * This can be used to optimize performance by changing the way mappings
+     * between nodes in the trie are stored.
+     * 
+     * @param factory 
+     */
     public IntTrie(MapFactory factory) {
         this(0, factory);
     }
 
+    /**
+     * Creates a new instance that always uses HashMaps to connect it's states.
+     */
     public IntTrie() {
-        this(alwaysHashMapFactory);
+        this(ALWAYS_HASHMAP_FACTORY);
     }
 
+    /**
+     * The value counter is used to map entries in the try into longs, which
+     * can then be added up to get some summary statistics.
+     * 
+     * @param valueCounter 
+     */
     public void setValueCounter(ToLongFunction<E> valueCounter) {
         this.valueCounter = valueCounter;
     }
 
-    private static final MapFactory alwaysHashMapFactory = depth -> new Int2ObjectOpenHashMap<>();
+    private static final MapFactory ALWAYS_HASHMAP_FACTORY = depth -> new Int2ObjectOpenHashMap<>();
 
     
     private class CollectionValueCounter implements ToLongFunction<E>, Serializable {
@@ -72,6 +95,8 @@ public class IntTrie<E> implements Serializable {
     }
 
     /**
+     * Adds a new key value pair to the trie. 
+     * 
      * Returns the previously known entry, or null if an entry for this key was
      * not known.
      *
@@ -107,6 +132,11 @@ public class IntTrie<E> implements Serializable {
         }
     }
 
+    /**
+     * Returns the value associate with the key, or null if there is no such value.
+     * @param key
+     * @return 
+     */
     public E get(int[] key) {
         //ParseTester.averageLogger.increaseCount("IntTrieGet1");
         //ParseTester.averageLogger.increaseValue("IntTrieGet1");
@@ -128,10 +158,25 @@ public class IntTrie<E> implements Serializable {
         }
     }
     
+    /**
+     * Obtais the subtrie reached with the given key.
+     * 
+     * @param oneStepKey
+     * @return 
+     */
     public IntTrie<E> step(int oneStepKey) {
         return nextStep.get(oneStepKey);
     }
 
+    /**
+     * Applys the consumer to all the non-null value that can be reached with the
+     * given keys.
+     * 
+     * If a key is not associated with a value, then it is ignored.
+     * 
+     * @param keySets
+     * @param fn 
+     */
     public void foreachValueForKeySets(List<IntSet> keySets, Consumer<E> fn) {
         foreachValueForKeySets(0, keySets, fn);
     }
@@ -166,6 +211,10 @@ public class IntTrie<E> implements Serializable {
         }
     }
 
+    /**
+     * Applies the given consumer to all the values in this map.
+     * @param fn 
+     */
     public void foreach(Consumer<E> fn) {
         if (value != null) {
             fn.accept(value);
@@ -176,11 +225,20 @@ public class IntTrie<E> implements Serializable {
         });
     }
 
+    /**
+     * This defines an interface for a class which consumes keys stored in the
+     * trie together with the value they are associated with.
+     * @param <E> 
+     */
     public static interface EntryVisitor<E> {
 
         public void visit(IntList keys, E value);
     }
 
+    /**
+     * Applies the given visitor to every key value pair stored in the trie.
+     * @param visitor 
+     */
     public void foreachWithKeys(EntryVisitor<E> visitor) {
         IntList keys = new IntArrayList();
         foreach(keys, visitor);
@@ -214,11 +272,15 @@ public class IntTrie<E> implements Serializable {
 //        }
     }
 
+    /**
+     * Returns a collection of all the values stored in the trie.
+     * @return 
+     */
     public Collection<E> getValues() {
-        final List<E> allValues = new ArrayList<E>();
+        final List<E> allValues = new ArrayList<>();
 
-        foreachWithKeys((keys, value) -> {
-            allValues.add(value);
+        foreachWithKeys((keys, val) -> {
+            allValues.add(val);
         });
 
         return allValues;
@@ -228,13 +290,18 @@ public class IntTrie<E> implements Serializable {
     public String toString() {
         final StringBuilder buf = new StringBuilder();
 
-        foreachWithKeys((keys, value) -> {
-            buf.append(keys + " -> " + value + "\n");
+        foreachWithKeys((keys, val) -> {
+            buf.append(keys).append(" -> ").append(val).append("\n");
         });
 
         return buf.toString();
     }
 
+    /**
+     * Prints a summary of the trie in its current states.
+     * This includes the number of nodes for a given depth, the maximum key value
+     * for a given depth and the number of values per depth.
+     */
     public void printStatistics() {
         Int2IntMap totalKeysPerDepth = new Int2IntOpenHashMap();
         Int2IntMap totalNodesPerDepth = new Int2IntOpenHashMap();
@@ -295,7 +362,14 @@ public class IntTrie<E> implements Serializable {
     
     
     
-    
+    /**
+     * Prints out the automaton with the given mappings for keys and values.
+     * 
+     * The keyToString function is applied to keys and their depth in order to encode them.
+     * 
+     * @param keyToString
+     * @param valueToString 
+     */
     public void print(BiFunction<Integer,Integer,String> keyToString, Function<E,String> valueToString) {
         print(0, keyToString, valueToString);
     }

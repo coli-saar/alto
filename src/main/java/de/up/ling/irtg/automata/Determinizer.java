@@ -25,25 +25,45 @@ import java.util.Queue;
 import java.util.Set;
 
 /**
- * Determinizes an unweighted tree automaton.
+ * This class constructs a bottom-up deterministic automaton from a given
+ * tree automaton, each instance is only applicable for a single automaton.
  *
+ * Note that the states of this automaton will corrspond to subsets of the
+ * states of the original automaton and the automaton may grow by an exponential
+ * factor.
+ * 
  * @author koller
+ * @param <State>
  */
 public class Determinizer<State> {
-    private TreeAutomaton<State> originalAutomaton;
-    private IntTrie<Integer> stateListToNewState = new IntTrie<>();
+    private final TreeAutomaton<State> originalAutomaton;
+    private final IntTrie<Integer> stateListToNewState = new IntTrie<>();
     private int nextNewState = 1;
-    private List<IntSet> allStateLists = new ArrayList<>();
-    private IntList allNewStates = new IntArrayList();
-    private IntSet allSymbolIds = new IntOpenHashSet();
-    private SignatureMapper ism;
+    private final List<IntSet> allStateLists = new ArrayList<>();
+    private final IntList allNewStates = new IntArrayList();
+    private final IntSet allSymbolIds = new IntOpenHashSet();
+    private final SignatureMapper ism;
 
+    /**
+     * Creates a new instance for the given instance.
+     * 
+     * @param originalAutomaton 
+     */
     public Determinizer(TreeAutomaton<State> originalAutomaton) {
         this.originalAutomaton = originalAutomaton;
         ism = originalAutomaton.getSignature().getIdentityMapper();
         allStateLists.add(null); // to ensure allStateLists.get(newState) == states represented by newState
     }
     
+    /**
+     * Returns a bottom up deterministic tree automaton for the underlying automaton.
+     * 
+     * @param newStateToOldStateSet a list which contains the set any new state corresponds to
+     * after the algorithm finishes (set) is cleared by algorithm before adding sets. If the
+     * new state has id x then the corresponding set will be in newStateToOldStateSet.get(x). First
+     * entry is null.
+     * @return 
+     */
     public TreeAutomaton<Set<State>> determinize(List<IntSet> newStateToOldStateSet) {
         ConcreteTreeAutomaton<Set<State>> ret = new ConcreteTreeAutomaton<>(originalAutomaton.getSignature());
         Queue<Integer> stateSetAgenda = new ArrayDeque<>();

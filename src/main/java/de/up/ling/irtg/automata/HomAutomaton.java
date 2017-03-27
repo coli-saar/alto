@@ -30,8 +30,8 @@ import java.util.Set;
  * @author koller
  */
 class HomAutomaton extends TreeAutomaton<Object> {
-    private TreeAutomaton base;
-    private Homomorphism hom;
+    private final TreeAutomaton base;
+    private final Homomorphism hom;
     private int gensymNext = 1;
 
     public HomAutomaton(TreeAutomaton base, Homomorphism hom) {

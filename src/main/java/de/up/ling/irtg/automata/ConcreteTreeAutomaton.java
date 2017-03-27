@@ -12,23 +12,46 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- *
+ * An automaton which can be constructed by explicitly adding rules, and which
+ * stores these rules explicitly in memory.
+ * 
+ * The main added functionality of the automaton is given by the addRule and
+ * addFinalState methods.
+ * 
  * @author koller
  * @param <State>
  */
 public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
-    private long numRules = 0;
+    // see below
+    // private long numRules = 0;
     
+    /**
+     * Constructs a new instance without any final states of rules.
+     * 
+     * This creates a new signature for the automaton.
+     */
     public ConcreteTreeAutomaton() {
         this(new Signature());
     }
 
+    /**
+     * Constructs a new instance without any final states or rules.
+     * 
+     * This instance will use the given signature.
+     * 
+     * @param signature 
+     */
     public ConcreteTreeAutomaton(Signature signature) {
         super(signature);
         ruleStore.setExplicit(true);
     }
     
     /**
+     * Constructs a new instance without any final states or rules, which
+     * will use the given state interner to enumerate its states.
+     * 
+     * The signature used will be the one given.
+     * 
      * Only use this if you know what you're doing.
      * 
      * @param signature
@@ -49,7 +72,14 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
         super.addFinalState(state);
     }
     
-
+    /**
+     * Adds the rule to the automaton.
+     * 
+     * The rule should be constructed with one of the createRule methods of
+     * the automaton to ensure that it is interpreted correctly.
+     * 
+     * @param rule 
+     */
     public void addRule(Rule rule) {
         storeRuleBottomUp(rule);
         storeRuleTopDown(rule);
