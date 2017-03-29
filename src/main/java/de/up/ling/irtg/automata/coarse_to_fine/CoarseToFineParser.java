@@ -13,6 +13,7 @@ import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.binarization.InsideRuleFactory;
 import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.signature.Signature;
@@ -39,18 +40,43 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 /**
- *
+ * This class implements coarse-to-fine parsing.
+ * 
+ * This builds an intersection automaton for a given input in multiple refinement
+ * steps and filters low weight constituents at every step. This can be used to
+ * significantly decrease parsing times.
+ * 
  * @author koller
  */
 public class CoarseToFineParser {
 
-    private InterpretedTreeAutomaton irtg;
-    private RuleRefinementTree rrt;
-    private String inputInterpretation;
-    private FineToCoarseMapping ftc;
-    private double theta;
+    private final InterpretedTreeAutomaton irtg;
+    private final RuleRefinementTree rrt;
+    private final String inputInterpretation;
+    private final FineToCoarseMapping ftc;
+    private final double theta;
+    
+    /**
+     * Set this variable to true in order for debugging information to be printed
+     * to System.err.
+     */
     public static boolean DEBUG = false;
 
+    /**
+     * Creates a new instance from the given FineToCoarseMapping.
+     * 
+     * each instance will always use the same FineToCoarseMapping. The irtg is
+     * equal to the finest level of the mapping. The class also assumes that there
+     * is a single interpretation in the IRTG which serves as the source of inputs.
+     * This interpretation is specified at this step.
+     * 
+     * @param irtg
+     * @param inputInterpretation
+     * @param ftc
+     * @param theta threshold, if the outside+inside+ruleweight for any given rule
+     * is less than the total inside weight of a all parses for a given level of coarseness times theta,
+     * then the rule is ignored for the following refinement step.
+     */
     public CoarseToFineParser(InterpretedTreeAutomaton irtg, String inputInterpretation, FineToCoarseMapping ftc, double theta) {
         this.irtg = irtg;
         this.inputInterpretation = inputInterpretation;
@@ -83,6 +109,15 @@ public class CoarseToFineParser {
         }
     }
 
+    /**
+     * This method is a shorter alias for {@link #parseInputObject(java.lang.Object)}
+     * which also takes care of decoding the string representation of the input into
+     * a suitable object.
+     * 
+     * @param input
+     * @return
+     * @throws ParserException 
+     */
     public TreeAutomaton parse(String input) throws ParserException {
         return parseInputObject(irtg.parseString(inputInterpretation, input));
     }
@@ -127,6 +162,19 @@ public class CoarseToFineParser {
         }
     }
 
+    /**
+     * Uses coarse to fine parsing to produce a pruned parse chart for the input
+     * object.
+     * 
+     * This uses the coarse to fine chart that has been passed at construction
+     * as well as the given pruning threshold. Note that intersection at the coarsest
+     * level is done using the condensed intersection algorithm. For some grammars
+     * it might improve performance to use the sibling finder algorithm instead
+     * as implemented by {@link #parseInputObjectWithSF(java.lang.Object)}
+     * 
+     * @param inputObject
+     * @return 
+     */
     @OperationAnnotation(code = "parseInputObject")
     public TreeAutomaton parseInputObject(Object inputObject) {
         // create condensed invhom automaton
@@ -217,6 +265,18 @@ public class CoarseToFineParser {
         return createTreeAutomaton(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs());
     }
 
+    /**
+     * Uses coarse to fine parsing to produce a pruned parse chart for the input
+     * object.
+     * 
+     * This uses the coarse to fine chart that has been passed at construction
+     * as well as the given pruning threshold. Note that this implementation uses
+     * the sibling finder algorithm intersection for the coarsest level of parsing
+     * which can be helpful for grammars with more complex homomorphic images.
+     * 
+     * @param inputObject
+     * @return 
+     */
     @OperationAnnotation(code = "parseInputObjectWithSF")
     public TreeAutomaton parseInputObjectWithSF(Object inputObject) {
         // create condensed invhom automaton
@@ -311,6 +371,12 @@ public class CoarseToFineParser {
         return createTreeAutomatonNoncondensed(coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs());
     }
 
+    /**
+     * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
+     * most users will not need it.
+     * @param inputObject
+     * @return 
+     */
     @OperationAnnotation(code = "parseInputObjectWithSFSizes")
     public Combination parseInputObjectWithSFTrackSizes(Object inputObject) {
         // create condensed invhom automaton
@@ -566,6 +632,12 @@ public class CoarseToFineParser {
                 levelTimes, rulesPruned);
     }
 
+    /**
+     * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
+     * most users will not need it.
+     * @param inputObject
+     * @return 
+     */
     @OperationAnnotation(code = "parseInputObjectWithSFTimes")
     public Combination parseInputObjectWithSFTrackTimes(Object inputObject) {
         // create condensed invhom automaton
@@ -675,6 +747,15 @@ public class CoarseToFineParser {
                 levelTimes, null);
     }
 
+    /**
+     * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
+     * most users will not need it.
+     * @param inputObject
+     * @return
+     * @throws ClassNotFoundException
+     * @throws InstantiationException
+     * @throws IllegalAccessException 
+     */
     @OperationAnnotation(code = "parseInputObjectSizes")
     public Combination parseInputObjectTrackSizes(Object inputObject) throws ClassNotFoundException,
             InstantiationException, IllegalAccessException {
@@ -926,6 +1007,15 @@ public class CoarseToFineParser {
                 stateSaturation, binaryStateSaturation, initialTime, levelTimes, rulesPruned);
     }
 
+    /**
+     * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
+     * most users will not need it.
+     * @param inputObject
+     * @return
+     * @throws ClassNotFoundException
+     * @throws InstantiationException
+     * @throws IllegalAccessException 
+     */
     @OperationAnnotation(code = "parseInputObjectTimes")
     public Combination parseInputObjectTrackTimes(Object inputObject) throws ClassNotFoundException,
             InstantiationException, IllegalAccessException {
@@ -1036,7 +1126,7 @@ public class CoarseToFineParser {
     }
 
     /**
-     *
+     * Used to store evaluation Information, not useful for most users.
      */
     public class Combination {
 
@@ -1387,6 +1477,45 @@ public class CoarseToFineParser {
         }
     }
 
+    /**
+     * This is a convenience method which constructs a coarse to fine parser with the given
+     * parameters.
+     * 
+     * The ftc mapping is given in the following format (the outermost level "__" is ignore and only
+     * written to ensure that the whole structure forms a tree):
+     * 
+     * __(
+     * 
+     *  coarse_nonterminal1 (
+     *          fine_nonterminal1_1  (
+     *                  even_finer_nonterminal1_1_1(
+     *                      .....
+     *                  )
+     *                  even_finer_nonterminal1_1_2(
+     *                      .....
+     *                  )
+     *          )
+     *          fine_nonterminal1_2 (
+     *                  ....
+     *          )
+     *  coarse_nonterminal2 (
+     *      ...
+     *  )
+     * )
+     * 
+     * Note that the default FTC mapping will assume that the value of {@link InsideRuleFactory#NONTERMINAL_SEPARATOR} indicates
+     * that a nonterminal consists of multiple parts and each part after a separator should be mapped individually.
+     * 
+     * @param irtg grammar corresponding to finest level of analysis
+     * @param interpretation interpretation which the objects to be parsed will
+     * come from
+     * @param ftcMap
+     * @param theta pruning threshold as described for the constructor
+     * @return
+     * @throws FileNotFoundException
+     * @throws IOException
+     * @throws ParseException 
+     */
     @OperationAnnotation(code = "makeCtfParser")
     public static CoarseToFineParser makeCoarseToFineParser(InterpretedTreeAutomaton irtg, String interpretation, String ftcMap, double theta) throws FileNotFoundException, IOException, ParseException {
         FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(ftcMap);
