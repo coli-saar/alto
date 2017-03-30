@@ -16,7 +16,8 @@ import java.util.Collection;
 import java.util.StringJoiner;
 
 /**
- * Output codec for visualizing s-graphs with the GraphViz tool.
+ * Output codec for visualizing s-graphs with the GraphViz tool (see graphvix.org).
+ * This uses the 'dot' format, sources are colored red.
  * @author Jonas
  */
 @CodecMetadata(name = "GraphViz-dot", description = "GraphViz-dot", type = SGraph.class)
