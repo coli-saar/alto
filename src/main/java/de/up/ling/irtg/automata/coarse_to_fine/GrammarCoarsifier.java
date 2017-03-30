@@ -7,7 +7,6 @@ package de.up.ling.irtg.automata.coarse_to_fine;
 
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Lists;
-import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.binarization.InsideRuleFactory;

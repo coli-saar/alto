@@ -16,19 +16,20 @@ import java.util.Set;
 import java.util.logging.Level;
 
 /**
- *
+ * This is an extension of CondensedTreeAutomaton for which all rules can and must
+ * be added externally and are then stored explicitly for quick access.
+ * 
  * @author johannes
+ * @param <State>
  */
 public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomaton<State> {
     
     /**
      * Constructs a new instance which is backed by the given signature.
      * 
+     * The automaton will contain no rules or final states.
      * The automaton might add to the signature when it creates new rules.
      * 
-     * This constructor was added for testing purposes.
-     * 
-     * @author christoph teichmann
      * @param sig 
      */
     public ConcreteCondensedTreeAutomaton(Signature sig) {
@@ -41,7 +42,10 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
         isCondensedExplicit = true;
     }
     
-    
+    /**
+     * Creates a new instance which will have its own signature and contains no
+     * rules or final states.
+     */
     public ConcreteCondensedTreeAutomaton() {
         super(new Signature());
         
@@ -54,18 +58,22 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
     
     /**
      * Creates a new CondensedTreeAutomaton based on the rules and final states of another TreeAutomaton.
-     * Rules in the original TreeAutomaton, that have the same child states and the the same parent state, 
+     * 
+     * Rules in the original TreeAutomaton that have the same child states and the the same parent state, 
      * but differ in their label, will be merged to form a CondensedRule
+     *
+     * @param <E>
      * @param origin
+     * @return 
      */
     public static <E> ConcreteCondensedTreeAutomaton<E> fromTreeAutomaton(TreeAutomaton<E> origin) {
-        ConcreteCondensedTreeAutomaton<E> ret = new ConcreteCondensedTreeAutomaton<E>();
+        ConcreteCondensedTreeAutomaton<E> ret = new ConcreteCondensedTreeAutomaton<>();
         
         ret.signature = origin.getSignature();
         ret.stateInterner = origin.getStateInterner();
         
         ret.ruleTrie = new CondensedRuleTrie();
-        ret.topDownRules = new Int2ObjectOpenHashMap<Int2ObjectMap<Set<CondensedRule>>>();
+        ret.topDownRules = new Int2ObjectOpenHashMap<>();
         ret.absorbTreeAutomaton(origin);
 //        
 //        System.err.println("original: \n" + origin);
@@ -74,7 +82,7 @@ public class ConcreteCondensedTreeAutomaton<State> extends CondensedTreeAutomato
 //        
 //        System.err.println("condensed as ordinary automaton: \n" + ret);
 //        
-Logging.get().setLevel(Level.ALL);
+        Logging.get().setLevel(Level.ALL);
         return ret;
     }
     
@@ -103,7 +111,7 @@ Logging.get().setLevel(Level.ALL);
     }
 
     /**
-     * Copies all rules from a TreeAutomaton to this automaton. Merges rules, that can be condensed.
+     * Copies all rules from a TreeAutomaton to this automaton. Merges rules which can be condensed.
      * @param auto
      */
     public void absorbTreeAutomaton(TreeAutomaton<State> auto) {

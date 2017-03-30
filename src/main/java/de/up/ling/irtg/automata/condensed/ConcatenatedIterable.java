@@ -10,20 +10,22 @@ import java.util.Iterator;
 /**
  *
  * @author koller
+ * @param <E>
  */
 public class ConcatenatedIterable<E> implements Iterable<E> {
-    private Iterable<? extends Iterable<E>> iterables;
+    private final Iterable<? extends Iterable<E>> iterables;
     
     public ConcatenatedIterable(Iterable<? extends Iterable<E>> its) {
         this.iterables = its;
     }
 
+    @Override
     public Iterator<E> iterator() {
         return new ConcatenatedIterator();
     }
 
     private class ConcatenatedIterator implements Iterator {        
-        private Iterator<? extends Iterable<E>> iterators;
+        private final Iterator<? extends Iterable<E>> iterators;
         private Iterator<E> currentIterator;
 
         public ConcatenatedIterator() {
@@ -31,6 +33,7 @@ public class ConcatenatedIterable<E> implements Iterable<E> {
             currentIterator = Iterators.emptyIterator();
         }
 
+        @Override
         public boolean hasNext() {
             while( ! currentIterator.hasNext() ) {
                 if( iterators.hasNext() ) {
@@ -43,10 +46,12 @@ public class ConcatenatedIterable<E> implements Iterable<E> {
             return true;
         }
 
+        @Override
         public E next() {
             return currentIterator.next();
         }
 
+        @Override
         public void remove() {
             throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
