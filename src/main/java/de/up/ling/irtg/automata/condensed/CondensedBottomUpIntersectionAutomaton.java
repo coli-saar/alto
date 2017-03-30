@@ -21,18 +21,33 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * This automaton represents the intersection of two tree automaton, at least one
+ * of which is a condensed tree automaton.
+ * 
+ * Before the automaton returns any rules it will always make all it's rules explicit.
+ * This is done through a bottom up search of rules, by attempting to combine states
+ * it has already discovered. Note that the automaton itself is not condensed.
+ * 
+ * 
  * @author koller
+ * @param <LeftState>
+ * @param <RightState>
  */
 public class CondensedBottomUpIntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
 
-    private TreeAutomaton<LeftState> left;
-    private CondensedTreeAutomaton<RightState> right;
-    private Int2IntMap stateToLeftState;
-    private Int2IntMap stateToRightState;
+    private final TreeAutomaton<LeftState> left;
+    private final CondensedTreeAutomaton<RightState> right;
+    private final Int2IntMap stateToLeftState;
+    private final Int2IntMap stateToRightState;
     private final SignatureMapper leftToRightSignatureMapper;
     private final IntInt2IntMap stateMapping;
 
+    /**
+     * 
+     * @param left
+     * @param right
+     * @param sigMapper 
+     */
     public CondensedBottomUpIntersectionAutomaton(TreeAutomaton<LeftState> left, CondensedTreeAutomaton<RightState> right, SignatureMapper sigMapper) {
         super(left.getSignature()); // TODO = should intersect this with the (remapped) right signature
 

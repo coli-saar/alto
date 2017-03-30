@@ -349,9 +349,9 @@ public class InterpretedTreeAutomaton implements Serializable {
      * @throws UnsupportedOperationException
      */
     public void trainML(Corpus trainingData) throws UnsupportedOperationException {
-        final Map<Integer, Rule> ruleForTerminal = new HashMap<Integer, Rule>(); // label -> rules
-        final Map<Integer, Long> ruleCounts = new HashMap<Integer, Long>();
-        final Map<Integer, Long> stateCounts = new HashMap<Integer, Long>();
+        final Map<Integer, Rule> ruleForTerminal = new HashMap<>(); // label -> rules
+        final Map<Integer, Long> ruleCounts = new HashMap<>();
+        final Map<Integer, Long> stateCounts = new HashMap<>();
 
         // initialize data
         for (Rule rule : automaton.getRuleSet()) {
@@ -460,12 +460,12 @@ public class InterpretedTreeAutomaton implements Serializable {
 
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
-        List<TreeAutomaton> parses = new ArrayList<TreeAutomaton>();
-        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
+        List<TreeAutomaton> parses = new ArrayList<>();
+        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
         ListMultimap<Rule, Rule> originalRuleToIntersectedRules = ArrayListMultimap.create();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, originalRuleToIntersectedRules);
 
-        Map<Rule, Double> globalRuleCount = new HashMap<Rule, Double>();
+        Map<Rule, Double> globalRuleCount = new HashMap<>();
         // Threshold parameters
         if (iterations <= 0) {
             iterations = Integer.MAX_VALUE;
@@ -599,19 +599,19 @@ public class InterpretedTreeAutomaton implements Serializable {
         }
         // memorize mapping between
         // rules of the parse charts and rules of the underlying RTG
-        List<TreeAutomaton> parses = new ArrayList<TreeAutomaton>();
-        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<Map<Rule, Rule>>();
+        List<TreeAutomaton> parses = new ArrayList<>();
+        List<Map<Rule, Rule>> intersectedRuleToOriginalRule = new ArrayList<>();
         collectParsesAndRules(trainingData, parses, intersectedRuleToOriginalRule, null);
 
         // initialize hyperparameters
-        List<Rule> automatonRules = new ArrayList<Rule>();
+        List<Rule> automatonRules = new ArrayList<>();
         Iterables.addAll(automatonRules, getAutomaton().getRuleSet()); // bring rules in defined order
 
         int numRules = automatonRules.size();
         double[] alpha = new double[numRules];
         Arrays.fill(alpha, 1.0); // might want to initialize them differently
 
-        Map<Rule, Double> ruleCounts = new HashMap<Rule, Double>();
+        Map<Rule, Double> ruleCounts = new HashMap<>();
         // Threshold parameters
         if (iterations <= 0) {
             iterations = Integer.MAX_VALUE;
@@ -623,7 +623,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         // iterate
         while (difference > threshold && iteration < iterations) {
             // for each state, compute sum of alphas for outgoing rules
-            Map<Integer, Double> sumAlphaForSameParent = new HashMap<Integer, Double>();
+            Map<Integer, Double> sumAlphaForSameParent = new HashMap<>();
             for (int i = 0; i < numRules; i++) {
                 int parent = automatonRules.get(i).getParent();
                 if (sumAlphaForSameParent.containsKey(parent)) {
@@ -751,7 +751,7 @@ public class InterpretedTreeAutomaton implements Serializable {
             parses.add(chartHere); 
 
             Iterable<Rule> rules = chartHere.getRuleSet();
-            Map<Rule, Rule> irtorHere = new HashMap<Rule, Rule>();
+            Map<Rule, Rule> irtorHere = new HashMap<>();
             for (Rule intersectedRule : rules) {
                 Rule originalRule = getRuleInGrammar(intersectedRule, chartHere);
 

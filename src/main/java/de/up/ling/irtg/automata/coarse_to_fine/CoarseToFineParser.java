@@ -135,7 +135,7 @@ public class CoarseToFineParser {
 
     private static class MyIntInt2DoubleMap implements IIntInt2DoubleMap {
 
-        private IntInt2DoubleMap map;
+        private final IntInt2DoubleMap map;
 
         public MyIntInt2DoubleMap() {
             map = new IntInt2DoubleMap();
