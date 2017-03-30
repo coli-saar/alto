@@ -20,18 +20,19 @@ import java.util.function.ToIntFunction;
 /**
  *
  * @author koller
+ * @param <State>
  */
 public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
 
     public static String FAIL_STATE = "q_FAIL_";
-    private int failStateId;
-    private TreeAutomaton<State> rhsAutomaton;
-    private Homomorphism hom;
-    private Set<Integer> computedLabels;
+    private final int failStateId;
+    private final TreeAutomaton<State> rhsAutomaton;
+    private final Homomorphism hom;
+    private final Set<Integer> computedLabels;
 //    private Map<String, State> rhsState;
     private int[] labelsRemap; // hom-target(id) = rhs-auto(labelsRemap[id])
-    private ToIntFunction<HomomorphismSymbol> remappingHomSymbolToIntFunction;
-    private IntSet provisionalStateSet;
+    private final ToIntFunction<HomomorphismSymbol> remappingHomSymbolToIntFunction;
+    private final IntSet provisionalStateSet;
 
     public InverseHomAutomaton(TreeAutomaton<State> rhsAutomaton, Homomorphism hom) {
         super(hom.getSourceSignature());
@@ -42,7 +43,7 @@ public class InverseHomAutomaton<State> extends TreeAutomaton<Object> {
         labelsRemap = hom.getTargetSignature().remap(rhsAutomaton.getSignature());
         remappingHomSymbolToIntFunction = f -> labelsRemap[HomomorphismSymbol.getHomSymbolToIntFunction().applyAsInt(f)]; // TODO replace by sig mapper
 
-        computedLabels = new HashSet<Integer>();
+        computedLabels = new HashSet<>();
 //        rhsState = new HashMap<String, State>();
 
         this.stateInterner = (Interner) rhsAutomaton.stateInterner;

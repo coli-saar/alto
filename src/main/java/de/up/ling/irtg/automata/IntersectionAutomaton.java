@@ -12,11 +12,6 @@ import com.google.common.collect.Sets;
 import de.saar.basic.Agenda;
 import de.saar.basic.CartesianIterator;
 import de.saar.basic.Pair;
-import de.up.ling.irtg.Interpretation;
-import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
-import de.up.ling.irtg.hom.Homomorphism;
 import de.up.ling.irtg.laboratory.OperationAnnotation;
 import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.IntInt2IntMap;
@@ -27,20 +22,15 @@ import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntIterator;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.*;
 
 /**
- *
+ * This class is used to represent the intersection of two tree automata.
+ * 
+ * The intersection is computed bottom up.
  * @author koller
+ * @param <LeftState>
+ * @param <RightState>
  */
 public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<Pair<LeftState, RightState>> {
 
@@ -51,7 +41,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     private int[] labelRemap;
     Int2IntMap stateToLeftState;
     Int2IntMap stateToRightState;
-    private long[] ckyTimestamp = new long[10];
+    private final long[] ckyTimestamp = new long[10];
     private StateDiscoveryListener stateDiscoveryListener;
 
     private final IntInt2IntMap stateMapping;  // right state -> left state -> output state
@@ -59,6 +49,11 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     // receive corresponding left states, but not vice versa. This keeps outer map very dense,
     // and makes it suitable for a fast ArrayMap)
 
+    /**
+     * Crates a new instance which represents the intersection of the two given automata.
+     * @param left
+     * @param right 
+     */
     @OperationAnnotation(code = "bottomUpIntersectionAutomaton")
     public IntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right) {
         super(left.getSignature()); // TODO = should intersect this with the right signature
@@ -77,6 +72,11 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         stateMapping = new IntInt2IntMap();
     }
 
+    /**
+     * The listener will be informed whenever a new state is visited for the first
+     * time.
+     * @param listener 
+     */
     public void setStateDiscoveryListener(StateDiscoveryListener listener) {
         this.stateDiscoveryListener = listener;
     }
@@ -169,7 +169,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                     } else {
                         // all other rules
                         int[] children = rightRule.getChildren();
-                        List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                        List<Set<Integer>> remappedChildren = new ArrayList<>();
                         // iterate over all children in the right rule
                         for (int i = 0; i < rightRule.getArity(); ++i) {
                             // RECURSION!
@@ -178,7 +178,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                             remappedChildren.add(partners.get(children[i]));
                         }
 
-                        CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
+                        CartesianIterator<Integer> it = new CartesianIterator<>(remappedChildren); // int = right state ID
                         while (it.hasNext()) {
                             // get all rules from the left automaton, where the rhs is the rhs of the current rule.
                             for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), it.next())) {
@@ -221,7 +221,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                     } else {
                         // all other rules
                         int[] children = rightRule.getChildren();
-                        List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                        List<Set<Integer>> remappedChildren = new ArrayList<>();
                         // iterate over all children in the right rule
                         for (int i = 0; i < rightRule.getArity(); ++i) {
                             // RECURSION!
@@ -317,6 +317,13 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         }
     }
 
+    /**
+     * This method constructs all transitions in the automaton in a CKY style 
+     * algorithm.
+     * 
+     * This attempts to combine pairs of states that have been found bottom up
+     * into new rules.
+     */
     public void makeAllRulesExplicitCKY() {
         if (!ruleStore.isExplicit()) {
             ckyTimestamp[0] = System.nanoTime();
@@ -325,7 +332,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             int[] oldLabelRemap = labelRemap;
             labelRemap = labelRemap = right.getSignature().remap(left.getSignature());
             SetMultimap<Integer, Integer> partners = HashMultimap.create();
-            Int2ObjectOpenHashMap<IntSet> partners2 = new Int2ObjectOpenHashMap<IntSet>();
+            Int2ObjectOpenHashMap<IntSet> partners2 = new Int2ObjectOpenHashMap<>();
 
             ckyTimestamp[1] = System.nanoTime();
 
@@ -355,6 +362,13 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         }
     }
 
+     /**
+     * This method constructs all transitions in the automaton in a CKY style 
+     * algorithm, there is a newer version that is preferred.
+     * 
+     * This attempts to combine pairs of states that have been found bottom up
+     * into new rules.
+     */
     public void makeAllRulesExplicitCKYOld() {
         if (!ruleStore.isExplicit()) {
 
@@ -388,13 +402,13 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                         } else {
                             // all other rules
                             int[] children = rightRule.getChildren();
-                            List<Set<Integer>> remappedChildren = new ArrayList<Set<Integer>>();
+                            List<Set<Integer>> remappedChildren = new ArrayList<>();
                             // iterate over all children in the right rule
                             for (int i = 0; i < rightRule.getArity(); ++i) {
                                 // take the right-automaton label for each child and get the previously calculated left-automaton label from partners.
                                 remappedChildren.add(partners.get(children[i]));
                             }
-                            CartesianIterator<Integer> it = new CartesianIterator<Integer>(remappedChildren); // int = right state ID
+                            CartesianIterator<Integer> it = new CartesianIterator<>(remappedChildren); // int = right state ID
                             while (it.hasNext()) {
                                 // get all rules from the left automaton, where the rhs is the rhs of the current rule.
                                 for (Rule leftRule : left.getRulesBottomUp(remapLabel(rightRule.getLabel()), it.next())) {
@@ -437,8 +451,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
             getStateInterner().setTrustingMode(true);
 
             ListMultimap<Integer, Rule> rulesByChildState = left.getRuleByChildStateMap();  // int = left state ID
-            Queue<Integer> agenda = new LinkedList<Integer>();
-            Set<Integer> seenStates = new HashSet<Integer>();
+            Queue<Integer> agenda = new LinkedList<>();
+            Set<Integer> seenStates = new HashSet<>();
             SetMultimap<Integer, Integer> partners = HashMultimap.create(); // left state ID -> right state IDs
 
             // initialize agenda with all pairs of rules of the form A -> f
@@ -492,7 +506,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                             // The exception is that if j == i, i.e. we are looking
                             // at the selected occurrence of p as a child in the rule,
                             // we constrain Qj to {q}.
-                            List<Set<Integer>> partnerStates = new ArrayList<Set<Integer>>();
+                            List<Set<Integer>> partnerStates = new ArrayList<>();
 
                             for (int j = 0; j < leftRule.getArity(); j++) {
                                 if (i == j) {
@@ -503,8 +517,8 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
                             }
 
                             // iterate over state tuples Q1 x ... x Qn and look for right rules
-                            CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
-                            List<Integer> newStates = new ArrayList<Integer>();
+                            CartesianIterator<Integer> it = new CartesianIterator<>(partnerStates); // int = right state ID
+                            List<Integer> newStates = new ArrayList<>();
                             while (it.hasNext()) {
                                 iterations++;
 
@@ -608,7 +622,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
     }
 
     private void collectStatePairs(Collection<Integer> leftStates, Collection<Integer> rightStates, Collection<Integer> pairStates) {
-        List<Collection> stateSets = new ArrayList<Collection>();
+        List<Collection> stateSets = new ArrayList<>();
         stateSets.add(leftStates);
         stateSets.add(rightStates);
 
@@ -697,11 +711,13 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //        return super.getAllStates();
 //    }
     /**
-     * ************* Early-style intersection *************
+     * This implements an interesection algorithm in the style of the early
+     * algorithm, which predicts possible transition based on the first input
+     * automaton and then finds matching rules based on the second input automaton.
      */
     public void makeAllRulesExplicitEarley() {
         if (!ruleStore.isExplicit()) {
-            Queue<IncompleteEarleyItem> agenda = new Agenda<IncompleteEarleyItem>();
+            Queue<IncompleteEarleyItem> agenda = new Agenda<>();
             ListMultimap<Integer, CompleteEarleyItem> completedItemsForLeftState = ArrayListMultimap.create(); // left state ID -> ...
             ListMultimap<Integer, IncompleteEarleyItem> waitingIncompleteItems = ArrayListMultimap.create();   // left state ID -> ...
 
@@ -774,7 +790,7 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 
     private void predict(int leftState, Queue<IncompleteEarleyItem> agenda) {
         for (Integer label : left.getLabelsTopDown(leftState)) {
-            if (right.hasRuleWithPrefix(remapLabel(label), new ArrayList<Integer>())) {
+            if (right.hasRuleWithPrefix(remapLabel(label), new ArrayList<>())) {
                 for (Rule rule : left.getRulesTopDown(label, leftState)) {
                     final IncompleteEarleyItem incompleteEarleyItem = new IncompleteEarleyItem(rule, 0, null);
                     agenda.offer(incompleteEarleyItem);
@@ -901,12 +917,16 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
 //        }
     }
 
-    /**
+    /*
+     * this is evaluation code which should be moved into a test case or
+        Alto lab
+     * 
      * Arg1: IRTG Grammar Arg2: List of Sentences Arg3: Interpretation to parse
      * Arg4: Outputfile Arg5: Comments
      *
      * @param args
-     */
+     * @throws java.io.FileNotFoundException
+     *
     public static void main(String[] args) throws FileNotFoundException, IOException, de.up.ling.irtg.codec.CodecParseException {
         if (args.length != 5) {
             System.err.println("1. IRTG\n"
@@ -976,14 +996,24 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         } catch (Exception ex) {
             System.out.println("Error while writing to file:" + ex.getMessage());
         }
-    }
+    }*/
 
+    /**
+     * Defines an interface  which accepts newly discovered states during
+     * the intersection construction.
+     */
     @FunctionalInterface
     public static interface StateDiscoveryListener {
-
         public void accept(int state);
     }
     
+    /**
+     * Helper method which creates an intersection automaton and
+     * makes all rules explicit with the default algorithm.
+     * @param lhs
+     * @param rhs
+     * @return 
+     */
     @OperationAnnotation(code = "buIntersect")
     public static IntersectionAutomaton intersectBottomUpNaive(TreeAutomaton lhs, TreeAutomaton rhs) {
         IntersectionAutomaton ret = new IntersectionAutomaton(lhs, rhs);
@@ -991,6 +1021,13 @@ public class IntersectionAutomaton<LeftState, RightState> extends TreeAutomaton<
         return ret;
     }
     
+    /**
+     * Helper method which creates an intersection automaton and
+     * makes all rules explicit with the CKY algorithm.
+     * @param lhs
+     * @param rhs
+     * @return 
+     */
     @OperationAnnotation(code = "tdbuIntersect")
     public static IntersectionAutomaton intersectTopDownBottomUpCKY(TreeAutomaton lhs, TreeAutomaton rhs) {
         IntersectionAutomaton ret = new IntersectionAutomaton(lhs, rhs);

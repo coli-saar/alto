@@ -7,7 +7,11 @@
 package de.up.ling.irtg.automata;
 
 /**
- *
+ * This class is used to predict the outside score of a state.
+ * 
+ * This is used in the agenda based intersection algorithms which attempt to find
+ * the based tree based on an A* approach.
+ * 
  * @author koller
  */
 public interface EdgeEvaluator {

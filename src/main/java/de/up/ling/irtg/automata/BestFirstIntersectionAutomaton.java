@@ -20,14 +20,34 @@ import java.util.List;
 import java.util.Set;
 
 /**
- *
+ * An intersection automaton for viterbi search that constructs transitions bottom up
+ * when makeAllRulesExplicit is called, according to
+ * a queue and stops construction once a complete tree can be derived.
+ * 
+ * This is used when only the best parse is of interest and a complete automaton
+ * is not necessary. Note that the automaton requires an EdgeEvaluator to provide
+ * outside scores.
+ * 
+ * 
  * @author koller
+ * @param <LeftState>
+ * @param <RightState>
  */
 public class BestFirstIntersectionAutomaton<LeftState, RightState> extends IntersectionAutomaton<LeftState, RightState> {
 
     private static final boolean DEBUG = false;
     private final EdgeEvaluator evaluator;
 
+    /**
+     * Creates a new instance with the given evaluator.
+     * 
+     * If the score provided by the evaluator is an upper bound, then makeAllRulesExplicit
+     * will implement A*-search.
+     * 
+     * @param left
+     * @param right
+     * @param evaluator 
+     */
     public BestFirstIntersectionAutomaton(TreeAutomaton<LeftState> left, TreeAutomaton<RightState> right, EdgeEvaluator evaluator) {
         super(left, right);
         this.evaluator = evaluator;
@@ -134,7 +154,7 @@ public class BestFirstIntersectionAutomaton<LeftState, RightState> extends Inter
                             // The exception is that if j == i, i.e. we are looking
                             // at the selected occurrence of p as a child in the rule,
                             // we constrain Qj to {q}.
-                            List<Set<Integer>> partnerStates = new ArrayList<Set<Integer>>();
+                            List<Set<Integer>> partnerStates = new ArrayList<>();
 
                             for (int j = 0; j < leftRule.getArity(); j++) {
                                 if (i == j) {
@@ -144,8 +164,8 @@ public class BestFirstIntersectionAutomaton<LeftState, RightState> extends Inter
                                 }
                             }
 
-                            CartesianIterator<Integer> it = new CartesianIterator<Integer>(partnerStates); // int = right state ID
-                            List<Integer> newStates = new ArrayList<Integer>();
+                            CartesianIterator<Integer> it = new CartesianIterator<>(partnerStates); // int = right state ID
+                            List<Integer> newStates = new ArrayList<>();
 
                             while (it.hasNext()) {
                                 iterations++;
