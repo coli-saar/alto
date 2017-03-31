@@ -466,7 +466,7 @@
       </snapshots>
       <id>tcl-artifactory-release</id>
       <name>tcl-artifactory-release</name>
-      <url>http://tcl.ling.uni-potsdam.de/artifactory/release</url>
+      <url>http://akci.coli.uni-saarland.de/artifactory/release</url>
     </repository>
     
     <repository>
@@ -475,13 +475,13 @@
       </snapshots>
       <id>tcl-artifactory-snapshots</id>
       <name>tcl-artifactory-snapshots</name>
-      <url>http://tcl.ling.uni-potsdam.de/artifactory/snapshots</url>
+      <url>http://akci.coli.uni-saarland.de/artifactory/snapshots</url>
     </repository>
 
     <repository>
       <id>tcl-artifactory-external</id>
       <name>tcl-artifactory-external</name>
-      <url>http://tcl.ling.uni-potsdam.de/artifactory/external</url>
+      <url>http://akci.coli.uni-saarland.de/artifactory/external</url>
     </repository>
 
 
