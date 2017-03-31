@@ -98,7 +98,7 @@ public class BasicOperations {
     @OperationAnnotation(code = "div")
     public static Double div(Object denominator, Object divisor) {
         if ((Double) divisor == 0) {
-            return null;//TODO - think about if this is what we want
+            throw new IllegalArgumentException("Argument 'divisor' is 0");
         }
         return (Double) denominator / (Double) divisor;
     }
@@ -112,7 +112,7 @@ public class BasicOperations {
     @OperationAnnotation(code = "f1")
     public static double f1(double precision, double recall) {
         if (precision + recall == 0) {
-            return 0; //TODO: throw error?
+            return 0;
         } else {
             return 2 * (precision * recall) / (precision + recall);
         }

@@ -792,7 +792,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         @Override
         public Iterable<int[]> getPartners(int stateID, int pos) {
             IntList relevantList = null;
-            //TODO this catch (Null Pointer) is bad style (too general)
             try {
                 switch(pos) {
                     case 0:
@@ -802,10 +801,9 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                         relevantList = leftLookup.get(rightState2Index.applyAsInt(stateID));
                         break;
                 }
-            } catch (java.lang.NullPointerException ex) {
+            } catch (java.lang.NullPointerException ex) {//MAYBEFIX this catch is bad style (too general), but quite an effort to fix
                 return new ArrayList<>();
             }
-            //TODO: throw error if pos is neither 0 or 1?
             if (relevantList == null) {
                 return new ArrayList<>();
             }
@@ -831,7 +829,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         @Override
         protected void performAddState(int stateID, int pos) {
             IntList relevantList;
-            //TODO this try is bad style (too general)
             try {
                 switch(pos) {
                     case 0:
@@ -851,10 +848,10 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                         }
                         break;
                     default:
-                        return;//TODO: throw error?
+                        throw new IndexOutOfBoundsException("Adding state not possible at index "+pos+"(must be 0 or 1).");
                 }
                 relevantList.add(stateID);
-            } catch (java.lang.NullPointerException ex) {
+            } catch (java.lang.NullPointerException ex) {//MAYBEFIX this catch is bad style (too general), but quite an effort to fix
                 //do nothing.
             }
         }
@@ -883,7 +880,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         @Override
         public Iterable<int[]> getPartners(int stateID, int pos) {
             IntList relevantList = null;
-            //TODO this try is bad style (too general)
             try {
                 switch(pos) {
                     case 0:
@@ -901,7 +897,7 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                         relevantList = second2ListR.get(rightState2SecondIndex.applyAsInt(stateID));
                         break;
                 }
-            } catch (java.lang.NullPointerException ex) {
+            } catch (java.lang.NullPointerException ex) {//MAYBEFIX this catch is bad style (too general), but quite an effort to fix
                 return new ArrayList<>();
             }
             if (relevantList == null) {
@@ -929,7 +925,6 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
         @Override
         protected void performAddState(int stateID, int pos) {
             IntList relevantList;
-            //TODO this try is bad style (too general)
             try {
                 switch(pos) {
                     case 0:
@@ -961,10 +956,10 @@ public class TagStringAlgebra extends Algebra<Pair<List<String>, List<String>>> 
                         }
                         break;
                     default:
-                        return;//TODO: throw error?
+                        throw new IndexOutOfBoundsException("Adding state not possible at index "+pos+"(must be 0 or 1).");
                 }
                 relevantList.add(stateID);
-            } catch (java.lang.NullPointerException ex) {
+            } catch (java.lang.NullPointerException ex) {//MAYBEFIX this catch is bad style (too general), but quite an effort to fix
                 //do nothing
             }
         }

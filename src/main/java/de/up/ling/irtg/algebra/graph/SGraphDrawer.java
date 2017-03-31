@@ -32,11 +32,11 @@ import org.jgrapht.ext.JGraphModelAdapter;
  * @author koller
  */
 public class SGraphDrawer {
-    // TODO - the adapter is meant to be parameterized by functions that
+    // MAYBEFIX - Previous problem: the adapter was meant to be parameterized by functions that
     // map nodes and edges to the strings that are displayed visually.
-    // However, the create*Cell methods of the factory are never called,
-    // and so the default string representations are used after all.
-    // EDIT -- This solution is certainly not beautiful, but it works. Jonas
+    // However, the create*Cell methods of the factory were never called,
+    // and so the default string representations was used after all.
+    // New Problem: Find a more elegant solution
     private static class MyModelAdapter extends JGraphModelAdapter<GraphNode, GraphEdge> {
         private JGraphModelAdapter.CellFactory<GraphNode, GraphEdge> cf;
 

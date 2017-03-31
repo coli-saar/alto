@@ -76,7 +76,7 @@ public abstract class SiblingFinder {
         IntList[] containers;
         int arity;
         
-        //TODO: simpler/faster implementation for arity 0 or 1.
+        //MAYBEFIX: simpler/faster implementation for arity 0 or 1. But is not used in these cases anyway?
         
         @Override
         public String toString() {

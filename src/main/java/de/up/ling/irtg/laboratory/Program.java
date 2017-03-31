@@ -489,7 +489,6 @@ public class Program {
                                 Method m = null;
                                 for (Method candidate : invokingType.getMethods()) {
                                     OperationAnnotation annot = findAnnotation(candidate, OperationAnnotation.class);
-                                    //TODO: write testcase that checks for duplicate codes in one class or its superclasses
                                     if (annot != null) {
                                         //System.err.println("--- CODE FOUND ----- :: "+annot.code());
                                         if (annot.code().equals(code)) {
@@ -590,7 +589,7 @@ public class Program {
 
         Int2ObjectMap<Throwable> ret = new Int2ObjectOpenHashMap<>();
 
-        //run, and measure times --TODO: runtimes
+        //run, and measure times
         for (int i = 0; i < localProgram.length; i++) {
 
             //not sure if this is too much overhead, but it should be a few orders of magnitude below 1 ms
@@ -690,7 +689,7 @@ public class Program {
         String formatString = verbose ? "%0" + width + "d [%-50.50s] " : null;
         Algebra firstAlgebra = verbose ? getGlobalIrtg().getInterpretation(firstMentionedInterpretation).getAlgebra() : null;
 
-        // brute force make everything explicit for parallelisation. TODO: do this properly
+        // brute force make everything explicit for parallelisation. MAYBEFIX: do this properly
         // force building the bottom-up rule index
         ((InterpretedTreeAutomaton) globalVariableTracker[0]).getAutomaton().getRuleSet();
         if (corpus.iterator().hasNext()) {
@@ -723,7 +722,7 @@ public class Program {
                 resMan.acceptResult(globalVariableTracker[shiftIndex(k)], -1, varNames[k], doExport[shiftIndex(k)], true, isNumeric[shiftIndex(k)]);
             }
         }
-        //TODO: accept runtimes -- EDIT: currently only measuring non-global runtimes
+        //TODO: global runtimes
 
         for (Int2ObjectMap.Entry<Throwable> idAndError : initErrors.int2ObjectEntrySet()) {
             int k = idAndError.getIntKey();
@@ -898,7 +897,7 @@ public class Program {
                 System.err.printf("\ntotal %s: %s", nameAndTime.getKey(), Util.formatTime(sum * 1000000L)); // convert back to ns
             }
 
-            //TODO: accept runtimes -- EDIT: currently only measuring non-global runtimes
+            //TODO: global runtimes
             for (Int2ObjectMap.Entry<Throwable> idAndError : errors.int2ObjectEntrySet()) {
                 int k = idAndError.getIntKey();
                 //do not need to check if entry for k is global, only global k can appear here.

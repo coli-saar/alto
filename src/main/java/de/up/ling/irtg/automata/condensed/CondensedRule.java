@@ -62,11 +62,6 @@ public class CondensedRule {
         return parent;
     }
 
-    // TODO - is this needed?
-    public void setParent(int parent) {
-        this.parent = parent;
-    }
-
     public double getWeight() {
         return weight;
     }

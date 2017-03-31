@@ -145,7 +145,7 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
                 }
             } else if (childStateIds.length == 0) {
                 for (String leafPath : leafPaths) {
-                    if (tree.select(leafPath, 0).getLabel().equals(getSignature().resolveSymbolId(labelId))) {  // TODO speedup
+                    if (tree.select(leafPath, 0).getLabel().equals(getSignature().resolveSymbolId(labelId))) {// MAYBEFIX speedup
                         ret.add(createRule(addState(new Context(leafPath)), labelId, childStateIds, 1));
                     }
                 }
@@ -158,7 +158,7 @@ public class TagTreeAlgebra extends Algebra<Tree<String>> {
                     String potentialParent = firstTop.substring(0, firstTop.length() - 1);
                     boolean allChildrenMatch = true;
 
-                    if (tree.select(potentialParent, 0).getLabel().equals(getSignature().resolveSymbolId(labelId))) {  // TODO speedup
+                    if (tree.select(potentialParent, 0).getLabel().equals(getSignature().resolveSymbolId(labelId))) {// MAYBEFIX speedup
                         for (int i = 0; i < childStateIds.length; i++) {
                             Context child = getStateForId(childStateIds[i]);
 

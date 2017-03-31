@@ -105,18 +105,4 @@ public class ConcreteTreeAutomaton<State> extends TreeAutomaton<State> {
         ruleStore.foreachRuleBottomUpForSets(labelIds, childStateSets, signatureMapper, fn);
     }
 
-    // TODO - this doesn't work, because numRules overcounts
-    // when the same rule is added twice. The clean solution
-    // would be to read the number of rules from an index.
-//    /**
-//     * Returns the number of rules in this automaton.
-//     * This method is fast for concrete automata, because
-//     * they count rules as they are added.
-//     * 
-//     * @return 
-//     */
-//    @Override
-//    public long getNumberOfRules() {
-//        return numRules;
-//    }
 }
