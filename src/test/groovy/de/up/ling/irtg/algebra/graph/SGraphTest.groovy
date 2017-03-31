@@ -74,11 +74,46 @@ class SGraphTest {
         assertEquals(gold, g1.merge(g2))
     }
     
-    //@Test
-    public void testMergeNotDisjoint() {
-        SGraph g1 = pg("(w / want-01  :ARG0 (b)  :ARG1 (g))")
-        SGraph g2 = pg("(b :ARG0 (g))")
-        assertThat(g1.merge(g2), nullValue())
+    // Node names should not influence the merging process. I.e. the nodes with name b in g1 and g2 should
+    // be separate nodes after the merge.
+    @Test
+    public void testMergeCommonNodeNameOnDisjointNodes() {
+        SGraph g1 = pg("(w<root> / want-01  :ARG0 (b/b1)  :ARG1 (g/g))")
+        SGraph g2 = pg("(g<root> :ARG2 (b/b2))")
+        SGraph gold = pg("(w<root> / want-01 :ARG0 (b/b1)  :ARG1 (g/g) :ARG2 (b2/b2))")
+        
+        assertEquals(gold, g1.merge(g2))
+    }
+    
+    //We want to allow merging of completely disjoint graphs.
+    @Test
+    public void testMergeNoCommonSource() {
+        SGraph g1 = pg("(a/a  :ARG0 (b/b))")
+        SGraph g2 = pg("(c/c)")
+        SGraph gold = new SGraph()
+        GraphNode a = gold.addNode("a", "a")
+        GraphNode b = gold.addNode("b", "b")
+        gold.addNode("c", "c")
+        gold.addEdge(a, b, "ARG0")
+        
+        assertEquals(gold, g1.merge(g2))
+    }
+    
+    //We want to allow merging of completely disjoint graphs. A common node name
+    //should not interfere with that.
+    @Test
+    public void testMergeCommonNodeNameNoCommonSource() {
+        SGraph g1 = pg("(a :ARG0 (b/b))")
+        SGraph g2 = pg("(a :ARG1 (d/d))")
+        SGraph gold = new SGraph()
+        GraphNode a = gold.addNode("a", null)
+        GraphNode b = gold.addNode("b", "b")
+        GraphNode c = gold.addNode("c", null)
+        GraphNode d = gold.addNode("d", "d")
+        gold.addEdge(a, b, "ARG0")
+        gold.addEdge(c, d, "ARG1")
+        
+        assertEquals(gold, g1.merge(g2))
     }
     
     @Test
