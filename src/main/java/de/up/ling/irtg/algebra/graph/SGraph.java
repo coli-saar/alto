@@ -255,17 +255,29 @@ public class SGraph{
      * @return a new s-graph representing the merge of the two original s-graphs
      */
     public SGraph merge(SGraph other) {
-        if (!overlapsOnlyInSources(other)) {
-            Logging.get().fine(() -> "merge: graphs are not disjoint: " + this + ", " + other);
-            return null;
-        }
+//        if (!overlapsOnlyInSources(other)) {
+//            Logging.get().fine(() -> "merge: graphs are not disjoint: " + this + ", " + other);
+//            return null;
+//        }
 
         // map node names of "other" to node names of "this" with same source
         // (if the same source node exists in both s-graphs)
+        Set<String> nodesToBeMerged = new HashSet<>();
         Map<String, String> nodeRenaming = new HashMap<>();
         for (String source : other.sourceToNodename.keySet()) {
             if (this.sourceToNodename.containsKey(source)) {
                 nodeRenaming.put(other.sourceToNodename.get(source), this.sourceToNodename.get(source));
+                nodesToBeMerged.add(other.sourceToNodename.get(source));
+            }
+        }
+        // map node names of "other" that are not to be merged, but share a node name, to a different name.
+        for (String nodeName : other.getAllNodeNames()) {
+            if (!nodesToBeMerged.contains(nodeName)) {
+                String newName = nodeName;
+                while (getAllNodeNames().contains(newName)) {
+                    newName = gensym("u");
+                    nodeRenaming.put(nodeName, newName);
+                }
             }
         }
 
