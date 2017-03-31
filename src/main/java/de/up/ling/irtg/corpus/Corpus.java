@@ -60,20 +60,42 @@ public class Corpus implements Iterable<Instance> {
     private static final boolean DEBUG = false;
     private String source; // explains where this corpus came from
 
+    /**
+     * This creates a new empty corpus.
+     * 
+     * In this corpus there will be no charts and no annotation.
+     */
     public Corpus() {
         instances = new ArrayList<>();
         charts = null;
         isAnnotated = false;
     }
 
+    /**
+     * Returns true if there are gold annotations for each instance.
+     * @return 
+     */
     public boolean isAnnotated() {
         return isAnnotated;
     }
 
+    /**
+     * Returns true if the instances in this corpus are associated with parse
+     * charts.
+     * @return 
+     */
     public boolean hasCharts() {
         return charts != null;
     }
 
+    /**
+     * This attaches parse charts to the instances of the corpus.
+     * 
+     * Different ChartAttachers may have different strategies for this. A
+     * OnTheFlyCharts attacher will compute the parse charts when they are requested.
+     * 
+     * @param charts 
+     */
     public void attachCharts(ChartAttacher charts) {
         this.charts = charts;
     }
@@ -88,6 +110,10 @@ public class Corpus implements Iterable<Instance> {
         attachCharts(new Charts(new FileInputStreamSupplier(new File(filename))));
     }
 
+    /**
+     * Returns the number of instances contained in this corpus.
+     * @return 
+     */
     public int getNumberOfInstances() {
         return instances.size();
     }
@@ -101,19 +127,37 @@ public class Corpus implements Iterable<Instance> {
         }
     }
 
+    /**
+     * Adds a new instance to the corpus.
+     * 
+     * If the instance is not annotated, it will change set the whole corpus to
+     * being unAnnotated.
+     * @param instance 
+     */
     public void addInstance(Instance instance) {
         instances.add(instance);
 
+        isAnnotated &= (instance.getDerivationTree() != null);
+        
         //is this the intended behaviour??? jonas
-        if (instance.getDerivationTree() != null) {
-            isAnnotated = true;
-        }
+        //if (instance.getDerivationTree() != null) {
+        //    isAnnotated &= true;
+        //}
     }
 
+    /**
+     * Returns a string describing the source of the corpus, if this was passed
+     * to the corpus at some point.
+     * @return 
+     */
     public String getSource() {
         return source;
     }
 
+    /**
+     * This sets a value for the source of the corpus.
+     * @param source 
+     */
     public void setSource(String source) {
         this.source = source;
     }
@@ -145,13 +189,23 @@ public class Corpus implements Iterable<Instance> {
         }
     }
 
+    /**
+     * Reads a corpus from a string format available via a reader.
+     * 
+     * 
+     * @param reader
+     * @param irtg
+     * @return
+     * @throws IOException
+     * @throws CorpusReadingException 
+     */
     public static Corpus readCorpus(Reader reader, InterpretedTreeAutomaton irtg) throws IOException, CorpusReadingException {
         Corpus ret = new Corpus();
         boolean annotated = false;
 
         BufferedReader br = new BufferedReader(reader);
-        List<String> interpretationOrder = new ArrayList<String>();
-        Map<String, Object> currentInputs = new HashMap<String, Object>();
+        List<String> interpretationOrder = new ArrayList<>();
+        Map<String, Object> currentInputs = new HashMap<>();
         int currentInterpretationIndex = 0;
         MutableInteger lineNumber = new MutableInteger(0);
         String commentPrefix = null;
@@ -263,7 +317,7 @@ public class Corpus implements Iterable<Instance> {
                 }
 
                 ret.instances.add(inst);
-                currentInputs = new HashMap<String, Object>();
+                currentInputs = new HashMap<>();
                 currentInterpretationIndex = 0;
             }
 
@@ -286,8 +340,8 @@ public class Corpus implements Iterable<Instance> {
         boolean annotated = false;
 
         BufferedReader br = new BufferedReader(reader);
-        List<String> interpretationOrder = new ArrayList<String>();
-        Map<String, Object> currentInputs = new HashMap<String, Object>();
+        List<String> interpretationOrder = new ArrayList<>();
+        Map<String, Object> currentInputs = new HashMap<>();
         int currentInterpretationIndex = 0;
         MutableInteger lineNumber = new MutableInteger(0);
         String commentPrefix = null;
@@ -401,7 +455,7 @@ public class Corpus implements Iterable<Instance> {
                 }
 
                 ret.instances.add(inst);
-                currentInputs = new HashMap<String, Object>();
+                currentInputs = new HashMap<>();
                 currentInterpretationIndex = 0;
             }
 
@@ -424,6 +478,11 @@ public class Corpus implements Iterable<Instance> {
         return ret;
     }
 
+    /**
+     * Re-orders the instances in this corpus according to the order induced by
+     * the comparator.
+     * @param comparator 
+     */
     public void sort(Comparator<Instance> comparator) {
         instances.sort(comparator);
     }

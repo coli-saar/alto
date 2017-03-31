@@ -30,7 +30,6 @@ public class OnTheFlyCharts implements ChartAttacher {
      * over the instances and computing charts as they are needed.
      * 
      * @param irtg
-     * @param instances 
      */
     public OnTheFlyCharts(InterpretedTreeAutomaton irtg) {
         this.irtg = irtg;
