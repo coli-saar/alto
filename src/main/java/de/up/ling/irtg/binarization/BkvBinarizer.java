@@ -82,9 +82,9 @@ public class BkvBinarizer {
         Logging.get().setLevel(Level.WARNING);
 
         try {
-            ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<String>();
-            Map<String, Homomorphism> binarizedHom = new HashMap<String, Homomorphism>();
-            List<String> interpretationNames = new ArrayList<String>(irtg.getInterpretations().keySet());
+            ConcreteTreeAutomaton<String> binarizedRtg = new ConcreteTreeAutomaton<>();
+            Map<String, Homomorphism> binarizedHom = new HashMap<>();
+            List<String> interpretationNames = new ArrayList<>(irtg.getInterpretations().keySet());
             TreeAutomaton rtg = irtg.getAutomaton();
             int numRules = Iterables.size(irtg.getAutomaton().getRuleSet());
             int max = (numRules < Integer.MAX_VALUE) ? ((int) numRules) : Integer.MAX_VALUE;
@@ -225,8 +225,8 @@ public class BkvBinarizer {
     RuleBinarization binarizeRule(Rule rule, InterpretedTreeAutomaton irtg) {
         try {
             TreeAutomaton commonVariableTrees = null;
-            Map<String, TreeAutomaton<String>> binarizationTermsPerInterpretation = new HashMap<String, TreeAutomaton<String>>();
-            Map<String, Int2ObjectMap<IntSet>> varPerInterpretation = new HashMap<String, Int2ObjectMap<IntSet>>();
+            Map<String, TreeAutomaton<String>> binarizationTermsPerInterpretation = new HashMap<>();
+            Map<String, Int2ObjectMap<IntSet>> varPerInterpretation = new HashMap<>();
             RuleBinarization ret = new RuleBinarization();
 
             if (debug) {
@@ -361,7 +361,7 @@ public class BkvBinarizer {
     // '{0}' -> '0' [1.0]
     // '{1, 2}' -> '1_2'('{1}', '{2}') [1.0]
     static TreeAutomaton<IntSet> vartreesForAutomaton(TreeAutomaton<String> automaton, Int2ObjectMap<IntSet> vars) {
-        ConcreteTreeAutomaton<IntSet> ret = new ConcreteTreeAutomaton<IntSet>();
+        ConcreteTreeAutomaton<IntSet> ret = new ConcreteTreeAutomaton<>();
 
         // iterate over the rules of G_i
         for (Rule rule : automaton.getRuleSet()) {
@@ -377,9 +377,9 @@ public class BkvBinarizer {
                     is.add(var);
                 }
 
-                newRule = ret.createRule(is, representVarSet(is), new ArrayList<IntSet>());
+                newRule = ret.createRule(is, representVarSet(is), new ArrayList<>());
             } else {
-                List<IntSet> rhsVarsets = new ArrayList<IntSet>();
+                List<IntSet> rhsVarsets = new ArrayList<>();
 
                 // compute fork
                 // this work is repeated in (iv); if it becomes a performance issue, cache results
@@ -433,6 +433,7 @@ public class BkvBinarizer {
 
     private static class IntSetComparator implements Comparator<IntSet> {
 
+        @Override
         public int compare(IntSet o1, IntSet o2) {
             return Integer.compare(Collections.min(o1), Collections.min(o2));
         }
@@ -484,7 +485,7 @@ public class BkvBinarizer {
             System.exit(1);
         }
 
-        final Map<String, String> labelForFork = new HashMap<String, String>();  // 0+1 -> _br0, 0_1+2 -> _br1
+        final Map<String, String> labelForFork = new HashMap<>();  // 0+1 -> _br0, 0_1+2 -> _br1
         xi.dfs(new TreeVisitor<String, Void, IntSet>() {
             @Override
             public IntSet combine(Tree<String> node, List<IntSet> childrenValues) {
@@ -505,22 +506,23 @@ public class BkvBinarizer {
             }
         });
 
-        Subtree subtreeForRoot = binarizationTerm.dfs(new TreeVisitor<String, Void, Subtree>() {
+        Subtree subtreeForRoot;
+        subtreeForRoot = binarizationTerm.dfs(new TreeVisitor<String, Void, Subtree>() {
             @Override
             public Subtree combine(Tree<String> node, final List<Subtree> childrenValues) {
                 IntSet is = new IntOpenHashSet();
-                List<IntSet> childrenVarSets = new ArrayList<IntSet>();
-                List<Tree<String>> childrenTrees = new ArrayList<Tree<String>>();
-                List<IntSet> nonemptyChildConstruction = new ArrayList<IntSet>();
+                List<IntSet> childrenVarSets = new ArrayList<>();
+                List<Tree<String>> childrenTrees = new ArrayList<>();
+                List<IntSet> nonemptyChildConstruction = new ArrayList<>();
                 int childrenWithNonemptyVarsets = 0;
                 Subtree ret;
 
                 if (childrenValues.isEmpty()) {
                     if (HomomorphismSymbol.isVariableSymbol(node.getLabel())) {
                         is.add(HomomorphismSymbol.getVariableIndex(node.getLabel()));
-                        ret = new Subtree(Tree.create("?1"), is, new ArrayList<IntSet>());
+                        ret = new Subtree(Tree.create("?1"), is, new ArrayList<>());
                     } else {
-                        ret = new Subtree(node, is, new ArrayList<IntSet>());
+                        ret = new Subtree(node, is, new ArrayList<>());
                     }
                 } else {
                     for (Subtree st : childrenValues) {
@@ -540,10 +542,10 @@ public class BkvBinarizer {
                     if (childrenWithNonemptyVarsets < 2) {
                         ret = new Subtree(Tree.create(node.getLabel(), childrenTrees), is, nonemptyChildConstruction);
                     } else {
-                        List<IntSet> orderedChildrenVarSets = new ArrayList<IntSet>(childrenVarSets);
+                        List<IntSet> orderedChildrenVarSets = new ArrayList<>(childrenVarSets);
                         Collections.sort(orderedChildrenVarSets, new IntSetComparator());
 
-                        List<Tree<String>> subtrees = new ArrayList<Tree<String>>();
+                        List<Tree<String>> subtrees = new ArrayList<>();
 
                         for (int i = 0; i < childrenTrees.size(); i++) {
                             IntSet childVarSetHere = childrenVarSets.get(i);
@@ -620,11 +622,11 @@ public class BkvBinarizer {
      */
     // step (iv) of the algorithm: compute G''_i from G_i, var_i, and tau
     static TreeAutomaton<String> binarizationsForVartree(TreeAutomaton<String> binarizations, Tree<String> commonVariableTree, Int2ObjectMap<IntSet> var) {
-        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<String>();
+        ConcreteTreeAutomaton<String> ret = new ConcreteTreeAutomaton<>();
         Set<String> forksInVartree = collectForks(commonVariableTree);
 
         for (Rule rule : binarizations.getRuleSet()) {
-            List<IntSet> rhsVarsets = new ArrayList<IntSet>();
+            List<IntSet> rhsVarsets = new ArrayList<>();
 
             for (int i = 0; i < rule.getArity(); i++) {
                 IntSet varset = var.get(rule.getChildren()[i]);
@@ -669,7 +671,7 @@ public class BkvBinarizer {
         Map<String, Tree<String>> binarizationTerms;
 
         public RuleBinarization() {
-            binarizationTerms = new HashMap<String, Tree<String>>();
+            binarizationTerms = new HashMap<>();
         }
 
         @Override
@@ -703,7 +705,7 @@ public class BkvBinarizer {
     // every variable from 0,...,k-1 occurs exactly once. The implementation
     // assumes this uniqueness, but does not check it.
     static Int2ObjectMap<IntSet> computeVar(TreeAutomaton auto) {
-        Int2ObjectMap<IntSet> ret = new Int2ObjectOpenHashMap<IntSet>();
+        Int2ObjectMap<IntSet> ret = new Int2ObjectOpenHashMap<>();
 
         stateLoop:
         for (Integer state : (List<Integer>) auto.getStatesInBottomUpOrder()) {
@@ -760,7 +762,7 @@ public class BkvBinarizer {
         List<IntSet> vssList = new ArrayList<>(vss);
         Collections.sort(vssList, new IntSetComparator());
 
-        SortedSet<String> reprs = new TreeSet<String>();
+        SortedSet<String> reprs = new TreeSet<>();
 
         for (IntSet vs : vssList) {
             if (!vs.isEmpty()) {
@@ -780,7 +782,7 @@ public class BkvBinarizer {
     // given variable tree. A fork is a binary construction 0_1+2_3, which
     // happens when two children of a node have disjoint variable sets.
     static Set<String> collectForks(Tree<String> vartree) {
-        final Set<String> ret = new HashSet<String>();
+        final Set<String> ret = new HashSet<>();
 
         vartree.dfs(new TreeVisitor<String, Void, IntSet>() {
             @Override

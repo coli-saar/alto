@@ -6,22 +6,13 @@
 package de.up.ling.irtg.codec.tag;
 
 import com.beust.jcommander.internal.Maps;
-import com.google.common.collect.ImmutableMap;
 import de.saar.basic.Pair;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
-import de.up.ling.irtg.algebra.BinarizingTagTreeAlgebra;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.algebra.TagStringAlgebra;
-import de.up.ling.irtg.algebra.TagTreeAlgebra;
 import de.up.ling.irtg.automata.TreeAutomaton;
-import de.up.ling.irtg.binarization.BinarizingAlgebraSeed;
-import de.up.ling.irtg.binarization.BkvBinarizer;
-import de.up.ling.irtg.binarization.IdentitySeed;
-import de.up.ling.irtg.binarization.RegularSeed;
 import de.up.ling.irtg.codec.CodecMetadata;
 import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
-import de.up.ling.irtg.util.GuiUtils;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.tree.Tree;
 import java.io.BufferedReader;
