@@ -41,6 +41,26 @@ Here's the result of parsing "the boy wants to go" with this grammar:
 
 ![Screen Shot 2015-05-27 at 16.23.49.png](https://bitbucket.org/repo/ny94Mo/images/1198790576-Screen%20Shot%202015-05-27%20at%2016.23.49.png)
 
+
+## Version History ##
+
+**Version 2.1, April 2017**
+
+- Improved intersection and invhom algorithms (condensed, sibling-finder) for much faster PCFG, TAG, and HRG parsing (Groschwitz et al., ACL 2016).
+- Added pruning techniques, including beam search and coarse-to-fine parsing.
+- Added adaptive importance sampler for grammar induction (Teichmann et al., ACL 2016 Workshop on Statistical NLP and Weighted Automata).
+- Added "inside" binarization strategy (Klein & Manning 2003).
+- Added command-line scripts for parsing and grammar/corpus conversion.
+- Initial support for running reproducible experiments using Alto Lab.
+- Many small bugfixes and performance improvements.
+
+
+
+**Version 2.0, July 2015**
+
+- Initial Bitbucket release.
+
+
 ## Contributors ##
 
 * Danilo Baumgarten (BSc University of Potsdam, 2013)
