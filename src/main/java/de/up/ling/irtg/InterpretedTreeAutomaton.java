@@ -1145,6 +1145,14 @@ public class InterpretedTreeAutomaton implements Serializable {
      * which cannot be used in deriving the given object or rules which are connected
      * by binarization to the rules that have been removed.
      * 
+     * Note that some binarization techniques, e.g. the "inside" strategy used in
+     * {@link de.up.ling.irtg.binarization.InsideRuleFactory}, pool rules together
+     * after binarization. Removing all rules connected by binarization
+     * to rules removed due to constants removes some of these pooled rules that
+     * would be necessary for parsing. Thus, for grammars binarized with such strategies,
+     * use {@link de.up.ling.irtg.InterpretedTreeAutomaton#filterForAppearingConstants(java.lang.String, java.lang.Object)}
+     * instead.
+     * 
      * @param interpName
      * @param input
      * @return 

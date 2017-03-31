@@ -15,7 +15,8 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- *
+ * Implementation of the sibling finders discussed in Groschwitz et al. 2016
+ * (Efficient techniques for parsing with tree automata).
  * @author groschwitz
  */
 public abstract class SiblingFinder {
@@ -23,10 +24,10 @@ public abstract class SiblingFinder {
     BitSet[] seen;
     
     /**
-     * Returns the partners (ie other children) for a given operation.
-     * @param stateID the state for which I want to find partners
-     * @param pos this position (in the array of children) that this state should be in
-     * @return all potential partner combinations. the int[] arrays includes
+     * Returns the possible stored siblings (ie other children) for a given state.
+     * @param stateID the state for which to find partners
+     * @param pos the desired position of state in the arguments 
+     * @return all potential sibling combinations. the int[] arrays includes
      * the given stateID at position pos
      */
     public abstract Iterable<int[]> getPartners(int stateID, int pos);/* {
@@ -34,7 +35,13 @@ public abstract class SiblingFinder {
     }
     
     protected abstract Container getPartnerReturner(int stateID, int pos);*/
-        
+    
+    /**
+     * Adds a state to the indexing structure, making it available for future
+     * calls to <code>getPartners</code>.
+     * @param stateID
+     * @param pos 
+     */    
     public void addState(int stateID, int pos) {
         if (!seen[pos].get(stateID)) {
             performAddState(stateID, pos);
@@ -42,9 +49,18 @@ public abstract class SiblingFinder {
         }
     }
     
+    /**
+     * Override this to implement indexing. The <code>addState</code> method
+     * is just a wrapper.
+     * @param stateID
+     * @param pos 
+     */
     protected abstract void performAddState(int stateID, int pos);
     
-    
+    /**
+     * Creates a new sibling finder for an operation with given arity.
+     * @param arity 
+     */
     public SiblingFinder(int arity) {
         seen = new BitSet[arity];
         for (int i = 0; i<arity; i++) {
@@ -52,7 +68,10 @@ public abstract class SiblingFinder {
         }
     }
     
-    
+    /**
+     * Trivial and inefficient implementation, that has no indexing and simply
+     * returns all previous seen states as possible partners.
+     */
     public static class SetPartnerFinder extends SiblingFinder {
         IntList[] containers;
         int arity;

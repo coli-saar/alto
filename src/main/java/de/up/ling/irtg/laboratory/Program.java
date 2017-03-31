@@ -54,8 +54,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
+ * A program is used to run an Alto Lab task.
  * @author groschwitz
+ * @see <a href="https://bitbucket.org/tclup/alto/wiki/AltoLab">
+ * bitbucket.org/tclup/alto/wiki/AltoLab</a>
  */
 public class Program {
 
@@ -98,6 +100,17 @@ public class Program {
 
     public static final String VERBOSE_ALL = "ALL";
 
+    /**
+     * Creates a new program for a given task and parameter values.
+     * See <a href="https://bitbucket.org/tclup/alto/wiki/AltoLab">
+     * bitbucket.org/tclup/alto/wiki/AltoLab</a> for details on tasks.
+     * @param irtg The basic IRTG for the program (denoted with <code>$</code> in the code)
+     * @param additionalData The i-th entry of this is referred to in the code with #i.
+     * @param unparsedProgram The code of the task, line by line.
+     * @param varRemapper Maps variables to the lines of code that should fill them
+     * (see the -V option in the {@link de.up.ling.irtg.laboratory.CommandLineInterface}).
+     * @throws VariableNotDefinedException 
+     */
     public Program(InterpretedTreeAutomaton irtg, List<String> additionalData, List<String> unparsedProgram, Map<String, String> varRemapper) throws VariableNotDefinedException {
 
         //preprocessing (currently the watches and varibale remapping)
@@ -924,18 +937,18 @@ public class Program {
                 || maybeNumber == int.class || maybeNumber == short.class || maybeNumber == byte.class);
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException, ParseException, Throwable {
-
-        //System.out.println(getAllAnnotatedConstructors());
-        Map<String, Method> ms = getAllAnnotatedStaticMethods();
-        String longest = Collections.max(ms.keySet(), Comparator.comparing(s -> s.length()));
-        int maxLen = longest.length();
-
-        for (String key : ms.keySet()) {
-            System.err.printf("[%-" + maxLen + "s] %s\n", key, ms.get(key).toString());
-        }
-
-        System.exit(0);
+//    public static void main(String[] args) throws FileNotFoundException, IOException, ParseException, Throwable {
+//
+//        //System.out.println(getAllAnnotatedConstructors());
+//        Map<String, Method> ms = getAllAnnotatedStaticMethods();
+//        String longest = Collections.max(ms.keySet(), Comparator.comparing(s -> s.length()));
+//        int maxLen = longest.length();
+//
+//        for (String key : ms.keySet()) {
+//            System.err.printf("[%-" + maxLen + "s] %s\n", key, ms.get(key).toString());
+//        }
+//
+//        System.exit(0);
 
 //        List<String> programCode = new ArrayList<>();
 //        programCode.add("export pruningPolicy = histogramPP(insideFOM, 10)");
@@ -981,13 +994,13 @@ public class Program {
 //         System.err.println(varName+" = "+resString.substring(0, Math.min(30, resString.length())));
 //         System.err.println();
 //         }*/
-    }
+//    }
 
-    public int getNumThreads() {
+    int getNumThreads() {
         return numThreads;
     }
 
-    public void setNumThreads(int numThreads) {
+    void setNumThreads(int numThreads) {
         this.numThreads = numThreads;
     }
 

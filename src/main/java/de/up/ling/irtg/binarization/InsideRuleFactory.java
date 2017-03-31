@@ -18,6 +18,15 @@ import java.util.function.Function;
  * Generates nonterminals in the style of Klein and Manning's (2003)
  * "inside" strategy (see their Fig. 5).
  * 
+ * Note that this binarization technique pools rules together
+ * after binarization. Therefore
+ * {@link de.up.ling.irtg.InterpretedTreeAutomaton#filterBinarizedForAppearingConstants(java.lang.String, java.lang.Object)},
+ * which removes all rules connected by binarization
+ * to rules removed due to constants, removes some of these pooled rules that
+ * would be necessary for parsing. Thus, for grammars binarized with this strategy,
+ * use {@link de.up.ling.irtg.InterpretedTreeAutomaton#filterForAppearingConstants(java.lang.String, java.lang.Object)}
+ * instead.
+ * 
  * @author koller
  */
 public class InsideRuleFactory implements BinaryRuleFactory {

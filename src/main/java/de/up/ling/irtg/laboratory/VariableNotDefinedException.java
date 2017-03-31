@@ -6,8 +6,10 @@
 package de.up.ling.irtg.laboratory;
 
 /**
- *
+ * Thrown when a variable in a task is not given in the execution of said task. 
  * @author Jonas
+ * @see <a href = "https://bitbucket.org/tclup/alto/wiki/AltoLab">
+ * bitbucket.org/tclup/alto/wiki/AltoLab</a>
  */
 public class VariableNotDefinedException extends Exception {
     

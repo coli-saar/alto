@@ -35,8 +35,10 @@ import java.util.Scanner;
 import java.util.Set;
 
 /**
- *
+ * Command line interface for Alto Lab.
  * @author groschwitz
+ * @see <a href = "https://bitbucket.org/tclup/alto/wiki/AltoLab">
+ * bitbucket.org/tclup/alto/wiki/AltoLab</a>
  */
 public class CommandLineInterface {
 
@@ -51,9 +53,7 @@ public class CommandLineInterface {
     @Parameter(names = {"--comment", "-c"}, description = "Comment on this experiment run (enclose in quotes if necessary)")
     private String comment = "";
 
-//    @Parameter(names = "-taskID", description = "ID of the task (the one to be run) in the database", required = true)
-//    private int taskID;
-    @DynamicParameter(names = {"-V"}) //, description = "Follow with parameters v1 w1 v2 w2 ... where v_i are variable names in the task tree (without '?'), to replace v_i with w_i", variableArity = true, splitter = NullSplitter.class)
+    @DynamicParameter(names = {"-V"}) //, description = "Follow with parameters v1 w1 v2 w2 ... where v_i are variable names in the task tree (without '?'), to replace v_i with w_i"
     private Map<String, String> varRemapping = new HashMap<>();
 
     @Parameter(names = {"--data"}, description = "Follow with the IDs of additional data you want to use in your parse", variableArity = true)
@@ -77,7 +77,7 @@ public class CommandLineInterface {
     @Parameter(names = {"--flush-every", "-f"}, description = "Flush results buffer every k instances (k = 1: every instance; k = 0: only after last instance)")
     private int flushFrequency = 1;
     
-    public boolean isVerbose() {
+    private boolean isVerbose() {
         return !verboseMeasurements.isEmpty();
     }
 
@@ -85,13 +85,17 @@ public class CommandLineInterface {
         return varRemapping;
     }
 
-//    @Parameter(names = {"-show", "-showresults"}, description = "With this flag, results are printed in the console via stderr")
-//    private boolean showResults = false;
-//    @Parameter(names = {"-progressbar", "-pb"}, description="Show progress bar (do not use with -show)")
-//    private boolean showProgressBar = false;
     @Parameter(names = {"--help", "-?"}, description = "displays help if this is the only command", help = true)
     private boolean help = false;
 
+    /**
+     * Runs an experiment with Alto Lab. Takes one number as a obligatory argument,
+     * namely the task ID. For a list of optional arguments, run with option --help.
+     * For more information on Alto Lab, see <a href = "https://bitbucket.org/tclup/alto/wiki/AltoLab">
+     * bitbucket.org/tclup/alto/wiki/AltoLab</a>
+     * @param args
+     * @throws Exception 
+     */
     public static void main(String[] args) throws Exception {
         run(args);
     }
@@ -99,6 +103,8 @@ public class CommandLineInterface {
     /**
      * Runs an experiment with command-line style arguments args, and returns
      * the corresponding experimentID. Returns -1 if the process fails.
+     * This is what is executed by the main function and the scripts/alab
+     * bash script.
      *
      * @param args
      * @return
@@ -317,13 +323,6 @@ public class CommandLineInterface {
         }
     }
 
-    public static class NullSplitter implements IParameterSplitter {
-
-        @Override
-        public List<String> split(String value) {
-            return Collections.singletonList(value);
-        }
-    }
 
     private static String rl(boolean inCache, boolean forceReload) {
         if (forceReload) {
