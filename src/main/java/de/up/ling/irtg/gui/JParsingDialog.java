@@ -26,6 +26,7 @@ public class JParsingDialog extends javax.swing.JDialog {
         super(parent, modal);
         initComponents();
 
+        // populate algorithm and filtering methods
         cbAlgorithm.removeAllItems();
         for (String it : ALGORITHMS) {
             cbAlgorithm.addItem(it);
@@ -35,6 +36,17 @@ public class JParsingDialog extends javax.swing.JDialog {
         for (String it : FILTERING) {
             cbFiltering.addItem(it);
         }
+        
+        // disable pruning controls initially
+        lbThreshold.setEnabled(false);
+        tfThreshold.setEnabled(false);
+        
+        lbFtcMap.setEnabled(false);
+        tfFtcMap.setEnabled(false);
+        bFtcMapFileChooser.setEnabled(false);
+        
+        // disable filtering choices
+        cbFiltering.setEnabled(false);
     }
 
     public static JParsingDialog create(List<String> interpretations, Frame parent, boolean modal) {
@@ -45,9 +57,6 @@ public class JParsingDialog extends javax.swing.JDialog {
         ret.pInterpretationsContainer.add(new JInterpretationsPanel(interpretations), BorderLayout.CENTER);
         ret.pInterpretationsContainer.revalidate();
         ret.pInterpretationsContainer.repaint();
-
-//        ret.pDummy.revalidate();
-//        ret.pDummy.repaint();
         ret.validate();
         ret.pack();
 
@@ -79,9 +88,9 @@ public class JParsingDialog extends javax.swing.JDialog {
         rbNone = new javax.swing.JRadioButton();
         rbBeamSearch = new javax.swing.JRadioButton();
         rbCoarseToFine = new javax.swing.JRadioButton();
-        jLabel4 = new javax.swing.JLabel();
+        lbThreshold = new javax.swing.JLabel();
         tfThreshold = new javax.swing.JTextField();
-        jLabel5 = new javax.swing.JLabel();
+        lbFtcMap = new javax.swing.JLabel();
         tfFtcMap = new javax.swing.JTextField();
         bFtcMapFileChooser = new javax.swing.JButton();
         bOk = new javax.swing.JButton();
@@ -160,15 +169,25 @@ public class JParsingDialog extends javax.swing.JDialog {
 
         buttonGroup1.add(rbBeamSearch);
         rbBeamSearch.setText("beam search");
+        rbBeamSearch.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbBeamSearchActionPerformed(evt);
+            }
+        });
 
         buttonGroup1.add(rbCoarseToFine);
         rbCoarseToFine.setText("coarse-to-fine");
+        rbCoarseToFine.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                rbCoarseToFineActionPerformed(evt);
+            }
+        });
 
-        jLabel4.setText("Threshold");
+        lbThreshold.setText("Threshold");
 
         tfThreshold.setText("0.0001");
 
-        jLabel5.setText("Fine-to-coarse map");
+        lbFtcMap.setText("Fine-to-coarse map");
 
         bFtcMapFileChooser.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/open-16x16.png"))); // NOI18N
 
@@ -180,8 +199,8 @@ public class JParsingDialog extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jLabel3)
-                    .addComponent(jLabel4)
-                    .addComponent(jLabel5))
+                    .addComponent(lbThreshold)
+                    .addComponent(lbFtcMap))
                 .addGap(33, 33, 33)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(tfThreshold)
@@ -210,11 +229,11 @@ public class JParsingDialog extends javax.swing.JDialog {
                 .addComponent(rbCoarseToFine)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel4)
+                    .addComponent(lbThreshold)
                     .addComponent(tfThreshold, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
+                    .addComponent(lbFtcMap)
                     .addComponent(tfFtcMap, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(bFtcMapFileChooser))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -228,6 +247,11 @@ public class JParsingDialog extends javax.swing.JDialog {
         });
 
         bCancel.setText("Cancel");
+        bCancel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bCancelActionPerformed(evt);
+            }
+        });
 
         pDummy.setBackground(new java.awt.Color(255, 0, 204));
 
@@ -298,20 +322,52 @@ public class JParsingDialog extends javax.swing.JDialog {
     }// </editor-fold>//GEN-END:initComponents
 
     private void chFilteringActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_chFilteringActionPerformed
-        // TODO add your handling code here:
+        cbFiltering.setEnabled(chFiltering.isSelected());
     }//GEN-LAST:event_chFilteringActionPerformed
 
     private void rbNoneActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbNoneActionPerformed
-        // TODO add your handling code here:
+        // disable all pruning controls
+        lbThreshold.setEnabled(false);
+        tfThreshold.setEnabled(false);
+        
+        lbFtcMap.setEnabled(false);
+        tfFtcMap.setEnabled(false);        
+        bFtcMapFileChooser.setEnabled(false);
     }//GEN-LAST:event_rbNoneActionPerformed
 
     private void bOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bOkActionPerformed
-        // TODO add your handling code here:
+        // TODO - do some parsing
+        
+        setVisible(false);
     }//GEN-LAST:event_bOkActionPerformed
 
     private void cbAlgorithmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbAlgorithmActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_cbAlgorithmActionPerformed
+
+    private void bCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bCancelActionPerformed
+        setVisible(false);
+    }//GEN-LAST:event_bCancelActionPerformed
+
+    private void rbBeamSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbBeamSearchActionPerformed
+        // enable threshold, disable ftc
+        lbThreshold.setEnabled(true);
+        tfThreshold.setEnabled(true);
+        
+        lbFtcMap.setEnabled(false);
+        tfFtcMap.setEnabled(false);
+        bFtcMapFileChooser.setEnabled(false);
+    }//GEN-LAST:event_rbBeamSearchActionPerformed
+
+    private void rbCoarseToFineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbCoarseToFineActionPerformed
+        // enable threshold, enable ftc
+        lbThreshold.setEnabled(true);
+        tfThreshold.setEnabled(true);
+        
+        lbFtcMap.setEnabled(true);
+        tfFtcMap.setEnabled(true);
+        bFtcMapFileChooser.setEnabled(true);
+    }//GEN-LAST:event_rbCoarseToFineActionPerformed
 
     /**
      * @param args the command line arguments
@@ -352,10 +408,10 @@ public class JParsingDialog extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
-    private javax.swing.JLabel jLabel4;
-    private javax.swing.JLabel jLabel5;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JLabel lbFtcMap;
+    private javax.swing.JLabel lbThreshold;
     private javax.swing.JPanel pDummy;
     private javax.swing.JPanel pInterpretationsContainer;
     private javax.swing.JRadioButton rbBeamSearch;

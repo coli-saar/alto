@@ -181,8 +181,8 @@
                   <EmptySpace max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
                       <Component id="jLabel3" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="jLabel4" alignment="0" min="-2" max="-2" attributes="0"/>
-                      <Component id="jLabel5" alignment="0" min="-2" max="-2" attributes="0"/>
+                      <Component id="lbThreshold" alignment="0" min="-2" max="-2" attributes="0"/>
+                      <Component id="lbFtcMap" alignment="0" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace min="-2" pref="33" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="0" attributes="0">
@@ -219,12 +219,12 @@
                   <Component id="rbCoarseToFine" min="-2" max="-2" attributes="0"/>
                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="jLabel4" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="lbThreshold" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="tfThreshold" alignment="3" min="-2" max="-2" attributes="0"/>
                   </Group>
                   <EmptySpace type="unrelated" max="-2" attributes="0"/>
                   <Group type="103" groupAlignment="3" attributes="0">
-                      <Component id="jLabel5" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Component id="lbFtcMap" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="tfFtcMap" alignment="3" min="-2" max="-2" attributes="0"/>
                       <Component id="bFtcMapFileChooser" alignment="1" min="-2" max="-2" attributes="0"/>
                   </Group>
@@ -258,6 +258,9 @@
             </Property>
             <Property name="text" type="java.lang.String" value="beam search"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="rbBeamSearchActionPerformed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JRadioButton" name="rbCoarseToFine">
           <Properties>
@@ -266,8 +269,11 @@
             </Property>
             <Property name="text" type="java.lang.String" value="coarse-to-fine"/>
           </Properties>
+          <Events>
+            <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="rbCoarseToFineActionPerformed"/>
+          </Events>
         </Component>
-        <Component class="javax.swing.JLabel" name="jLabel4">
+        <Component class="javax.swing.JLabel" name="lbThreshold">
           <Properties>
             <Property name="text" type="java.lang.String" value="Threshold"/>
           </Properties>
@@ -277,7 +283,7 @@
             <Property name="text" type="java.lang.String" value="0.0001"/>
           </Properties>
         </Component>
-        <Component class="javax.swing.JLabel" name="jLabel5">
+        <Component class="javax.swing.JLabel" name="lbFtcMap">
           <Properties>
             <Property name="text" type="java.lang.String" value="Fine-to-coarse map"/>
           </Properties>
@@ -305,6 +311,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Cancel"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="bCancelActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JPanel" name="pInterpretationsContainer">
 
