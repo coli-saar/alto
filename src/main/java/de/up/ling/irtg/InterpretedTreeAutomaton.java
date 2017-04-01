@@ -15,6 +15,8 @@ import de.up.ling.irtg.automata.Intersectable;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.WeightedTree;
+import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
+import de.up.ling.irtg.automata.pruning.PruningPolicy;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.codec.IrtgInputCodec;
 import de.up.ling.irtg.codec.CodecParseException;
@@ -251,10 +253,30 @@ public class InterpretedTreeAutomaton implements Serializable {
      */
     @OperationAnnotation(code = "parseSimpleWithSiblingFinder")
     public TreeAutomaton parseWithSiblingFinder(String interpretationName, Object input) throws ParserException {
+        Logging.get().info(() -> "Parsing with sibling finder.");
         SiblingFinderInvhom invhom = new SiblingFinderInvhom(interpretations.get(interpretationName).getAlgebra().decompose(input), interpretations.get(interpretationName).getHomomorphism());
         SiblingFinderIntersection inters = new SiblingFinderIntersection((ConcreteTreeAutomaton) automaton, invhom);
         inters.makeAllRulesExplicit(null);
         return inters.seenRulesAsAutomaton();
+    }
+    
+    public TreeAutomaton parseCondensedWithPruning(Map<String,Object> inputs, PruningPolicy pp) {
+        TreeAutomaton ret = automaton;
+        
+        Logging.get().info(() -> "Parsing with condensed/pruning.");
+        if( pp != null ) {
+            Logging.get().info(() -> "... with pruning policy: " + pp.getClass().getSimpleName());
+        }
+        
+        for( String interpName : inputs.keySet() ) {
+            Interpretation interp = interpretations.get(interpName);
+            Object input = inputs.get(interpName);
+            
+            CondensedTreeAutomaton interpParse = interp.parseToCondensed(input);
+            ret = ret.intersectCondensed(interpParse, pp);
+        }
+        
+        return ret;
     }
 
     /**

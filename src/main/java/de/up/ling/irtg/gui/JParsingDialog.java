@@ -7,8 +7,12 @@ package de.up.ling.irtg.gui;
 
 import java.awt.BorderLayout;
 import java.awt.Frame;
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import javax.swing.JFileChooser;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
 /**
@@ -16,9 +20,47 @@ import javax.swing.UIManager;
  * @author koller
  */
 public class JParsingDialog extends javax.swing.JDialog {
-    private static final String[] ALGORITHMS = {"Condensed bottom-up", "Sibling finder"};
-    private static final String[] FILTERING = {"Basic", "Binarized"};
+    public static enum Algorithm {
+        DEFAULT("Default"),
+        CONDENSED_BOTTOM_UP("Condensed bottom-up"),
+        SIBLING_FINDER("Sibling finder");
+        
+        private String label;
+        Algorithm(String label) { this.label = label; }
 
+        @Override
+        public String toString() {
+            return label;
+        }        
+    }
+    
+    public static enum Filtering {
+        BASIC("Basic"),
+        BINARIZED("Binarized");
+        
+        private String label;
+        Filtering(String label) { this.label = label; }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+    
+    public static enum Pruning {
+        NONE, BEAM_SEARCH, CTF
+    }
+
+    private Map<String,String> inputValues;
+    private Map.Entry<String, String> theOneNonemptyInput;
+    private Algorithm selectedAlgorithm;
+    private Filtering selectedFiltering;
+    private Pruning selectedPruning;
+    private double pruningThreshold;
+    private File pruningFtcMap;
+    
+    private static String previousPruningFtcMap = null;
+    
     /**
      * Creates new form JParsingDialog
      */
@@ -28,25 +70,30 @@ public class JParsingDialog extends javax.swing.JDialog {
 
         // populate algorithm and filtering methods
         cbAlgorithm.removeAllItems();
-        for (String it : ALGORITHMS) {
+        for (Algorithm it : Algorithm.values()) {
             cbAlgorithm.addItem(it);
         }
 
         cbFiltering.removeAllItems();
-        for (String it : FILTERING) {
+        for (Filtering it : Filtering.values()) {
             cbFiltering.addItem(it);
         }
-        
+
         // disable pruning controls initially
         lbThreshold.setEnabled(false);
         tfThreshold.setEnabled(false);
-        
+
         lbFtcMap.setEnabled(false);
         tfFtcMap.setEnabled(false);
         bFtcMapFileChooser.setEnabled(false);
-        
+
         // disable filtering choices
         cbFiltering.setEnabled(false);
+        
+        // initialize FTC name
+        if( previousPruningFtcMap != null ) {
+            tfFtcMap.setText(previousPruningFtcMap);
+        }
     }
 
     public static JParsingDialog create(List<String> interpretations, Frame parent, boolean modal) {
@@ -104,7 +151,6 @@ public class JParsingDialog extends javax.swing.JDialog {
 
         jLabel1.setText("Algorithm");
 
-        cbAlgorithm.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "aaa", "bbb" }));
         cbAlgorithm.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cbAlgorithmActionPerformed(evt);
@@ -119,7 +165,11 @@ public class JParsingDialog extends javax.swing.JDialog {
             }
         });
 
-        cbFiltering.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "ccc", "ddd" }));
+        cbFiltering.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbFilteringActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -190,6 +240,11 @@ public class JParsingDialog extends javax.swing.JDialog {
         lbFtcMap.setText("Fine-to-coarse map");
 
         bFtcMapFileChooser.setIcon(new javax.swing.ImageIcon(getClass().getResource("/images/open-16x16.png"))); // NOI18N
+        bFtcMapFileChooser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                bFtcMapFileChooserActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -329,23 +384,86 @@ public class JParsingDialog extends javax.swing.JDialog {
         // disable all pruning controls
         lbThreshold.setEnabled(false);
         tfThreshold.setEnabled(false);
-        
+
         lbFtcMap.setEnabled(false);
-        tfFtcMap.setEnabled(false);        
+        tfFtcMap.setEnabled(false);
         bFtcMapFileChooser.setEnabled(false);
     }//GEN-LAST:event_rbNoneActionPerformed
 
     private void bOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bOkActionPerformed
-        // TODO - do some parsing
+        inputValues = ((JInterpretationsPanel) pInterpretationsContainer.getComponent(0)).getInputValues();
+        
+        theOneNonemptyInput = null;        
+        if( inputValues.size() == 1 ) {
+            theOneNonemptyInput = inputValues.entrySet().iterator().next();
+        }
+        
+        selectedAlgorithm = (Algorithm) cbAlgorithm.getSelectedItem();
+        
+        selectedFiltering = null;
+        if( chFiltering.isSelected() ) {
+            selectedFiltering = (Filtering) cbFiltering.getSelectedItem();
+        }
+        
+        if( rbNone.isSelected() ) {
+            selectedPruning = Pruning.NONE;
+        } else if( rbBeamSearch.isSelected() ) {
+            selectedPruning = Pruning.BEAM_SEARCH;
+        } else {
+            selectedPruning = Pruning.CTF;
+        }
+        
+        pruningThreshold = Double.NaN;
+        if( tfThreshold.isEnabled() ) {
+            pruningThreshold = Double.parseDouble(tfThreshold.getText());
+        }
+        
+        pruningFtcMap = null;
+        if( tfFtcMap.isEnabled() ) {
+            pruningFtcMap = new File(tfFtcMap.getText());
+            previousPruningFtcMap = tfFtcMap.getText();
+        }
         
         setVisible(false);
     }//GEN-LAST:event_bOkActionPerformed
 
+    public Map<String, String> getInputValues() {
+        return inputValues;
+    }
+
+    public Map.Entry<String, String> getTheOneNonemptyInput() {
+        return theOneNonemptyInput;
+    }
+
+    public Algorithm getSelectedAlgorithm() {
+        return selectedAlgorithm;
+    }
+
+    public Filtering getSelectedFiltering() {
+        return selectedFiltering;
+    }
+
+    public Pruning getSelectedPruning() {
+        return selectedPruning;
+    }
+
+    public double getPruningThreshold() {
+        return pruningThreshold;
+    }
+
+    public File getPruningFtcMap() {
+        return pruningFtcMap;
+    }
+
+    
+    
     private void cbAlgorithmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbAlgorithmActionPerformed
-        // TODO add your handling code here:
     }//GEN-LAST:event_cbAlgorithmActionPerformed
 
     private void bCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bCancelActionPerformed
+        inputValues = null;
+        theOneNonemptyInput = null;
+        
         setVisible(false);
     }//GEN-LAST:event_bCancelActionPerformed
 
@@ -353,7 +471,7 @@ public class JParsingDialog extends javax.swing.JDialog {
         // enable threshold, disable ftc
         lbThreshold.setEnabled(true);
         tfThreshold.setEnabled(true);
-        
+
         lbFtcMap.setEnabled(false);
         tfFtcMap.setEnabled(false);
         bFtcMapFileChooser.setEnabled(false);
@@ -363,11 +481,28 @@ public class JParsingDialog extends javax.swing.JDialog {
         // enable threshold, enable ftc
         lbThreshold.setEnabled(true);
         tfThreshold.setEnabled(true);
-        
+
         lbFtcMap.setEnabled(true);
         tfFtcMap.setEnabled(true);
         bFtcMapFileChooser.setEnabled(true);
     }//GEN-LAST:event_rbCoarseToFineActionPerformed
+
+    private void bFtcMapFileChooserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bFtcMapFileChooserActionPerformed
+        SwingUtilities.invokeLater(() -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setCurrentDirectory(new File(System.getProperty("user.dir")));
+            int result = fileChooser.showOpenDialog(this);
+
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File selectedFile = fileChooser.getSelectedFile();
+                tfFtcMap.setText(selectedFile.getAbsolutePath());
+            }
+        });
+    }//GEN-LAST:event_bFtcMapFileChooserActionPerformed
+
+    private void cbFilteringActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbFilteringActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cbFilteringActionPerformed
 
     /**
      * @param args the command line arguments
@@ -402,8 +537,8 @@ public class JParsingDialog extends javax.swing.JDialog {
     private javax.swing.JButton bFtcMapFileChooser;
     private javax.swing.JButton bOk;
     private javax.swing.ButtonGroup buttonGroup1;
-    private javax.swing.JComboBox<String> cbAlgorithm;
-    private javax.swing.JComboBox<String> cbFiltering;
+    private javax.swing.JComboBox<Algorithm> cbAlgorithm;
+    private javax.swing.JComboBox<Filtering> cbFiltering;
     private javax.swing.JCheckBox chFiltering;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;

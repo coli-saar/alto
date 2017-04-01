@@ -110,7 +110,7 @@ public class Interpretation<E> implements Serializable {
                         Logging.get().info(() -> "Using sibling finder inverse hom automaton.");
                         return new SiblingFinderInvhom(auto, hom);
                     } else {
-                        Logging.get().info(() -> "Using basic bottom up iverse hom automaton.");
+                        Logging.get().info(() -> "Using basic bottom up inverse hom automaton.");
                         return new NondeletingInverseHomAutomaton(auto, hom);
                     }
                 } else {
