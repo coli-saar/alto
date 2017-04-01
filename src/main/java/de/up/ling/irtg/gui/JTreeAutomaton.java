@@ -549,6 +549,11 @@ public class JTreeAutomaton extends javax.swing.JFrame {
 
             JParsingDialog jpd = JParsingDialog.create(annotationsInOrder, this, true);
             jpd.setVisible(true);
+            
+            if( jpd.getInputValues() == null ) {
+                // dialog was cancelled
+                return;
+            }
 
             final Map<String, String> inputs = jpd.getInputValues();
             final Map<String, Object> inputObjects = new HashMap<>();

@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
@@ -24,43 +25,49 @@ public class JParsingDialog extends javax.swing.JDialog {
         DEFAULT("Default"),
         CONDENSED_BOTTOM_UP("Condensed bottom-up"),
         SIBLING_FINDER("Sibling finder");
-        
-        private String label;
-        Algorithm(String label) { this.label = label; }
 
-        @Override
-        public String toString() {
-            return label;
-        }        
-    }
-    
-    public static enum Filtering {
-        BASIC("Basic"),
-        BINARIZED("Binarized");
-        
         private String label;
-        Filtering(String label) { this.label = label; }
+
+        Algorithm(String label) {
+            this.label = label;
+        }
 
         @Override
         public String toString() {
             return label;
         }
     }
-    
+
+    public static enum Filtering {
+        BASIC("Basic"),
+        BINARIZED("Binarized");
+
+        private String label;
+
+        Filtering(String label) {
+            this.label = label;
+        }
+
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     public static enum Pruning {
         NONE, BEAM_SEARCH, CTF
     }
 
-    private Map<String,String> inputValues;
+    private Map<String, String> inputValues;
     private Map.Entry<String, String> theOneNonemptyInput;
     private Algorithm selectedAlgorithm;
     private Filtering selectedFiltering;
     private Pruning selectedPruning;
     private double pruningThreshold;
     private File pruningFtcMap;
-    
+
     private static String previousPruningFtcMap = null;
-    
+
     /**
      * Creates new form JParsingDialog
      */
@@ -89,9 +96,9 @@ public class JParsingDialog extends javax.swing.JDialog {
 
         // disable filtering choices
         cbFiltering.setEnabled(false);
-        
+
         // initialize FTC name
-        if( previousPruningFtcMap != null ) {
+        if (previousPruningFtcMap != null) {
             tfFtcMap.setText(previousPruningFtcMap);
         }
     }
@@ -391,39 +398,46 @@ public class JParsingDialog extends javax.swing.JDialog {
     }//GEN-LAST:event_rbNoneActionPerformed
 
     private void bOkActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bOkActionPerformed
+        pruningFtcMap = null;
+        if (tfFtcMap.isEnabled()) {
+            File f = new File(tfFtcMap.getText());
+            
+            if( ! f.exists() ) {
+                JOptionPane.showMessageDialog(this, "Fine-to-coarse map file \"" + tfFtcMap.getText() + "\" does not exist.", "Error in parsing options", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            pruningFtcMap = f;
+            previousPruningFtcMap = tfFtcMap.getText();
+        }
+
         inputValues = ((JInterpretationsPanel) pInterpretationsContainer.getComponent(0)).getInputValues();
-        
-        theOneNonemptyInput = null;        
-        if( inputValues.size() == 1 ) {
+
+        theOneNonemptyInput = null;
+        if (inputValues.size() == 1) {
             theOneNonemptyInput = inputValues.entrySet().iterator().next();
         }
-        
+
         selectedAlgorithm = (Algorithm) cbAlgorithm.getSelectedItem();
-        
+
         selectedFiltering = null;
-        if( chFiltering.isSelected() ) {
+        if (chFiltering.isSelected()) {
             selectedFiltering = (Filtering) cbFiltering.getSelectedItem();
         }
-        
-        if( rbNone.isSelected() ) {
+
+        if (rbNone.isSelected()) {
             selectedPruning = Pruning.NONE;
-        } else if( rbBeamSearch.isSelected() ) {
+        } else if (rbBeamSearch.isSelected()) {
             selectedPruning = Pruning.BEAM_SEARCH;
         } else {
             selectedPruning = Pruning.CTF;
         }
-        
+
         pruningThreshold = Double.NaN;
-        if( tfThreshold.isEnabled() ) {
+        if (tfThreshold.isEnabled()) {
             pruningThreshold = Double.parseDouble(tfThreshold.getText());
         }
-        
-        pruningFtcMap = null;
-        if( tfFtcMap.isEnabled() ) {
-            pruningFtcMap = new File(tfFtcMap.getText());
-            previousPruningFtcMap = tfFtcMap.getText();
-        }
-        
+
         setVisible(false);
     }//GEN-LAST:event_bOkActionPerformed
 
@@ -455,21 +469,20 @@ public class JParsingDialog extends javax.swing.JDialog {
         return pruningFtcMap;
     }
 
-    
-    
+
     private void cbAlgorithmActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbAlgorithmActionPerformed
     }//GEN-LAST:event_cbAlgorithmActionPerformed
 
     private void bCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_bCancelActionPerformed
         inputValues = null;
         theOneNonemptyInput = null;
-        
+
         pruningFtcMap = null;
-        if( tfFtcMap.isEnabled() ) {
+        if (tfFtcMap.isEnabled()) {
             pruningFtcMap = new File(tfFtcMap.getText());
             previousPruningFtcMap = tfFtcMap.getText();
         }
-        
+
         setVisible(false);
     }//GEN-LAST:event_bCancelActionPerformed
 
@@ -510,33 +523,6 @@ public class JParsingDialog extends javax.swing.JDialog {
         // TODO add your handling code here:
     }//GEN-LAST:event_cbFilteringActionPerformed
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) throws Exception {
-        System.setProperty("apple.laf.useScreenMenuBar", "true");
-        System.setProperty("com.apple.mrj.application.apple.menu.about.name", "Alto");
-
-        UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-
-
-        /* Create and display the dialog */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                List<String> interps = Arrays.asList("string", "tree");
-                JParsingDialog dialog = JParsingDialog.create(interps, new javax.swing.JFrame(), true);
-
-//                JParsingDialog dialog = new JParsingDialog(new javax.swing.JFrame(), true);
-                dialog.addWindowListener(new java.awt.event.WindowAdapter() {
-                    @Override
-                    public void windowClosing(java.awt.event.WindowEvent e) {
-                        System.exit(0);
-                    }
-                });
-                dialog.setVisible(true);
-            }
-        });
-    }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton bCancel;
