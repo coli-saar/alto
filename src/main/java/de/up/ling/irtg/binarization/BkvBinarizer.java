@@ -435,7 +435,9 @@ public class BkvBinarizer {
 
         @Override
         public int compare(IntSet o1, IntSet o2) {
-            return Integer.compare(Collections.min(o1), Collections.min(o2));
+            int min1 = o1.isEmpty() ? Integer.MIN_VALUE : Collections.min(o1);
+            int min2 = o2.isEmpty() ? Integer.MIN_VALUE : Collections.min(o2);
+            return Integer.compare(min1,min2);
         }
     }
 

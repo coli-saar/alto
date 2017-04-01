@@ -258,7 +258,7 @@ public class PennTreebankConverter {
         }
     });
 
-    private static Function<InterpretedTreeAutomaton, BinaryRuleFactory> makeRuleFactoryFactory(String binarizationMode) {
+    public static Function<InterpretedTreeAutomaton, BinaryRuleFactory> makeRuleFactoryFactory(String binarizationMode) {
         switch(binarizationMode) {
             case "complete": return GensymBinaryRuleFactory.createFactoryFactory();
             case "xbar": return XbarRuleFactory.createFactoryFactory();
