@@ -124,9 +124,11 @@ public class SGraphDrawer {
                                     node -> {
                                         Collection<String> sources = sgraph.getSourcesAtNode(node.getName());
                                         if (!sources.isEmpty()) {
-                                            return node.getName()+"/"+node.getLabel() + "/" + sgraph.getSourceLabel(node.getName());
+                                            return node.getLabel() + "/" + sgraph.getSourceLabel(node.getName());
+//                                            return node.getName()+"/"+node.getLabel() + "/" + sgraph.getSourceLabel(node.getName());
                                         } else {
-                                            return node.getName()+"/"+node.getLabel();
+                                            return node.getLabel();
+//                                            return node.getName()+"/"+node.getLabel();
                                         }
                                         
                                                 },

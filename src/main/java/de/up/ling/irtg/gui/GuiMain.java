@@ -219,7 +219,7 @@ public class GuiMain extends javax.swing.JFrame implements ApplicationListener {
         });
         jMenu2.add(miComputeDecompositionAutomaton);
 
-        miVisualizeInput.setText("Visualize input object");
+        miVisualizeInput.setText("Visualize object of algebra ...");
         miVisualizeInput.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 miVisualizeInputActionPerformed(evt);

@@ -108,7 +108,7 @@
             </MenuItem>
             <MenuItem class="javax.swing.JMenuItem" name="miVisualizeInput">
               <Properties>
-                <Property name="text" type="java.lang.String" value="Visualize input object"/>
+                <Property name="text" type="java.lang.String" value="Visualize object of algebra ..."/>
               </Properties>
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="miVisualizeInputActionPerformed"/>

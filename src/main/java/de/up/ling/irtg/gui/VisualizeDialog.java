@@ -5,10 +5,7 @@
 package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.GuiUtils;
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,8 +13,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.JComponent;
-import javax.swing.JScrollPane;
 
 /**
  *
@@ -55,7 +50,7 @@ public class VisualizeDialog extends javax.swing.JDialog {
 
         cbAlgebra.removeAllItems();
         for (Algebra c : algebras) {
-            cbAlgebra.addItem(c.getClass().getName());
+            cbAlgebra.addItem(c.getClass().getSimpleName());
         }
 
         activateOptions(0);
@@ -63,7 +58,7 @@ public class VisualizeDialog extends javax.swing.JDialog {
 
     public static class AlgebraByClassNameComparator implements Comparator<Algebra> {
         public int compare(Algebra o1, Algebra o2) {
-            return o1.getClass().getName().compareTo(o2.getClass().getName());
+            return o1.getClass().getSimpleName().compareTo(o2.getClass().getSimpleName());
         }
     }
 
