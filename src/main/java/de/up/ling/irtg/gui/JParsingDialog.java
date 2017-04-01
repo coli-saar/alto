@@ -464,6 +464,12 @@ public class JParsingDialog extends javax.swing.JDialog {
         inputValues = null;
         theOneNonemptyInput = null;
         
+        pruningFtcMap = null;
+        if( tfFtcMap.isEnabled() ) {
+            pruningFtcMap = new File(tfFtcMap.getText());
+            previousPruningFtcMap = tfFtcMap.getText();
+        }
+        
         setVisible(false);
     }//GEN-LAST:event_bCancelActionPerformed
 

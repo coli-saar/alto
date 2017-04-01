@@ -20,6 +20,7 @@ import de.up.ling.irtg.signature.Signature;
 import de.up.ling.irtg.util.CpuTimeStopwatch;
 import de.up.ling.irtg.util.IntInt2DoubleMap;
 import de.up.ling.irtg.util.IntInt2IntMap;
+import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.NumbersCombine;
 import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
@@ -177,6 +178,8 @@ public class CoarseToFineParser {
      */
     @OperationAnnotation(code = "parseInputObject")
     public TreeAutomaton parseInputObject(Object inputObject) {
+        Logging.get().info("Using basic coarse-to-fine parsing.");
+        
         // create condensed invhom automaton
         CondensedTreeAutomaton invhom = irtg.getInterpretation(inputInterpretation).parseToCondensed(inputObject);
 
@@ -279,6 +282,8 @@ public class CoarseToFineParser {
      */
     @OperationAnnotation(code = "parseInputObjectWithSF")
     public TreeAutomaton parseInputObjectWithSF(Object inputObject) {
+        Logging.get().info("Using coarse-to-fine parsing with sibling finders.");
+        
         // create condensed invhom automaton
         Homomorphism hom = irtg.getInterpretation(inputInterpretation).getHomomorphism();
         TreeAutomaton decomp = irtg.getInterpretation(inputInterpretation).getAlgebra().decompose(inputObject);
