@@ -5,7 +5,6 @@
 package de.up.ling.irtg.gui;
 
 import de.up.ling.irtg.algebra.Algebra;
-import de.up.ling.irtg.algebra.ParserException;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.util.GuiUtils;
 import java.util.ArrayList;
@@ -52,7 +51,7 @@ public class DecompositionDialog extends javax.swing.JDialog {
 
         cbAlgebra.removeAllItems();
         for (Algebra c : algebras) {
-            cbAlgebra.addItem(c.getClass().getName());
+            cbAlgebra.addItem(c.getClass().getSimpleName());
         }
 
         activateOptions(0);
@@ -60,7 +59,7 @@ public class DecompositionDialog extends javax.swing.JDialog {
 
     public static class AlgebraByClassNameComparator implements Comparator<Algebra> {
         public int compare(Algebra o1, Algebra o2) {
-            return o1.getClass().getName().compareTo(o2.getClass().getName());
+            return o1.getClass().getSimpleName().compareTo(o2.getClass().getSimpleName());
         }
     }
 
