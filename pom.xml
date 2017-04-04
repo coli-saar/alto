@@ -5,7 +5,7 @@
   <groupId>de.up.ling</groupId>
   <artifactId>alto</artifactId>
   <packaging>jar</packaging>
-  <version>2.1</version>
+  <version>2.2-SNAPSHOT</version>
   <name>alto</name>
   <url>http://maven.apache.org</url>
 
