@@ -104,10 +104,11 @@ public class TagGrammar {
 
         // add rules for empty adjunctions
         for (String nt : adjunctionNonterminals) {
-            auto.addRule(auto.createRule(nt, NO_ADJUNCTION, Collections.EMPTY_LIST));
+            String sym = NO_ADJUNCTION + "_" + nt;
+            auto.addRule(auto.createRule(nt, sym, Collections.EMPTY_LIST));
+            th.add(sym, Tree.create(TagTreeAlgebra.P1));
+            sh.add(sym, Tree.create(TagStringAlgebra.EE()));
         }
-        th.add(NO_ADJUNCTION, Tree.create(TagTreeAlgebra.P1));
-        sh.add(NO_ADJUNCTION, Tree.create(TagStringAlgebra.EE()));
 
         return irtg;
     }
@@ -123,7 +124,7 @@ public class TagGrammar {
     private static String makeS(String nonterminal) {
         return nonterminal + "_" + SUBST_VARTYPE;
     }
-    
+
     private static HomomorphismSymbol lwa(String label, int arity, Homomorphism th) {
         return th.c(label + "_" + arity, arity);
     }
@@ -150,16 +151,16 @@ public class TagGrammar {
                         childStates.add(makeA(label));
                         adjunctionNonterminals.add(makeA(label));
                         ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                          Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getWord())))); // th.c(labelWithArity + "**1", 1)
+                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getWord())))); // th.c(labelWithArity + "**1", 1)
                         break;
 
                     case SECONDARY_LEX:
                         childStates.add(makeA(label));
                         adjunctionNonterminals.add(makeA(label));
                         ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                          Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                          Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getSecondaryLex())))); // th.c(labelWithArity + "**1", 1)
+                                Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                Tree.create(lwa(label, 1, th), Tree.create(th.c(lex.getSecondaryLex())))); // th.c(labelWithArity + "**1", 1)
                         break;
                     // TODO - maybe XTAG allows multiple secondary lexes, one per POS-tag
 
@@ -180,10 +181,10 @@ public class TagGrammar {
                             childStates.add(makeA(label));
                             adjunctionNonterminals.add(makeA(label));
                             int numChildren = children.size();
-                            
+
                             ret = Tree.create(th.c(TagTreeAlgebra.C, 2),
-                                              Tree.create(th.v(nextVar.gensym(adjPrefix))),
-                                              Tree.create(lwa(label, numChildren, th), children)); // th.c(labelWithArity, numChildren)
+                                    Tree.create(th.v(nextVar.gensym(adjPrefix))),
+                                    Tree.create(lwa(label, numChildren, th), children)); // th.c(labelWithArity, numChildren)
 //                            Tree.create(th.c(labelWithArity, 1), children));
                         }
                         break;

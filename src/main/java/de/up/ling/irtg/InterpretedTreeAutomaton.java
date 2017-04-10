@@ -378,7 +378,7 @@ public class InterpretedTreeAutomaton implements Serializable {
         // initialize data
         for (Rule rule : automaton.getRuleSet()) {
             if (ruleForTerminal.containsKey(rule.getLabel())) {
-                throw new UnsupportedOperationException("ML training only supported if no two rules use the same terminal symbol.");
+                throw new UnsupportedOperationException("ML training only supported if no two rules use the same terminal symbol; but " + rule.getLabel(automaton) + " is duplicate.");
             }
 
             ruleForTerminal.put(rule.getLabel(), rule);

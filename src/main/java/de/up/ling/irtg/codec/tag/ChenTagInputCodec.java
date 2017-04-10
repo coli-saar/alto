@@ -15,6 +15,10 @@ import de.up.ling.irtg.codec.CodecParseException;
 import de.up.ling.irtg.codec.InputCodec;
 import de.up.ling.irtg.util.MutableInteger;
 import de.up.ling.tree.Tree;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -40,35 +44,35 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", "There asbestos now"));
         System.err.println("\n\n\nchart:\n\n" + chart);
     }
-    
+
     public static void main(String[] args) throws FileNotFoundException, IOException, ParserException, Exception {
         ChenTagInputCodec ic = new ChenTagInputCodec();
         TagGrammar tagg = ic.readUnlexicalizedGrammar(new FileReader(args[0]));
         ic.lexicalizeFromCorpus(tagg, new FileReader(args[1]));
-        
+
         PrintWriter pw = new PrintWriter("tagg.txt");
         pw.println(tagg);
         pw.flush();
         pw.close();
-        
+
         pw = new PrintWriter("lexicalized-tagg.txt");
         pw.println("\n\n");
-        for(String word : tagg.getWords()) {
+        for (String word : tagg.getWords()) {
             pw.println("\nword: " + word + "\n==================\n");
-            for( ElementaryTree et : tagg.lexicalizeElementaryTrees(word)) {
+            for (ElementaryTree et : tagg.lexicalizeElementaryTrees(word)) {
                 pw.println("   " + et);
             }
         }
         pw.flush();
         pw.close();
-        
+
         pw = new PrintWriter("tagg.irtg");
         tagg.setTracePredicate(s -> s.contains("-NONE-"));
         InterpretedTreeAutomaton irtg = tagg.toIrtg();
         pw.println(irtg);
         pw.flush();
         pw.close();
-        
+
         // binarize IRTG
         // TODO - something is wrong with this code: it throws an exception during binarization,
         // whereas binarizing from the GUI does not.
@@ -95,17 +99,23 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         return tagg.toIrtg();
     }
 
-    private static String findSecondary(Map<String,String> features) {
-        if( features.containsKey("sgp1")) {
+    private static String findSecondary(Map<String, String> features) {
+        if (features.containsKey("sgp1")) {
             return features.get("sgp1");
         } else {
             return features.get("prt1"); // could be null
         }
     }
-    
-    public void lexicalizeFromCorpus(TagGrammar tagg, Reader r) throws IOException {
+
+    public List<Tree<String>> lexicalizeFromCorpus(TagGrammar tagg, Reader r) throws IOException {
         BufferedReader br = new BufferedReader(r);
         String line = null;
+
+        // for constructing and storing the derivation trees
+        List<Tree<String>> ret = new ArrayList<>();
+        Int2ObjectMap<String> posToLabel = new Int2ObjectOpenHashMap<>();
+        Int2ObjectMap<IntList> posToChildPositions = new Int2ObjectOpenHashMap<>();
+        int rootPos = 0;
 
         while ((line = br.readLine()) != null) {
             String[] parts = line.split("\\s+");
@@ -114,18 +124,63 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 String word = parts[1];
                 String treename = parts[7];
                 LexiconEntry lex = new LexiconEntry(word, treename);
-                
-                for( int i = 10; i < parts.length; i++ ) {
+
+                for (int i = 10; i < parts.length; i++) {
                     assert parts[i].contains("=");
                     String[] split = parts[i].split("=");
                     lex.addFeature(split[0], split[1]);
                 }
-                
+
                 lex.setSecondaryLex(findSecondary(lex.getFeatures()));
-                
+
                 tagg.addLexiconEntry(word, lex);
+
+                // add to derivation tree maps
+                int pos = Integer.parseInt(parts[0]);
+                int parentPos = Integer.parseInt(parts[3]);
+                String label = treename + "-" + word;
+
+                posToLabel.put(pos, label);
+
+                if (pos == parentPos) {
+                    // root
+                    rootPos = pos;
+                } else {
+                    IntList children = posToChildPositions.get(parentPos);
+                    if (children == null) {
+                        children = new IntArrayList();
+                        posToChildPositions.put(parentPos, children);
+                    }
+
+                    // XXXXX TODO XXXXX
+                    children.add(pos);
+                }
+
+            } else {
+                // finished reading the sentence
+                if (!posToLabel.isEmpty()) {
+                    ret.add(makeDerivationTree(rootPos, posToLabel, posToChildPositions));
+                    posToLabel.clear();
+                    posToChildPositions.clear();
+                    rootPos = -1;
+                }
             }
         }
+
+        return ret;
+    }
+
+    private static Tree<String> makeDerivationTree(int nodePos, Int2ObjectMap<String> posToLabel, Int2ObjectMap<IntList> posToChildPositions) {
+        IntList children = posToChildPositions.get(nodePos);
+        List<Tree<String>> childTrees = new ArrayList<>();
+
+        if (children != null) { // nodePos received children
+            for (int child : children) {
+                childTrees.add(makeDerivationTree(child, posToLabel, posToChildPositions));
+            }
+        }
+
+        return Tree.create(posToLabel.get(nodePos), childTrees);
     }
 
     public TagGrammar readUnlexicalizedGrammar(Reader r) throws IOException {
@@ -205,4 +260,5 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
             throw new CodecParseException("Unknown node type: " + marker);
         }
     }
+
 }

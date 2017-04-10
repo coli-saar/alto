@@ -270,6 +270,24 @@ public class Signature implements Serializable {
             }
         });
     }
+    
+    /**
+     * Maps a tree of symbols to a tree of symbol IDs.
+     * Assumes that all symbols exist in this signature; otherwise
+     * the method will throw a {@link NullPointerException}.
+     * 
+     * @param tree
+     * @return 
+     */
+    public Tree<Integer> mapSymbolsToIds(Tree<String> tree) {
+        return tree.dfs(new TreeVisitor<String, Void, Tree<Integer>>() {
+            @Override
+            public Tree<Integer> combine(Tree<String> node, List<Tree<Integer>> childrenValues) {
+                int sym = getIdForSymbol(node.getLabel());
+                return Tree.create(sym, childrenValues);
+            }
+        });
+    }
 
     /**
      * Adds all the constants from the tree to the signature.

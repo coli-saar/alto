@@ -19,13 +19,15 @@ import de.up.ling.irtg.binarization.BinaryRuleFactory;
 import de.up.ling.irtg.binarization.BkvBinarizer;
 import de.up.ling.irtg.binarization.IdentitySeed;
 import de.up.ling.irtg.binarization.RegularSeed;
-import de.up.ling.irtg.binarization.StringAlgebraSeed;
 import de.up.ling.irtg.codec.tag.ChenTagInputCodec;
 import de.up.ling.irtg.codec.tag.ElementaryTree;
 import de.up.ling.irtg.codec.tag.TagGrammar;
 import de.up.ling.irtg.corpus.AbstractCorpusWriter;
+import de.up.ling.irtg.corpus.Corpus;
 import de.up.ling.irtg.corpus.CorpusWriter;
+import de.up.ling.irtg.corpus.Instance;
 import de.up.ling.irtg.util.GuiUtils;
+import de.up.ling.tree.Tree;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -60,7 +62,7 @@ public class ChenTagTreebankConverter {
 
         ChenTagInputCodec ic = new ChenTagInputCodec();
         TagGrammar tagg = ic.readUnlexicalizedGrammar(new FileReader(param.inGrammarFilename));
-        ic.lexicalizeFromCorpus(tagg, new FileReader(param.inputFiles.get(0))); // TODO multiple input corpora
+        List<Tree<String>> rawDerivationTrees = ic.lexicalizeFromCorpus(tagg, new FileReader(param.inputFiles.get(0))); // TODO multiple input corpora
 
         PrintWriter pw = new PrintWriter("tagg.txt");
         pw.println(tagg);
@@ -81,6 +83,24 @@ public class ChenTagTreebankConverter {
         // convert TAG grammar to IRTG
         tagg.setTracePredicate(s -> s.contains("-NONE-"));
         irtg = tagg.toIrtg();
+        
+//        pw = new PrintWriter("xxxx.irtg");
+//        pw.println(irtg);
+//        pw.flush();
+//        pw.close();
+        
+        // convert raw derivation trees into ones for this IRTG
+        System.err.println("\nMaximum likelihood estimation ...");
+        Corpus corpus = new Corpus();
+        for( Tree<String> dt : rawDerivationTrees ) {
+            Instance inst = new Instance();
+            inst.setDerivationTree(irtg.getAutomaton().getSignature().mapSymbolsToIds(dt));
+//            System.err.println(dt);
+//            System.err.println("  -> " + inst.getDerivationTree());
+        }
+        
+        // maximum likelihood estimation
+        irtg.trainML(corpus);
 
         // binarize grammar if requested
         if (param.binarize) {
