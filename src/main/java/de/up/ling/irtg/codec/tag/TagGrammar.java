@@ -9,6 +9,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
+import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.TagStringAlgebra;
@@ -51,6 +52,10 @@ public class TagGrammar {
 
     public void addElementaryTree(String name, ElementaryTree tree) {
         trees.put(name, tree);
+    }
+
+    public ElementaryTree getElementaryTree(String name) {
+        return trees.get(name);
     }
 
     public void addLexiconEntry(String word, LexiconEntry lex) {
@@ -104,13 +109,17 @@ public class TagGrammar {
 
         // add rules for empty adjunctions
         for (String nt : adjunctionNonterminals) {
-            String sym = NO_ADJUNCTION + "_" + nt;
+            String sym = makeNop(nt);
             auto.addRule(auto.createRule(nt, sym, Collections.EMPTY_LIST));
             th.add(sym, Tree.create(TagTreeAlgebra.P1));
             sh.add(sym, Tree.create(TagStringAlgebra.EE()));
         }
 
         return irtg;
+    }
+    
+    public static String makeNop(String nt) {
+        return NO_ADJUNCTION + "_" + nt;
     }
 
     private static String makeTerminalSymbol(LexiconEntry lex) {
@@ -129,6 +138,91 @@ public class TagGrammar {
         return th.c(label + "_" + arity, arity);
     }
 
+    /**
+     * Generates the list of child states, in the same order as
+     * {@link #convertElementaryTree(de.up.ling.irtg.codec.tag.LexiconEntry, de.up.ling.irtg.automata.ConcreteTreeAutomaton, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.algebra.TagStringAlgebra, java.util.Set) }.
+     * 
+     * @param etree
+     * @return 
+     */
+    List<String> getChildStates(ElementaryTree etree) {
+        final List<String> childStates = new ArrayList<>();
+
+        etree.getTree().dfs((node, children) -> {
+            String label = node.getLabel().getLeft(); // use these as states
+
+            switch (node.getLabel().getRight()) {
+                case HEAD:
+                case SECONDARY_LEX:
+                    childStates.add(makeA(label));
+                    break;
+
+                case SUBSTITUTION:
+                    childStates.add(makeS(label));
+                    break;
+
+                case DEFAULT:
+                    if (isTrace(label)) { //  traceP != null && traceP.test(label)) {
+                        // do not allow adjunction around traces
+                    } else {
+                        childStates.add(makeA(label));
+                    }
+                    break;
+                    
+                default:
+                    // NOP
+            }
+
+            return null;
+        });
+
+        return childStates;
+    }
+    
+    /**
+     * Returns a tree of the same shape as the elementary tree, with each
+     * node replaced by its post-order visit index, starting at nextPosition for the
+     * leftmost leaf. This is the same order in which {@link #convertElementaryTree(de.up.ling.irtg.codec.tag.LexiconEntry, de.up.ling.irtg.automata.ConcreteTreeAutomaton, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.algebra.TagStringAlgebra, java.util.Set) }
+     * and {@link #getChildStates(de.up.ling.irtg.codec.tag.ElementaryTree) } generate
+     * the lists of child states.
+     * 
+     * @param tree
+     * @param nextPosition
+     * @return 
+     */
+    Tree<Integer> makeDfsNodePositions(ElementaryTree tree, MutableInteger nextPosition) {
+            return tree.getTree().dfs((node, children) -> {
+                switch (node.getLabel().getRight()) {
+                    case HEAD:
+                    case SECONDARY_LEX:
+                    case SUBSTITUTION:
+                        return Tree.create(nextPosition.incValue(), children);
+                        
+                    case DEFAULT:
+                        if (isTrace(node.getLabel().getLeft())) {
+                            // do not allow adjunction around traces
+                            return Tree.create(-1);
+                        } else {
+                            return Tree.create(nextPosition.incValue(), children);
+                        }
+                    
+                    default:
+                        return Tree.create(-1, children);
+                }
+            });
+        }
+
+    /**
+     * NB: Keep this consistent with {@link #makeDfsNodePositions(de.up.ling.irtg.codec.tag.ElementaryTree, de.up.ling.irtg.util.MutableInteger) }
+     * and {@link #getChildStates(de.up.ling.irtg.codec.tag.ElementaryTree) }.
+     * 
+     * @param lex
+     * @param auto
+     * @param th
+     * @param sh
+     * @param tsa
+     * @param adjunctionNonterminals 
+     */
     private void convertElementaryTree(LexiconEntry lex, ConcreteTreeAutomaton<String> auto, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa, final Set<String> adjunctionNonterminals) {
         final List<String> childStates = new ArrayList<String>();
         ElementaryTree etree = trees.get(lex.getElementaryTreeName());
@@ -174,7 +268,7 @@ public class TagGrammar {
                         break;
 
                     case DEFAULT:
-                        if (traceP != null && traceP.test(label)) {
+                        if (isTrace(label)) { //  traceP != null && traceP.test(label)) {
                             // do not allow adjunction around traces
                             ret = Tree.create(lwa(label, 0, th)); // th.c(labelWithArity, 0));
                         } else {
@@ -236,6 +330,18 @@ public class TagGrammar {
      */
     public void setTracePredicate(Predicate<String> traceP) {
         this.traceP = traceP;
+    }
+
+    /**
+     * Checks whether the given nodeLabel is a trace, according to the trace
+     * predicate set by {@link #setTracePredicate(java.util.function.Predicate)
+     * }.
+     *
+     * @param nodeLabel
+     * @return
+     */
+    public boolean isTrace(String nodeLabel) {
+        return (traceP != null) && traceP.test(nodeLabel);
     }
 
     private Tree<HomomorphismSymbol> makeStringHom(Tree<HomomorphismSymbol> treeForTreeHom, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa, List<String> childStates) {

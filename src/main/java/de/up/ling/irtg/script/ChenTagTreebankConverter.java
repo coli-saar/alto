@@ -62,6 +62,8 @@ public class ChenTagTreebankConverter {
 
         ChenTagInputCodec ic = new ChenTagInputCodec();
         TagGrammar tagg = ic.readUnlexicalizedGrammar(new FileReader(param.inGrammarFilename));
+        tagg.setTracePredicate(s -> s.contains("-NONE-"));
+
         List<Tree<String>> rawDerivationTrees = ic.lexicalizeFromCorpus(tagg, new FileReader(param.inputFiles.get(0))); // TODO multiple input corpora
 
         PrintWriter pw = new PrintWriter("tagg.txt");
@@ -81,7 +83,6 @@ public class ChenTagTreebankConverter {
         pw.close();
 
         // convert TAG grammar to IRTG
-        tagg.setTracePredicate(s -> s.contains("-NONE-"));
         irtg = tagg.toIrtg();
         
 //        pw = new PrintWriter("xxxx.irtg");
