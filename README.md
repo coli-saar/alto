@@ -31,6 +31,10 @@ See the [Wiki](https://bitbucket.org/tclup/alto/wiki/Home) for more details on h
 
 If you run into trouble, please feel free to ask for help on [our Google group](https://groups.google.com/forum/#!forum/alto-users), or you can [submit an issue](https://bitbucket.org/tclup/alto/issues?status=new&status=open).
 
+## JavaDoc ##
+
+You can find the JavaDoc API documentation [here](http://www.coli.uni-saarland.de/projects/alto/apidocs/index.html).
+
 ## Screenshots ##
 
 Here are some screenshots of the Alto GUI. Here's an IRTG with one string and one graph interpretation (equivalent to a synchronous HRG):
