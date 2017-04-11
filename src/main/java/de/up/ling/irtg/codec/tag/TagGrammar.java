@@ -9,7 +9,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.SetMultimap;
-import de.saar.basic.Pair;
 import de.up.ling.irtg.Interpretation;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.TagStringAlgebra;
@@ -368,7 +367,7 @@ public class TagGrammar {
                 } else if (TagTreeAlgebra.P1.equals(label)) {
                     assert children.isEmpty();
                     return cs(TagStringAlgebra.EE(), children, sh, tsa);
-                } else if (traceP != null && traceP.test(label)) {
+                } else if (isTrace(label)) {
                     return cs(TagStringAlgebra.E(), children, sh, tsa);
                 } else {
                     switch (children.size()) {

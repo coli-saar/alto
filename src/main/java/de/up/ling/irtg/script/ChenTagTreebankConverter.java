@@ -103,11 +103,6 @@ public class ChenTagTreebankConverter {
         // convert TAG grammar to IRTG
         irtg = tagg.toIrtg();
         
-//        pw = new PrintWriter("xxxx.irtg");
-//        pw.println(irtg);
-//        pw.flush();
-//        pw.close();
-        
         // convert raw derivation trees into ones for this IRTG
         System.err.println("\nMaximum likelihood estimation ...");
         Corpus corpus = new Corpus();
@@ -176,19 +171,6 @@ public class ChenTagTreebankConverter {
         
         @Parameter(names = {"--lowercase"}, description = "Convert all words to lowercase.")
         public boolean lowercase = false;
-
-//        
-//        @Parameter(names = "--strip-annotations", description = "Convert NP-SBJ to NP etc.")
-//        public boolean stripAnnotations = false;
-//
-//        @Parameter(names = "--remove-none", description = "Remove empty elements such as -NONE-.")
-//        public boolean removeNone = false;
-//
-//        @Parameter(names = "--add-top", description = "Add a TOP symbol on top of every parse tree.")
-//        public boolean addTop = false;
-//
-//        @Parameter(names = "--pos", description = "Remove all leaves, yielding strings of POS tags.")
-//        public boolean removeLeaves = false;
 
         @Parameter(names = "--binarize", description = "Binarize the output grammar.")
         public boolean binarize = false;
