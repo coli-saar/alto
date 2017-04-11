@@ -38,59 +38,6 @@ import java.util.Map;
 @CodecMetadata(name = "chen-tag", description = "Tree-adjoining grammar (Chen format)", type = InterpretedTreeAutomaton.class)
 public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
-    /*
-     public static void mmain(String[] args) throws FileNotFoundException, IOException, ParserException {
-     InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.read(new FileInputStream("tagg-bin.irtg"));
-     TreeAutomaton chart = irtg.parse(Maps.newHashMap("string", "There asbestos now"));
-     System.err.println("\n\n\nchart:\n\n" + chart);
-     }
-
-     public static void main(String[] args) throws FileNotFoundException, IOException, ParserException, Exception {
-     ChenTagInputCodec ic = new ChenTagInputCodec();
-     TagGrammar tagg = ic.readUnlexicalizedGrammar(new FileReader(args[0]));
-     ic.lexicalizeFromCorpus(tagg, new FileReader(args[1]));
-
-     PrintWriter pw = new PrintWriter("tagg.txt");
-     pw.println(tagg);
-     pw.flush();
-     pw.close();
-
-     pw = new PrintWriter("lexicalized-tagg.txt");
-     pw.println("\n\n");
-     for (String word : tagg.getWords()) {
-     pw.println("\nword: " + word + "\n==================\n");
-     for (ElementaryTree et : tagg.lexicalizeElementaryTrees(word)) {
-     pw.println("   " + et);
-     }
-     }
-     pw.flush();
-     pw.close();
-
-     pw = new PrintWriter("tagg.irtg");
-     tagg.setTracePredicate(s -> s.contains("-NONE-"));
-     InterpretedTreeAutomaton irtg = tagg.toIrtg();
-     pw.println(irtg);
-     pw.flush();
-     pw.close();
-
-     // binarize IRTG
-     // TODO - something is wrong with this code: it throws an exception during binarization,
-     // whereas binarizing from the GUI does not.
-     //        TagStringAlgebra newSA = new TagStringAlgebra();
-     //        BinarizingTagTreeAlgebra newTA = new BinarizingTagTreeAlgebra();
-     //        RegularSeed seedS = new IdentitySeed(irtg.getInterpretation("string").getAlgebra(), newSA);
-     //        RegularSeed seedT = new BinarizingAlgebraSeed(irtg.getInterpretation("tree").getAlgebra(), newTA);
-     //        BkvBinarizer binarizer = new BkvBinarizer(ImmutableMap.of("string", seedS, "tree", seedT));        
-     //        InterpretedTreeAutomaton bin = GuiUtils.withConsoleProgressBar(60, System.out, listener -> {
-     //            return binarizer.binarize(irtg, ImmutableMap.of("string", newSA, "tree", newTA), listener);
-     //        });
-     //        
-     //        pw = new PrintWriter("tagg-bin.irtg");
-     //        pw.println(bin);
-     //        pw.flush();
-     //        pw.close();
-     }
-     */
     @Override
     public InterpretedTreeAutomaton read(InputStream is) throws CodecParseException, IOException {
         TagGrammar tagg = readUnlexicalizedGrammar(new InputStreamReader(is));
@@ -118,6 +65,8 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         Int2ObjectMap<IntList> posToChildPositions = new Int2ObjectOpenHashMap<>();
         int rootPos = 0;
 
+        int counter = 0;
+
         while ((line = br.readLine()) != null) {
             String[] parts = line.split("\\s+");
 
@@ -137,40 +86,48 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
                 tagg.addLexiconEntry(word, lex);
 
                 // add to derivation tree maps
-                int pos = Integer.parseInt(parts[0]);
-                int parentPos = Integer.parseInt(parts[3]);
-                String parentTreename = parts[8];
-                String label = treename + "-" + word;
+                if (!"tCO".equals(treename)) {
+                    // tCO is for secondary lexical anchors, such as "invest ... _in_".
+                    // These trees are not spelled out in the IRTG grammar, and can be
+                    // skipped here. (Instead, the secondary lexical anchors are added
+                    // as constants to the homomorphisms in the IRTG.)
+                    int pos = Integer.parseInt(parts[0]);
+                    int parentPos = Integer.parseInt(parts[3]);
+                    String parentTreename = parts[8];
+                    String label = treename + "-" + word;
 
-                posToLabel.put(pos, label);
+                    posToLabel.put(pos, label);
 
-                if (pos == parentPos) {
-                    // root
-                    rootPos = pos;
-                } else {
-                    IntList children = posToChildPositions.get(parentPos);
-                    if (children == null) {
-                        children = makeIntList(npcp.getNumChildren(parentTreename), -1);
-                        posToChildPositions.put(parentPos, children);
+                    if (pos == parentPos) {
+                        // root
+                        rootPos = pos;
+                    } else {
+                        IntList children = posToChildPositions.get(parentPos);
+                        if (children == null) {
+                            children = makeIntList(npcp.getNumChildren(parentTreename), -1);
+                            posToChildPositions.put(parentPos, children);
+                        }
+
+                        int posInParentChildrenList = Integer.parseInt(parts[9]);
+//                        System.err.println("(" + treename + ")");
+                        children.set(npcp.getChildPosForNodePos(parentTreename, posInParentChildrenList), pos);
+//                        System.err.println(String.format("[%d: %s] posInParent=%d, posInParentChildren=%d, parentTree=%s", pos, word, posInParentChildrenList, npcp.getChildPosForNodePos(parentTreename, posInParentChildrenList), parentTreename));
                     }
-
-                    int posInParentChildrenList = Integer.parseInt(parts[9]);
-                    System.err.println("(" + treename + ")");
-                    children.set(npcp.getChildPosForNodePos(parentTreename, posInParentChildrenList), pos);
-
-                    // XXXXX TODO XXXXX
-//                    children.add(pos);
                 }
-
             } else {
                 // finished reading the sentence
                 if (!posToLabel.isEmpty()) {
                     Tree<String> dt = makeDerivationTree(rootPos, posToLabel, posToChildPositions, npcp, tagg);
-                    System.err.println(" --> " + dt);
+//                    System.err.println(" --> " + dt + "\n");
                     ret.add(dt);
                     posToLabel.clear();
                     posToChildPositions.clear();
                     rootPos = -1;
+
+//                    counter++;
+//                    if (counter > 10) {
+//                        System.exit(1);
+//                    }
                 }
             }
         }
@@ -191,18 +148,21 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         List<Tree<String>> childTrees = new ArrayList<>();
         String label = posToLabel.get(nodePos);
         String treename = label.split("-")[0];
-        System.err.println("** " + treename); // TODO - why is this called before sentence is finished??
         List<String> childStates = tagg.getChildStates(tagg.getElementaryTree(treename));
 
+//        System.err.println("mkdt nodePos=" + nodePos + ", label=" + label);
+//        if(children != null) System.err.println("  children=" + children);
+//        System.err.println("  childStates=" + childStates);
+//        System.err.println("  ")
         if (children == null) {
             // node has only *NOP* children
             children = makeIntList(npcp.getNumChildren(treename), -1);
         }
-        
-        for( int i = 0; i < children.size(); i++ ) {
+
+        for (int i = 0; i < children.size(); i++) {
             int child = children.get(i);
-            
-            if( child < 0 ) {
+
+            if (child < 0) {
                 // no explicit child specified => put *NOP* of appropriate type here
                 childTrees.add(Tree.create(TagGrammar.makeNop(childStates.get(i))));
             } else {
@@ -297,6 +257,7 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
         private Map<String, Int2IntMap> map = new HashMap<String, Int2IntMap>();
         private Object2IntMap<String> etreeNumChildren = new Object2IntOpenHashMap<String>();
         private TagGrammar tagg;
+        private static final boolean DEBUG = false;
 
         public NodePosToChildrenPos(TagGrammar tagg) {
             this.tagg = tagg;
@@ -304,12 +265,17 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
         private void ensureEtreeCalculated(String etreeName) {
             if (!etreeNumChildren.containsKey(etreeName)) {
-                System.err.println("\n====== etree: " + etreeName);
-                System.err.println("tree: " + tagg.getElementaryTree(etreeName).getTree());
+                if (DEBUG) {
+                    System.err.println("\n====== etree: " + etreeName);
+                    System.err.println("tree: " + tagg.getElementaryTree(etreeName).getTree());
+                }
+
                 map.put(etreeName, computeNodeMapping(etreeName));
                 // side-effect of computeNodeMapping: etreeNumChildren is set to num children of this etree
-                
-                System.err.println("# children: " + etreeNumChildren.get(etreeName));
+
+                if (DEBUG) {
+                    System.err.println("# children: " + etreeNumChildren.get(etreeName));
+                }
             }
         }
 
@@ -334,25 +300,26 @@ public class ChenTagInputCodec extends InputCodec<InterpretedTreeAutomaton> {
 
             final Int2IntMap ret = new Int2IntOpenHashMap();
             final MutableInteger nextPosition = new MutableInteger(1);
-            
-            System.err.println("dfs tree: " + dfsNodePositions);
 
+            if(DEBUG) System.err.println("dfs tree: " + dfsNodePositions);
+            
             // visit nodes in pre-order, as in the tree definitions of the
             // Chen f.str file, and generate pre-order -> post-order mapping
             dfsNodePositions.dfs(new TreeVisitor<Integer, Void, Void>() {
                 @Override
                 public Void visit(Tree<Integer> node, Void data) {
-                    if (node.getLabel() > 0) {
+                    int nodePos = nextPosition.incValue();
+                    
+                    if (node.getLabel() >= 0) {
                         // skip nodes that do not generate rule children
-                        ret.put(nextPosition.incValue(), node.getLabel().intValue());
+                        ret.put(nodePos, node.getLabel().intValue());
                     }
 
                     return null;
                 }
             });
-            
-            System.err.println("mapping: " + ret);
 
+            if(DEBUG) System.err.println("mapping: " + ret);
             return ret;
         }
     }

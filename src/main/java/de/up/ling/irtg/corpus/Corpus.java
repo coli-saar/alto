@@ -62,13 +62,16 @@ public class Corpus implements Iterable<Instance> {
 
     /**
      * This creates a new empty corpus.
+     * By default, the new corpus is set to "annotated".
+     * If any instance without a derivation tree is added
+     * to the corpus, the corpus changes its state
+     * to "unannotated".
      * 
-     * In this corpus there will be no charts and no annotation.
      */
     public Corpus() {
         instances = new ArrayList<>();
         charts = null;
-        isAnnotated = false;
+        isAnnotated = true;
     }
 
     /**
@@ -136,13 +139,13 @@ public class Corpus implements Iterable<Instance> {
      */
     public void addInstance(Instance instance) {
         instances.add(instance);
-
-        isAnnotated &= (instance.getDerivationTree() != null);
         
-        //is this the intended behaviour??? jonas
-        //if (instance.getDerivationTree() != null) {
-        //    isAnnotated &= true;
-        //}
+        if( instance.getDerivationTree() == null ) {
+            isAnnotated = false;
+        }
+        
+        // NB Changed this in April 2017, check if it caused
+        // any problems. - AK
     }
 
     /**

@@ -73,7 +73,7 @@ public class TagGrammar {
             for (LexiconEntry lex : lexicon.get(word)) {
                 ElementaryTree et = trees.get(lex.getElementaryTreeName());
 
-                if (et == null) {
+                if (et == null && ! "tCO".equals(lex.getElementaryTreeName())) {
                     System.err.println("*** UNK ET: " + lex + " for word " + word + "***");
                 } else {
                     ret.add(et.lexicalize(word, lex.getFeature("pos"), lex.getSecondaryLex()));
@@ -111,6 +111,7 @@ public class TagGrammar {
         for (String nt : adjunctionNonterminals) {
             String sym = makeNop(nt);
             auto.addRule(auto.createRule(nt, sym, Collections.EMPTY_LIST));
+            
             th.add(sym, Tree.create(TagTreeAlgebra.P1));
             sh.add(sym, Tree.create(TagStringAlgebra.EE()));
         }
@@ -185,6 +186,9 @@ public class TagGrammar {
      * leftmost leaf. This is the same order in which {@link #convertElementaryTree(de.up.ling.irtg.codec.tag.LexiconEntry, de.up.ling.irtg.automata.ConcreteTreeAutomaton, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.hom.Homomorphism, de.up.ling.irtg.algebra.TagStringAlgebra, java.util.Set) }
      * and {@link #getChildStates(de.up.ling.irtg.codec.tag.ElementaryTree) } generate
      * the lists of child states.
+     * 
+     * The node label -1 indicates that this node does not generate a child
+     * state.
      * 
      * @param tree
      * @param nextPosition

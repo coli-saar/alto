@@ -277,9 +277,9 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         labelIds.forEach(labelId -> {
             if (signature.getArity(labelId) == childStateSets.size()) {
                 FastutilUtils.forEachIntCartesian(childStateSets, childStates -> {
-                    Iterable<Rule> rules = getRulesBottomUp(signatureMapper.remapForward(labelId), childStates);
-                    rules.forEach(fn);
-                });
+                                              Iterable<Rule> rules = getRulesBottomUp(signatureMapper.remapForward(labelId), childStates);
+                                              rules.forEach(fn);
+                                          });
             }
         });
     }
@@ -780,10 +780,10 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public long countTrees() {
         Map<Integer, Long> map = evaluateInSemiring(new LongArithmeticSemiring(), new RuleEvaluator<Long>() {
-            public Long evaluateRule(Rule rule) {
-                return 1L;
-            }
-        });
+                                                public Long evaluateRule(Rule rule) {
+                                                    return 1L;
+                                                }
+                                            });
 
         long ret = 0L;
         for (int f : getFinalStates()) {
@@ -800,10 +800,10 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public Int2ObjectMap<Double> inside() {
         return evaluateInSemiring(new DoubleArithmeticSemiring(), new RuleEvaluator<Double>() {
-            public Double evaluateRule(Rule rule) {
-                return rule.getWeight();
-            }
-        });
+                              public Double evaluateRule(Rule rule) {
+                                  return rule.getWeight();
+                              }
+                          });
     }
 
     /**
@@ -815,20 +815,20 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public Map<Integer, Double> outside(final Map<Integer, Double> inside) {
         return evaluateInSemiringTopDown(new DoubleArithmeticSemiring(), new RuleEvaluatorTopDown<Double>() {
-            public Double initialValue() {
-                return 1.0;
-            }
+                                     public Double initialValue() {
+                                         return 1.0;
+                                     }
 
-            public Double evaluateRule(Rule rule, int i) {
-                Double ret = rule.getWeight();
-                for (int j = 0; j < rule.getArity(); j++) {
-                    if (j != i) {
-                        ret = ret * inside.get(rule.getChildren()[j]);
-                    }
-                }
-                return ret;
-            }
-        });
+                                     public Double evaluateRule(Rule rule, int i) {
+                                         Double ret = rule.getWeight();
+                                         for (int j = 0; j < rule.getArity(); j++) {
+                                             if (j != i) {
+                                                 ret = ret * inside.get(rule.getChildren()[j]);
+                                             }
+                                         }
+                                         return ret;
+                                     }
+                                 });
     }
 
     /**
@@ -891,7 +891,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
 
         Int2ObjectMap<Pair<Double, Rule>> map
                 = evaluateInSemiring2(new ViterbiWithBackpointerSemiring(),
-                        rule -> new Pair(rule.getWeight(), rule));
+                                      rule -> new Pair(rule.getWeight(), rule));
 
         // find final state with highest weight
         int bestFinalState = -1;
@@ -2114,7 +2114,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      * accept the tree; the weight of a run is the product of the weights of the
      * rules it uses. If the automaton does not accept the tree, the method
      * returns a weight of zero.<p>
-     * 
+     *
      * The method also returns a weight of zero if the tree is null.<p>
      *
      * The labels of the nodes of the tree are assumed to be strings.
@@ -2666,10 +2666,10 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
      */
     public Iterator<Tree<String>> languageIterator() {
         return Iterators.transform(languageIteratorRaw(), new Function<Tree<Integer>, Tree<String>>() {
-            public Tree<String> apply(Tree<Integer> f) {
-                return getSignature().resolve(f);
-            }
-        });
+                               public Tree<String> apply(Tree<Integer> f) {
+                                   return getSignature().resolve(f);
+                               }
+                           });
     }
 
     /**
@@ -2883,7 +2883,14 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
         }
 
         for (Rule rule : rules) {
-            rule.setWeight(rule.getWeight() / lhsWeightSum.get(rule.getParent()));
+            double Z = lhsWeightSum.get(rule.getParent());
+
+            if (Z != 0.0) {
+                // if all rules for the same LHS have weight 0, then
+                // just leave their weights as they were; otherwise
+                // their weights would be set to NaN
+                rule.setWeight(rule.getWeight() / Z);
+            }
         }
     }
 
@@ -3047,7 +3054,7 @@ public abstract class TreeAutomaton<State> implements Serializable, Intersectabl
     public int getNumberOfSeenStates() {
         return stateInterner.getNextIndex() - 1;
     }
-    
+
     /**
      * This returns an object that stores and finds possible partners for a
      * given state given a rule label. (see i.e.

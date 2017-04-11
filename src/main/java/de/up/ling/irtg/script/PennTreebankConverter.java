@@ -300,7 +300,7 @@ public class PennTreebankConverter {
         @Parameter(names = "--binarize", description = "Binarize the output grammar.")
         public boolean binarize = false;
 
-        @Parameter(names = "--binarization-mode", description = "Binarization mode (complete or xbar).",
+        @Parameter(names = "--binarization-mode", description = "Binarization mode (complete/xbar/inside).",
                 validateWith = BinarizationStyleValidator.class)
         public String binarizationMode = "complete";
 
@@ -340,12 +340,13 @@ public class PennTreebankConverter {
 
     public static class BinarizationStyleValidator implements IParameterValidator {
 
-        private final List<String> allows = Lists.newArrayList("complete", "xbar", "inside", "outside");
+        private static final List<String> allowed = Lists.newArrayList("complete", "xbar", "inside"); //, "outside");
+        
 
         @Override
         public void validate(String key, String value) throws ParameterException {
-            if (!allows.contains(value)) {
-                throw new ParameterException("Invalid value for argument 'binarizationMode'. Allows values are: " + allows);
+            if (!allowed.contains(value)) {
+                throw new ParameterException("Invalid value for argument 'binarizationMode'. Allowed values are: " + allowed);
             }
         }
 
