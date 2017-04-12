@@ -38,7 +38,7 @@ import java.util.List;
  *
  * @author koller
  */
-public class Rule implements Serializable, Comparable<Rule> {
+public class Rule implements Serializable, Comparable<Rule>, AbstractRule {
     private int parent;
     private int label;
     private int[] children;

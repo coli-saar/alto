@@ -10,6 +10,7 @@ import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
+import de.up.ling.irtg.automata.AbstractRule;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
@@ -376,7 +377,7 @@ public class CoarseToFineParser {
                 outside.clear();
                 productivityChecker.clear();
 
-                double totalSentenceInside = computeInsideOutsideNoncondensed(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
+                double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
                 /*
                  if (DEBUG) {
@@ -527,7 +528,7 @@ public class CoarseToFineParser {
                 double rPruned = 0.0;
 
                 cts.record(0);
-                double totalSentenceInside = computeInsideOutsideNoncondensed(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
+                double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
                 /*
                  if (DEBUG) {
@@ -745,7 +746,7 @@ public class CoarseToFineParser {
                 productivityChecker.clear();
 
                 cts.record(0);
-                double totalSentenceInside = computeInsideOutsideNoncondensed(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
+                double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
                 /*
                  if (DEBUG) {
@@ -1294,7 +1295,7 @@ public class CoarseToFineParser {
 
     private static class ProductiveRulesChecker {
 
-        private LongSet bottomUpStatesDiscovered = new LongOpenHashSet();
+        private final LongSet bottomUpStatesDiscovered = new LongOpenHashSet();
 
         public void recordParents(RuleRefinementNode n, CondensedRule r) {
             bottomUpStatesDiscovered.add(NumbersCombine.combine(n.getParent(), r.getParent()));
@@ -1441,7 +1442,7 @@ public class CoarseToFineParser {
         System.err.printf(" %4s  outside(parent): %e\n\n", "", outside.get(n.getParent(), r.getParent()));
     }
 
-    private double computeInsideOutside(int level, List<RuleRefinementNode> coarseNodes, List<CondensedRule> partnerInvhomRules, CondensedTreeAutomaton invhom, IIntInt2DoubleMap inside, IIntInt2DoubleMap outside) {
+    private double computeInsideOutside(int level, List<RuleRefinementNode> coarseNodes, List<? extends AbstractRule> partnerInvhomRules, TreeAutomaton invhom, IIntInt2DoubleMap inside, IIntInt2DoubleMap outside) {
         double totalSentenceInside = 0;
 
         inside.setDefaultReturnValue(0);
@@ -1450,7 +1451,7 @@ public class CoarseToFineParser {
         // calculate coarse inside
         for (int i = 0; i < coarseNodes.size(); i++) {
             RuleRefinementNode n = coarseNodes.get(i);
-            CondensedRule r = partnerInvhomRules.get(i);
+            AbstractRule r = partnerInvhomRules.get(i);
 
             double insideHere = n.getWeight() * r.getWeight();
             for (int j = 0; j < r.getArity(); j++) {
@@ -1468,7 +1469,7 @@ public class CoarseToFineParser {
         // calculate coarse outside
         for (int i = coarseNodes.size() - 1; i >= 0; i--) {
             RuleRefinementNode n = coarseNodes.get(i);
-            CondensedRule r = partnerInvhomRules.get(i);
+            AbstractRule r = partnerInvhomRules.get(i);
 
             double[] childInside = new double[r.getArity()];
             double parentOutside = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
@@ -1492,59 +1493,6 @@ public class CoarseToFineParser {
             // In an earlier version, we first multiplied all child insides,
             // and then divided by the one we wanted to take out. This can
             // yield NaN if a child inside was zero, thus the quadratic version above.            
-        }
-
-        return totalSentenceInside;
-    }
-
-    private double computeInsideOutsideNoncondensed(int level, List<RuleRefinementNode> coarseNodes, List<Rule> partnerInvhomRules, TreeAutomaton invhom, IIntInt2DoubleMap inside, IIntInt2DoubleMap outside) {
-        double totalSentenceInside = 0;
-
-        inside.setDefaultReturnValue(0);
-        outside.setDefaultReturnValue(0);
-
-        // calculate coarse inside
-        for (int i = 0; i < coarseNodes.size(); i++) {
-            RuleRefinementNode n = coarseNodes.get(i);
-            Rule r = partnerInvhomRules.get(i);
-
-            double insideHere = n.getWeight() * r.getWeight();
-            for (int j = 0; j < r.getArity(); j++) {
-                insideHere *= inside.get(n.getChildren()[j], r.getChildren()[j]);
-            }
-
-//            long key = NumbersCombine.combine();
-            inside.put(n.getParent(), r.getParent(), inside.get(n.getParent(), r.getParent()) + insideHere);
-
-            if (invhom.getFinalStates().contains(r.getParent()) && rrt.getFinalStatesAtLevel(level).contains(n.getParent())) {
-                outside.put(n.getParent(), r.getParent(), 1);
-                totalSentenceInside += insideHere;
-            }
-        }
-
-        // calculate coarse outside
-        for (int i = coarseNodes.size() - 1; i >= 0; i--) {
-            RuleRefinementNode n = coarseNodes.get(i);
-            Rule r = partnerInvhomRules.get(i);
-            
-            double[] childInside = new double[r.getArity()];
-            double parentOutside = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
-                        
-            for (int j = 0; j < r.getArity(); j++) {
-                childInside[j] = inside.get(n.getChildren()[j], r.getChildren()[j]);
-            }
-            
-            for( int childToUpdate = 0; childToUpdate < r.getArity(); childToUpdate++ ) {
-                double outsideThisChild = parentOutside;
-                
-                for( int j = 0; j < r.getArity(); j++ ) {
-                    if( j != childToUpdate ) {
-                        outsideThisChild *= childInside[j];
-                    }
-                }
-                
-                outside.put(n.getChildren()[childToUpdate], r.getChildren()[childToUpdate], outside.get(n.getChildren()[childToUpdate], r.getChildren()[childToUpdate]) + outsideThisChild);
-            }
         }
 
         return totalSentenceInside;

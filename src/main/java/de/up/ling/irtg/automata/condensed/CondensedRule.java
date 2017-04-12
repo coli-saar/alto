@@ -5,6 +5,7 @@
  */
 package de.up.ling.irtg.automata.condensed;
 
+import de.up.ling.irtg.automata.AbstractRule;
 import de.up.ling.tree.Tree;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import java.util.Arrays;
@@ -17,11 +18,11 @@ import java.util.function.Predicate;
  *
  * @author gontrum
  */
-public class CondensedRule {
+public class CondensedRule implements AbstractRule {
 
-    private int labelSetID;
-    private int parent;
-    private int[] children;
+    private final int labelSetID;
+    private final int parent;
+    private final int[] children;
     private double weight;
     private Object extra;
 
@@ -51,7 +52,7 @@ public class CondensedRule {
      * @return
      */
     public Collection<String> getLabelStrings(CondensedTreeAutomaton auto) {
-        Set<String> ret = new HashSet<String>();
+        Set<String> ret = new HashSet<>();
         for (int label : getLabels(auto)) {
             ret.add(auto.getSignature().resolveSymbolId(label));
         }
@@ -114,7 +115,7 @@ public class CondensedRule {
             ret.append(")");
         }
 
-        ret.append(" [" + weight + "]");
+        ret.append(" [").append(weight).append("]");
         return ret.toString();
     }
 
@@ -136,12 +137,12 @@ public class CondensedRule {
         for (String label : getLabelStrings(auto)) {
             if( skippingEnabled ) {
                 if( symbolFilter.test(label)) {
-                    ret.append(label + ",");
+                    ret.append(label).append(",");
                 } else {
                     skippedLabel = true;
                 }
             } else {
-                ret.append(label + ",");
+                ret.append(label).append(",");
             }
         }
 
@@ -174,7 +175,7 @@ public class CondensedRule {
             ret.append(")");
         }
 
-        ret.append(" [" + weight + "]");
+        ret.append(" [").append(weight).append("]");
         return ret.toString();
     }
 
@@ -221,10 +222,7 @@ public class CondensedRule {
         if (this.labelSetID != other.labelSetID) {
             return false;
         }
-        if (!Arrays.equals(this.children, other.children)) {
-            return false;
-        }
-        return true;
+        return Arrays.equals(this.children, other.children);
     }
 
     public boolean isLoop() {
