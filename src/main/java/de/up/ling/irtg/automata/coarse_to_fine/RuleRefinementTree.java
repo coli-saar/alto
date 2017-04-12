@@ -54,6 +54,13 @@ public class RuleRefinementTree {
         return finestNodes.apply(rule);
     }
     
+    /**
+     * Returns the variant of the derivation tree automaton at the 
+     * coarsest level of the coarse-to-fine hierarchy.
+     * 
+     * @param fineAutomaton
+     * @return 
+     */
     public TreeAutomaton makeCoarsestAutomaton(TreeAutomaton fineAutomaton) {
         ConcreteTreeAutomaton ret = new ConcreteTreeAutomaton(fineAutomaton.getSignature(), fineAutomaton.getStateInterner());
         
@@ -66,6 +73,13 @@ public class RuleRefinementTree {
         return ret;
     }
     
+    /**
+     * Returns the variant of the IRTG at the coarsest level
+     * of the coarse-to-fine hierarchy.
+     * 
+     * @param irtg
+     * @return 
+     */
     public InterpretedTreeAutomaton makeIrtgWithCoarsestAutomaton(InterpretedTreeAutomaton irtg) {
         TreeAutomaton auto = makeCoarsestAutomaton(irtg.getAutomaton());
         InterpretedTreeAutomaton ret = new InterpretedTreeAutomaton(auto);
