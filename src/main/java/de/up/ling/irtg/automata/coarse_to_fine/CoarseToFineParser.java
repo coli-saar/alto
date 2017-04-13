@@ -10,10 +10,10 @@ import de.saar.basic.Pair;
 import de.saar.basic.StringTools;
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.algebra.ParserException;
-import de.up.ling.irtg.automata.AbstractRule;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
+import de.up.ling.irtg.automata.AbstractRule;
 import de.up.ling.irtg.automata.WeightedTree;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
 import de.up.ling.irtg.automata.condensed.CondensedTreeAutomaton;
@@ -27,7 +27,6 @@ import de.up.ling.irtg.util.IntInt2DoubleMap;
 import de.up.ling.irtg.util.IntInt2IntMap;
 import de.up.ling.irtg.util.Logging;
 import de.up.ling.irtg.util.NumbersCombine;
-import de.up.ling.irtg.util.Util;
 import de.up.ling.tree.ParseException;
 import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
 import it.unimi.dsi.fastutil.doubles.DoubleList;
@@ -46,7 +45,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -439,7 +437,7 @@ public class CoarseToFineParser {
         }
 
         // decode final chart into tree automaton
-        return createTreeAutomatonNoncondensed(ftc.numLevels() - 1, coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs());
+        return createTreeAutomaton(ftc.numLevels() - 1, coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs());
     }
 
     /**
@@ -696,7 +694,7 @@ public class CoarseToFineParser {
         }
 
         // decode final chart into tree automaton
-        return new Combination(createTreeAutomatonNoncondensed(ftc.numLevels() - 1, coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()), 
+        return new Combination(createTreeAutomaton(ftc.numLevels() - 1, coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()), 
                 constituentsSeen,
                 constituentsPruned, rulesInChart, inverseRulesUsed, grammarRulesUsed,
                 saturation, stateSaturation, binaryStateSaturation, initialTime,
@@ -812,7 +810,7 @@ public class CoarseToFineParser {
         }
 
         // decode final chart into tree automaton
-        return new Combination(createTreeAutomatonNoncondensed(ftc.numLevels() - 1, coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
+        return new Combination(createTreeAutomaton(ftc.numLevels() - 1, coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs()),
                 null, null, null, null, null, null, null, null, initialTime,
                 levelTimes, null);
     }
@@ -1334,7 +1332,8 @@ public class CoarseToFineParser {
         }
     }
 
-    private TreeAutomaton createTreeAutomaton(int level, List<RuleRefinementNode> nodes, List<CondensedRule> invhomRules, CondensedTreeAutomaton invhom, LongSet stateIdPairs) {
+    private TreeAutomaton createTreeAutomaton(int level, List<RuleRefinementNode> nodes, List<? extends AbstractRule> invhomRules,
+            TreeAutomaton invhom, LongSet stateIdPairs) {
         Signature sig = irtg.getAutomaton().getSignature();
         ConcreteTreeAutomaton auto = new ConcreteTreeAutomaton(sig);
 
@@ -1362,56 +1361,10 @@ public class CoarseToFineParser {
         // create rules
         for (int i = 0; i < nodes.size(); i++) {
             RuleRefinementNode n = nodes.get(i);
-            CondensedRule r = invhomRules.get(i);
+            AbstractRule r = invhomRules.get(i);
 
 //            assert n.getLabelSet().size() == 1;
             // this assertion only needs to be true at the finest level
-
-            int parent = stateIdPairToState.get(n.getParent(), r.getParent());
-            int label = n.getRepresentativeLabel();
-            int[] children = new int[r.getArity()];
-            for (int j = 0; j < r.getArity(); j++) {
-                children[j] = stateIdPairToState.get(n.getChildren()[j], r.getChildren()[j]);
-            }
-
-            Rule rule = auto.createRule(parent, label, children, n.getWeight() * r.getWeight());
-            auto.addRule(rule);
-        }
-
-        return auto;
-    }
-
-    private TreeAutomaton createTreeAutomatonNoncondensed(int level, List<RuleRefinementNode> nodes, List<Rule> invhomRules, TreeAutomaton invhom, LongSet stateIdPairs) {
-        Signature sig = irtg.getAutomaton().getSignature();
-        ConcreteTreeAutomaton auto = new ConcreteTreeAutomaton(sig);
-
-        // create states in automaton
-        auto.getStateInterner().setTrustingMode(true);
-
-        LongIterator it = stateIdPairs.iterator();
-        IntInt2IntMap stateIdPairToState = new IntInt2IntMap();
-        stateIdPairToState.setDefaultReturnValue(-1000);
-        while (it.hasNext()) {
-            long stateIdPair = it.nextLong();
-            int grammarStateId = NumbersCombine.getFirst(stateIdPair);
-            int invhomStateId = NumbersCombine.getSecond(stateIdPair);
-            Pair statePair = new Pair(irtg.getAutomaton().getStateForId(grammarStateId), invhom.getStateForId(invhomStateId));
-            int newState = auto.addState(statePair);
-            stateIdPairToState.put(grammarStateId, invhomStateId, newState);
-
-            if (invhom.getFinalStates().contains(invhomStateId) && rrt.getFinalStatesAtLevel(level).contains(grammarStateId) ) { //   irtg.getAutomaton().getFinalStates().contains(grammarStateId)) {
-                auto.addFinalState(newState);
-            }
-        }
-
-        auto.getStateInterner().setTrustingMode(false);
-
-        // create rules
-        for (int i = 0; i < nodes.size(); i++) {
-            RuleRefinementNode n = nodes.get(i);
-            Rule r = invhomRules.get(i);
-
-            assert n.getLabelSet().size() == 1;
 
             int parent = stateIdPairToState.get(n.getParent(), r.getParent());
             int label = n.getRepresentativeLabel();
@@ -1442,7 +1395,8 @@ public class CoarseToFineParser {
         System.err.printf(" %4s  outside(parent): %e\n\n", "", outside.get(n.getParent(), r.getParent()));
     }
 
-    private double computeInsideOutside(int level, List<RuleRefinementNode> coarseNodes, List<? extends AbstractRule> partnerInvhomRules, TreeAutomaton invhom, IIntInt2DoubleMap inside, IIntInt2DoubleMap outside) {
+    private double computeInsideOutside(int level, List<RuleRefinementNode> coarseNodes,
+                   List<? extends AbstractRule> partnerInvhomRules, TreeAutomaton invhom, IIntInt2DoubleMap inside, IIntInt2DoubleMap outside) {
         double totalSentenceInside = 0;
 
         inside.setDefaultReturnValue(0);
@@ -1470,6 +1424,7 @@ public class CoarseToFineParser {
         for (int i = coarseNodes.size() - 1; i >= 0; i--) {
             RuleRefinementNode n = coarseNodes.get(i);
             AbstractRule r = partnerInvhomRules.get(i);
+//            long parentKey = NumbersCombine.combine(n.getParent(), r.getParent());
 
             double[] childInside = new double[r.getArity()];
             double parentOutside = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
@@ -1496,12 +1451,6 @@ public class CoarseToFineParser {
         }
 
         return totalSentenceInside;
-    }
-
-    private static void D(int depth, Supplier<String> s) {
-        if (DEBUG) {
-            System.err.println(Util.repeat("  ", depth) + s.get());
-        }
     }
 
     /**
