@@ -41,8 +41,8 @@ public class TagGrammar {
     private static final char ADJ_VARTYPE = 'A';
     private static final String SUBST_SUFFIX = "_" + SUBST_VARTYPE;
 
-    private Map<String, ElementaryTree> trees;   // tree-name -> elementary-tree
-    private SetMultimap<String, LexiconEntry> lexicon; // word -> set(tree-name)
+    private final Map<String, ElementaryTree> trees;   // tree-name -> elementary-tree
+    private final SetMultimap<String, LexiconEntry> lexicon; // word -> set(tree-name)
 
     public TagGrammar() {
         trees = new HashMap<>();
@@ -72,7 +72,10 @@ public class TagGrammar {
             for (LexiconEntry lex : lexicon.get(word)) {
                 ElementaryTree et = trees.get(lex.getElementaryTreeName());
 
-                if (et == null && ! "tCO".equals(lex.getElementaryTreeName())) {
+                if (et == null) { /* && ! "tCO".equals(lex.getElementaryTreeName())) { 
+                        adding the above to the if clause leads to NullPointerExceptions whenever
+                        (et==null && "tCO".equals(lex.getElementaryTreeName())
+                    */
                     System.err.println("*** UNK ET: " + lex + " for word " + word + "***");
                 } else {
                     ret.add(et.lexicalize(word, lex.getFeature("pos"), lex.getSecondaryLex()));
@@ -227,7 +230,7 @@ public class TagGrammar {
      * @param adjunctionNonterminals 
      */
     private void convertElementaryTree(LexiconEntry lex, ConcreteTreeAutomaton<String> auto, Homomorphism th, Homomorphism sh, TagStringAlgebra tsa, final Set<String> adjunctionNonterminals) {
-        final List<String> childStates = new ArrayList<String>();
+        final List<String> childStates = new ArrayList<>();
         ElementaryTree etree = trees.get(lex.getElementaryTreeName());
         MutableInteger nextVar = new MutableInteger(1);
         String adjPrefix = "?" + ADJ_VARTYPE;
