@@ -7,6 +7,7 @@ package de.up.ling.irtg.automata.coarse_to_fine;
 
 import de.up.ling.irtg.InterpretedTreeAutomaton;
 import de.up.ling.irtg.automata.ConcreteTreeAutomaton;
+import de.up.ling.irtg.automata.NondeletingInverseHomAutomaton;
 import de.up.ling.irtg.automata.Rule;
 import de.up.ling.irtg.automata.TreeAutomaton;
 import de.up.ling.irtg.automata.condensed.CondensedRule;
@@ -31,36 +32,16 @@ import java.util.function.Consumer;
  */
 public class SiblingFinderCoarserstParser {
     
-    private static final String DUMMY_SIG_PREFIX = "dummyr";
-    private final Homomorphism hom;
-    private final SiblingFinderInvhom invhom;
+    private final InterpretedTreeAutomaton coarsestIRTG;
+    private final RuleRefinementTree rrt;
     private final SiblingFinderIntersection intersect;
-    private final ConcreteTreeAutomaton<String> dummyLeft;
-    private final List<RuleRefinementNode> allCoarsestNodes;
+    private final SiblingFinderInvhom invhom;
     
-    public SiblingFinderCoarserstParser(RuleRefinementTree rrt, Homomorphism origHom, TreeAutomaton decomp) {
-        Signature src = new Signature();
-        hom = new Homomorphism(src, origHom.getTargetSignature());
-        Interner<String> interner = new Interner<>();
-        dummyLeft = new ConcreteTreeAutomaton<>(src, interner);
-        
-        allCoarsestNodes = rrt.getCoarsestNodes();
-        int i = 0;
-        for (RuleRefinementNode node : allCoarsestNodes) {
-            int srcID = src.addSymbol(DUMMY_SIG_PREFIX+i, node.getChildren().length);
-            hom.add(srcID, origHom.getByLabelSetID(node.getTermId()));
-            
-            for (int child : node.getChildren()) {
-                interner.addObjectWithIndex(child, "s"+child);
-            }
-            interner.addObjectWithIndex(node.getParent(), "s"+node.getParent());
-            dummyLeft.addRule(dummyLeft.createRule(node.getParent(), srcID, node.getChildren(), node.getWeight()));
-                    
-            i++;
-        }
-        
-        invhom = new SiblingFinderInvhom(decomp, hom);
-        intersect = new SiblingFinderIntersection(dummyLeft, invhom);
+    public SiblingFinderCoarserstParser(RuleRefinementTree rrt, InterpretedTreeAutomaton irtg, TreeAutomaton decomp, String interpretation) {
+        this.rrt = rrt;
+        this.coarsestIRTG = rrt.makeIrtgWithCoarsestAutomaton(irtg);
+        invhom = new SiblingFinderInvhom(decomp, irtg.getInterpretation(interpretation).getHomomorphism());
+        intersect = new SiblingFinderIntersection(irtg.getAutomaton(), invhom);
     }
     
     /**
@@ -70,11 +51,18 @@ public class SiblingFinderCoarserstParser {
      * @return 
      */
     public ConcreteTreeAutomaton parse(List<RuleRefinementNode> coarseNodes, List<Rule> partnerInvhomRules) {
-        ConcreteTreeAutomaton dummyRhs = new ConcreteTreeAutomaton(hom.getTargetSignature());
+        ConcreteTreeAutomaton dummyRhs = new ConcreteTreeAutomaton(coarsestIRTG.getAutomaton().getSignature());
         intersect.makeAllRulesExplicit(new Consumer<Rule>() {
             @Override
             public void accept(Rule rule) {
-                coarseNodes.add(allCoarsestNodes.get(Integer.valueOf(hom.getSourceSignature().resolveSymbolId(rule.getLabel()).substring(DUMMY_SIG_PREFIX.length()))));
+                RuleRefinementNode matchingCoarsest = null;
+                for (RuleRefinementNode n : rrt.getCoarsestNodes()) {
+                    if (n.getLabelSet().contains(rule.getLabel())) {
+                        matchingCoarsest = n;
+                        break;
+                    }
+                }
+                coarseNodes.add(matchingCoarsest);
                 int[] rhsChildren = new int[rule.getArity()];
                 for (int i = 0; i<rule.getArity(); i++) {
                     rhsChildren[i]=intersect.getRhsState4IntersectState(rule.getChildren()[i]);

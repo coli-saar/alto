@@ -213,85 +213,8 @@ public class CoarseToFineParser {
 
         assert coarseNodes.size() == partnerInvhomRules.size();
         
+        return executeParseInputObject(invhom, coarseNodes, partnerInvhomRules);
         
-
-        // refine the chart level-1 times
-        IIntInt2DoubleMap inside = new MyIntInt2DoubleMap();
-        IIntInt2DoubleMap outside = new MyIntInt2DoubleMap();
-        ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
-
-        if (ftc.numLevels() > 1) {
-            for (int level = 0; level < ftc.numLevels() - 1; level++) {
-                
-//                System.err.println("Viterbi: " + viterbi(level, coarseNodes, partnerInvhomRules, invhom, productivityChecker));
-                
-                inside.clear();
-                outside.clear();
-                productivityChecker.clear();
-                
-
-                double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
-
-                if (DEBUG) {
-                    System.err.println("\n\nCHART AT LEVEL " + level + ":\n");
-                    System.err.printf("(total inside: %e)\n", totalSentenceInside );
-                    printChart(coarseNodes, partnerInvhomRules, invhom, inside, outside);
-                }
-
-                List<RuleRefinementNode> finerNodes = new ArrayList<>();
-                List<CondensedRule> finerInvhomPartners = new ArrayList<>();
-
-                for (int i = 0; i < coarseNodes.size(); i++) {
-                    RuleRefinementNode n = coarseNodes.get(i);
-                    CondensedRule r = partnerInvhomRules.get(i);
-
-                    if (DEBUG) {
-                        printRulePair(i, r, n, invhom, inside, outside);
-                    }
-
-                    double score = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
-                    for (int j = 0; j < r.getArity(); j++) {
-                        score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
-                    }
-
-                    if (score > theta * totalSentenceInside) {
-                        // rule not filtered out => refine and copy to finer structure
-                        for (RuleRefinementNode nn : n.getRefinements()) {
-                            if (DEBUG) {
-                                System.err.println("- consider refinement: " + nn.localToString(irtg.getAutomaton()));
-                            }
-
-                            if (productivityChecker.isRefinementProductive(nn, r)) {
-                                finerNodes.add(nn);
-                                finerInvhomPartners.add(r);
-                                productivityChecker.recordParents(nn, r);
-
-                                if (DEBUG) {
-                                    System.err.println("   -> record it: " + irtg.getAutomaton().getStateForId(nn.getParent()) + " " + invhom.getStateForId(r.getParent()) + "\n");
-                                }
-                            } else if (DEBUG) {
-                                System.err.println("   -> removed, unproductive\n");
-                            }
-                        }
-                    } else if (DEBUG) {
-                        System.err.println("removed with score " + score + ":");
-                        System.err.println("- " + r.toString(invhom, x -> false));
-                        System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
-                    }
-                }
-
-                coarseNodes = finerNodes;
-                partnerInvhomRules = finerInvhomPartners;
-            }
-        } else {
-            for (int i = 0; i < coarseNodes.size(); i++) {
-                RuleRefinementNode n = coarseNodes.get(i);
-                productivityChecker.recordParents(n, partnerInvhomRules.get(i));
-            }
-        }
-
-        // decode final chart into tree automaton
-        return createTreeAutomaton(ftc.numLevels() - 1, coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs());
     }
     
     /**
@@ -349,56 +272,66 @@ public class CoarseToFineParser {
         Logging.get().info("Using coarse-to-fine parsing with sibling finders.");
         
         // create condensed invhom automaton
-        Homomorphism hom = irtg.getInterpretation(inputInterpretation).getHomomorphism();
         TreeAutomaton decomp = irtg.getInterpretation(inputInterpretation).getAlgebra().decompose(inputObject);
 
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
         List<Rule> partnerInvhomRules = new ArrayList<>();
-        SiblingFinderCoarserstParser sfcp = new SiblingFinderCoarserstParser(rrt, hom, decomp);
+        SiblingFinderCoarserstParser sfcp = new SiblingFinderCoarserstParser(rrt, irtg, decomp, inputInterpretation);
 
         //the important results are stored in coarseNodes and partnerInvhomRules, the invhom is only for future reference
         ConcreteTreeAutomaton invhom = sfcp.parse(coarseNodes, partnerInvhomRules);
-
+        
+        System.err.println(invhom.getFinalStates());
+        
         assert coarseNodes.size() == partnerInvhomRules.size();
 
+        return executeParseInputObject(invhom, coarseNodes, partnerInvhomRules);
+        
+    }
+    
+    private TreeAutomaton executeParseInputObject(TreeAutomaton invhom, List<RuleRefinementNode> coarseNodes,
+        List<? extends AbstractRule> partnerInvhomRules) {
         // refine the chart level-1 times
-//        Long2DoubleMap inside = new Long2DoubleOpenHashMap();
-//        Long2DoubleMap outside = new Long2DoubleOpenHashMap();
         IIntInt2DoubleMap inside = new MyIntInt2DoubleMap();
         IIntInt2DoubleMap outside = new MyIntInt2DoubleMap();
         ProductiveRulesChecker productivityChecker = new ProductiveRulesChecker();
 
         if (ftc.numLevels() > 1) {
             for (int level = 0; level < ftc.numLevels() - 1; level++) {
+                
+//                System.err.println("Viterbi: " + viterbi(level, coarseNodes, partnerInvhomRules, invhom, productivityChecker));
+                
                 inside.clear();
                 outside.clear();
                 productivityChecker.clear();
+                
 
                 double totalSentenceInside = computeInsideOutside(level, coarseNodes, partnerInvhomRules, invhom, inside, outside);
 
-                /*
-                 if (DEBUG) {
-                 System.err.println("\n\nCHART AT LEVEL " + level + ":\n");
-                 printChart(coarseNodes, partnerInvhomRules, invhom, inside, outside);
-                 }*/
+//                if (DEBUG) {
+//                    System.err.println("\n\nCHART AT LEVEL " + level + ":\n");
+//                    System.err.printf("(total inside: %e)\n", totalSentenceInside );
+//                    printChart(coarseNodes, partnerInvhomRules, invhom, inside, outside);
+//                }
+
                 List<RuleRefinementNode> finerNodes = new ArrayList<>();
-                List<Rule> finerInvhomPartners = new ArrayList<>();
+                List<AbstractRule> finerInvhomPartners = new ArrayList<>();
 
                 for (int i = 0; i < coarseNodes.size(); i++) {
                     RuleRefinementNode n = coarseNodes.get(i);
-                    Rule r = partnerInvhomRules.get(i);
+                    AbstractRule r = partnerInvhomRules.get(i);
 
-                    /*
-                     if (DEBUG) {
-                     printRulePair(i, r, n, invhom, inside, outside);
-                     }*/
+//                    if (DEBUG) {
+//                        printRulePair(i, r, n, invhom, inside, outside);
+//                    }
+
                     double score = outside.get(n.getParent(), r.getParent()) * n.getWeight() * r.getWeight();
                     for (int j = 0; j < r.getArity(); j++) {
                         score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
                     }
 
-                    if (score > theta * totalSentenceInside) {
+                    if (score >= theta * totalSentenceInside) {
                         // rule not filtered out => refine and copy to finer structure
                         for (RuleRefinementNode nn : n.getRefinements()) {
                             if (DEBUG) {
@@ -410,20 +343,18 @@ public class CoarseToFineParser {
                                 finerInvhomPartners.add(r);
                                 productivityChecker.recordParents(nn, r);
 
-                                /*
-                                 if (DEBUG) {
-                                 System.err.println("   -> record it: " + irtg.getAutomaton().getStateForId(nn.getParent()) + " " + invhom.getStateForId(r.getParent()) + "\n");
-                                 }*/
+                                if (DEBUG) {
+                                    System.err.println("   -> record it: " + irtg.getAutomaton().getStateForId(nn.getParent()) + " " + invhom.getStateForId(r.getParent()) + "\n");
+                                }
                             } else if (DEBUG) {
                                 System.err.println("   -> removed, unproductive\n");
                             }
                         }
-                    }/* else if (DEBUG) {
-                     System.err.println("removed with score " + score + ":");
-                     System.err.println("- " + r.toString(invhom, x -> false));
-                     System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
-                     }*/
-
+                    } else if (DEBUG) {
+//                        System.err.println("removed with score " + score + ":");
+//                        System.err.println("- " + r.toString(invhom, x -> false));
+//                        System.err.println("- " + n.localToString(irtg.getAutomaton()) + "\n");
+                    }
                 }
 
                 coarseNodes = finerNodes;
@@ -439,7 +370,7 @@ public class CoarseToFineParser {
         // decode final chart into tree automaton
         return createTreeAutomaton(ftc.numLevels() - 1, coarseNodes, partnerInvhomRules, invhom, productivityChecker.getStatePairs());
     }
-
+    
     /**
      * This method is used for evaluation of coarse-to-fine parsing with Alto Lab,
      * most users will not need it.
@@ -449,13 +380,12 @@ public class CoarseToFineParser {
     @OperationAnnotation(code = "parseInputObjectWithSFSizes")
     public Combination parseInputObjectWithSFTrackSizes(Object inputObject) {
         // create condensed invhom automaton
-        Homomorphism hom = irtg.getInterpretation(inputInterpretation).getHomomorphism();
         TreeAutomaton decomp = irtg.getInterpretation(inputInterpretation).getAlgebra().decompose(inputObject);
 
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
         List<Rule> partnerInvhomRules = new ArrayList<>();
-        SiblingFinderCoarserstParser sfcp = new SiblingFinderCoarserstParser(rrt, hom, decomp);
+        SiblingFinderCoarserstParser sfcp = new SiblingFinderCoarserstParser(rrt, irtg, decomp, inputInterpretation);
 
         CpuTimeStopwatch cts = new CpuTimeStopwatch();
         double initialTime;
@@ -566,7 +496,7 @@ public class CoarseToFineParser {
                         score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
                     }
 
-                    if (score > theta * totalSentenceInside) {
+                    if (score >= theta * totalSentenceInside) {
                         passed.add(combined);
 
                         // rule not filtered out => refine and copy to finer structure
@@ -710,13 +640,12 @@ public class CoarseToFineParser {
     @OperationAnnotation(code = "parseInputObjectWithSFTimes")
     public Combination parseInputObjectWithSFTrackTimes(Object inputObject) {
         // create condensed invhom automaton
-        Homomorphism hom = irtg.getInterpretation(inputInterpretation).getHomomorphism();
         TreeAutomaton decomp = irtg.getInterpretation(inputInterpretation).getAlgebra().decompose(inputObject);
 
         // coarse parsing
         List<RuleRefinementNode> coarseNodes = new ArrayList<>();
         List<Rule> partnerInvhomRules = new ArrayList<>();
-        SiblingFinderCoarserstParser sfcp = new SiblingFinderCoarserstParser(rrt, hom, decomp);
+        SiblingFinderCoarserstParser sfcp = new SiblingFinderCoarserstParser(rrt, irtg, decomp, inputInterpretation);
 
         CpuTimeStopwatch cts = new CpuTimeStopwatch();
         double initialTime;
@@ -767,7 +696,7 @@ public class CoarseToFineParser {
                         score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
                     }
 
-                    if (score > theta * totalSentenceInside) {
+                    if (score >= theta * totalSentenceInside) {
                         // rule not filtered out => refine and copy to finer structure
                         for (RuleRefinementNode nn : n.getRefinements()) {
                             if (DEBUG) {
@@ -941,7 +870,7 @@ public class CoarseToFineParser {
                         score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
                     }
 
-                    if (score > theta * totalSentenceInside) {
+                    if (score >= theta * totalSentenceInside) {
                         passed.add(combined);
 
                         // rule not filtered out => refine and copy to finer structure
@@ -1145,7 +1074,7 @@ public class CoarseToFineParser {
                         score *= inside.get(n.getChildren()[j], r.getChildren()[j]);
                     }
 
-                    if (score > theta * totalSentenceInside) {
+                    if (score >= theta * totalSentenceInside) {
                         // rule not filtered out => refine and copy to finer structure
                         for (RuleRefinementNode nn : n.getRefinements()) {
                             if (DEBUG) {
@@ -1295,15 +1224,12 @@ public class CoarseToFineParser {
 
         private final LongSet bottomUpStatesDiscovered = new LongOpenHashSet();
 
-        public void recordParents(RuleRefinementNode n, CondensedRule r) {
+        public void recordParents(RuleRefinementNode n, AbstractRule r) {
             bottomUpStatesDiscovered.add(NumbersCombine.combine(n.getParent(), r.getParent()));
         }
 
-        public void recordParents(RuleRefinementNode n, Rule r) {
-            bottomUpStatesDiscovered.add(NumbersCombine.combine(n.getParent(), r.getParent()));
-        }
 
-        public boolean isRefinementProductive(RuleRefinementNode n, CondensedRule r) {
+        public boolean isRefinementProductive(RuleRefinementNode n, AbstractRule r) {
             for (int i = 0; i < r.getArity(); i++) {
                 if (!bottomUpStatesDiscovered.contains(NumbersCombine.combine(n.getChildren()[i], r.getChildren()[i]))) {
                     return false;
@@ -1313,15 +1239,6 @@ public class CoarseToFineParser {
             return true;
         }
 
-        public boolean isRefinementProductive(RuleRefinementNode n, Rule r) {
-            for (int i = 0; i < r.getArity(); i++) {
-                if (!bottomUpStatesDiscovered.contains(NumbersCombine.combine(n.getChildren()[i], r.getChildren()[i]))) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
 
         public void clear() {
             bottomUpStatesDiscovered.clear();
@@ -1497,4 +1414,6 @@ public class CoarseToFineParser {
         FineToCoarseMapping ftc = GrammarCoarsifier.readFtcMapping(ftcMap);
         return new CoarseToFineParser(irtg, interpretation, ftc, theta);
     }
+    
+    
 }
