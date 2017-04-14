@@ -282,7 +282,6 @@ public class CoarseToFineParser {
         //the important results are stored in coarseNodes and partnerInvhomRules, the invhom is only for future reference
         ConcreteTreeAutomaton invhom = sfcp.parse(coarseNodes, partnerInvhomRules);
         
-        System.err.println(invhom.getFinalStates());
         
         assert coarseNodes.size() == partnerInvhomRules.size();
 

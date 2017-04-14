@@ -32,6 +32,7 @@ public class TestSiblingFinderTrees {
     public static void main(String[] args) throws IOException, ParserException, FileNotFoundException, ParseException {
         InterpretedTreeAutomaton irtg = InterpretedTreeAutomaton.fromPath("../../experimentData/grammar_37.irtg");
         Object input = irtg.parseString("string", "Vinken is chairman .");
+//        Object input = irtg.parseString("string", "The vote came after debate replete with complaints from proponents and critics of increase in wage floor .");
         irtg = irtg.filterForAppearingConstants("string", input);
 //        System.err.println("starting sf parsing..");
 //        TreeAutomaton sf = irtg.parseWithSiblingFinder("string", input);
@@ -45,37 +46,41 @@ public class TestSiblingFinderTrees {
         double th = 0;
         String ftcEmpt = StringTools.slurp(new FileReader("../../experimentData/empty.txt"));
         String ftc = StringTools.slurp(new FileReader("../../experimentData/chen_ctf.txt"));
-        CoarseToFineParser ctfpEmpt = CoarseToFineParser.makeCoarseToFineParser(irtg, "string", ftcEmpt, th);
+//        CoarseToFineParser ctfpEmpt = CoarseToFineParser.makeCoarseToFineParser(irtg, "string", ftcEmpt, th);
         CoarseToFineParser ctfp = CoarseToFineParser.makeCoarseToFineParser(irtg, "string", ftc, th);
                                                                           
-        System.err.println("parsing with empty CTF: ");
-        TreeAutomaton sfCtfpEmpt = ctfpEmpt.parseInputObjectWithSF(input);   
-//        System.err.println(sfCtfpEmpt);
-        TreeAutomaton defCtfpEmpt = ctfpEmpt.parseInputObject(input);
+//        System.err.println("parsing with empty CTF: ");
+//        TreeAutomaton sfCtfpEmpt = ctfpEmpt.parseInputObjectWithSF(input);   
+////        System.err.println(sfCtfpEmpt);
+//        TreeAutomaton defCtfpEmpt = ctfpEmpt.parseInputObject(input);
         System.err.println("parsing with chen CTF: ");             
         TreeAutomaton sfCtfp = ctfp.parseInputObjectWithSF(input);
-        Tree<String> homTree = irtg.getInterpretation("string").getHomomorphism().apply(sfCtfp.viterbi());
-        System.err.println("alg evaluation: "+irtg.getInterpretation("string").getAlgebra().evaluate(homTree));
+        TreeAutomaton sfCtfpTime = ctfp.parseInputObjectWithSFTrackTimes(input).getChart();
+        TreeAutomaton sfCtfpSize = ctfp.parseInputObjectWithSFTrackSizes(input).getChart();
+//        Tree<String> homTree = irtg.getInterpretation("string").getHomomorphism().apply(sfCtfp.viterbi());
+//        System.err.println("alg evaluation: "+irtg.getInterpretation("string").getAlgebra().evaluate(homTree));
         //TreeAutomaton defCtfp = ctfp.parseInputObject(input);
-        System.err.println(sfCtfpEmpt.countTrees());
-        System.err.println(defCtfpEmpt.countTrees());
+//        System.err.println(sfCtfpEmpt.countTrees());
+//        System.err.println(defCtfpEmpt.countTrees());
         System.err.println(sfCtfp.countTrees());
+        System.err.println(sfCtfpTime.countTrees());
+        System.err.println(sfCtfpSize.countTrees());
         //System.err.println(defCtfp.countTrees());
         
                 
-        Set<Tree<String>> emptSet = new HashSet<>();
-        Iterator<Tree<String>> emptIt = defCtfpEmpt.languageIterator();
-        Set<Tree<String>> ctfSet = new HashSet<>();
-        Iterator<Tree<String>> ctfIt = sfCtfp.languageIterator();
-        while (emptIt.hasNext() || ctfIt.hasNext()) {
-            if (emptIt.hasNext()) {
-                emptSet.add(emptIt.next());
-            }
-            if (ctfIt.hasNext()) {
-                ctfSet.add(ctfIt.next());
-            }
-        }
-        System.err.println("intersection size: "+Sets.intersection(emptSet, ctfSet).size());
+//        Set<Tree<String>> emptSet = new HashSet<>();
+//        Iterator<Tree<String>> emptIt = defCtfpEmpt.languageIterator();
+//        Set<Tree<String>> ctfSet = new HashSet<>();
+//        Iterator<Tree<String>> ctfIt = sfCtfp.languageIterator();
+//        while (emptIt.hasNext() || ctfIt.hasNext()) {
+//            if (emptIt.hasNext()) {
+//                emptSet.add(emptIt.next());
+//            }
+//            if (ctfIt.hasNext()) {
+//                ctfSet.add(ctfIt.next());
+//            }
+//        }
+//        System.err.println("intersection size: "+Sets.intersection(emptSet, ctfSet).size());
         
         
         
