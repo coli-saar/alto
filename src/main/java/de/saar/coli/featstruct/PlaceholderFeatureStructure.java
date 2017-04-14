@@ -11,33 +11,23 @@ import java.util.Set;
  *
  * @author koller
  */
-public class PrimitiveFeatureStructure<E> extends FeatureStructure {
-    private E value;
+public class PlaceholderFeatureStructure extends FeatureStructure {
+    public PlaceholderFeatureStructure(String index) {
+        setIndex(index);
+    }    
 
-    public PrimitiveFeatureStructure(E value) {
-        this.value = value;
-    }
-
-    public E getValue() {
-        return value;
-    }
-
-    public void setValue(E value) {
-        this.value = value;
+    @Override
+    protected void appendWithIndex(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
+        buf.append(getIndexMarker());
     }
 
     @Override
     protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
-        buf.append(value.toString());
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
     protected Object getValue(String[] path, int pos) {
-        if( pos == path.length ) {
-            return value;
-        } else {
-            return null;
-        }
+        return null;
     }
-    
 }

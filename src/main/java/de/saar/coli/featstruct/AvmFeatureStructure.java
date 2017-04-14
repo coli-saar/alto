@@ -5,30 +5,39 @@
  */
 package de.saar.coli.featstruct;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
  * @author koller
  */
-public class AvmFeatureStructure implements FeatureStructure {
+public class AvmFeatureStructure extends FeatureStructure {
     private Map<String,FeatureStructure> avm;
 
     public AvmFeatureStructure() {
         avm = new HashMap<>();
     }
     
-    public void add(String attribute, FeatureStructure value) {
+    public void put(String attribute, FeatureStructure value) {
         avm.put(attribute, value);
+    }
+    
+    public Set<String> getAttributes() {
+        return avm.keySet();
+    }
+    
+    public FeatureStructure get(String attribute) {
+        return avm.get(attribute);
     }
 
     @Override
-    public String toString() {
-        StringBuilder buf = new StringBuilder("[");
+    protected void appendValue(Set<FeatureStructure> visitedIndexedFs, StringBuilder buf) {
         boolean first = true;
         
-        // TODO - does not represent coindexation correctly yet
+        buf.append("[");
         
         for( String key : avm.keySet() ) {
             if(first) {
@@ -39,13 +48,28 @@ public class AvmFeatureStructure implements FeatureStructure {
             
             buf.append(key);
             buf.append(": ");
-            buf.append(avm.get(key).toString());
+            
+            avm.get(key).appendWithIndex(visitedIndexedFs, buf);
         }
         
         buf.append("]");
-        return buf.toString();
     }
-    
-    
+
+    @Override
+    protected Object getValue(String[] path, int pos) {
+//        System.err.printf("gv on %s [%d]\n", Arrays.toString(path), pos);
+        
+        if( pos < path.length ) {
+            FeatureStructure ch = get(path[pos]);
+            
+            if( ch == null ) {
+                return null;
+            } else {
+                return ch.getValue(path, pos+1);
+            }
+        } else {
+            return null;
+        }
+    }
 }
  
