@@ -34,7 +34,7 @@ public class TestSiblingFinderTrees {
         Map<String, Object> map = new HashMap<>();
         map.put("string", input);
         TreeAutomaton def = irtg.parseInputObjects(map);
-        System.err.println("starting defcondensed parsing..");
+        System.err.println("starting condensed parsing..");
         TreeAutomaton cond = irtg.parseCondensedWithPruning(map, new NoPruningPolicy());
         Set<Tree<String>> sfSet = new HashSet<>();
         Iterator<Tree<String>> sfIt = sf.languageIterator();
