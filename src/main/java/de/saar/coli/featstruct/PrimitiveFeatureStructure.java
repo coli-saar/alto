@@ -5,6 +5,9 @@
  */
 package de.saar.coli.featstruct;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -18,12 +21,17 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
         this.value = value;
     }
 
-    public E getValue() {
+    private PrimitiveFeatureStructure<E> pdereference() {
+        return (PrimitiveFeatureStructure<E>) dereference();
+    }
+
+    @Override
+    protected E getValueD() {
         return value;
     }
 
     public void setValue(E value) {
-        this.value = value;
+        pdereference().value = value;
     }
 
     @Override
@@ -32,12 +40,50 @@ public class PrimitiveFeatureStructure<E> extends FeatureStructure {
     }
 
     @Override
-    protected Object getValue(String[] path, int pos) {
-        if( pos == path.length ) {
-            return value;
+    protected FeatureStructure destructiveUnifyLocalD(FeatureStructure d2) {
+        // unification with non-AVM FSs
+        if (d2 instanceof PlaceholderFeatureStructure) {
+            d2.forward = this;
+            return this;
+        } else if (d2 instanceof AvmFeatureStructure) {
+            return null;
+        }
+
+        // check that value is the same
+        PrimitiveFeatureStructure pd2 = (PrimitiveFeatureStructure) d2;
+        if (value.equals(pd2.value)) {
+            forward = d2;
+            return d2;
         } else {
             return null;
         }
     }
-    
+
+    private static final List<String> EMPTY_PATH = new ArrayList<>();
+
+    @Override
+    protected List<List<String>> getAllPathsD() {
+        return Arrays.asList(EMPTY_PATH);
+    }
+
+    @Override
+    protected FeatureStructure getD(List<String> path, int pos) {
+        if (pos == path.size()) {
+            return this;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    protected boolean localEqualsD(FeatureStructure other) {
+        FeatureStructure d = other.dereference();
+
+        if (other instanceof PrimitiveFeatureStructure) {
+            PrimitiveFeatureStructure pOther = (PrimitiveFeatureStructure) other;
+            return value.equals(pOther.value);
+        } else {
+            return false;
+        }
+    }
 }

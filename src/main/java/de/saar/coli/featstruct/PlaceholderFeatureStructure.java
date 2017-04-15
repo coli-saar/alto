@@ -5,6 +5,9 @@
  */
 package de.saar.coli.featstruct;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,7 +30,35 @@ public class PlaceholderFeatureStructure extends FeatureStructure {
     }
 
     @Override
-    protected Object getValue(String[] path, int pos) {
+    protected FeatureStructure destructiveUnifyLocalD(FeatureStructure other) {
+        forward = other;
+        return other;
+    }
+
+    private static final List<String> EMPTY_PATH = new ArrayList<>();
+    
+    @Override
+    protected List<List<String>> getAllPathsD() {
+        return Arrays.asList(EMPTY_PATH);
+    }
+
+    @Override
+    protected Object getValueD() {
         return null;
+    }
+
+    @Override
+    protected FeatureStructure getD(List<String> path, int pos) {
+        if (pos == path.size()) {
+            return this;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    protected boolean localEqualsD(FeatureStructure other) {
+        FeatureStructure d = other.dereference();
+        return other instanceof PlaceholderFeatureStructure;
     }
 }

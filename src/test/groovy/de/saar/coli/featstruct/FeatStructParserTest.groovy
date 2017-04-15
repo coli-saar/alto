@@ -35,11 +35,11 @@ class FeatStructParserTest {
         assertThat(fs, instanceOf(AvmFeatureStructure.class))
         
         AvmFeatureStructure afs = (AvmFeatureStructure) fs
-        assertThat(afs.getValue("num"), is("sg"))
-        assertThat(afs.getValue("gen"), is("masc"))
+        assertThat(afs.get("num").getValue(), is("sg"))
+        assertThat(afs.get("gen").getValue(), is("masc"))
         
-        assertThat(afs.getValue("foo"), nullValue())
-        assertThat(afs.getValue("num", "gen"), nullValue())
+        assertThat(afs.get("foo"), nullValue())
+        assertThat(afs.get("num", "gen"), nullValue())
     }
     
     @Test
@@ -60,16 +60,16 @@ class FeatStructParserTest {
     public void testComplex() {
         FeatureStructure fs = FeatureStructure.parse('[num: sg, ggggg: #hallo, gen: "masc foo", bar: #hallo [test: #test 17], baz: #test]');
         
-        assertThat(fs.getValue("gen"), is("masc foo"))
+        assertThat("gen", fs.get("gen").getValue(), is("masc foo"))
         
         // value equality
-        assertThat(fs.getValue("bar", "test"), is(17))
-        assertThat(fs.getValue("baz"), is(17))
-        assertThat(fs.get("ggggg").getValue("test"), is(17))
+        assertThat("bar test", fs.get("bar", "test").getValue(), is(17))
+        assertThat("baz", fs.get("baz").getValue(), is(17))
+        assertThat("ggggg / test", fs.get("ggggg").get("test").getValue(), is(17))
         
         // node identity
-        assertThat(fs.getValue("bar", "test"), sameInstance(fs.getValue("baz")))
-        assertThat(fs.getValue("ggggg"), sameInstance(fs.getValue("bar")))
+        assertThat(fs.get("bar", "test"), sameInstance(fs.get("baz")))
+        assertThat(fs.get("ggggg"), sameInstance(fs.get("bar")))
     }
     
     @Test
@@ -79,8 +79,6 @@ class FeatStructParserTest {
         assertThat(fs.get("num"), instanceOf(PlaceholderFeatureStructure.class))
         assertThat(fs.get("num").getIndex(), is("1"))
         assertThat(fs.get("num"), sameInstance(fs.get("gen")))
-        
-        System.err.println(fs)
     }
 }
 
